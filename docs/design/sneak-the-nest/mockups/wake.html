@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sneak the Nest wake overlay</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #8A8FE0; }
+  body { background: url("wake-shot.png") center / cover no-repeat; position: relative; }
+  /* Red edge glow while the giant is awake. In the game: a full-screen ImageLabel or Frame with a UIGradient, faded in and out. */
+  .edge {
+    position: absolute; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 6vw 2.4vw rgba(255, 46, 74, 0.75);
+  }
+</style>
+</head>
+<body><div class="edge"></div></body>
+</html>
