@@ -1,0 +1,14 @@
+# Project place file
+/MyRobloxGame.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+sourcemap.json
+
+# Other games' images used as design references
+/docs/design/*/references/
+
+# macOS folder files
+.DS_Store
