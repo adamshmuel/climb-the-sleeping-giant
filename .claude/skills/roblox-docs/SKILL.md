@@ -19,12 +19,15 @@ The docs are served as clean markdown at `create.roblox.com/docs/...md`. Never g
 | Guide | `https://create.roblox.com/docs/<path>.md` (e.g. `scripting/events/remote.md`) | 2026-10-06 |
 | Engine index | `https://create.roblox.com/docs/reference/engine/llms.txt` | 2026-10-06 |
 | Site/guide index | `https://create.roblox.com/docs/llms.txt` | 2026-10-06 |
+| Plain-language search | `https://create.roblox.com/docs/api/search/<url-encoded question>` (JSON: `results[].title/url/summary`) | 2026-10-11 |
 | Deprecated APIs | `https://create.roblox.com/docs/reference/engine/deprecated.md` | 2026-10-06 |
 | Locale fallback | same paths with `/docs/en-us/...` | 2026-10-06 |
 
 ## Lookup
 
-1. Don't know the exact name? Search the index first:
+1. Don't know the exact name or page? Ask the official search in plain words, then open the top `url` (add nothing, it already ends in `.md`):
+   `curl -s "https://create.roblox.com/docs/api/search/$(jq -rn --arg q 'how to secure remote events' '$q|@uri')" | jq -r '.results[:5][] | "\(.title) | \(.url)"'`
+   Or search the index:
    `curl -s https://create.roblox.com/docs/reference/engine/llms.txt | grep -i <term>`
    (guides: `curl -s https://create.roblox.com/docs/llms.txt | grep -i <term>`)
 2. Check the page exists:
