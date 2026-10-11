@@ -10,7 +10,7 @@ Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox
 Logic goes in ModuleScripts. `init.*.luau` files only require and wire things up, which keeps the logic unit-testable.
 
 ## Agents
-Project agents live in `.claude/agents/`: `game_creator` (ideas, gameplay, business) and `designer` (look and feel, mockups). The main chat is the messenger between them and Adam. The flow, the approval gates and who owns what are in `.claude/rules/agent-workflow.md`.
+Project agents live in `.claude/agents/`: `game_creator` (ideas, gameplay, business), `designer` (look and feel, mockups), `product` (specs, build reviews), `code_lead` (architecture, plans, code review, progress) and `builder` (code and tests). The main chat is the messenger between them and Adam. The flow, the approval gates and who owns what are in `.claude/rules/agent-workflow.md`.
 
 ## Source of truth
 - Change code by editing files in `src/`. Never use MCP `multi_edit` on Rojo-synced scripts, because Rojo overwrites Studio edits on the next sync.
@@ -19,7 +19,7 @@ Project agents live in `.claude/agents/`: `game_creator` (ideas, gameplay, busin
 
 ## Roblox Studio MCP
 - Call `list_roblox_studios` first to get the `studio_id`.
-- Confirm with the user before destructive changes in Studio (deleting or replacing instances).
+- Deleting or replacing instances in Studio needs no confirmation from Adam when the change matches the spec, the gameplay and the game idea. If the owner of that topic (`product`, `game_creator` or `designer`) has approved it, go ahead. Ask Adam first only for the bigger changes listed in `agent-workflow.md`, "Asking Adam".
 - Use the built-in MCP skills via the `skill` tool: `rbx-unit-test` for tests, `rbx-debug`, `rbx-perf-profiling`, `rbx-scene-analysis` and `rbx-device-simulator-lua` when relevant.
 
 ## Docs

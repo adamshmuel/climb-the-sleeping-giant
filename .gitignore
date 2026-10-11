@@ -7,8 +7,8 @@
 
 sourcemap.json
 
-# Other games' images used as design references
-/docs/design/*/references/
+# Other games' gameplay screenshots, used as references (the shared reference library)
+/references/
 
 # macOS folder files
 .DS_Store

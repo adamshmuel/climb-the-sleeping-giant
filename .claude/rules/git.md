@@ -22,6 +22,12 @@ for Adam to paste and run himself, split per the rules above — do not run
 `git commit` directly. Reason: no AI traces in the repo's history (see below),
 and Adam stays the one who actually commits his own work.
 
+## When
+
+During coding, agents never commit. After Adam approves a built feature at
+Gate 4, the main chat gives him **one code block** with all of that feature's
+commits, split per the rules above.
+
 ## No AI attribution
 
 Nothing in this repo says Claude or AI wrote it. This is Adam's graded
