@@ -22,12 +22,12 @@ Words used here:
 | What | Where | Why |
 |---|---|---|
 | All code and tests | `src/` in git. Rojo copies it into Studio. | Git keeps every change, and code review reads the diff. |
-| The world (the giant, gardens, nature, terrain, lighting) | The place file `MyRobloxGame.rbxlx.rbxl` in the project folder, under `Workspace.World`. It is a binary place file (about 4 MB), kept out of git (`.gitignore` skips `/*.rbxl` and `/*.rbxlx`). **Adam saves it** in Studio. | The world has about 11,000 objects plus terrain. Rojo can't hold terrain, and no tool we have can save Studio models to disk. So the world stays in the place file. |
+| The world (the giant, gardens, nature, terrain, lighting) | The place file `climb-the-sleeping-giant.rbxl` in the project folder, under `Workspace.World`. It is a binary place file (about 4 MB), kept in git (`.gitignore` skips other `/*.rbxl` and `/*.rbxlx` files, but not this one). **Adam saves it** in Studio, then commits it with the code that needs it, so an old commit brings back the matching world. | The world has about 11,000 objects plus terrain. Rojo can't hold terrain, and no tool we have can save Studio models to disk. So the world stays in the place file. |
 | Changes to the world made during the build | Small scripts in `tools/world/`, run once in Studio with `execute_luau`. | Each change is written down in git, so it can be reviewed and run again if needed. The result still lives in the place file, so Adam saves the place after a build night. |
 | Art the code copies (egg models, the caught puff, the slam fist) | The place file: `ServerStorage.Assets` (server copies) and `ReplicatedStorage.Assets` (client copies) | Same reason as the world. |
 | The designer's spare models (`_Generated`, `Library`, Epic, Legendary and Dream eggs) | `ServerStorage.ArtLibrary` in the place file | Kept for later specs, but not drawn in the game, so phones don't pay for them. |
 
-**Which file is the place.** Studio has the place open as `MyRobloxGame.rbxlx.rbxl`, and that is the one Adam saves. Its name stays as it is: renaming it while Studio has it open would break saving. The file `MyRobloxGame.rbxlx` (about 200 KB) in the project folder is not the place: it is a WebP picture with the wrong name.
+**Which file is the place.** Studio has the place open as `climb-the-sleeping-giant.rbxl`, and that is the one Adam saves. To rename it, use Save to File As in Studio: renaming it in Finder while Studio has it open would break saving. The old copy `MyRobloxGame.rbxlx.rbxl` is no longer used. The file `MyRobloxGame.rbxlx` (about 200 KB) in the project folder is not the place: it is a WebP picture with the wrong name.
 
 **Rojo must never touch the world.** `default.project.json` maps only the code folders. It has no `Workspace` children and no `Lighting` settings. If it had them, Rojo would overwrite the designer's lighting on its first sync.
 

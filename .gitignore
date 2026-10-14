@@ -1,6 +1,7 @@
-# Project place files
+# Project place files. The one exception is the saved Studio world, kept in git
 /*.rbxlx
 /*.rbxl
+!/climb-the-sleeping-giant.rbxl
 
 # Roblox Studio lock files
 /*.rbxlx.lock

@@ -2,7 +2,7 @@
 
 **Now:** Core heist (spec 1): all 51 tasks done (2119 tests pass). The build review fix round (Tasks 44 to 51, the 7 changes the build reviews asked for plus 2 found on the way) is finished and approved. Next: qa tests the whole feature, then product, game_creator and designer re-run their build reviews, then Gate 4 (see "Gate 4 hand-over" below).
 
-**Place file: has unsaved world changes** since Adam saved it after Task 21 (`MyRobloxGame.rbxlx.rbxl`, kept out of git): `tools/world/07-home-spots.luau` (Task 38) and `tools/world/08-route.luau` (Task 23: the footprint route and the landing spots, rebuilt in review round 1; landing spot 8 moved in round 2). Task 24's round 1 adds one more: `tools/world/09-footprint-colour.luau` (the footprints turn a brighter yellow). Task 27's round 2 adds `tools/world/10-clear-landing-views.luau` (7 meadow props move out of the meadow, into the art library). Task 48 adds `tools/world/11-sign-faces.luau` (both name faces of every garden sign resized and moved, so the name reads from inside the garden too). Adam needs to save the place in Studio.
+**Place file:** `climb-the-sleeping-giant.rbxl` is kept in git since 2026-10-14, saved with every world script up to `tools/world/11-sign-faces.luau`. After any new world script, Adam saves the place in Studio and commits it with that script.
 
 Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who has approved it so far.
 
@@ -132,4 +132,4 @@ After Gate 4, the main chat turns this into one code block of git commands for A
 | The core heist: code, tests and world scripts | `src/` (all of it: `src/shared`, `src/server`, `src/client`, `src/tests`), `tools/world/` (all of it, 01 to 11 and `.gitkeep`) |
 | The build review | `docs/reviews/core-heist.md`, `docs/reviews/core-heist-shots/` |
 
-New in the fix round (Tasks 44 to 51), all inside the folders above: `src/server/Players/JumpWatcher.luau` (notices each jump and where it took off), `src/client/World/EggFade.luau` (makes a blocking egg see-through), their tests `src/tests/server/Players/JumpWatcher.spec.luau` and `src/tests/client/World/EggFade.spec.luau`, `tools/world/11-sign-faces.luau` (the bigger garden sign faces), and `docs/reviews/`. Never in git: `references/`, the place files, `sourcemap.json`, `build/`, `Packages/` and `DevPackages/` (all ignored already).
+New in the fix round (Tasks 44 to 51), all inside the folders above: `src/server/Players/JumpWatcher.luau` (notices each jump and where it took off), `src/client/World/EggFade.luau` (makes a blocking egg see-through), their tests `src/tests/server/Players/JumpWatcher.spec.luau` and `src/tests/client/World/EggFade.spec.luau`, `tools/world/11-sign-faces.luau` (the bigger garden sign faces), and `docs/reviews/`. Never in git: `references/`, the other place files (only `climb-the-sleeping-giant.rbxl` is in git, since 2026-10-14), `sourcemap.json`, `build/`, `Packages/` and `DevPackages/` (all ignored already).
