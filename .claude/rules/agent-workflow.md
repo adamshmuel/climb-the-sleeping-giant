@@ -68,6 +68,21 @@ Agents never talk to each other directly. The main chat carries every message be
 - Show Adam each relay in one line: `designer → game_creator: <what it asked>`.
 - If an agent can't be resumed (for example, in a new session), start a new one and give it the file paths below. The files are the shared memory.
 
+## Agent memory size
+
+Every agent report ends with a token count (`subagent_tokens`): how much text the agent carries. A big memory makes an agent slower and costlier. Near the limit, older parts get squeezed into a summary, and details can be lost.
+
+The main chat checks the count after every report:
+
+| Agent | Rule |
+|---|---|
+| `builder` | A fresh agent for every task |
+| Every other agent | Keep resuming it while under 200k tokens. Above that, start a fresh one at the next natural break: after a review or an answer, never in the middle of a task. Every step rereads the whole memory, so a big memory makes even a short check costly |
+
+A fresh agent gets the file paths it needs (idea, design, spec, plan, progress) and a short note of where the work stands. The files are the shared memory.
+
+The main chat's own memory grows too. After every approved task, it updates the "Now" section of `docs/handoff.md` (untracked): the task in progress, open questions between agents, each agent's size, and what Adam checks at the next gate. A new session starts from that file and `docs/progress.md`.
+
 ## Who owns what
 
 | Topic | Owner |
