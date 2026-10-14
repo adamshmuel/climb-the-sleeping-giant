@@ -1,6 +1,6 @@
 ---
 name: roblox-trends
-description: Fetch live Roblox charts (Top Trending, Up-and-Coming, Top Playing Now, Fun with Friends, Top Revisited) with player counts, genres, subgenres, creation dates and descriptions, plus a game's game-pass prices, badge award counts, icons and store thumbnails, and DevForum discussions. Use when researching what's popular or growing on Roblox right now. Repairs its own URL table if Roblox changes the addresses.
+description: Fetch live Roblox charts (Top Trending, Up-and-Coming, Top Playing Now, Fun with Friends, Top Revisited, Top Earning) with player counts, genres, subgenres, creation dates and descriptions, plus a game's game-pass prices, badge award counts, icons and store thumbnails, DevForum discussions, and Roblox game search by name. Use when researching what's popular or growing on Roblox right now. Repairs its own URL table if Roblox changes the addresses.
 ---
 
 # Roblox trends
@@ -17,10 +17,12 @@ Live chart data from Roblox. The addresses are **unofficial and undocumented**, 
 | Badges | `https://badges.roblox.com/v1/universes/<id>/badges?limit=100&sortOrder=Asc` | one universe per request, `limit` must be 10/25/50/100 (`nextPageCursor`) | 2026-10-06 |
 | Game icons | `https://thumbnails.roblox.com/v1/games/icons?universeIds=<id,id,...>&size=512x512&format=Png` | returns image URLs; download each with curl | 2026-10-07 |
 | Game thumbnails | `https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=<id,id,...>&countPerUniverse=10&size=768x432&format=Png` | `1920x1080` returns 400, use `768x432` | 2026-10-07 |
+| Top Earning chart | `https://apis.roblox.com/explore-api/v1/get-sort-content?sessionId=<uuid>&sortId=top-earning` | `sessionId` required. ~100 games | 2026-10-14 |
+| Game search | `https://apis.roblox.com/search-api/omni-search?searchQuery=<url-encoded name>&sessionId=<uuid>&pageType=all` | results in `searchResults[]`; games have `contentGroupType` `Game` | 2026-10-14 |
 | DevForum search | `https://devforum.roblox.com/search.json?q=<url-encoded query>` | ~50 topics per search | 2026-10-06 |
 | Fallback page | `https://www.roblox.com/charts` | HTML only, use WebFetch | 2026-10-06 |
 
-Chart lists (`sortId`): `top-trending`, `up-and-coming`, `top-playing-now`, `fun-with-friends`, `top-revisited`.
+Chart lists (`sortId`): `top-trending`, `up-and-coming`, `top-playing-now`, `fun-with-friends`, `top-revisited`. `top-earning` is not in `get-sorts`; fetch it with command 9.
 
 Fields used:
 - Charts games: `name`, `universeId`, `playerCount`, `genreL1`, `totalUpVotes`, `totalDownVotes`, `isSponsored`
@@ -76,6 +78,16 @@ curl -s "https://devforum.roblox.com/search.json?q=$(jq -rn --arg q 'tycoon rete
 mkdir -p "$out"
 curl -s "https://thumbnails.roblox.com/v1/games/icons?universeIds=$ids&size=512x512&format=Png" | jq -r '.data[] | select(.state=="Completed") | "\(.targetId) \(.imageUrl)"' | while read id url; do curl -s -o "$out/$id-icon.png" "$url"; done
 curl -s "https://thumbnails.roblox.com/v1/games/multiget/thumbnails?universeIds=$ids&countPerUniverse=10&size=768x432&format=Png" | jq -r '.data[] | .universeId as $u | .thumbnails | to_entries[] | select(.value.state=="Completed") | "\($u)-thumb\(.key) \(.value.imageUrl)"' | while read name url; do curl -s -o "$out/$name.png" "$url"; done
+```
+
+**9. Top Earning chart** as `name | genre | players`:
+```bash
+curl -s "https://apis.roblox.com/explore-api/v1/get-sort-content?sessionId=$(uuidgen)&sortId=top-earning" | jq -r '.games[] | select(.isSponsored|not) | "\(.name) | \(.genreL1) | \(.playerCount)"'
+```
+
+**10. Search Roblox games by name,** for example to check that a name is free. Set `q` to the name.
+```bash
+curl -s "https://apis.roblox.com/search-api/omni-search?searchQuery=$(jq -rn --arg q "$q" '$q|@uri')&sessionId=$(uuidgen)&pageType=all" | jq -r '[.searchResults[] | select(.contentGroupType=="Game") | .contents[]][:20][] | "\(.name) | \(.playerCount) playing | universe \(.universeId)"'
 ```
 
 ## Reading the signals
