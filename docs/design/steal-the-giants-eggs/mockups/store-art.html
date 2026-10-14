@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Steal the Giant's Eggs - icon and thumbnails</title>
+<!--
+  Store art built on real Play screenshots from Studio (source/*.png).
+  Only text and a soft edge shade are added; the scene itself is untouched.
+    store-art.html?art=icon     -> 1024x1024 (upload as 512x512 or larger)
+    store-art.html?art=climb    -> 1920x1080 thumbnail
+    store-art.html?art=wakeup   -> 1920x1080 thumbnail
+-->
+<style>
+@font-face { font-family: "Fredoka One"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/FredokaOne-Regular.ttf"); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+#art { position: relative; width: 100vw; height: 100vh; overflow: hidden; font-family: "Fredoka One", sans-serif; }
+#bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: contrast(1.12) saturate(1.15); transform-origin: 0 0; }
+.shade { position: absolute; inset: 0; pointer-events: none; }
+.title { position: absolute; color: #fff; line-height: .92; -webkit-text-stroke: 0.16em #2B2340; paint-order: stroke fill; text-shadow: 0 0.09em 0 #2B2340; letter-spacing: .01em; }
+.title .gold { color: #FFC93C; }
+.title .red { color: #FF3B4E; }
+.tag { position: absolute; padding: .18em .55em; border-radius: .5em; border: .12em solid #2B2340; box-shadow: 0 .14em 0 #2B2340; color: #fff;
+  -webkit-text-stroke: .1em #2B2340; paint-order: stroke fill; }
+.zzz { position: absolute; color: #fff; -webkit-text-stroke: .14em #4A5BC4; paint-order: stroke fill; }
+</style>
+</head>
+<body>
+<div id="art"><div id="bg"></div><div class="shade" id="shade"></div></div>
+<script>
+const art = new URLSearchParams(location.search).get("art") || "icon";
+const el = document.getElementById("art");
+const bgEl = document.getElementById("bg");
+// crop(x, y, w) zooms into a part of the 1920x1080 shot: the region starting at x,y that is w wide
+const crop = (x, y, w) => { const k = 1920 / w; bgEl.style.transform = `scale(${k}) translate(${-x/1920*100}%, ${-y/1080*100}%)`; };
+const add = (html) => { el.insertAdjacentHTML("beforeend", html); };
+
+if (art === "icon") {
+  // giant asleep (closed-eye lids), tiny thief on his forehead holding a gold egg up
+  bgEl.style.backgroundImage = "url(source/icon-shot.png)";
+  document.getElementById("shade").style.background = "radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 62%, rgba(20,20,60,.25))";
+  add('<div class="zzz" style="left:3%;top:4%;font-size:170px;transform:rotate(-12deg);line-height:.8">Z<span style="font-size:.72em">z</span><span style="font-size:.5em">z</span></div>');
+}
+if (art === "climb") {
+  // asleep: thief on his belly holding a Legendary egg up
+  bgEl.style.backgroundImage = "url(source/escape-shot.png)";
+  document.getElementById("shade").style.background = "linear-gradient(90deg, rgba(10,20,60,.0) 60%, rgba(10,20,60,.22))";
+  add('<div class="title" style="right:3%;top:7%;font-size:132px;text-align:right;transform:rotate(3deg)">DON\'T<br><span class="red">WAKE HIM!</span></div>');
+  add('<div class="tag" style="left:61%;top:58%;font-size:54px;background:linear-gradient(#FFE58F,#FFC93C 55%,#E09A12);transform:rotate(-3deg)">Legendary egg!</div>');
+}
+if (art === "wakeup") {
+  // awake: eyes open, fist up, red slam circle, players running with eggs
+  bgEl.style.backgroundImage = "url(source/wake-shot.png)";
+  document.getElementById("shade").style.background = "radial-gradient(ellipse at 55% 40%, rgba(0,0,0,0) 55%, rgba(60,0,10,.22))";
+  add('<div class="title" style="left:3%;top:6%;font-size:150px;transform:rotate(-5deg)"><span class="red">HE\'S</span><br><span class="red">AWAKE!</span></div>');
+  add('<div class="tag" style="left:4%;top:46%;font-size:58px;background:linear-gradient(#8ED0FF,#3FA9FF 55%,#1F78D1);transform:rotate(-3deg)">RUN HOME!</div>');
+}
+</script>
+</body>
+</html>

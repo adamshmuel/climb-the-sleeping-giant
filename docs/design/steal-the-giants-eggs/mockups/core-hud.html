@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Steal the Giant's Eggs - core heist screen</title>
+<!--
+  Core heist screen only: sleep meter, Tiptoe, carry pill, short messages.
+  No menu grid, cash, Deep Sleep countdown or Lullaby (they come in later specs).
+    core-hud.html?state=carry|warning|heavysleep|caught|safehome&device=desktop|phone
+  desktop = 1280x720, phone = 844x390 (iPhone 14, landscape).
+  Backgrounds are real Play screenshots from Studio (view-*.png).
+  Same look rules as hud.html (style guide, "Screen layout").
+-->
+<style>
+@font-face { font-family: "Fredoka One"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/FredokaOne-Regular.ttf"); }
+@font-face { font-family: "RbxEmoji"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/TwemojiMozilla.ttf"); }
+:root {
+  --ink: #2B2340; --cream: #FFF6E4; --gold: #FFC93C; --sky: #3FA9FF; --sky-d: #1F78D1;
+  --leaf: #5BD45B; --leaf-d: #2E9E3A; --sleep: #4A5BC4; --sleep-d: #2F3B8F;
+  --warn: #FF8A3D; --warn-d: #D8651A; --wake: #FF3B4E; --wake-d: #C4142A;
+  --s: 1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+body { font-family: "Fredoka One", sans-serif; color: #fff; }
+.e { font-family: "RbxEmoji", sans-serif; font-style: normal; }
+#screen { position: relative; width: 100vw; height: 100vh; background-size: cover; background-position: center; }
+.stroke { -webkit-text-stroke: calc(5px * var(--s)) var(--ink); paint-order: stroke fill; }
+#rbx { position: absolute; left: calc(12px * var(--s)); top: calc(10px * var(--s)); display: flex; gap: calc(8px * var(--s)); }
+#rbx div { width: calc(40px * var(--s)); height: calc(40px * var(--s)); border-radius: calc(10px * var(--s)); background: rgba(20, 20, 30, .55); }
+
+/* sleep meter, top centre */
+#sleep { position: absolute; left: 50%; transform: translateX(-50%); top: calc(12px * var(--s)); display: flex; flex-direction: column; align-items: center; gap: calc(6px * var(--s)); }
+.meter { position: relative; width: calc(400px * var(--s)); height: calc(62px * var(--s)); border-radius: 999px; background: var(--cream);
+  border: calc(4px * var(--s)) solid var(--ink); box-shadow: 0 calc(5px * var(--s)) 0 var(--ink); display: flex; align-items: center; padding: 0 calc(10px * var(--s)); gap: calc(10px * var(--s)); }
+.meter .face { font-size: calc(38px * var(--s)); }
+.meter .col { flex: 1; display: flex; flex-direction: column; gap: calc(3px * var(--s)); }
+.meter .lbl { font-size: calc(17px * var(--s)); color: var(--sleep-d); line-height: 1; }
+.bar { position: relative; height: calc(20px * var(--s)); border-radius: 999px; background: #2F2A4A; border: calc(3px * var(--s)) solid var(--ink); overflow: hidden; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #6EE07A, #FFE066 60%, #FF8A3D 85%, #FF3B4E); background-size: calc(400px * var(--s)) 100%; }
+.tick { position: absolute; top: -2px; bottom: -2px; width: calc(3px * var(--s)); background: rgba(255,255,255,.8); }
+.lock { position: absolute; right: calc(6px * var(--s)); top: 50%; transform: translateY(-50%); font-size: calc(14px * var(--s)); }
+
+/* Tiptoe, right side */
+#actions { position: absolute; right: calc(18px * var(--s)); top: 40%; }
+.btn { position: relative; width: calc(92px * var(--s)); height: calc(92px * var(--s)); border-radius: 50%;
+  border: calc(4px * var(--s)) solid var(--ink); box-shadow: 0 calc(6px * var(--s)) 0 var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(#8F9CF0, var(--sleep) 55%, var(--sleep-d)); }
+.btn::after { content: ""; position: absolute; left: 14%; right: 14%; top: 8%; height: 20%; border-radius: 999px; background: rgba(255,255,255,.35); }
+.btn .e { font-size: calc(36px * var(--s)); line-height: 1; }
+.btn .t { font-size: calc(17px * var(--s)); }
+.key { font-size: calc(13px * var(--s)); padding: 0 calc(6px * var(--s)); border-radius: calc(5px * var(--s)); background: var(--ink); margin-top: calc(2px * var(--s)); }
+.on { outline: calc(5px * var(--s)) solid #FFF; outline-offset: calc(2px * var(--s)); }
+.pulse { box-shadow: 0 calc(6px * var(--s)) 0 var(--ink), 0 0 0 calc(10px * var(--s)) rgba(255, 138, 61, .55); }
+
+/* carry pill and tips, bottom centre */
+.pill { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(18px * var(--s)); display: flex; align-items: center; gap: calc(10px * var(--s));
+  padding: calc(6px * var(--s)) calc(18px * var(--s)) calc(6px * var(--s)) calc(8px * var(--s)); border-radius: 999px; background: rgba(43, 35, 64, .85);
+  border: calc(4px * var(--s)) solid var(--ink); font-size: calc(22px * var(--s)); white-space: nowrap; }
+.pill .egg { width: calc(40px * var(--s)); height: calc(50px * var(--s)); border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%; border: calc(3px * var(--s)) solid var(--ink);
+  background: radial-gradient(circle at 35% 30%, #CDEBFF, #3FA9FF 60%, #1F78D1); }
+
+/* message card, just under the meter (3 seconds) */
+.msg { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: calc(12px * var(--s));
+  padding: calc(8px * var(--s)) calc(22px * var(--s)) calc(8px * var(--s)) calc(10px * var(--s)); border-radius: calc(20px * var(--s));
+  border: calc(4px * var(--s)) solid var(--ink); box-shadow: 0 calc(6px * var(--s)) 0 var(--ink); font-size: calc(24px * var(--s)); white-space: nowrap; }
+.msg .e { font-size: calc(40px * var(--s)); }
+.msg small { display: block; font-size: .62em; opacity: .95; }
+.msg.cream { background: var(--cream); color: var(--ink); }
+.msg.green { background: linear-gradient(#A6F29A, var(--leaf) 55%, var(--leaf-d)); }
+.msg.orange { background: linear-gradient(#FFD08F, var(--warn) 55%, var(--warn-d)); }
+.msg.blue { background: linear-gradient(#8F9CF0, var(--sleep) 55%, var(--sleep-d)); }
+.hide { display: none !important; }
+/* phone sizes from the core heist spec: text never below 14 px */
+body.phone .meter { width: 260px; height: 46px; padding: 0 8px; gap: 6px; }
+body.phone .meter .face { font-size: 26px; }
+body.phone .meter .lbl { font-size: 14px; }
+body.phone .bar { height: 13px; }
+body.phone .btn { width: 60px; height: 60px; }
+body.phone .btn .e { font-size: 22px; }
+body.phone .btn .t { font-size: 14px; -webkit-text-stroke: 3.5px var(--ink); }
+body.phone .pill, body.phone .msg { font-size: 14px; }
+body.phone .msg small { font-size: 14px; }
+body.phone .pill .egg { width: 24px; height: 30px; }
+body.phone .msg .e { font-size: 26px; }
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="rbx"><div></div><div></div><div></div></div>
+  <div id="sleep">
+    <div class="meter" id="meter">
+      <span class="face e" id="face">😴</span>
+      <div class="col">
+        <span class="lbl" id="mlabel">Giant is sleeping</span>
+        <div class="bar"><div class="fill" id="fill" style="width:24%"></div><div class="tick" style="left:60%"></div><div class="tick" style="left:85%"></div><span class="lock e hide" id="lock">🔒</span></div>
+      </div>
+    </div>
+  </div>
+  <div id="actions"><div class="btn" id="tiptoe"><span class="e">🦶</span><span class="t stroke">Tiptoe</span><span class="key" id="tkey">C</span></div></div>
+  <div class="pill hide" id="carry"><div class="egg"></div><span class="stroke" id="ctext">Rare egg! Get it home</span><span class="e">🏡</span></div>
+  <div class="msg hide" id="msg"></div>
+</div>
+<script>
+const q = new URLSearchParams(location.search);
+const state = q.get("state") || "carry";
+const phone = (q.get("device") || "desktop") === "phone";
+const $ = id => document.getElementById(id);
+const bg = { carry: "view-carry.png", warning: "view-warning.png", heavysleep: "view-heavysleep.png", caught: "view-caught.png", safehome: "view-safehome.png" };
+const bgPhone = { carry: "view-phone-carry.png", warning: "view-phone-warning.png", heavysleep: "view-phone-heavysleep.png", caught: "view-phone-caught.png", safehome: "view-phone-safehome.png" };
+$("screen").style.backgroundImage = `url(${(phone ? bgPhone : bg)[state]})`;
+const msg = $("msg");
+if (phone) {
+  document.body.classList.add("phone");
+  document.documentElement.style.setProperty("--s", "0.62");
+  $("rbx").style.left = "53px";
+  $("sleep").style.top = "8px";
+  $("actions").style.right = "60px"; $("actions").style.top = ""; $("actions").style.bottom = "128px";
+  $("tkey").classList.add("hide");
+  msg.style.top = "56px";
+} else {
+  msg.style.top = "96px";
+}
+const meter = (pct, label, face, color, bgc) => {
+  $("fill").style.width = pct + "%"; $("mlabel").textContent = label; $("face").textContent = face;
+  if (color) $("mlabel").style.color = color;
+  if (bgc) $("meter").style.background = bgc;
+};
+const show = (cls, html) => { msg.className = "msg " + cls; msg.innerHTML = html; };
+
+if (state === "carry") {
+  meter(38, "Giant is sleeping", "😴");
+  $("carry").classList.remove("hide");
+}
+if (state === "warning") {
+  // 85%: bar orange, label and face change, Tiptoe glows orange once
+  meter(88, "He's waking up! Tiptoe!", "😟", "#D8651A", "#FFE9D6");
+  $("fill").style.background = "linear-gradient(90deg, #FFB25C, #FF8A3D)";
+  $("tiptoe").classList.add("pulse");
+  $("carry").classList.remove("hide");
+  $("carry").innerHTML = '<span class="e" style="font-size:1.4em">🤫</span><span class="stroke">Stand still or tiptoe!</span>';
+}
+if (state === "heavysleep") {
+  // after a wake-up: 45 s where noise can't wake him. Bar locked and blue.
+  meter(100, "Heavy Sleep · safe for 0:42", "😪", "#2F3B8F", "#E3E8FF");
+  $("fill").style.background = "repeating-linear-gradient(135deg, #6F80E8 0 10px, #5466D6 10px 20px)";
+  $("lock").classList.remove("hide");
+}
+if (state === "caught") {
+  meter(100, "AWAKE! Back to sleep in 0:09", "😠", "#C4142A", "#FFE3E6");
+  show("cream", '<span class="e">💫</span><span>Caught!<small>The egg went back. You lost nothing else.</small></span>');
+  // bottom centre, so his face stays clear
+  msg.style.top = ""; msg.style.bottom = phone ? "14px" : "22px"; msg.style.left = phone ? "50%" : "30%";
+}
+if (state === "safehome") {
+  meter(30, "Giant is sleeping", "😴");
+  show("green stroke", '<span class="e">🥚</span><span>Safe! Rare egg is home</span>');
+}
+</script>
+</body>
+</html>
