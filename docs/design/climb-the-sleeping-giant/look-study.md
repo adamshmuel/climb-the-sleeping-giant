@@ -1,4 +1,4 @@
-# Look study: Steal the Giant's Eggs
+# Look study: Climb the Sleeping Giant
 
 What the top Roblox games really look like in play, and what that means for our game.
 

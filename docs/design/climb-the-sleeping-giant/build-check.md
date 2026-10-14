@@ -1,4 +1,4 @@
-# Build check: Steal the Giant's Eggs
+# Build check: Climb the Sleeping Giant
 
 Every mockup image, what it is made of, how hard it is for a beginner to build, and how it scores next to real screenshots of top games. Checked 2026-10-11, and checked again on 2026-10-12 after game_creator's review (round 1). Every image below was retaken or re-rendered in that second check.
 

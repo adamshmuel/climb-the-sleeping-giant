@@ -2,9 +2,9 @@
 
 ## 1. Goal and why
 
-A player sneaks onto the sleeping giant, grabs an egg and carries it home before he wakes. This is the heart of the game: the "Sneak, Grab, Escape" part of the core loop (the actions players repeat) and the twist, one giant that the whole server (one running copy of the game, up to 8 players) shares (`docs/ideas/steal-the-giants-eggs.md`, sections "Core loop", "Twist", "Sneaking and noise" and "The wake-up"). It comes first so the fun part is playable before anything else is built. Hatching, cash and upgrades come in the next specs (see `docs/specs/index.md`).
+A player sneaks onto the sleeping giant, grabs an egg and carries it home before he wakes. This is the heart of the game: the "Sneak, Grab, Escape" part of the core loop (the actions players repeat) and the twist, one giant that the whole server (one running copy of the game, up to 8 players) shares (`docs/ideas/climb-the-sleeping-giant.md`, sections "Core loop", "Twist", "Sneaking and noise" and "The wake-up"). It comes first so the fun part is playable before anything else is built. Hatching, cash and upgrades come in the next specs (see `docs/specs/index.md`).
 
-Mockups this spec covers (all in `docs/design/steal-the-giants-eggs/mockups/`):
+Mockups this spec covers (all in `docs/design/climb-the-sleeping-giant/mockups/`):
 
 | State | Computer | Phone | Real Play shot |
 |---|---|---|---|

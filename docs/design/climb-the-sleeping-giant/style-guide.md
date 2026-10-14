@@ -1,4 +1,4 @@
-# Style guide: Steal the Giant's Eggs
+# Style guide: Climb the Sleeping Giant
 
 The rules every picture, model and screen in the game follows. Based on `look-study.md` and tested in Studio on 2026-10-11 and updated on 2026-10-12 after game_creator's review. The mockups in `mockups/` show every rule in use.
 

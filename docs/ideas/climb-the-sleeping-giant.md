@@ -1,4 +1,4 @@
-# Steal the Giant's Eggs
+# Climb the Sleeping Giant
 
 (Earlier name: Sneak the Nest. Same core idea, rebuilt on new research from 2026-10-11.)
 
@@ -8,7 +8,7 @@ The heart of the game stays: sneak up to a sleeping giant, grab an egg, get home
 
 | What | Before | Now | Why (evidence, 2026-10-11) |
 |---|---|---|---|
-| Name | Sneak the Nest | **Steal the Giant's Eggs** | The biggest game on Roblox is "Steal An Egg" (1,323,939 playing). 12 charting games have "egg" or "steal" in the name. "Sneak" and "Nest" are in no top title. Nobody uses our new name. "Dont Wake The Giant" is already taken by an 8-day-old game. |
+| Name | Sneak the Nest | **Climb the Sleeping Giant** | It says what you do (climb), the danger (he's asleep) and our one-of-a-kind creature: "Giant" is in 0 of 305 chart names on 2026-10-14, while "Egg" is in 11 and "Steal" in 10. Starting with an action word is how 7 of 12 hits made since 2025 are named. No Roblox game uses it. It replaces "Steal the Giant's Eggs", which sounded hostile and like a copy of Steal An Egg. See [name research](name-research.md). |
 | The twist | "You steal from a monster, not from players" | **One colossal giant that you climb on.** The rarest eggs are tucked into his boots, belly, beard and nightcap. The whole server shares his sleep. | The old twist already exists. Steal An Egg guards its eggs with big animals. "Don't Steal the Bobo" (468 million visits) has you sneak past sleeping guards. "Dont Wake Up for Eggs" (2026-09-16) and "Dont Wake the Kitty" do it too. No game lets you climb onto one giant sleeper. |
 | Where the eggs are | In a nest bowl around the giant | On and around the giant's body: 5 zones, from the meadow at his feet up to his pillow | Climbing higher on him is the progression (getting better over time), and it is a picture no other game's icon shows. |
 | Waking up | He gets up and chases you | He sits up, roars, **bounces everyone off his body**, then slams his huge hands at egg carriers. After that he can't wake again for 45 seconds. | Bouncing 8 players off a giant is a clip players share. Sitting and slamming needs no walking animation, which is untested. The 45-second rest stops one player from waking him on purpose over and over. |
@@ -328,7 +328,7 @@ These are never in the game:
 
 Virality means why players invite friends and share the game.
 
-1. **The name and icon say the twist.** "Steal the Giant's Eggs" catches the "steal egg" searches. The icon shows something no other game shows: a tiny player tiptoeing across a sleeping giant's beard with a glowing egg, his huge eyelid half open.
+1. **The name and icon say the twist.** "Climb the Sleeping Giant" tells a kid the twist in four plain words: you climb onto a giant who is asleep, something no other game offers. The name doesn't say what you collect, so the icon has to: a tiny player tiptoeing across a sleeping giant's beard with a glowing egg, more eggs tucked into his beard and nightcap, and his huge eyelid half open.
 2. **Clip moments are built in:** the bounce-off, the blame banner, a near miss under a giant hand, his face waking up a few steps from you.
 3. **The stakes are shared.** One player's noise affects everyone, so chat fills with "SHHH!". This turns strangers into a team and gives them a reason to bring friends.
 4. **Friends pay off:** the Friend Boost, Team Eggs and the invite egg.

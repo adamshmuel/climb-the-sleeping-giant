@@ -123,8 +123,8 @@ After Gate 4, the main chat turns this into one code block of git commands for A
 
 | Commit | Files |
 |---|---|
-| The new game idea | `docs/ideas/steal-the-giants-eggs.md` (new), `docs/ideas/sneak-the-nest.md` (removed) |
-| Its look: look study, style guide, mockups | `docs/design/steal-the-giants-eggs/` (all of it) |
+| The new game idea | `docs/ideas/climb-the-sleeping-giant.md` (new), `docs/ideas/sneak-the-nest.md` (removed) |
+| Its look: look study, style guide, mockups | `docs/design/climb-the-sleeping-giant/` (all of it) |
 | The agent workflow rule (with "Agent memory size") | `.claude/rules/agent-workflow.md` |
 | Project tools: Rokit, Wally, Rojo map, quality checks | `rokit.toml`, `wally.toml`, `wally.lock`, `.gitignore`, `default.project.json` (includes the phone auto-jump switch from Setup S7), `scripts/check.sh`, `src/shared/Hello.luau` (removed) |
 | The core heist spec | `docs/specs/index.md`, `docs/specs/core-heist.md`, `docs/specs/core-heist-playtest/` |

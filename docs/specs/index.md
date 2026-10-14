@@ -1,6 +1,6 @@
-# Spec list: Steal the Giant's Eggs
+# Spec list: Climb the Sleeping Giant
 
-V1 of the game (see `docs/ideas/steal-the-giants-eggs.md`, "V1 gameplay") is split into small specs. They are built one at a time, in this order. The first one is the core heist, so something fun is playable early.
+V1 of the game (see `docs/ideas/climb-the-sleeping-giant.md`, "V1 gameplay") is split into small specs. They are built one at a time, in this order. The first one is the core heist, so something fun is playable early.
 
 Each spec has at most 15 rules. Status words:
 

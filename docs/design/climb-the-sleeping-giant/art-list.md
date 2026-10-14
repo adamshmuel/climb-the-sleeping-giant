@@ -1,4 +1,4 @@
-# Art list: Steal the Giant's Eggs
+# Art list: Climb the Sleeping Giant
 
 Every model the game needs, where it comes from, and how it moves. How the models get into the code is `code_lead`'s decision.
 

@@ -1,6 +1,6 @@
 --!strict
 -- The look of the screen: colours, font and the meter's looks. The values are copied from the style guide
--- (docs/design/steal-the-giants-eggs/style-guide.md) and the mockup core-hud.html, so they match it exactly.
+-- (docs/design/climb-the-sleeping-giant/style-guide.md) and the mockup core-hud.html, so they match it exactly.
 
 local Theme = {}
 
