@@ -1,5 +1,6 @@
-# Project place file
-/MyRobloxGame.rbxlx
+# Project place files
+/*.rbxlx
+/*.rbxl
 
 # Roblox Studio lock files
 /*.rbxlx.lock
@@ -12,3 +13,9 @@ sourcemap.json
 
 # macOS folder files
 .DS_Store
+
+# Wally packages and build output
+/Packages/
+/DevPackages/
+/ServerPackages/
+/build/
