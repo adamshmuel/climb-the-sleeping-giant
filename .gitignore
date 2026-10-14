@@ -19,3 +19,7 @@ sourcemap.json
 /DevPackages/
 /ServerPackages/
 /build/
+
+# Session notes for the main chat, kept out of git on purpose
+/docs/handoff.md
+/docs/action-items.md
