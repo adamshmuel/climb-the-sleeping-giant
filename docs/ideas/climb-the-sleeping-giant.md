@@ -9,7 +9,7 @@ The heart of the game stays: sneak up to a sleeping giant, grab an egg, get home
 | What | Before | Now | Why (evidence, 2026-10-11) |
 |---|---|---|---|
 | Name | Sneak the Nest | **Climb the Sleeping Giant** | It says what you do (climb), the danger (he's asleep) and our one-of-a-kind creature: "Giant" is in 0 of 305 chart names on 2026-10-14, while "Egg" is in 11 and "Steal" in 10. Starting with an action word is how 7 of 12 hits made since 2025 are named. No Roblox game uses it. It replaces "Steal the Giant's Eggs", which sounded hostile and like a copy of Steal An Egg. See [name research](name-research.md). |
-| The twist | "You steal from a monster, not from players" | **One colossal giant that you climb on.** The rarest eggs are tucked into his boots, belly, beard and nightcap. The whole server shares his sleep. | The old twist already exists. Steal An Egg guards its eggs with big animals. "Don't Steal the Bobo" (468 million visits) has you sneak past sleeping guards. "Dont Wake Up for Eggs" (2026-09-16) and "Dont Wake the Kitty" do it too. No game lets you climb onto one giant sleeper. |
+| The twist | "You steal from a monster, not from players" | **One colossal giant that you climb on.** The rarest eggs are tucked into his boots, belly, cuffs and nightcap. The whole server shares his sleep. | The old twist already exists. Steal An Egg guards its eggs with big animals. "Don't Steal the Bobo" (468 million visits) has you sneak past sleeping guards. "Dont Wake Up for Eggs" (2026-09-16) and "Dont Wake the Kitty" do it too. No game lets you climb onto one giant sleeper. |
 | Where the eggs are | In a nest bowl around the giant | On and around the giant's body: 5 zones, from the meadow at his feet up to his pillow | Climbing higher on him is the progression (getting better over time), and it is a picture no other game's icon shows. |
 | Waking up | He gets up and chases you | He sits up, roars, **bounces everyone off his body**, then slams his huge hands at egg carriers. After that he can't wake again for 45 seconds. | Bouncing 8 players off a giant is a clip players share. Sitting and slamming needs no walking animation, which is untested. The 45-second rest stops one player from waking him on purpose over and over. |
 | Server events | None | **Deep Sleep** every 10 minutes: a 60-second window when noise counts half and a special Dream Egg appears on his nose | Steal An Egg and Don't Steal the Bobo show countdowns such as "Guaranteed Legendary in 23:04". They pull the whole server together at one moment. |
@@ -170,8 +170,8 @@ It keeps the tension of a steal game with no griefing (players bullying or robbi
 | 1. The Meadow | The grass around his boots and hands | Common | Silent (x0): he can't hear you on the grass |
 | 2. Boots and Knees | Climbing up his boots and legs | Uncommon | Normal (x1) |
 | 3. The Belly | The wide, soft middle of his body | Rare | Higher (x1.5) |
-| 4. The Beard | Right under his nose | Epic | High (x2) |
-| 5. The Pillow and Nightcap | Next to his ear | Legendary | Highest (x3) |
+| 4. His arms and cuffs | Out along his sleeves to pockets on his white cuffs | Epic | Higher (x1.5): it counts as the Belly |
+| 5. The Beard, Pillow and Nightcap | Up his beard onto his cap, next to his ear | Legendary | High (x2) on the beard, highest (x3) on the cap |
 | Event: his nose | Only during Deep Sleep | Secret (the Dream Egg) | Half noise during Deep Sleep |
 
 Players walk on invisible walking surfaces shaped to his body, hidden under the giant model. This is decided now, because it is the reliable Roblox way to make a big model walkable. It also lets the builder choose exactly where players can stand.
@@ -192,7 +192,7 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
 
 ### Minutes 1 to 10
 
-- **Minutes 1-3: first scare.** On your boot-climb the giant stops snoring and an eyelid flutters. You freeze or tiptoe, and the meter drains. Until a new player has brought 2 eggs home, their own noise can't push the meter past 84%, so they feel the scare but can't wake him.
+- **Minutes 1-3: first scare.** On your boot-climb the giant stops snoring and an eyelid flutters. You freeze or tiptoe, and the meter drains. A new player (someone who hasn't brought a Rare egg or better home yet) gets **one free save**: the first time their own noise would wake him, he stays asleep, the meter drops to 70 and the 85% warning plays again. After that, their noise wakes him like anyone's. So they feel every warning and one real close call, and the danger is never fake.
 - **Minutes 3-5: first Rare.** A Rare egg is guaranteed on his belly for every new player. Hatching it is the first "wow". The Index (the collection book) opens and shows the silhouettes still missing.
 - **Always on screen:** the Deep Sleep countdown, for example "Deep Sleep in 4:12".
 - **Minutes 5-10: first wake-up.** In a busy server someone will wake him. Everyone goes flying, everyone laughs, and nobody loses anything but the egg they carried.
@@ -212,12 +212,12 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
 - **Eggs are shared:** every egg sits at a fixed spot, and the first player to finish the grab gets it. The spot refills after a short wait. A carried egg is yours until you get home or he catches you; nobody can take it from you.
 - **Warnings before he wakes:**
   - at 60%: snoring stops, an eyelid flutters, the music thins;
-  - at 85%: the snoring and Zzz stop, he mumbles "Mmm... my eggs..." and his arm twitches.
+  - at 85%: the snoring and Zzz stop, he snorts twice through his nose, and a bubble beside his nose says "Mmm... my eggs...". His arm doesn't move: while he sleeps, nothing a player stands on moves, because players walk out along his arms.
 - **Starting values only:** the playtest decides the exact noise numbers. If most heists in the Belly zone end in a wake-up, lower the Belly noise.
 
 ### The wake-up
 
-1. **He wakes.** The meter fills. He sits up with a huge yawn and a roar ("FEE-FI-FO-FUM!"). The screen shakes and the music turns into a chase tune.
+1. **He wakes.** The meter fills. He sits up with a huge yawn and a cartoon roar with no words. The screen shakes and the music turns into a chase tune.
 2. **Bounce-off.** Everyone standing on him is bounced off with a "boing" and floats down into the meadow. This happens *before* he moves, so nobody stands on a moving part.
 3. **Blame banner.** For 3 seconds everyone sees "💥 [name] woke the Giant!", and he glares at that player.
 4. **Hand slams, for 15 seconds.** He slams his huge hands at players carrying eggs. A glowing shadow shows where each hand will land, 1.5 seconds before, so a child has time to react and run out of it.
@@ -287,7 +287,7 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
 
 How progression feels:
 - **One session:** reach the Belly, and buy the next upgrade.
-- **A few days:** reach the Beard and Pillow, fill the Rare and Epic pages, and win a Dream Egg.
+- **A few days:** reach his cuffs and his nightcap, fill the Rare and Epic pages, and win a Dream Egg.
 - **Weeks:** a Huge Golden Legendary, the full Index, and then new giants.
 
 ### Playing with friends
@@ -421,7 +421,7 @@ These were decided while the design, the core heist spec (`docs/specs/core-heist
 | The giant half-lies on a red cushion, not flat on his back | The generated model came out that way, and it shows his face from every garden. All 5 zones still work. | Nothing planned |
 | The icon and thumbnails show him **asleep** (closed lids, big "Zzz") with a tiny thief holding an egg up | Round 1 showed him with open eyes, which said "awake" and broke the pitch | Store tests (thumbnail personalization) favour a wake-up picture: keep both in the test set |
 | Ramps and rope ladders on his body are visible, not hidden | Players sank into his body and got stuck without them. Seen up close, they also say "you climb him". | Nothing planned |
-| No belly scratch at the 85% warning | There's no tested way to slide his hand across his belly. The mumble and the arm twitch carry the warning. | A tested hand slide exists: add it back |
+| No belly scratch and no arm twitch at the 85% warning | Players walk out along his arms to the Epic cuff pockets, so nothing they stand on may move while he sleeps. The double snort and the "Mmm... my eggs..." bubble by his nose carry the warning. | Nothing planned |
 | At 60% the meter pulses once and the Z Z Z pause for 2 seconds, besides the eyelid flutter | Players looking at their feet miss the flutter, and sound is muted on many phones | New players don't slow down after the first 60% warning: also show the tip "Tiptoe!" for 2 seconds |
 
 ### Gameplay decisions (spec questions and the build)
@@ -429,7 +429,7 @@ These were decided while the design, the core heist spec (`docs/specs/core-heist
 | Decision | Why | What would change it |
 |---|---|---|
 | Eggs are shared at fixed spots: Meadow 8, Boots 4, Belly 4. Refill: Common 10 s, Uncommon 30 s, Rare 60 s. | Steal An Egg and Don't Steal the Bobo share their eggs too, and the race for the rare spot is fun. A 10-second Common refill keeps "first egg in 15 seconds" true when a neighbour just took the nearest egg. | Most players get no Rare within 5 minutes in a 6–8-player test: add a 5th belly spot. New players wait at empty Common spots: refill Commons in 5 s. |
-| New players can't push the meter past 84% until 2 eggs are home. Their noise still counts below that. | They still see the meter move and get the first scare, but can't wake him | More than 1 in 5 new players caught before their 2nd egg: slams also miss new players until then |
+| A new player gets one free save: the first time their own noise would fill the meter, he stays asleep, the meter drops to 70 and the 85% warning plays again. A player stops being new when they bring a Rare egg or better home. (Replaced "held under 84% until 2 eggs are home", which Adam found let a new player take every Rare without ever waking him.) | Beginners get one "phew, that was close" moment, then the normal rules. At 70, a kid who obeys the tip within 1 second still gets the Rare home. Two Commons come home in about 40 seconds with no risk, so "new" ends with the first Rare, not 2 eggs | Fewer than half of saved carriers get that egg home: the save drops the meter to 60 instead. Fewer than 1 in 10 new players wake him before their first Rare is home (the danger feels fake): to 75 instead. More than half of saved players wake him within 3 seconds of the save: an orange glow at the screen edges for the warning |
 | Drain is 1 point per second for each player, with **no minimum** (a solo player drains 1 per second) | builder measured a solo Rare heist in Play: with a minimum of 2 per second it peaked at 49%, so a solo player never got the 60% scare. Without the minimum it reaches about 65%. Busier servers are unchanged. Raising walking noise instead would have made full servers wake him too often. | Solo walk from Rare_1 peaks under 60% from any garden: Rare carry ×3. Solo Rare_1 peaks over 80%, or a solo walk from Rare_1 or Rare_2 wakes him: solo drain 1.5 per second. Waking him from Rare_3 or Rare_4 without tiptoeing is intended. |
 | The meadow is silent (zone ×0, was ×0.5), and carrying a Rare is ×2.5 (was ×2) | Only the left ramp reaches his belly, so the far gardens walk up to 220 studs more each way. With a noisy meadow, carrying a Rare home adds about 3 points a second for a solo player. The same Rare_1 heist that peaks at 65–67% from garden 4 would peak near 100% from garden 1 and about 125% from garden 8, so where you live would decide whether he wakes. With a silent meadow the peak comes at the ramp foot and is the same from every garden: about 66% with the ×2.5 carry. It also matches the first minute already planned: the meter starts to move on the ramp. | A solo Rare_1 heist differs by more than 5 points between gardens 4, 1 and 8: find what still makes noise in the meadow. In a 6–8-player test, gardens 7 and 8 bank fewer than half as many Rares per player as gardens 3 and 4: add a plank between his legs, from the right boot top to the belly path. |
 | A jump landing on him adds 20 × the zone multiplier (Belly = 30) | So one clumsy jump past the 60% warning wakes him for everyone | Nothing planned |
@@ -472,7 +472,7 @@ Imagine the game launched and failed six months later. Working backward, these a
 | The game is stuck in the 16+ trial. Roblox needs 250 plays from highly engaged players within 60 days, and the account must be verified, use 2-step verification and pay a fee or have Plus. The kids it's made for never see it. | Launch | Medium | **High** | Before launch, Adam completes the account steps. Make the chaos and jokes work for teens. Use a small sponsored ad budget in the first 20 days, as the forum advises. |
 | Players grief by waking the giant on purpose, or the blame banner becomes a way to mock someone. | Fun | Medium | **High** | Heavy Sleep blocks repeat wake-ups for 45 seconds. A wake-up only costs carried eggs. The banner is a joke, with no lasting score of wake-ups. Playtest with 8 players. If one player can ruin a server, raise Heavy Sleep to 90 seconds. |
 | The generated giant or pets look cheap (an earlier test head came out with a patchy pink texture), or the world ends up plain again. | Looks | Medium | **High** | `designer` compares every screen side by side with `adopt-me` and `ride-a-pet` before approval. Regenerate or retexture weak models. `game_creator` rejects any plain look. |
-| New players get confused or caught on their first try and leave within 3 minutes (18% of Dont Wake Up for Eggs players never get a first egg). | Onboarding | Medium | High | First egg in 15 seconds. Until a new player has brought 2 eggs home, their own noise can't push the meter past 84%. Guidance is footprints, not text. First hatch in 3 seconds. |
+| New players get confused or caught on their first try and leave within 3 minutes (18% of Dont Wake Up for Eggs players never get a first egg). | Onboarding | Medium | High | First egg in 15 seconds. A new player gets one free save before their first Rare egg is home. Guidance is footprints, not text. First hatch in 3 seconds. |
 | Sneaking feels slow and kids get bored. | Fun (first 10 seconds) | Medium | Medium | Tiptoe only matters high on the giant. The Meadow and Boots can be done at normal speed. A Common heist takes under 30 seconds. |
 | Bounce-off and hand-slam physics glitch: players stuck in the giant, or flung across the map. | Fun | Medium | High | Bounce players to set landing spots in the meadow. Slams only check carriers inside the glowing shadow. Test in Play with 8 players on phone and computer. |
 | The egg wave fades before launch. | Trend timing | Medium | High | Ship V1 in weeks. The giant identity works without eggs: later giants can hoard other treasures. 99 Nights shows one great monster lasts. |
