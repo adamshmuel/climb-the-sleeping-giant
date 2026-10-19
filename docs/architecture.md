@@ -1,6 +1,6 @@
 # Architecture: Climb the Sleeping Giant
 
-How the game is built. Each choice has a short "why". Written 2026-10-12 for spec 1 (Core heist). It is updated whenever a later spec changes how things are built.
+How the game is built. Each choice has a short "why". Written 2026-10-12 for spec 1 (Core heist). Updated 2026-10-19 for V2 spec 1 (New-player safety), V2 spec 2 (Stuck safety), V2 spec 3 (Gardens and ways up), V2 spec 4 (Egg reachability), V2 spec 5 (Egg nests and the walk-anywhere belly), V2 spec 6 (Wake-up) and V2 spec 7 (Audio). It is updated whenever a later spec changes how things are built.
 
 Words used here:
 
@@ -31,13 +31,23 @@ Words used here:
 
 **Rojo must never touch the world.** `default.project.json` maps only the code folders. It has no `Workspace` children and no `Lighting` settings. If it had them, Rojo would overwrite the designer's lighting on its first sync.
 
-**The world contract.** At start-up the server reads `Workspace.World` with one module, `WorldIndex`. It checks that every piece the code needs is there (8 gardens, 16 egg spots, the zones, and so on). If a piece is missing, the server stops with a clear message naming it. Why: the world is not in git, so the code must notice at once when the place file and the code don't match.
+**The world contract.** At start-up the server reads `Workspace.World` with one module, `WorldIndex`. It checks that every piece the code needs is there (8 gardens, the egg spots, the zones, and so on; V2 adds the ladder boxes, 12 landing spots and five egg models). If a piece is missing, the server stops with a clear message naming it. Why: the world is not in git, so the code must notice at once when the place file and the code don't match.
+
+**Markers in the place** (attributes set by world scripts, read by the code; the world contract checks them):
+
+| Marker | On | Means |
+|---|---|---|
+| `RidesRightArm` (V2 spec 5) | The right cuff's pockets, strap, ledge, ridge, nests and eggs | Moves exactly with his right arm |
+| `StitchedEdge` (V2 spec 5) | Each solid cuff strap and ledge, nothing else | A fall off its edge can be a slide (`SlideWatch`) |
+| `Down` (V2 spec 5) | Each point of `World.Seam.SeamLine`: invisible points every 2 studs along the seam's stitches down each side and along the top rim of each white cuff | The downhill direction across the seam, for the seam-line check |
+| `ShakesOnSlam` (V2 spec 6) | Every store flower model | Shakes when a fist lands near it |
+| `RightArmRest` (V2 spec 6) | His right arm's resting solid shape | Red circles pass through it while he's awake |
 
 ### Code folders
 
 | Folder in git | Where it goes in Studio | What goes in it |
 |---|---|---|
-| `src/shared` | `ReplicatedStorage.Shared` | Things both sides need: the game numbers (`Config`), shared names (`Types`), the list of remotes (`Net`), countdown text (`Format`), and the reader for the footprint route in the place (`RouteData`, used by the server's world check and by each client's footprints). |
+| `src/shared` | `ReplicatedStorage.Shared` | Things both sides need: the game numbers (`Config`), shared names (`Types`), the list of remotes (`Net`), countdown text (`Format`), the order of egg rarities (`Rarity`: "is this Rare or rarer?"; V2 spec 4 has five ranks: Common, Uncommon, Rare, Epic, Legendary), the hatch-odds table of each rank (`HatchOdds`, used by spec 2's hatching later), and the reader for the footprint route in the place (`RouteData`, used by the server's world check and by each client's footprints; V2: it also reads which links are ladders and where each way up starts and ends). |
 | `src/server` | `ServerScriptService.Server` | Everything that decides the game: the sleep meter, noise, eggs, grabbing, banking, the wake-up, slams, spawning. |
 | `src/client` | `StarterPlayer.StarterPlayerScripts.Client` | Everything the player sees and presses: the screen buttons, footprints, the giant's movements, effects, the camera. |
 | `src/tests` | `ServerStorage.Tests` | The tests and the test runner. ServerStorage is never sent to players. |
@@ -50,32 +60,50 @@ Words used here:
 
 | Module | Pure? | Job |
 |---|---|---|
-| `World/WorldIndex` | no | Reads `Workspace.World`, checks the world contract, and returns plain data (positions, boxes, gardens). |
-| `Players/PlotAssigner` | yes | Gives each new player a free garden (1 to 8) and frees it when they leave. |
+| `World/WorldIndex` | no | Reads `Workspace.World`, checks the world contract, and returns plain data (positions, boxes, gardens). V2 spec 5: `readSeamLine` gives the seam points (`World.Seam.SeamLine`) and each one's downhill direction (`Down`), for `SlideWatch`. V2 spec 7: checks `SoundService.CharacterSoundsUseNewApi` is `Enabled` and the listener location isn't `None`. |
+| `World/HeistScore` | yes | The heist replay: the sleep meter worked out step by step along a route (real noise and drain numbers, the 1-second grab, no 100 cap, never below 0). Gives the peak, the seconds on ladders and the total seconds. Used by Rule 41's check (spec 3) and every egg score (spec 4). Never runs while players play. |
+| `World/NestSeat` | no | Rule 59 (Eggs sit on something you can see): measures one egg spot straight down against the visible surface under it (parts less than half see-through, under 0.5; boxes, route points, characters and eggs don't count): the surface, the pose (upright or leaning), the gap or sink, and for a nest the egg's distance from its bottom. Test-time only. |
+| `World/ReachCheck` | no | Spec 4's difficulty score for every nest on the walk map: its stand spots, reachable and left with no jump, the score (Uncommon egg first, Rare egg if 40 or more), the Tiptoe peak, the garden times and the ladder seconds. Uses `HeistScore` and one search per way-up foot. Test-time only. |
+| `World/EggRanks` | yes | Turns each nest's results into its rank (bands 40, 85, 130; an edge takes the higher rank), the "close to the edge" flag (3 points) and every reason it fails (Rule 54: The check fails when a nest drifts). |
+| `World/EggRanksReport` | yes | Writes the plain-English table of every nest for `docs/egg-ranks.md` (Rule 57: A report Adam can read). `tools/report/egg-ranks.luau` returns it in Edit mode, and the builder copies it into the file, because a test inside Studio can't write project files. |
+| `World/WaysUpCheck` | no | Spec 3's Rule 45 checks on the walk map: no walk from the boots onto the belly skips the lap landing, and nothing solid and see-through within 15 studs above a walk surface. V2 spec 5 (Rule 82: No new way onto the belly): from every jump surface, with one jump's reach (9 studs up, 10 across, a body 5 tall), the walk area stays 12 studs above, no stray climbable part is lower than 15 studs, and no belly nest is within grab reach. Test-time only. |
+| `World/WalkAreaCheck` | no | V2 spec 5 (Rules 79 and 80): the walk area on the walk map has no spot of 65° or steeper, never floats more than 1 stud over what you see, has no gaps above the seam, is all Belly, and ends where the seam's stitches are (probed 1 stud up and down from each stitch). Test-time only. |
+| `World/FairnessCheck` | no | Rule 41 (Every way up is equally loud) on the walk map: the peak of a solo walking heist through each way up, compared. V2 spec 5 (Rule 73: Every rank is fair from every way up): the quietest nest of each rank through each way up, compared. Test-time only. |
+| `World/PathCheck` | no | The one shared walk check (V2 Rule 23: One walk check for everything): "can a player walk from here to there with no jump?", room for a body, the walk map, routes and stuck spots. Used by the real-world tests, the world scripts and `Players/SafeSpots`. Its interface is in section 9. |
+| `Players/PlotAssigner` | yes | Gives each new player a free garden and frees it when they leave. V2 (Rule 34: Gardens are handed out in two groups): a random free garden from 3 to 6 first, then a random free one from 1, 2, 7 and 8. The random pick is passed in, so tests choose it. |
 | `Players/Spawning` | no | Sets each player's spawn spot and writes their name on their gate's sign. |
 | `Players/Collisions` | no | Puts all characters in one collision group, so players pass through each other. |
-| `Players/PlayerTracker` | no | Ten times a second, reads each character's real position and works out: moving or still, which zone, in which garden. |
-| `Players/PlayerInfo` | yes | Reads one player's display name, Tiptoe, carried egg and eggs home from their attributes, checking each value's type. |
-| `Players/LandingDetector` | yes | Follows each player's falls and says when one ends with a thud, and from which zone. |
-| `Players/Floater` | no | Turns each bounced player to face him and floats them down onto their landing spot (Task 27), lets go 2.5 studs above the ground, and says who is still floating and how long ago each float touched down. |
-| `Giant/Zones` | yes | Which zone a position is in (Meadow, Boots, Belly, Beard, Nightcap) and which garden, from boxes. |
-| `Giant/Noise` | yes | Noise per second for one player, and the jump burst. |
-| `Giant/SleepMeter` | yes | One step of the meter: drain, noise, the new-player limit, who woke him. |
-| `Giant/Warnings` | yes | Fires the 60% and 85% warnings once, and re-arms them 10 points below. |
-| `Giant/GiantCycle` | yes | The timeline after a wake-up: 15 s awake, the slam times, 45 s Heavy Sleep. |
-| `Giant/Slams` | yes | Picks each slam's target, keeps the circle out of gardens, and checks who is caught. |
+| `Players/PlayerTracker` | no | Ten times a second, reads each character's real position and works out: moving or still, which zone, in which garden, and (V2) whether they are on a ladder and which one. V2 spec 6: writes the player's `InGarden` attribute when it changes. |
+| `Players/WayUpWatch` | yes | Says when a player reaches the top of a way up after being in the meadow (once per climb), and keeps each player's last way up, for the "WayUp" and "WakeWayUp" events (V2 spec 3, section 10). |
+| `Players/PlayerInfo` | yes | Reads one player's display name, Tiptoe, carried egg, eggs home, whether they have banked a Rare or rarer egg (`RareHome`) and whether their free save is spent (`FreeSaveUsed`) from their attributes, checking each value's type. |
+| `Players/SafeSpots` | yes | Keeps each player's last safe spots (V2 Rule 27: Safe spots are really safe) and picks the newest one far enough away. |
+| `Players/StuckWatch` | yes | Says when a player is stuck: pressing to move for 3 s without their body moving 1 stud, and not falling, floating or under a red circle (V2 Rule 28: Stuck players are rescued). |
+| `Players/RecoveryRules` | yes | The Reset and rescue decisions: where a Reset sends a player (back to the safe spot, or home), the one-Reset-every-2-seconds limit, and the loop limit (3 within 30 s). |
+| `Players/Recovery` | no | Listens to `RequestReset` and `SetPressing`, asks the rules above, and moves a player back (keeping the egg) or sends them home (egg back). Fires a Signal for Analytics ("Unstuck"). |
+| `Players/LandingDetector` | yes | Follows each player's falls and says when one ends with a thud, and from which zone (V2: and where it began and ended). |
+| `Players/SlideWatch` | yes | V2 spec 5 (Rule 84): says whether a finished fall is a slide and whether it is the player's first this visit. A slide is a thudding fall that passes below the seam line (on any tick, the feet more than 1 stud past the nearest `SeamLine` point in its `Down` direction, within 4 studs across of it), or starts on a part marked `StitchedEdge` and goes off its edge, and ends at least 5 studs lower, wherever it ends. Bounce floats, rescues and catches never count. It also answers the seam-line check on its own ("is this point below the seam line?"). |
+| `Players/Floater` | no | (V2 spec 6: writes the player's `Floating` attribute when it changes.) Turns each bounced player to face him and floats them down onto their landing spot (Task 27), lets go 2.5 studs above the ground, and says who is still floating and how long ago each float touched down. |
+| `Giant/Zones` | yes | Which zone a position is in (Meadow, Boots, Belly, Beard, Nightcap) and which garden, from boxes. V2: which ladder box a position is in (`ladderAt`). |
+| `Giant/Noise` | yes | Noise per second for one player, and the jump burst. V2: ×1.2 while moving on a ladder (Rule 39: Ladders are a little louder). |
+| `Giant/SleepMeter` | yes | One step of the meter: drain (1.5 a second alone, 1 per player with 2 or more), noise, a new player's free save (the meter drops to 70 instead of filling, once), who woke him. |
+| `Giant/Warnings` | yes | Fires the 60% and 85% warnings once, and re-arms them 10 points below. For 3 s after a free save, a pass of 85 fires nothing (the save already replayed it). |
+| `Giant/GiantCycle` | yes | The timeline after a wake-up: 15 s awake, the slam times, 45 s Heavy Sleep. V2 spec 6 (Rule 64: He gets faster): the slam times come from a list in `Config.Wake.SlamWarningTimes` (circles at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 s), each fist 1.5 s after its circle. |
+| `Giant/Slams` | yes | Picks each slam's target, keeps the circle out of gardens, and checks who is caught. V2 spec 6: carriers first, then players with no egg (Rule 60: Carriers first), never a player who joined during this wake-up, appeared less than 3 s ago or was bonked by the slam before; `underHand` (the one shape for "under the hand": inside the circle seen from above, from 1 stud below the circle's surface right under that player to 45 studs above it, also used by the stuck rescue's guard; `SlamSurface.under` finds that surface with one ray down from 45 studs above the circle's centre); `hits` (carriers caught, players with no egg bonked); `pickShow` (a show slam 35 to 45 studs from a protected player, its centre at least half the circle's width plus 1 (16 studs) from the stretch between each protected player and their gate). |
+| `Giant/ShowSpots` | no | V2 spec 6: builds, once at start, the grid of dry meadow spots (every 4 studs, outside gardens, not on water) a show slam can land on. |
+| `Giant/Bonker` | no | V2 spec 6 (Rule 61: The bonk is harmless): sets a player's `Bonked` attribute ("Ground" or "Ladder") for 1.0 s, during which `Carry` gives walking speed 0 and no jump. Fires a `bonked` Signal for Analytics. |
 | `Giant/BounceOff` | yes | Gives each bounced player a landing spot. |
 | `Giant/Catcher` | no | Handles one caught player: sends the egg back to its spot, moves them onto their own spawn spot facing him, and tells everyone with `Caught`. Fires a `caught` Signal (player, rarity of the lost egg) for Analytics. |
 | `Giant/GiantDirector` | no | Runs the meter and the cycle every tick, writes the giant's state for clients, and starts bounce-offs and slams. It keeps the exact meter itself and shows it on `GiantState.Meter` rounded to 0.1. If another server module writes `GiantState.Meter` (for example Task 27 putting it back to 0 after Heavy Sleep), the director takes that value on its next tick. Clients can't change it: attributes a client sets never reach the server. Its `woke` Signal gives the waker's name, their UserId and what filled the meter ("Walking", "Jump on him", "Jump off" or "Waker left"), for Analytics. |
-| `Eggs/EggSpots` | yes | The state of all 16 egg spots: waiting, carried, or counting down to refill. |
+| `Eggs/EggSlots` | yes | V2 spec 5 (replaces V1's `EggSpots`): the nests and each rank's egg slots. A slot is an egg waiting on a nest, a countdown, or both while its egg is carried. When a countdown ends, the next egg goes on a random allowed nest of the same rank (no egg there, not the nest it left, 6 studs from every egg, 15 from every player, not locked), or it tries again every second; a meadow slot always uses its garden's other nest. Lost eggs go back to their nest. The random pick and the players' positions are passed in. |
 | `Eggs/Grab` | no | Connects the hold prompts and checks every grab on the server. It is the one owner of the `EggSpots` state: it runs the refills and gives later tasks (banking, catches) one place to return or bank an egg. Fires a `grabbed` Signal (player, rarity) after each grab, for Analytics. |
-| `Eggs/SpotModels` | no | Shows the egg model on each waiting spot and removes it when taken, and writes each spot's `Waiting` and `RefillAt` attributes. `RefillAt` uses the shared server clock (`Workspace:GetServerTimeNow()`), so clients can count down by themselves. |
-| `Eggs/Carry` | no | Puts the egg on the player's back (a smaller copy, welded behind the root part, measured in Task 3: `CarriedEggOffset` and `CarriedEggHeight` on `ServerStorage.Assets`) and sets walking speed (Tiptoe and egg slowdown). |
-| `Eggs/Banking` | no | Every tick, banks the egg of each carrier who is inside their own garden (`grab:bank`), adds 1 to their `EggsHome`, and fires a `banked` Signal (player, rarity) for HomeDisplay and Analytics. Sends a carrier's egg back (`grab:returnEgg`) when they die, lose their character or leave. |
+| `Eggs/SpotModels` | no | Shows the egg model in each waiting nest and removes it when taken, and writes each nest's `Waiting` and `Locked` attributes. V2 spec 5: no `RefillAt` and no glow rings (Rule 77: Empty nests show no timer). |
+| `Eggs/Carry` | no | (V2 spec 6: walking speed 0 and no jump while `Bonked` is set.) Puts the egg on the player's back (a smaller copy, welded behind the root part, measured in Task 3: `CarriedEggOffset` and `CarriedEggHeight` on `ServerStorage.Assets`) and sets walking speed (Tiptoe and egg slowdown). |
+| `Eggs/Banking` | no | Every tick, banks the egg of each carrier who is inside their own garden (`grab:bank`), adds 1 to their `EggsHome` (and sets `RareHome` for a Rare or rarer egg), and fires a `banked` Signal (player, rarity) for HomeDisplay and Analytics. Sends a carrier's egg back (`grab:returnEgg`) when they die, lose their character or leave. |
 | `Eggs/HomeDisplay` | no | Shows banked eggs in the garden on its 12 home spots (`HomeSpots` in the place file, made in Task 38): one per pet pad first (up to 6), then a row beside the incubator, up to 12 in all, plus the "[N] eggs waiting" tag. Fires `EggHome`. Clears the garden when its owner leaves. |
 | `Remotes/RateLimiter` | yes | Allows at most a set number of messages per second per player. |
 | `Remotes/TiptoeHandler` | no | Checks and applies the one message a client may send (Tiptoe on or off). |
-| `Analytics` | no | Logs the analytics events from spec section 10 (records Roblox keeps of what players do, shown as charts on the Creator Dashboard). It listens to the other modules (`grabbed`, `banked`, `caught`, `woke`) and reads every player's place on the giant's tick, so no game module needs to know it exists. Roblox's AnalyticsService is passed in, so a test can use a fake one. Why: the game rules stay free of logging code, and one file says exactly what is logged and when. A custom field (a breakdown) means something different on each event: field 1 is the rarity on "EggHome" and "PlayerCaught" but the server size on "GiantWoke". Roblox only sends these events from a published game; in Studio it prints "AnalyticsService: ... event fired." for each call. |
+| `Remotes/MusicHandler` | no | V2 spec 7: checks `SetMusic` (a boolean, at most 5 a second, only a change from the player's last value counts, forgotten on leave) and fires a Signal for Analytics. It changes nothing in the game: the music lives on the player's device. |
+| `Analytics` | no | Logs the analytics events from spec section 10 (records Roblox keeps of what players do, shown as charts on the Creator Dashboard). It listens to the other modules (`grabbed`, `banked`, `caught`, `woke`) and reads every player's place on the giant's tick, so no game module needs to know it exists. Roblox's AnalyticsService is passed in, so a test can use a fake one. Why: the game rules stay free of logging code, and one file says exactly what is logged and when. A custom field (a breakdown) means something different on each event: field 1 is the rarity on "EggHome" and "PlayerCaught" but the server size on "GiantWoke". Roblox only sends these events from a published game; in Studio it prints "AnalyticsService: ... event fired." for each call. V2 spec 7 adds "MusicOff" and "MusicOn" (from `MusicHandler`), valued at the minutes since the player joined, with the server size as their one breakdown. |
 
 ### Client modules (`src/client`)
 
@@ -87,16 +115,39 @@ Words used here:
 | `Hud/MeterView` | yes | Turns the giant's state into the meter's face, words, bar colour and countdown (the table in spec section 6). |
 | `Hud/SleepMeterUi` | no | Draws the sleep meter at the top centre. |
 | `Hud/TiptoeButton` | no | The Tiptoe button and the C key. |
-| `Hud/Messages` | no | The carry pill, bottom tips, the "Safe!" and "Caught!" cards and the wake banner. |
+| `Hud/Messages` | no | The carry pill, bottom tips, the "Safe!" and "Caught!" cards and the wake banner. V2 spec 6: the banner is one line (on phones pinned before the Jump button, long names cut to 11 letters and "…"), and a player with no egg outside a garden gets "Dodge the red circles!" with a red-circle icon. |
+| `Hud/HuntView` | yes | V2 spec 6: from the giant's Phase and the player's `Carrying`, `InGarden`, `PlotIndex` and `Floating`, says what the hunt screen shows: "RUN HOME!", the red edges, and which bottom tip. |
+| `Hud/RunHome` | no | V2 spec 6 (Rule 67: RUN HOME!): the red "RUN HOME!" pill on `HudTop`, right of the meter. |
+| `Hud/RedEdges` | no | V2 spec 6 (Rule 68: Red edges while he hunts): four red bands at the screen edges in their own `ScreenGui` (`ScreenInsets` None, drawn under every button), pulsing once a second, steady with Reduce Motion, fading 0.5 s in a garden. |
 | `Hud/GrabPrompt` | no | Our own "Hold to Grab" prompt look (the key E on computers, a hand on phones). |
-| `World/RouteGraph` | yes | Finds the shortest way along the route points to a target. |
-| `World/Footprints` | no | Draws the glowing footprints only this player can see. Hides them while a bounced player floats down, and fades them back in on their first move after landing (told by `Fx/CameraFx`). |
-| `World/SpotLabels` | no | Rarity labels over eggs and refill countdowns over empty spots. |
-| `Fx/GiantFx` | no | Moves the giant: lid flutter, Z Z Z, mumble, arm twitch, waking pose, slam, Heavy Sleep look. |
-| `Fx/SlamFx` | no | Red circles, the slam fist dropping onto each one, and the dust burst. |
+| `World/RouteGraph` | yes | Finds the quickest way along the route points to a target (V2: in seconds; a ladder link is climbed at 70% of walking speed), and names the first ladder on it. |
+| `World/LadderGlow` | no | The one ladder glow on this player's screen (V2 Rule 42: Footprints take the quickest way): yellow on the ladder the trail goes up or down, and red on a ladder under a slam warning, which wins while it lasts. A `Highlight` made by the player's own device, pointed at the ladder's visible pieces (`Look`). |
+| `World/Footprints` | no | Draws the glowing footprints only this player can see. V2: none along a ladder; it tells `LadderGlow` which ladder the trail uses. Hides them while a bounced player floats down, and fades them back in on their first move after landing (told by `Fx/CameraFx`). |
+| `World/SpotLabels` | no | Rarity labels over waiting eggs. V2 spec 5: no countdowns over empty nests. V2 spec 6: a label touching the "RUN HOME!" pill fades like one touching the meter. |
+| `Fx/NestPop` | no | V2 spec 5 (Rule 77): the refill pop when a nest's `Waiting` turns true: 30 gold stars and the egg's grow-in, or the still version with Reduce Motion on. |
+| `Fx/GiantFx` | no | Moves the giant: lid flutter, Z Z Z, the 85% double snort and bubble (V2: no arm twitch while he sleeps; the bubble is `SnoreEmitter.Warning85Bubble`, placed each frame with `Fx/Bubble85` from three inputs read when used: is this a phone, the camera's right direction, and Reduce Motion), waking pose, slam, Heavy Sleep look. V2 spec 5: every piece marked `RidesRightArm` (the right cuff's pockets, strap, ledge, ridge, nests and eggs) moves exactly with his right arm, and that egg's beam fades out and back in over 0.3 s. After a free save it keeps the Z Z Z off until the replayed warning ends. V2 spec 6 (Rule 66: His face wakes first): the open mouth (`AwakeMouth`) tips with the head, the head tips over 0.3 s, the red "!" pops and the Z Z Z pop like bubbles; a slam warning that comes while the arm is still out swings it on from where it is; the return to sleep starts at `PhaseEndsAt` on the shared clock, so the arm is at rest within `Config.Nests.ArmReturnSeconds` of the last fist on every device. V2 spec 7: tells `Audio/Snore` how the snore puffs are (normal, Heavy Sleep or off) and when they restart, and has the sound places `Snort`, `Mumble`, `WakeEyes`, `WakeRoar`, `ZzzPop` and `LieDown`. |
+| `Fx/WakeWorld` | no | V2 spec 6 (Rule 69: The world reacts): the 24 birds flying up from behind him for 3 s, and the 7 dust bursts off his body. |
+| `Fx/BonkPose` | yes | V2 spec 6: the tumble's angle over time (90° back in 0.15 s, held 0.6 s, up in 0.25 s) and the root joint's `C0` that lays the body on the ground behind the heels. |
+| `Fx/BonkFx` | no | V2 spec 6 (Rule 61: The bonk is harmless): on every device, for each character whose `Bonked` is set, the tumble (not on a ladder), the ring of 4 gold stars and the cream puff. |
+| `Fx/FlowerShake` | no | V2 spec 6 (Rule 69): each flower model marked `ShakesOnSlam` inside a landing circle tips 12° away and wobbles back over 0.5 s. |
+| `World/RankGlow` | yes | The rank glow's maths (V2 spec 4, section 6): for a rank and a distance, how big and how strong the halo behind a waiting egg is (hidden closer than 55 studs, full from 75), so a lower rank never outshines a higher one. |
+| `Fx/Bubble85` | yes | V2 spec 1 (Rule 17: A free save replays the 85% warning): the 85% bubble's maths. Its fixed size on the screen (phone 120 × 40 px, computer 170 × 52 px), which side of his nose it sits on (from the camera's right direction), its tail corner, its pop (0.2 s) and its fade (0.3 s after 3 s). With Reduce Motion on it just appears and goes. Why a separate module: these numbers can be tested without Studio. |
+| `Fx/RescueFx` | no | The two lavender puffs with gold sparkles when a player is moved back (V2 Rule 33: What a rescue looks like). V2 spec 7: the sound place `RescuePoof` at each puff. |
+| `Player/Recovery` | no | Makes Roblox's Reset button send `RequestReset` instead of ending the character, tells the server when the player starts or stops pressing to move, and places its own character when the server moves it back. |
+| `Fx/SlamFx` | no | Red circles, the slam fist dropping onto each one, and the dust burst. V2 spec 6: the fist is 90% see-through on the screen of a player it hits, until it has lifted above their head; the circle's pieces skip his right arm's resting shape while he's awake. |
 | `Fx/SlamCircle` | yes | The maths of a red circle that follows a curved surface: where its small pieces go, and when a piece is split or dropped. |
 | `Fx/Celebrations` | no | Confetti, "+1 egg", and the caught star puff. |
-| `Fx/CameraFx` | no | The one camera tilt at spawn and the same kind of view when a player is bounced off him (30° up, toward his face), the ease back to Roblox's normal view on the first step (after landing, for a bounce; or at once when a red circle appears under a landed player who hasn't moved yet) unless the player turned the camera first, and the small shake when he wakes. It also tells the footprints when to hide and come back after a bounce, with its own wait for the first move, so a camera turn doesn't change when they come back. |
+| `Fx/CameraFx` | no | The one camera tilt at spawn and the same kind of view when a player is bounced off him (30° up, toward his face), the ease back to Roblox's normal view on the first step (after landing, for a bounce; or at once when a red circle appears under a landed player who hasn't moved yet) unless the player turned the camera first, and the small shake when he wakes (V2 spec 6, Rule 65: 1.5 studs over 1.0 s at the wake, up to 1 stud over 0.4 s for each nearby slam, none with Reduce Motion on). It also tells the footprints when to hide and come back after a bounce, with its own wait for the first move, so a camera turn doesn't change when they come back. |
+| `Audio/SoundList` | yes | V2 spec 7: every sound row of the spec's table (asset id, maker, hearing group, the spec's loudness, speed, where it starts and loops, designer's measured length). `playerVolume` turns the spec's loudness into the `AudioPlayer` volume: twice the number (section 10). |
+| `Audio/HearingGroups` | yes | The two distance curves: "Whole valley" (full to 60 studs, 0.34 at 200, 0.2 from 600) and "Nearby" (full to 10, silent from 80). |
+| `Audio/SoundBoard` | no | The one place that makes sound. Builds this device's buses and speaker output, loads every file, plays a row "just for you" or from a spot in the world, keeps at most 3 copies of a row at once (the mumble and the snort one at a time), skips a file that isn't ready, and keeps a short log of what played. Its output and its "start playing" step are passed in, so tests never make sound. |
+| `Audio/Cues` | yes | Which rows each sound place plays, with their speed, delay and place (for example `Bonk`: the bonk and the twinkle at the player). |
+| `Audio/Moments` | no | Plays the cues for the sound places, the remotes (`EggHome`, `EggPop`, `Thud`) and the player attributes (own `Carrying` and `Tiptoe`, anyone's `Floating`). |
+| `Audio/MusicMix` | yes | What the music should be doing now: each tune's loudness, how muffled it is, and where the chase tune is in its file, from the giant's state, the 85% silence, the player's garden and the music button, each change over 1 s. |
+| `Audio/Music` | no | Plays the two tunes on the music bus through one low-pass filter, following `MusicMix` every frame. Starts only once the character has spawned and the files are ready, fading in. |
+| `Audio/Snore` | no | The snore loop from his mouth, exactly while `GiantFx` says the snore puffs show: full, half from 60% to 84%, off within 0.1 s at 85%, the Heavy Sleep snore, a new random speed at every loop. |
+| `Audio/Footsteps` | no | While the player's own Tiptoe is on, Roblox's footstep sound in their character plays at a quarter of its volume. |
+| `Hud/MusicButton` | no | V2 spec 7 (Rule 98: The music button): the round music-note button on `HudTop` right after Roblox's top-bar buttons (from `GuiService.TopbarInset`), one row down on phones too narrow for it beside the meter; a tap turns the music bus off or on at once and sends `SetMusic`. |
 
 ### Libraries
 
@@ -117,6 +168,9 @@ The server decides everything. A client only says what the player wants ("Tiptoe
 | Remote | Sends | What the server checks |
 |---|---|---|
 | `SetTiptoe` | `on` (true or false) | Type: must be a boolean, or it is ignored. Rate: at most 5 per second per player (extra ones are ignored). Ownership: it only changes the sender's own Tiptoe. |
+| `RequestReset` (V2) | nothing | Sent when the player confirms Roblox's Reset. Arguments: anything sent is ignored. Rate: at most 1 every 2 seconds per player. Ownership: it only moves the sender. Context: the server decides from where the player really is and the giant's phase (back to the safe spot, or a V1 respawn at home). A cheater gains nothing: they land on a spot they already stood on, and the loop limit still applies. |
+| `SetMusic` (V2 spec 7) | `on` (true or false) | Type: must be a boolean. Rate: at most 5 a second per player. Ownership: only the sender's own record. Only used for the "MusicOff" and "MusicOn" analytics; a change from the last value counts, repeats log nothing. A cheater can only log their own taps. |
+| `SetPressing` (V2) | `pressing` (true or false) | Type: must be a boolean. Rate: at most 10 changes a second per player. Ownership: only the sender's own rescue. Forgotten when they respawn or leave. Faking it only moves the cheater back to a spot they already stood on. |
 
 Grabbing uses Roblox's `ProximityPrompt` ("Hold to Grab"). Its `Triggered` event fires on the server, and the server re-checks every grab:
 - the player's character is alive;
@@ -125,7 +179,7 @@ Grabbing uses Roblox's `ProximityPrompt` ("Hold to Grab"). Its `Triggered` event
 - the spot still has its egg;
 - the first player whose hold finishes gets it; everyone else gets "Someone else got it!".
 
-Nothing else comes from clients. Noise, banking, catches and bounce-offs are worked out on the server from where characters really are. Why: a cheater controls their own device completely, so nothing it sends can be trusted.
+Nothing else comes from clients (V2 adds `RequestReset`, `SetPressing` and `SetMusic`, above). Noise, banking, catches and bounce-offs are worked out on the server from where characters really are. Why: a cheater controls their own device completely, so nothing it sends can be trusted.
 
 ### Server to clients
 
@@ -137,22 +191,31 @@ Nothing else comes from clients. Noise, banking, catches and bounce-offs are wor
 | | `Phase` | `Asleep`, `Awake` or `HeavySleep` |
 | | `PhaseEndsAt` | When Awake or Heavy Sleep ends, on the shared server clock (`Workspace:GetServerTimeNow()`), so every client counts down by itself |
 | | `WokenBy` | Display name (the name over their avatar) of the player whose noise filled the meter, for the wake banner. "" if nobody is named |
+| Each player | `RareHome` (V2) | true once they have banked a Rare or rarer egg this visit: they are no longer new |
+| | `FreeSaveUsed` (V2) | true once their free save is spent. It is on the Player, not the character, so a catch, a Reset or a respawn never gives it back |
 | Each player | `PlotIndex` | Their garden, 1 to 8 |
 | | `Carrying` | The rarity they carry, or nothing |
 | | `Tiptoe` | true or false (the button shows the server's answer) |
 | | `EggsHome` | Eggs banked this session |
-| Each egg spot model | `Rarity`, `Waiting`, `RefillAt` | What the spot holds, whether its egg is there, and when it refills |
+| | `InGarden` (V2 spec 6) | The garden number the player stands in, 0 if none, written when it changes |
+| | `Floating` (V2 spec 6) | true while the bounce-off float holds them |
+| | `Bonked` (V2 spec 6) | "Ground" or "Ladder" for the 1.0 s of a bonk, otherwise not set. Every device draws the tumble and the stars from it |
+| Each nest model (in `World.EggSpots`) | `Rarity`, `Waiting`, `Locked` | V2 spec 5: what rank of egg the nest holds (set from the egg-ranks report), whether an egg waits there, and whether it is locked (right cuff, while he's awake). V1's `RefillAt` is gone. Set in the place: `NestName` (a name a person understands), `Twin` (its mirror twin), `Garden` (meadow nests) and `RidesRightArm` (right cuff nests) |
 
 **Remotes** (one-off moments):
 
 | Remote | To | Sends |
 |---|---|---|
-| `Warning` | everyone | `60` or `85` |
-| `SlamWarning` | everyone | slam number, the point on the surface under the circle's centre, and the landing time on the shared server clock. The server never listens to it. |
+| `Warning` | everyone | `60` or `85`. V2: at a free save, `85` and a second value `"FreeSave"` (the replayed warning) |
+| `Rescued` (V2) | everyone | the player, where they were, and the CFrame they are moved to (the puffs for all; the player's own device also places its character there) |
+| `SlamWarning` | everyone (V2 spec 6: for any target, carrier or not) | slam number, the point on the surface under the circle's centre, the landing time on the shared server clock, and (V2) the name of the ladder the target is on, or nil (that ladder glows red). The server never listens to it. |
 | `SlamLanded` | everyone | slam number, the same surface point. The server never listens to it. |
 | `EggHome` | everyone | the player, the rarity, and where the new egg sits (confetti at their gate for all; "+1 egg" over the new egg; the card only for them) |
 | `Caught` | everyone | the player (star puff for all; the card only for them) |
 | `GrabMissed` | one player | nothing ("Someone else got it!") |
+| `SlideTip` (V2) | one player | nothing: their first slide this visit ("Too steep! Slipping is loud.", Rule 84) |
+| `Thud` (V2 spec 7) | everyone | where the thud was and the noise it added (20, 30, 40 or 60), for the flump. Only thuds that added to the meter. The server never listens to it. |
+| `EggPop` (V2 spec 7) | everyone | a nest's position and `"Refill"`, `"Back"` or `"Gone"`, for the sparkle pop or the egg pop. The server never listens to it. |
 | `Bounced` | one player | the flat direction they now face, toward his face (their camera snaps behind them, 30° up). The server never listens to it. |
 
 The server creates every remote in `ReplicatedStorage.Remotes` when it starts. Clients wait for them. Remote names live in one place, `Shared/Net`, so a typo can't happen. `Net` creates nothing when it is loaded; the server calls `Net.setup()` once. Why: tests load modules in Studio's edit mode, and loading must never change the place.
@@ -164,7 +227,7 @@ The server creates every remote in `ReplicatedStorage.Remotes` when it starts. C
 One loop runs ten times a second (every 0.1 s, counted from `RunService.Heartbeat`):
 
 1. `PlayerTracker` reads each character's position: moving (moved more than 0.5 studs since the last tick in any direction, so climbing a ladder counts, but not a teleport of more than 20 studs), zone, garden, and landings.
-2. `Noise` turns that into noise per player. `SleepMeter` adds it, subtracts the drain and applies the new-player limit.
+2. `Noise` turns that into noise per player. `SleepMeter` adds it, subtracts the drain, and spends a new player's free save when their noise would fill the meter.
 3. `Warnings` fires `Warning` when the meter rises past 60 or 85.
 4. `Banking` banks any carrier who is inside their own garden.
 5. When the meter reaches 100, `GiantDirector` starts the wake-up: `BounceOff` first, then `GiantCycle` runs the slams and Heavy Sleep.
@@ -180,22 +243,32 @@ Decisions the spec leaves to the build:
 | What if one tick takes the meter past a warning mark and to 100? | The warnings for every mark it rose past still fire (Rule 10 says each warning plays each time the meter rises past its mark), then he wakes on the same tick. The wake-up on screen (Task 28) takes over from them. A meter at 100 while he is still Asleep always counts as awake, so he can never sit asleep at a full meter. |
 | Can a cheater tiptoe at full speed? | No. Every device moves its own character, so a cheater can undo the Tiptoe slow-down on their own device. The server measures each player's real speed across the ground every tick, and Tiptoe only cuts noise up to 1.25 × the tiptoe speed (Task 37). The speed is measured over the last 1 s of real time, because positions arrive in uneven bursts and a slow server runs several ticks in one frame. While the player stayed on the ground, it is the distance along the slope (a cheater walking up or down the steep belly path covers only about 10 studs a second across the ground); after any time in the air, only the distance across the ground counts, so falls never count as speed. It is the straight-line distance from where the player was 1 s ago, not the path walked: adding up every small step would also add the jitter in the positions the server receives, pushing honest tiptoers toward the limit. Accepted limits: a cheater pacing back and forth on a short stretch, the first second of a run, and ladders are not caught. A real heist is made of straight runs, which are caught (Task 37: honest tiptoe at most 10.8 studs per second, a full-speed cheat over 12 on most of a straight run). |
 | When does a carrier bank? | When their real position is inside their own garden's box (`GardenVolume`). The garden's way in is the Safe Gate. |
-| "Two eggs home" for the new-player limit | Counted per session, because spec 1 doesn't save (spec section 11). It is saved from spec 3. |
+| How an egg's rank is set (V2 spec 4, Rule 53: A nest's rank is fixed) | Each egg spot's `Rarity` attribute in the place file, set by a world script from the egg-ranks report. The game never works ranks out while players play: the check runs only in the test run, and fails if a rank lies. Spot names (`EggSpot_Rare_2`) stay as they are, and each spot has a `NestName` for the report. |
+| How Epic and Legendary eggs behave (V2 Rule 49: Higher eggs carry like a Rare) | They use the Rare egg's carry noise, slowdown and refill numbers in `Config`, so every V1 rule that reads the rarity's numbers treats them like a Rare. Their look is their own egg model in `ServerStorage.Assets.Eggs`, tinted on its `SurfaceAppearance.Color`. |
+| Who is "new" (V2 spec 1) | A player without `RareHome`. Counted per visit, because nothing is saved yet. From spec 3 (Cash and saving) `RareHome` is read from the saved record. |
+| Whose free save is spent (V2 Rule 19: Only the waker's save counts) | The noise is still added biggest first. Only the player whose noise would fill the meter can be saved; if they can, the meter becomes 70 and the rest of that tick's noise goes on from there. A veteran's noise that fills it wakes him, and nobody's save is spent. |
+| The replayed 85% warning (V2 Rule 17) | The server fires `Warning` (85, "FreeSave") at the save. For the next 3 s a pass of 85 fires nothing, but still uses up the 85 mark, so it fires again only after the meter falls to 75. Why on the server: one place decides every warning, and every device sees the same thing. |
+| How a player is moved back (V2 Rules 25, 28) | The server places the whole character (as `Catcher` does) and fires `Rescued`; the player's own device places its character too, because a device can undo a server move of its own character. The tracker is told, so the move is neither walking nor a fall. |
+| A body shaking in a gap (V2 Rule 31) | Counts as moving only if it went at least 1 stud in a straight line over the last second. Why: shaking goes nowhere, and real walking, tiptoeing and climbing all go much further. |
 | Which landing spot a bounced player gets | The closest free spot, measured across the ground (height ignored). The closest player and spot of all are paired first, then the next closest, so two players never race for one spot. If more players are bounced than there are spots (only if the server size is above 8), spots are shared. Why: players float straight down, so ground distance is the trip they see, and the spec allows overlap. |
 | A player still floating down after the bounce-off | Is never a slam target until they land. This keeps every landing spot clear of circles (spec section 8). |
 | How a bounced player floats down | The server turns them to face his face (left-right only, toward `Giant.SleepEyes`), moves them 12 studs above their landing spot, then a downward push (`LinearVelocity`, no force limit) lowers them straight down at 8 studs a second. The push stops 2.5 studs above standing height, and they drop the last bit. The server stops it by time (when the push should have reached 2.5 studs above standing height, about 1.2 s), by height if it sees them low enough first, or after 4 s at the latest. Then the `Bounced` remote tells that player's device to put the camera behind them, 30° up, so they see him wake (spec Rule 12). Why: moving players to set spots, instead of pushing them off his body, means nobody can be flung or stuck in him (the spec's physics risk). The server sees a player's position late (their own device moves them), so a stop based only on height came too late and pressed players into the grass; the start and the stop reach the device with the same delay, so a stop by time doesn't depend on ping. The fall is slower than a thud. |
 | Which name the wake banner shows | The waker's display name, written by the server into `WokenBy` at the wake-up (`designer`: it matches the name over their avatar and the garden signs). Why on the server: the banner still works if the waker leaves at once. Roblox checks display names when players set them, so they need no extra filter. |
-| How the screen shakes when he wakes | Each device moves the point its camera follows (`Humanoid.CameraOffset`) by at most 0.5 studs for 0.5 s, then puts it back. Why: the camera and that point move together, so the view never turns, and the bounce camera's ease never mistakes the shake for the player turning the camera. |
+| How the screen shakes when he wakes | V2 spec 6: 1.5 studs fading over 1.0 s, plus a slam shake for each nearby fist; none with `GuiService.ReducedMotionEnabled`. V1: each device moves the point its camera follows (`Humanoid.CameraOffset`) by at most 0.5 studs for 0.5 s, then puts it back. Why: the camera and that point move together, so the view never turns, and the bounce camera's ease never mistakes the shake for the player turning the camera. |
 | How the spawn view shows the first egg (Task 45) | The player's own device turns its character, at spawn and after a catch, until the egg the footprints lead to sits at least 20° to the side. Why the device: only it works out where its footprints lead, and a turn in place gains a cheater nothing. The camera also sits 1.5 studs higher during the spawn view, through the same `Humanoid.CameraOffset` as the shake. One small writer adds the two parts up (raise plus shake), so neither undoes the other. |
 | What clock the wake-up timeline uses | The shared server clock (`Workspace:GetServerTimeNow()`), counted from the tick he woke, not a count of ticks. Why: when the server falls behind, ticks are dropped, but `PhaseEndsAt` must match what every device counts down. |
 | A carried egg goes back (caught, left or reset) after its spot already refilled | It disappears with the spot's pop, so a spot never holds two eggs. If the spot is still counting down, the egg sits back on it and the countdown stops. Refill always starts at the grab. (Answer from `product`.) |
+| Who is on a ladder (V2 Rule 40: The server knows who is on a ladder) | A player whose root part is inside a ladder box (`World.LadderBoxes`) and who isn't standing on standable ground (the server's own ground ray). Their zone is the higher of the zone boxes' and the box's `Zone` attribute (Boots for the four new ladders). Why: the box alone would count a player on the grass at the foot or on the top pad, and nothing comes from the player's device. |
+| Where a red circle goes under a climber (V2 spec 3, Check C4) | The server's ray goes through every ladder and stops at the first standable surface (grass, boot top or side pad). The ladder itself glows red on every device for the warning. Catches are unchanged. |
 | How steep parts of the giant can't be climbed (Rule 15) | `StarterPlayer.CharacterMaxSlopeAngle` = 70°, set in `default.project.json`. Roblox's default is 89°, which lets players walk up almost anything. 70° is the lowest limit that keeps the existing belly path walkable: its line is about 47° steep on average, so a lower limit would need a longer path and a slower climb. The steep middle of the belly path is smoothed so no piece is steeper than 60°. Every steep part named in Rule 15 (face, beard front, nightcap sides, boot fronts) is covered by smooth invisible guards steeper than 75°, so they can't be walked up and nobody hangs stuck. |
 | The cap ladder's upper part | Its invisible truss lies behind the forehead's middle guard slab, so above about 107 studs players walk up that slab (68.6°, just under the 70° limit) instead of climbing. Accepted: that slab is the ladder's route, and it always reaches the cap path. Side rails stop players stepping off it. The steeper side walls (80°) block the rest of his forehead. |
-| Slam timing | Warnings start at 1.0 s after waking and then every 2.5 s; each slam lands 1.5 s after its warning (at 2.5, 5, 7.5, 10, 12.5 and 15 s). |
+| Slam timing | V2 spec 6: circles at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 s after waking; each fist lands 1.5 s after its circle (3.8, 6.3, 8.7, 10.9, 13.0 and 15.0 s). V1 was every 2.5 s from 1.0 s. |
 | How "the carrier nearest to him" is measured (Rule 13) | Across the ground (height ignored) from the centre of his face, the same point bounced players turn to. A tie goes to the lower user id. Why: his face sits almost exactly over his middle, and players read "near him" from the ground. |
 | What happens to a red circle that would touch a garden (Rule 6) | Its centre moves straight toward his face, across the ground, until the whole circle stands at least 1 stud outside every garden box. Why: the gardens stand in a ring around him, only about 14 studs apart, so pushing a circle "away from the nearest garden" can push it into the next one. Toward him is always open meadow. |
+| Where a show slam lands near a protected player (V2 spec 6) | When nobody can be targeted only because of Rule 62 or Rule 63, the circle's centre lands 35 to 45 studs from the player just bonked (or the protected player nearest to him), on a dry meadow spot from `ShowSpots`, covering no player, garden or landing spot, and at least half the circle's width plus 1 (16 studs) from the stretch between every protected player and their gate (never the line past the gate). Otherwise the nearest such spot out to 60 studs, otherwise V1's pick below. Why: a show slam anywhere in the valley can land behind him, and a solo wake would feel empty. |
 | Where he slams when nobody can be targeted | On one of the meadow route points (`RoutePoint_Meadow_*`), picked at random among those whose circle touches no garden, covers no landing spot and has nobody in it. It avoids the spot of the slam before, if another one fits. If none fits, the one farthest from every player. Why: route points are known flat grass, a real-world test can check them all, and a landing spot is never covered, so bounced players never land in a circle meant for nobody. |
-| Who a slam catches | Every carrier who isn't floating, didn't touch down from the bounce-off float less than 1.5 s before the hand lands (`game_creator`: they couldn't steer the fall, so they get the same warning as everyone), and isn't in a garden, whose middle is at most 15 studs from the circle's centre across the ground and at most 10 studs above or below it. Why: a jump (about 7 studs high) doesn't escape the fist, and a circle on the meadow can't catch someone high on the giant above it. |
+| Who a slam hits (V2 spec 6) | Everyone whose middle is inside the circle seen from above and between 1 stud below the circle's surface right under them and 45 studs above it (the fist's drop height; the surface is found by one ray straight down from 45 studs above the circle's centre, so it is the surface the circle's pieces lie on there), except players in a garden, floating, or touched down less than 1.5 s before. Carriers are caught, players with no egg bonked. Why: anyone under the hand is hit at any height, so hiding high on a ladder or on him doesn't work (Rule 13). The V1 row below is replaced. |
+| Who a slam catches (V1) | Every carrier who isn't floating, didn't touch down from the bounce-off float less than 1.5 s before the hand lands (`game_creator`: they couldn't steer the fall, so they get the same warning as everyone), and isn't in a garden, whose middle is at most 15 studs from the circle's centre across the ground and at most 10 studs above or below it. Why: a jump (about 7 studs high) doesn't escape the fist, and a circle on the meadow can't catch someone high on the giant above it. |
 | What "touched down" means for the slam guard (Rule 13) | The moment the float's push lets go, plus 0.25 s for the last 2.5-stud drop (about 0.16 s at Roblox's gravity). `Floater` keeps that time for each player until they leave or float again. Why: the server sees positions late, and counting from slightly later than the real touchdown errs on the player's side. |
 | Where the red circle is drawn (Rule 13: "on the surface where the target stands") | The server casts one ray straight down, starting 1 stud above the circle's centre, ignoring characters and parts players walk through, and sends that surface point in `SlamWarning` and `SlamLanded`. If the ray finds nothing within 50 studs, it sends a point 3 studs below the centre (a player's middle is about 3 studs above their feet). Catches still measure from `Slams`' own centre (the target's middle). Why: every device draws the circle at the same point, and a jump of about 7 studs still can't escape the fist. |
 | How a caught player is sent home | The egg goes back first, then the server moves the character onto the top of their own spawn spot (about 20 studs in front of their gate), turned to face his face, then fires `Caught`. No respawn. Why: a respawn would take a moment and reset the character; moving them keeps Tiptoe, the character and any camera settings, and they never stand in the air (no thud). |
@@ -206,6 +279,10 @@ Decisions the spec leaves to the build:
 | Who sees the safe-home moment? | Everyone sees the confetti and "+1 egg", because they happen in the world. Only the player who banked sees the green card. (The spec doesn't say; designer kept this choice.) |
 | Why is "+1 egg" drawn on top of the world? | It lasts 1 second in the player's own garden, and the arch hid it (designer). Screenshots can't show on-top signs, so checks read it on the client and photograph a still copy. |
 | Why is the route reader shared? | `RouteData` lives in `src/shared`, so the server's world check and each client's footprints read the route in the place the same way. |
+| How the next egg's nest is picked (V2 Rule 74) | By the server only, at the moment the countdown ends, from the players' real root positions and `Random.new():NextInteger`. A nest's prompt is switched off while it is empty or locked, and every grab is still checked. Why: the pick is never seen before it happens, so no device can steer it. |
+| When the right cuff nests lock (V2 Rule 100) | Locked when `Phase` becomes `Awake`; unlocked once it isn't `Awake` (Heavy Sleep counts as asleep) and `Config.Nests.UnlockAfterSeconds` (0.5 s) have passed, **and** his arm's return after the last fist has finished (`Config.Nests.ArmReturnSeconds`, 0.5 s; the director reports each fist landing). Both numbers must be at least the device's own times (`GiantFx.poseSeconds`, `GiantFx.slamSwingSeconds`), and tests check it, including a whole wake-up with plan 6's faster slams. His arm's own collision isn't moved while he's awake, so nobody can walk into the space it returns to. Why: the server's own phase decides, so a late screen can't open the nest, and product asked that the unlock wait for the arm. |
+| How a bonk is drawn (V2 spec 6) | The server sets `Bonked` for 1.0 s and `Carry` stops walking and jumping; a ladder climber holds still, because climbing runs at 70% of walking speed. Every device tips that character back through the root joint's `C0`, so no animation asset is uploaded and the root part never moves (no push). |
+| The arm's resting shape while he's awake (V2 spec 6) | His right arm's solid shape stays at rest (plan 5). Its pieces are marked `RightArmRest`, and while he's awake the server's circle ray and the circle pieces pass through them, so no circle hangs in the air where the arm was. |
 | A 9th player (only possible if the server size is above 8) | Has no garden, so they are sent back with the message "This valley is full. Please join another server." The server size must be set to 8 when the game is published. |
 
 ## 4. Data saving
@@ -219,7 +296,7 @@ Spec 1 saves nothing: banked eggs are lost when a player leaves (spec 1, section
   - `Hud`, with `ScreenInsets = CoreUISafeInsets`: buttons, cards, tips and banners. Roblox recommends this for anything a player presses or must read, because it keeps clear of the phone's notch and of Roblox's own buttons.
   - `HudTop`, with `ScreenInsets = DeviceSafeInsets`: only the sleep meter. Why: `CoreUISafeInsets` starts about 58 px below the top of the screen (the height of Roblox's top bar), which pushed the meter down over his face and the Z Z Z (Task 14). `DeviceSafeInsets` still avoids the notch, but not Roblox's top-bar buttons. Those buttons sit only at the top left (measured in Play: `GuiService.TopbarInset`, the free part of the top bar, ran from x = 164 to the right edge), so the meter is centred in the top bar like the mockups. If Roblox's left buttons ever reach the meter (a very narrow screen, or extra buttons such as voice chat), the meter slides right just far enough to clear them, using `GuiService.TopbarInset`.
 - `Layout` picks the computer or the phone sizes from spec section 6. Phone = the screen's short side is under 500 pixels (Studio's iPhone 14 simulator gives 390).
-- The look comes from the style guide and `docs/design/climb-the-sleeping-giant/mockups/core-hud.html`:
+- The look comes from the style guide and `docs/design/v1/mockups/core-hud.html`:
   - font `Font.fromEnum(Enum.Font.FredokaOne)` with an Ink (`#2B2340`) `UIStroke` outline;
   - buttons with `UICorner`, a 4 px Ink `UIStroke`, a top-to-bottom `UIGradient` and a 6 px Ink shadow.
   - The CSS colours in `core-hud.html` are the exact values to copy.
@@ -250,6 +327,9 @@ We compared three options:
   ```
 - Modules get what they need passed in (players, clock, random numbers, the world data), so a test can pass simple fake tables instead. Time is passed in as a number, never read with `os.clock()` inside a pure module.
 - **Tests never change the place.** A test builds its objects without a parent, or in a folder it destroys at the end. Nothing is parented into `Workspace`, `ReplicatedStorage` or `Players`.
+- **Fake worlds (V2).** A test that needs rays or overlap checks builds a few parts inside a `WorldModel` in `ServerStorage` and destroys it at the end. A `WorldModel` answers `Raycast` and `GetPartsInPart` like the Workspace (code_lead checked both in Studio on 2026-10-19; an unparented one answers nothing). `PathCheck` takes the world to search as an argument, so the same code runs on a fake world and on the real one.
+- **The one exception: the body probe.** `GetPartsInPart` needs a real part in the same world, so `PathCheck` keeps one invisible probe part (no collision, no touch, no query, `Archivable` off, so it is never saved) while it checks the real Workspace, and `PathCheck.cleanup` removes it. Tests call `cleanup` at the end.
+- **Long real-world checks (V2).** The stuck scan takes up to 2 minutes. It yields (`task.wait()`) after every chunk of work, so Studio never freezes long enough to drop the connection, and its test sets a longer Jest time limit than the default 5 seconds.
 - Things a test can't check (how it looks, how it feels, several real players) are checked in Play with screenshots, as `agent-workflow.md` asks.
 
 ### How tests are run
@@ -293,3 +373,68 @@ It runs, in order, and stops at the first failure:
 - World changes go through a script in `tools/world/`. The script checks before it creates, so running it twice does no harm. It returns a short report of what it changed.
 - Every model that the game copies into `Workspace` has all its parts `Anchored`. An unanchored copy falls below the world's floor (`FallenPartsDestroyHeight`) and Roblox deletes it. Models stored in `ServerStorage` don't fall, because physics doesn't run there.
 - After world changes, the place must be saved by Adam. The progress table says when the place has unsaved world changes.
+- Play test tools (V2), such as the bot walk, live in `tools/play/`. They are run with `execute_luau` in Play, like the world scripts in Edit mode, and are never part of the game.
+
+## 9. The shared walk check (`World/PathCheck`)
+
+V2 spec 2 says one check answers every "can a player walk from here to there with no jump?" question (Rule 23: One walk check for everything). The stuck scan (spec 2), the egg scores (spec 4) and the "every way up is equally loud" check (spec 3) all use it, so they can never disagree.
+
+### Why not Roblox's pathfinder
+
+The specs first named Roblox's pathfinder (`PathfindingService`). code_lead tested it in Studio on 2026-10-19: with jumping off, it finds no path on any slope of about 48° or steeper (test ramps at 30°, 40° and 45° pass; 48° to 66° fail), and none from the real belly path above `Belly_2`. Our players walk slopes up to 70°, and spec 5's walk area goes to 65°. So the walk check is our own **walk map**, built from the same step check the V1 footprint route test used. (Accepted by product on 2026-10-19.)
+
+### The walk map
+
+- **Spots:** a grid over an area, 2 studs apart (`Config.Stuck.ScanSpacing`). Each grid column casts rays down through every surface, so spots under overhangs count. A surface is a spot if it is no steeper than `StarterPlayer.CharacterMaxSlopeAngle` (70°), isn't water, and a body fits on it.
+- **Links:** walk links to the spots in the 8 columns around (both ways, when the step check passes); climb links along each `TrussPart` ladder (both ways, at 70% of walking speed); and slide links (one way) from an edge to wherever a player drops or slides to.
+- **Searches:** the cheapest route between spots, with the caller choosing which links count and what each costs; and the stuck spots, found with one backwards search from the exits.
+- **The stuck scan counts walk, climb and slide links** (a spot is stuck only if no walk, climb or slide gets it to a meadow exit). A scored heist counts walk and climb links only (below).
+- **The body size** is the solid part of a standard character, measured in Play in plan 2 (stuck safety, Task 2), and kept in `Config.Stuck`. The "big avatars" trigger in spec 2 still applies.
+
+### Interface
+
+Everything takes `options` first: which world to search (the Workspace, or a test's `WorldModel`), what to ignore (characters, eggs, props that aren't ground), the slope limit, the body size and the grid spacing. `PathCheck.defaults(world)` fills them from `Config.Stuck` and `StarterPlayer`.
+
+| Function | Gives | Used by |
+|---|---|---|
+| `linkProblem(options, from, to)` | What is wrong with walking straight from `from` to `to` (no ground, water, too steep, off the line, something in the way), or nil | The footprint route test, `tools/world/08-route.luau`, and the walk map's links |
+| `bodyFits(options, feet, up?)` | Whether a player's body fits standing there, and what is in the way if not. `up` is the surface direction (default straight up): the box tilts with it, like the footprint route's box always did. The box is square (the larger of the measured width and depth, because a player turns to face where it walks) | The walk map's spots, `SafeSpots` ("room for their body") |
+| `buildMap(options, area)` | A `WalkMap`: its spots (position and surface direction) and each spot's links (to, kind `"Walk"`, `"Climb"` or `"Slide"`, length, seconds). It yields between chunks | The stuck scan, the egg scores |
+| `nearestSpot(map, position, maxStuds)` | The spot nearest a point (an egg nest, a route point, a landing spot), or nil | Every caller that starts from a place in the world |
+| `costsFrom(map, from, rules)` and `routeFrom(tree, to)` | One search from a spot to every spot (a tree of the cheapest ways), then the route to any spot in it. Walk and climb links cost the same both ways, so one search from each way-up foot also gives every trip back down | Rule 41's check and spec 4's scores: one search per way up and egg weight, not one per nest |
+| `route(map, from, to, rules)` | The cheapest route from one spot to any of the `to` spots, or nil. `rules.allow` picks the link kinds (for example walk and climb only: "reachable with no jump"); `rules.cost` sets each step's cost (the default is seconds: "walk time"; spec 4 passes the noise of each step: "quietest noise"). The route lists its steps (from, to, kind, length, seconds), so a caller can replay the real noise rules along it and get the meter's peak | Spec 4's scores and Rule 41's fairness check |
+| `stuckSpots(map, exits)` | Every spot that can't reach an exit, each with its position and the nearest part of the giant | The stuck scan (Rule 22) |
+| `cleanup(options)` | Removes the body probe | Every test and world script that used `options` |
+
+**One map per test run:** `src/tests/server/World/WalkMap.spec.luau` (plan 2's stuck scan file, renamed in plan 3) builds the real walk map once in `beforeAll` and runs every check on it: the stuck scan, `WaysUpCheck`, `FairnessCheck` and spec 4's scores. It also builds the footprint trail's steps on that map once, for `FairnessCheck`'s check that Rare egg 1's window (60–80%) holds along the footprint route too (product, 2026-10-19). Why: Jest-Lua gives each test file its own copy of every module, so a map kept in a module would be built again in each file, and spec 4's limit is 2 minutes for the scan and the scores together.
+
+**Which links a scored heist uses:** walk and climb only, never slide links (a slide is a drop that can thud, and a scored heist has no thuds). A route that must stay on one way up keeps to spots off the meadow, except where it starts, so it can't cross the silent meadow to another way up.
+
+## 10. Sound (V2 spec 7)
+
+Every sound is free audio from Roblox and its partners (Rule 85), played on each player's own device. The server never plays a sound; it only tells devices about two moments they can't work out themselves (`Thud`, `EggPop`).
+
+### The objects, and the loudness scale
+
+- **Roblox's newer audio objects, never the old `Sound`.** Roblox's audio guide says the old `Sound`, `SoundGroup` and `SoundEffect` "are now discouraged in favor of the more robust functionality of audio objects" (checked 2026-10-19). The newer ones also give exact distance curves and a real low-pass filter for "muffled".
+- **Every `AudioPlayer.Volume` is twice the spec's number.** The docs say `AudioPlayer.Volume` multiplies the sound (1 = as recorded) and `Sound.Volume` defaults to 0.5 without saying what 0.5 does. designer set every number assuming 0.5 = as recorded; doubling makes that exactly true, so designer's crackle caps hold. The spec keeps its own numbers; only `Audio/SoundList.playerVolume` converts. The biggest, 3.8, becomes 7.6 (the limit is 10).
+
+### How sound reaches the speakers
+
+| Group | Path on the device |
+|---|---|
+| Just for you, and both tunes | `AudioPlayer` → a bus (`AudioFader`; the music bus also goes through one `AudioFilter` for "muffled") → our own `AudioDeviceOutput` |
+| Whole valley, Nearby | `AudioPlayer` → an `AudioEmitter` on an `Attachment` in `Workspace.Terrain` at the sound's spot, with its group's curve → Roblox's own listener on the camera (`SoundService.DefaultListenerLocation = Camera`), which Roblox wires to its own `AudioDeviceOutput` |
+| Roblox's character sounds (footsteps, jumping, climbing) | Roblox makes them with the newer objects, because world script 26 sets `SoundService.CharacterSoundsUseNewApi` to `Enabled` |
+
+Fades run on the board's per-frame clock, never `TweenService` (section 3). A sound whose file isn't ready is skipped; nothing ever waits for a sound.
+
+### Nobody hears a test
+
+Nobody listens before Adam's Gate 4 playtest (Rule 99: Studio tests mute at runtime only).
+
+- **Tests** never create an `AudioDeviceOutput`, an `AudioListener`, an `AudioEmitter` in the Workspace or an old `Sound`, and never call `:Play()` on a real `AudioPlayer`. `SoundBoard` gets its output and its "start playing" step passed in, so tests pass fakes. The one real-file test only loads each file and reads its length and its maker (`MarketplaceService:GetProductInfoAsync`), in a temporary folder it removes.
+- **Every team Play session** starts with a Client `execute_luau` that cuts every `Wire` into an `AudioDeviceOutput` (now and whenever one is added or changed) and routes any old `Sound` into a `SoundGroup` at Volume 0. It is typed in each session and **never saved** in a file, script, place or setting, so the published game always plays sound. The game's first sound comes only after the character spawns and the files load, fading in, which leaves time for the mute.
+- **Checking without listening:** the board keeps a short log of what it played and when; muted sessions read it to prove each sound starts at its moment.
+- **Adam's Gate 4 listen** is played with sound on. `tools/play/sound-check.luau` triggers the moments a session rarely reaches (an egg home of each rank, a free save, a rescue, a wake-up for the yawn) while the game runs, and saves nothing.
+
