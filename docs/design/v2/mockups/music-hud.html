@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Climb the Sleeping Giant - music button (V2)</title>
+<!--
+  V2 spec 7 (audio, Rule 98: The music button). Sleep meter and Tiptoe copied from rescue-hud.html,
+  the awake screen (red edges, RUN HOME!, bottom pill) from wake-hud.html.
+  New on screen: one round music button in the free top-bar space, just right of Roblox's own buttons.
+    music-hud.html?music=on|off&state=calm|wake&device=desktop|phone|small
+  Defaults: music=on, state=calm.
+  desktop = 1280x720, phone = 844x390 (iPhone 14, landscape, 47 px safe edge each side),
+  small = 667x375 (4.7-inch iPhone SE, landscape, no safe edge).
+  Roblox's own top-bar buttons are drawn, because screen captures don't include them. They are drawn
+  at full size (a 58 px tall top-bar band, 44 px buttons, as in Roblox's own experience controls),
+  on phones too, so the phone pictures show the most crowded case.
+  Backgrounds are real Studio shots (view-*.png).
+-->
+<style>
+@font-face { font-family: "Fredoka One"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/FredokaOne-Regular.ttf"); }
+@font-face { font-family: "RbxEmoji"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/TwemojiMozilla.ttf"); }
+:root {
+  --ink: #2B2340; --cream: #FFF6E4; --gold: #FFC93C; --sky: #3FA9FF; --sky-d: #1F78D1;
+  --leaf: #5BD45B; --leaf-d: #2E9E3A; --sleep: #4A5BC4; --sleep-d: #2F3B8F;
+  --warn: #FF8A3D; --warn-d: #D8651A; --wake: #FF3B4E; --wake-d: #C4142A;
+  --s: 1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+body { font-family: "Fredoka One", sans-serif; color: #fff; }
+.e { font-family: "RbxEmoji", sans-serif; font-style: normal; }
+#screen { position: relative; width: 100vw; height: 100vh; background-size: cover; background-position: center; }
+.stroke { -webkit-text-stroke: calc(5px * var(--s)) var(--ink); paint-order: stroke fill; }
+
+/* Roblox's own top-bar controls (drawn): a round Roblox button, then a pill with the menu and chat.
+   Dark see-through fill, white line icons, 44 px tall, centred in the 58 px top-bar band. */
+#rbx { position: absolute; top: 7px; display: flex; gap: 8px; align-items: center; }
+.rb { height: 44px; min-width: 44px; border-radius: 22px; background: rgba(18, 18, 24, .72); display: flex; align-items: center; justify-content: space-around; padding: 0 6px; }
+.rb svg { width: 22px; height: 22px; }
+
+/* the music button (Rule 98): the first thing in the free top-bar space (TopbarSafeInsets).
+   Same height as Roblox's buttons, round, Ink fill, a sky-blue music note. No word: no top-bar button has one. */
+#music { position: absolute; top: 7px; width: 44px; height: 44px; border-radius: 50%; background: rgba(43, 35, 64, .92);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85); display: flex; align-items: center; justify-content: center; }
+#music .e { font-size: 26px; line-height: 1; }
+/* off: the note fades to half and a red slash with an Ink edge crosses it */
+#music.off .e { opacity: .5; }
+#music .slash { position: absolute; left: 7px; right: 7px; top: 50%; height: 5px; margin-top: -2.5px; border-radius: 3px;
+  background: var(--wake); box-shadow: 0 0 0 1.5px var(--ink); transform: rotate(-45deg); display: none; }
+#music.off .slash { display: block; }
+
+/* red edges while he is awake (wake-hud.html, strong) */
+#edges { position: absolute; inset: 0; pointer-events: none; }
+#edges div { position: absolute; }
+.eT { left: 0; right: 0; top: 0; height: 14vh; background: linear-gradient(to bottom, rgba(255, 59, 78, .55), rgba(255, 59, 78, 0)); }
+.eB { left: 0; right: 0; bottom: 0; height: 14vh; background: linear-gradient(to top, rgba(255, 59, 78, .55), rgba(255, 59, 78, 0)); }
+.eL { left: 0; top: 0; bottom: 0; width: 14vh; background: linear-gradient(to right, rgba(255, 59, 78, .55), rgba(255, 59, 78, 0)); }
+.eR { right: 0; top: 0; bottom: 0; width: 14vh; background: linear-gradient(to left, rgba(255, 59, 78, .55), rgba(255, 59, 78, 0)); }
+body.touch .eL, body.touch .eR { bottom: 45%; -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent); }
+body.touch .eB { left: 28%; right: 28%; -webkit-mask-image: linear-gradient(to right, transparent, #000 25%, #000 75%, transparent); }
+
+/* sleep meter, top centre */
+#sleep { position: absolute; left: 50%; transform: translateX(-50%); top: calc(12px * var(--s)); }
+.meter { position: relative; width: calc(400px * var(--s)); height: calc(62px * var(--s)); border-radius: 999px; background: var(--cream);
+  border: calc(4px * var(--s)) solid var(--ink); box-shadow: 0 calc(5px * var(--s)) 0 var(--ink); display: flex; align-items: center; padding: 0 calc(10px * var(--s)); gap: calc(10px * var(--s)); }
+.meter .face { font-size: calc(38px * var(--s)); }
+.meter .col { flex: 1; display: flex; flex-direction: column; gap: calc(3px * var(--s)); }
+.meter .lbl { font-size: calc(17px * var(--s)); color: var(--sleep-d); line-height: 1; }
+.bar { position: relative; height: calc(20px * var(--s)); border-radius: 999px; background: #2F2A4A; border: calc(3px * var(--s)) solid var(--ink); overflow: hidden; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #6EE07A, #FFE066 60%, #FF8A3D 85%, #FF3B4E); background-size: calc(400px * var(--s)) 100%; }
+.tick { position: absolute; top: -2px; bottom: -2px; width: calc(3px * var(--s)); background: rgba(255,255,255,.8); }
+body.awake .meter { background: #FFE3E6; }
+body.awake .meter .lbl { color: var(--wake-d); }
+body.awake .fill { width: 100% !important; background: var(--wake); }
+
+#runhome { position: absolute; display: flex; align-items: center; gap: calc(8px * var(--s)); white-space: nowrap;
+  padding: calc(6px * var(--s)) calc(22px * var(--s)) calc(6px * var(--s)) calc(14px * var(--s)); border-radius: 999px;
+  background: linear-gradient(#FF7A86, var(--wake) 55%, var(--wake-d)); border: calc(4px * var(--s)) solid var(--ink);
+  box-shadow: 0 calc(5px * var(--s)) 0 var(--ink); font-size: calc(34px * var(--s)); transform: rotate(-2deg); }
+
+/* Tiptoe, right side */
+#actions { position: absolute; right: calc(18px * var(--s)); top: 40%; }
+.btn { position: relative; width: calc(92px * var(--s)); height: calc(92px * var(--s)); border-radius: 50%;
+  border: calc(4px * var(--s)) solid var(--ink); box-shadow: 0 calc(6px * var(--s)) 0 var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(#8F9CF0, var(--sleep) 55%, var(--sleep-d)); }
+.btn::after { content: ""; position: absolute; left: 14%; right: 14%; top: 8%; height: 20%; border-radius: 999px; background: rgba(255,255,255,.35); }
+.btn .e { font-size: calc(36px * var(--s)); line-height: 1; }
+.btn .t { font-size: calc(17px * var(--s)); }
+.key { font-size: calc(13px * var(--s)); padding: 0 calc(6px * var(--s)); border-radius: calc(5px * var(--s)); background: var(--ink); margin-top: calc(2px * var(--s)); }
+
+.pill { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(18px * var(--s)); display: flex; align-items: center; gap: calc(10px * var(--s));
+  padding: calc(6px * var(--s)) calc(18px * var(--s)) calc(6px * var(--s)) calc(8px * var(--s)); border-radius: 999px; background: rgba(43, 35, 64, .85);
+  border: calc(4px * var(--s)) solid var(--ink); font-size: calc(22px * var(--s)); white-space: nowrap; }
+.pill .egg { width: calc(40px * var(--s)); height: calc(50px * var(--s)); border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%; border: calc(3px * var(--s)) solid var(--ink);
+  background: radial-gradient(circle at 35% 30%, #CDEBFF, #3FA9FF 60%, #1F78D1); }
+.hide { display: none !important; }
+.touchc { position: absolute; border-radius: 50%; display: none; }
+body.touch .touchc { display: block; }
+#stick { left: 46px; bottom: 26px; width: 104px; height: 104px; background: rgba(30, 30, 40, .35); border: 3px solid rgba(255,255,255,.35); }
+#stick::after { content: ""; position: absolute; left: 30px; top: 30px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.55); }
+#jump { right: 46px; bottom: 30px; width: 80px; height: 80px; background: rgba(30, 30, 40, .35); border: 3px solid rgba(255,255,255,.35); color: rgba(255,255,255,.8); font-size: 34px; text-align: center; line-height: 74px; }
+body.touch .meter { width: 260px; height: 46px; padding: 0 8px; gap: 6px; }
+body.touch .meter .face { font-size: 26px; }
+body.touch .meter .lbl { font-size: 14px; }
+body.touch .bar { height: 13px; }
+body.touch .btn { width: 60px; height: 60px; }
+body.touch .btn .e { font-size: 22px; }
+body.touch .btn .t { font-size: 14px; -webkit-text-stroke: 3.5px var(--ink); }
+body.touch .pill { font-size: 14px; }
+body.touch .pill .egg { width: 24px; height: 30px; }
+body.touch #runhome { font-size: 20px; padding: 3px 14px 3px 9px; border-width: 3px; box-shadow: 0 3px 0 var(--ink); -webkit-text-stroke: 3.5px var(--ink); }
+/* measuring aid (guides=1): the 58 px top-bar band and the free space Roblox reports (TopbarSafeInsets) */
+#band { position: absolute; left: 0; right: 0; top: 0; height: 58px; outline: 1px dashed rgba(255,255,255,.9); display: none; }
+#free { position: absolute; top: 0; height: 58px; right: 0; background: rgba(91, 212, 91, .28); display: none; }
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="edges" class="hide"><div class="eT"></div><div class="eB"></div><div class="eL"></div><div class="eR"></div></div>
+  <div id="band"></div><div id="free"></div>
+  <div id="rbx">
+    <div class="rb"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.5" fill="#fff" transform="rotate(15 12 12)"/><rect x="10" y="10" width="4" height="4" fill="#222" transform="rotate(15 12 12)"/></svg></div>
+    <div class="rb" style="width:88px"><svg viewBox="0 0 24 24"><g stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></g></svg>
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v11H11l-4 4v-4H4z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div id="music"><span class="e">🎵</span><div class="slash"></div></div>
+  <div id="sleep">
+    <div class="meter" id="meter">
+      <span class="face e" id="face">😴</span>
+      <div class="col">
+        <span class="lbl" id="mlabel">Giant is sleeping</span>
+        <div class="bar"><div class="fill" id="fill" style="width:22%"></div><div class="tick" style="left:60%"></div><div class="tick" style="left:85%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="runhome" class="stroke hide"><span class="e">🏃</span>RUN HOME!</div>
+  <div id="actions"><div class="btn" id="tiptoe"><span class="e">🦶</span><span class="t stroke">Tiptoe</span><span class="key" id="tkey">C</span></div></div>
+  <div class="pill hide" id="carry"><div class="egg"></div><span class="stroke">Dodge the red circles!</span></div>
+  <div class="touchc" id="stick"></div>
+  <div class="touchc" id="jump">&#x2B06;</div>
+</div>
+<script>
+const q = new URLSearchParams(location.search);
+const music = q.get("music") || "on";
+const state = q.get("state") || "calm";
+const device = q.get("device") || "desktop";
+const touch = device !== "desktop";
+const $ = id => document.getElementById(id);
+const shot = state === "wake" ? "wake-run" : "meadow-nests";
+$("screen").style.backgroundImage = "url(" + (touch ? "view-phone-" : "view-") + shot + ".png)";
+
+const safe = device === "phone" ? 47 : 0;
+const W = window.innerWidth;
+if (touch) {
+  document.body.classList.add("touch");
+  document.documentElement.style.setProperty("--s", "0.62");
+  $("sleep").style.top = "8px";
+  $("actions").style.right = (safe + 13) + "px"; $("actions").style.top = ""; $("actions").style.bottom = "128px";
+  $("tkey").classList.add("hide");
+  $("stick").style.left = (safe - 1) + "px"; $("jump").style.right = (safe - 1) + "px";
+}
+// Roblox's controls start 12 px inside the device safe edge. Their right end is where the free space starts.
+const rbxLeft = safe + 12;
+$("rbx").style.left = rbxLeft + "px";
+const rbxRight = rbxLeft + 44 + 8 + 88;          // round Roblox button, gap, menu-and-chat pill
+const freeLeft = rbxRight + 12;                   // Roblox keeps a 12 px gap before the free space
+$("free").style.left = freeLeft + "px";
+// the music button: the first thing in the free space
+const meterLeft = W / 2 - (touch ? 130 : 200);
+const gap = meterLeft - (freeLeft + 44);
+const btn = $("music");
+if (gap >= 8) {
+  btn.style.left = freeLeft + "px";
+} else {
+  // too little room before the meter (small phones): the button drops to just under Roblox's round button
+  btn.style.left = rbxLeft + "px"; btn.style.top = (58 + 6) + "px";
+}
+if (music === "off") btn.classList.add("off");
+if (q.get("guides") === "1") { $("band").style.display = "block"; $("free").style.display = "block"; }
+document.title += " | gap to meter " + gap + " px";
+
+if (state === "wake") {
+  document.body.classList.add("awake");
+  $("edges").classList.remove("hide");
+  $("face").textContent = "😠"; $("mlabel").textContent = "AWAKE! Back to sleep in 0:11";
+  const rh = $("runhome"); rh.classList.remove("hide");
+  rh.style.left = (W / 2 + (touch ? 130 : 200) + (touch ? 10 : 14)) + "px"; rh.style.top = touch ? "12px" : "14px";
+  $("carry").classList.remove("hide");
+}
+</script>
+</body>
+</html>
