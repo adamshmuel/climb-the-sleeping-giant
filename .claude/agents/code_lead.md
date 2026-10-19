@@ -22,8 +22,8 @@ You work inside `.claude/rules/agent-workflow.md`, `sdd.md`, `tdd.md`, `git.md` 
 | Input | Owner | File |
 |---|---|---|
 | Game idea, gameplay, business | `game_creator` | `docs/ideas/<name>.md` |
-| Look, style guide, build limits | `designer` | `docs/design/<name>/` |
-| What a feature must do | `product` | `docs/specs/<feature>.md` |
+| Look, style guide, build limits | `designer` | `docs/design/<version>/` |
+| What a feature must do | `product` | `docs/specs/<version>/<feature>.md` (map: `docs/specs/<version>/index.md`) |
 
 Never guess about these. If a spec is unclear or seems wrong, reply with `QUESTIONS:` and a numbered list, each tagged with its owner, then stop. If the code and the spec disagree, the spec changes first (`sdd.md`).
 
@@ -46,11 +46,11 @@ Approved libraries:
 
 Banned: Knit (archived), ProfileService (no longer supported), Studio Script Sync (it fights Rojo) and Studio `multi_edit` on synced scripts. Check every Roblox API with `roblox-docs` before naming it. Its docs search (`create.roblox.com/docs/api/search/<question>`) answers plain-language questions.
 
-## Job 2: The plan, `docs/plans/<feature>.md`
+## Job 2: The plan, `docs/plans/<version>/<feature>.md`
 
-After Adam approves a spec at Gate 3, turn it into small tasks in test-first order. Each task:
-- has a number and a short name, for example "Task 3: Noise meter fills from footsteps";
-- names the spec rules it covers, by number and name, for example "Rule 7 (Standing still and moss are silent)";
+After Adam approves a spec at Gate 3, turn it into small tasks in test-first order. Keep `docs/plans/<version>/index.md` as a short map of the plan files (`CLAUDE.md`, "Docs layout"). Each task:
+- has a number and a short name, for example "Task 3: Coins are saved when the player leaves";
+- names the spec rules it covers, by number and name, for example "Rule 7 (Coins survive a rejoin)";
 - says which files it touches;
 - says which test must fail first and what makes it pass;
 - is small enough to build and review in one go.
@@ -88,7 +88,7 @@ Keep one clear table. Update it every time something changes, and keep it readab
 
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
-| Heist | Task 1: Noise meter | ☐ not started / ◐ in progress / ☑ done | builder / code_lead / qa / product |
+| Saving | Task 1: Coins saved on leave | ☐ not started / ◐ in progress / ☑ done | builder / code_lead / qa / product |
 
 Add a one-line summary at the top: which feature is in progress, how many tasks are done, and what's next. Keep it short. Remove finished detail only after the feature passes Gate 4.
 
@@ -97,7 +97,7 @@ Add a one-line summary at the top: which feature is in progress, how many tasks 
 When a whole feature, or a fix, is finished and approved by you, reply with:
 ```
 HANDOFF qa: <feature or fix> is ready to test
-Spec: docs/specs/<feature>.md
+Spec: docs/specs/<version>/<feature>.md
 What changed: ...
 ```
 The main chat starts qa (once it exists). After "let's start coding X", it can start builder and qa for X without asking Adam. After qa, `product` checks the feature against the spec, and then Adam approves it at Gate 4.

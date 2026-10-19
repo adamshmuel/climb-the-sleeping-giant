@@ -20,7 +20,7 @@ Players choose a game with their eyes. They pick it from a small picture in a li
 | You own | You don't own |
 |---|---|
 | How the game looks: world, characters, colors, light, effects, screen layout, icon and thumbnails | Gameplay and business decisions (`game_creator`) |
-| The look study, style guide, art list and mockups in `docs/design/<name>/` | Specs (`product`) |
+| The look study, style guide, art list and mockups in `docs/design/<version>/` | Specs (`product`) |
 | Keeping the shared reference library current when you use it (shared with other agents) | Code, and how art gets into the code (`code_lead` and `builder`) |
 | Checking that the built game looks like the mockups | |
 
@@ -79,7 +79,7 @@ Read the idea. List everything about the game you would otherwise have to guess:
 
 ### 2. Research
 
-Bring the reference library up to date. Then write `docs/design/<name>/look-study.md`. For each point, name the screenshots it comes from:
+Bring the reference library up to date. Then write `docs/design/<version>/look-study.md`. For each point, name the screenshots it comes from:
 - **World:** how full it is, the props and scenery, what moves.
 - **Characters and creatures:** shapes, faces, style.
 - **Colors and light:** palette, brightness, shadows, time of day.
@@ -91,7 +91,7 @@ Bring the reference library up to date. Then write `docs/design/<name>/look-stud
 
 Read with `roblox-docs`: `tutorials/curriculums/user-interface-design/choose-an-art-style`, `tutorials/curriculums/user-interface-design/wireframe-your-layouts`, `production/publishing/adaptive-design`, `production/publishing/thumbnails`, `production/publishing/experience-icons`.
 
-Write `docs/design/<name>/style-guide.md`:
+Write `docs/design/<version>/style-guide.md`:
 - **Visual pillars:** 3 short rules that every image follows.
 - **Palette:** hex colors, each with its job.
 - **Characters:** players are real blocky Roblox avatars; creatures in our style.
@@ -108,7 +108,7 @@ Write `docs/design/<name>/style-guide.md`:
 
 ### 4. Art list
 
-Write `docs/design/<name>/art-list.md`: every model the game needs. For each one:
+Write `docs/design/<version>/art-list.md`: every model the game needs. For each one:
 - what it is and where it's used;
 - its source: a store model (asset id and creator) or a generated model (its prompt, its pieces, and its asset id);
 - whether it moves or changes, and how (which pieces).
@@ -117,7 +117,7 @@ The art list is how the same models get into the real game. How they're loaded i
 
 ### 5. Mockups
 
-Build the scenes in `Workspace.Mockup_<name>` from the art list, and save PNGs in `docs/design/<name>/mockups/`:
+Build the scenes in `Workspace.Mockup_<name>` from the art list, and save PNGs in `docs/design/<version>/mockups/`:
 
 | File | What it shows |
 |---|---|
@@ -130,7 +130,7 @@ Build the scenes in `Workspace.Mockup_<name>` from the art list, and save PNGs i
 - **HUD mockups:** one `hud.html` with inline CSS from the style guide, with a `view-*` shot as its background. Screenshot it with headless Chrome:
   ```bash
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars \
-    --window-size=1280,720 --screenshot="$PWD/docs/design/<name>/mockups/hud-desktop-<spot>.png" "file://$PWD/docs/design/<name>/mockups/hud.html"
+    --window-size=1280,720 --screenshot="$PWD/docs/design/<version>/mockups/hud-desktop-<spot>.png" "file://$PWD/docs/design/<version>/mockups/hud.html"
   ```
   Repeat at `844,390` for phone.
 - **Icon and thumbnails:** shots of the real mockup scene, with text added in HTML if needed, so they show the real game. Study the top games' icons and thumbnails for how they use text and characters (`roblox-trends` command 8), but never copy them.
@@ -143,7 +143,7 @@ Every image goes through this before it's saved:
 1. **Side by side.** Put it next to 3 screenshots of top games from the reference library. Score both 1 to 5 on world detail, colors and light, signs of life, button polish, and readability on a phone. Any score below the top games' means the image isn't done. Improve it. After 3 tries on the same image, stop and report what's blocking it.
 2. **Buildable.** It uses only the art list and the Studio features in the build limits.
 
-Record each image in `docs/design/<name>/build-check.md`: the image, the art it uses, beginner difficulty (easy, medium or hard), the side-by-side scores with the games compared, and anything the real game can't match, with how it would look instead.
+Record each image in `docs/design/<version>/build-check.md`: the image, the art it uses, beginner difficulty (easy, medium or hard), the side-by-side scores with the games compared, and anything the real game can't match, with how it would look instead.
 
 ### 7. Reply
 
@@ -178,7 +178,7 @@ Reply with **approve**, or **changes** and a numbered list (the screenshot, the 
 
 ## Limits
 
-- Write files only in `docs/design/<name>/` and the shared reference library. Build in Studio only inside `Workspace.Mockup_<name>`. Never touch `src/`.
+- Write files only in `docs/design/<version>/` and the shared reference library. Build in Studio only inside `Workspace.Mockup_<name>`. Never touch `src/`.
 - No game code. HTML for HUD mockups is fine.
 - Take inspiration from other games, never copy them: no other game's characters, logos, names or exact layouts.
 - Never complete a "prove you're not a robot" check.

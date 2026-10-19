@@ -1,6 +1,6 @@
 # Spec-driven development
 
-Specs live in `docs/specs/`. Implementation plans live in `docs/plans/`.
+Specs live in `docs/specs/`. Implementation plans live in `docs/plans/`. Both use the folder layout in `CLAUDE.md` ("Docs layout"): one folder per version, with an `index.md` map and one small file per feature. An agent gets the index plus only its own feature file.
 
 The order is always: **spec → Adam approves → plan → code.**
 
@@ -23,7 +23,7 @@ spec) or **out** (it is not built in this spec). There is no "nice to have", no
 priority levels like P1/P2, no "optional" and no "fallback if it's too hard".
 
 - Something that is out but still needed later goes into a named later spec in
-  `docs/specs/index.md`, for example "Launch polish: tiptoe animation".
+  `docs/specs/index.md`, for example "Launch polish: walking animation".
 - If a choice depends on difficulty, the owner decides now which version is built.
 
 ## Coding starts only when Adam says so

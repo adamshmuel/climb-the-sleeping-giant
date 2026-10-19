@@ -12,9 +12,9 @@ Nobody approves what they haven't seen in the running game. Reading code and pas
   - take `screen_capture` screenshots of the real play screen.
 - Each check looks at:
   - **Computer and phone:** the computer screen, and a phone screen through Studio's device simulator;
-  - **Every state it touches:** for example the base, a bridge, each ring, the giant asleep, stirring and awake, carrying an egg, and being caught.
+  - **Every state it touches:** for example each area of the map, each phase of an enemy or event, carrying an item, and being caught or defeated.
 - Screenshots are evidence: a report names what they show, and compares them with the spec and the approved mockups.
-- Problems are judged on the whole screen, not only the part the task changed: something covering the giant, text cut off at an edge, or controls overlapping are problems even if no rule names them.
+- Problems are judged on the whole screen, not only the part the task changed: something covering the main character or enemy, text cut off at an edge, or controls overlapping are problems even if no rule names them.
 - If a tool can't do something (for example, it can't capture a screen), test it in Play before believing it, and tell the main chat. Never quietly push a check to "later".
 
 ## Shared reference library: `references/top-games/`
@@ -111,7 +111,7 @@ The main chat's own memory grows too. After every approved task, it updates the 
    It replies with either **approve** or **changes**, plus a numbered list. Changes go back to `designer`. After 3 rounds without approval, stop and ask Adam.
 5. **Gate 2: Adam approves the images.** After `game_creator` approves, the main chat shows Adam the images and the review. Any changes Adam asks for go through steps 3–4 again.
 6. **Specs.** After Gate 2, when Adam says so, the main chat starts `product`.
-   - It splits V1 into small specs, listed in `docs/specs/index.md`, with the core heist first.
+   - It splits the version into small specs, in a version folder with an `index.md` map (`CLAUDE.md`, "Docs layout"), with the core loop first.
    - It writes one spec at a time.
    - Its questions go to `game_creator` (gameplay, business) or `designer` (look), the same way as in step 3.
 7. **Spec review.** `game_creator` checks idea and business fit, and `designer` checks the spec matches the mockups and the build limits.
@@ -119,7 +119,7 @@ The main chat's own memory grows too. After every approved task, it updates the 
    - Changes go back to `product`.
    - After 3 rounds without approval from both, stop and ask Adam.
 8. **Gate 3: Adam approves the spec.** The main chat shows Adam the spec and both reviews.
-9. **Plan.** After Gate 3, when Adam says so, the main chat starts `code_lead`. It keeps `docs/architecture.md` current and writes `docs/plans/<feature>.md`: small tasks in test-first order, each naming the spec rules it covers. Its questions go to the owners like everyone else's.
+9. **Plan.** After Gate 3, when Adam says so, the main chat starts `code_lead`. It keeps `docs/architecture.md` current and writes `docs/plans/<version>/index.md` and one `docs/plans/<version>/<feature>.md` per spec: small tasks in test-first order, each naming the spec rules it covers. Its questions go to the owners like everyone else's.
 10. **Code.** Only after Adam says "let's start coding X" (sdd.md). `code_lead` hands one task at a time to `builder`. `builder` writes it test-first in `src/` and proves it works. `code_lead` reviews every task: **approve** or **changes** (max 3 rounds, then Adam). `code_lead` keeps `docs/progress.md` up to date.
 11. **Test.** When a whole feature or a fix is approved, `code_lead` hands it to `qa`, which tests it. Bugs go back to `builder`.
 12. **Build review.** `product` first plays the feature like a regular player: whole sessions, with the player's own controls only, on computer and phone. Anything that hurts the player is a fail, even if no rule names it. Then it checks the feature against its spec, the idea and the business goals, then writes `docs/reviews/<feature>.md` with an **accept** or **changes** verdict. `game_creator` also plays it and judges the first impression next to the top games, the fun and the business fit (its Job 6), and `designer` checks the look (its Job 4). Changes go back to `builder`.
@@ -161,9 +161,10 @@ Adam talks only to the main chat. When he asks why an agent decided something, o
 | Path | Written by | In git |
 |---|---|---|
 | `docs/ideas/<name>.md` | `game_creator` | yes |
-| `docs/design/<name>/` (look study, style guide, mockups) | `designer` | yes |
+| `docs/design/<version>/` (look study, style guide, mockups) | `designer` | yes |
 | `references/top-games/` (the shared reference library, see above) | any agent that needs it | **no**, because those images belong to other games |
-| `docs/specs/index.md`, `docs/specs/<feature>.md` | `product` | yes |
+| `docs/specs/index.md`, `docs/specs/<version>/index.md`, `docs/specs/<version>/<feature>.md` | `product` | yes |
+| `docs/specs/<version>/research/` (owner input saved for fresh agents) | main chat | yes |
 | `docs/reviews/<feature>.md` | `product` | yes |
-| `docs/architecture.md`, `docs/plans/<feature>.md`, `docs/progress.md` | `code_lead` | yes |
+| `docs/architecture.md`, `docs/plans/<version>/index.md`, `docs/plans/<version>/<feature>.md`, `docs/progress.md` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |

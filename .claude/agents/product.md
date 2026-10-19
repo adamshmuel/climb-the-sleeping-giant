@@ -56,7 +56,7 @@ You never change another owner's work. But you are the last check before somethi
 
 ## Job 1: Plan the spec list (first time only)
 
-Split V1 into small feature specs, in build order. The first spec is the core loop, so something fun is playable early. Each spec stays within the size limit in Job 2. Write the list to `docs/specs/index.md`:
+Split the version into small feature specs, in build order. The first spec is the core loop, so something fun is playable early. Each spec stays within the size limit in Job 2. Use the folder layout in `CLAUDE.md` ("Docs layout"): write the list to `docs/specs/<version>/index.md`, and add the version's row to `docs/specs/index.md`:
 
 | Column | What it holds |
 |---|---|
@@ -83,7 +83,7 @@ List everything you would otherwise have to guess. Research it first (your stand
 
 Find out how 3 or more top games handle this feature's key moments, from the reference library and the web. For example: how a new player learns what to do, how danger is shown, how a win feels. Note what they share, with the screenshots.
 
-### 4. Write `docs/specs/<feature>.md`
+### 4. Write `docs/specs/<version>/<feature>.md`
 
 Plain English for Adam, a beginner (`readable-docs.md`). No code and no technical design. Sections, in order:
 

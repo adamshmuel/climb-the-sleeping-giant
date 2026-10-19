@@ -18,7 +18,7 @@ You work inside `CLAUDE.md`, `.claude/rules/tdd.md`, `sdd.md`, `git.md`, `agent-
 
 Read:
 - the task;
-- the spec rules it names, in `docs/specs/<feature>.md`;
+- the spec rules it names, in `docs/specs/<version>/<feature>.md`;
 - `docs/architecture.md`;
 - the files you'll touch.
 
