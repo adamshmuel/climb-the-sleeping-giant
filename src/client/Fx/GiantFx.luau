@@ -4,14 +4,25 @@
 -- player's own device, this module moves its own copy of the giant. The server never moves him.
 --   * 60: his eyelids flutter twice (each lid lifts and a white slice of eye shows), and the floating Z Z Z hold still
 --     and fade to half for 2 seconds.
---   * 85: the Z Z Z and the snore puffs stop, a bubble by his mouth says "Mmm... my eggs..." for 3 seconds, and his
---     right arm twitches twice. The Z Z Z and puffs come back when the meter falls to 75 (and he is asleep), or when
---     he goes into Heavy Sleep.
+--   * 85: the Z Z Z and the snore puffs stop, a bubble beside his nose (World.GiantFX.SnoreEmitter.Warning85Bubble)
+--     says "Mmm... my eggs..." for 3 seconds and fades out over 0.3 more, and he snorts twice from his nose: a burst of
+--     20 puffs, and another 0.5 seconds later. Nothing he sleeps on moves (spec Rule 100, "Nothing you stand on moves
+--     while he sleeps"), so his arm stays still. The Z Z Z and puffs come back when the meter falls to 75 (and he is
+--     asleep), or when he goes into Heavy Sleep.
+--     The bubble has a fixed size on the screen (Bubble85 holds the maths: the sizes, the side, the pop and the fade).
+--     Each frame while it shows, this module sets its size from isPhone, its side from the camera's RightVector.Z, and
+--     its pop and fade from the time. All three inputs are read each time, never once at the start.
+-- A free save (spec Rule 17, "A free save replays the 85% warning") fires Warning with (85, Net.FreeSaveKind). The 85
+-- plan plays again from the start (the snort too: a burst now, and the second 0.5 seconds after this one), and the Z Z Z
+-- and puffs stay off until Config.Meter.FreeSaveWarningSeconds have
+-- passed. Then, if the meter is at 75 or less, they come back and the letters fade in over 0.2 seconds, like the way
+-- back of the 60 fade. Otherwise they wait for the meter to fall to 75, as after a plain 85. Any other second value
+-- is ignored, like a wrong mark.
 -- The Tiptoe button's glow and the tip "Stand still or tiptoe!" belong to TiptoeButton and Messages. warningPlan
 -- lists them anyway, so the whole warning is in one place.
 -- The waking pose (spec Rule 12, "Waking bounces everyone off"): when GiantState's Phase turns Awake, the warnings stop
 -- at once, his eyes swap (the sleeping eyes hide, the awake eyes show), and over 0.5 seconds his head tips forward
--- (head, nightcap, lids and awake eyes together) and his right fist goes up. The mumble bubble, the Z Z Z and the
+-- (head, nightcap, lids and awake eyes together) and his right fist goes up. The bubble, the Z Z Z and the
 -- puffs are off for as long as he is awake. When Phase leaves Awake the eyes swap back at once and the head and the
 -- arm go back over 0.5 seconds. A player who joins while he is awake sees the full pose at once.
 -- The slam swing (spec section 6, "Awake" row): each SlamWarning makes his right arm swing toward the target over 0.5
@@ -29,13 +40,15 @@
 -- look is always what the place had (saved the first time, like everything else here), never a number in code, and a
 -- part that streams in gets the look for the phase at that moment. Off is off: the quiet and awake rules above win.
 -- Pieces are always placed from the pivot they had at the start (saved once), never by adding to where they are now, so
--- a second flutter or twitch can never leave them out of place. The motion needs no tween: it runs on `step` and
+-- a second flutter can never leave them out of place. The motion needs no tween: it runs on `step` and
 -- connects to it only while something is moving.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
+local Bubble85 = require(script.Parent.Bubble85)
 local SlamFx = require(script.Parent.SlamFx)
 
 local GiantFx = {}
@@ -46,21 +59,22 @@ local FADE_LETTERS = "fadeLetters"
 local STOP_LETTERS = "stopLetters"
 local STOP_PUFFS = "stopPuffs"
 local MUMBLE = "mumbleBubble"
-local TWITCH = "twitchArm"
+local SNORT = "snortNose"
 local GLOW = "tiptoeGlow"
 local TIP = "standStillTip"
 
 local PLAN_60: { string } = table.freeze({ FLUTTER, FADE_LETTERS })
-local PLAN_85: { string } = table.freeze({ STOP_LETTERS, STOP_PUFFS, MUMBLE, TWITCH, GLOW, TIP })
+local PLAN_85: { string } = table.freeze({ STOP_LETTERS, STOP_PUFFS, MUMBLE, SNORT, GLOW, TIP })
 local PLAN_NONE: { string } = table.freeze({})
 
-GiantFx.flutterSeconds = 0.5 -- one flutter (and one twitch): 0.25 s up, 0.25 s down
+GiantFx.flutterSeconds = 0.5 -- one flutter: 0.25 s up, 0.25 s down
 GiantFx.flutterCount = 2
-GiantFx.twitchDegrees = 12
+GiantFx.snortPuffs = 20 -- the puffs in each of the two snort bursts (style guide, "The snort")
+GiantFx.snortGapSeconds = 0.5 -- the second burst comes this long after the first
 GiantFx.fadeSeconds = 2 -- the Z Z Z fade, all in all
 GiantFx.fadeEdgeSeconds = 0.2 -- the way down to half and the way back
 GiantFx.fadeTo = 0.5 -- half see-through
-GiantFx.mumbleSeconds = 3
+GiantFx.fadeInSeconds = 0.2 -- the letters of the Z Z Z come back from fully see-through over this long, after a replay
 GiantFx.comeBackAtMeter = 75
 GiantFx.poseSeconds = 0.5 -- the head tip and the fist raise, on waking and on going back to sleep
 -- Heavy Sleep: how much bigger the Z Z Z sign is (designer: 2.5 times, because the style guide asks for "much bigger").
@@ -250,7 +264,7 @@ end
 
 -- The turn that raises the right arm `share` of the way: put it in front of the arm's start pivot. The arm turns about
 -- `shoulder`, around the axis of the rotation CFrame.Angles(x, y, z) (`raiseDegreesXZ` holds x, y and z in degrees: the
--- same axis the twitch uses), by that rotation's own angle times `share`. At share 1 it is exactly the full raise.
+-- same axis the wake-up raise uses), by that rotation's own angle times `share`. At share 1 it is exactly the full raise.
 function GiantFx.armRaise(shoulder: Vector3, raiseDegreesXZ: Vector3, share: number): CFrame
 	local full = CFrame.Angles(math.rad(raiseDegreesXZ.X), math.rad(raiseDegreesXZ.Y), math.rad(raiseDegreesXZ.Z))
 	local axis, angle = full:ToAxisAngle()
@@ -260,7 +274,7 @@ function GiantFx.armRaise(shoulder: Vector3, raiseDegreesXZ: Vector3, share: num
 	return CFrame.new(shoulder) * CFrame.fromAxisAngle(axis, angle * share) * CFrame.new(-shoulder)
 end
 
--- How far up a flutter or a twitch is, from 0 (down) to 1 (all the way up), `seconds` after the warning started.
+-- How far up a flutter is, from 0 (down) to 1 (all the way up), `seconds` after the warning started.
 -- Two up-and-down movements, 0.25 s up and 0.25 s down each, with no pause. After the last one it is 0 for good.
 function GiantFx.lift(seconds: number): number
 	local total = GiantFx.flutterSeconds * GiantFx.flutterCount
@@ -280,11 +294,6 @@ function GiantFx.flutterLift(seconds: number, flutterLift: number): number
 	return flutterLift * GiantFx.lift(seconds)
 end
 
--- How many degrees the right arm is turned `seconds` after an 85 warning started.
-function GiantFx.twitchAngle(seconds: number): number
-	return GiantFx.twitchDegrees * GiantFx.lift(seconds)
-end
-
 -- How see-through a Z letter or its outline is `seconds` after a 60 warning started, if it normally has `normal`.
 -- It goes to half over the first 0.2 s, holds, and comes back over the last 0.2 s. After 2 s it is `normal` again.
 function GiantFx.fadedTransparency(normal: number, seconds: number): number
@@ -302,12 +311,22 @@ function GiantFx.fadedTransparency(normal: number, seconds: number): number
 	return normal + (GiantFx.fadeTo - normal) * share
 end
 
+-- How see-through a Z letter or its outline is `seconds` after the Z Z Z came back at the end of a replayed warning, if
+-- it normally has `normal`. It starts fully see-through (1), comes back evenly over 0.2 s, and is `normal` after that.
+function GiantFx.fadedInTransparency(normal: number, seconds: number): number
+	if seconds >= GiantFx.fadeInSeconds then
+		return normal
+	end
+	local share = math.max(seconds, 0) / GiantFx.fadeInSeconds
+	return 1 + (normal - 1) * share
+end
+
 -- The shapes this module needs, so tests can pass simple stand-ins. The real ones fit these shapes.
 export type SignalLike = {
 	Connect: (self: any, callback: (...any) -> ()) -> RBXScriptConnection,
 }
 
--- The Warning remote, as far as this module uses it: it fires the mark (60 or 85).
+-- The Warning remote, as far as this module uses it: it fires the mark (60 or 85), and at a free save (85, Net.FreeSaveKind).
 export type WarningLike = { OnClientEvent: SignalLike }
 
 export type Deps = {
@@ -318,11 +337,20 @@ export type Deps = {
 	step: SignalLike, -- once per frame, for the motion (RenderStepped)
 	now: () -> number, -- a clock in seconds (os.clock)
 	armClear: (shoulder: Vector3, direction: Vector3) -> boolean, -- is the arm's path clear of his body?
+	-- Sends `count` puffs out of an emitter at once. If left out, it is the emitter's own Emit.
+	burst: ((emitter: ParticleEmitter, count: number) -> ())?,
+	-- Clears every puff an emitter has sent out, at once. If left out, it is the emitter's own Clear.
+	clear: ((emitter: ParticleEmitter) -> ())?,
+	isPhone: () -> boolean, -- is this a phone screen? (asked each time, so a new window size counts)
+	cameraRight: () -> Vector3, -- the current camera's RightVector (its Z says which side of his nose the bubble goes)
+	reducedMotion: () -> boolean, -- GuiService.ReducedMotionEnabled: the bubble just appears and goes
 }
 
 -- What start gives back: `stop` puts every piece back as it was and disconnects everything.
 export type Handle = {
 	stop: () -> (),
+	-- How many bubbles have their first look saved right now (for tests: a bubble that left the game has none).
+	savedBubbleCount: () -> number,
 }
 
 local LID_NAMES = { "LeftLid", "RightLid" }
@@ -361,10 +389,17 @@ function GiantFx.start(deps: Deps): Handle
 	-- What is playing now: the time each started, or nil.
 	local flutterAt: number? = nil
 	local fadeAt: number? = nil
-	local twitchAt: number? = nil
+	-- When the snort started: its second burst is still to come until this is nil.
+	local snortAt: number? = nil
+	-- The 85 bubble: when it popped in, and when it goes off (after its fade), or nil.
+	local bubbleAt: number? = nil
 	local bubbleUntil: number? = nil
 	-- True from an 85 warning until the Z Z Z and puffs may come back.
 	local quiet = false
+	-- After a replayed 85: when its 3 seconds are over (the Z Z Z stay off until then), or nil. And when the Z Z Z came
+	-- back after it, while the letters fade in, or nil.
+	local replayUntil: number? = nil
+	local fadeInAt: number? = nil
 	local stepConnection: RBXScriptConnection? = nil
 	-- True from the moment Phase turned Awake until it left Awake.
 	local awake = false
@@ -433,12 +468,183 @@ function GiantFx.start(deps: Deps): Handle
 		return nil
 	end
 
-	local function mumble(): BillboardGui?
-		local found = child(child(fx(), "MumbleAnchor"), "Mumble")
+	local function snortPuff(): ParticleEmitter?
+		local found = child(child(fx(), "SnortNose"), "SnortPuff")
+		if found ~= nil and found:IsA("ParticleEmitter") then
+			return found
+		end
+		return nil
+	end
+
+	local function bubble(): BillboardGui?
+		local found = child(child(fx(), "SnoreEmitter"), "Warning85Bubble")
 		if found ~= nil and found:IsA("BillboardGui") then
 			return found
 		end
 		return nil
+	end
+
+	-- How the bubble was before this module changed it, saved the first time it is placed (a bubble that streams out
+	-- and back in is a new instance, so it is saved again).
+	type BubbleStart = {
+		size: UDim2,
+		studsOffset: Vector3,
+		sizeOffset: Vector2,
+		textScaled: boolean,
+		textWrapped: boolean,
+		textSize: number,
+		tailPosition: UDim2,
+		background: { [GuiObject]: number },
+		text: { [TextLabel]: number },
+		stroke: { [UIStroke]: number },
+	}
+	local startBubble: { [BillboardGui]: BubbleStart } = {}
+	-- Watching each saved bubble, so its entry goes when the bubble leaves the game (it streams out on a phone).
+	local bubbleWatch: { [BillboardGui]: { RBXScriptConnection } } = {}
+
+	local function forgetBubble(gui: BillboardGui)
+		startBubble[gui] = nil
+		local watching = bubbleWatch[gui]
+		if watching ~= nil then
+			bubbleWatch[gui] = nil
+			for _, connection in watching do
+				connection:Disconnect()
+			end
+		end
+	end
+
+	local function watchBubble(gui: BillboardGui)
+		local function onLeft()
+			if not gui:IsDescendantOf(deps.world) then
+				forgetBubble(gui)
+			end
+		end
+		-- Destroying fires while the bubble is still in the world, so it forgets at once.
+		bubbleWatch[gui] = {
+			gui.AncestryChanged:Connect(onLeft),
+			gui.Destroying:Connect(function()
+				forgetBubble(gui)
+			end),
+		}
+	end
+
+	-- The pieces of the bubble: the pill, its words and the tail (found by name each time).
+	local function bubbleWords(gui: BillboardGui): TextLabel?
+		local found = child(child(gui, "Frame"), "TextLabel")
+		if found ~= nil and found:IsA("TextLabel") then
+			return found
+		end
+		return nil
+	end
+
+	local function bubbleTail(gui: BillboardGui): GuiObject?
+		local found = child(gui, "Tail")
+		if found ~= nil and found:IsA("GuiObject") then
+			return found
+		end
+		return nil
+	end
+
+	local function bubbleStartOf(gui: BillboardGui): BubbleStart
+		local saved = startBubble[gui]
+		if saved ~= nil then
+			return saved
+		end
+		local words = bubbleWords(gui)
+		local tail = bubbleTail(gui)
+		local made: BubbleStart = {
+			size = gui.Size,
+			studsOffset = gui.StudsOffset,
+			sizeOffset = gui.SizeOffset,
+			textScaled = if words ~= nil then words.TextScaled else false,
+			textWrapped = if words ~= nil then words.TextWrapped else false,
+			textSize = if words ~= nil then words.TextSize else 0,
+			tailPosition = if tail ~= nil then tail.Position else UDim2.new(),
+			background = {},
+			text = {},
+			stroke = {},
+		}
+		for _, piece in gui:GetDescendants() do
+			if piece:IsA("TextLabel") then
+				made.text[piece] = piece.TextTransparency
+			end
+			if piece:IsA("GuiObject") then
+				made.background[piece] = piece.BackgroundTransparency
+			elseif piece:IsA("UIStroke") then
+				made.stroke[piece] = piece.Transparency
+			end
+		end
+		startBubble[gui] = made
+		watchBubble(gui)
+		return made
+	end
+
+	-- Makes every part of the bubble `fade` of the way from its own look to fully see-through (0 is its own look).
+	local function paintBubble(gui: BillboardGui, fade: number)
+		local start = bubbleStartOf(gui)
+		for piece, look in start.background do
+			piece.BackgroundTransparency = look + (1 - look) * fade
+		end
+		for piece, look in start.text do
+			piece.TextTransparency = look + (1 - look) * fade
+		end
+		for piece, look in start.stroke do
+			piece.Transparency = look + (1 - look) * fade
+		end
+	end
+
+	-- Sets the bubble's size, side, pop and fade for `now`: `now - bubbleAt` seconds after it popped in.
+	local function placeBubble(gui: BillboardGui, now: number)
+		local at = bubbleAt
+		if at == nil then
+			return
+		end
+		bubbleStartOf(gui)
+		local seconds = now - at
+		local reduced = deps.reducedMotion()
+		local look = Bubble85.size(deps.isPhone())
+		local scale = Bubble85.popScale(seconds, reduced)
+		gui.Size = UDim2.fromOffset(math.round(look.size.X.Offset * scale), math.round(look.size.Y.Offset * scale))
+		local side = Bubble85.side(deps.cameraRight().Z)
+		gui.StudsOffset = side.studsOffset
+		gui.SizeOffset = side.sizeOffset
+		local words = bubbleWords(gui)
+		if words ~= nil then
+			-- One line at a fixed font size; during the pop the words grow with the bubble.
+			words.TextScaled = false
+			words.TextWrapped = false
+			words.TextSize = math.max(1, math.round(look.textSize * scale))
+		end
+		local tail = bubbleTail(gui)
+		if tail ~= nil then
+			tail.Position = Bubble85.tailPosition(side.tailRight)
+		end
+		paintBubble(gui, Bubble85.fade(seconds, reduced))
+	end
+
+	-- Puts the bubble's size, side, words and look back as they were before this module changed them.
+	local function restoreBubble(gui: BillboardGui?)
+		if gui == nil then
+			return
+		end
+		local start = startBubble[gui]
+		if start == nil then
+			return
+		end
+		gui.Size = start.size
+		gui.StudsOffset = start.studsOffset
+		gui.SizeOffset = start.sizeOffset
+		local words = bubbleWords(gui)
+		if words ~= nil then
+			words.TextScaled = start.textScaled
+			words.TextWrapped = start.textWrapped
+			words.TextSize = start.textSize
+		end
+		local tail = bubbleTail(gui)
+		if tail ~= nil then
+			tail.Position = start.tailPosition
+		end
+		paintBubble(gui, 0)
 	end
 
 	-- The pivot a model had before any motion of this module, saved the first time.
@@ -504,6 +710,23 @@ function GiantFx.start(deps: Deps): Handle
 				outline.Transparency = if seconds == nil
 					then normalOutline
 					else GiantFx.fadedTransparency(normalOutline, seconds)
+			end
+		end
+	end
+
+	-- Paints every letter and outline `seconds` into the fade-in after a replay, or back to normal when `seconds` is nil.
+	local function paintFadeIn(seconds: number?)
+		for _, letter in letters() do
+			local normal = startLetter[letter.label]
+			letter.label.TextTransparency = if seconds == nil
+				then normal
+				else GiantFx.fadedInTransparency(normal, seconds)
+			local outline = letter.outline
+			if outline ~= nil then
+				local normalOutline = startOutline[outline]
+				outline.Transparency = if seconds == nil
+					then normalOutline
+					else GiantFx.fadedInTransparency(normalOutline, seconds)
 			end
 		end
 	end
@@ -583,12 +806,13 @@ function GiantFx.start(deps: Deps): Handle
 				restoreEnabled(puff)
 			end
 		end
-		local bubble = mumble()
-		if bubble ~= nil then
+		local gui = bubble()
+		if gui ~= nil then
 			if bubbleUntil ~= nil and not awake then
-				setEnabled(bubble, true)
+				placeBubble(gui, deps.now())
+				setEnabled(gui, true)
 			else
-				restoreEnabled(bubble)
+				restoreEnabled(gui)
 			end
 		end
 	end
@@ -611,22 +835,32 @@ function GiantFx.start(deps: Deps): Handle
 		end
 	end
 
-	-- Turns the right arm `degrees` about the shoulder, from where it started.
-	local function placeArm(degrees: number)
-		local model = arm()
-		if model == nil then
+	-- One snort burst, from the nose as it is now: it streams in and out on a player's device, so it is looked up each
+	-- time, and a burst is skipped (with no error) while it isn't there.
+	local function snortBurst()
+		local emitter = snortPuff()
+		if emitter == nil then
 			return
 		end
-		local start = startPivotOf(model)
-		local shoulderPoint: any = giant():GetAttribute("Awake_RightShoulderPivot")
-		if degrees == 0 or typeof(shoulderPoint) ~= "Vector3" then
-			model:PivotTo(start)
+		if deps.burst ~= nil then
+			deps.burst(emitter, GiantFx.snortPuffs)
+		else
+			emitter:Emit(GiantFx.snortPuffs)
+		end
+	end
+
+	-- Clears the snort cloud at once, from the nose as it is now (skipped, with no error, while it isn't there). The
+	-- puffs of a burst live about 2.3 seconds, so at a wake they would still cover his open eyes.
+	local function clearSnort()
+		local emitter = snortPuff()
+		if emitter == nil then
 			return
 		end
-		-- The same axis as the awake raise, so the twitch goes the way the arm will go when he wakes.
-		local axis = CFrame.Angles(math.rad(135), 0, math.rad(15)):ToAxisAngle()
-		local turn = CFrame.fromAxisAngle(axis, math.rad(degrees))
-		model:PivotTo(CFrame.new(shoulderPoint) * turn * CFrame.new(-shoulderPoint) * start)
+		if deps.clear ~= nil then
+			deps.clear(emitter)
+		else
+			emitter:Clear()
+		end
 	end
 
 	-- The seconds into the pose at `now`.
@@ -748,6 +982,25 @@ function GiantFx.start(deps: Deps): Handle
 		table.clear(startLook)
 	end
 
+	-- True when the meter or the phase lets the Z Z Z and puffs come back: Heavy Sleep, or asleep with the meter at 75 or less.
+	local function mayComeBack(): boolean
+		local phase = deps.giantState:GetAttribute("Phase")
+		local meter = deps.giantState:GetAttribute("Meter")
+		return phase == "HeavySleep"
+			or (phase == "Asleep" and type(meter) == "number" and meter <= GiantFx.comeBackAtMeter)
+	end
+
+	-- The 3 seconds of a replayed warning are over at `now`. If the meter lets them, the Z Z Z and puffs come back and the
+	-- letters fade in. If not, they stay off until the meter falls (onGiantStateChanged), as after a plain 85.
+	local function endReplay(now: number)
+		if quiet and mayComeBack() then
+			quiet = false
+			fadeInAt = now
+			applyState()
+			paintFadeIn(0)
+		end
+	end
+
 	local function disconnectStep()
 		if stepConnection ~= nil then
 			stepConnection:Disconnect()
@@ -771,14 +1024,9 @@ function GiantFx.start(deps: Deps): Handle
 				placeLids(seconds)
 			end
 		end
-		if twitchAt ~= nil then
-			local seconds = now - twitchAt
-			if seconds >= GiantFx.flutterSeconds * GiantFx.flutterCount then
-				twitchAt = nil
-				placeArm(0)
-			else
-				placeArm(GiantFx.twitchAngle(seconds))
-			end
+		if snortAt ~= nil and now - snortAt >= GiantFx.snortGapSeconds then
+			snortAt = nil
+			snortBurst()
 		end
 		if fadeAt ~= nil then
 			local seconds = now - fadeAt
@@ -789,9 +1037,30 @@ function GiantFx.start(deps: Deps): Handle
 				paintLetters(seconds)
 			end
 		end
-		if bubbleUntil ~= nil and now >= bubbleUntil then
-			bubbleUntil = nil
-			applyState()
+		if bubbleUntil ~= nil then
+			if now >= bubbleUntil then
+				bubbleAt = nil
+				bubbleUntil = nil
+				applyState()
+			else
+				local gui = bubble()
+				if gui ~= nil then
+					placeBubble(gui, now)
+				end
+			end
+		end
+		if replayUntil ~= nil and now >= replayUntil then
+			replayUntil = nil
+			endReplay(now)
+		end
+		if fadeInAt ~= nil then
+			local seconds = now - fadeInAt
+			if seconds >= GiantFx.fadeInSeconds then
+				fadeInAt = nil
+				paintFadeIn(nil)
+			else
+				paintFadeIn(seconds)
+			end
 		end
 		if shrinkAt ~= nil then
 			if now - shrinkAt >= GiantFx.heavyShrinkSeconds then
@@ -816,9 +1085,11 @@ function GiantFx.start(deps: Deps): Handle
 		end
 		if
 			flutterAt == nil
-			and twitchAt == nil
+			and snortAt == nil
 			and fadeAt == nil
 			and bubbleUntil == nil
+			and replayUntil == nil
+			and fadeInAt == nil
 			and poseDirection == 0
 			and slamAt == nil
 			and shrinkAt == nil
@@ -834,9 +1105,13 @@ function GiantFx.start(deps: Deps): Handle
 		end
 	end
 
-	local function onWarning(mark: any)
+	local function onWarning(mark: any, kind: any)
 		-- Once he is awake (or while he settles back), the warnings are over: a late one must not start a flutter.
 		if stopped or awake or poseDirection ~= 0 then
+			return
+		end
+		-- Only a plain warning (no second value) and the free save's replay count. Anything else is ignored.
+		if kind ~= nil and kind ~= Net.FreeSaveKind then
 			return
 		end
 		local plan = GiantFx.warningPlan(mark)
@@ -848,12 +1123,28 @@ function GiantFx.start(deps: Deps): Handle
 		end
 		if table.find(plan, STOP_LETTERS) ~= nil then
 			quiet = true
+			-- A new 85 ends a fade-in that was playing: the Z Z Z go off again with their own look.
+			if fadeInAt ~= nil then
+				fadeInAt = nil
+				paintFadeIn(nil)
+			end
+			if kind == Net.FreeSaveKind then
+				letters() -- saves the letters' own look before anything paints them
+				replayUntil = deps.now() + Config.Meter.FreeSaveWarningSeconds
+			else
+				replayUntil = nil
+			end
 		end
 		if table.find(plan, MUMBLE) ~= nil then
-			bubbleUntil = deps.now() + GiantFx.mumbleSeconds
+			-- Every 85, plain or replayed, pops the bubble in from the start.
+			local popAt = deps.now()
+			bubbleAt = popAt
+			bubbleUntil = popAt + Bubble85.showSeconds(deps.reducedMotion())
 		end
-		if table.find(plan, TWITCH) ~= nil then
-			twitchAt = deps.now()
+		if table.find(plan, SNORT) ~= nil then
+			-- A new 85 starts the snort over: a burst now, and the second one after this one (not after the old one).
+			snortAt = deps.now()
+			snortBurst()
 		end
 		if #plan > 0 then
 			applyState()
@@ -903,22 +1194,27 @@ function GiantFx.start(deps: Deps): Handle
 		connectStep()
 	end
 
-	-- He woke: the warnings stop at once, the eyes swap, the bubble, the Z Z Z and the puffs go off, and the pose starts.
+	-- He woke: the warnings stop at once, the snort cloud is cleared, the eyes swap, the bubble, the Z Z Z and the puffs go off,
+	-- and the pose starts.
 	local function onWake()
 		awake = true
 		if flutterAt ~= nil then
 			flutterAt = nil
 			placeLids(0)
 		end
-		if twitchAt ~= nil then
-			twitchAt = nil
-			placeArm(0)
-		end
+		snortAt = nil
+		clearSnort()
 		if fadeAt ~= nil then
 			fadeAt = nil
 			paintLetters(nil)
 		end
+		bubbleAt = nil
 		bubbleUntil = nil
+		replayUntil = nil
+		if fadeInAt ~= nil then
+			fadeInAt = nil
+			paintFadeIn(nil)
+		end
 		setEyes(true)
 		applyState()
 		startPose(1)
@@ -934,14 +1230,11 @@ function GiantFx.start(deps: Deps): Handle
 
 	-- The Z Z Z and puffs come back when the meter has fallen to 75 while he sleeps, or when he is in Heavy Sleep.
 	local function onGiantStateChanged()
-		if stopped or not quiet then
+		-- During the 3 seconds of a replayed warning nothing comes back; endReplay decides when they are over.
+		if stopped or not quiet or replayUntil ~= nil then
 			return
 		end
-		local phase = deps.giantState:GetAttribute("Phase")
-		local meter = deps.giantState:GetAttribute("Meter")
-		local backToNormal = phase == "HeavySleep"
-			or (phase == "Asleep" and type(meter) == "number" and meter <= GiantFx.comeBackAtMeter)
-		if backToNormal then
+		if mayComeBack() then
 			quiet = false
 			applyState()
 		end
@@ -951,16 +1244,18 @@ function GiantFx.start(deps: Deps): Handle
 	local function restoreAll()
 		disconnectStep()
 		flutterAt = nil
-		twitchAt = nil
+		snortAt = nil
 		fadeAt = nil
+		bubbleAt = nil
 		bubbleUntil = nil
+		replayUntil = nil
+		fadeInAt = nil
 		quiet = false
 		awake = false
 		poseDirection = 0
 		slamAt = nil
 		slamPoint = nil
 		placeLids(0)
-		placeArm(0)
 		for piece, start in startPivots do
 			piece:PivotTo(start)
 		end
@@ -969,7 +1264,14 @@ function GiantFx.start(deps: Deps): Handle
 		paintLetters(nil)
 		restoreEnabled(floatingZ())
 		restoreEnabled(snorePuff())
-		restoreEnabled(mumble())
+		restoreEnabled(bubble())
+		for gui in startBubble do
+			restoreBubble(gui)
+		end
+		for gui in table.clone(bubbleWatch) do
+			forgetBubble(gui)
+		end
+		table.clear(startBubble)
 		table.clear(startPivots)
 		heavy = false
 		shrinkAt = nil
@@ -1074,6 +1376,13 @@ function GiantFx.start(deps: Deps): Handle
 			end
 			stopped = true
 			trove:Destroy()
+		end,
+		savedBubbleCount = function(): number
+			local count = 0
+			for _ in startBubble do
+				count += 1
+			end
+			return count
 		end,
 	}
 end

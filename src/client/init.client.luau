@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
@@ -18,8 +19,10 @@ local SlamFx = require(script.Fx.SlamFx)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local GrabPrompt = require(script.Hud.GrabPrompt)
 local Messages = require(script.Hud.Messages)
+local Layout = require(script.Hud.Layout)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local TiptoeButton = require(script.Hud.TiptoeButton)
+local BodyBeams = require(script.World.BodyBeams)
 local EggFade = require(script.World.EggFade)
 local Footprints = require(script.World.Footprints)
 local RouteGraph = require(script.World.RouteGraph)
@@ -84,6 +87,9 @@ if server then
 		warning = { OnClientEvent = server.Warning.OnClientEvent },
 		viewport = SleepMeterUi.workspaceViewport(Workspace),
 		topbarInset = SleepMeterUi.guiServiceTopbar(GuiService),
+		createTween = function(instance: Instance, info: TweenInfo, goal: { [string]: any })
+			return TweenService:Create(instance, info, goal)
+		end,
 		now = function()
 			return Workspace:GetServerTimeNow()
 		end,
@@ -132,8 +138,12 @@ if server then
 			step = RunService.RenderStepped,
 			now = os.clock,
 		})
-		-- The giant himself: the eyelids at 60, at 85 the Z Z Z, the puffs, the bubble and the arm, the waking pose, and
-		-- the arm swinging toward each slam.
+		-- The giant himself: the eyelids at 60, at 85 the snort, the Z Z Z, the puffs and the bubble beside his nose, the
+		-- waking pose, and the arm swinging toward each slam. The bubble reads three things each time it is placed: whether
+		-- this is a phone screen, which way the camera's right side points, and whether Reduce Motion is on.
+		local function currentCamera(): Camera?
+			return Workspace.CurrentCamera
+		end
 		GiantFx.start({
 			world = world,
 			warning = { OnClientEvent = server.Warning.OnClientEvent },
@@ -142,6 +152,18 @@ if server then
 			step = RunService.RenderStepped,
 			now = os.clock,
 			armClear = GiantFx.workspaceArmClear(Workspace, world),
+			isPhone = function(): boolean
+				local camera = currentCamera()
+				-- No camera yet: a computer screen, as the meter assumes.
+				return camera ~= nil and Layout.isPhone(camera.ViewportSize)
+			end,
+			cameraRight = function(): Vector3
+				local camera = currentCamera()
+				return if camera ~= nil then camera.CFrame.RightVector else Vector3.xAxis
+			end,
+			reducedMotion = function(): boolean
+				return GuiService.ReducedMotionEnabled
+			end,
 		})
 		-- When a hand slam catches this player, the server puts them on their own spawn spot and tells every device. Their
 		-- camera snaps behind them there. The spawn spot is a loose part, so with streaming it can be missing for a moment:
@@ -213,7 +235,9 @@ if server then
 				}
 			end),
 		})
-		-- An egg between the camera and this player's own character turns 70% see-through on this screen only.
+		-- An egg between the camera and this player's own character turns 70% see-through on this screen only. The egg this
+		-- player carries on their back fades when it covers their head or body (a box at 75% of its size), to 60%, and
+		-- waits 0.2 s with no line crossing before it starts back to solid.
 		local eggFade = EggFade.start({
 			root = eggSpots,
 			camera = function()
@@ -223,10 +247,29 @@ if server then
 			targets = function()
 				return EggFade.targetsOf(Players.LocalPlayer.Character)
 			end,
+			carried = function()
+				local character = Players.LocalPlayer.Character
+				local egg = if character then character:FindFirstChild("CarriedEgg") else nil
+				return if egg and egg:IsA("Model") then egg else nil
+			end,
 			step = RunService.RenderStepped,
 			now = os.clock,
 		})
 		script.Destroying:Once(eggFade.stop)
+		-- The light beam of an egg on his body turns off while the camera is within 30 studs of it, and on again beyond 35
+		-- (this screen only). Which eggs are on his body is read from the zone boxes in World.Zones.
+		if world then
+			local bodyBeams = BodyBeams.start({
+				root = eggSpots,
+				isOnBody = BodyBeams.bodyReader(world),
+				camera = function()
+					local camera = Workspace.CurrentCamera
+					return if camera then camera.CFrame else nil
+				end,
+				step = RunService.RenderStepped,
+			})
+			script.Destroying:Once(bodyBeams.stop)
+		end
 	else
 		warn("The egg spots were not found, so the grab prompts and the egg labels have no look.")
 	end

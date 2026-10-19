@@ -25,7 +25,7 @@ export type PlayersLike = {
 
 -- Grab's handle, as far as Catcher uses it: puts the player's carried egg back on its spot (nil if they carry nothing).
 export type GrabLike = {
-	returnEgg: (self: any, player: any) -> (("back" | "gone")?, string?),
+	returnEgg: (self: any, player: any, why: "Caught" | "Lost"?) -> (("back" | "gone")?, string?),
 }
 
 export type Deps = {
@@ -101,7 +101,8 @@ function Catcher.new(deps: Deps): Catcher
 		-- Which egg they lose, read before returnEgg clears the attribute.
 		local lostRarity: Config.RarityName? = rarityFrom(player:GetAttribute("Carrying"))
 		-- The egg goes back first. A player who carries nothing any more (they banked or died since) is left alone.
-		local result = deps.grab:returnEgg(player)
+		-- It says "Caught", so the log never takes a catch for a lost egg (this runs before `caught` fires).
+		local result = deps.grab:returnEgg(player, "Caught")
 		if result == nil then
 			return
 		end

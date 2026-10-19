@@ -32,6 +32,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Layout = require(script.Parent.Layout)
 local Theme = require(script.Parent.Theme)
@@ -94,7 +95,7 @@ export type GrabMissedLike = { OnClientEvent: SignalLike }
 -- The EggHome remote, as far as this module uses it: it fires (player, rarity, position of the new egg).
 export type EggHomeLike = { OnClientEvent: SignalLike }
 
--- The Warning remote, as far as this module uses it: it fires the mark (60 or 85).
+-- The Warning remote, as far as this module uses it: it fires the mark (60 or 85), and at a free save (85, Net.FreeSaveKind).
 export type WarningLike = { OnClientEvent: SignalLike }
 
 -- The Caught remote, as far as this module uses it: it fires the player who was caught.
@@ -713,10 +714,14 @@ function Messages.start(deps: Deps): Handle
 	end
 
 	-- The 85% warning: the tip shows for 3 seconds, also for a player who carries an egg (the pill comes back after).
-	-- A second 85 starts the 3 seconds again. Any other mark shows nothing.
-	local function onWarning(mark: any)
+	-- A second 85 starts the 3 seconds again, and so does the replay at a free save (85, Net.FreeSaveKind). Any other
+	-- mark shows nothing, and neither does any other second value.
+	local function onWarning(mark: any, kind: any)
 		-- A late 85 that arrives after he woke shows nothing: the warnings are over.
 		if stopped or mark ~= WARNING_MARK or awake then
+			return
+		end
+		if kind ~= nil and kind ~= Net.FreeSaveKind then
 			return
 		end
 		stopWarningTimer()

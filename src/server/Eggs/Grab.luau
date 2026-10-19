@@ -36,6 +36,9 @@ export type PromptLike = {
 	Destroy: (self: any) -> (),
 }
 
+-- Why an egg went back: a hand slam caught the carrier, or anything else (they died, reset or left).
+export type ReturnReason = "Caught" | "Lost"
+
 export type Deps = {
 	spots: { WorldIndex.EggSpot },
 	templates: WorldIndex.EggTemplates,
@@ -57,12 +60,16 @@ export type Deps = {
 export type Grab = {
 	-- Puts the player's carried egg back on its own spot (see EggSpots.returnEgg), takes it off their back and
 	-- clears their Carrying attribute. Returns what happened and the spot's name, or nil if they carry nothing.
-	returnEgg: (self: Grab, player: PlayerLike) -> (("back" | "gone")?, string?),
+	-- `why` says why it went back ("Caught" for a hand slam; left out, it is "Lost") and goes to the `returned` signal.
+	returnEgg: (self: Grab, player: PlayerLike, why: ReturnReason?) -> (("back" | "gone")?, string?),
 	-- The player's carried egg leaves the world for their garden (see EggSpots.bank): it comes off their back and
 	-- Carrying is cleared, but the spot keeps counting down. Returns the spot's name and the egg's rarity, or nil.
 	bank: (self: Grab, player: PlayerLike) -> (string?, Config.RarityName?),
 	-- Fires after a grab succeeds (Carrying is set by then), with the player and the egg's rarity. Analytics listens to it.
 	grabbed: Signal.Signal<PlayerLike, Config.RarityName>,
+	-- Fires when a carried egg really went back (not when it was banked, and not for a player who carried nothing), after
+	-- it is off their back: the player, the egg's rarity and why. Analytics listens to it.
+	returned: Signal.Signal<PlayerLike, Config.RarityName, ReturnReason>,
 	-- One refill check. The heartbeat calls it every 0.1 s; tests call it by hand.
 	step: (self: Grab) -> (),
 	-- Removes the prompts, the eggs on the spots and on backs, and every connection. Safe to call twice.
@@ -131,6 +138,15 @@ function Grab.start(deps: Deps): Grab
 	trove:Add(function()
 		grabbed:Destroy()
 	end)
+	local returned = Signal.new() :: Signal.Signal<PlayerLike, Config.RarityName, ReturnReason>
+	trove:Add(function()
+		returned:Destroy()
+	end)
+	-- Each spot's rarity by name, so the egg that went back can be named (the server's own list, never the client's).
+	local rarityOfSpot: { [string]: Config.RarityName } = {}
+	for _, spot in deps.spots do
+		rarityOfSpot[spot.name] = spot.rarity
+	end
 	local limiter = RateLimiter.new(GRABS_PER_SECOND, 1, deps.now)
 	-- Everyone who carries an egg right now, so stop() can take every egg off every back.
 	local carriers: { [number]: PlayerLike } = {}
@@ -202,7 +218,7 @@ function Grab.start(deps: Deps): Grab
 		removing:Disconnect()
 	end)
 
-	local function returnEgg(_self: Grab, player: PlayerLike): (("back" | "gone")?, string?)
+	local function returnEgg(_self: Grab, player: PlayerLike, why: ReturnReason?): (("back" | "gone")?, string?)
 		local result: ("back" | "gone")?, spotName: string? = EggSpots.returnEgg(state, player.UserId)
 		if spotName == nil then
 			return nil, nil
@@ -210,6 +226,11 @@ function Grab.start(deps: Deps): Grab
 		takeEggOffBack(player)
 		if result == "back" then
 			spotModels:show(spotName)
+		end
+		local rarity: Config.RarityName? = rarityOfSpot[spotName]
+		if rarity ~= nil then
+			local reason: ReturnReason = if why ~= nil then why else "Lost"
+			returned:Fire(player, rarity, reason)
 		end
 		return result, spotName
 	end
@@ -237,7 +258,8 @@ function Grab.start(deps: Deps): Grab
 		trove:Destroy()
 	end
 
-	local grab: Grab = { returnEgg = returnEgg, bank = bank, grabbed = grabbed, step = step, stop = stop }
+	local grab: Grab =
+		{ returnEgg = returnEgg, bank = bank, grabbed = grabbed, returned = returned, step = step, stop = stop }
 
 	trove:Add(GiantDirector.run(grab, deps.heartbeat, REFILL_CHECK_SECONDS, MAX_CHECKS_PER_FRAME))
 	return grab

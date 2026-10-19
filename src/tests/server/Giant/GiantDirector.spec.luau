@@ -5,6 +5,7 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Carry = require(ServerScriptService.Server.Eggs.Carry)
 local GiantDirector = require(ServerScriptService.Server.Giant.GiantDirector)
 local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
@@ -35,9 +36,13 @@ type Harness = {
 	director: GiantDirector.Director,
 	samples: { Sample },
 	infos: { PlayerInfo },
-	warnings: { number },
+	warnings: { number }, -- the mark of every plain warning (no second value), in order
+	replays: { number }, -- the mark of every replayed warning (second value "FreeSave"), in order
+	warningCalls: { string }, -- every fireWarning call in order: "60" for a plain mark, "85:FreeSave" for a replay
 	wakes: { string },
 	wakeDetails: { { name: string, wokenBy: number?, cause: string } }, -- everything the woke signal said, in order
+	spent: { number }, -- the user id of every spendSave call, in order
+	saves: { { userId: number, zone: Config.ZoneName } }, -- everything the saved signal said, in order
 	clock: number, -- the shared server clock; it stands still until the test moves it
 	bounces: { BounceCall },
 	-- The fake world for the slams. The tables are shared with the director, so a test may change what is in them.
@@ -88,8 +93,12 @@ local function newHarness(startMeter: number?): Harness
 		samples = {},
 		infos = {},
 		warnings = {},
+		replays = {},
+		warningCalls = {},
 		wakes = {},
 		wakeDetails = {},
+		spent = {},
+		saves = {},
 		clock = START_CLOCK,
 		bounces = {},
 		gardens = {},
@@ -115,8 +124,14 @@ local function newHarness(startMeter: number?): Harness
 			return harness.infos
 		end,
 		state = state,
-		fireWarning = function(mark: number)
-			table.insert(harness.warnings, mark)
+		fireWarning = function(mark: number, kind: "FreeSave"?)
+			if kind == nil then
+				table.insert(harness.warnings, mark)
+				table.insert(harness.warningCalls, tostring(mark))
+			else
+				table.insert(harness.replays, mark)
+				table.insert(harness.warningCalls, `{mark}:{kind}`)
+			end
 		end,
 		now = function()
 			return harness.clock
@@ -161,10 +176,22 @@ local function newHarness(startMeter: number?): Harness
 			table.insert(harness.catches, { userId = userId, phase = state:GetAttribute("Phase") })
 			table.insert(harness.order, `catch{userId}`)
 		end,
+		-- Like the real one, it marks the player's save as used, so the next tick can't save them again.
+		spendSave = function(userId: number)
+			table.insert(harness.spent, userId)
+			for _, info in harness.infos do
+				if info.userId == userId then
+					info.freeSaveUsed = true
+				end
+			end
+		end,
 	})
 	harness.director.woke:Connect(function(name: string, wokenBy: number?, cause: string)
 		table.insert(harness.wakes, name)
 		table.insert(harness.wakeDetails, { name = name, wokenBy = wokenBy, cause = cause })
+	end)
+	harness.director.saved:Connect(function(userId: number, zone: Config.ZoneName)
+		table.insert(harness.saves, { userId = userId, zone = zone })
 	end)
 	table.insert(harnesses, harness)
 	return harness
@@ -182,8 +209,13 @@ local function addPlayer(
 	harness: Harness,
 	userId: number,
 	name: string,
-	eggsHome: number?,
-	extra: { tiptoe: boolean?, carrying: Config.RarityName?, displayName: string? }?
+	extra: {
+		tiptoe: boolean?,
+		carrying: Config.RarityName?,
+		displayName: string?,
+		veteran: boolean?, -- has brought a Rare home: no free save
+		saveUsed: boolean?, -- has already had the free save
+	}?
 )
 	table.insert(harness.infos, {
 		userId = userId,
@@ -192,7 +224,12 @@ local function addPlayer(
 		displayName = if extra ~= nil and extra.displayName ~= nil then extra.displayName else name,
 		tiptoe = extra ~= nil and extra.tiptoe == true,
 		carrying = if extra ~= nil then extra.carrying else nil,
-		eggsHome = eggsHome or 2,
+		-- A player starts brand-new: nothing banked, no Rare home, no save used. A test that needs a veteran asks for
+		-- one with `veteran = true`, which means a Rare is home: the player has no free save, so a share that fills
+		-- the meter wakes him.
+		eggsHome = 0, -- the director doesn't read it; PlayerInfo still has the field
+		rareHome = extra ~= nil and extra.veteran == true,
+		freeSaveUsed = extra ~= nil and extra.saveUsed == true,
 	})
 end
 
@@ -227,13 +264,13 @@ end
 
 describe("GiantDirector meter", function()
 	it("rises while a player walks on his belly", function()
-		-- 6 noise a second minus 1 drain a second is +5 a second. The meter starts at 10, not 0, because the
-		-- drain can't take it below 0 on the first step.
+		-- 6 noise a second minus 1.5 drain a second (one player alone) is +4.5 a second. The meter starts at 10,
+		-- not 0, because the drain can't take it below 0 on the first step.
 		local harness = newHarness(10)
 		addPlayer(harness, 1, "Mia")
 		harness.samples = { sample(1, "Belly", true) }
 		stepTimes(harness, 10)
-		expect(meter(harness)).toBeCloseTo(15, 5)
+		expect(meter(harness)).toBeCloseTo(14.5, 5)
 	end)
 
 	it("starts from 0 without going below it", function()
@@ -241,7 +278,7 @@ describe("GiantDirector meter", function()
 		addPlayer(harness, 1, "Mia")
 		harness.samples = { sample(1, "Belly", true) }
 		stepTimes(harness, 1)
-		-- The drain of 0.1 can't take 0 below 0, so the whole 0.6 of noise stays.
+		-- The drain of 0.15 can't take 0 below 0, so the whole 0.6 of noise stays.
 		expect(meter(harness)).toBeCloseTo(0.6, 5)
 	end)
 
@@ -250,7 +287,7 @@ describe("GiantDirector meter", function()
 		addPlayer(harness, 1, "Mia")
 		harness.samples = { sample(1, "Belly", false) }
 		stepTimes(harness, 10)
-		expect(meter(harness)).toBeCloseTo(9, 5)
+		expect(meter(harness)).toBeCloseTo(8.5, 5)
 	end)
 
 	it("drains one point a second for every player", function()
@@ -265,11 +302,11 @@ describe("GiantDirector meter", function()
 
 	it("adds noise for a player carrying an egg and tiptoeing", function()
 		local harness = newHarness(10)
-		addPlayer(harness, 1, "Mia", 2, { tiptoe = true, carrying = "Rare" })
-		-- Boots 1 x walk 4 x Rare 2.5 x tiptoe 0.2 = 2 a second, so 0.2 a step, minus 0.1 of drain.
+		addPlayer(harness, 1, "Mia", { tiptoe = true, carrying = "Rare" })
+		-- Boots 1 x walk 4 x Rare 2.5 x tiptoe 0.2 = 2 a second, so 0.2 a step, minus 0.15 of drain.
 		harness.samples = { sample(1, "Boots", true) }
 		stepTimes(harness, 10)
-		expect(meter(harness)).toBeCloseTo(11, 5)
+		expect(meter(harness)).toBeCloseTo(10.5, 5)
 	end)
 
 	it("makes no noise inside a garden", function()
@@ -278,7 +315,7 @@ describe("GiantDirector meter", function()
 		-- a garden always reports the Meadow, but the rule must hold for any zone
 		harness.samples = { sample(1, "Belly", true, nil, 3) }
 		stepTimes(harness, 10)
-		expect(meter(harness)).toBeCloseTo(9, 5)
+		expect(meter(harness)).toBeCloseTo(8.5, 5)
 	end)
 
 	it("ignores a sample whose player is not in the player list", function()
@@ -291,67 +328,71 @@ describe("GiantDirector meter", function()
 end)
 
 describe("GiantDirector tiptoe speed", function()
-	-- All of these walk on the Belly for one second (10 steps) from a meter of 10, with the drain of 1 a second
+	-- All of these walk on the Belly for one second (10 steps) from a meter of 10, with the drain of 1.5 a second
 	-- already in the numbers. Normal walking there is 1.5 x 4 = 6 a second; with Tiptoe it is a fifth of that.
 	local function walkOnBelly(
 		groundSpeed: number,
 		extra: { tiptoe: boolean?, carrying: Config.RarityName?, displayName: string? }?
 	): number
 		local harness = newHarness(10)
-		addPlayer(harness, 1, "Mia", 2, extra)
+		addPlayer(harness, 1, "Mia", {
+			tiptoe = extra ~= nil and extra.tiptoe == true,
+			carrying = if extra ~= nil then extra.carrying else nil,
+			displayName = if extra ~= nil then extra.displayName else nil,
+		})
 		harness.samples = { sample(1, "Belly", true, nil, nil, groundSpeed) }
 		stepTimes(harness, 10)
 		return meter(harness)
 	end
 
 	it("a Tiptoe player walking at tiptoe speed makes tiptoe noise", function()
-		-- 1.5 x 4 x 0.2 = 1.2 a second, minus 1 of drain.
-		expect(walkOnBelly(9.6, { tiptoe = true })).toBeCloseTo(10.2, 5)
+		-- 1.5 x 4 x 0.2 = 1.2 a second, minus 1.5 of drain.
+		expect(walkOnBelly(9.6, { tiptoe = true })).toBeCloseTo(9.7, 5)
 	end)
 
 	it("a Tiptoe player walking at full speed makes normal walking noise", function()
-		-- 6 a second, minus 1 of drain.
-		expect(walkOnBelly(16, { tiptoe = true })).toBeCloseTo(15, 5)
+		-- 6 a second, minus 1.5 of drain.
+		expect(walkOnBelly(16, { tiptoe = true })).toBeCloseTo(14.5, 5)
 	end)
 
 	it("exactly 1.25 times tiptoe speed (12) still counts as tiptoe", function()
-		expect(walkOnBelly(12, { tiptoe = true })).toBeCloseTo(10.2, 5)
+		expect(walkOnBelly(12, { tiptoe = true })).toBeCloseTo(9.7, 5)
 	end)
 
 	it("just over 1.25 times tiptoe speed counts as normal walking", function()
-		expect(walkOnBelly(12.01, { tiptoe = true })).toBeCloseTo(15, 5)
+		expect(walkOnBelly(12.01, { tiptoe = true })).toBeCloseTo(14.5, 5)
 	end)
 
 	it("with a Rare egg the limit is 1.25 times 8.64 (10.8)", function()
-		-- A Rare makes the noise 2.5 times louder: 15 a second normally, 3 with Tiptoe. Minus 1 of drain.
-		expect(walkOnBelly(10.79, { tiptoe = true, carrying = "Rare" })).toBeCloseTo(12, 5)
-		expect(walkOnBelly(10.81, { tiptoe = true, carrying = "Rare" })).toBeCloseTo(24, 5)
+		-- A Rare makes the noise 2.5 times louder: 15 a second normally, 3 with Tiptoe. Minus 1.5 of drain.
+		expect(walkOnBelly(10.79, { tiptoe = true, carrying = "Rare" })).toBeCloseTo(11.5, 5)
+		expect(walkOnBelly(10.81, { tiptoe = true, carrying = "Rare" })).toBeCloseTo(23.5, 5)
 	end)
 
 	it("a player without Tiptoe makes normal walking noise at any speed", function()
-		expect(walkOnBelly(5, nil)).toBeCloseTo(15, 5)
-		expect(walkOnBelly(16, nil)).toBeCloseTo(15, 5)
+		expect(walkOnBelly(5, nil)).toBeCloseTo(14.5, 5)
+		expect(walkOnBelly(16, nil)).toBeCloseTo(14.5, 5)
 	end)
 
 	it("the speed limit is checked on each step", function()
 		local harness = newHarness(10)
-		addPlayer(harness, 1, "Mia", 2, { tiptoe = true })
+		addPlayer(harness, 1, "Mia", { tiptoe = true })
 		harness.samples = { sample(1, "Belly", true, nil, nil, 16) }
-		stepTimes(harness, 5) -- +5 a second for half a second: 12.5
+		stepTimes(harness, 5) -- +4.5 a second for half a second: 12.25
 		harness.samples = { sample(1, "Belly", true, nil, nil, 9.6) }
-		stepTimes(harness, 5) -- +0.2 a second for half a second: 12.6
-		expect(meter(harness)).toBeCloseTo(12.6, 5)
+		stepTimes(harness, 5) -- -0.3 a second for half a second: 12.1
+		expect(meter(harness)).toBeCloseTo(12.1, 5)
 	end)
 end)
 
 describe("GiantDirector thuds", function()
 	it("adds 30 at once for a thud from the belly", function()
-		local harness = newHarness(10)
+		local harness = newHarness(10.15)
 		addPlayer(harness, 1, "Mia")
 		harness.samples = { sample(1, "Belly", false, "Belly") }
 		stepTimes(harness, 1)
-		-- +30 from the thud, then this step's drain of 0.1.
-		expect(meter(harness)).toBeCloseTo(39.9, 5)
+		-- 10.15 + 30 from the thud, then this step's drain of 0.15: exactly 40, so no rounding decides the result.
+		expect(meter(harness)).toBeCloseTo(40, 5)
 	end)
 
 	it("adds nothing for a thud that ends in a garden", function()
@@ -433,52 +474,267 @@ describe("GiantDirector warnings", function()
 	end)
 end)
 
-describe("GiantDirector new players", function()
-	it("never lets a player with no eggs home push the meter past 84", function()
-		local harness = newHarness(80)
-		addPlayer(harness, 1, "Newbie", 0)
-		local highest = 0
-		for _ = 1, 20 do
-			harness.samples = { sample(1, "Belly", false, "Belly") }
+describe("GiantDirector free save", function()
+	-- The walking sample of a player carrying a Rare on the belly: 4 x 1.5 x 2.5 = 15 noise a second, so +1.35 a tick
+	-- after the drain of 0.15.
+	local function walkingOnBelly(): Sample
+		return sample(1, "Belly", true)
+	end
+
+	-- Steps `count` ticks and returns the highest meter seen on the way (the meter is written to 0.1).
+	local function stepAndPeak(harness: Harness, count: number, peakSoFar: number): number
+		local peak = peakSoFar
+		for _ = 1, count do
 			harness.director:step()
-			highest = math.max(highest, meter(harness))
+			peak = math.max(peak, meter(harness))
 		end
-		expect(highest).toBeLessThanOrEqual(84)
+		return peak
+	end
+
+	it("Check D1: a brand-new carrier walking on the belly is saved once, keeps moving, then wakes him", function()
+		local harness = newHarness(0)
+		addPlayer(harness, 1, "Mia", { carrying = "Rare" })
+		harness.samples = { walkingOnBelly() }
+		local previous = -1
+		local stillTicks = 0
+		local longestStill = 0
+		local wokeAtTick: number? = nil
+		local atSave: { meter: number, phase: any, warnings: { number }, spent: { number } }? = nil
+		for tick = 1, 600 do -- 60 seconds
+			harness.director:step()
+			if harness.state:GetAttribute("Phase") ~= "Asleep" then
+				wokeAtTick = tick
+				break
+			end
+			if atSave == nil and #harness.spent > 0 then
+				atSave = {
+					meter = meter(harness),
+					phase = harness.state:GetAttribute("Phase"),
+					warnings = table.clone(harness.warnings),
+					spent = table.clone(harness.spent),
+				}
+			end
+			if meter(harness) == previous then
+				stillTicks += 1
+			else
+				stillTicks = 0
+			end
+			previous = meter(harness)
+			longestStill = math.max(longestStill, stillTicks)
+		end
+		-- At the first would-be wake: the meter is 70, he is still asleep, one save is spent, and both warnings played.
+		expect(atSave).never.toBeNil()
+		local saveMoment = atSave :: { meter: number, phase: any, warnings: { number }, spent: { number } }
+		expect(saveMoment.meter).toBe(70)
+		expect(saveMoment.phase).toBe("Asleep")
+		expect(saveMoment.warnings).toEqual({ 60, 85 })
+		expect(saveMoment.spent).toEqual({ 1 })
+		-- Then he wakes before the 60 seconds are up, and the banner names the player. The save is not spent again.
+		expect(wokeAtTick).never.toBeNil()
+		expect(wokeAtTick :: number).toBeLessThan(600)
+		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		expect(harness.state:GetAttribute("WokenBy")).toBe("Mia")
+		expect(harness.spent).toEqual({ 1 })
+		expect(harness.saves).toEqual({ { userId = 1, zone = "Belly" } })
+		-- The V1 bug: the meter sat at 84 for good. It never stands still for 10 seconds while they walk.
+		expect(longestStill).toBeLessThan(100)
+	end)
+
+	it("Check D2: after the save, 1 second of walking and then a tiptoe home never wakes him", function()
+		local harness = newHarness(70)
+		addPlayer(harness, 1, "Mia", { carrying = "Rare", saveUsed = true })
+		local tiptoeSpeed = Carry.speed(true, "Rare")
+		harness.samples = { walkingOnBelly() }
+		local peak = stepAndPeak(harness, 10, 0) -- 1 second of walking on the belly
+		harness.infos[1].tiptoe = true
+		harness.samples = { sample(1, "Belly", true, nil, nil, tiptoeSpeed) }
+		peak = stepAndPeak(harness, 40, peak) -- 4 seconds tiptoeing on the belly
+		harness.samples = { sample(1, "Boots", true, nil, nil, tiptoeSpeed) }
+		peak = stepAndPeak(harness, 80, peak) -- 8 seconds tiptoeing on the boots
+		harness.samples = { sample(1, "Meadow", true, nil, nil, tiptoeSpeed) }
+		peak = stepAndPeak(harness, 30, peak) -- then the meadow
+		-- 70 + 13.5 + 6 + 4 = 93.5: a close call, but he stays asleep.
+		expect(peak).toBeGreaterThanOrEqual(92)
+		expect(peak).toBeLessThanOrEqual(96)
 		expect(harness.state:GetAttribute("Phase")).toBe("Asleep")
+		expect(harness.wakes).toEqual({})
 	end)
 
-	it("does not let a player with one egg home push it past 84 either", function()
-		local harness = newHarness(80)
-		addPlayer(harness, 1, "Newbie", 1)
-		harness.samples = { sample(1, "Meadow", false, "Nightcap") }
+	it("Check D3: after the save, walking on without Tiptoe wakes him within 3 seconds", function()
+		local harness = newHarness(70)
+		addPlayer(harness, 1, "Mia", { carrying = "Rare", saveUsed = true })
+		harness.samples = { walkingOnBelly() }
+		stepTimes(harness, 30)
+		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		expect(harness.state:GetAttribute("WokenBy")).toBe("Mia")
+		expect(harness.spent).toEqual({})
+	end)
+
+	it("Check E3: a player whose save is used fills the meter, wakes him, and is named", function()
+		local harness = newHarness(99)
+		addPlayer(harness, 1, "Mia", { carrying = "Rare", saveUsed = true })
+		harness.samples = { walkingOnBelly() }
 		stepTimes(harness, 1)
-		expect(meter(harness)).toBeLessThanOrEqual(84)
+		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		expect(harness.state:GetAttribute("WokenBy")).toBe("Mia")
+		expect(harness.spent).toEqual({})
+		expect(harness.saves).toEqual({})
 	end)
 
-	it("lets a player with 2 eggs home reach 100 with the same noise", function()
-		local harness = newHarness(80)
-		addPlayer(harness, 1, "Veteran", 2)
+	it(
+		"Check E1: a veteran's thud wakes him while a brand-new player stands on the belly, and no save is spent",
+		function()
+			local harness = newHarness(95)
+			addPlayer(harness, 1, "Veteran", { veteran = true })
+			addPlayer(harness, 2, "Newbie")
+			harness.samples = { sample(1, "Belly", false, "Belly"), sample(2, "Belly", false) }
+			stepTimes(harness, 1)
+			expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+			expect(harness.state:GetAttribute("WokenBy")).toBe("Veteran")
+			expect(harness.spent).toEqual({})
+			expect(harness.saves).toEqual({})
+			expect(harness.infos[2].freeSaveUsed).toBe(false)
+		end
+	)
+
+	it(
+		"a brand-new player who was saved, then a veteran's thud in the same tick: he wakes and no save is spent",
+		function()
+			-- Rule 19 (Only the waker's save counts). Both thuds have the same noise, so the lower id (the brand-new
+			-- player) goes first and would be saved to 70. Then the veteran fills it again: he wakes, so no save is spent.
+			local harness = newHarness(95)
+			addPlayer(harness, 1, "Newbie")
+			addPlayer(harness, 2, "Veteran", { veteran = true })
+			harness.samples = { sample(1, "Belly", false, "Belly"), sample(2, "Belly", false, "Belly") }
+			stepTimes(harness, 1)
+			expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+			expect(harness.state:GetAttribute("WokenBy")).toBe("Veteran")
+			expect(harness.spent).toEqual({})
+			expect(harness.saves).toEqual({})
+			expect(harness.infos[1].freeSaveUsed).toBe(false)
+		end
+	)
+
+	it("a thud that would fill the meter spends a brand-new player's save and leaves the meter at 70", function()
+		local harness = newHarness(75)
+		addPlayer(harness, 1, "Mia")
 		harness.samples = { sample(1, "Belly", false, "Belly") }
 		stepTimes(harness, 1)
-		expect(meter(harness)).toBe(100)
-		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		-- 75 + 30 would be 105, so the save drops it to 70, and this step's drain of 0.15 comes off after that.
+		expect(meter(harness)).toBeGreaterThan(69.7)
+		expect(meter(harness)).toBeLessThan(70)
+		expect(harness.state:GetAttribute("Phase")).toBe("Asleep")
+		expect(harness.spent).toEqual({ 1 })
+		expect(harness.saves).toEqual({ { userId = 1, zone = "Belly" } })
 	end)
 
-	it("still counts a veteran's noise in full when a new player is also there", function()
+	it("a player with a Rare home has no save: his thud wakes him and he is named", function()
 		local harness = newHarness(80)
-		addPlayer(harness, 1, "Newbie", 0)
-		addPlayer(harness, 2, "Veteran", 2)
-		harness.samples = { sample(1, "Meadow", false, "Belly"), sample(2, "Meadow", false, "Belly") }
+		addPlayer(harness, 1, "Mia", { veteran = true })
+		harness.samples = { sample(1, "Belly", false, "Belly") }
 		stepTimes(harness, 1)
-		expect(meter(harness)).toBe(100)
-		expect(harness.wakes).toEqual({ "Veteran" })
+		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		expect(harness.state:GetAttribute("WokenBy")).toBe("Mia")
+		expect(harness.spent).toEqual({})
+		expect(harness.saves).toEqual({})
+	end)
+
+	it("a save fires the 85 warning once, with the second value FreeSave", function()
+		local harness = newHarness(75)
+		addPlayer(harness, 1, "Mia")
+		harness.samples = { sample(1, "Belly", false, "Belly") }
+		stepTimes(harness, 1)
+		expect(harness.spent).toEqual({ 1 })
+		expect(harness.warningCalls).toEqual({ "85:FreeSave" })
+		-- The next ticks have no save, so nothing more is sent.
+		harness.samples = { sample(1, "Belly", false) }
+		stepTimes(harness, 3)
+		expect(harness.warningCalls).toEqual({ "85:FreeSave" })
+	end)
+
+	it("two brand-new players saved in the same tick send one FreeSave warning", function()
+		local harness = newHarness(75)
+		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 2, "Noa")
+		harness.samples = { sample(1, "Belly", false, "Belly"), sample(2, "Belly", false, "Belly") }
+		stepTimes(harness, 1)
+		expect(harness.spent).toEqual({ 1, 2 })
+		expect(harness.warningCalls).toEqual({ "85:FreeSave" })
+	end)
+
+	it("a tick where he wakes sends no FreeSave warning", function()
+		local harness = newHarness(95)
+		addPlayer(harness, 1, "Newbie")
+		addPlayer(harness, 2, "Veteran", { veteran = true })
+		harness.samples = { sample(1, "Belly", false, "Belly"), sample(2, "Belly", false, "Belly") }
+		stepTimes(harness, 1)
+		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		expect(harness.replays).toEqual({})
+	end)
+
+	it("a pass of 85 one second after the save sends nothing: the meter just turns orange", function()
+		local harness = newHarness(75)
+		-- A Rare carrier on the belly adds 1.35 a tick, so he is past 85 about a second after the save.
+		addPlayer(harness, 1, "Mia", { carrying = "Rare" })
+		harness.samples = { sample(1, "Belly", false, "Belly") }
+		stepTimes(harness, 1)
+		expect(harness.warningCalls).toEqual({ "85:FreeSave" })
+		harness.clock += 1
+		harness.samples = { sample(1, "Belly", true) }
+		stepTimes(harness, 12)
+		expect(meter(harness)).toBeGreaterThan(85)
+		expect(harness.state:GetAttribute("Phase")).toBe("Asleep")
+		expect(harness.warningCalls).toEqual({ "85:FreeSave" })
+	end)
+
+	it("after the 3 seconds, a fall below 75 and a new pass of 85 sends a plain 85", function()
+		local harness = newHarness(75)
+		addPlayer(harness, 1, "Mia", { carrying = "Rare" })
+		harness.samples = { sample(1, "Belly", false, "Belly") }
+		stepTimes(harness, 1)
+		harness.clock += 1
+		harness.samples = { sample(1, "Belly", true) }
+		stepTimes(harness, 12) -- past 85, inside the 3 seconds: nothing
+		harness.clock += Config.Meter.FreeSaveWarningSeconds
+		harness.state:SetAttribute("Meter", 74) -- he has fallen below 75
+		harness.samples = { sample(1, "Meadow", false) }
+		stepTimes(harness, 1)
+		harness.samples = { sample(1, "Belly", true) }
+		stepTimes(harness, 10)
+		expect(meter(harness)).toBeGreaterThan(85)
+		expect(harness.warningCalls).toEqual({ "85:FreeSave", "85" })
+	end)
+
+	it("a thud from 45 that would fill the meter sends 60, then 85 as a FreeSave, and ends at 70", function()
+		local harness = newHarness(45)
+		addPlayer(harness, 1, "Mia")
+		-- A thud from the nightcap is +60: 45 + 60 would be 105.
+		harness.samples = { sample(1, "Belly", false, "Nightcap") }
+		stepTimes(harness, 1)
+		expect(harness.spent).toEqual({ 1 })
+		expect(harness.warningCalls).toEqual({ "60", "85:FreeSave" })
+		expect(harness.state:GetAttribute("Phase")).toBe("Asleep")
+		expect(meter(harness)).toBeCloseTo(69.9, 1)
+	end)
+
+	it("removes the saved connections when the director is destroyed", function()
+		local harness = newHarness(75)
+		addPlayer(harness, 1, "Mia")
+		local calls = 0
+		harness.director.saved:Connect(function()
+			calls += 1
+		end)
+		harness.director:destroy()
+		harness.samples = { sample(1, "Belly", false, "Belly") }
+		stepTimes(harness, 1)
+		expect(calls).toBe(0)
 	end)
 end)
 
 describe("GiantDirector waking", function()
 	it("sets Phase to Awake and WokenBy to the player's name when the meter reaches 100", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 1, "Mia", { veteran = true })
 		harness.samples = { sample(1, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		expect(meter(harness)).toBe(100)
@@ -488,7 +744,7 @@ describe("GiantDirector waking", function()
 
 	it("sets WokenBy to the waker's display name, not the user name", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 1, "mia_2014", nil, { displayName = "Mia" })
+		addPlayer(harness, 1, "mia_2014", { displayName = "Mia", veteran = true })
 		harness.samples = { sample(1, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
@@ -497,7 +753,7 @@ describe("GiantDirector waking", function()
 
 	it("fires the woke signal with the waker's display name too", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 1, "mia_2014", nil, { displayName = "Mia" })
+		addPlayer(harness, 1, "mia_2014", { displayName = "Mia", veteran = true })
 		harness.samples = { sample(1, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		expect(harness.wakes).toEqual({ "Mia" })
@@ -505,7 +761,7 @@ describe("GiantDirector waking", function()
 
 	it("fires the woke signal once, with the waker's name", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 1, "Mia", { veteran = true })
 		harness.samples = { sample(1, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		harness.samples = { sample(1, "Belly", true) }
@@ -515,7 +771,7 @@ describe("GiantDirector waking", function()
 
 	it("fires the woke signal with the display name first, then the waker's id and the cause", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 7, "mia_2014", nil, { displayName = "Mia" })
+		addPlayer(harness, 7, "mia_2014", { displayName = "Mia", veteran = true })
 		harness.samples = { sample(7, "Belly", false, "Belly") }
 		stepTimes(harness, 1)
 		expect(harness.wakeDetails).toEqual({ { name = "Mia", wokenBy = 7, cause = "Jump on him" } })
@@ -523,8 +779,8 @@ describe("GiantDirector waking", function()
 
 	it("says Walking when the walking step fills the meter", function()
 		local harness = newHarness(99.9)
-		addPlayer(harness, 4, "Mia")
-		-- Walking on the belly adds 0.6 in a tick; the drain takes 0.1.
+		addPlayer(harness, 4, "Mia", { veteran = true })
+		-- Walking on the belly adds 0.6 in a tick; the drain takes 0.15.
 		harness.samples = { sample(4, "Belly", true) }
 		stepTimes(harness, 1)
 		expect(harness.wakeDetails).toEqual({ { name = "Mia", wokenBy = 4, cause = "Walking" } })
@@ -532,7 +788,7 @@ describe("GiantDirector waking", function()
 
 	it("says Jump on him when a thud that lands on him fills the meter", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 4, "Mia")
+		addPlayer(harness, 4, "Mia", { veteran = true })
 		harness.samples = { sample(4, "Beard", false, "Beard") }
 		stepTimes(harness, 1)
 		expect(harness.wakeDetails).toEqual({ { name = "Mia", wokenBy = 4, cause = "Jump on him" } })
@@ -540,7 +796,7 @@ describe("GiantDirector waking", function()
 
 	it("says Jump off when a thud that lands in the meadow fills the meter", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 4, "Mia")
+		addPlayer(harness, 4, "Mia", { veteran = true })
 		harness.samples = { sample(4, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		expect(harness.wakeDetails).toEqual({ { name = "Mia", wokenBy = 4, cause = "Jump off" } })
@@ -548,7 +804,7 @@ describe("GiantDirector waking", function()
 
 	it("counts a walk off an edge that ends in a thud as a jump", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 4, "Mia")
+		addPlayer(harness, 4, "Mia", { veteran = true })
 		harness.samples = { sample(4, "Meadow", true, "Belly") }
 		stepTimes(harness, 1)
 		expect(harness.wakeDetails[1].cause).toBe("Jump off")
@@ -556,8 +812,8 @@ describe("GiantDirector waking", function()
 
 	it("judges the cause by the waker's own sample, not another player's", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 1, "Walker")
-		addPlayer(harness, 2, "Jumper")
+		addPlayer(harness, 1, "Walker", { veteran = true })
+		addPlayer(harness, 2, "Jumper", { veteran = true })
 		harness.samples = {
 			sample(1, "Meadow", false), -- on the grass, no thud
 			sample(2, "Belly", false, "Belly"),
@@ -576,7 +832,7 @@ describe("GiantDirector waking", function()
 
 	it("keeps the meter at 100 on later steps", function()
 		local harness = newHarness(90)
-		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 1, "Mia", { veteran = true })
 		harness.samples = { sample(1, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		harness.samples = {}
@@ -588,9 +844,9 @@ describe("GiantDirector waking", function()
 	it("names the jumper whose thud crosses 100, with 3 players on him and the meter at 95", function()
 		-- Spec check C1.
 		local harness = newHarness(95)
-		addPlayer(harness, 1, "Walker")
-		addPlayer(harness, 2, "Other")
-		addPlayer(harness, 3, "Jumper")
+		addPlayer(harness, 1, "Walker", { veteran = true })
+		addPlayer(harness, 2, "Other", { veteran = true })
+		addPlayer(harness, 3, "Jumper", { veteran = true })
 		harness.samples = {
 			sample(1, "Belly", true),
 			sample(2, "Belly", true),
@@ -604,9 +860,9 @@ describe("GiantDirector waking", function()
 
 	it("names the jumper even when the walkers' noise alone would also have filled the meter", function()
 		local harness = newHarness(99.5)
-		addPlayer(harness, 1, "Walker")
-		addPlayer(harness, 2, "Other")
-		addPlayer(harness, 3, "Jumper")
+		addPlayer(harness, 1, "Walker", { veteran = true })
+		addPlayer(harness, 2, "Other", { veteran = true })
+		addPlayer(harness, 3, "Jumper", { veteran = true })
 		harness.samples = {
 			sample(1, "Belly", true),
 			sample(2, "Belly", true),
@@ -618,7 +874,7 @@ describe("GiantDirector waking", function()
 
 	it("names the walker whose steps fill the meter", function()
 		local harness = newHarness(99.9)
-		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 1, "Mia", { veteran = true })
 		harness.samples = { sample(1, "Belly", true) }
 		stepTimes(harness, 1)
 		expect(harness.state:GetAttribute("WokenBy")).toBe("Mia")
@@ -637,7 +893,7 @@ describe("GiantDirector waking", function()
 
 	it("still sends the warning for a mark the waking step rose past", function()
 		local harness = newHarness(80)
-		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 1, "Mia", { veteran = true })
 		harness.samples = { sample(1, "Meadow", false, "Belly") }
 		stepTimes(harness, 1)
 		expect(harness.warnings).toEqual({ 85 })
@@ -763,8 +1019,8 @@ describe("GiantDirector bounce-off", function()
 
 	it("names the player who filled the meter and ends Awake 15 seconds after the clock of the waking step", function()
 		local harness = newHarness(95)
-		addPlayer(harness, 1, "Mia")
-		addPlayer(harness, 2, "Leo")
+		addPlayer(harness, 1, "Mia", { veteran = true })
+		addPlayer(harness, 2, "Leo", { veteran = true })
 		harness.clock = START_CLOCK + 7
 		harness.samples = {
 			placed(sample(1, "Belly", true), Vector3.new(-45, 60, 5)),
@@ -871,7 +1127,7 @@ describe("GiantDirector wake-up timeline", function()
 
 	it("keeps WokenBy after he is Asleep again", function()
 		local harness = newHarness(95)
-		addPlayer(harness, 1, "Mia")
+		addPlayer(harness, 1, "Mia", { veteran = true })
 		harness.samples = { placed(sample(1, "Belly", false, "Belly"), Vector3.new(-45, 60, 5)) }
 		stepTimes(harness, 1)
 		stepAt(harness, 60)
@@ -890,11 +1146,11 @@ describe("GiantDirector wake-up timeline", function()
 	it("raises the meter again from 0 when a player walks on the belly after he is Asleep", function()
 		local harness = wakeWithWalker()
 		stepAt(harness, 60)
-		for tickNumber = 1, 10 do
+		for tickNumber = 1, 11 do
 			stepAt(harness, 60 + tickNumber * 0.1)
 		end
-		-- 6 a second of walking noise minus the drain of 1 a second, for 10 ticks. The first tick can't drain from
-		-- 0, so it keeps its whole 0.6: 0.6 + 9 x 0.5 = 5.1.
+		-- 6 a second of walking noise minus the drain of 1.5 a second, for 11 ticks. The first tick can't drain from
+		-- 0, so it keeps its whole 0.6: 0.6 + 10 x 0.45 = 5.1.
 		expect(meter(harness)).toBeCloseTo(5.1, 1)
 	end)
 
@@ -982,29 +1238,29 @@ end)
 describe("GiantDirector Meter writes", function()
 	it("rounds the written Meter to 0.1", function()
 		local harness = newHarness(10)
-		addPlayer(harness, 1, "Mia", 2, { tiptoe = true, carrying = "Uncommon" })
-		harness.samples = { sample(1, "Boots", true) }
-		-- Boots 1 x walk 4 x Uncommon 1.5 x tiptoe 0.2 = 1.2 a second, minus 1 of drain.
-		-- Each step is +0.02, so 10 steps end at 10.2; three steps end at 10.06, which shows as 10.1.
-		stepTimes(harness, 3)
+		addPlayer(harness, 1, "Mia", { tiptoe = true, carrying = "Uncommon" })
+		harness.samples = { sample(1, "Belly", true, nil, nil, 9.6) }
+		-- Belly 1.5 x walk 4 x Uncommon 1.5 x tiptoe 0.2 = 1.8 a second, minus 1.5 of drain.
+		-- Each step is +0.03, so 10 steps end at 10.3; two steps end at 10.06, which shows as 10.1.
+		stepTimes(harness, 2)
 		expect(meter(harness)).toBe(10.1)
 	end)
 
 	it("writes Meter only when its rounded value changes", function()
 		local harness = newHarness(10)
-		addPlayer(harness, 1, "Mia", 2, { tiptoe = true, carrying = "Uncommon" })
-		harness.samples = { sample(1, "Boots", true) }
+		addPlayer(harness, 1, "Mia", { tiptoe = true, carrying = "Uncommon" })
+		harness.samples = { sample(1, "Belly", true, nil, nil, 9.6) }
 		local writes = 0
 		local connection = harness.state:GetAttributeChangedSignal("Meter"):Connect(function()
 			writes += 1
 		end)
-		-- Each step is +0.02 (1.2 a second of noise, minus 1 of drain). Steps 1 and 2 end at 10.02 and 10.04, which
-		-- still show as 10.0: no write.
-		stepTimes(harness, 2)
+		-- Each step is +0.03 (1.8 a second of noise, minus 1.5 of drain). Step 1 ends at 10.03, which still shows
+		-- as 10.0: no write.
+		stepTimes(harness, 1)
 		task.wait()
 		expect(writes).toBe(0)
 		expect(meter(harness)).toBe(10)
-		-- Step 3 ends at 10.06, which shows as 10.1: one write.
+		-- Step 2 ends at 10.06, which shows as 10.1: one write.
 		stepTimes(harness, 1)
 		task.wait()
 		expect(writes).toBe(1)
@@ -1113,7 +1369,6 @@ local function slamHarness(people: { Person }): Harness
 			harness,
 			person.id,
 			`Player{person.id}`,
-			2,
 			{ carrying = if person.carrying == false then nil else "Common" }
 		)
 		table.insert(harness.samples, placed(sample(person.id, "Meadow", false), person.position))
@@ -1186,7 +1441,7 @@ describe("GiantDirector slams", function()
 
 	it("sends landsAt as the clock when he woke plus the landing's seconds", function()
 		local harness = newHarness(100)
-		addPlayer(harness, 1, "Mia", 2, { carrying = "Common" })
+		addPlayer(harness, 1, "Mia", { carrying = "Common" })
 		harness.samples = { placed(sample(1, "Meadow", false), NEAR) }
 		harness.clock = START_CLOCK + 7
 		harness.director:step() -- he wakes with the clock at START_CLOCK + 7

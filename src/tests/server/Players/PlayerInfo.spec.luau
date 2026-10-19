@@ -76,4 +76,37 @@ describe("PlayerInfo.fromPlayer", function()
 		expect(PlayerInfo.fromPlayer(fakePlayer({ EggsHome = 0 / 0 })).eggsHome).toBe(0)
 		expect(PlayerInfo.fromPlayer(fakePlayer({ EggsHome = math.huge })).eggsHome).toBe(0)
 	end)
+
+	it("is not rareHome and has not used the free save when the player has no such attributes", function()
+		local info = PlayerInfo.fromPlayer(fakePlayer({}))
+		expect(info.rareHome).toBe(false)
+		expect(info.freeSaveUsed).toBe(false)
+	end)
+
+	it("reads RareHome and FreeSaveUsed from the player's attributes", function()
+		local info = PlayerInfo.fromPlayer(fakePlayer({ RareHome = true, FreeSaveUsed = true }))
+		expect(info.rareHome).toBe(true)
+		expect(info.freeSaveUsed).toBe(true)
+	end)
+
+	it("reads RareHome and FreeSaveUsed separately", function()
+		local rareOnly = PlayerInfo.fromPlayer(fakePlayer({ RareHome = true }))
+		expect(rareOnly.rareHome).toBe(true)
+		expect(rareOnly.freeSaveUsed).toBe(false)
+		local savedOnly = PlayerInfo.fromPlayer(fakePlayer({ FreeSaveUsed = true }))
+		expect(savedOnly.rareHome).toBe(false)
+		expect(savedOnly.freeSaveUsed).toBe(true)
+	end)
+
+	it("counts RareHome and FreeSaveUsed only when they are the boolean true", function()
+		local wrongValues: { any } = { 1, "true", "Rare", 0 }
+		for _, wrong in wrongValues do
+			local info = PlayerInfo.fromPlayer(fakePlayer({ RareHome = wrong, FreeSaveUsed = wrong }))
+			expect(info.rareHome).toBe(false)
+			expect(info.freeSaveUsed).toBe(false)
+		end
+		local falseInfo = PlayerInfo.fromPlayer(fakePlayer({ RareHome = false, FreeSaveUsed = false }))
+		expect(falseInfo.rareHome).toBe(false)
+		expect(falseInfo.freeSaveUsed).toBe(false)
+	end)
 end)

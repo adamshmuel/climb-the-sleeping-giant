@@ -173,8 +173,12 @@ local director = GiantDirector.new({
 		return infos
 	end,
 	state = net.GiantState,
-	fireWarning = function(mark: number)
-		net.Warning:FireAllClients(mark)
+	fireWarning = function(mark: number, kind: "FreeSave"?)
+		if kind == nil then
+			net.Warning:FireAllClients(mark)
+		else
+			net.Warning:FireAllClients(mark, kind)
+		end
 	end,
 	now = function()
 		return Workspace:GetServerTimeNow()
@@ -221,9 +225,17 @@ local director = GiantDirector.new({
 	catch = function(userId: number)
 		catcher:catch(userId)
 	end,
+	spendSave = function(userId: number)
+		-- On the Player, not the character, so being caught, resetting or respawning never gives the save back (Rule 18).
+		-- Only the server sets it; no remote can.
+		local player = Players:GetPlayerByUserId(userId)
+		if player ~= nil then
+			player:SetAttribute("FreeSaveUsed", true)
+		end
+	end,
 })
 
--- Analytics: listens to grabs, banked eggs, catches, wake-ups and slams, and to the ticks above. In Studio, Roblox prints a line
+-- Analytics: listens to grabs, banked eggs, returned eggs, catches, wake-ups, slams and free saves, and to the ticks above. In Studio, Roblox prints a line
 -- for each event and sends nothing; a published game's server sends them to the Creator Dashboard.
 local gardenSpots: { Analytics.GardenSpot } = {}
 for _, garden in gardens do
@@ -237,6 +249,8 @@ analytics = Analytics.start({
 	caught = catcher.caught,
 	woke = director.woke,
 	slammed = director.slammed,
+	saved = director.saved,
+	returned = grab.returned,
 	gardens = gardenSpots,
 	now = os.clock,
 	newId = function()

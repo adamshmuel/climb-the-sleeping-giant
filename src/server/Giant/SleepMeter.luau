@@ -9,25 +9,29 @@ local Config = require(ReplicatedStorage.Shared.Config)
 export type Contribution = {
 	id: number, -- the player's UserId
 	noise: number, -- points to add now
-	eggsHome: number, -- eggs this player banked this session
+	canBeSaved: boolean, -- true while this player is new and still has their free save
 }
 
 export type Result = {
 	value: number,
 	woke: boolean,
 	wokenBy: number?,
+	saved: { number }, -- the UserIds whose free save was spent in this step; always empty when he woke
 }
 
 local SleepMeter = {}
 
 function SleepMeter.drainPerSecond(playerCount: number): number
+	if playerCount == 1 then
+		return Config.Meter.SoloDrain
+	end
 	return Config.Meter.DrainPerPlayer * playerCount
 end
 
 function SleepMeter.add(value: number, phase: Config.Phase, contributions: { Contribution }): Result
 	-- The meter is locked unless he is asleep.
 	if phase ~= "Asleep" then
-		return { value = value, woke = false, wokenBy = nil }
+		return { value = value, woke = false, wokenBy = nil, saved = {} }
 	end
 	local current = value
 	-- Biggest noise first. Equal noise: the lower id first. Sort a copy, so the caller's list stays as it was.
@@ -38,20 +42,23 @@ function SleepMeter.add(value: number, phase: Config.Phase, contributions: { Con
 		end
 		return a.id < b.id
 	end)
+	local saved: { number } = {}
+	local savedIds: { [number]: boolean } = {}
 	for _, contribution in ordered do
-		if contribution.eggsHome < Config.Meter.NewPlayerEggsNeeded then
-			-- A new player can only push the meter up to the cap, and never pulls it down from above it.
-			if current < Config.Meter.NewPlayerCap then
-				current = math.min(current + contribution.noise, Config.Meter.NewPlayerCap)
-			end
-		else
-			current += contribution.noise
-		end
+		current += contribution.noise
 		if current >= Config.Meter.Max then
-			return { value = Config.Meter.Max, woke = true, wokenBy = contribution.id }
+			-- A player is saved once per step: a second share that fills the meter wakes him, naming that player.
+			if contribution.canBeSaved and not savedIds[contribution.id] then
+				savedIds[contribution.id] = true
+				table.insert(saved, contribution.id)
+				current = Config.Meter.FreeSaveMeter
+			else
+				-- A save is spent only if he is still asleep at the end of the step (Rule 19), so a wake spends none.
+				return { value = Config.Meter.Max, woke = true, wokenBy = contribution.id, saved = {} }
+			end
 		end
 	end
-	return { value = current, woke = false, wokenBy = nil }
+	return { value = current, woke = false, wokenBy = nil, saved = saved }
 end
 
 function SleepMeter.drain(value: number, phase: Config.Phase, playerCount: number, dt: number): number

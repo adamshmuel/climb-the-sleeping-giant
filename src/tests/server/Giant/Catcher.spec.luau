@@ -116,6 +116,7 @@ type Harness = {
 	players: { [number]: FakePlayer },
 	log: { LogEntry },
 	returned: { number }, -- the user ids grab:returnEgg was called for
+	returnReasons: { any }, -- the reason each of those calls gave (the third argument), in order
 	caught: { number }, -- the user ids fireCaught was called for
 	heardCaught: { { player: any, rarity: any, carryingThen: any } }, -- what the caught signal said, in order
 	carrying: { [number]: boolean }, -- who still carries an egg (returnEgg gives nil to the others)
@@ -134,6 +135,7 @@ local function newHarness(): Harness
 		players = {},
 		log = {},
 		returned = {},
+		returnReasons = {},
 		caught = {},
 		heardCaught = {},
 		carrying = {},
@@ -149,8 +151,9 @@ local function newHarness(): Harness
 			end,
 		},
 		grab = {
-			returnEgg = function(_self: any, player: any): (("back" | "gone")?, string?)
+			returnEgg = function(_self: any, player: any, why: any): (("back" | "gone")?, string?)
 				table.insert(harness.returned, player.UserId)
+				table.insert(harness.returnReasons, why)
 				table.insert(harness.log, {
 					what = "returnEgg",
 					rootPosition = rootPositionOf(harness.players[player.UserId]),
@@ -197,6 +200,13 @@ local function rootOf(player: FakePlayer): BasePart
 end
 
 describe("Catcher.catch", function()
+	it("sends the egg back with the reason 'Caught', so the log can tell a catch from a lost egg", function()
+		local harness = newHarness()
+		add(harness, newPlayer(1, Vector3.new(10, 3, 10), { plotIndex = 1 }))
+		harness.catcher:catch(1)
+		expect(harness.returnReasons).toEqual({ "Caught" })
+	end)
+
 	it("sends a caught carrier's egg back, then moves them, then fires Caught, in that order", function()
 		local harness = newHarness()
 		local start = Vector3.new(10, 3, 10)

@@ -8,6 +8,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Rarity = require(ReplicatedStorage.Shared.Rarity)
 local Signal = require(ReplicatedStorage.Packages.Signal)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Grab = require(script.Parent.Grab)
@@ -189,6 +190,10 @@ function Banking.start(deps: Deps): Banking
 					local _spotName: string?, rarity: Config.RarityName? = grab:bank(player)
 					if rarity ~= nil then
 						player:SetAttribute("EggsHome", info.eggsHome + 1)
+						if Rarity.isRareOrRarer(rarity) then
+							-- A Rare home ends the new-player free save. It stays on the player, never the character.
+							player:SetAttribute("RareHome", true)
+						end
 						banked:Fire(player, rarity)
 					end
 				end

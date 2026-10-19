@@ -4,7 +4,6 @@
 -- listens for the Warning remote. What it shows for each state is worked out in MeterView.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Trove = require(ReplicatedStorage.Packages.Trove)
@@ -48,12 +47,20 @@ export type TopbarLike = {
 	connect: (callback: () -> ()) -> () -> (),
 }
 
+-- The part of a tween this module uses. Roblox's Tween fits it, and tests pass a stand-in that only records the calls.
+export type TweenLike = {
+	Play: (self: any) -> (),
+	Cancel: (self: any) -> (),
+	Destroy: (self: any) -> (),
+}
+
 export type Deps = {
 	parent: Instance, -- the player's screen (PlayerGui): HudTop goes in it
 	giantState: Instance, -- has the attributes Meter, Phase and PhaseEndsAt
 	warning: WarningLike, -- fires 60 or 85 when the meter rises past that mark
 	viewport: ViewportLike,
 	topbarInset: TopbarLike,
+	createTween: (instance: Instance, info: TweenInfo, goal: { [string]: any }) -> TweenLike, -- TweenService:Create in the game
 	now: () -> number, -- the server's clock (Workspace:GetServerTimeNow())
 }
 
@@ -253,7 +260,7 @@ function SleepMeterUi.start(deps: Deps): () -> ()
 
 	local look: MeterView.Look? = nil
 	local refreshThread: thread? = nil
-	local pulseTween: Tween? = nil
+	local pulseTween: TweenLike? = nil
 
 	local function cancelRefresh()
 		if refreshThread then
@@ -325,7 +332,7 @@ function SleepMeterUi.start(deps: Deps): () -> ()
 	local function pulseOnce()
 		stopPulse()
 		local info = TweenInfo.new(PULSE_SECONDS / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true)
-		local tween = TweenService:Create(parts.pulse, info, { Scale = PULSE_SCALE })
+		local tween = deps.createTween(parts.pulse, info, { Scale = PULSE_SCALE })
 		pulseTween = tween
 		tween:Play()
 	end

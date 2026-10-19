@@ -3,9 +3,15 @@
 -- style guide). On the belly the camera looks up the slope, and a 7-stud Rare egg standing between the camera and the
 -- player covered the whole player. So an egg that waits on its spot and sits between the camera and the player's own
 -- character turns 70% see-through. It fades in over 0.15 s, and back over 0.3 s once it no longer blocks.
+-- The egg the player carries on their own back follows the same rule (V2, "Your own carried egg never hides you"): on
+-- the belly path the low camera looks up the slope and that egg covered the player's head and body. It is a copy on the
+-- character, named CarriedEgg, and it moves with the player, so its box is measured again every frame. Like a waiting egg
+-- it is judged by the line from the camera to the avatar's head or to the middle of the body, but through a box at 75% of
+-- the egg's size (an egg whose edge only grazes the line stays solid), it fades to 60% instead of 70% so it still reads
+-- as an egg on a bright belly, and it waits 0.2 s with no line crossing before it starts back to solid (so it doesn't
+-- flicker at the edge of the line).
 -- Every part of the egg gets the same value, through LocalTransparencyModifier. The light, the sparkles and the label
--- are not parts, so they stay as they are. Carried eggs are copies on the character, never under the egg spots, so
--- they are never touched.
+-- are not parts, so they stay as they are.
 -- LocalTransparencyModifier is local to this device: the server's parts stay at 0 and other players never see it.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -24,7 +30,8 @@ export type SignalLike = {
 export type Deps = {
 	root: Instance, -- holds the egg spots (Workspace.World.EggSpots)
 	camera: () -> CFrame?, -- where the camera is now (nil when there is none)
-	targets: () -> { Vector3 }, -- the points that must stay in sight: the player's head and root (empty without a living character)
+	targets: () -> { Vector3 }, -- the points that must stay in sight, for waiting eggs and the carried egg: the player's head and root (empty without a living character)
+	carried: () -> Model?, -- the egg the player carries on their back (the CarriedEgg model), or nil when there is none
 	step: SignalLike, -- once per frame (RunService.RenderStepped)
 	now: () -> number, -- a clock in seconds
 }
@@ -32,10 +39,19 @@ export type Deps = {
 -- How see-through a blocking egg gets (70%, as the style guide says): enough that the player shows through, little
 -- enough that it still reads as an egg.
 local SEE_THROUGH = 0.7
+-- How see-through the carried egg gets (60%): it is small and close to the camera, and 70% almost erased it on a bright
+-- belly, so it keeps a little more of its shell.
+local CARRIED_SEE_THROUGH = 0.6
+-- The share of each side of the carried egg's outer box used for the line test: the egg's rounded edge should not fade it
+-- when it only grazes the line.
+local CARRIED_BOX_SCALE = 0.75
 -- Seconds to go from clear to fully faded: quick, so the player is never hidden for long.
 local FADE_IN_SECONDS = 0.15
 -- Seconds to go from fully faded back to clear: slower, so an egg at the edge of the line doesn't flicker.
 local FADE_OUT_SECONDS = 0.3
+-- Seconds the carried egg waits, with no line crossing it, before it starts back to solid: an egg at the edge of the line
+-- doesn't flicker. A waiting egg has no wait.
+local CARRIED_HOLD_SECONDS = 0.2
 
 local EGG_NAME = "Egg"
 -- A fade this close to clear or to fully faded counts as there, so a clock that is off by a hair never leaves a speck
@@ -84,33 +100,89 @@ function EggFade.blocks(from: Vector3, to: Vector3, boxCFrame: CFrame, boxSize: 
 	return inside
 end
 
--- The points of the player's own character that must stay in sight: the head and the root part. Nothing for a missing or
--- dead character, so no egg fades for a player who is not there.
-function EggFade.targetsOf(character: Model?): { Vector3 }
-	local points: { Vector3 } = {}
+-- True when the character exists and its humanoid is alive, so no egg fades for a player who is not there.
+local function isAlive(character: Model?): boolean
 	if character == nil then
-		return points
+		return false
 	end
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	if humanoid == nil or humanoid.Health <= 0 then
+	return humanoid ~= nil and humanoid.Health > 0
+end
+
+-- Where the named part of a living character is, or nil without that part.
+local function positionOf(character: Model, name: string): Vector3?
+	local part = character:FindFirstChild(name)
+	if part ~= nil and part:IsA("BasePart") then
+		return part.Position
+	end
+	return nil
+end
+
+-- The points of the player's own character that must stay in sight: the head and the root part. Nothing for a missing or
+-- dead character.
+function EggFade.targetsOf(character: Model?): { Vector3 }
+	local points: { Vector3 } = {}
+	if character == nil or not isAlive(character) then
 		return points
 	end
 	for _, name in { "Head", "HumanoidRootPart" } do
-		local part = character:FindFirstChild(name)
-		if part ~= nil and part:IsA("BasePart") then
-			table.insert(points, part.Position)
+		local position = positionOf(character, name)
+		if position ~= nil then
+			table.insert(points, position)
 		end
 	end
 	return points
 end
 
--- One waiting egg and what it needs to fade.
+-- The eight corners of a box, as signs: multiply each by half the box's size to get the corner.
+local CORNER_SIGNS: { Vector3 } = {
+	Vector3.new(-1, -1, -1),
+	Vector3.new(-1, -1, 1),
+	Vector3.new(-1, 1, -1),
+	Vector3.new(-1, 1, 1),
+	Vector3.new(1, -1, -1),
+	Vector3.new(1, -1, 1),
+	Vector3.new(1, 1, -1),
+	Vector3.new(1, 1, 1),
+}
+
+-- The box around every part of a model, measured from where the parts are now, turned the way its first part is turned.
+-- The carried egg needs this instead of Model:GetBoundingBox: it is welded to the character, so its parts move with the
+-- player but the model's own pivot stays where the egg was put on, and GetBoundingBox measures around that old spot.
+-- Nil when the model has no part.
+local function boxOfParts(model: Model): (CFrame?, Vector3?)
+	local first = model:FindFirstChildWhichIsA("BasePart", true)
+	if first == nil then
+		return nil, nil
+	end
+	local inverse = first.CFrame:Inverse()
+	local low = Vector3.new(math.huge, math.huge, math.huge)
+	local high = -low
+	for _, descendant in model:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			local half = descendant.Size / 2
+			local toFirst = inverse * descendant.CFrame
+			for _, sign in CORNER_SIGNS do
+				local corner = toFirst * (sign * half)
+				low = low:Min(corner)
+				high = high:Max(corner)
+			end
+		end
+	end
+	return first.CFrame * CFrame.new((low + high) / 2), high - low
+end
+
+-- One egg and what it needs to fade.
 type Entry = {
-	spot: Instance,
+	spot: Instance?, -- the egg spot a waiting egg sits on (nil for the carried egg)
 	egg: Model,
-	boxCFrame: CFrame?, -- the egg's bounding box, read once (eggs are anchored and never move)
+	boxCFrame: CFrame?, -- the egg's bounding box: read once for a waiting egg (it is anchored and never moves)
 	boxSize: Vector3?,
+	seeThrough: number, -- how see-through the egg gets when fully faded
+	hold: number, -- seconds with no line crossing before a faded egg starts back to solid (0 for a waiting egg)
+	clearFor: number, -- seconds in a row with no line crossing (0 after any frame where one crosses)
 	progress: number, -- 0 clear to 1 fully faded
+	reassert: boolean, -- true for the carried egg: its fade is written again every frame while it is faded (see `advance`)
 	written: number, -- the value last put on the parts, so a part is only written when it changes
 	cleanup: () -> (), -- disconnects what follows this egg
 }
@@ -121,6 +193,7 @@ function EggFade.start(deps: Deps): { stop: () -> () }
 	local trove = Trove.new()
 	local stopped = false
 	local entries: { [Model]: Entry } = {}
+	local carriedEntry: Entry? = nil
 	local spotCleanups: { [Instance]: () -> () } = {}
 	local lastTime = deps.now()
 
@@ -150,29 +223,38 @@ function EggFade.start(deps: Deps): { stop: () -> () }
 		end
 	end
 
-	local function trackEgg(spot: Instance, egg: Instance)
-		if stopped or not egg:IsA("Model") or egg.Name ~= EGG_NAME or entries[egg] ~= nil then
-			return
-		end
+	-- Starts following one egg, clear. `spot` is the egg spot it waits on, or nil for the carried egg.
+	local function newEntry(spot: Instance?, egg: Model): Entry
 		local eggTrove = Trove.new()
 		local entry: Entry = {
 			spot = spot,
 			egg = egg,
 			boxCFrame = nil,
 			boxSize = nil,
+			seeThrough = if spot == nil then CARRIED_SEE_THROUGH else SEE_THROUGH,
+			hold = if spot == nil then CARRIED_HOLD_SECONDS else 0,
+			clearFor = 0,
 			progress = 0,
+			reassert = spot == nil,
 			written = 0,
 			cleanup = function()
 				eggTrove:Destroy()
 			end,
 		}
-		entries[egg] = entry
 		-- A part that arrives while the egg is faded joins in at the same value.
 		eggTrove:Add(egg.DescendantAdded:Connect(function(descendant: Instance)
 			if entry.written ~= 0 and descendant:IsA("BasePart") then
 				descendant.LocalTransparencyModifier = entry.written
 			end
 		end))
+		return entry
+	end
+
+	local function trackEgg(spot: Instance, egg: Instance)
+		if stopped or not egg:IsA("Model") or egg.Name ~= EGG_NAME or entries[egg] ~= nil then
+			return
+		end
+		entries[egg] = newEntry(spot, egg)
 	end
 
 	local function trackSpot(spot: Instance)
@@ -220,6 +302,52 @@ function EggFade.start(deps: Deps): { stop: () -> () }
 		return false
 	end
 
+	-- Moves one egg's fade on by `seconds`, towards faded while it blocks and towards clear while it does not. An egg
+	-- with a hold starts back only after the hold has passed with no line crossing; the time past the hold in this frame
+	-- already counts as fade-back.
+	local function advance(entry: Entry, cameraPosition: Vector3?, targets: { Vector3 }, seconds: number)
+		if isBlocking(entry, cameraPosition, targets) then
+			entry.clearFor = 0
+			entry.progress = math.min(1, entry.progress + seconds / FADE_IN_SECONDS)
+		else
+			entry.clearFor += seconds
+			local fadeBackSeconds = math.clamp(entry.clearFor - entry.hold, 0, seconds)
+			entry.progress = math.max(0, entry.progress - fadeBackSeconds / FADE_OUT_SECONDS)
+		end
+		if entry.progress < SNAP then
+			entry.progress = 0
+		elseif entry.progress > 1 - SNAP then
+			entry.progress = 1
+		end
+		local value = entry.progress * entry.seeThrough
+		-- The carried egg is inside the player's character, so Roblox's own camera scripts also write its
+		-- LocalTransparencyModifier: 1 when the camera zooms in close, and back to 0 when it zooms out. While the egg is
+		-- faded, its value is written again every frame, so the camera's 0 never leaves it covering the player. While it
+		-- is clear, nothing is written, and the camera keeps its say.
+		if value ~= entry.written or (entry.reassert and value ~= 0) then
+			write(entry, value)
+		end
+	end
+
+	-- Follows the egg the player carries: a new CarriedEgg starts clear, and one that is gone is forgotten. The carried
+	-- egg moves with the player, so its box is measured again on every frame (only while it has a part to measure).
+	local function followCarried()
+		local model = deps.carried()
+		local old = carriedEntry
+		if old ~= nil and old.egg ~= model then
+			old.cleanup()
+			carriedEntry = nil
+		end
+		if model == nil then
+			return
+		end
+		local entry = carriedEntry or newEntry(nil, model)
+		carriedEntry = entry
+		local boxCFrame, boxSize = boxOfParts(model)
+		entry.boxCFrame = boxCFrame
+		entry.boxSize = if boxSize ~= nil then boxSize * CARRIED_BOX_SCALE else nil
+	end
+
 	local function onStep()
 		local now = deps.now()
 		local seconds = math.max(0, now - lastTime)
@@ -231,20 +359,11 @@ function EggFade.start(deps: Deps): { stop: () -> () }
 			if entry.boxSize == nil then
 				readBox(entry)
 			end
-			if isBlocking(entry, cameraPosition, targets) then
-				entry.progress = math.min(1, entry.progress + seconds / FADE_IN_SECONDS)
-			else
-				entry.progress = math.max(0, entry.progress - seconds / FADE_OUT_SECONDS)
-			end
-			if entry.progress < SNAP then
-				entry.progress = 0
-			elseif entry.progress > 1 - SNAP then
-				entry.progress = 1
-			end
-			local value = entry.progress * SEE_THROUGH
-			if value ~= entry.written then
-				write(entry, value)
-			end
+			advance(entry, cameraPosition, targets, seconds)
+		end
+		followCarried()
+		if carriedEntry ~= nil then
+			advance(carriedEntry, cameraPosition, targets, seconds)
 		end
 	end
 
@@ -269,6 +388,14 @@ function EggFade.start(deps: Deps): { stop: () -> () }
 		end
 		for spot in spotCleanups do
 			untrackSpot(spot)
+		end
+		local entry = carriedEntry
+		if entry ~= nil then
+			carriedEntry = nil
+			if entry.written ~= 0 then
+				write(entry, 0)
+			end
+			entry.cleanup()
 		end
 	end
 

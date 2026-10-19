@@ -9,9 +9,10 @@ local Signal = require(ReplicatedStorage.Packages.Signal)
 local Analytics = require(ServerScriptService.Server.Analytics)
 local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 
--- The two breakdown slots Roblox gives a custom event. Which one means what depends on the event.
+-- The three breakdown slots Roblox gives a custom event. Which one means what depends on the event.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
+local FIELD_THREE = Enum.AnalyticsCustomFieldKeys.CustomField03.Name
 
 -- Everything the fake AnalyticsService was asked to log, in order.
 type Call = {
@@ -29,6 +30,7 @@ type Call = {
 type FakePlayer = {
 	UserId: number,
 	Name: string,
+	DisplayName: string,
 	Character: any,
 	CharacterAdded: Signal.Signal<any>,
 	attributes: { [string]: any },
@@ -49,6 +51,8 @@ type Harness = {
 	caught: Signal.Signal<any, any>,
 	woke: Signal.Signal<string, number?, string>,
 	slammed: Signal.Signal<number?, { number }>,
+	saved: Signal.Signal<number, Config.ZoneName>,
+	returned: Signal.Signal<any, any, string>,
 	idsMade: number,
 }
 
@@ -67,6 +71,8 @@ afterEach(function()
 		harness.caught:Destroy()
 		harness.woke:Destroy()
 		harness.slammed:Destroy()
+		harness.saved:Destroy()
+		harness.returned:Destroy()
 	end
 	table.clear(made)
 	for _, player in players do
@@ -80,6 +86,7 @@ local function makePlayer(userId: number, plotIndex: number?): FakePlayer
 	local player: FakePlayer = {
 		UserId = userId,
 		Name = `Player{userId}`,
+		DisplayName = `Player{userId}`,
 		Character = nil,
 		CharacterAdded = Signal.new(),
 		attributes = { PlotIndex = plotIndex, EggsHome = 0 },
@@ -106,6 +113,8 @@ local function newHarness(present: { FakePlayer }?): Harness
 		caught = Signal.new(),
 		woke = Signal.new(),
 		slammed = Signal.new(),
+		saved = Signal.new(),
+		returned = Signal.new(),
 		idsMade = 0,
 	}
 	local function record(method: string, call: Call)
@@ -174,6 +183,8 @@ local function newHarness(present: { FakePlayer }?): Harness
 		caught = harness.caught,
 		woke = harness.woke,
 		slammed = harness.slammed,
+		saved = harness.saved,
+		returned = harness.returned,
 		gardens = gardens,
 		now = function()
 			return harness.clock
@@ -237,6 +248,25 @@ local function catch(harness: Harness, player: FakePlayer)
 	local rarity = player.attributes.Carrying
 	player.attributes.Carrying = nil
 	harness.caught:Fire(player, rarity)
+end
+
+-- Grab's order for an egg sent back: Carrying is cleared, then `returned` fires with the reason.
+local function sendBack(harness: Harness, player: FakePlayer, why: string)
+	local rarity = player.attributes.Carrying
+	player.attributes.Carrying = nil
+	harness.returned:Fire(player, rarity, why)
+end
+
+-- Catcher's order for a catch: the egg goes back first (`returned` with "Caught"), then `caught` fires.
+local function catchForReal(harness: Harness, player: FakePlayer)
+	local rarity = player.attributes.Carrying
+	sendBack(harness, player, "Caught")
+	harness.caught:Fire(player, rarity)
+end
+
+-- The director spends the player's free save in `zone`.
+local function save(harness: Harness, player: FakePlayer, zone: Config.ZoneName)
+	harness.saved:Fire(player.UserId, zone)
 end
 
 -- Where a player is for the tick: `garden` is the garden box they stand in (nil in the meadow), and `x`, `z` and `y`
@@ -885,6 +915,33 @@ describe("Analytics GiantWoke", function()
 		expect((harness.calls[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
 	end)
 
+	it("calls the waker 'New' when they have no Rare home, in the third slot", function()
+		local harness, all = serverOf(2)
+		harness.woke:Fire("Ann", all[1].UserId, "Walking")
+		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("New")
+	end)
+
+	it("calls the waker 'Veteran' when they have a Rare home", function()
+		local harness, all = serverOf(2)
+		all[2].attributes.RareHome = true
+		harness.woke:Fire("Bo", all[2].UserId, "Jump off")
+		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("Veteran")
+	end)
+
+	it("says 'Nobody' in the third slot when nobody is named", function()
+		local harness, _all = serverOf(2)
+		harness.woke:Fire("", nil, "Waker left")
+		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("Nobody")
+	end)
+
+	it("says 'Nobody' in the third slot when the named waker has left", function()
+		local harness, all = serverOf(3)
+		all[3].attributes.RareHome = true
+		leave(harness, all[3])
+		harness.woke:Fire("Cy", all[3].UserId, "Jump on him")
+		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("Nobody")
+	end)
+
 	it("logs nothing when there is no player in the server", function()
 		local harness, all = serverOf(2)
 		leave(harness, all[1])
@@ -906,6 +963,259 @@ describe("Analytics GiantWoke", function()
 		local harness, all = serverOf(5)
 		harness.woke:Fire("Ann", all[1].UserId, "Walking")
 		expect(#harness.calls).toBe(1)
+	end)
+end)
+
+-- The "FreeSaveUsed" calls on a player, and the "FreeSaveResult" calls.
+local function eventsNamed(harness: Harness, eventName: string, player: FakePlayer?): { Call }
+	local found: { Call } = {}
+	for _, call in callsOf(harness, "custom", player) do
+		if call.eventName == eventName then
+			table.insert(found, call)
+		end
+	end
+	return found
+end
+
+describe("Analytics FreeSaveUsed", function()
+	for _, row in
+		{
+			{ zone = "Boots", where = "Boots" },
+			{ zone = "Belly", where = "Belly" },
+			{ zone = "Beard", where = "Higher" },
+			{ zone = "Nightcap", where = "Higher" },
+		}
+	do
+		local zone, where = row.zone :: any, row.where
+		it(`says where the save happened: {zone} is "{where}"`, function()
+			local harness = newHarness()
+			local mia = makePlayer(1, 1)
+			enter(harness, mia)
+			grab(harness, mia, "Rare")
+			save(harness, mia, zone)
+			local events = eventsNamed(harness, "FreeSaveUsed", mia)
+			expect(#events).toBe(1)
+			expect(events[1].value).toBe(1)
+			expect((events[1].fields :: any)[FIELD_ONE]).toBe(where)
+		end)
+	end
+
+	it("logs the Meadow as it is, so a save there shows on the chart", function()
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		enter(harness, mia)
+		grab(harness, mia, "Rare")
+		save(harness, mia, "Meadow")
+		expect((eventsNamed(harness, "FreeSaveUsed", mia)[1].fields :: any)[FIELD_ONE]).toBe("Meadow")
+	end)
+
+	for _, row in
+		{
+			{ eggsHome = 0, bucket = "0" },
+			{ eggsHome = 1, bucket = "1" },
+			{ eggsHome = 2, bucket = "2+" },
+			{ eggsHome = 7, bucket = "2+" },
+		}
+	do
+		local eggsHome, bucket = row.eggsHome, row.bucket
+		it(`puts {eggsHome} eggs home in the "{bucket}" bucket`, function()
+			local harness = newHarness()
+			local mia = makePlayer(1, 1)
+			enter(harness, mia)
+			mia.attributes.EggsHome = eggsHome
+			grab(harness, mia, "Rare")
+			save(harness, mia, "Belly")
+			expect((eventsNamed(harness, "FreeSaveUsed", mia)[1].fields :: any)[FIELD_TWO]).toBe(bucket)
+		end)
+	end
+
+	it("names the rarity of the egg they carry in the third slot", function()
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		enter(harness, mia)
+		grab(harness, mia, "Rare")
+		save(harness, mia, "Belly")
+		expect((eventsNamed(harness, "FreeSaveUsed", mia)[1].fields :: any)[FIELD_THREE]).toBe("Rare")
+	end)
+
+	it("says 'None' in the third slot when they carry nothing", function()
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		enter(harness, mia)
+		save(harness, mia, "Belly")
+		local events = eventsNamed(harness, "FreeSaveUsed", mia)
+		expect(#events).toBe(1)
+		expect((events[1].fields :: any)[FIELD_THREE]).toBe("None")
+	end)
+
+	it("logs once for the player who was saved and for nobody else", function()
+		local harness, all = serverOf(3)
+		save(harness, all[2], "Boots")
+		expect(#harness.calls).toBe(1)
+		expect(harness.calls[1].player).toBe(all[2])
+	end)
+
+	it("logs nothing for a player who has left", function()
+		local harness, all = serverOf(2)
+		local gone = all[2]
+		leave(harness, gone)
+		save(harness, gone, "Belly")
+		expect(harness.calls).toEqual({})
+	end)
+end)
+
+describe("Analytics FreeSaveResult", function()
+	-- A brand-new player carrying a Rare who has just been saved on the belly at clock 100.
+	local function savedCarrier(): (Harness, FakePlayer)
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		enter(harness, mia)
+		grab(harness, mia, "Rare")
+		harness.clock = 100
+		save(harness, mia, "Belly")
+		return harness, mia
+	end
+
+	local function resultsOf(harness: Harness, player: FakePlayer): { Call }
+		return eventsNamed(harness, "FreeSaveResult", player)
+	end
+
+	it("logs nothing yet right after the save", function()
+		local harness, mia = savedCarrier()
+		expect(#resultsOf(harness, mia)).toBe(0)
+	end)
+
+	it("logs 'Home' when the egg is banked", function()
+		local harness, mia = savedCarrier()
+		harness.clock = 130
+		bank(harness, mia)
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect((results[1].fields :: any)[FIELD_ONE]).toBe("Home")
+	end)
+
+	it("logs 'Woke him' when they are named as the waker", function()
+		local harness, mia = savedCarrier()
+		harness.clock = 112
+		harness.woke:Fire("Player1", mia.UserId, "Walking")
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect((results[1].fields :: any)[FIELD_ONE]).toBe("Woke him")
+	end)
+
+	it("does not close the result of a player who is not the waker", function()
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		local bo = makePlayer(2, 2)
+		enter(harness, mia)
+		enter(harness, bo)
+		grab(harness, mia, "Rare")
+		save(harness, mia, "Belly")
+		harness.woke:Fire("Player2", bo.UserId, "Jump on him")
+		expect(#eventsNamed(harness, "FreeSaveResult", mia)).toBe(0)
+		bank(harness, mia)
+		expect((eventsNamed(harness, "FreeSaveResult", mia)[1].fields :: any)[FIELD_ONE]).toBe("Home")
+	end)
+
+	it("logs 'Caught' when a catch comes: the egg goes back first, then `caught` fires", function()
+		local harness, mia = savedCarrier()
+		catchForReal(harness, mia)
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect((results[1].fields :: any)[FIELD_ONE]).toBe("Caught")
+	end)
+
+	it("logs 'Lost' when the egg goes back for any other reason", function()
+		local harness, mia = savedCarrier()
+		sendBack(harness, mia, "Lost")
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect((results[1].fields :: any)[FIELD_ONE]).toBe("Lost")
+	end)
+
+	it("logs 'Lost' when they leave with the result still open and Banking's handler ran first", function()
+		local harness, mia = savedCarrier()
+		-- Banking sends the egg back as they leave, then Analytics hears them leave.
+		sendBack(harness, mia, "Lost")
+		leave(harness, mia)
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect((results[1].fields :: any)[FIELD_ONE]).toBe("Lost")
+	end)
+
+	it("logs 'Lost' when they leave with the result still open and Analytics' handler ran first", function()
+		local harness, mia = savedCarrier()
+		leave(harness, mia)
+		-- Banking sends the egg back after Analytics has already forgotten them.
+		sendBack(harness, mia, "Lost")
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect((results[1].fields :: any)[FIELD_ONE]).toBe("Lost")
+	end)
+
+	it("values the result at the seconds since the save", function()
+		local harness, mia = savedCarrier()
+		harness.clock = 137.5
+		bank(harness, mia)
+		expect(resultsOf(harness, mia)[1].value).toBe(37.5)
+	end)
+
+	it("logs one result per save: the first outcome closes it and nothing later logs again", function()
+		local harness, mia = savedCarrier()
+		harness.woke:Fire("Player1", mia.UserId, "Walking")
+		sendBack(harness, mia, "Lost")
+		leave(harness, mia)
+		expect(#resultsOf(harness, mia)).toBe(1)
+		expect((resultsOf(harness, mia)[1].fields :: any)[FIELD_ONE]).toBe("Woke him")
+	end)
+
+	it("does not log a later egg that is banked after the result was closed", function()
+		local harness, mia = savedCarrier()
+		sendBack(harness, mia, "Lost")
+		grab(harness, mia, "Common")
+		bank(harness, mia)
+		expect(#resultsOf(harness, mia)).toBe(1)
+	end)
+
+	it("opens no result for a save while carrying nothing", function()
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		enter(harness, mia)
+		save(harness, mia, "Belly")
+		grab(harness, mia, "Common")
+		bank(harness, mia)
+		sendBack(harness, mia, "Lost")
+		harness.woke:Fire("Player1", mia.UserId, "Walking")
+		leave(harness, mia)
+		expect(#eventsNamed(harness, "FreeSaveUsed", mia)).toBe(1)
+		expect(#eventsNamed(harness, "FreeSaveResult", mia)).toBe(0)
+	end)
+
+	it("lets a second save replace the open result", function()
+		local harness, mia = savedCarrier()
+		harness.clock = 150
+		save(harness, mia, "Boots")
+		harness.clock = 160
+		bank(harness, mia)
+		local results = resultsOf(harness, mia)
+		expect(#results).toBe(1)
+		expect(results[1].value).toBe(10)
+	end)
+
+	it("logs a result for each saved carrier, on their own player", function()
+		local harness = newHarness()
+		local mia = makePlayer(1, 1)
+		local bo = makePlayer(2, 2)
+		enter(harness, mia)
+		enter(harness, bo)
+		grab(harness, mia, "Rare")
+		grab(harness, bo, "Rare")
+		save(harness, mia, "Belly")
+		save(harness, bo, "Belly")
+		bank(harness, bo)
+		sendBack(harness, mia, "Lost")
+		expect((eventsNamed(harness, "FreeSaveResult", bo)[1].fields :: any)[FIELD_ONE]).toBe("Home")
+		expect((eventsNamed(harness, "FreeSaveResult", mia)[1].fields :: any)[FIELD_ONE]).toBe("Lost")
 	end)
 end)
 
@@ -1178,6 +1488,8 @@ describe("Analytics.stop", function()
 		expect(#harness.caught:GetConnections()).toBe(1)
 		expect(#harness.woke:GetConnections()).toBe(1)
 		expect(#harness.slammed:GetConnections()).toBe(1)
+		expect(#harness.saved:GetConnections()).toBe(1)
+		expect(#harness.returned:GetConnections()).toBe(1)
 		expect(#mia.CharacterAdded:GetConnections()).toBe(1)
 		harness.analytics:stop()
 		harness.analytics:stop()
@@ -1188,6 +1500,8 @@ describe("Analytics.stop", function()
 		expect(#harness.caught:GetConnections()).toBe(0)
 		expect(#harness.woke:GetConnections()).toBe(0)
 		expect(#harness.slammed:GetConnections()).toBe(0)
+		expect(#harness.saved:GetConnections()).toBe(0)
+		expect(#harness.returned:GetConnections()).toBe(0)
 		expect(#mia.CharacterAdded:GetConnections()).toBe(0)
 	end)
 

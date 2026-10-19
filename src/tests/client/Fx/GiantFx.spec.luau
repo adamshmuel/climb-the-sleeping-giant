@@ -55,6 +55,9 @@ end
 
 local LETTER_LOOKS = { 0.05, 0.10, 0.15 }
 
+-- One snort burst the module asked for: how many puffs, and how many seconds after the rig was built.
+type Burst = { count: number, at: number, emitter: ParticleEmitter }
+
 type Rig = {
 	world: Folder,
 	giant: Model,
@@ -69,7 +72,17 @@ type Rig = {
 	outlines: { UIStroke },
 	normalLetters: { number }, -- as Roblox stores them (32-bit)
 	puff: ParticleEmitter,
-	mumble: BillboardGui,
+	snortPuff: ParticleEmitter?, -- nil when the rig is built without the nose
+	bursts: { Burst }, -- every Emit the module asked for, with the seconds since the rig was built
+	clears: { ParticleEmitter }, -- every emitter the module cleared (ParticleEmitter:Clear), in order
+	bubble: BillboardGui, -- World.GiantFX.SnoreEmitter.Warning85Bubble
+	bubbleFrame: Frame,
+	bubbleWords: TextLabel,
+	bubbleTail: Frame,
+	bubbleStrokes: { UIStroke }, -- the pill's and the tail's outlines
+	setPhone: (phone: boolean) -> (),
+	setCameraRightZ: (z: number) -> (),
+	setReducedMotion: (reduced: boolean) -> (),
 	state: Folder,
 	warning: any,
 	slamWarning: any,
@@ -78,7 +91,7 @@ type Rig = {
 	setArmClear: (answer: (shoulder: Vector3, direction: Vector3) -> boolean) -> (),
 	armClearCalls: { { shoulder: Vector3, direction: Vector3 } },
 	advance: (seconds: number) -> (),
-	fire: (mark: number) -> (),
+	fire: (mark: number, kind: string?) -> (),
 	setState: (meter: number, phase: string) -> (),
 	armStart: CFrame,
 	leftStart: CFrame,
@@ -126,7 +139,7 @@ end
 
 -- A stand-in for the giant's pieces, the state folder, the Warning remote, the frame step and a fake clock, so a
 -- test can drive all of them. `withFx` false builds the world without GiantFX (it streams in later).
-local function newRig(withFx: boolean?, startPhase: string?): Rig
+local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?): Rig
 	local world = made(Instance.new("Folder"))
 	local giant = Instance.new("Model")
 	giant.Name = "Giant"
@@ -224,14 +237,56 @@ local function newRig(withFx: boolean?, startPhase: string?): Rig
 	puff.Rate = 2
 	puff.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 2), NumberSequenceKeypoint.new(1, 7) })
 	puff.Parent = snoreEmitter
-	local mumbleAnchor = Instance.new("Part")
-	mumbleAnchor.Name = "MumbleAnchor"
-	mumbleAnchor.Anchored = true
-	mumbleAnchor.Parent = fx
-	local mumble = Instance.new("BillboardGui")
-	mumble.Name = "Mumble"
-	mumble.Enabled = false
-	mumble.Parent = mumbleAnchor
+	-- The snort: its own invisible part with its own emitter, as in the place (World.GiantFX.SnortNose.SnortPuff).
+	local snortPuff: ParticleEmitter? = nil
+	if withNose ~= false then
+		local snortNose = Instance.new("Part")
+		snortNose.Name = "SnortNose"
+		snortNose.Anchored = true
+		snortNose.Parent = fx
+		local snortEmitter = Instance.new("ParticleEmitter")
+		snortEmitter.Name = "SnortPuff"
+		snortEmitter.Parent = snortNose
+		snortPuff = snortEmitter
+	end
+	-- The 85% bubble, as in the place (World.GiantFX.SnoreEmitter.Warning85Bubble): a pill with the words, and a tail.
+	local bubble = Instance.new("BillboardGui")
+	bubble.Name = "Warning85Bubble"
+	bubble.Enabled = false
+	bubble.Size = UDim2.fromScale(41.6, 14.4)
+	bubble.StudsOffset = Vector3.new(14, -3, 2)
+	bubble.SizeOffset = Vector2.new(0.5, 0.5)
+	local bubbleFrame = Instance.new("Frame")
+	bubbleFrame.Name = "Frame"
+	bubbleFrame.Size = UDim2.fromScale(1, 1)
+	bubbleFrame.BackgroundTransparency = 0
+	bubbleFrame.Parent = bubble
+	local pillStroke = Instance.new("UIStroke")
+	pillStroke.Thickness = 4
+	pillStroke.Transparency = 0
+	pillStroke.Parent = bubbleFrame
+	local bubbleWords = Instance.new("TextLabel")
+	bubbleWords.Name = "TextLabel"
+	bubbleWords.Text = "Mmm... my eggs..."
+	bubbleWords.Size = UDim2.fromScale(0.9, 0.8)
+	bubbleWords.BackgroundTransparency = 1
+	bubbleWords.TextScaled = true
+	bubbleWords.TextWrapped = true
+	bubbleWords.TextTransparency = 0
+	bubbleWords.Parent = bubbleFrame
+	local bubbleTail = Instance.new("Frame")
+	bubbleTail.Name = "Tail"
+	bubbleTail.Size = UDim2.fromScale(0.0761538446, 0.22)
+	bubbleTail.AnchorPoint = Vector2.new(0.5, 0.5)
+	bubbleTail.Position = UDim2.fromScale(0.07, 0.93)
+	bubbleTail.Rotation = 45
+	bubbleTail.BackgroundTransparency = 0
+	bubbleTail.Parent = bubble
+	local tailStroke = Instance.new("UIStroke")
+	tailStroke.Thickness = 4
+	tailStroke.Transparency = 0
+	tailStroke.Parent = bubbleTail
+	bubble.Parent = snoreEmitter
 	made(fx)
 	if withFx ~= false then
 		fx.Parent = world
@@ -244,12 +299,20 @@ local function newRig(withFx: boolean?, startPhase: string?): Rig
 	local slamWarning = newSignal()
 	local step = newSignal()
 	local clock = 100
+	-- What the screen and the camera say right now; a test changes them with setPhone and the others.
+	local onPhone = false
+	local cameraRightZ = 0
+	local reducedMotion = false
 	-- The stand-in for "is the arm's path clear of his body?": clear unless a test says otherwise. It records its calls.
 	local function clearAlways(_shoulder: Vector3, _direction: Vector3): boolean
 		return true
 	end
 	local armClearAnswer: (shoulder: Vector3, direction: Vector3) -> boolean = clearAlways
 	local armClearCalls: { { shoulder: Vector3, direction: Vector3 } } = {}
+	-- The stand-in for ParticleEmitter:Emit: a real emitter can't be asked how often it was told to emit.
+	local bursts: { Burst } = {}
+	-- The stand-in for ParticleEmitter:Clear: a real emitter can't be asked either.
+	local clears: { ParticleEmitter } = {}
 
 	-- Where the pieces are before the module starts: a module that starts while he is awake moves them at once.
 	local armStart = arm:GetPivot()
@@ -272,6 +335,22 @@ local function newRig(withFx: boolean?, startPhase: string?): Rig
 			table.insert(armClearCalls, { shoulder = shoulder, direction = direction })
 			return armClearAnswer(shoulder, direction)
 		end,
+		burst = function(emitter: ParticleEmitter, count: number)
+			table.insert(bursts, { count = count, at = clock - 100, emitter = emitter })
+		end,
+		clear = function(emitter: ParticleEmitter?)
+			-- A call with no emitter still counts (as `false`), so a missing nose can't hide in an empty slot.
+			table.insert(clears, if emitter ~= nil then emitter else false :: any)
+		end,
+		isPhone = function(): boolean
+			return onPhone
+		end,
+		cameraRight = function(): Vector3
+			return Vector3.new(1, 0, cameraRightZ)
+		end,
+		reducedMotion = function(): boolean
+			return reducedMotion
+		end,
 	})
 	table.insert(stops, handle.stop)
 
@@ -289,7 +368,23 @@ local function newRig(withFx: boolean?, startPhase: string?): Rig
 		outlines = outlines,
 		normalLetters = normalLetters,
 		puff = puff,
-		mumble = mumble,
+		snortPuff = snortPuff,
+		bursts = bursts,
+		clears = clears,
+		bubble = bubble,
+		bubbleFrame = bubbleFrame,
+		bubbleWords = bubbleWords,
+		bubbleTail = bubbleTail,
+		bubbleStrokes = { pillStroke, tailStroke },
+		setPhone = function(phone: boolean)
+			onPhone = phone
+		end,
+		setCameraRightZ = function(z: number)
+			cameraRightZ = z
+		end,
+		setReducedMotion = function(reduced: boolean)
+			reducedMotion = reduced
+		end,
 		state = state,
 		warning = warning,
 		slamWarning = slamWarning,
@@ -303,8 +398,8 @@ local function newRig(withFx: boolean?, startPhase: string?): Rig
 			clock += seconds
 			step:Fire(seconds)
 		end,
-		fire = function(mark: number)
-			warning:Fire(mark)
+		fire = function(mark: number, kind: string?)
+			warning:Fire(mark, kind)
 		end,
 		setState = function(meter: number, phase: string)
 			state:SetAttribute("Meter", meter)
@@ -343,15 +438,19 @@ describe("GiantFx.warningPlan", function()
 		expect(GiantFx.warningPlan(60)).toEqual({ "flutterEyelids", "fadeLetters" })
 	end)
 
-	it("at 85 stops the Z Z Z and puffs, mumbles, twitches the arm, glows Tiptoe and shows the tip", function()
+	it("at 85 stops the Z Z Z and puffs, mumbles, snorts twice, glows Tiptoe and shows the tip", function()
 		expect(GiantFx.warningPlan(85)).toEqual({
 			"stopLetters",
 			"stopPuffs",
 			"mumbleBubble",
-			"twitchArm",
+			"snortNose",
 			"tiptoeGlow",
 			"standStillTip",
 		})
+	end)
+
+	it("at 85 has no arm twitch (Rule 100: nothing he sleeps on moves)", function()
+		expect(table.find(GiantFx.warningPlan(85), "twitchArm")).toBe(nil)
 	end)
 
 	it("does nothing for any other mark", function()
@@ -388,17 +487,15 @@ describe("GiantFx.flutterLift", function()
 	end)
 end)
 
-describe("GiantFx.twitchAngle", function()
-	it("is 12 degrees at 0.25 s and at 0.75 s", function()
-		expect(GiantFx.twitchAngle(0.25)).toBeCloseTo(12, 6)
-		expect(GiantFx.twitchAngle(0.75)).toBeCloseTo(12, 6)
+describe("GiantFx snort settings", function()
+	it("has bursts of 20 puffs, 0.5 seconds apart (style guide, the snort)", function()
+		expect(GiantFx.snortPuffs).toBe(20)
+		expect(GiantFx.snortGapSeconds).toBe(0.5)
 	end)
 
-	it("is 0 at the start, between the twitches, and from 1 s on", function()
-		expect(GiantFx.twitchAngle(0)).toBe(0)
-		expect(GiantFx.twitchAngle(0.5)).toBeCloseTo(0, 6)
-		expect(GiantFx.twitchAngle(1)).toBe(0)
-		expect(GiantFx.twitchAngle(3)).toBe(0)
+	it("no longer has the arm twitch", function()
+		expect((GiantFx :: any).twitchAngle).toBe(nil)
+		expect((GiantFx :: any).twitchDegrees).toBe(nil)
 	end)
 end)
 
@@ -423,6 +520,21 @@ describe("GiantFx.fadedTransparency", function()
 	it("takes an outline at 0 to half at the hold and back to 0 at 2 s", function()
 		expect(GiantFx.fadedTransparency(0, 1)).toBeCloseTo(0.5, 6)
 		expect(GiantFx.fadedTransparency(0, 2)).toBe(0)
+	end)
+end)
+
+describe("GiantFx.fadedInTransparency", function()
+	it("starts fully see-through, is half way at 0.1 s, and is the normal look from 0.2 s", function()
+		expect(GiantFx.fadedInTransparency(0.05, 0)).toBe(1)
+		expect(GiantFx.fadedInTransparency(0.05, 0.1)).toBeCloseTo(0.525, 6)
+		expect(GiantFx.fadedInTransparency(0.05, 0.2)).toBe(0.05)
+		expect(GiantFx.fadedInTransparency(0.05, 5)).toBe(0.05)
+	end)
+
+	it("takes an outline at 0 from fully see-through to 0 over 0.2 s", function()
+		expect(GiantFx.fadedInTransparency(0, 0)).toBe(1)
+		expect(GiantFx.fadedInTransparency(0, 0.1)).toBeCloseTo(0.5, 6)
+		expect(GiantFx.fadedInTransparency(0, 0.2)).toBe(0)
 	end)
 end)
 
@@ -495,7 +607,7 @@ describe("GiantFx.start: the 60 warning", function()
 		rig.advance(0.25)
 		expect(rig.floatingZ.Enabled).toBe(true)
 		expect(rig.puff.Enabled).toBe(true)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
 		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
 	end)
 end)
@@ -508,50 +620,134 @@ describe("GiantFx.start: the 85 warning", function()
 		expect(rig.puff.Enabled).toBe(false)
 	end)
 
-	it("shows the bubble for 3 seconds: still there at 2.9 s, gone at 3 s", function()
+	it("shows the bubble for 3 seconds and fades it out until 3.3 s: still there at 3.2 s, gone after 3.3 s", function()
 		local rig = newRig()
 		rig.fire(85)
-		expect(rig.mumble.Enabled).toBe(true)
+		expect(rig.bubble.Enabled).toBe(true)
 		rig.advance(2.9)
-		expect(rig.mumble.Enabled).toBe(true)
-		rig.advance(0.1)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(true)
+		rig.advance(0.3)
+		expect(rig.bubble.Enabled).toBe(true)
+		rig.advance(0.11)
+		expect(rig.bubble.Enabled).toBe(false)
 	end)
 
-	it("starts the bubble's 3 seconds again when a second 85 comes while it shows", function()
+	it("starts the bubble's time again when a second 85 comes while it shows", function()
 		local rig = newRig()
 		rig.fire(85)
 		rig.advance(2)
 		rig.fire(85)
 		rig.advance(2)
-		expect(rig.mumble.Enabled).toBe(true)
-		rig.advance(1)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(true)
+		rig.advance(1.31)
+		expect(rig.bubble.Enabled).toBe(false)
 	end)
 
-	it("twitches the right arm about the shoulder and puts it back exactly at the start", function()
+	it("never moves the right arm: it is exactly at the start at 0, 0.25, 0.5 and 1 second", function()
 		local rig = newRig()
 		rig.fire(85)
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
 		rig.advance(0.25)
-		local top = rig.arm:GetPivot()
-		expect(top == rig.armStart).toBe(false)
-		-- It is turned 12 degrees: the arm's turn from the start is a rotation of 12 degrees.
-		local _, angle = (top * rig.armStart:Inverse()):ToAxisAngle()
-		expect(math.deg(angle)).toBeCloseTo(12, 3)
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
 		rig.advance(0.25)
-		rig.advance(0.25)
-		rig.advance(0.25)
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
+		rig.advance(0.5)
 		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
 	end)
 
-	it("turns the arm about the shoulder: the shoulder point does not move", function()
+	it(
+		"snorts a burst of 20 puffs at the warning and another of 20 at 0.5 seconds, and no third by 2 seconds",
+		function()
+			local rig = newRig()
+			rig.fire(85)
+			expect(#rig.bursts).toBe(1)
+			expect(rig.bursts[1].count).toBe(20)
+			expect(rig.bursts[1].at).toBeCloseTo(0, 6)
+			expect(rig.bursts[1].emitter).toBe(rig.snortPuff)
+			rig.advance(0.25)
+			expect(#rig.bursts).toBe(1)
+			rig.advance(0.25)
+			expect(#rig.bursts).toBe(2)
+			expect(rig.bursts[2].count).toBe(20)
+			expect(rig.bursts[2].at).toBeCloseTo(0.5, 6)
+			rig.advance(0.5)
+			rig.advance(0.5)
+			rig.advance(0.5)
+			expect(#rig.bursts).toBe(2)
+		end
+	)
+
+	it("makes only one burst when he wakes 0.3 seconds after the warning", function()
 		local rig = newRig()
 		rig.fire(85)
+		rig.advance(0.3)
+		rig.setState(100, "Awake")
+		rig.advance(0.5)
+		rig.advance(1)
+		expect(#rig.bursts).toBe(1)
+	end)
+
+	it("makes only one burst when the module is stopped 0.3 seconds after the warning", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.3)
+		rig.handle.stop()
+		rig.advance(0.5)
+		expect(#rig.bursts).toBe(1)
+	end)
+
+	it("snorts also when the nose streams in between the two bursts: the second burst finds it", function()
+		local rig = newRig(nil, nil, false)
+		rig.fire(85)
+		expect(#rig.bursts).toBe(0)
 		rig.advance(0.25)
-		local shoulder = Vector3.new(40, 58, 8)
-		local before = rig.armStart:PointToObjectSpace(shoulder)
-		local after = rig.arm:GetPivot():PointToObjectSpace(shoulder)
-		expect((before - after).Magnitude).toBeCloseTo(0, 4)
+		local nose = Instance.new("Part")
+		nose.Name = "SnortNose"
+		nose.Parent = rig.fx
+		local emitter = Instance.new("ParticleEmitter")
+		emitter.Name = "SnortPuff"
+		emitter.Parent = nose
+		rig.advance(0.25)
+		expect(#rig.bursts).toBe(1)
+		expect(rig.bursts[1].emitter).toBe(emitter)
+	end)
+
+	it(
+		"still runs the rest of the plan with no nose in the world: the bubble shows, the Z Z Z stay off, and no error",
+		function()
+			local rig = newRig(nil, nil, false)
+			rig.fire(85)
+			expect(#rig.bursts).toBe(0)
+			expect(rig.bubble.Enabled).toBe(true)
+			expect(rig.floatingZ.Enabled).toBe(false)
+			expect(rig.puff.Enabled).toBe(false)
+			rig.advance(0.5)
+			rig.advance(2.81)
+			expect(#rig.bursts).toBe(0)
+			expect(rig.bubble.Enabled).toBe(false)
+			expect(rig.step:count()).toBe(0)
+		end
+	)
+
+	it("skips a burst when SnortPuff is not a ParticleEmitter", function()
+		local rig = newRig()
+		local snortPuff = rig.snortPuff :: ParticleEmitter
+		local parent = snortPuff.Parent
+		snortPuff:Destroy()
+		local wrong = Instance.new("Folder")
+		wrong.Name = "SnortPuff"
+		wrong.Parent = parent
+		rig.fire(85)
+		rig.advance(0.5)
+		expect(#rig.bursts).toBe(0)
+	end)
+
+	it("keeps the step connected until the second burst is done", function()
+		local rig = newRig()
+		rig.fire(85)
+		expect(rig.step:count()).toBe(1)
+		rig.advance(0.5)
+		expect(#rig.bursts).toBe(2)
 	end)
 
 	it("leaves the arm exactly at the start after two 85 warnings back to back", function()
@@ -577,7 +773,440 @@ describe("GiantFx.start: the 85 warning", function()
 		rig.fire(86)
 		expect(rig.step:count()).toBe(0)
 		expect(rig.floatingZ.Enabled).toBe(true)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+end)
+
+-- The 85% bubble beside his nose (V2 spec 1, Rule 17: A free save replays the 85% warning, section 5 "The 85% bubble's
+-- size and spot"). The maths is in Bubble85 (its own tests); here the module places the real bubble.
+describe("GiantFx.start: the 85 bubble beside his nose", function()
+	local function near(actual: number, wanted: number): boolean
+		return math.abs(actual - wanted) < 0.01
+	end
+
+	-- How see-through every part of the bubble is: the pill, its outline, the words, the tail and its outline.
+	local function seeThrough(rig: Rig): { number }
+		return {
+			rig.bubbleFrame.BackgroundTransparency,
+			rig.bubbleStrokes[1].Transparency,
+			rig.bubbleWords.TextTransparency,
+			rig.bubbleTail.BackgroundTransparency,
+			rig.bubbleStrokes[2].Transparency,
+		}
+	end
+
+	it("turns the bubble on at an 85 warning and off when he wakes", function()
+		local rig = newRig()
+		expect(rig.bubble.Enabled).toBe(false)
+		rig.fire(85)
+		expect(rig.bubble.Enabled).toBe(true)
+		rig.advance(1)
+		rig.setState(100, "Awake")
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+
+	it("starts from nothing, is 110% at 0.1 s and settles at exactly 100% at 0.2 s (computer)", function()
+		local rig = newRig()
+		rig.fire(85)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(0, 0))
+		rig.advance(0.1)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(187, 57))
+		expect(rig.bubbleWords.TextSize).toBe(22)
+		rig.advance(0.1)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(170, 52))
+		expect(rig.bubbleWords.TextSize).toBe(20)
+	end)
+
+	it("gets the computer size, 170 by 52 px with words at font size 20 on one line", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.3)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(170, 52))
+		expect(rig.bubbleWords.TextSize).toBe(20)
+		expect(rig.bubbleWords.TextScaled).toBe(false)
+		expect(rig.bubbleWords.TextWrapped).toBe(false)
+	end)
+
+	it("gets the phone size, 120 by 40 px with words at font size 14 on one line, when isPhone says true", function()
+		local rig = newRig()
+		rig.setPhone(true)
+		rig.fire(85)
+		rig.advance(0.3)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(120, 40))
+		expect(rig.bubbleWords.TextSize).toBe(14)
+		expect(rig.bubbleWords.TextScaled).toBe(false)
+		expect(rig.bubbleWords.TextWrapped).toBe(false)
+	end)
+
+	it("asks isPhone again each frame, so turning the phone sideways or a new window size counts", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.3)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(170, 52))
+		rig.setPhone(true)
+		rig.advance(0.1)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(120, 40))
+	end)
+
+	it("goes left of his nose, tail bottom-right, when the camera's RightVector.Z is above 0", function()
+		local rig = newRig()
+		rig.setCameraRightZ(0.6)
+		rig.fire(85)
+		expect(rig.bubble.StudsOffset).toEqual(Vector3.new(-14, -3, 2))
+		expect(rig.bubble.SizeOffset).toEqual(Vector2.new(-0.5, 0.5))
+		expect(rig.bubbleTail.Position).toEqual(UDim2.fromScale(0.93, 0.93))
+	end)
+
+	it("goes right of his nose, tail bottom-left, when the camera's RightVector.Z is 0 or below", function()
+		local rig = newRig()
+		rig.setCameraRightZ(-0.6)
+		rig.fire(85)
+		expect(rig.bubble.StudsOffset).toEqual(Vector3.new(14, -3, 2))
+		expect(rig.bubble.SizeOffset).toEqual(Vector2.new(0.5, 0.5))
+		expect(rig.bubbleTail.Position).toEqual(UDim2.fromScale(0.07, 0.93))
+	end)
+
+	it("switches side while it shows when the camera's RightVector.Z changes sign", function()
+		local rig = newRig()
+		rig.setCameraRightZ(-0.6)
+		rig.fire(85)
+		expect(rig.bubble.StudsOffset).toEqual(Vector3.new(14, -3, 2))
+		rig.setCameraRightZ(0.6)
+		rig.advance(0.5)
+		expect(rig.bubble.StudsOffset).toEqual(Vector3.new(-14, -3, 2))
+		expect(rig.bubble.SizeOffset).toEqual(Vector2.new(-0.5, 0.5))
+		expect(rig.bubbleTail.Position).toEqual(UDim2.fromScale(0.93, 0.93))
+		rig.setCameraRightZ(0)
+		rig.advance(0.5)
+		expect(rig.bubble.StudsOffset).toEqual(Vector3.new(14, -3, 2))
+		expect(rig.bubbleTail.Position).toEqual(UDim2.fromScale(0.07, 0.93))
+	end)
+
+	it("is solid until 3 s, half see-through at 3.15 s and gone at 3.3 s", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(3)
+		expect(seeThrough(rig)).toEqual({ 0, 0, 0, 0, 0 })
+		rig.advance(0.15)
+		expect(near(rig.bubbleFrame.BackgroundTransparency, 0.5)).toBe(true)
+		expect(near(rig.bubbleStrokes[1].Transparency, 0.5)).toBe(true)
+		expect(near(rig.bubbleWords.TextTransparency, 0.5)).toBe(true)
+		expect(near(rig.bubbleTail.BackgroundTransparency, 0.5)).toBe(true)
+		expect(near(rig.bubbleStrokes[2].Transparency, 0.5)).toBe(true)
+		expect(rig.bubble.Enabled).toBe(true)
+		rig.advance(0.16)
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+
+	it("is solid again, at full size from the pop's start, when a second warning comes after it faded", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(3.31)
+		rig.fire(85, "FreeSave")
+		expect(rig.bubble.Enabled).toBe(true)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(0, 0))
+		expect(rig.bubbleFrame.BackgroundTransparency).toBe(0)
+		expect(rig.bubbleWords.TextTransparency).toBe(0)
+		expect(rig.bubbleStrokes[1].Transparency).toBe(0)
+	end)
+
+	it("pops again from nothing on a replayed warning, also while it still shows", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(1)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(170, 52))
+		rig.fire(85, "FreeSave")
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(0, 0))
+		rig.advance(0.1)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(187, 57))
+	end)
+
+	it("just appears at full size and goes at 3 s, with no fade, when Reduce Motion is on", function()
+		local rig = newRig()
+		rig.setReducedMotion(true)
+		rig.fire(85)
+		expect(rig.bubble.Size).toEqual(UDim2.fromOffset(170, 52))
+		expect(rig.bubbleWords.TextSize).toBe(20)
+		rig.advance(2.9)
+		expect(rig.bubble.Enabled).toBe(true)
+		expect(rig.bubbleFrame.BackgroundTransparency).toBe(0)
+		rig.advance(0.11)
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+
+	it("puts the bubble back as it was when stopped while it shows", function()
+		local rig = newRig()
+		rig.setCameraRightZ(0.6)
+		rig.fire(85)
+		rig.advance(3.2)
+		rig.handle.stop()
+		expect(rig.bubble.Enabled).toBe(false)
+		expect(rig.bubble.Size).toEqual(UDim2.fromScale(41.6, 14.4))
+		expect(rig.bubble.StudsOffset).toEqual(Vector3.new(14, -3, 2))
+		expect(rig.bubble.SizeOffset).toEqual(Vector2.new(0.5, 0.5))
+		expect(rig.bubbleWords.TextScaled).toBe(true)
+		expect(rig.bubbleWords.TextWrapped).toBe(true)
+		expect(rig.bubbleWords.TextSize).toBe(8)
+		expect(rig.bubbleTail.Position).toEqual(UDim2.fromScale(0.07, 0.93))
+		expect(rig.bubbleFrame.BackgroundTransparency).toBe(0)
+		expect(rig.bubbleWords.TextTransparency).toBe(0)
+		expect(rig.bubbleStrokes[1].Transparency).toBe(0)
+		expect(rig.bubbleTail.BackgroundTransparency).toBe(0)
+		expect(rig.bubbleStrokes[2].Transparency).toBe(0)
+	end)
+
+	it("shows nothing and raises no error when the bubble is missing from the world", function()
+		local rig = newRig()
+		rig.bubble.Parent = nil
+		rig.fire(85)
+		rig.advance(1)
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+
+	it("ignores an old MumbleAnchor.Mumble: only Warning85Bubble is the bubble", function()
+		local rig = newRig()
+		local oldAnchor = Instance.new("Part")
+		oldAnchor.Name = "MumbleAnchor"
+		oldAnchor.Parent = rig.fx
+		local oldBubble = Instance.new("BillboardGui")
+		oldBubble.Name = "Mumble"
+		oldBubble.Enabled = false
+		oldBubble.Parent = oldAnchor
+		rig.fire(85)
+		expect(oldBubble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(true)
+	end)
+end)
+
+-- A free save replays the 85 warning (Rule 17): the server fires Warning with (85, "FreeSave") and sets the Meter to 70.
+-- The Z Z Z and puffs stay off until the replayed warning has finished, then fade back in over 0.2 seconds, but only if
+-- the Meter is at 75 or less.
+describe("GiantFx.start: the replayed 85 warning", function()
+	it("never moves the right arm: it is exactly at the start at 0, 0.25, 0.5 and 1 second", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
+		rig.advance(0.25)
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
+		rig.advance(0.25)
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
+		rig.advance(0.5)
+		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
+	end)
+
+	it("snorts two bursts of 20 puffs, 0.5 seconds apart, also when it is the first warning", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(0.5)
+		rig.advance(1.5)
+		expect(#rig.bursts).toBe(2)
+		expect(rig.bursts[1].count).toBe(20)
+		expect(rig.bursts[1].at).toBeCloseTo(0, 6)
+		expect(rig.bursts[2].count).toBe(20)
+		expect(rig.bursts[2].at).toBeCloseTo(0.5, 6)
+	end)
+
+	it("starts the snort again from the start when it comes 0.2 seconds after a plain 85", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.2)
+		rig.fire(85, "FreeSave")
+		rig.advance(0.49) -- 0.69 s after the first warning: the first warning's second burst (0.5 s) was cancelled
+		expect(#rig.bursts).toBe(2)
+		expect(rig.bursts[1].at).toBeCloseTo(0, 6)
+		expect(rig.bursts[2].at).toBeCloseTo(0.2, 6)
+		rig.advance(0.02) -- 0.71 s: 0.5 s after the replay
+		expect(#rig.bursts).toBe(3)
+		expect(rig.bursts[3].at).toBeCloseTo(0.71, 6)
+		rig.advance(2)
+		expect(#rig.bursts).toBe(3)
+	end)
+
+	it("starts the bubble's time again when the replay comes while the bubble shows", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(2)
+		rig.fire(85, "FreeSave")
+		rig.advance(2)
+		expect(rig.bubble.Enabled).toBe(true)
+		rig.advance(1.31)
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+
+	it("turns the Z Z Z and the puffs off and shows the bubble, also when it is the first warning", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		expect(rig.floatingZ.Enabled).toBe(false)
+		expect(rig.puff.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(true)
+	end)
+
+	it("keeps the Z Z Z and the puffs off for 3 seconds at a Meter of 70, even when the Meter changes", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(1)
+		rig.setState(66, "Asleep")
+		expect(rig.floatingZ.Enabled).toBe(false)
+		expect(rig.puff.Enabled).toBe(false)
+		rig.advance(1.9)
+		expect(rig.floatingZ.Enabled).toBe(false)
+		expect(rig.puff.Enabled).toBe(false)
+	end)
+
+	it("brings the Z Z Z and the puffs back at 3 seconds, fading the letters in over 0.2 seconds", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(2.9)
+		rig.advance(0.1)
+		expect(rig.floatingZ.Enabled).toBe(true)
+		expect(rig.puff.Enabled).toBe(true)
+		-- The letters start fully see-through ...
+		for index, letter in rig.letters do
+			expect(letter.TextTransparency).toBeCloseTo(1, 3)
+			expect(rig.outlines[index].Transparency).toBeCloseTo(1, 3)
+		end
+		-- ... are half way back to their own look at 0.1 s ...
+		rig.advance(0.1)
+		for index, letter in rig.letters do
+			local normal = rig.normalLetters[index]
+			expect(letter.TextTransparency).toBeCloseTo(normal + (1 - normal) / 2, 3)
+			expect(rig.outlines[index].Transparency).toBeCloseTo(0.5, 3)
+		end
+		-- ... at their own look at 0.2 s (the fake clock adds up with a tiny rounding error, so this is close, not exact) ...
+		rig.advance(0.1)
+		for index, letter in rig.letters do
+			expect(letter.TextTransparency).toBeCloseTo(rig.normalLetters[index], 6)
+			expect(rig.outlines[index].Transparency).toBeCloseTo(0, 6)
+		end
+		-- ... and exactly at their own look right after.
+		rig.advance(0.01)
+		for index, letter in rig.letters do
+			expect(letter.TextTransparency).toBe(rig.normalLetters[index])
+			expect(rig.outlines[index].Transparency).toBe(0)
+		end
+	end)
+
+	it("lets go of the step when the bubble and the fade-in are both over", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		expect(rig.step:count()).toBe(1)
+		rig.advance(3)
+		expect(rig.step:count()).toBe(1) -- the fade-in is still playing
+		rig.advance(0.2)
+		expect(rig.step:count()).toBe(1) -- and the bubble is still fading out
+		rig.advance(0.11)
+		expect(rig.step:count()).toBe(0)
+	end)
+
+	it("keeps the Z Z Z off after 3 seconds when the Meter is 78, until it falls to 75", function()
+		local rig = newRig()
+		rig.setState(78, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(3)
+		rig.advance(1)
+		expect(rig.floatingZ.Enabled).toBe(false)
+		expect(rig.puff.Enabled).toBe(false)
+		rig.setState(76, "Asleep")
+		expect(rig.floatingZ.Enabled).toBe(false)
+		rig.setState(75, "Asleep")
+		expect(rig.floatingZ.Enabled).toBe(true)
+		expect(rig.puff.Enabled).toBe(true)
+		-- As today, they are simply back at their own look.
+		for index, letter in rig.letters do
+			expect(letter.TextTransparency).toBe(rig.normalLetters[index])
+		end
+	end)
+
+	it("keeps them off after the 3 seconds at a Meter of 90, and brings them back when it falls", function()
+		local rig = newRig()
+		rig.setState(90, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(3)
+		expect(rig.floatingZ.Enabled).toBe(false)
+		rig.setState(60, "Asleep")
+		expect(rig.floatingZ.Enabled).toBe(true)
+	end)
+
+	it("starts the 3 seconds again when a second replay comes during them", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(2)
+		rig.fire(85, "FreeSave")
+		rig.advance(2)
+		expect(rig.floatingZ.Enabled).toBe(false)
+		rig.advance(1)
+		expect(rig.floatingZ.Enabled).toBe(true)
+	end)
+
+	it("brings nothing back when he wakes during the 3 seconds", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(1)
+		rig.setState(100, "Awake")
+		rig.advance(2)
+		rig.advance(1)
+		expect(rig.floatingZ.Enabled).toBe(false)
+		expect(rig.puff.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
+	end)
+
+	it("puts the letters back at their own look when he wakes during the fade-in", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(3)
+		rig.advance(0.05)
+		rig.setState(100, "Awake")
+		for index, letter in rig.letters do
+			expect(letter.TextTransparency).toBe(rig.normalLetters[index])
+			expect(rig.outlines[index].Transparency).toBe(0)
+		end
+		expect(rig.floatingZ.Enabled).toBe(false)
+	end)
+
+	it("puts everything back as it was when stopped during the 3 seconds", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "FreeSave")
+		rig.advance(1)
+		rig.handle.stop()
+		expect(rig.floatingZ.Enabled).toBe(true)
+		expect(rig.puff.Enabled).toBe(true)
+		expect(rig.bubble.Enabled).toBe(false)
+		expect(rig.step:count()).toBe(0)
+	end)
+
+	it("leaves a plain 85 as it was: the Z Z Z do not come back with time, only with the Meter", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85)
+		rig.advance(3)
+		rig.advance(5)
+		expect(rig.floatingZ.Enabled).toBe(false)
+		expect(rig.puff.Enabled).toBe(false)
+		rig.setState(69, "Asleep")
+		expect(rig.floatingZ.Enabled).toBe(true)
+	end)
+
+	it("does nothing for a second value that is not FreeSave", function()
+		local rig = newRig()
+		rig.setState(70, "Asleep")
+		rig.fire(85, "Something")
+		rig.fire(60, "Something")
+		expect(rig.step:count()).toBe(0)
+		expect(rig.floatingZ.Enabled).toBe(true)
+		expect(rig.puff.Enabled).toBe(true)
+		expect(rig.bubble.Enabled).toBe(false)
+		rig.advance(5)
+		expect(rig.floatingZ.Enabled).toBe(true)
 	end)
 end)
 
@@ -648,7 +1277,7 @@ describe("GiantFx.start: streaming", function()
 			task.wait()
 			expect(rig.floatingZ.Enabled).toBe(false)
 			expect(rig.puff.Enabled).toBe(false)
-			expect(rig.mumble.Enabled).toBe(true)
+			expect(rig.bubble.Enabled).toBe(true)
 		end
 	)
 
@@ -668,13 +1297,143 @@ describe("GiantFx.start: streaming", function()
 	it("skips pieces that are not there", function()
 		local rig = newRig()
 		rig.snoreEmitter.Parent = nil
-		(rig.fx :: any).MumbleAnchor:Destroy()
+		(rig.bubble :: any):Destroy()
 		rig.arm.Parent = nil
 		rig.fire(60)
 		rig.fire(85)
 		rig.advance(0.25)
-		rig.advance(3)
+		rig.advance(3.1)
 		expect(rig.step:count()).toBe(0)
+	end)
+end)
+
+describe("GiantFx.start: a wake clears the snort cloud", function()
+	it("clears the snort emitter once when he wakes 1 second after the 85", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.5)
+		rig.advance(0.5) -- both bursts are out, and the cloud is in the air
+		rig.setState(100, "Awake")
+		expect(#rig.clears).toBe(1)
+		expect(rig.clears[1]).toBe(rig.snortPuff)
+	end)
+
+	it("clears the snort emitter at a wake with no 85 before it (harmless)", function()
+		local rig = newRig()
+		rig.setState(100, "Awake")
+		expect(#rig.clears).toBe(1)
+		expect(rig.clears[1]).toBe(rig.snortPuff)
+	end)
+
+	it("clears nothing, and gives no error, at a wake with no nose in the world", function()
+		local rig = newRig(nil, nil, false)
+		rig.fire(85)
+		rig.advance(1)
+		rig.setState(100, "Awake")
+		expect(#rig.clears).toBe(0)
+		expect(rig.awakeParts[1].Transparency).toBe(0) -- the rest of the wake still ran
+	end)
+
+	it("clears the nose that streams in later, found at the wake", function()
+		local rig = newRig(nil, nil, false)
+		local nose = Instance.new("Part")
+		nose.Name = "SnortNose"
+		nose.Parent = rig.fx
+		local emitter = Instance.new("ParticleEmitter")
+		emitter.Name = "SnortPuff"
+		emitter.Parent = nose
+		rig.setState(100, "Awake")
+		expect(#rig.clears).toBe(1)
+		expect(rig.clears[1]).toBe(emitter)
+	end)
+
+	it("clears the first burst and never makes the second when he wakes between the two bursts", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.3)
+		expect(#rig.bursts).toBe(1)
+		rig.setState(100, "Awake")
+		expect(#rig.clears).toBe(1)
+		expect(rig.clears[1]).toBe(rig.snortPuff)
+		rig.advance(0.5)
+		rig.advance(1)
+		expect(#rig.bursts).toBe(1)
+		expect(#rig.clears).toBe(1)
+	end)
+
+	it("does not clear the snort while he sleeps", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.advance(0.5)
+		rig.advance(3)
+		expect(#rig.clears).toBe(0)
+	end)
+
+	it("clears again at a second wake", function()
+		local rig = newRig()
+		rig.setState(100, "Awake")
+		rig.setState(0, "Asleep")
+		rig.fire(85)
+		rig.setState(100, "Awake")
+		expect(#rig.clears).toBe(2)
+	end)
+end)
+
+describe("GiantFx.start: the bubble's saved first look", function()
+	it("keeps no entry for a bubble that was removed from the game", function()
+		local rig = newRig()
+		rig.fire(85)
+		expect(rig.handle.savedBubbleCount()).toBe(1)
+		rig.bubble:Destroy()
+		task.wait()
+		expect(rig.handle.savedBubbleCount()).toBe(0)
+	end)
+
+	it("keeps no entry for a bubble that streamed out without being destroyed", function()
+		local rig = newRig()
+		rig.fire(85)
+		expect(rig.handle.savedBubbleCount()).toBe(1)
+		rig.bubble.Parent = nil
+		task.wait()
+		expect(rig.handle.savedBubbleCount()).toBe(0)
+	end)
+
+	it("keeps the entry of a bubble that only moves inside the world", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.bubble.Parent = rig.fx
+		task.wait()
+		expect(rig.handle.savedBubbleCount()).toBe(1)
+	end)
+
+	it("saves the first look of a new bubble that streams in later, and paints it right", function()
+		local rig = newRig()
+		local fresh = made(rig.bubble:Clone()) -- the server's copy, as it was made (never painted)
+		rig.fire(85)
+		rig.bubble:Destroy()
+		task.wait()
+		expect(rig.handle.savedBubbleCount()).toBe(0)
+		fresh.Parent = rig.snoreEmitter -- streams in while the bubble is showing
+		task.wait()
+		expect(rig.handle.savedBubbleCount()).toBe(1)
+		expect(fresh.Enabled).toBe(true)
+		rig.advance(3.0) -- 3.0 seconds into the bubble: fully there
+		local words = (fresh:FindFirstChild("Frame") :: Frame):FindFirstChild("TextLabel") :: TextLabel
+		expect(words.TextTransparency).toBe(0)
+		rig.advance(0.15) -- half way through the fade
+		expect(words.TextTransparency > 0.3 and words.TextTransparency < 0.7).toBe(true)
+		rig.advance(0.2)
+		expect(fresh.Enabled).toBe(false) -- it is switched off, not painted to the end (as for the first bubble)
+		rig.handle.stop()
+		expect(words.TextTransparency).toBe(0) -- the first look it was saved with
+		expect(fresh.Size).toEqual(UDim2.fromScale(41.6, 14.4))
+	end)
+
+	it("lets go of the entries, and the watching, when it is stopped", function()
+		local rig = newRig()
+		rig.fire(85)
+		rig.handle.stop()
+		expect(rig.handle.savedBubbleCount()).toBe(0)
 	end)
 end)
 
@@ -694,13 +1453,13 @@ describe("GiantFx.start: the step", function()
 		expect(rig.step:count()).toBe(0)
 	end)
 
-	it("stays connected for the whole 3 seconds of the 85 bubble, and no longer", function()
+	it("stays connected for the whole 3.3 seconds of the 85 bubble, and no longer", function()
 		local rig = newRig()
 		rig.fire(85)
 		rig.advance(1)
-		rig.advance(1.9)
+		rig.advance(2.2)
 		expect(rig.step:count()).toBe(1)
-		rig.advance(0.1)
+		rig.advance(0.11)
 		expect(rig.step:count()).toBe(0)
 	end)
 
@@ -727,7 +1486,7 @@ describe("GiantFx.start: stop", function()
 		expect(rig.leftSliver.Transparency).toBe(1)
 		expect(rig.floatingZ.Enabled).toBe(true)
 		expect(rig.puff.Enabled).toBe(true)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
 		for index, letter in rig.letters do
 			expect(letter.TextTransparency).toBe(rig.normalLetters[index])
 			expect(rig.outlines[index].Transparency).toBe(0)
@@ -745,7 +1504,7 @@ describe("GiantFx.start: stop", function()
 		rig.advance(0.25)
 		rig.setState(10, "Asleep")
 		expect(rig.floatingZ.Enabled).toBe(true)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
 		expect(rig.leftLid:GetPivot() == rig.leftStart).toBe(true)
 		expect(rig.arm:GetPivot() == rig.armStart).toBe(true)
 	end)
@@ -922,15 +1681,20 @@ describe("GiantFx.start: the waking pose", function()
 		expect(rig.stray.Transparency).toBe(1)
 	end)
 
-	it("stops a twitch that is running: the arm ends on the full raise, not on twitch plus raise", function()
-		local rig = newRig()
-		rig.fire(85)
-		rig.advance(0.25) -- the arm is at the top of the twitch
-		rig.setState(100, "Awake")
-		rig.advance(0.5)
-		rig.advance(2) -- the twitch would have ended by now, and put the arm back down
-		expect(samePlace(rig.arm:GetPivot(), GiantFx.armRaise(SHOULDER, RAISE_DEGREES, 1) * rig.armStart)).toBe(true)
-	end)
+	it(
+		"wakes from an 85 warning that is running: the arm ends on the full raise and nothing puts it back down",
+		function()
+			local rig = newRig()
+			rig.fire(85)
+			rig.advance(0.25) -- the 85 warning is running
+			rig.setState(100, "Awake")
+			rig.advance(0.5)
+			rig.advance(2) -- the warning would have ended by now
+			expect(samePlace(rig.arm:GetPivot(), GiantFx.armRaise(SHOULDER, RAISE_DEGREES, 1) * rig.armStart)).toBe(
+				true
+			)
+		end
+	)
 
 	it("stops a flutter that is running: the lids end on the head tip alone and the slices are hidden", function()
 		local rig = newRig()
@@ -964,11 +1728,11 @@ describe("GiantFx.start: the waking pose", function()
 		local rig = newRig()
 		rig.fire(85)
 		rig.advance(1)
-		expect(rig.mumble.Enabled).toBe(true)
+		expect(rig.bubble.Enabled).toBe(true)
 		rig.setState(100, "Awake")
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
 		rig.advance(5)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
 	end)
 
 	it("turns the Z Z Z and the puffs off even when there was no 85 warning", function()
@@ -1001,7 +1765,7 @@ describe("GiantFx.start: the waking pose", function()
 		rig.fire(85)
 		rig.fire(60)
 		rig.advance(0.5)
-		expect(rig.mumble.Enabled).toBe(false)
+		expect(rig.bubble.Enabled).toBe(false)
 		expect(samePlace(rig.arm:GetPivot(), GiantFx.armRaise(SHOULDER, RAISE_DEGREES, 1) * rig.armStart)).toBe(true)
 		expect(rig.leftSliver.Transparency).toBe(1)
 		expect(rig.step:count()).toBe(0)
@@ -1149,17 +1913,20 @@ describe("GiantFx.start: going back to sleep", function()
 		end
 	end)
 
-	it("flutters and twitches again after a return", function()
+	it("snorts and mumbles again after a return, and keeps the arm still", function()
 		local rig = newRig()
 		rig.setState(100, "Awake")
 		rig.advance(0.5)
 		rig.setState(100, "HeavySleep")
 		rig.advance(0.5)
 		rig.setState(0, "Asleep")
+		rig.advance(0.5)
+		expect(samePlace(rig.arm:GetPivot(), rig.armStart)).toBe(true)
 		rig.fire(85)
-		rig.advance(0.25)
-		expect(rig.arm:GetPivot() == rig.armStart).toBe(false)
-		expect(rig.mumble.Enabled).toBe(true)
+		rig.advance(0.5)
+		expect(samePlace(rig.arm:GetPivot(), rig.armStart)).toBe(true)
+		expect(#rig.bursts).toBe(2)
+		expect(rig.bubble.Enabled).toBe(true)
 	end)
 end)
 

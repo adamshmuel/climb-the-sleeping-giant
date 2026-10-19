@@ -11,6 +11,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Trove = require(ReplicatedStorage.Packages.Trove)
+local Rarity = require(ReplicatedStorage.Shared.Rarity)
+local PlayerInfo = require(script.Parent.Players.PlayerInfo)
 local PlayerTracker = require(script.Parent.Players.PlayerTracker)
 
 -- A Roblox event or a Signal, as far as Analytics uses it. (The connection it returns is typed `any`, because the checker
@@ -43,6 +45,8 @@ export type ServiceLike = {
 -- What Analytics needs from a player. A real Player fits, and tests pass simple stand-ins.
 export type PlayerLike = {
 	UserId: number,
+	Name: string,
+	DisplayName: string,
 	Character: any,
 	CharacterAdded: SignalLike,
 	GetAttribute: (self: any, name: string) -> any,
@@ -69,6 +73,8 @@ export type Deps = {
 	caught: SignalLike, -- Catcher's signal: (player, rarity of the lost egg)
 	woke: SignalLike, -- the director's signal: (display name, waker's UserId or nil, cause)
 	slammed: SignalLike, -- the director's signal: (UserId the slam was aimed at or nil, UserIds it caught) as the hand lands
+	saved: SignalLike, -- the director's signal: (UserId, zone) when a player's free save is spent
+	returned: SignalLike, -- Grab's signal: (player, rarity, "Caught" or "Lost") when a carried egg goes back
 	gardens: { GardenSpot },
 	now: () -> number, -- os.clock; it tells who has been in the server longest
 	newId: () -> string, -- makes the session id of one heist (HttpService:GenerateGUID(false))
@@ -111,20 +117,28 @@ local HEIST_HOME_NAME = "Home"
 -- the garden. The spawn spot is itself outside the garden box, so standing on it must not count.
 local LEFT_GARDEN_STUDS = 10
 
--- The custom events. Each has two breakdown slots, and the slots mean different things on different events:
---   "EggHome":      CustomField01 = the egg's rarity, CustomField02 = the garden number ("1" to "8").
---   "PlayerCaught": CustomField01 = the lost egg's rarity (no second slot).
---   "GiantWoke":    CustomField01 = the server size ("1", "2-4" or "5-8"), CustomField02 = what filled the meter.
---   "Slam":         CustomField01 = the result ("Caught", "Missed" or "Empty"), CustomField02 = the server size.
+-- The custom events. Each has up to three breakdown slots, and the slots mean different things on different events:
+--   "EggHome":        CustomField01 = the egg's rarity, CustomField02 = the garden number ("1" to "8").
+--   "PlayerCaught":   CustomField01 = the lost egg's rarity (no other slot).
+--   "GiantWoke":      CustomField01 = the server size ("1", "2-4" or "5-8"), CustomField02 = what filled the meter,
+--                     CustomField03 = who woke him ("New" = no Rare home yet, "Veteran", or "Nobody" if nobody can be named).
+--   "Slam":           CustomField01 = the result ("Caught", "Missed" or "Empty"), CustomField02 = the server size.
+--   "FreeSaveUsed":   CustomField01 = where ("Boots", "Belly" or "Higher"; "Meadow" would be a bug), CustomField02 = the
+--                     player's eggs home ("0", "1" or "2+"), CustomField03 = the egg they carried ("None" or its rarity).
+--   "FreeSaveResult": CustomField01 = how that egg's heist ended ("Home", "Woke him", "Caught" or "Lost"), valued at the
+--                     seconds since the save (no other slot).
 -- So never read one chart's slot as another's.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
+local FIELD_THREE = Enum.AnalyticsCustomFieldKeys.CustomField03.Name
 local EVENT_EGG_HOME = "EggHome"
 local EVENT_GIANT_WOKE = "GiantWoke"
 local EVENT_PLAYER_CAUGHT = "PlayerCaught"
 local EVENT_SLAM = "Slam" -- one per hand slam, valued at the number of players it caught
--- Every event of these counts once, so the value is 1 (except "GiantWoke", valued at the number of players, and "Slam",
--- valued at the number of players it caught).
+local EVENT_FREE_SAVE_USED = "FreeSaveUsed" -- one per free save
+local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, valued at the seconds since the save
+-- Every event of these counts once, so the value is 1 (except "GiantWoke", valued at the number of players, "Slam",
+-- valued at the number of players it caught, and "FreeSaveResult", valued at the seconds since the save).
 local EVENT_VALUE = 1
 
 -- "GiantWoke" server sizes, from the number of players. The spec's three buckets.
@@ -136,6 +150,31 @@ local FULL_FROM = 5
 
 -- What "GiantWoke" says when nobody can be named, so the wake is still counted.
 local CAUSE_WAKER_LEFT = "Waker left"
+
+-- Who woke him, for the third "GiantWoke" slot.
+local WAKER_NEW = "New" -- no Rare home yet: still a new player
+local WAKER_VETERAN = "Veteran"
+local WAKER_NOBODY = "Nobody" -- nobody can be named, or the waker left
+
+-- "FreeSaveUsed": where the save happened. The Beard and the Nightcap are both "Higher".
+local WHERE_HIGHER = "Higher"
+local whereByZone: { [string]: string } = {
+	Boots = "Boots",
+	Belly = "Belly",
+	Beard = WHERE_HIGHER,
+	Nightcap = WHERE_HIGHER,
+}
+-- "FreeSaveUsed": the player's eggs home, in the spec's three buckets, and what they carried when they carried nothing.
+local EGGS_NONE = "0"
+local EGGS_ONE = "1"
+local EGGS_TWO_OR_MORE = "2+"
+local CARRYING_NONE = "None"
+
+-- "FreeSaveResult": how the saved egg's heist ended.
+local RESULT_HOME = "Home"
+local RESULT_WOKE_HIM = "Woke him"
+local RESULT_CAUGHT = "Caught"
+local RESULT_LOST = "Lost"
 
 -- What a "Slam" did, as the chart's result breakdown says it.
 -- It caught at least one carrier, whoever it was aimed at (this is the number the success target counts):
@@ -160,6 +199,7 @@ type Record = {
 	joinOrder: number, -- breaks a tie between two arrivals at the same time
 	onboardingDone: { [number]: boolean }, -- the onboarding steps already logged
 	heist: Heist?,
+	savedAt: number?, -- os.clock at a save by a carrier whose "FreeSaveResult" is not logged yet
 	cleanup: () -> (),
 }
 
@@ -257,6 +297,7 @@ function Analytics.start(deps: Deps): Analytics
 			joinOrder = arrivals,
 			onboardingDone = {},
 			heist = nil,
+			savedAt = nil,
 			cleanup = function()
 				playerTrove:Destroy()
 			end,
@@ -272,9 +313,23 @@ function Analytics.start(deps: Deps): Analytics
 		end
 	end
 
+	-- Ends the open "FreeSaveResult" of this player (if there is one) with this outcome. The first outcome closes it, so
+	-- nothing later logs again.
+	local function closeFreeSave(record: Record, outcome: string)
+		local savedAt = record.savedAt
+		if savedAt == nil then
+			return
+		end
+		record.savedAt = nil
+		logCustom(record.player, EVENT_FREE_SAVE_RESULT, deps.now() - savedAt, { [FIELD_ONE] = outcome })
+	end
+
 	local function forgetPlayer(player: PlayerLike)
 		local record = records[player.UserId]
 		if record ~= nil then
+			-- Banking sends the egg back on leaving too, but its handler may run after this one, so a still-open result
+			-- ends here as lost.
+			closeFreeSave(record, RESULT_LOST)
 			records[player.UserId] = nil
 			record.cleanup()
 		end
@@ -325,9 +380,10 @@ function Analytics.start(deps: Deps): Analytics
 		end
 		if rarity == "Uncommon" then
 			logOnboarding(record, ONBOARDING_FIRST_UNCOMMON, ONBOARDING_FIRST_UNCOMMON_NAME)
-		elseif rarity == "Rare" then
+		elseif Rarity.isRareOrRarer(rarity) then
 			logOnboarding(record, ONBOARDING_FIRST_RARE, ONBOARDING_FIRST_RARE_NAME)
 		end
+		closeFreeSave(record, RESULT_HOME)
 
 		local heist = record.heist
 		if heist ~= nil then
@@ -341,6 +397,36 @@ function Analytics.start(deps: Deps): Analytics
 			fields[FIELD_TWO] = tostring(garden)
 		end
 		logCustom(player, EVENT_EGG_HOME, EVENT_VALUE, fields)
+	end))
+
+	-- A carried egg went back. Catcher gives the reason "Caught" before it fires `caught`, so a catch is never taken for a
+	-- lost egg, whichever handler runs first.
+	trove:Add(deps.returned:Connect(function(player: PlayerLike, _rarity: Config.RarityName, why: string)
+		local record = records[player.UserId]
+		if stopped or record == nil then
+			return
+		end
+		closeFreeSave(record, if why == "Caught" then RESULT_CAUGHT else RESULT_LOST)
+	end))
+
+	-- A free save was spent. Everything is read now, from the server's own attributes: where they were, their eggs home
+	-- and what they carry. A save by a carrier also opens the "FreeSaveResult" that the egg's heist will close.
+	trove:Add(deps.saved:Connect(function(userId: number, zone: string)
+		local record = records[userId]
+		if stopped or record == nil then
+			return
+		end
+		local player = record.player
+		local eggsHome = numberFrom(player:GetAttribute("EggsHome")) or 0
+		local eggsBucket = if eggsHome >= 2 then EGGS_TWO_OR_MORE elseif eggsHome == 1 then EGGS_ONE else EGGS_NONE
+		local carrying = PlayerInfo.fromPlayer(player).carrying
+		logCustom(player, EVENT_FREE_SAVE_USED, EVENT_VALUE, {
+			[FIELD_ONE] = whereByZone[zone] or zone,
+			[FIELD_TWO] = eggsBucket,
+			[FIELD_THREE] = carrying or CARRYING_NONE,
+		})
+		-- A second save would replace the open one (the spec gives each player one save).
+		record.savedAt = if carrying ~= nil then deps.now() else nil
 	end))
 
 	trove:Add(deps.caught:Connect(function(player: PlayerLike, rarity: Config.RarityName)
@@ -384,10 +470,18 @@ function Analytics.start(deps: Deps): Analytics
 			waker = players:GetPlayerByUserId(wokenBy)
 		end
 		local reported = cause
+		local who = WAKER_NOBODY
 		if waker == nil then
 			-- Nobody can be named, or the waker is gone: the player here longest carries it, so no wake goes missing.
 			waker = longestInServer()
 			reported = CAUSE_WAKER_LEFT
+		else
+			who = if PlayerInfo.fromPlayer(waker).rareHome then WAKER_VETERAN else WAKER_NEW
+			-- The waker's own noise woke him, so a save they were carrying on ends here.
+			local wakerRecord = records[waker.UserId]
+			if wakerRecord ~= nil then
+				closeFreeSave(wakerRecord, RESULT_WOKE_HIM)
+			end
 		end
 		if waker == nil then
 			return
@@ -395,6 +489,7 @@ function Analytics.start(deps: Deps): Analytics
 		logCustom(waker, EVENT_GIANT_WOKE, count, {
 			[FIELD_ONE] = Analytics.serverSize(count),
 			[FIELD_TWO] = reported,
+			[FIELD_THREE] = who,
 		})
 	end))
 

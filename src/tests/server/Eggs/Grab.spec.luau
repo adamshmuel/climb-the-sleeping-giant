@@ -666,6 +666,85 @@ describe("Grab grabbed signal", function()
 	end)
 end)
 
+describe("Grab returned signal", function()
+	it("fires once with the player, the egg's rarity and 'Lost' when an egg goes back with no reason given", function()
+		local rig = newRig()
+		local heard: { { player: any, rarity: any, why: any, carryingThen: any } } = {}
+		rig.grab.returned:Connect(function(player, rarity, why)
+			table.insert(
+				heard,
+				{ player = player, rarity = rarity, why = why, carryingThen = (player :: any):GetAttribute("Carrying") }
+			)
+		end)
+		local player = rig.playerAt(1, "Uncommon_1")
+		rig.trigger("Uncommon_1", player)
+		rig.grab:returnEgg(player)
+		expect(#heard).toBe(1)
+		expect(heard[1].player).toBe(player)
+		expect(heard[1].rarity).toBe("Uncommon")
+		expect(heard[1].why).toBe("Lost")
+		-- It fires after the egg is off their back.
+		expect(heard[1].carryingThen).toBeNil()
+	end)
+
+	it("says 'Caught' when returnEgg is asked with that reason", function()
+		local rig = newRig()
+		local whys: { any } = {}
+		rig.grab.returned:Connect(function(_player, _rarity, why)
+			table.insert(whys, why)
+		end)
+		local player = rig.playerAt(1, "Rare_1")
+		rig.trigger("Rare_1", player)
+		rig.grab:returnEgg(player, "Caught")
+		expect(whys).toEqual({ "Caught" })
+	end)
+
+	it("fires for an egg that vanishes because its spot already refilled", function()
+		local rig = newRig()
+		local count = 0
+		rig.grab.returned:Connect(function()
+			count += 1
+		end)
+		local player = rig.playerAt(1, "Common_1")
+		rig.trigger("Common_1", player)
+		rig.setTime(START_TIME + 10)
+		rig.grab:step()
+		rig.grab:returnEgg(player)
+		expect(count).toBe(1)
+	end)
+
+	it("does not fire for a player who carries nothing", function()
+		local rig = newRig()
+		local count = 0
+		rig.grab.returned:Connect(function()
+			count += 1
+		end)
+		rig.grab:returnEgg(rig.playerAt(1, "Common_1"))
+		rig.grab:returnEgg(rig.playerAt(2, "Common_1"), "Caught")
+		expect(count).toBe(0)
+	end)
+
+	it("does not fire when an egg is banked", function()
+		local rig = newRig()
+		local count = 0
+		rig.grab.returned:Connect(function()
+			count += 1
+		end)
+		local player = rig.playerAt(1, "Common_1")
+		rig.trigger("Common_1", player)
+		rig.grab:bank(player)
+		expect(count).toBe(0)
+	end)
+
+	it("is destroyed when Grab stops", function()
+		local rig = newRig()
+		local connection = rig.grab.returned:Connect(function() end)
+		expect(connection.Connected).toBe(true)
+		rig.grab:stop()
+		expect(connection.Connected).toBe(false)
+	end)
+end)
+
 describe("Grab.stop", function()
 	it("disconnects, destroys the prompts and removes every egg, on the spots and on backs", function()
 		local rig = newRig()

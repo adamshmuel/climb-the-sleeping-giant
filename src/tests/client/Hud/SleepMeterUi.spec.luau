@@ -29,8 +29,44 @@ afterEach(function()
 	table.clear(madeInstances)
 end)
 
+-- A stand-in for a tween that only records what was done to it, so a test needs no Roblox animation to move.
+type FakeTween = {
+	instance: Instance,
+	info: TweenInfo,
+	goal: { [string]: any },
+	played: number,
+	cancelled: number,
+	destroyed: number,
+	Play: (self: FakeTween) -> (),
+	Cancel: (self: FakeTween) -> (),
+	Destroy: (self: FakeTween) -> (),
+}
+
+local function newFakeTween(instance: Instance, info: TweenInfo, goal: { [string]: any }): FakeTween
+	local tween: FakeTween
+	tween = {
+		instance = instance,
+		info = info,
+		goal = goal,
+		played = 0,
+		cancelled = 0,
+		destroyed = 0,
+		Play = function()
+			tween.played += 1
+		end,
+		Cancel = function()
+			tween.cancelled += 1
+		end,
+		Destroy = function()
+			tween.destroyed += 1
+		end,
+	}
+	return tween
+end
+
 type Rig = {
 	parent: Folder,
+	tweens: { FakeTween }, -- every tween the meter asked for, in order
 	giantState: Folder,
 	set: (name: string, value: any) -> (),
 	fireWarning: (mark: number) -> (),
@@ -61,9 +97,15 @@ local function newRig(viewport: Vector2?, now: number?, topbarEdge: number?): Ri
 	local currentTopbarEdge = topbarEdge or 164
 	local viewportSize = viewport or Vector2.new(1280, 720)
 	local currentTime = now or 0
+	local tweens: { FakeTween } = {}
 
 	local stop = SleepMeterUi.start({
 		parent = parent,
+		createTween = function(instance: Instance, info: TweenInfo, goal: { [string]: any })
+			local tween = newFakeTween(instance, info, goal)
+			table.insert(tweens, tween)
+			return tween
+		end,
 		giantState = giantState,
 		warning = { OnClientEvent = warningEvent.Event },
 		viewport = {
@@ -100,6 +142,7 @@ local function newRig(viewport: Vector2?, now: number?, topbarEdge: number?): Ri
 	end
 	return {
 		parent = parent,
+		tweens = tweens,
 		giantState = giantState,
 		set = function(name: string, value: any)
 			giantState:SetAttribute(name, value)
@@ -107,6 +150,7 @@ local function newRig(viewport: Vector2?, now: number?, topbarEdge: number?): Ri
 		end,
 		fireWarning = function(mark: number)
 			warningEvent:Fire(mark)
+			task.wait() -- the event reaches listeners a moment after it is fired
 		end,
 		setViewport = function(size: Vector2)
 			viewportSize = size
@@ -179,6 +223,9 @@ describe("SleepMeterUi.start: the screen", function()
 			parent = rig.parent,
 			giantState = rig.giantState,
 			warning = { OnClientEvent = made(Instance.new("BindableEvent")).Event },
+			createTween = function(instance: Instance, info: TweenInfo, goal: { [string]: any })
+				return newFakeTween(instance, info, goal)
+			end,
 			viewport = {
 				get = function()
 					return Vector2.new(1280, 720)
@@ -327,40 +374,52 @@ describe("SleepMeterUi.start: what the meter shows", function()
 end)
 
 describe("SleepMeterUi.start: the pulse at 60", function()
-	it("grows to about 110% on the 60 warning and is back to 100% after 0.3 s", function()
+	it("a 60 warning asks for one pulse", function()
 		local rig = newRig()
-		local pulse = rig.pulse()
-		expect(pulse.Scale).toBe(1)
 		rig.fireWarning(60)
-		local biggest = 1
-		local started = os.clock()
-		while os.clock() - started < 0.7 do
-			biggest = math.max(biggest, pulse.Scale)
-			task.wait()
-		end
-		expect(biggest > 1.08).toBe(true)
-		expect(biggest <= 1.1001).toBe(true)
+		expect(#rig.tweens).toBe(1)
+		local tween = rig.tweens[1]
+		expect(tween.instance).toBe(rig.pulse())
+		expect(tween.goal.Scale).toBe(1.1)
+		-- 0.15 s out, then the same back (it reverses itself once), so 0.3 s in all.
+		expect(tween.info.Time).toBeCloseTo(0.15, 5) -- TweenInfo keeps its time as a 32-bit number
+		expect(tween.info.Reverses).toBe(true)
+		expect(tween.info.RepeatCount).toBe(0)
+		expect(tween.played).toBe(1)
+	end)
+
+	it("a second 60 warning starts a fresh pulse", function()
+		local rig = newRig()
+		rig.fireWarning(60)
+		rig.fireWarning(60)
+		expect(#rig.tweens).toBe(2)
+		expect(rig.tweens[1].cancelled).toBe(1)
+		expect(rig.tweens[1].destroyed).toBe(1)
+		expect(rig.tweens[2].played).toBe(1)
+		expect(rig.tweens[2].cancelled).toBe(0)
+	end)
+
+	it("stopping the HUD cancels the pulse and puts the size back to 1", function()
+		local rig = newRig()
+		local pulse = rig.pulse()
+		rig.fireWarning(60)
+		pulse.Scale = 1.05 -- as if the pulse was part way through
+		rig.stop()
+		expect(rig.tweens[1].cancelled).toBe(1)
+		expect(rig.tweens[1].destroyed).toBe(1)
 		expect(pulse.Scale).toBe(1)
 	end)
 
-	it("does not pulse on the 85 warning", function()
+	it("an 85 warning asks for no pulse", function()
 		local rig = newRig()
-		local pulse = rig.pulse()
 		rig.fireWarning(85)
-		local biggest = 1
-		local started = os.clock()
-		while os.clock() - started < 0.4 do
-			biggest = math.max(biggest, pulse.Scale)
-			task.wait()
-		end
-		expect(biggest).toBe(1)
+		expect(#rig.tweens).toBe(0)
 	end)
 
-	it("ignores a warning that is not a number", function()
+	it("a warning that isn't a number asks for no pulse", function()
 		local rig = newRig()
 		rig.fireWarning("60" :: any)
-		task.wait(0.1)
-		expect(rig.pulse().Scale).toBe(1)
+		expect(#rig.tweens).toBe(0)
 	end)
 end)
 

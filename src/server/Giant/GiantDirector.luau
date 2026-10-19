@@ -10,6 +10,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
 local Signal = require(ReplicatedStorage.Packages.Signal)
 local Carry = require(script.Parent.Parent.Eggs.Carry)
 local BounceOff = require(script.Parent.BounceOff)
@@ -29,7 +30,9 @@ export type Deps = {
 	tick: () -> { PlayerTracker.Sample }, -- where every player is right now
 	players: () -> { PlayerInfo }, -- everyone in the server, with Tiptoe, the egg they carry and eggs home
 	state: Instance, -- the GiantState folder: this module writes Meter, Phase, PhaseEndsAt and WokenBy (a display name) on it
-	fireWarning: (mark: number) -> (), -- tells every client the meter rose past 60 or 85
+	-- Tells every client a warning plays: the meter rose past 60 or 85, or (mark 85, kind Net.FreeSaveKind) a free save replays
+	-- the 85% warning (Rule 17).
+	fireWarning: (mark: number, kind: "FreeSave"?) -> (),
 	now: () -> number, -- the shared server clock in seconds (Workspace:GetServerTimeNow), for the wake-up timeline
 	landingSpots: { WorldIndex.LandingSpot }, -- where bounced players land
 	bounce: (userId: number, spot: WorldIndex.LandingSpot) -> (), -- moves one player to a landing spot
@@ -44,6 +47,8 @@ export type Deps = {
 	fireSlamWarning: (slam: number, point: Vector3, landsAt: number) -> (), -- tells every client a circle starts
 	fireSlamLanded: (slam: number, point: Vector3) -> (), -- tells every client the hand landed
 	catch: (userId: number) -> (), -- sends one caught carrier home
+	-- Marks this player's free save as used, for the rest of their visit (Rule 18). It must outlive their character.
+	spendSave: (userId: number) -> (),
 }
 
 export type Director = {
@@ -54,6 +59,9 @@ export type Director = {
 	-- Fires once for each slam when its hand lands, right after the catches: the user id the slam was aimed at (nil for
 	-- a slam on empty meadow) and the user ids it caught. Analytics listens to it.
 	slammed: Signal.Signal<number?, { number }>,
+	-- Fires once for each free save, right after it is spent: the saved player's user id and the zone they were in. Analytics
+	-- listens to it.
+	saved: Signal.Signal<number, Config.ZoneName>,
 	destroy: (self: Director) -> (),
 }
 
@@ -129,6 +137,7 @@ function GiantDirector.new(deps: Deps): Director
 	local dt = Config.Tick.Seconds
 	local woke = Signal.new() :: Signal.Signal<string, number?, string>
 	local slammed = Signal.new() :: Signal.Signal<number?, { number }>
+	local saved = Signal.new() :: Signal.Signal<number, Config.ZoneName>
 	-- Where bounced players land. A slam must never cover one (Slams.pickEmpty), so Slams is given only their points.
 	local landingPositions: { Vector3 } = {}
 	for _, spot in deps.landingSpots do
@@ -241,6 +250,21 @@ function GiantDirector.new(deps: Deps): Director
 		running.lastElapsed = elapsed
 	end
 
+	-- Spends the free save of every player in `ids`: tells init to mark it used, and tells Analytics where it happened.
+	-- The zone is the one in that player's own sample this tick. Returns true if it spent at least one.
+	local function spendSaves(ids: { number }, samples: { PlayerTracker.Sample }): boolean
+		for _, userId in ids do
+			deps.spendSave(userId)
+			for _, sample in samples do
+				if sample.userId == userId then
+					saved:Fire(userId, sample.zone)
+					break
+				end
+			end
+		end
+		return #ids > 0
+	end
+
 	local function step(_self: Director)
 		local samples = deps.tick()
 		local players = deps.players()
@@ -279,6 +303,7 @@ function GiantDirector.new(deps: Deps): Director
 		local wokeNow = false
 		local wokenBy: number? = nil
 		local cause = CAUSE_WAKER_LEFT
+		local savedNow = false -- a free save was spent this tick, so the 85% warning plays again
 
 		if asleep then
 			if value >= Config.Meter.Max then
@@ -292,11 +317,16 @@ function GiantDirector.new(deps: Deps): Director
 					if info ~= nil and sample.thudFrom ~= nil then
 						local noise = Noise.jumpBurst(sample.thudFrom, sample.garden)
 						if noise > 0 then
-							table.insert(thuds, { id = info.userId, noise = noise, eggsHome = info.eggsHome })
+							table.insert(thuds, {
+								id = info.userId,
+								noise = noise,
+								canBeSaved = not info.rareHome and not info.freeSaveUsed,
+							})
 						end
 					end
 				end
 				local afterThuds = SleepMeter.add(value, phase, thuds)
+				savedNow = spendSaves(afterThuds.saved, samples) or savedNow
 				value = afterThuds.value
 				wokeNow = afterThuds.woke
 				wokenBy = afterThuds.wokenBy
@@ -324,11 +354,16 @@ function GiantDirector.new(deps: Deps): Director
 								carrying = info.carrying,
 							}) * dt
 							if noise > 0 then
-								table.insert(walking, { id = info.userId, noise = noise, eggsHome = info.eggsHome })
+								table.insert(walking, {
+									id = info.userId,
+									noise = noise,
+									canBeSaved = not info.rareHome and not info.freeSaveUsed,
+								})
 							end
 						end
 					end
 					local afterWalking = SleepMeter.step(value, phase, walking, playerCount, dt)
+					savedNow = spendSaves(afterWalking.saved, samples) or savedNow
 					value = afterWalking.value
 					wokeNow = afterWalking.woke
 					wokenBy = afterWalking.wokenBy
@@ -338,10 +373,17 @@ function GiantDirector.new(deps: Deps): Director
 		end
 
 		-- Warnings still go out on the tick he wakes.
-		local fired, newWarningState = Warnings.update(warningState, valueAtStart, value, phase)
+		local clock = deps.now()
+		local fired, newWarningState = Warnings.update(warningState, valueAtStart, value, phase, clock)
 		warningState = newWarningState
 		for _, mark in fired do
 			deps.fireWarning(mark)
+		end
+		-- A save replays the 85% warning, once for the tick even if two players were saved. It comes after the plain
+		-- marks of this tick, and for the next few seconds a pass of 85 fires nothing (Rule 17).
+		if savedNow then
+			deps.fireWarning(Warnings.FREE_SAVE_MARK, Net.FreeSaveKind :: "FreeSave")
+			warningState = Warnings.freeSave(warningState, clock)
 		end
 
 		local shown = roundToTenth(value)
@@ -376,9 +418,10 @@ function GiantDirector.new(deps: Deps): Director
 	local function destroy(_self: Director)
 		woke:Destroy()
 		slammed:Destroy()
+		saved:Destroy()
 	end
 
-	return { step = step, woke = woke, slammed = slammed, destroy = destroy }
+	return { step = step, woke = woke, slammed = slammed, saved = saved, destroy = destroy }
 end
 
 -- Calls `stepper:step()` once for every `seconds` of game time, counted from `heartbeat`. At most `maxSteps`

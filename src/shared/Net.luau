@@ -4,7 +4,7 @@
 
 export type Made = {
 	Remotes: Folder,
-	Warning: RemoteEvent, -- fires 60 or 85 when the meter rises past that mark
+	Warning: RemoteEvent, -- fires 60 or 85 when the meter rises past that mark; at a free save it fires (85, "FreeSave") to replay the 85% warning
 	SetTiptoe: RemoteEvent, -- the client asks for Tiptoe on or off (true or false)
 	GrabMissed: RemoteEvent, -- the server tells one player that someone else got the egg first (sends nothing)
 	EggHome: RemoteEvent, -- the server tells everyone an egg was banked: (player, rarity, position of the new egg)
@@ -27,6 +27,10 @@ Net.BouncedName = "Bounced"
 Net.SlamWarningName = "SlamWarning"
 Net.SlamLandedName = "SlamLanded"
 Net.CaughtName = "Caught"
+
+-- The second value of the Warning remote at a free save (Rule 17): (85, Net.FreeSaveKind) replays the 85% warning. A plain
+-- warning has no second value. The server and every client use this name, so nobody spells the word themselves.
+Net.FreeSaveKind = "FreeSave"
 
 -- Finds the child with this name and class, or makes it. Returns the child and whether it was just made.
 local function findOrMake(parent: Instance, name: string, className: string): (Instance, boolean)

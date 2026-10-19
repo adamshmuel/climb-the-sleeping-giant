@@ -78,6 +78,10 @@ describe("Config", function()
 		expect(Config.Meter.Max).toBe(100)
 	end)
 
+	it("a lone player drains the meter at 1.5 a second", function()
+		expect(Config.Meter.SoloDrain).toBe(1.5)
+	end)
+
 	it("the drain is 1 per player, with no minimum", function()
 		expect(Config.Meter.DrainPerPlayer).toBe(1)
 		expect((Config.Meter :: any).DrainMinimum).toBe(nil)
@@ -88,9 +92,17 @@ describe("Config", function()
 		expect(Config.Meter.WarningRearmDrop).toBe(10)
 	end)
 
-	it("the new-player limit is 84 until 2 eggs are home", function()
-		expect(Config.Meter.NewPlayerCap).toBe(84)
-		expect(Config.Meter.NewPlayerEggsNeeded).toBe(2)
+	it("a free save drops the meter to 70", function()
+		expect(Config.Meter.FreeSaveMeter).toBe(70)
+	end)
+
+	it("the replayed 85% warning after a free save lasts 3 seconds", function()
+		expect(Config.Meter.FreeSaveWarningSeconds).toBe(3)
+	end)
+
+	it("the new-player cap of 84 and its 2 eggs are gone", function()
+		expect((Config.Meter :: any).NewPlayerCap).toBe(nil)
+		expect((Config.Meter :: any).NewPlayerEggsNeeded).toBe(nil)
 	end)
 
 	it("slams come every 2.5 s with a 1.5 s warning", function()

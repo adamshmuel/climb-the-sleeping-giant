@@ -45,10 +45,11 @@ export type Config = {
 	Meter: {
 		Max: number,
 		DrainPerPlayer: number,
+		SoloDrain: number,
 		WarningMarks: { number },
 		WarningRearmDrop: number,
-		NewPlayerCap: number,
-		NewPlayerEggsNeeded: number,
+		FreeSaveMeter: number,
+		FreeSaveWarningSeconds: number,
 	},
 	Wake: {
 		AwakeSeconds: number,
@@ -120,10 +121,11 @@ local config: Config = {
 	Meter = {
 		Max = 100,
 		DrainPerPlayer = 1,
+		SoloDrain = 1.5, -- V2: one player alone drains faster (spec 1, section 5)
 		WarningMarks = { 60, 85 },
 		WarningRearmDrop = 10,
-		NewPlayerCap = 84,
-		NewPlayerEggsNeeded = 2,
+		FreeSaveMeter = 70, -- where a free save drops the meter (spec 1, Rule 11)
+		FreeSaveWarningSeconds = 3, -- how long the replayed 85% warning shows; a pass of 85 meanwhile fires nothing (Rule 17)
 	},
 	Wake = {
 		AwakeSeconds = 15,

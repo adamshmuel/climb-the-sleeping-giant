@@ -5,6 +5,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Net = require(ReplicatedStorage.Shared.Net)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Layout = require(script.Parent.Layout)
 local SleepMeterUi = require(script.Parent.SleepMeterUi)
@@ -58,7 +59,7 @@ export type Deps = {
 	player: PlayerLike, -- the local player: their Tiptoe attribute is the server's answer
 	send: (on: boolean) -> (), -- asks the server for Tiptoe on or off
 	input: { InputBegan: InputSignalLike }, -- UserInputService
-	warning: { OnClientEvent: SignalLike }, -- the Warning remote: fires 60 or 85 when the meter rises past that mark
+	warning: { OnClientEvent: SignalLike }, -- the Warning remote: fires 60 or 85 when the meter rises past that mark, and (85, Net.FreeSaveKind) at a free save
 	step: SignalLike, -- once per frame, for the glow (RenderStepped)
 	now: () -> number, -- a clock in seconds (os.clock)
 	viewport: SleepMeterUi.ViewportLike,
@@ -305,9 +306,10 @@ function TiptoeButton.start(deps: Deps): Handle
 		end
 	end
 
-	-- A warning at 85 lights the glow again from full strength. Any other mark does nothing.
-	local function onWarning(mark: any)
-		if mark ~= WARNING_MARK then
+	-- A warning at 85 lights the glow again from full strength, and so does the replay at a free save (85,
+	-- Net.FreeSaveKind). Any other mark does nothing, and neither does any other second value.
+	local function onWarning(mark: any, kind: any)
+		if mark ~= WARNING_MARK or (kind ~= nil and kind ~= Net.FreeSaveKind) then
 			return
 		end
 		glowStart = deps.now()

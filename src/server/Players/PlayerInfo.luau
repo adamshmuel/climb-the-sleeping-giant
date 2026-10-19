@@ -1,7 +1,7 @@
 --!strict
 -- What the giant needs to know about one player besides where they are: their names, Tiptoe, the egg they
--- carry and the eggs they banked. These come from the player's attributes, which the server writes itself.
--- Every value is checked, so a wrong type or a strange number can't break the meter.
+-- carry, the eggs they banked, and whether they are still a new player. These come from the player's attributes,
+-- which the server writes itself. Every value is checked, so a wrong type or a strange number can't break the meter.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -14,6 +14,8 @@ export type Info = {
 	tiptoe: boolean,
 	carrying: Config.RarityName?,
 	eggsHome: number,
+	rareHome: boolean, -- has brought a Rare egg, or a rarer one, home: no longer a new player
+	freeSaveUsed: boolean, -- has already had the new player's one free save
 }
 
 -- What this module needs from a player. A real Player fits, and tests pass simple stand-ins.
@@ -65,6 +67,8 @@ function PlayerInfo.fromPlayer(player: PlayerLike): Info
 		tiptoe = player:GetAttribute("Tiptoe") == true,
 		carrying = rarityFrom(player:GetAttribute("Carrying")),
 		eggsHome = eggCountFrom(player:GetAttribute("EggsHome")),
+		rareHome = player:GetAttribute("RareHome") == true,
+		freeSaveUsed = player:GetAttribute("FreeSaveUsed") == true,
 	}
 end
 

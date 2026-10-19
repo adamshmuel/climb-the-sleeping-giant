@@ -149,8 +149,9 @@ type Rig = {
 	root: Folder,
 	step: any,
 	clock: { now: number },
-	view: { camera: CFrame?, targets: { Vector3 } },
+	view: { camera: CFrame?, targets: { Vector3 }, carried: Model? },
 	addSpot: (name: string) -> Model,
+	addCarried: (position: Vector3) -> Model,
 	addEgg: (spot: Model, position: Vector3) -> Model,
 	advance: (seconds: number) -> (),
 	stop: () -> (),
@@ -199,9 +200,10 @@ local function newRig(): Rig
 	local root = made(Instance.new("Folder"))
 	local step = newSignal()
 	local clock = { now = 100 }
-	local view: { camera: CFrame?, targets: { Vector3 } } = {
+	local view: { camera: CFrame?, targets: { Vector3 }, carried: Model? } = {
 		camera = CFrame.new(0, 0, -20),
 		targets = { Vector3.new(0, 0, 0), Vector3.new(0, 0, 0) },
+		carried = nil,
 	}
 	local fade = EggFade.start({
 		root = root,
@@ -210,6 +212,9 @@ local function newRig(): Rig
 		end,
 		targets = function()
 			return view.targets
+		end,
+		carried = function()
+			return view.carried
 		end,
 		step = step,
 		now = function()
@@ -228,6 +233,17 @@ local function newRig(): Rig
 			spot.Parent = root
 			task.wait()
 			return spot
+		end,
+		addCarried = function(position: Vector3): Model
+			-- The carried egg is a copy named CarriedEgg inside the character, never under the egg spots.
+			local character = made(Instance.new("Model"))
+			character.Name = "Character"
+			local egg = newEggModel(position)
+			egg.Name = "CarriedEgg"
+			egg.Parent = character
+			view.carried = egg
+			task.wait()
+			return egg
 		end,
 		addEgg = function(spot: Model, position: Vector3): Model
 			local egg = newEggModel(position)
@@ -427,6 +443,9 @@ describe("EggFade.start", function()
 			targets = function()
 				return { Vector3.new(0, 0, 0) }
 			end,
+			carried = function()
+				return nil
+			end,
 			step = step,
 			now = function()
 				return clock.now
@@ -494,5 +513,300 @@ describe("EggFade.start", function()
 		rig.stop()
 		rig.stop()
 		expect(rig.step:count()).toBe(0)
+	end)
+end)
+
+describe("EggFade.start with the player's own carried egg", function()
+	it("fades a carried egg between the camera and the root to exactly 0.6 in 0.15 seconds", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		for _, descendant in egg:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				expect(descendant.LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+			end
+		end
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("is about half way in after 0.075 seconds", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.075)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.3, 5)
+	end)
+
+	it("stays clear when the camera is beside the player and the egg is off the line", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.view.camera = CFrame.new(50, 0, -20)
+		bodyOf(egg).LocalTransparencyModifier = SENTINEL
+		rig.advance(0.2)
+		rig.advance(0.2)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(SENTINEL)
+	end)
+
+	it("holds 0.2 seconds after the lines clear, then fades back to exactly 0 over 0.3 seconds", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		rig.view.camera = CFrame.new(50, 0, -20)
+		rig.advance(0.19)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		rig.advance(0.01)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.3, 5)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(0)
+	end)
+
+	it(
+		"starts back to solid only after 0.2 seconds in a row with no line crossing: a crossing restarts the hold",
+		function()
+			local rig = newRig()
+			local egg = rig.addCarried(BLOCKING)
+			rig.advance(0.15)
+			rig.view.camera = CFrame.new(50, 0, -20)
+			rig.advance(0.15)
+			rig.view.camera = CFrame.new(0, 0, -20)
+			rig.advance(1 / 60)
+			rig.view.camera = CFrame.new(50, 0, -20)
+			rig.advance(0.15)
+			expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		end
+	)
+
+	it("counts the time past the hold as fade-back when one frame is longer than the hold", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		rig.view.camera = CFrame.new(50, 0, -20)
+		rig.advance(0.25)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6 * (1 - 0.05 / 0.3), 5)
+	end)
+
+	it("gives a waiting egg no hold: it starts back at once while the carried egg is still held", function()
+		local rig = newRig()
+		local waiting = rig.addEgg(rig.addSpot("Spot"), Vector3.new(0, 0, -5))
+		local carried = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		rig.view.camera = CFrame.new(50, 0, -20)
+		rig.advance(0.15)
+		expect(bodyOf(waiting).LocalTransparencyModifier).toBeCloseTo(0.35, 5)
+		expect(bodyOf(carried).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("fades when the line to the head crosses it", function()
+		local rig = newRig()
+		-- The egg is high: the line from the camera to the head crosses it, the line to the root does not.
+		rig.view.targets = { Vector3.new(0, 5, 0), Vector3.new(0, 0, 0) }
+		local egg = rig.addCarried(Vector3.new(0, 2.5, -10))
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("fades when only the line to the root crosses it", function()
+		local rig = newRig()
+		-- The line to the head passes clear above the egg. The line to the root goes through it.
+		rig.view.targets = { Vector3.new(0, 5, 0), Vector3.new(0, 0, 0) }
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("stays clear when the head line only crosses the outer edge of the box", function()
+		local rig = newRig()
+		-- The egg's box is 2 studs each way. At 75% it is 1.5, so the head line at 0.81 to 0.83 studs above the middle
+		-- (box half height 0.75) passes through the outer band only.
+		rig.view.targets = { Vector3.new(0, 1.8, 0) }
+		local egg = rig.addCarried(BLOCKING)
+		bodyOf(egg).LocalTransparencyModifier = SENTINEL
+		rig.advance(0.2)
+		rig.advance(0.2)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(SENTINEL)
+	end)
+
+	it("fades when the head line passes just inside the 75% box", function()
+		local rig = newRig()
+		-- Same egg, the head line a little lower: 0.555 studs above the middle where it enters the 1.5-stud box.
+		rig.view.targets = { Vector3.new(0, 1.2, 0) }
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("fades back after the hold, without an error, when there are no targets (dead or no character)", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		rig.view.targets = {}
+		rig.advance(0.19)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		rig.advance(0.01)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.3, 5)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(0)
+	end)
+
+	it("follows a carried egg that moves with the player", function()
+		local rig = newRig()
+		local egg = rig.addCarried(Vector3.new(30, 0, -10))
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(0)
+		egg:PivotTo(CFrame.new(BLOCKING))
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("follows a carried egg whose parts are moved by a weld, which leaves the model's own pivot behind", function()
+		-- On the real character the egg is welded to the root part: its parts move with the root, but the CarriedEgg
+		-- model's pivot stays where the egg was put on, and Model:GetBoundingBox would measure around that old spot.
+		local rig = newRig()
+		local egg = rig.addCarried(Vector3.new(30, 0, -10))
+		local character = egg.Parent :: Model
+		local root = Instance.new("Part")
+		root.Name = "HumanoidRootPart"
+		root.Anchored = true
+		root.CFrame = CFrame.new(30, 0, -10)
+		root.Parent = character
+		-- Putting the egg on the back sets its pivot once, like Carry.attachEgg does.
+		egg:PivotTo(CFrame.new(30, 0, -10))
+		-- Welds only move parts that are in the world.
+		character.Parent = game:GetService("Workspace")
+		for _, part in egg:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.Anchored = false
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = root
+				weld.Part1 = part
+				weld.Parent = part
+			end
+		end
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(0)
+		root.CFrame = CFrame.new(BLOCKING)
+		rig.advance(0.15)
+		expect(bodyOf(egg).Position.X).toBeCloseTo(0, 3)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("fades a waiting egg and the carried egg together", function()
+		local rig = newRig()
+		local waiting = rig.addEgg(rig.addSpot("Spot"), Vector3.new(0, 0, -5))
+		local carried = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		expect(bodyOf(waiting).LocalTransparencyModifier).toBeCloseTo(0.7, 7)
+		expect(bodyOf(carried).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("sets every part of the carried egg, and leaves the light, the sparkles and the label alone", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		local geometry = bodyOf(egg)
+		local light = geometry:FindFirstChildOfClass("PointLight") :: PointLight
+		local sparkles = geometry:FindFirstChild("Sparkles", true) :: ParticleEmitter
+		local gui = geometry:FindFirstChildOfClass("BillboardGui") :: BillboardGui
+		local words = gui:FindFirstChildOfClass("TextLabel") :: TextLabel
+		local brightness, enabled = light.Brightness, light.Enabled
+		local sparklesTransparency, guiEnabled = sparkles.Transparency, gui.Enabled
+		rig.advance(0.15)
+		expect((egg:FindFirstChild("extra", true) :: Part).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		expect(light.Brightness).toBe(brightness)
+		expect(light.Enabled).toBe(enabled)
+		expect(sparkles.Transparency).toEqual(sparklesTransparency)
+		expect(gui.Enabled).toBe(guiEnabled)
+		expect(words.TextTransparency).toBe(0)
+	end)
+
+	it("does nothing, without an error, when there is no carried egg", function()
+		local rig = newRig()
+		local waiting = rig.addEgg(rig.addSpot("Spot"), BLOCKING)
+		rig.advance(0.15)
+		rig.advance(0.15)
+		expect(bodyOf(waiting).LocalTransparencyModifier).toBeCloseTo(0.7, 7)
+	end)
+
+	it("forgets a carried egg that is destroyed mid-fade, and the next carried egg starts clear", function()
+		local rig = newRig()
+		local first = rig.addCarried(BLOCKING)
+		rig.advance(0.075)
+		local firstBody = bodyOf(first)
+		first:Destroy()
+		-- The player still hands out the destroyed egg for a frame: still no error.
+		rig.advance(0.01)
+		rig.view.carried = nil
+		rig.advance(0.01)
+		local second = rig.addCarried(BLOCKING)
+		expect(bodyOf(second).LocalTransparencyModifier).toBe(0)
+		rig.advance(0.015)
+		expect(bodyOf(second).LocalTransparencyModifier).toBeCloseTo(0.06, 5)
+		expect(firstBody.Parent).toBeNil()
+	end)
+
+	it("starts a new carried egg clear even when the old one was fully faded", function()
+		local rig = newRig()
+		local first = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		first.Parent = nil
+		rig.view.carried = nil
+		rig.advance(0.01)
+		local second = rig.addCarried(BLOCKING)
+		expect(bodyOf(second).LocalTransparencyModifier).toBe(0)
+		first:Destroy()
+	end)
+
+	it("gives a part that arrives while the carried egg is faded the same see-through", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		local late = Instance.new("Part")
+		late.Anchored = true
+		late.Parent = egg:FindFirstChild("body") :: Model
+		task.wait()
+		expect(late.LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("puts the fade back when Roblox's camera writes over the carried egg while it still blocks", function()
+		-- Roblox's own camera scripts set LocalTransparencyModifier on everything inside the character when the camera
+		-- zooms in close, and back to 0 when it zooms out. The carried egg is inside the character.
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		bodyOf(egg).LocalTransparencyModifier = 1
+		rig.advance(0.016)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		bodyOf(egg).LocalTransparencyModifier = 0
+		rig.advance(0.016)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+	end)
+
+	it("leaves what Roblox's camera wrote alone while the carried egg is clear and does not block", function()
+		local rig = newRig()
+		local egg = rig.addCarried(Vector3.new(30, 0, -10))
+		rig.advance(0.15)
+		bodyOf(egg).LocalTransparencyModifier = 1
+		rig.advance(0.2)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(1)
+	end)
+
+	it("stop puts the carried egg back to 0", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.advance(0.15)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBeCloseTo(0.6, 7)
+		rig.stop()
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(0)
+		expect((egg:FindFirstChild("extra", true) :: Part).LocalTransparencyModifier).toBe(0)
+	end)
+
+	it("stop leaves a carried egg alone afterwards", function()
+		local rig = newRig()
+		local egg = rig.addCarried(BLOCKING)
+		rig.stop()
+		bodyOf(egg).LocalTransparencyModifier = SENTINEL
+		rig.advance(0.2)
+		expect(bodyOf(egg).LocalTransparencyModifier).toBe(SENTINEL)
 	end)
 end)
