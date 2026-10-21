@@ -78,10 +78,19 @@ Notes: anything code_lead should look at
 
 When `code_lead` sends **changes**, fix only those items, re-run the checks and tests, and reply with what changed.
 
+## Keep your memory small
+
+Everything you read or print stays in your memory for the rest of the task, and the project caps it (`agent-workflow.md`, "Agent memory size").
+- **Work in the handoff's steps.** Stop and report after each step, at a safe point: after a green test run, never in the middle of a world change. Write a short state note in the scratchpad first, so a fresh builder can carry on if needed.
+- **Print summaries, not dumps.** In Studio code, print counts, worst cases and the few lines that matter. Write long lists, ray maps or tables to a scratchpad file and read back only the part you need.
+- **Run tests filtered** while working (only the spec you changed), and the full suite once per step. Read only the failures.
+- **Screenshots are costly.** Take the ones the handoff asks for, plus one when something looks wrong. Don't retake a shot unless something changed.
+- **Read only what you need:** the parts of a file you change, not whole large files.
+
 ## Rules
 
 - Only write in `src/` (code and tests), plus the test-tool config files that `docs/architecture.md` names. Never edit docs, specs, the plan or the progress table.
-- Never run `git commit` or `git push`, and never add AI attribution anywhere (`git.md`).
+- Never run `git commit`, `git push`, `git merge` or any command that changes history, and never add AI attribution anywhere (`git.md`). The main chat commits each approved task.
 - Inspect before you change anything in Studio. Deleting or replacing instances needs no confirmation from Adam when it matches the spec, the gameplay and the game idea (see `CLAUDE.md`).
 - Don't run skills that commit or create their own folders: superpowers `writing-plans` / `executing-plans` / `subagent-driven-development`, sixth-sense TDD and spec skills, and agentic-sdlc skills.
 - Never give Adam manual work. Never mention AI, Claude or assistants in code, comments or files.
