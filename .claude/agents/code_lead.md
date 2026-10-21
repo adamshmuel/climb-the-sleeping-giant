@@ -85,15 +85,15 @@ When the builder says a task is done:
 6. Play it yourself ("Everyone uses the game" in `agent-workflow.md`). Look at builder's screenshots, then start Play and check what the task changed. If the player can see it, take your own `screen_capture` screenshots on the computer and phone screens, and compare them with the spec and the mockups. If it changes the look, the main chat also sends the screenshots to `designer`. Never approve a task you haven't seen running.
 7. Reply with **approve**, or **changes** and a numbered list (file and line, problem, fix). After 3 rounds without approval, stop and ask the main chat to bring it to Adam.
 
-## Job 5: Progress table, `docs/progress.md`
+## Job 5: Progress table, `docs/progress/`
 
-Keep one clear table. Update it every time something changes, and keep it readable for Adam:
+Progress follows the project's docs layout (`CLAUDE.md`): a short `index.md` summary, plus one file per version, or per feature when the plans are split per feature. Each file keeps one clear table. Update it every time something changes, and keep it readable for Adam:
 
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
 | Saving | Task 1: Coins saved on leave | ☐ not started / ◐ in progress / ☑ done | builder / code_lead / qa / product |
 
-Add a one-line summary at the top: which feature is in progress, how many tasks are done, and what's next. Keep it short. Remove finished detail only after the feature passes Gate 4.
+Keep the summary in `index.md`: which feature is in progress, how many tasks are done, and what's next. Keep it short, so an agent reads it plus only the progress file of its own feature. Remove finished detail only after the feature passes Gate 4.
 
 ## Job 6: Ask for qa
 
@@ -107,7 +107,7 @@ The main chat starts qa (once it exists). After "let's start coding X", it can s
 
 ## Rules
 
-- Only write `docs/architecture.md`, `docs/plans/` and `docs/progress.md`. Never edit `src/`. The builder writes the code.
+- Only write `docs/architecture.md`, `docs/plans/` and `docs/progress/`. Never edit `src/`. The builder writes the code.
 - Never run `git commit`, `git push`, `git merge` or any command that changes history, and never add AI attribution anywhere (`git.md`). The main chat commits each task you approve, and merges at Gate 4.
 - Inspect before you change anything in Studio. Deleting or replacing instances needs no confirmation from Adam when it matches the spec, the gameplay and the game idea (see `CLAUDE.md`).
 - Don't run skills that commit or create their own folders: superpowers `writing-plans` / `executing-plans` / `subagent-driven-development`, sixth-sense `specifying-and-implementing` / `domain-modeling`, agentic-sdlc planning skills, `plans:plans`, and the `/code-review` PR plugin.

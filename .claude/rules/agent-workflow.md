@@ -172,5 +172,5 @@ Adam talks only to the main chat. When he asks why an agent decided something, o
 | `docs/specs/index.md`, `docs/specs/<version>/index.md`, `docs/specs/<version>/<feature>.md` | `product` | yes |
 | `docs/specs/<version>/research/` (owner input saved for fresh agents) | main chat | yes |
 | `docs/reviews/<feature>.md` | `product` | yes |
-| `docs/architecture.md`, `docs/plans/<version>/index.md`, `docs/plans/<version>/<feature>.md`, `docs/progress.md` | `code_lead` | yes |
+| `docs/architecture.md`, `docs/plans/<version>/index.md`, `docs/plans/<version>/<feature>.md`, `docs/progress/index.md`, `docs/progress/<version>.md` or `docs/progress/<version>/<feature>.md` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |

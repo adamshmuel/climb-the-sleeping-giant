@@ -18,6 +18,7 @@ Agent definitions are generic, so they can be reused for other Roblox games. Fac
 Each version or large feature set is a folder, so an agent only reads what it needs and stays under its memory limit:
 - `docs/specs/<version>/index.md`: a short map with one line per feature (its file, status and build order). Each feature has its own small spec, `docs/specs/<version>/<feature>.md`, with at most 15 rules.
 - `docs/plans/<version>/index.md` plus `docs/plans/<version>/<feature>.md`: the same shape for build plans.
+- `docs/progress/index.md`: a short summary of where every version stands, plus house notes every agent needs. Each version's progress is its own file, `docs/progress/<version>.md`, or a folder `docs/progress/<version>/<feature>.md` that matches that version's plans.
 - `docs/design/<version>/`: the look for that version (look study, style guide, art list, build check, mockups). A later version holds only what it adds or changes. The earlier style guide still applies unless the new one replaces a part of it.
 - Research and owner input for a version go in `docs/specs/<version>/research/`.
 - An agent gets the index and only the feature files it works on, never the whole folder.
