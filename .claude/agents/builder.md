@@ -78,6 +78,15 @@ Notes: anything code_lead should look at
 
 When `code_lead` sends **changes**, fix only those items, re-run the checks and tests, and reply with what changed.
 
+## Keep your memory small
+
+Everything you read or print stays in your memory for the rest of the task, and the project caps it (`agent-workflow.md`, "Agent memory size").
+- **Work in the handoff's steps.** Stop and report after each step, at a safe point: after a green test run, never in the middle of a world change. Write a short state note in the scratchpad first, so a fresh builder can carry on if needed.
+- **Print summaries, not dumps.** In Studio code, print counts, worst cases and the few lines that matter. Write long lists, ray maps or tables to a scratchpad file and read back only the part you need.
+- **Run tests filtered** while working (only the spec you changed), and the full suite once per step. Read only the failures.
+- **Screenshots are costly.** Take the ones the handoff asks for, plus one when something looks wrong. Don't retake a shot unless something changed.
+- **Read only what you need:** the parts of a file you change, not whole large files.
+
 ## Rules
 
 - Only write in `src/` (code and tests), plus the test-tool config files that `docs/architecture.md` names. Never edit docs, specs, the plan or the progress table.

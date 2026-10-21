@@ -76,12 +76,18 @@ The main chat checks the count after every report:
 
 | Agent | Rule |
 |---|---|
-| `builder` | A fresh agent for every task |
+| `builder` | A fresh agent for every task, and never over 200k tokens. An agent can't see its own token count, so the main chat enforces it with checkpoints: each handoff splits the task into steps, and the builder stops and reports after each step (after a green test run, never in the middle of a world change), with a short note of where it stands in the scratchpad. The main chat reads the count from the report: under 200k it resumes the same builder for the next step; above that a fresh builder carries on from the note and the handoff |
 | Every other agent | Keep resuming it while under 200k tokens. Above that, start a fresh one at the next natural break: after a review or an answer, never in the middle of a task. Every step rereads the whole memory, so a big memory makes even a short check costly |
 
 A fresh agent gets the file paths it needs (idea, design, spec, plan, progress) and a short note of where the work stands. The files are the shared memory.
 
-The main chat's own memory grows too. After every approved task, it updates the "Now" section of `docs/handoff.md` (untracked): the task in progress, open questions between agents, each agent's size, and what Adam checks at the next gate. A new session starts from that file and `docs/progress.md`.
+`code_lead` sizes tasks so a builder can finish one well under 200k tokens. A task that keeps stopping or needs a new approach is split into smaller tasks.
+
+The main chat's own memory grows too, and it follows two rules:
+- **Relay by file, not by pasting.** When an agent's report has to go to another agent, the main chat saves it once in the scratchpad and sends the path with a short summary. It never pastes a long report into a message. Reports to Adam stay short.
+- **Let the app compact it.** The chat can't compact itself, and Adam isn't asked to. The app compacts the chat automatically when it is nearly full, which can happen at any moment. So the main chat updates the "Now" section of `docs/handoff.md` after every agent step, not only after every approved task, and a compacted chat picks up from that file with nothing lost.
+
+After every approved task, it updates the "Now" section of `docs/handoff.md` (untracked): the task in progress, open questions between agents, each agent's size, and what Adam checks at the next gate. A new session starts from that file and `docs/progress/index.md`.
 
 ## Who owns what
 
