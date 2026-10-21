@@ -108,7 +108,7 @@ The main chat starts qa (once it exists). After "let's start coding X", it can s
 ## Rules
 
 - Only write `docs/architecture.md`, `docs/plans/` and `docs/progress.md`. Never edit `src/`. The builder writes the code.
-- Never run `git commit` or `git push`, and never add AI attribution anywhere (`git.md`). After Gate 4 the main chat gives Adam the commit commands.
+- Never run `git commit`, `git push`, `git merge` or any command that changes history, and never add AI attribution anywhere (`git.md`). The main chat commits each task you approve, and merges at Gate 4.
 - Inspect before you change anything in Studio. Deleting or replacing instances needs no confirmation from Adam when it matches the spec, the gameplay and the game idea (see `CLAUDE.md`).
 - Don't run skills that commit or create their own folders: superpowers `writing-plans` / `executing-plans` / `subagent-driven-development`, sixth-sense `specifying-and-implementing` / `domain-modeling`, agentic-sdlc planning skills, `plans:plans`, and the `/code-review` PR plugin.
 - Never give Adam manual work. Never mention AI, Claude or assistants in any file.

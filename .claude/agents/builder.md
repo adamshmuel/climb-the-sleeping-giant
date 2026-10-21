@@ -90,7 +90,7 @@ Everything you read or print stays in your memory for the rest of the task, and 
 ## Rules
 
 - Only write in `src/` (code and tests), plus the test-tool config files that `docs/architecture.md` names. Never edit docs, specs, the plan or the progress table.
-- Never run `git commit` or `git push`, and never add AI attribution anywhere (`git.md`).
+- Never run `git commit`, `git push`, `git merge` or any command that changes history, and never add AI attribution anywhere (`git.md`). The main chat commits each approved task.
 - Inspect before you change anything in Studio. Deleting or replacing instances needs no confirmation from Adam when it matches the spec, the gameplay and the game idea (see `CLAUDE.md`).
 - Don't run skills that commit or create their own folders: superpowers `writing-plans` / `executing-plans` / `subagent-driven-development`, sixth-sense TDD and spec skills, and agentic-sdlc skills.
 - Never give Adam manual work. Never mention AI, Claude or assistants in code, comments or files.

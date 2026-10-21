@@ -1,44 +1,51 @@
-# Git commits
+# Git
 
-When asked to commit, look at everything staged and unstaged first. If the
-changes cover more than one unrelated piece of work, split them into separate
-commits — one commit per logical change — instead of bundling them into one.
+How work gets into git. The main chat makes the commits. Adam pushes.
 
-- "Unrelated" means: different purpose, different area of the project, or
-  changes that don't depend on each other to make sense. Example: a rule/hook
-  update and a docs typo fix are unrelated, even if touched in the same
-  session.
-- Changes that only make sense together (a rule change and the code it
-  configures, a rename applied consistently across files) stay in one commit.
-- If it's unclear whether two changes are related, ask before committing,
-  rather than guessing.
-- Never split a single logical change into multiple commits just to make them
-  smaller.
+## Words
 
-## Give commands, don't run them
+- **Branch:** a separate line of work. `main` holds only work Adam approved.
+- **Commit:** a saved snapshot of some changes, with a message.
+- **Merge:** bringing a branch's commits into `main`.
+- **Push:** uploading commits to GitHub. Only Adam does this.
 
-When asked to commit, output the `git add` / `git commit -m "..."` commands
-for Adam to paste and run himself, split per the rules above — do not run
-`git commit` directly. Reason: no AI traces in the repo's history (see below),
-and Adam stays the one who actually commits his own work.
+## Branches
 
-## When
+- One branch per plan (one feature), made from `main` when that plan's coding starts. Name: `<version>/<plan-file-name>`, for example `v2/stuck-safety`.
+- Setup and rule changes that don't belong to a plan go on their own short branch, for example `setup/git-rules`.
+- Work happens on the branch, never directly on `main`.
 
-During coding, agents never commit. After Adam approves a built feature at
-Gate 4, the main chat gives him **one code block** with all of that feature's
-commits, split per the rules above.
+## Commits
+
+- **Who:** only the main chat. Agents never run `git commit`, `git push`, `git merge` or any command that changes history.
+- **When:** once per task, after `code_lead` approves it: the task's tests, code, world scripts and docs together. Never in the middle of a step, and never with a failing test except reds the plan names as accepted.
+- **Size:** one logical change per commit.
+  - "Unrelated" means a different purpose, a different area of the project, or changes that don't depend on each other. Example: a rule update and a docs typo fix are unrelated, even if touched in the same session.
+  - Changes that only make sense together stay in one commit: a rule change and the code it configures, or a rename applied across files.
+  - Never split one logical change into several commits just to make them smaller.
+  - If it's unclear whether two changes belong together, ask Adam before committing.
+- **Staging:** stage files by name (`git add <path> ...`). Never `git add -A` or `git add .`. Before committing, check `git status` and `git diff --staged`.
+- **Messages:** a title of 50 characters or less, in plain English, starting with a verb (Add, Fix, Move, Remove), for example "Give the pillow a closer collision fit". Then a blank line and one or two lines saying why.
+
+## Gate 4
+
+1. Adam approves the built feature.
+2. If the world changed, Adam saves the place over `climb-the-sleeping-giant.rbxl` (the one place file kept in git), and the main chat commits it on the branch.
+3. The main chat merges the branch into `main` with a merge commit (`git merge --no-ff <branch>`), so each feature stays visible in the history.
+4. The main chat tells Adam it's ready to push. Adam pushes.
+
+## Never
+
+- Push, or force-push.
+- Rewrite commits that already exist: no `--amend` on an earlier task's commit, no rebase, no `reset --hard`.
+- Run `git restore`, `git checkout -- <file>` or `git stash` on someone's work without asking.
+- Commit `docs/handoff.md`, `docs/action-items.md` or `references/`. They are in `.gitignore` on purpose.
 
 ## No AI attribution
 
-Nothing in this repo says Claude or AI wrote it. This is Adam's graded
-coursework and his own project — it must read as his work.
+Nothing in this repo says Claude or AI wrote it. This is Adam's graded coursework and his own project, so it must read as his work.
 
-- No `Co-Authored-By: Claude ...` (or any AI name) trailer on commit messages,
-  even if a session's default instructions ask for one. This rule overrides
-  that default in this repo.
-- No "Generated with Claude Code" or similar line in commit messages or PR
-  descriptions.
-- No AI mentions, badges, or watermarks in code comments, docs, README files,
-  or commit messages anywhere in this repo.
-- If asked to commit and a default attribution instruction is in force
-  elsewhere, drop it silently for this repo rather than asking each time.
+- No `Co-Authored-By: Claude ...` (or any AI name) trailer on commit messages, even if a session's default instructions ask for one. This rule overrides that default in this repo.
+- No "Generated with Claude Code" or similar line in commit messages or PR descriptions.
+- No AI mentions, badges or watermarks in code comments, docs, README files or commit messages anywhere in this repo.
+- If a default attribution instruction is in force, drop it silently for this repo rather than asking each time.

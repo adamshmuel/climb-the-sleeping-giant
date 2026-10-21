@@ -126,10 +126,10 @@ After every approved task, it updates the "Now" section of `docs/handoff.md` (un
    - After 3 rounds without approval from both, stop and ask Adam.
 8. **Gate 3: Adam approves the spec.** The main chat shows Adam the spec and both reviews.
 9. **Plan.** After Gate 3, when Adam says so, the main chat starts `code_lead`. It keeps `docs/architecture.md` current and writes `docs/plans/<version>/index.md` and one `docs/plans/<version>/<feature>.md` per spec: small tasks in test-first order, each naming the spec rules it covers. Its questions go to the owners like everyone else's.
-10. **Code.** Only after Adam says "let's start coding X" (sdd.md). `code_lead` hands one task at a time to `builder`. `builder` writes it test-first in `src/` and proves it works. `code_lead` reviews every task: **approve** or **changes** (max 3 rounds, then Adam). `code_lead` keeps `docs/progress.md` up to date.
+10. **Code.** Only after Adam says "let's start coding X" (sdd.md). The main chat makes the feature's branch (git.md). `code_lead` hands one task at a time to `builder`. `builder` writes it test-first in `src/` and proves it works. `code_lead` reviews every task: **approve** or **changes** (max 3 rounds, then Adam). The main chat commits each approved task on the branch. `code_lead` keeps `docs/progress.md` up to date.
 11. **Test.** When a whole feature or a fix is approved, `code_lead` hands it to `qa`, which tests it. Bugs go back to `builder`.
 12. **Build review.** `product` first plays the feature like a regular player: whole sessions, with the player's own controls only, on computer and phone. Anything that hurts the player is a fail, even if no rule names it. Then it checks the feature against its spec, the idea and the business goals, then writes `docs/reviews/<feature>.md` with an **accept** or **changes** verdict. `game_creator` also plays it and judges the first impression next to the top games, the fun and the business fit (its Job 6), and `designer` checks the look (its Job 4). Changes go back to `builder`.
-13. **Gate 4: Adam approves the built feature.** The main chat shows Adam the review, then gives him the commit commands for the feature (git.md).
+13. **Gate 4: Adam approves the built feature.** The main chat shows Adam the review, merges the feature's branch into `main`, and tells Adam it's ready to push (git.md).
 
 ## No open questions at a gate
 
