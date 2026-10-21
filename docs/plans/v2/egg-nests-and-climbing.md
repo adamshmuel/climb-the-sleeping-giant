@@ -261,7 +261,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 **Task 18: No new way onto the belly**
 - Spec rules: Rule 82 (No new way onto the belly), all three points, and spec 3's Rule 45 (One way onto the belly) as Rule 82 (No new way onto the belly) widens it. Section 5: "Seam height", "Climbable-part height". Story E's first case. Section 8: "A player on the side pad jumps at his cuff".
 - Files: `src/server/World/WaysUpCheck.luau` (plan 3, Task 10), `src/tests/server/World/WaysUpCheck.spec.luau`, `WalkMap.spec.luau`.
-- What it adds, from every jump-surface spot (the meadow round him, the side pads, thigh planks, boot tops, lap planks and the tops of invisible guards), with the jump reach in "Decisions":
+- What it adds, from every jump-surface spot (the meadow round him, the side pads, thigh planks, boot tops, lap planks, the tops of invisible guards, and the tops of the cave skirt (`World.CaveSkirt`, stuck safety Task 22; product's condition for allowing the reachable step by the ledge)), with the jump reach in "Decisions":
   - every walk-area spot within jump reach sideways is at least 12 studs above that jump surface, the rounded end of each arm at cuff points 4 and 5 included (product, stuck safety Task 21 round 3);
   - every climbable part (every `TrussPart`) other than the six ways up and the beard and cap ladders has its lowest point at least 15 studs above every jump surface within reach; and there is none on him today;
   - no nest reached through the lap landing is within 8 studs of the body anywhere in a jump's reach, and no nest is over a side pad.

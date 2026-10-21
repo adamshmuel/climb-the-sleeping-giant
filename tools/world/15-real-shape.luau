@@ -32,7 +32,14 @@
 --       he visibly touches the ladder. See "Section 2f6" below.
 --   2g. Beard rails reach his drawn belly (Task 25, after the Task 26 ruling): each beard rail grows 2.75 studs at its
 --       bottom end only, and one more rung, a copy of the lowest, goes in below the 17. See "Section 2g" below.
---   3. Patches (Task 22): not here yet.
+--   3a. The pillow's closer fit (Task 22, step 22-2): the pillow behind his head (World.GiantsThings.Pillow.body.body_geom)
+--       becomes Tunable with CollisionPrecision 1, so a player stands on the pillow he sees. See "Section 3a" below.
+--   3a2. Lit like before (Task 22, step 22-6d): the pillow's CastShadow becomes false, because the precise solid shape
+--       shades the pillow itself and made it look dark navy and tan. See "Section 3a2" below.
+--   3b. Patches (Task 22, step 22-9): 41 invisible blocks (Patch_Cave_<n>) in the new folder World.WalkSurfaces.Patches that
+--       close off the cave under his cushion. See "Section 3b and 3c" below.
+--   3c. The cave skirt (Task 22, step 22-9): 20 visible red blocks (CaveSkirt_<n>) in the new folder World.CaveSkirt across
+--       the cave's mouth, solid for players. See "Section 3b and 3c" below.
 --   4. Slide guards (Task 23): not here yet.
 -- Section 1 does this:
 --   - It refuses to run in Play: a running game can't change CollisionFidelity.
@@ -100,7 +107,7 @@
 -- Run in Studio EDIT mode: read this file and pass its text as `code` to execute_luau.
 -- It runs again safely: section 1 changes nothing when all six pieces are PreciseConvexDecomposition and their rays are
 -- steady (body_and_cushion, head_with_beard and nightcap may be Tunable once sections 2f and 2f2 have run, legs_and_boots
--- once 2f5 has), and sections 2, 2b, 2c, 2d, 2e, 2f, 2f2, 2f3, 2f4, 2f5, 2f6 and 2g change nothing once their parts are there; all
+-- once 2f5 has), and sections 2, 2b, 2c, 2d, 2e, 2f, 2f2, 2f3, 2f4, 2f5, 2f6, 2g, 3a, 3a2, 3b and 3c change nothing once their parts are there; all
 -- say "already done". The place
 -- file must be saved by Adam afterwards, because Roblox keeps the worked-out shapes with the place.
 
@@ -4727,6 +4734,821 @@ local function sectionBeardBelly(): string
 	return table.concat(lines, "\n")
 end
 
+----------------------------------------------------------------------------------------------------------------------
+-- Section 3a: the pillow's closer fit (stuck safety Task 22, step 22-2; Rule 20, One collision source)
+----------------------------------------------------------------------------------------------------------------------
+-- Why: the pillow behind his head (World.GiantsThings.Pillow.body.body_geom) has Roblox's usual collision shape
+-- (CollisionFidelity Default), which sits above the pillow players see in places: 35 of the 287 stuck spots are on it.
+-- CollisionPrecision 1 on the Tunable shape ("closest to the visual mesh", Roblox docs, TriangleMeshPart) follows the
+-- pillow's drawn surface much closer, and a pillow is a plain MeshPart, so it is done the way section 2f2 does it:
+-- AssetService:CreateMeshPartAsync makes a Tunable copy, CollisionPrecision 1 is set on the copy, and MeshPart:ApplyMesh
+-- takes its shape onto the pillow. ApplyMesh wipes TextureID (measured in step 6b-1f), so it is put back at once.
+-- It knows two worlds, and changes nothing on any difference:
+--   (a) before: the pillow is CollisionFidelity Default, with its MeshId, TextureID, Size and CFrame as recorded in step
+--       22-0 (below). The change is made.
+--   (b) after: the pillow is Tunable at CollisionPrecision 1.0 (+-0.01), with the same MeshId, TextureID, Size and
+--       CFrame. It says "already done".
+--   (c) anything else: it stops with nothing changed and names what differs.
+-- Away from the Workspace (in a WorldModel in ServerStorage that is destroyed at the end, also when something fails):
+--   1. The Tunable copy is made, given the pillow's Size and CFrame, and its 7 rays (below) are read until steady.
+--   2. CollisionPrecision is set to 1, and it waits until the rays move and are steady again (up to MAX_WAIT seconds,
+--      then it stops with nothing changed).
+--   3. Dry run: ApplyMesh from the copy onto a clone of the pillow, TextureID put back. The same 28 values as in 2f are
+--      compared (only CollisionFidelity and CollisionPrecision may differ) and the clone must be Tunable at 1.0.
+-- Only then, between two ChangeHistoryService waypoints: ApplyMesh onto the live pillow and TextureID put back, the same
+-- check on the live pillow, and a wait until its rays have moved and are steady.
+-- Rays: straight down from y 140 at 7 points (x, z), reading the pillow alone, as in step 22-0 (heights before the change):
+--   (0, 50) 116.0, (0, 66) 93.8, (20, 66) 90.3, (-20, 66) 90.1, (0, 72) 77.5, (17, 41) 119.6, (-17, 41) 119.8.
+-- No earlier section reads the pillow, so all of them still say "already done" after this one has run.
+local function sectionPillowCloserFit(): string
+	if RunService:IsRunning() then
+		error("a running game can't change CollisionFidelity: stop Play and run this in Edit mode")
+	end
+	-- As recorded in step 22-0 (Studio Edit mode, 2026-10-21).
+	local PATH = { "World", "GiantsThings", "Pillow", "body", "body_geom" }
+	local MESH_ID = "rbxassetid://106761089887672"
+	local TEXTURE_ID = "rbxassetid://138710597423165"
+	local SIZE = Vector3.new(95.004646, 91.194412, 35.748734)
+	local CFRAME = CFrame.new(0.142862, 79.86055, 52.141579, 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939692)
+	local PLACE_TOLERANCE_STUDS = 0.01 -- on the size and the middle
+	local TURN_TOLERANCE_NUMBER = 0.001 -- on each of the nine numbers of the turn
+	local PILLOW_PRECISION = 1.0
+	local PILLOW_PRECISION_SLACK = 0.01
+	local RAY_FROM_Y = 140
+	local RAY_LENGTH = 150
+	local RAY_POINTS = {
+		Vector2.new(0, 50),
+		Vector2.new(0, 66),
+		Vector2.new(20, 66),
+		Vector2.new(-20, 66),
+		Vector2.new(0, 72),
+		Vector2.new(17, 41),
+		Vector2.new(-17, 41),
+	}
+	local PILLOW_STAGING_NAME = "Task22Staging3a"
+
+	local node: Instance? = Workspace
+	for _, name in PATH do
+		node = if node ~= nil then node:FindFirstChild(name) else nil
+	end
+	if node == nil or not node:IsA("MeshPart") then
+		error(`nothing was changed. {table.concat(PATH, ".")} (a MeshPart) is missing`)
+	end
+	local pillow: MeshPart = node
+
+	local rays: { FixedRay } = {}
+	for _, point in RAY_POINTS do
+		table.insert(rays, {
+			origin = Vector3.new(point.X, RAY_FROM_Y, point.Y),
+			direction = Vector3.new(0, -RAY_LENGTH, 0),
+		})
+	end
+	local function raysText(distances: { number }): string
+		local texts: { string } = {}
+		for index, ray in rays do
+			table.insert(
+				texts,
+				`({RAY_POINTS[index].X}, {RAY_POINTS[index].Y}) {heightText(hitHeight(ray, distances[index]))}`
+			)
+		end
+		return table.concat(texts, "; ")
+	end
+	local function stateText(mesh: MeshPart): string
+		return string.format(
+			"CollisionFidelity %s, CollisionPrecision %.2f, TextureID %s",
+			mesh.CollisionFidelity.Name,
+			mesh.CollisionPrecision,
+			mesh.TextureID
+		)
+	end
+
+	-- What never changes: the mesh, the texture, the size and the place as recorded.
+	local problems: { string } = {}
+	if pillow.MeshId ~= MESH_ID then
+		table.insert(problems, `MeshId is {pillow.MeshId}, recorded {MESH_ID}`)
+	end
+	if pillow.TextureID ~= TEXTURE_ID then
+		table.insert(problems, `TextureID is {pillow.TextureID}, recorded {TEXTURE_ID}`)
+	end
+	if (pillow.Size - SIZE).Magnitude > PLACE_TOLERANCE_STUDS then
+		table.insert(problems, `Size is {pillow.Size}, recorded {SIZE}`)
+	end
+	if (pillow.CFrame.Position - CFRAME.Position).Magnitude > PLACE_TOLERANCE_STUDS then
+		table.insert(problems, `its middle is {pillow.CFrame.Position}, recorded {CFRAME.Position}`)
+	end
+	local nowTurn = { pillow.CFrame:GetComponents() }
+	local recordedTurn = { CFRAME:GetComponents() }
+	for index = 4, 12 do
+		if math.abs(nowTurn[index] - recordedTurn[index]) > TURN_TOLERANCE_NUMBER then
+			table.insert(problems, `its turn differs from the recorded one (number {index - 3} of 9)`)
+			break
+		end
+	end
+	if #problems > 0 then
+		error(`nothing was changed. The pillow is not the one recorded in step 22-0: {someProblems(problems)}`)
+	end
+
+	-- Which world is it?
+	if isTunableAt(pillow, PILLOW_PRECISION, PILLOW_PRECISION_SLACK) then
+		return `already done: the pillow is Tunable at CollisionPrecision {string.format(
+			"%.2f",
+			pillow.CollisionPrecision
+		)}, with its mesh, texture, size and place as recorded. {stateText(pillow)}. Its rays now: {raysText(
+			readRays(pillow, rays)
+		)}`
+	end
+	if pillow.CollisionFidelity ~= Enum.CollisionFidelity.Default then
+		error(
+			`nothing was changed. The pillow is neither the world before nor the world after section 3a: {stateText(
+				pillow
+			)}`
+		)
+	end
+
+	local function changePillow(staging: WorldModel): string
+		local oldPrecision = pillow.CollisionPrecision
+		local lines: { string } = {}
+		table.insert(lines, `before: {stateText(pillow)}`)
+		local beforeLive = readRays(pillow, rays)
+		table.insert(lines, `before: the live pillow's rays: {raysText(beforeLive)}`)
+
+		local made, madeOrWhy = pcall(function(): MeshPart
+			return AssetService:CreateMeshPartAsync(Content.fromUri(pillow.MeshId), {
+				CollisionFidelity = Enum.CollisionFidelity.Tunable,
+				RenderFidelity = pillow.RenderFidelity,
+				FluidFidelity = pillow.FluidFidelity,
+			})
+		end)
+		if not made then
+			error(`nothing was changed. CreateMeshPartAsync failed for the pillow: {tostring(madeOrWhy)}`)
+		end
+		local source = madeOrWhy :: MeshPart
+		source.Anchored = true
+		source.Size = pillow.Size
+		source.CFrame = pillow.CFrame
+		source.Parent = staging
+
+		local baselineSteady, _, _, baseline = waitForSourceShape(staging, source, rays, nil)
+		if not baselineSteady then
+			error(
+				`nothing was changed. The copy of the pillow never settled at its first precision within {MAX_WAIT} seconds`
+			)
+		end
+		(source :: any).CollisionPrecision = PILLOW_PRECISION
+		local moved, seconds, movedBy = waitForSourceShape(staging, source, rays, baseline)
+		if not moved then
+			error(
+				string.format(
+					"nothing was changed. The copy of the pillow did not change its shape within %d seconds of CollisionPrecision 1 (largest ray move %.3f studs)",
+					MAX_WAIT,
+					movedBy
+				)
+			)
+		end
+
+		-- Dry run on a clone.
+		local trial = pillow:Clone()
+		trial.Parent = staging
+		local wiped = false
+		local trialOk, trialWhy = pcall(function()
+			trial:ApplyMesh(source)
+			wiped = trial.TextureID ~= TEXTURE_ID
+			trial.TextureID = TEXTURE_ID
+		end)
+		if not trialOk then
+			error(`nothing was changed. ApplyMesh failed on the clone of the pillow: {tostring(trialWhy)}`)
+		end
+		local before = bodySnapshot(pillow)
+		local trialDifferences = unexpectedDifferences(bodyDifferences(before, bodySnapshot(trial)))
+		if #trialDifferences > 0 then
+			error(
+				`nothing was changed. ApplyMesh on the clone of the pillow changed more than the collision: {table.concat(
+					trialDifferences,
+					", "
+				)}`
+			)
+		end
+		if not isTunableAt(trial, PILLOW_PRECISION, PILLOW_PRECISION_SLACK) then
+			error(
+				string.format(
+					"nothing was changed. The clone of the pillow is %s at CollisionPrecision %.3f, expected Tunable at 1.0",
+					trial.CollisionFidelity.Name,
+					trial.CollisionPrecision
+				)
+			)
+		end
+		trial:Destroy()
+
+		-- The change itself, between two waypoints.
+		pcall(function()
+			ChangeHistoryService:SetWaypoint("15-real-shape section 3a: before")
+		end)
+		local changed, whyNot = pcall(function()
+			pillow:ApplyMesh(source)
+			pillow.TextureID = TEXTURE_ID
+		end)
+		pcall(function()
+			ChangeHistoryService:SetWaypoint("15-real-shape section 3a: after")
+		end)
+		if not changed then
+			error(
+				`the change stopped half way ({tostring(whyNot)}). Undo it in Studio (Ctrl+Z, back to the waypoint "15-real-shape section 3a: before") and tell code_lead`
+			)
+		end
+
+		-- The same check on the live pillow.
+		local differences = unexpectedDifferences(bodyDifferences(before, bodySnapshot(pillow)))
+		if #differences > 0 or not isTunableAt(pillow, PILLOW_PRECISION, PILLOW_PRECISION_SLACK) then
+			error(
+				string.format(
+					"the pillow was changed, but the check afterwards found it is %s at CollisionPrecision %.3f and differs from before in: %s. Undo it in Studio (Ctrl+Z, back to the waypoint) and tell code_lead",
+					pillow.CollisionFidelity.Name,
+					pillow.CollisionPrecision,
+					table.concat(differences, ", ")
+				)
+			)
+		end
+		table.insert(
+			lines,
+			string.format(
+				"CollisionFidelity Default -> Tunable; CollisionPrecision %.2f -> %.2f; ApplyMesh %s TextureID and it was put back (%s); %d values compared before and after: only CollisionFidelity and CollisionPrecision differ. The staging copy's rays moved %.2f studs after CollisionPrecision 1 (steady after %.1f seconds)",
+				oldPrecision,
+				pillow.CollisionPrecision,
+				if wiped then "wiped" else "did not wipe",
+				pillow.TextureID,
+				countValues(before),
+				movedBy,
+				seconds
+			)
+		)
+
+		-- Wait until Roblox has worked out the new shape: the live pillow's rays must have moved and be steady.
+		local steady, waited, liveMoved, now = waitForSourceShape(Workspace, pillow, rays, beforeLive)
+		table.insert(lines, `after: {stateText(pillow)}`)
+		table.insert(lines, `after: the live pillow's rays: {raysText(now)}`)
+		table.insert(
+			lines,
+			string.format("largest ray move on the live pillow from before the change: %.2f studs", liveMoved)
+		)
+		if steady then
+			table.insert(
+				lines,
+				string.format("Roblox worked out the shape: the rays were steady after %.1f seconds of waiting", waited)
+			)
+		else
+			table.insert(
+				lines,
+				string.format(
+					"TIMED OUT after %.0f seconds: the shape was not steady yet, or the pillow's rays did not move. Run the script again to wait further, and if it is the same, STOP and tell code_lead",
+					waited
+				)
+			)
+		end
+		return table.concat(lines, "\n")
+	end
+
+	-- The staging WorldModel: a leftover from a stopped run goes first, and it is destroyed whatever happens.
+	local leftover = ServerStorage:FindFirstChild(PILLOW_STAGING_NAME)
+	if leftover ~= nil then
+		leftover:Destroy()
+	end
+	local staging = Instance.new("WorldModel")
+	staging.Name = PILLOW_STAGING_NAME
+	staging.Archivable = false
+	staging.Parent = ServerStorage
+	local ok, result = pcall(changePillow, staging)
+	staging:Destroy()
+	if not ok then
+		error(tostring(result), 0)
+	end
+	return result
+end
+
+----------------------------------------------------------------------------------------------------------------------
+-- Section 3a2: lit like before (stuck safety Task 22, step 22-6d; Rule 20, One collision source)
+----------------------------------------------------------------------------------------------------------------------
+-- Why: after its closer collision fit (Tunable, CollisionPrecision 1) the pillow looked dark navy and tan instead of
+-- light blue and cream gingham. Nothing was lost: Color, Material, MaterialVariant, Transparency, Reflectance and TextureID
+-- are all still the ArtLibrary original's. The precise solid shape shades the pillow itself in Roblox's lighting, and
+-- CastShadow false puts the light look back (step 22-6a and 22-6b: the nightcap, head, body and legs keep CastShadow true,
+-- because they stayed light; only the pieces in LIT_PIECES below change). The cost: the pillow no longer drops a shadow on
+-- the grass (designer judges that in step 22-6g).
+-- It knows two worlds, and changes nothing on any difference:
+--   (a) before: each listed piece is Tunable at CollisionPrecision 1.0 (+-0.01) with CastShadow true. CastShadow is set to
+--       false, and nothing else is touched.
+--   (b) after: each listed piece is Tunable at CollisionPrecision 1.0 (+-0.01) with CastShadow false. It says "already
+--       done".
+--   (c) anything else (a piece missing or not the recorded one, not Tunable at 1.0, or some pieces before and some
+--       after): it stops with nothing changed and names what differs.
+-- The change runs between two ChangeHistoryService waypoints, and every value the pillow-style snapshot compares (the 28
+-- values of section 2f) is checked again afterwards: only CastShadow may differ.
+local function sectionLitLikeBefore(): string
+	if RunService:IsRunning() then
+		error("a running game can't be checked like this: stop Play and run this in Edit mode")
+	end
+	-- The listed pieces, as recorded in step 22-0 (Studio Edit mode, 2026-10-21).
+	local LIT_PIECES = {
+		{
+			label = "the pillow",
+			path = { "World", "GiantsThings", "Pillow", "body", "body_geom" },
+			meshId = "rbxassetid://106761089887672",
+			textureId = "rbxassetid://138710597423165",
+		},
+	}
+	local LIT_PRECISION = 1.0
+	local LIT_PRECISION_SLACK = 0.01
+	local LIT_MAY_DIFFER = "CastShadow"
+
+	local pieces: { { label: string, mesh: MeshPart } } = {}
+	for _, listed in LIT_PIECES do
+		local node: Instance? = Workspace
+		for _, name in listed.path do
+			node = if node ~= nil then node:FindFirstChild(name) else nil
+		end
+		if node == nil or not node:IsA("MeshPart") then
+			error(`nothing was changed. {table.concat(listed.path, ".")} (a MeshPart) is missing`)
+		end
+		local mesh: MeshPart = node
+		if mesh.MeshId ~= listed.meshId or mesh.TextureID ~= listed.textureId then
+			error(
+				`nothing was changed. {listed.label} is not the one recorded: MeshId {mesh.MeshId}, TextureID {mesh.TextureID}`
+			)
+		end
+		table.insert(pieces, { label = listed.label, mesh = mesh })
+	end
+
+	local function pieceText(label: string, mesh: MeshPart): string
+		return string.format(
+			"%s: CollisionFidelity %s, CollisionPrecision %.2f, CastShadow %s",
+			label,
+			mesh.CollisionFidelity.Name,
+			mesh.CollisionPrecision,
+			tostring(mesh.CastShadow)
+		)
+	end
+
+	-- Which world is it?
+	local before: { string } = {}
+	local after: { string } = {}
+	local other: { string } = {}
+	local allTexts: { string } = {}
+	for _, piece in pieces do
+		table.insert(allTexts, pieceText(piece.label, piece.mesh))
+		if not isTunableAt(piece.mesh, LIT_PRECISION, LIT_PRECISION_SLACK) then
+			table.insert(other, `{piece.label} is not Tunable at CollisionPrecision {LIT_PRECISION}`)
+		elseif piece.mesh.CastShadow then
+			table.insert(before, piece.label)
+		else
+			table.insert(after, piece.label)
+		end
+	end
+	if #other > 0 then
+		error(
+			`nothing was changed. This is neither the world before nor the world after section 3a2: {someProblems(other)}`
+		)
+	end
+	if #before > 0 and #after > 0 then
+		error(`nothing was changed. Some pieces are lit like before and some are not: {table.concat(allTexts, "; ")}`)
+	end
+	if #after == #pieces then
+		return `already done: {table.concat(allTexts, "; ")}`
+	end
+
+	-- The change itself, between two waypoints: CastShadow false on each listed piece, and nothing else.
+	local snapshots: { { [string]: any } } = {}
+	for _, piece in pieces do
+		table.insert(snapshots, bodySnapshot(piece.mesh))
+	end
+	pcall(function()
+		ChangeHistoryService:SetWaypoint("15-real-shape section 3a2: before")
+	end)
+	local changed, whyNot = pcall(function()
+		for _, piece in pieces do
+			piece.mesh.CastShadow = false
+		end
+	end)
+	pcall(function()
+		ChangeHistoryService:SetWaypoint("15-real-shape section 3a2: after")
+	end)
+	if not changed then
+		error(
+			`the change stopped half way ({tostring(whyNot)}). Undo it in Studio (Ctrl+Z, back to the waypoint "15-real-shape section 3a2: before") and tell code_lead`
+		)
+	end
+
+	-- The same check afterwards: only CastShadow may differ, and it must now be false.
+	local wrong: { string } = {}
+	local valuesCompared = 0
+	for index, piece in pieces do
+		valuesCompared += countValues(snapshots[index])
+		for _, name in bodyDifferences(snapshots[index], bodySnapshot(piece.mesh)) do
+			if name ~= LIT_MAY_DIFFER then
+				table.insert(wrong, `{piece.label}: {name} changed`)
+			end
+		end
+		if piece.mesh.CastShadow then
+			table.insert(wrong, `{piece.label}: CastShadow is still true`)
+		end
+	end
+	if #wrong > 0 then
+		error(
+			`the change was made, but the check afterwards found: {someProblems(wrong)}. Undo it in Studio (Ctrl+Z, back to the waypoint) and tell code_lead`
+		)
+	end
+	local afterTexts: { string } = {}
+	for _, piece in pieces do
+		table.insert(afterTexts, pieceText(piece.label, piece.mesh))
+	end
+	return string.format(
+		"CastShadow true -> false on %d piece(s); %d values compared before and after: only CastShadow differs. Before: %s. After: %s",
+		#pieces,
+		valuesCompared,
+		table.concat(allTexts, "; "),
+		table.concat(afterTexts, "; ")
+	)
+end
+
+----------------------------------------------------------------------------------------------------------------------
+-- Section 3b and 3c: the cave's patches and the cave skirt (stuck safety Task 22, step 22-9; Rule 20, One collision source)
+----------------------------------------------------------------------------------------------------------------------
+-- Why: under his cushion there is a cave (x -21 to 21, y 16 to 44, z 45.5 to 60) where a body fits and can get stuck.
+-- It is closed off with 61 blocks, all measured in step 22-8e (the lid), 22-8f2 and 22-8h2 on trial copies, and made into
+-- the final numbers in step 22-8e6 (files t22/patches.txt and t22/skirt.txt):
+--   3b. 41 invisible patches (strips and the fill behind the skirt), named Patch_Cave_<n>, in the new folder
+--       World.WalkSurfaces.Patches. They have the steep guards' settings (step 22-0): Transparency 1, CanCollide, CanQuery,
+--       CanTouch off, CastShadow off, SmoothPlastic, collision group Default, Anchored.
+--   3c. 20 visible blocks, the cave skirt, named CaveSkirt_<n>, in the new folder World.CaveSkirt (the panel ruling after
+--       the rule C rerun: what players see is what they bump into). They are in collision group Default, so players bump
+--       into them, and have designer's look: SmoothPlastic, #C2383E, no MaterialVariant, no texture, CastShadow off.
+-- None of the 61 blocks is turned. The small places went to Task 23, so every block here is in the cave.
+-- It knows three worlds for each folder, and changes nothing on any difference:
+--   (a) before: the folder is missing (and no block named like these stands anywhere in World). The folder is made.
+--   (b) after: the folder holds exactly its blocks, each within 0.01 studs of the recorded size and place, unturned, with
+--       its settings. It says "already done".
+--   (c) anything else: it stops with nothing changed and names what differs.
+-- Both folders are checked before anything is changed. The change runs between two ChangeHistoryService waypoints, with
+-- the folders built away from the Workspace first, and is checked again afterwards.
+type CaveBlock = { name: string, size: Vector3, position: Vector3, place: string }
+
+local function sectionCaveBlocks(): string
+	if RunService:IsRunning() then
+		error("a running game can't be changed: stop Play and run this in Edit mode")
+	end
+	local PATCH_FOLDER_NAME = "Patches" -- under World.WalkSurfaces
+	local SKIRT_FOLDER_NAME = "CaveSkirt" -- under World
+	local PATCH_NAME_PATTERN = "^Patch_Cave_%d+$"
+	local SKIRT_NAME_PATTERN = "^CaveSkirt_%d+$"
+	local CAVE_PLACE = "cave" -- the small places went to Task 23
+	local TURN_TOLERANCE = 0.001 -- how far a block's axes may differ from unturned
+	local SHOWN_MATERIAL = Enum.Material.SmoothPlastic
+	-- The steep guards' settings, measured in step 22-0 (all 30 identical): Part, Transparency 1, CanCollide, CanQuery,
+	-- CanTouch off, CastShadow off, SmoothPlastic, group Default, Anchored, Archivable.
+	local PATCH_LOOK: { [string]: any } = {
+		Transparency = 1,
+		CanCollide = true,
+		CanQuery = true,
+		CanTouch = false,
+		CastShadow = false,
+		Anchored = true,
+		Archivable = true,
+	}
+	-- designer on the cave skirt's look, decisions-plans.md (the same named values as the test "the cave skirt is drawn and
+	-- solid"). CanTouch is on, because players bump into it like any wall.
+	local SKIRT_LOOK: { [string]: any } = {
+		Transparency = 0,
+		CanCollide = true,
+		CanQuery = true,
+		CanTouch = true,
+		CastShadow = false,
+		Anchored = true,
+		Archivable = true,
+	}
+	local SKIRT_COLOR = Color3.fromRGB(194, 56, 62) -- #C2383E
+
+	-- One block as recorded: name, size, then place of the middle (measured in step 22-8e, final numbers of step 22-8h2).
+	local function block(
+		name: string,
+		sizeX: number,
+		sizeY: number,
+		sizeZ: number,
+		x: number,
+		y: number,
+		z: number
+	): CaveBlock
+		return {
+			name = name,
+			size = Vector3.new(sizeX, sizeY, sizeZ),
+			position = Vector3.new(x, y, z),
+			place = CAVE_PLACE,
+		}
+	end
+	-- Measured in step 22-8e. The strips across the cave (1 to 14), the front fill (15 to 28) and the upper fill (29 to 41).
+	local PATCHES: { CaveBlock } = {
+		block("Patch_Cave_1", 1, 5.88, 10, -21.5, 23.2241, 54.5),
+		block("Patch_Cave_2", 1, 7.199, 10, -20.5, 24.0633, 54.5),
+		block("Patch_Cave_3", 1, 8.498, 10, -19.5, 24.8899, 54.5),
+		block("Patch_Cave_4", 2, 9.826, 10, -18, 25.701, 54.5),
+		block("Patch_Cave_5", 3, 11.695, 10, -15.5, 26.9302, 54.5),
+		block("Patch_Cave_6", 4, 13.425, 10, -12, 28.169, 54.5),
+		block("Patch_Cave_7", 20, 14.995, 10, 0, 29.3433, 54.5),
+		block("Patch_Cave_8", 4, 13.447, 10, 12, 28.1801, 54.5),
+		block("Patch_Cave_9", 3, 11.925, 10, 15.5, 27.0445, 54.5),
+		block("Patch_Cave_10", 1, 10.926, 10, 17.5, 26.3978, 54.5),
+		block("Patch_Cave_11", 1, 9.618, 10, 18.5, 25.597, 54.5),
+		block("Patch_Cave_12", 1, 8.344, 10, 19.5, 24.813, 54.5),
+		block("Patch_Cave_13", 1, 7.109, 10, 20.5, 24.0166, 54.5),
+		block("Patch_Cave_14", 1, 5.801, 10, 21.5, 23.1721, 54.5),
+		block("Patch_Cave_15", 1, 6.267, 1.25, -22.5, 18.6844, 46.375),
+		block("Patch_Cave_16", 1, 9.04, 1.25, -21.5, 20.5378, 46.375),
+		block("Patch_Cave_17", 1.5, 12.14, 1.25, -20.25, 22.287, 46.375),
+		block("Patch_Cave_18", 2, 14.922, 1.25, -18.5, 23.9393, 46.375),
+		block("Patch_Cave_19", 3, 17.572, 1.25, -16, 25.5651, 46.375),
+		block("Patch_Cave_20", 4, 19.556, 1.25, -12.5, 26.9531, 46.375),
+		block("Patch_Cave_21", 5.5, 21.716, 1.25, -7.75, 28.4458, 46.375),
+		block("Patch_Cave_22", 13.5, 22.513, 1.25, 1.75, 29.0119, 46.375),
+		block("Patch_Cave_23", 4, 20.36, 1.25, 10.5, 27.5913, 46.375),
+		block("Patch_Cave_24", 3.5, 18.089, 1.25, 14.25, 26.042, 46.375),
+		block("Patch_Cave_25", 2.5, 15.688, 1.25, 17.25, 24.473, 46.375),
+		block("Patch_Cave_26", 1.5, 12.957, 1.25, 19.25, 22.882, 46.375),
+		block("Patch_Cave_27", 1.5, 10.123, 1.25, 20.75, 21.1903, 46.375),
+		block("Patch_Cave_28", 2.5, 7.636, 1.25, 22.75, 18.7765, 46.375),
+		block("Patch_Cave_29", 1.5, 6.109, 2.5, -22.25, 20.2355, 48.25),
+		block("Patch_Cave_30", 2, 9.414, 2.5, -20.5, 22.254, 48.25),
+		block("Patch_Cave_31", 1.5, 12.427, 2.5, -18.75, 24.1907, 48.25),
+		block("Patch_Cave_32", 2.5, 14.239, 2.5, -16.75, 25.3243, 48.25),
+		block("Patch_Cave_33", 3, 16.123, 2.5, -14, 26.6201, 48.25),
+		block("Patch_Cave_34", 4, 17.816, 2.5, -10.5, 27.8161, 48.25),
+		block("Patch_Cave_35", 16.5, 19.433, 2.5, -0.25, 28.9634, 48.25),
+		block("Patch_Cave_36", 4, 17.888, 2.5, 10, 27.9019, 48.25),
+		block("Patch_Cave_37", 3, 16.136, 2.5, 13.5, 26.6851, 48.25),
+		block("Patch_Cave_38", 3, 14.001, 2.5, 16.5, 25.2057, 48.25),
+		block("Patch_Cave_39", 2, 11.237, 2.5, 19, 23.5209, 48.25),
+		block("Patch_Cave_40", 2, 8.238, 2.5, 21, 21.5745, 48.25),
+		block("Patch_Cave_41", 2, 6.335, 2.5, 23, 19.9084, 48.25),
+	}
+	-- Measured in step 22-8e, fronts pulled back in steps 22-8f2 and 22-8h2. Every top is at or under y 47.0.
+	local SKIRT: { CaveBlock } = {
+		block("CaveSkirt_1", 4.897, 21.639, 4, -20.9486, 34.9456, 43.75),
+		block("CaveSkirt_2", 3.2, 21.036, 1.15, -17.5, 36.482, 45.175),
+		block("CaveSkirt_3", 2.2, 21.027, 1.15, -15, 36.4865, 45.175),
+		block("CaveSkirt_4", 3.2, 12.6, 1.15, -12.5, 32.2861, 45.175),
+		block("CaveSkirt_5", 3.2, 14.925, 1.15, -9.5, 33.4485, 45.175),
+		block("CaveSkirt_6", 1.2, 16.872, 1.15, -7.5, 34.3831, 45.175),
+		block("CaveSkirt_7", 2.2, 17.476, 1.15, -6, 34.6501, 45.175),
+		block("CaveSkirt_8", 2.2, 17.864, 1.15, -4, 34.7739, 45.175),
+		block("CaveSkirt_9", 8.2, 19.206, 1, 1, 34.9274, 45.25),
+		block("CaveSkirt_10", 2.2, 17.81, 1.5, 6, 34.8866, 45),
+		block("CaveSkirt_11", 1.2, 17.382, 2, 7.5, 34.7313, 44.75),
+		block("CaveSkirt_12", 1.2, 16.482, 2.5, 8.5, 34.2877, 44.5),
+		block("CaveSkirt_13", 1.2, 15.574, 3, 9.5, 34.0488, 44.25),
+		block("CaveSkirt_14", 1.2, 15.291, 2.5, 10.5, 33.5423, 44.5),
+		block("CaveSkirt_15", 1.2, 14.706, 3, 11.5, 33.1006, 44.25),
+		block("CaveSkirt_16", 1.2, 17.931, 3.5, 12.5, 34.5616, 44),
+		block("CaveSkirt_17", 1.2, 21.818, 4, 13.5, 36.0911, 43.75),
+		block("CaveSkirt_18", 1.2, 22.236, 4.5, 14.5, 35.882, 43.5),
+		block("CaveSkirt_19", 4.2, 27.562, 4.5, 17, 33.219, 43.5),
+		block("CaveSkirt_20", 5.558, 23.473, 5.25, 21.279, 31.175, 43.125),
+	}
+
+	local function largestGap(difference: Vector3): number
+		return math.max(math.abs(difference.X), math.abs(difference.Y), math.abs(difference.Z))
+	end
+	local function colorText(color: Color3): string
+		return `{math.round(color.R * 255)}, {math.round(color.G * 255)}, {math.round(color.B * 255)}`
+	end
+	local function countsText(blocks: { CaveBlock }): string
+		local perPlace: { [string]: number } = {}
+		for _, recorded in blocks do
+			perPlace[recorded.place] = (perPlace[recorded.place] or 0) + 1
+		end
+		local texts: { string } = {}
+		for place, count in perPlace do
+			table.insert(texts, `{place} {count}`)
+		end
+		table.sort(texts)
+		return `{#blocks} parts (per place: {table.concat(texts, ", ")})`
+	end
+
+	-- What is wrong with a folder that should hold exactly `blocks` with this look; the list is empty when all is right.
+	local function folderProblems(
+		folder: Instance,
+		blocks: { CaveBlock },
+		look: { [string]: any },
+		color: Color3?
+	): { string }
+		local problems: { string } = {}
+		if not folder:IsA("Folder") then
+			table.insert(problems, `{folder.Name} is a {folder.ClassName}, not a Folder`)
+		end
+		if #folder:GetChildren() ~= #blocks then
+			table.insert(problems, `{folder.Name} holds {#folder:GetChildren()} children, expected {#blocks}`)
+		end
+		for _, recorded in blocks do
+			local found: { Instance } = {}
+			for _, child in folder:GetChildren() do
+				if child.Name == recorded.name then
+					table.insert(found, child)
+				end
+			end
+			if #found ~= 1 or not found[1]:IsA("Part") then
+				table.insert(problems, `{recorded.name}: {#found} found, expected 1 Part`)
+				continue
+			end
+			local part = found[1] :: Part
+			local wrong: { string } = {}
+			local sizeGap = largestGap(part.Size - recorded.size)
+			if sizeGap > PLACE_TOLERANCE then
+				table.insert(wrong, `size is off by {string.format("%.3f", sizeGap)}`)
+			end
+			local placeGap = largestGap(part.Position - recorded.position)
+			if placeGap > PLACE_TOLERANCE then
+				table.insert(wrong, `place is off by {string.format("%.3f", placeGap)}`)
+			end
+			local cframe = part.CFrame
+			if
+				(cframe.XVector - Vector3.xAxis).Magnitude > TURN_TOLERANCE
+				or (cframe.YVector - Vector3.yAxis).Magnitude > TURN_TOLERANCE
+				or (cframe.ZVector - Vector3.zAxis).Magnitude > TURN_TOLERANCE
+			then
+				table.insert(wrong, "it is turned")
+			end
+			for property, value in look do
+				if (part :: any)[property] ~= value then
+					table.insert(wrong, `{property} is {tostring((part :: any)[property])}, expected {tostring(value)}`)
+				end
+			end
+			if part.Material ~= SHOWN_MATERIAL then
+				table.insert(wrong, `Material is {part.Material.Name}`)
+			end
+			if part.CollisionGroup ~= "Default" then
+				table.insert(wrong, `CollisionGroup is {part.CollisionGroup}, expected Default`)
+			end
+			if part.MaterialVariant ~= "" then
+				table.insert(wrong, `MaterialVariant is "{part.MaterialVariant}"`)
+			end
+			if not samePhysics(part, nil) then
+				table.insert(wrong, "CustomPhysicalProperties are set")
+			end
+			if #part:GetChildren() > 0 then
+				table.insert(wrong, `it has {#part:GetChildren()} children`)
+			end
+			if color ~= nil and colorText(part.Color) ~= colorText(color) then
+				table.insert(wrong, `Color is {colorText(part.Color)}, expected {colorText(color)}`)
+			end
+			if #wrong > 0 then
+				table.insert(problems, `{recorded.name}: {table.concat(wrong, ", ")}`)
+			end
+		end
+		return problems
+	end
+
+	-- A new folder with all `blocks`, built away from the Workspace.
+	local function makeFolder(name: string, blocks: { CaveBlock }, look: { [string]: any }, color: Color3): Folder
+		local folder = Instance.new("Folder")
+		folder.Name = name
+		for _, recorded in blocks do
+			local part = Instance.new("Part")
+			part.Name = recorded.name
+			part.Size = recorded.size
+			part.CFrame = CFrame.new(recorded.position)
+			for property, value in look do
+				(part :: any)[property] = value
+			end
+			part.Material = SHOWN_MATERIAL
+			part.Color = color
+			part.CollisionGroup = "Default"
+			part.Parent = folder
+		end
+		return folder
+	end
+
+	local function childrenNamed(parent: Instance, name: string): number
+		local count = 0
+		for _, child in parent:GetChildren() do
+			if child.Name == name then
+				count += 1
+			end
+		end
+		return count
+	end
+
+	-- Which world is it?
+	local world = Workspace:FindFirstChild("World")
+	local walk = if world ~= nil then world:FindFirstChild(WALK_FOLDER_NAME) else nil
+	if world == nil or walk == nil then
+		error("nothing was changed. World.WalkSurfaces is missing")
+	end
+	local patchFolder = walk:FindFirstChild(PATCH_FOLDER_NAME)
+	local skirtFolder = world:FindFirstChild(SKIRT_FOLDER_NAME)
+	local problems: { string } = {}
+	if childrenNamed(walk, PATCH_FOLDER_NAME) > 1 then
+		table.insert(problems, `World.WalkSurfaces has {childrenNamed(walk, PATCH_FOLDER_NAME)} folders called Patches`)
+	end
+	if childrenNamed(world, SKIRT_FOLDER_NAME) > 1 then
+		table.insert(problems, `World has {childrenNamed(world, SKIRT_FOLDER_NAME)} folders called CaveSkirt`)
+	end
+	local strays: { string } = {}
+	for _, descendant in world:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			local likePatch = string.match(descendant.Name, PATCH_NAME_PATTERN) ~= nil
+			local likeSkirt = string.match(descendant.Name, SKIRT_NAME_PATTERN) ~= nil
+			if (likePatch and descendant.Parent ~= patchFolder) or (likeSkirt and descendant.Parent ~= skirtFolder) then
+				table.insert(strays, descendant:GetFullName())
+			end
+		end
+	end
+	if #strays > 0 then
+		table.insert(
+			problems,
+			`{#strays} parts named like the patches or the skirt stand outside their folders: {someProblems(strays)}`
+		)
+	end
+	if patchFolder ~= nil then
+		for _, text in folderProblems(patchFolder, PATCHES, PATCH_LOOK, nil) do
+			table.insert(problems, `3b {text}`)
+		end
+	end
+	if skirtFolder ~= nil then
+		for _, text in folderProblems(skirtFolder, SKIRT, SKIRT_LOOK, SKIRT_COLOR) do
+			table.insert(problems, `3c {text}`)
+		end
+	end
+	if #problems > 0 then
+		error(
+			`nothing was changed. This is neither the world before nor the world after sections 3b and 3c: {someProblems(
+				problems
+			)}`
+		)
+	end
+	local patchesText = countsText(PATCHES)
+	local skirtText = countsText(SKIRT)
+	if patchFolder ~= nil and skirtFolder ~= nil then
+		return `already done: World.WalkSurfaces.Patches holds {patchesText} and World.CaveSkirt holds {skirtText}, all as recorded`
+	end
+
+	-- The change itself: build what is missing away from the Workspace, then put it in between two waypoints.
+	local newPatches: Folder? = if patchFolder == nil
+		then makeFolder(PATCH_FOLDER_NAME, PATCHES, PATCH_LOOK, GUARD_COLOR)
+		else nil
+	local newSkirt: Folder? = if skirtFolder == nil
+		then makeFolder(SKIRT_FOLDER_NAME, SKIRT, SKIRT_LOOK, SKIRT_COLOR)
+		else nil
+	local descendantsBefore = #world:GetDescendants()
+	pcall(function()
+		ChangeHistoryService:SetWaypoint("15-real-shape section 3b: before")
+	end)
+	local changed, whyNot = pcall(function()
+		if newPatches ~= nil then
+			newPatches.Parent = walk
+		end
+		if newSkirt ~= nil then
+			newSkirt.Parent = world
+		end
+	end)
+	pcall(function()
+		ChangeHistoryService:SetWaypoint("15-real-shape section 3b: after")
+	end)
+	if not changed then
+		error(
+			`the change stopped half way ({tostring(whyNot)}). Undo it in Studio (Ctrl+Z, back to the waypoint "15-real-shape section 3b: before") and tell code_lead`
+		)
+	end
+
+	-- The same check afterwards, on the live folders.
+	local wrong: { string } = {}
+	local livePatches = walk:FindFirstChild(PATCH_FOLDER_NAME)
+	local liveSkirt = world:FindFirstChild(SKIRT_FOLDER_NAME)
+	if livePatches == nil then
+		table.insert(wrong, "World.WalkSurfaces.Patches is missing")
+	else
+		for _, text in folderProblems(livePatches, PATCHES, PATCH_LOOK, nil) do
+			table.insert(wrong, `3b {text}`)
+		end
+	end
+	if liveSkirt == nil then
+		table.insert(wrong, "World.CaveSkirt is missing")
+	else
+		for _, text in folderProblems(liveSkirt, SKIRT, SKIRT_LOOK, SKIRT_COLOR) do
+			table.insert(wrong, `3c {text}`)
+		end
+	end
+	if #wrong > 0 then
+		error(
+			`the change was made, but the check afterwards found: {someProblems(wrong)}. Undo it in Studio (Ctrl+Z, back to the waypoint) and tell code_lead`
+		)
+	end
+	return string.format(
+		"made %s%s%s; World now has %d descendants (%d before). Patches: %s. Skirt: %s",
+		if newPatches ~= nil then "World.WalkSurfaces.Patches" else "",
+		if newPatches ~= nil and newSkirt ~= nil then " and " else "",
+		if newSkirt ~= nil then "World.CaveSkirt" else "",
+		#world:GetDescendants(),
+		descendantsBefore,
+		patchesText,
+		skirtText
+	)
+end
+
 local ok, message = pcall(sectionHisRealShape)
 if not ok then
 	return "STOPPED WITH AN ERROR: " .. tostring(message)
@@ -4944,6 +5766,105 @@ if not okBelly then
 		.. "\nSTOPPED WITH AN ERROR in section 2g: "
 		.. tostring(bellyMessage)
 end
+local okPillow, pillowMessage = pcall(sectionPillowCloserFit)
+if not okPillow then
+	return "SECTION 1: "
+		.. message
+		.. "\nSECTION 2: "
+		.. walkMessage
+		.. "\nSECTION 2b: "
+		.. headMessage
+		.. "\nSECTION 2c: "
+		.. zoneMessage
+		.. "\nSECTION 2d: "
+		.. railsMessage
+		.. "\nSECTION 2e: "
+		.. footMessage
+		.. "\nSECTION 2f: "
+		.. bodyMessage
+		.. "\nSECTION 2f2: "
+		.. closerMessage
+		.. "\nSECTION 2f3: "
+		.. slotMessage
+		.. "\nSECTION 2f4: "
+		.. trussMessage
+		.. "\nSECTION 2f5: "
+		.. legsMessage
+		.. "\nSECTION 2f6: "
+		.. swingMessage
+		.. "\nSECTION 2g: "
+		.. bellyMessage
+		.. "\nSTOPPED WITH AN ERROR in section 3a: "
+		.. tostring(pillowMessage)
+end
+local okLit, litMessage = pcall(sectionLitLikeBefore)
+if not okLit then
+	return "SECTION 1: "
+		.. message
+		.. "\nSECTION 2: "
+		.. walkMessage
+		.. "\nSECTION 2b: "
+		.. headMessage
+		.. "\nSECTION 2c: "
+		.. zoneMessage
+		.. "\nSECTION 2d: "
+		.. railsMessage
+		.. "\nSECTION 2e: "
+		.. footMessage
+		.. "\nSECTION 2f: "
+		.. bodyMessage
+		.. "\nSECTION 2f2: "
+		.. closerMessage
+		.. "\nSECTION 2f3: "
+		.. slotMessage
+		.. "\nSECTION 2f4: "
+		.. trussMessage
+		.. "\nSECTION 2f5: "
+		.. legsMessage
+		.. "\nSECTION 2f6: "
+		.. swingMessage
+		.. "\nSECTION 2g: "
+		.. bellyMessage
+		.. "\nSECTION 3a: "
+		.. pillowMessage
+		.. "\nSTOPPED WITH AN ERROR in section 3a2: "
+		.. tostring(litMessage)
+end
+local okCave, caveMessage = pcall(sectionCaveBlocks)
+if not okCave then
+	return "SECTION 1: "
+		.. message
+		.. "\nSECTION 2: "
+		.. walkMessage
+		.. "\nSECTION 2b: "
+		.. headMessage
+		.. "\nSECTION 2c: "
+		.. zoneMessage
+		.. "\nSECTION 2d: "
+		.. railsMessage
+		.. "\nSECTION 2e: "
+		.. footMessage
+		.. "\nSECTION 2f: "
+		.. bodyMessage
+		.. "\nSECTION 2f2: "
+		.. closerMessage
+		.. "\nSECTION 2f3: "
+		.. slotMessage
+		.. "\nSECTION 2f4: "
+		.. trussMessage
+		.. "\nSECTION 2f5: "
+		.. legsMessage
+		.. "\nSECTION 2f6: "
+		.. swingMessage
+		.. "\nSECTION 2g: "
+		.. bellyMessage
+		.. "\nSECTION 3a: "
+		.. pillowMessage
+		.. "\nSECTION 3a2: "
+		.. litMessage
+		.. "\nSTOPPED WITH AN ERROR in sections 3b and 3c: "
+		.. tostring(caveMessage)
+end
 return "SECTION 1 (his real shape): "
 	.. message
 	.. "\n\nSECTION 2 (walk pieces): "
@@ -4970,3 +5891,9 @@ return "SECTION 1 (his real shape): "
 	.. swingMessage
 	.. "\n\nSECTION 2g (the beard rails reach his drawn belly): "
 	.. bellyMessage
+	.. "\n\nSECTION 3a (the pillow's closer fit): "
+	.. pillowMessage
+	.. "\n\nSECTION 3a2 (lit like before): "
+	.. litMessage
+	.. "\n\nSECTIONS 3b and 3c (the cave's patches and the cave skirt): "
+	.. caveMessage

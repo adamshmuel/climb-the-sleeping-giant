@@ -15,6 +15,40 @@ local CameraFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.C
 local GiantFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.GiantFx)
 local DrawnSkin = require(game:GetService("ServerStorage").Tests.server.World.DrawnSkin)
 
+-- Check 6's limits (stuck safety spec, Rule 20) and its sideways search, in one place. "his solid body sits where he's
+-- drawn" and "the patches" both use them, so the two can never drift apart.
+local ABOVE_LIMIT = 0.2 -- studs: a solid shape may be this far over his drawn skin...
+local BELOW_LIMIT = 0.3 -- studs: ...and this far under it
+local LIMIT_SLACK = 0.001 -- studs: rounding in the numbers written into the world
+local SKIN_SEARCH_ABOVE = 1 -- studs: the drawn skin is read up to this far over the solid shape (not the skin of a floor above)
+local SKIN_SIDE_REACH = 0.3 -- studs: the drawn skin is also read this far sideways of a point (never the solid shape)
+local SKIN_SIDE_STEPS = 3 -- the sideways reads are SKIN_SIDE_REACH / SKIN_SIDE_STEPS = 0.1 studs apart, inside a circle
+
+local function outsideLimits(gap: number): boolean
+	return gap ~= gap or gap > ABOVE_LIMIT + LIMIT_SLACK or gap < -BELOW_LIMIT - LIMIT_SLACK
+end
+
+-- The gap to the drawn skin within SKIN_SIDE_REACH studs sideways of (x, z) that fits the limits and is the closest to
+-- zero, or nil when no skin there fits. `solidY` is the solid shape's height at the point.
+local function sidewaysFit(reader: DrawnSkin.Skin, x: number, z: number, solidY: number): number?
+	local best: number? = nil
+	local step = SKIN_SIDE_REACH / SKIN_SIDE_STEPS
+	for i = -SKIN_SIDE_STEPS, SKIN_SIDE_STEPS do
+		for j = -SKIN_SIDE_STEPS, SKIN_SIDE_STEPS do
+			if i * i + j * j <= SKIN_SIDE_STEPS * SKIN_SIDE_STEPS then
+				local drawn = reader.heightAt(x + i * step, z + j * step, solidY + SKIN_SEARCH_ABOVE)
+				if drawn ~= nil then
+					local gap = solidY - drawn
+					if not outsideLimits(gap) and (best == nil or math.abs(gap) < math.abs(best)) then
+						best = gap
+					end
+				end
+			end
+		end
+	end
+	return best
+end
+
 -- These tests only READ the real world (Workspace.World). They change nothing.
 -- The world is built by tools/world/01-gardens.luau.
 describe("the real world", function()
@@ -4226,14 +4260,10 @@ describe("the real world, his solid body sits where he's drawn", function()
 	local StarterPlayer = game:GetService("StarterPlayer")
 
 	local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
-	local ABOVE_LIMIT = 0.2 -- studs: his solid shape may be this far over his drawn skin...
-	local BELOW_LIMIT = 0.3 -- studs: ...and this far under it
-	local LIMIT_SLACK = 0.001 -- studs: rounding in the numbers written into the world
 	local GRID_STEP = 1 -- studs: the spots checked are this far apart, on a grid over the whole giant
 	local MAX_SURFACES = 200 -- most surfaces one column can have (a safety stop, as in PathCheck)
 	local RAY_RESTART = 0.01 -- studs: the next ray down a column starts this far below the last surface it hit
 	local COLUMNS_PER_YIELD = 200 -- the scan lets Studio breathe this often
-	local SKIN_SEARCH_ABOVE = 1 -- studs: the drawn skin is read up to this far over the solid shape (not the skin of a floor above)
 	local SPOT_RAY_ABOVE = 3 -- studs: a spot's ray starts this far over it
 	local SPOT_RAY_BELOW = 5 -- studs: ...and the spot is "on his body" if the ray hits it within this far under it
 	local MAX_EXAMPLES = 3 -- most examples written out for each piece
@@ -4320,39 +4350,11 @@ describe("the real world, his solid body sits where he's drawn", function()
 	end
 
 	-- gap: solid shape height minus drawn skin height straight under the spot. sideways: only set when that gap is outside
-	-- the limits but the drawn skin within SIDE_REACH studs sideways fits them (product's measuring rule, check 6): then
-	-- it is the gap to that skin.
+	-- the limits but the drawn skin within SKIN_SIDE_REACH studs sideways fits them (product's measuring rule, check 6):
+	-- then it is the gap to that skin. (The limits and the search are at the top of this file.)
 	type Gap = { piece: string, position: Vector3, gap: number, sideways: number? }
 
-	local SIDE_REACH = 0.3 -- studs: the drawn skin is also read this far sideways of a spot (never the solid shape)
-	local SIDE_STEPS = 3 -- the sideways reads are SIDE_REACH / SIDE_STEPS = 0.1 studs apart, inside a circle
-
-	local function outsideLimits(gap: number): boolean
-		return gap ~= gap or gap > ABOVE_LIMIT + LIMIT_SLACK or gap < -BELOW_LIMIT - LIMIT_SLACK
-	end
-
-	-- The gap to the drawn skin within SIDE_REACH studs sideways of (x, z) that fits the limits and is the closest to
-	-- zero, or nil when no skin there fits. `solidY` is the solid shape's top at the spot.
-	local function sidewaysFit(reader: DrawnSkin.Skin, x: number, z: number, solidY: number): number?
-		local best: number? = nil
-		local step = SIDE_REACH / SIDE_STEPS
-		for i = -SIDE_STEPS, SIDE_STEPS do
-			for j = -SIDE_STEPS, SIDE_STEPS do
-				if i * i + j * j <= SIDE_STEPS * SIDE_STEPS then
-					local drawn = reader.heightAt(x + i * step, z + j * step, solidY + SKIN_SEARCH_ABOVE)
-					if drawn ~= nil then
-						local gap = solidY - drawn
-						if not outsideLimits(gap) and (best == nil or math.abs(gap) < math.abs(best)) then
-							best = gap
-						end
-					end
-				end
-			end
-		end
-		return best
-	end
-
-	-- A spot fails outright when neither the skin under it nor the skin within SIDE_REACH sideways fits the limits.
+	-- A spot fails outright when neither the skin under it nor the skin within SKIN_SIDE_REACH sideways fits the limits.
 	local function failsOutright(entry: Gap): boolean
 		return outsideLimits(entry.gap) and entry.sideways == nil
 	end
@@ -4428,10 +4430,10 @@ describe("the real world, his solid body sits where he's drawn", function()
 			end
 		end
 		if worst == nil then
-			return `none pass only because of the {SIDE_REACH}-stud sideways search`
+			return `none pass only because of the {SKIN_SIDE_REACH}-stud sideways search`
 		end
 		local example = worst :: Gap
-		return `{count} more pass only because of the {SIDE_REACH}-stud sideways search (worst: {describePoint(
+		return `{count} more pass only because of the {SKIN_SIDE_REACH}-stud sideways search (worst: {describePoint(
 			example.position
 		)} is {string.format("%+.2f", example.gap)} over the skin under it and {string.format(
 			"%+.2f",
@@ -6912,4 +6914,961 @@ describe("the real world, his slide line is the seam", function()
 			expect(#all).toBe(20 + #CUFF_LEFT + #CUFF_RIGHT)
 		end
 	)
+end)
+
+-- Stuck safety Task 22, test 2 (docs/plans/v2/stuck-safety.md, "Ruling 1"): the pillow gets the closer fit, the same as
+-- his body, so the solid shape players stand on is the pillow they see. Only its collision settings change: its
+-- texture, size and place stay as they were. These tests only READ the world.
+describe("the real world, the pillow's closer fit", function()
+	local Workspace = game:GetService("Workspace")
+
+	local CLOSER_FIT_PRECISION = 0.99
+	-- Measured in step 22-0 (before the change). The numbers were printed to six places.
+	local PILLOW_TEXTURE_ID = "rbxassetid://138710597423165" -- measured in step 22-0
+	local PILLOW_SIZE = Vector3.new(95.004646, 91.194412, 35.748734) -- measured in step 22-0
+	local PILLOW_CFRAME =
+		CFrame.new(0.142862, 79.860550, 52.141579, 1, 0, 0, 0, 0.939693, 0.342020, 0, -0.342020, 0.939692) -- measured in step 22-0
+	local SAME_WITHIN = 0.001 -- studs, or a rotation number: the step 22-0 numbers have six places
+	-- The look of the ArtLibrary original (ServerStorage.ArtLibrary._Generated.Pillow.body.body_geom), read in step 22-6c.
+	local PILLOW_COLOR = Color3.fromRGB(163, 162, 165)
+	local PILLOW_MATERIAL = Enum.Material.Plastic
+	local PILLOW_MATERIAL_VARIANT = ""
+	local PILLOW_TRANSPARENCY = 0
+	local PILLOW_REFLECTANCE = 0
+
+	it("the pillow stands on its closer fit", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local mesh = (world :: any).GiantsThings.Pillow.body.body_geom :: MeshPart
+		local wrong: { string } = {}
+		if mesh.CollisionFidelity ~= Enum.CollisionFidelity.Tunable then
+			table.insert(wrong, `CollisionFidelity is {mesh.CollisionFidelity.Name}, wanted Tunable`)
+		end
+		if mesh.CollisionPrecision < CLOSER_FIT_PRECISION then
+			table.insert(
+				wrong,
+				`CollisionPrecision is {mesh.CollisionPrecision}, wanted at least {CLOSER_FIT_PRECISION}`
+			)
+		end
+		if mesh.TextureID ~= PILLOW_TEXTURE_ID then
+			table.insert(wrong, `TextureID is {mesh.TextureID}, wanted {PILLOW_TEXTURE_ID}`)
+		end
+		if (mesh.Size - PILLOW_SIZE).Magnitude > SAME_WITHIN then
+			table.insert(wrong, `Size is {mesh.Size}, wanted {PILLOW_SIZE}`)
+		end
+		local now = { mesh.CFrame:GetComponents() }
+		local before = { PILLOW_CFRAME:GetComponents() }
+		for index = 1, #before do
+			if math.abs(now[index] - before[index]) > SAME_WITHIN then
+				table.insert(wrong, `CFrame is {mesh.CFrame}, wanted {PILLOW_CFRAME} (number {index} differs)`)
+				break
+			end
+		end
+		expect(wrong).toEqual({})
+	end)
+
+	-- The precise solid shape shades the piece itself in Roblox's lighting, so the pillow looked dark navy and tan
+	-- instead of light blue and cream. Step 22-6a and 22-6b checked his four pieces: they stay light, so only the pillow
+	-- turns its shadow off. The look values must stay the ArtLibrary original's.
+	it("the closer-fit pieces keep their look", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local mesh = (world :: any).GiantsThings.Pillow.body.body_geom :: MeshPart
+		local wrong: { string } = {}
+		if mesh.CastShadow then
+			table.insert(wrong, "CastShadow is true, wanted false (the solid shape shades the pillow itself)")
+		end
+		if mesh.Color ~= PILLOW_COLOR then
+			table.insert(wrong, `Color is {mesh.Color}, wanted {PILLOW_COLOR}`)
+		end
+		if mesh.Material ~= PILLOW_MATERIAL then
+			table.insert(wrong, `Material is {mesh.Material.Name}, wanted {PILLOW_MATERIAL.Name}`)
+		end
+		if mesh.MaterialVariant ~= PILLOW_MATERIAL_VARIANT then
+			table.insert(wrong, `MaterialVariant is '{mesh.MaterialVariant}', wanted '{PILLOW_MATERIAL_VARIANT}'`)
+		end
+		if mesh.Transparency ~= PILLOW_TRANSPARENCY then
+			table.insert(wrong, `Transparency is {mesh.Transparency}, wanted {PILLOW_TRANSPARENCY}`)
+		end
+		if mesh.Reflectance ~= PILLOW_REFLECTANCE then
+			table.insert(wrong, `Reflectance is {mesh.Reflectance}, wanted {PILLOW_REFLECTANCE}`)
+		end
+		if mesh.TextureID ~= PILLOW_TEXTURE_ID then
+			table.insert(wrong, `TextureID is {mesh.TextureID}, wanted {PILLOW_TEXTURE_ID}`)
+		end
+		expect(wrong).toEqual({})
+	end)
+end)
+
+-- Stuck safety Task 22, test 3 (docs/plans/v2/stuck-safety.md, "Ruling 4: flush for a filled pocket"): the patches are
+-- invisible solid blocks in World.WalkSurfaces.Patches that fill the cracks and pockets in his shape. A patch inside a
+-- sealed pocket has no surface a player can reach, so the check measures only what a player can reach:
+--   Folder:   the folder exists and holds at least one patch.
+--   Settings: every patch has the settings of V1's steep guards.
+--   Tops:     wherever a ray straight down meets a patch first, that point is within check 6's limits of his drawn skin.
+--   Sides:    no ray from 3 studs outside a side face, toward the face, meets the patch first. Rays that start under the
+--             grass don't count.
+-- The checker is a function over a world, a folder and a drawn skin, so two made-up worlds can prove it bites.
+describe("the real world, the patches", function()
+	local Workspace = game:GetService("Workspace")
+	local ServerStorage = game:GetService("ServerStorage")
+
+	-- The steep guards' settings, measured in step 22-0 (all 30 guards are identical). A patch is a Part or a WedgePart.
+	local GUARD_TRANSPARENCY = 1 -- measured in step 22-0
+	local GUARD_CAN_COLLIDE = true -- measured in step 22-0
+	local GUARD_CAN_QUERY = true -- measured in step 22-0
+	local GUARD_CAN_TOUCH = false -- measured in step 22-0
+	local GUARD_CAST_SHADOW = false -- measured in step 22-0
+	local GUARD_MATERIAL = Enum.Material.SmoothPlastic -- measured in step 22-0
+	local GUARD_COLLISION_GROUP = "Default" -- measured in step 22-0
+	local GUARD_ANCHORED = true -- measured in step 22-0
+	local GUARD_ARCHIVABLE = true -- measured in step 22-0
+
+	-- Check 6's limits and its sideways search (outsideLimits, sidewaysFit) are the ones at the top of this file.
+
+	local GRID_STEP = 1 -- studs: the rays are this far apart over each face
+	local RAY_OUTSIDE = 3 -- studs: a ray starts this far above a top, or outside a side
+	local RAY_MARGIN = 0.5 -- studs: ...and reaches this far past the face
+	local MIN_TOP_NORMAL = 0.1 -- a face counts as a top only when it faces up at least this much
+	local PROBE_SIZE = 0.2 -- studs: the ball that tests whether a side ray starts inside a solid
+	local GRASS_RAY_ABOVE = 500 -- studs: the grass is found by a ray down from this far over the start of a side ray
+	local PROBE_NAME = "PatchSideProbe"
+	-- The scan's body (Config.Stuck, and PathCheck's lift): a box BODY_WIDTH wide and deep that starts BODY_LIFT above the
+	-- feet and ends BODY_HEIGHT above them. A top counts only where this body has room to stand on it. A side ray counts
+	-- only where this body has room to stand beside the face, with the face point at the bottom, middle or top of the box.
+	local BODY_WIDTH = Config.Stuck.BodyWidth -- studs
+	local BODY_HEIGHT = Config.Stuck.BodyHeight -- studs: from the feet to the top of the head
+	local BODY_LIFT = 0.5 -- studs: PathCheck's lift of the box above the feet (a player steps over less than that)
+	local FOOT_GAP = 0.1 -- studs: a foot beside a face is this far past half a body's width from it
+	local POINT_FROM_BOX_END = 0.6 -- studs: the face point is this far inside the box's bottom, or its top
+	local MIN_FLAT_SIDE = 1e-3 -- a face whose outward direction is flatter than this has no sideways direction
+	local BOX_HEIGHT = BODY_HEIGHT - BODY_LIFT
+	local POINT_ABOVE_BOX_BOTTOM = { POINT_FROM_BOX_END, BOX_HEIGHT / 2, BOX_HEIGHT - POINT_FROM_BOX_END }
+	-- The closing face (plan, "Ruling after step 22-8c", Ruling 6): the -Z face of a lid, a part named Patch_CaveLid_<n>,
+	-- is the one face allowed to have a body beside it. In return the lid must be sealed round its rim, have no slot in
+	-- front of its bottom edge, and stand steep.
+	local LID_NAME_PATTERN = "^Patch_CaveLid_%d+$"
+	local RIM_OUTSIDE = 0.25 -- studs: a rim ray runs this far outside the face's outline, in the face's plane
+	local RIM_SPACING = 1 -- studs: the rim rays are at most this far apart round the outline
+	local SLOT_NEAR = 0.5 -- studs in front of the face: the near ground reading
+	local SLOT_FAR = 1.5 -- studs in front of the face: the far ground reading
+	local SLOT_TOLERANCE = 0.05 -- studs: a near reading lower than the far one by more than this is a slot
+	local SLOT_RAY_UP = 3 -- studs: a ground ray starts this far over the face's bottom edge
+	local SLOT_RAY_LENGTH = 20 -- studs: ...and looks this far down
+	local MIN_STEEP_DEGREES = 72 -- the closing face is at least this far from flat
+	local EXAMPLES_SHOWN = 3 -- most points written out for each problem line
+	local BUILD_TIMEOUT_MS = 60000 -- reading the six meshes takes a few seconds
+	local TEST_TIMEOUT_MS = 60000
+
+	local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
+
+	-- A face of a patch in its own space: where its middle is, which way it faces, and the two directions it spreads in
+	-- with half its length in each.
+	type Face = { center: Vector3, normal: Vector3, u: Vector3, uHalf: number, v: Vector3, vHalf: number }
+
+	-- The faces of a block (six) or a wedge (five: its bottom, back, two sides and sloped top), as DrawnSkin draws them.
+	local function facesOf(patch: BasePart): { Face }
+		local half = patch.Size / 2
+		local x, y, z = Vector3.xAxis, Vector3.yAxis, Vector3.zAxis
+		local faces: { Face } = {
+			{ center = -y * half.Y, normal = -y, u = x, uHalf = half.X, v = z, vHalf = half.Z },
+			{ center = x * half.X, normal = x, u = y, uHalf = half.Y, v = z, vHalf = half.Z },
+			{ center = -x * half.X, normal = -x, u = y, uHalf = half.Y, v = z, vHalf = half.Z },
+			{ center = z * half.Z, normal = z, u = x, uHalf = half.X, v = y, vHalf = half.Y },
+		}
+		if patch:IsA("WedgePart") then
+			local slope = Vector3.new(0, patch.Size.Y, patch.Size.Z)
+			table.insert(faces, {
+				center = Vector3.zero,
+				normal = Vector3.new(0, patch.Size.Z, -patch.Size.Y).Unit,
+				u = x,
+				uHalf = half.X,
+				v = slope.Unit,
+				vHalf = slope.Magnitude / 2,
+			})
+		else
+			table.insert(faces, { center = y * half.Y, normal = y, u = x, uHalf = half.X, v = z, vHalf = half.Z })
+			table.insert(faces, { center = -z * half.Z, normal = -z, u = x, uHalf = half.X, v = y, vHalf = half.Y })
+		end
+		return faces
+	end
+
+	-- The points of a 1-stud grid over a face, in world space.
+	local function gridOver(patch: BasePart, face: Face): { Vector3 }
+		local points: { Vector3 } = {}
+		local uCount = math.max(1, math.round(2 * face.uHalf / GRID_STEP))
+		local vCount = math.max(1, math.round(2 * face.vHalf / GRID_STEP))
+		for i = 1, uCount do
+			for j = 1, vCount do
+				local u = ((i - 0.5) / uCount * 2 - 1) * face.uHalf
+				local v = ((j - 0.5) / vCount * 2 - 1) * face.vHalf
+				table.insert(points, patch.CFrame:PointToWorldSpace(face.center + face.u * u + face.v * v))
+			end
+		end
+		return points
+	end
+
+	local function describePoint(point: Vector3): string
+		return string.format("(%.1f, %.1f, %.1f)", point.X, point.Y, point.Z)
+	end
+
+	local function describeDirection(direction: Vector3): string
+		return string.format("(%.0f, %.0f, %.0f)", direction.X, direction.Y, direction.Z)
+	end
+
+	-- Whether a body fits standing beside a face. Three feet are tried: each is the face point moved out along the face's
+	-- flat outward direction, and lowered so that the point is near the bottom, the middle or the top of the body box.
+	local function bodyFitsBeside(options: PathCheck.Options, point: Vector3, outward: Vector3): boolean
+		local flat = Vector3.new(outward.X, 0, outward.Z)
+		local away = if flat.Magnitude > MIN_FLAT_SIDE then flat.Unit else outward
+		local beside = point + away * (BODY_WIDTH / 2 + FOOT_GAP)
+		for _, above in POINT_ABOVE_BOX_BOTTOM do
+			local feet = Vector3.new(beside.X, point.Y - BODY_LIFT - above, beside.Z)
+			if PathCheck.roomToStand(options, feet) then
+				return true
+			end
+		end
+		return false
+	end
+
+	-- The points round a face's outline, RIM_OUTSIDE outside it in the face's plane and at most RIM_SPACING apart, in world
+	-- space. Each side of the outline gets a point at its start, so every corner is there once.
+	local function rimPoints(patch: BasePart, face: Face): { Vector3 }
+		local a, b = face.uHalf + RIM_OUTSIDE, face.vHalf + RIM_OUTSIDE
+		local corners = { Vector2.new(-a, -b), Vector2.new(a, -b), Vector2.new(a, b), Vector2.new(-a, b) }
+		local points: { Vector3 } = {}
+		for index, from in corners do
+			local to = corners[index % #corners + 1]
+			local count = math.max(1, math.ceil((to - from).Magnitude / RIM_SPACING))
+			for step = 0, count - 1 do
+				local at = from:Lerp(to, step / count)
+				table.insert(points, patch.CFrame:PointToWorldSpace(face.center + face.u * at.X + face.v * at.Y))
+			end
+		end
+		return points
+	end
+
+	-- The ground straight down from a point, as a height (-math.huge where there is none).
+	local function groundHeight(world: WorldRoot, params: RaycastParams, point: Vector3): number
+		local hit = world:Raycast(point + Vector3.new(0, SLOT_RAY_UP, 0), Vector3.new(0, -SLOT_RAY_LENGTH, 0), params)
+		return if hit == nil then -math.huge else hit.Position.Y
+	end
+
+	-- Whether a ground ray from a point starts inside a solid (it starts SLOT_RAY_UP over the point).
+	local function rayStartsInside(world: WorldRoot, probe: BasePart, insideAny: OverlapParams, point: Vector3): boolean
+		probe.Position = point + Vector3.new(0, SLOT_RAY_UP, 0)
+		return #world:GetPartsInPart(probe, insideAny) > 0
+	end
+
+	-- The checks of a lid's closing face (its -Z face, `face`), which (d) leaves out. Returns the problems, each starting
+	-- with its rule: Steep (the face is under MIN_STEEP_DEGREES from flat), Rim (a ray just outside its outline gets past
+	-- the lid's depth without meeting a solid) and Slot (the ground right in front of its bottom edge is lower than the
+	-- ground a little farther out: a dip a foot fits in).
+	local function closingFaceProblems(
+		world: WorldRoot,
+		patch: BasePart,
+		face: Face,
+		params: RaycastParams,
+		probe: BasePart,
+		insideAny: OverlapParams
+	): { string }
+		local problems: { string } = {}
+		local outward = patch.CFrame:VectorToWorldSpace(face.normal)
+
+		-- Steep
+		local fromFlat = math.deg(math.acos(math.min(1, math.abs(outward.Y))))
+		if fromFlat < MIN_STEEP_DEGREES then
+			table.insert(
+				problems,
+				string.format(
+					"Steep: %s, its closing face is %.0f degrees from flat; it must be at least %d",
+					patch.Name,
+					fromFlat,
+					MIN_STEEP_DEGREES
+				)
+			)
+		end
+
+		-- Rim: a ray from RAY_OUTSIDE in front of the face, aimed straight in, must meet a solid before the lid's back face.
+		local depth = 2 * face.center.Magnitude
+		local total, open = 0, 0
+		local rimExamples: { string } = {}
+		for _, point in rimPoints(patch, face) do
+			local start = point + outward * RAY_OUTSIDE
+			probe.Position = start
+			if #world:GetPartsInPart(probe, insideAny) == 0 then -- a start inside a solid is blocked
+				total += 1
+				if world:Raycast(start, -outward * (RAY_OUTSIDE + depth), params) == nil then
+					open += 1
+					if #rimExamples < EXAMPLES_SHOWN then
+						table.insert(rimExamples, describePoint(point))
+					end
+				end
+			end
+		end
+		if open > 0 then
+			table.insert(
+				problems,
+				`Rim: {patch.Name}, its closing face: {open} of {total} rays from {RAY_OUTSIDE} studs in front, just outside its outline, get past the lid's back without meeting a solid, such as {table.concat(
+					rimExamples,
+					", "
+				)}`
+			)
+		end
+
+		-- Slot: along the bottom edge, in front of the face (flat on the ground).
+		local flat = Vector3.new(outward.X, 0, outward.Z)
+		local forward = if flat.Magnitude > MIN_FLAT_SIDE then flat.Unit else outward
+		local edgeCount = math.max(1, math.round(2 * face.uHalf / GRID_STEP))
+		local slotTotal, slots = 0, 0
+		local slotExamples: { string } = {}
+		for i = 1, edgeCount do
+			local along = ((i - 0.5) / edgeCount * 2 - 1) * face.uHalf
+			local edge = patch.CFrame:PointToWorldSpace(face.center + face.u * along - face.v * face.vHalf)
+			local nearPoint, farPoint = edge + forward * SLOT_NEAR, edge + forward * SLOT_FAR
+			-- A ground ray that starts inside a solid has no room for a foot there, so that point is not a slot
+			-- (code_lead's ruling after 22-8e1, item 3).
+			if
+				not (
+					rayStartsInside(world, probe, insideAny, nearPoint)
+					or rayStartsInside(world, probe, insideAny, farPoint)
+				)
+			then
+				local near = groundHeight(world, params, nearPoint)
+				local far = groundHeight(world, params, farPoint)
+				slotTotal += 1
+				if near < far - SLOT_TOLERANCE then
+					slots += 1
+					if #slotExamples < EXAMPLES_SHOWN then
+						table.insert(slotExamples, describePoint(edge))
+					end
+				end
+			end
+		end
+		if slots > 0 then
+			table.insert(
+				problems,
+				`Slot: {patch.Name}, its closing face: {slots} of {slotTotal} points along its bottom edge have ground {SLOT_NEAR} studs in front that is lower than the ground {SLOT_FAR} studs in front, such as {table.concat(
+					slotExamples,
+					", "
+				)}`
+			)
+		end
+		return problems
+	end
+
+	-- The checker. Returns its problems as sentences, each starting with the name of its rule; none means the patches
+	-- pass. `world` is the Workspace, or a made-up WorldModel. A top counts only where a body can stand on it, and a side
+	-- only where a body can stand beside it (see BODY_WIDTH). Use patchProblems, which cleans up when a check throws.
+	local function runPatchChecks(world: WorldRoot, folder: Instance?, skin: DrawnSkin.Skin): { string }
+		-- (a) Folder
+		local patches: { BasePart } = {}
+		if folder ~= nil then
+			for _, descendant in folder:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					table.insert(patches, descendant)
+				end
+			end
+		end
+		if #patches == 0 then
+			return { "Folder: World.WalkSurfaces.Patches is missing or holds no patch" }
+		end
+
+		local problems: { string } = {}
+		-- The body rule's settings, made once per run (the body check keeps a probe of its own in the world).
+		local options = PathCheck.defaults(world)
+		-- A ray sees what a player bumps into.
+		local params = RaycastParams.new()
+		params.RespectCanCollide = true
+		params.CollisionGroup = Collisions.GROUP
+		-- A ray that sees only the grass.
+		local grassOnly = RaycastParams.new()
+		grassOnly.FilterType = Enum.RaycastFilterType.Include
+		grassOnly.FilterDescendantsInstances = { Workspace.Terrain }
+		-- A small ball that is moved to the start of each side ray: a start inside a solid has nothing to reach the patch
+		-- from, so that ray doesn't count. It is made once per run and destroyed at the end.
+		local probe = Instance.new("Part")
+		probe.Name = PROBE_NAME
+		probe.Shape = Enum.PartType.Ball
+		probe.Size = Vector3.one * PROBE_SIZE
+		probe.Anchored = true
+		probe.CanCollide = false
+		probe.CanQuery = true
+		probe.Archivable = false
+		probe.Parent = world
+		local insideCheck = OverlapParams.new()
+		insideCheck.RespectCanCollide = true
+		insideCheck.CollisionGroup = Collisions.GROUP
+		insideCheck.FilterType = Enum.RaycastFilterType.Exclude
+		insideCheck.FilterDescendantsInstances = { probe, folder :: Instance }
+		-- The same, but another patch counts as a solid too (a rim ray that starts inside one is blocked).
+		local insideAny = OverlapParams.new()
+		insideAny.RespectCanCollide = true
+		insideAny.CollisionGroup = Collisions.GROUP
+		insideAny.FilterType = Enum.RaycastFilterType.Exclude
+		insideAny.FilterDescendantsInstances = { probe }
+
+		for _, patch in patches do
+			-- (b) Settings
+			local wrong: { string } = {}
+			if not (patch.ClassName == "Part" or patch.ClassName == "WedgePart") then
+				table.insert(wrong, `class {patch.ClassName}`)
+			end
+			if patch.Transparency ~= GUARD_TRANSPARENCY then
+				table.insert(wrong, `Transparency {patch.Transparency}`)
+			end
+			if patch.CanCollide ~= GUARD_CAN_COLLIDE then
+				table.insert(wrong, `CanCollide {patch.CanCollide}`)
+			end
+			if patch.CanQuery ~= GUARD_CAN_QUERY then
+				table.insert(wrong, `CanQuery {patch.CanQuery}`)
+			end
+			if patch.CanTouch ~= GUARD_CAN_TOUCH then
+				table.insert(wrong, `CanTouch {patch.CanTouch}`)
+			end
+			if patch.CastShadow ~= GUARD_CAST_SHADOW then
+				table.insert(wrong, `CastShadow {patch.CastShadow}`)
+			end
+			if patch.Material ~= GUARD_MATERIAL then
+				table.insert(wrong, `Material {patch.Material.Name}`)
+			end
+			if patch.CollisionGroup ~= GUARD_COLLISION_GROUP then
+				table.insert(wrong, `CollisionGroup {patch.CollisionGroup}`)
+			end
+			if patch.Anchored ~= GUARD_ANCHORED then
+				table.insert(wrong, `Anchored {patch.Anchored}`)
+			end
+			if patch.Archivable ~= GUARD_ARCHIVABLE then
+				table.insert(wrong, `Archivable {patch.Archivable}`)
+			end
+			if #wrong > 0 then
+				table.insert(
+					problems,
+					`Settings: {patch.Name} differs from the steep guards: {table.concat(wrong, ", ")}`
+				)
+			end
+
+			-- The top face faces up the most, the bottom face the least; the others are sides.
+			local faces = facesOf(patch)
+			local topIndex, bottomIndex = 1, 1
+			for index, face in faces do
+				local up = patch.CFrame:VectorToWorldSpace(face.normal).Y
+				if up > patch.CFrame:VectorToWorldSpace(faces[topIndex].normal).Y then
+					topIndex = index
+				end
+				if up < patch.CFrame:VectorToWorldSpace(faces[bottomIndex].normal).Y then
+					bottomIndex = index
+				end
+			end
+
+			-- (c) Tops
+			local topNormal = patch.CFrame:VectorToWorldSpace(faces[topIndex].normal)
+			if topNormal.Y >= MIN_TOP_NORMAL then
+				local met, bad = 0, 0
+				local examples: { string } = {}
+				for _, point in gridOver(patch, faces[topIndex]) do
+					local hit = world:Raycast(
+						point + Vector3.new(0, RAY_OUTSIDE, 0),
+						Vector3.new(0, -(RAY_OUTSIDE + RAY_MARGIN), 0),
+						params
+					)
+					if
+						hit ~= nil
+						and hit.Instance == patch
+						and PathCheck.roomToStand(options, hit.Position, hit.Normal)
+					then
+						met += 1
+						local drawn = skin.heightAt(hit.Position.X, hit.Position.Z, hit.Position.Y + SKIN_SEARCH_ABOVE)
+						local gap = if drawn == nil then 0 / 0 else hit.Position.Y - drawn
+						if
+							outsideLimits(gap)
+							and sidewaysFit(skin, hit.Position.X, hit.Position.Z, hit.Position.Y) == nil
+						then
+							bad += 1
+							if #examples < EXAMPLES_SHOWN then
+								local gapText = if gap ~= gap
+									then "no drawn skin under it"
+									else string.format("%+.2f", gap)
+								table.insert(examples, `{describePoint(hit.Position)} {gapText}`)
+							end
+						end
+					end
+				end
+				if bad > 0 then
+					table.insert(
+						problems,
+						`Tops: {patch.Name}: {bad} of {met} points a player can reach are not within {ABOVE_LIMIT} over or {BELOW_LIMIT} under his drawn skin, such as {table.concat(
+							examples,
+							", "
+						)}`
+					)
+				end
+			end
+
+			-- A lid's -Z face is its closing face: checked by (e), not by (d).
+			local closingIndex: number? = nil
+			if string.match(patch.Name, LID_NAME_PATTERN) ~= nil then
+				for index, face in faces do
+					if face.normal == -Vector3.zAxis then
+						closingIndex = index
+					end
+				end
+			end
+
+			-- (d) Sides
+			for index, face in faces do
+				if index ~= topIndex and index ~= bottomIndex and index ~= closingIndex then
+					local outward = patch.CFrame:VectorToWorldSpace(face.normal)
+					local met, total = 0, 0
+					local examples: { string } = {}
+					for _, point in gridOver(patch, face) do
+						local start = point + outward * RAY_OUTSIDE
+						local grass = world:Raycast(
+							start + Vector3.new(0, GRASS_RAY_ABOVE, 0),
+							Vector3.new(0, -GRASS_RAY_ABOVE - 1000, 0),
+							grassOnly
+						)
+						probe.Position = start
+						local insideSolid = #world:GetPartsInPart(probe, insideCheck) > 0
+						-- a start under the grass or inside a solid doesn't count
+						if not insideSolid and (grass == nil or grass.Position.Y <= start.Y) then
+							total += 1
+							local hit = world:Raycast(start, -outward * (RAY_OUTSIDE + RAY_MARGIN), params)
+							if hit ~= nil and hit.Instance == patch and bodyFitsBeside(options, point, outward) then
+								met += 1
+								if #examples < EXAMPLES_SHOWN then
+									table.insert(examples, describePoint(hit.Position))
+								end
+							end
+						end
+					end
+					if met > 0 then
+						table.insert(
+							problems,
+							`Sides: {patch.Name}, the side facing {describeDirection(outward)}: {met} of {total} rays from {RAY_OUTSIDE} studs outside meet the patch first, with room for a body beside it, such as {table.concat(
+								examples,
+								", "
+							)}`
+						)
+					end
+				end
+			end
+
+			-- (e) The closing face
+			if closingIndex ~= nil then
+				for _, problem in closingFaceProblems(world, patch, faces[closingIndex], params, probe, insideAny) do
+					table.insert(problems, problem)
+				end
+			end
+		end
+		probe:Destroy()
+		PathCheck.cleanup(options)
+		return problems
+	end
+
+	-- runPatchChecks, with its two probes (this one's ball and the body check's box) taken out of the world even when a
+	-- check throws.
+	local function patchProblems(world: WorldRoot, folder: Instance?, skin: DrawnSkin.Skin): { string }
+		local ok, result = pcall(runPatchChecks, world, folder, skin)
+		if not ok then
+			for _, child in world:GetChildren() do
+				if child.Name == PROBE_NAME then
+					child:Destroy()
+				end
+			end
+			PathCheck.cleanup(PathCheck.defaults(world))
+			error(result, 0)
+		end
+		return result
+	end
+
+	-- A WorldModel in ServerStorage for a made-up world; it is destroyed even when the test fails.
+	local function inFakeWorld(run: (world: WorldModel) -> ())
+		local world = Instance.new("WorldModel")
+		world.Archivable = false
+		world.Parent = ServerStorage
+		local ok, message = pcall(function(): string?
+			run(world)
+			return nil
+		end)
+		world:Destroy()
+		if not ok then
+			error(message, 0)
+		end
+	end
+
+	-- A flat drawn skin at height 10 made of two triangles, 40 studs square.
+	local function flatSkin(): DrawnSkin.Skin
+		local a, b = Vector3.new(-20, 10, -20), Vector3.new(20, 10, -20)
+		local c, d = Vector3.new(20, 10, 20), Vector3.new(-20, 10, 20)
+		return DrawnSkin.new({ { a = a, b = b, c = c }, { a = a, b = c, c = d } }, {})
+	end
+
+	-- A patch with the steep guards' settings, in a folder named Patches inside the world.
+	local function addPatch(world: WorldModel, name: string, position: Vector3, size: Vector3): Part
+		local folder: Instance? = world:FindFirstChild("Patches")
+		if folder == nil then
+			local made = Instance.new("Folder")
+			made.Name = "Patches"
+			made.Parent = world
+			folder = made
+		end
+		local patch = Instance.new("Part")
+		patch.Name = name
+		patch.Size = size
+		patch.Position = position
+		patch.Transparency = GUARD_TRANSPARENCY
+		patch.CanCollide = GUARD_CAN_COLLIDE
+		patch.CanQuery = GUARD_CAN_QUERY
+		patch.CanTouch = GUARD_CAN_TOUCH
+		patch.CastShadow = GUARD_CAST_SHADOW
+		patch.Material = GUARD_MATERIAL
+		patch.CollisionGroup = GUARD_COLLISION_GROUP
+		patch.Anchored = GUARD_ANCHORED
+		patch.Archivable = GUARD_ARCHIVABLE
+		patch.Parent = folder
+		return patch
+	end
+
+	local function addWall(world: WorldModel, position: Vector3, size: Vector3)
+		local wall = Instance.new("Part")
+		wall.Name = "Wall"
+		wall.Size = size
+		wall.Position = position
+		wall.Anchored = true
+		wall.CanCollide = true
+		wall.Parent = world
+	end
+
+	local function startsWith(problems: { string }, prefix: string): { string }
+		local found: { string } = {}
+		for _, problem in problems do
+			if string.sub(problem, 1, #prefix) == prefix then
+				table.insert(found, problem)
+			end
+		end
+		return found
+	end
+
+	it("the patch check names a block that stands up in the open", function()
+		inFakeWorld(function(world)
+			addPatch(world, "Patch_Test_1", Vector3.new(0, 10, 0), Vector3.new(4, 2, 4)) -- its top is at height 11
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			local tops = startsWith(problems, "Tops:")
+			expect(#tops).toBe(1)
+			expect((string.find(tops[1], "Patch_Test_1", 1, true))).never.toBeNil()
+		end)
+	end)
+
+	it("the patch check names only the open side of a block sunk under the skin", function()
+		inFakeWorld(function(world)
+			-- Its top is at height 9.9, 0.1 under the skin: fine. Walls touch three of its four sides.
+			addPatch(world, "Patch_Test_2", Vector3.new(0, 8.9, 0), Vector3.new(4, 2, 4))
+			addWall(world, Vector3.new(-2.5, 9, 0), Vector3.new(1, 6, 6)) -- the -X side
+			addWall(world, Vector3.new(2.5, 9, 0), Vector3.new(1, 6, 6)) -- the +X side
+			addWall(world, Vector3.new(0, 9, -2.5), Vector3.new(6, 6, 1)) -- the -Z side
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			expect(#startsWith(problems, "Tops:")).toBe(0)
+			local sides = startsWith(problems, "Sides:")
+			expect(#sides).toBe(1)
+			expect((string.find(sides[1], "(0, 0, 1)", 1, true))).never.toBeNil() -- the +Z side, the one left open
+			expect(#problems).toBe(1)
+		end)
+	end)
+
+	it("the patch check ignores side rays that start inside a solid", function()
+		inFakeWorld(function(world)
+			-- The same block under the skin and the same three walls...
+			addPatch(world, "Patch_Test_3", Vector3.new(0, 8.9, 0), Vector3.new(4, 2, 4))
+			addWall(world, Vector3.new(-2.5, 9, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(2.5, 9, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(0, 9, -2.5), Vector3.new(6, 6, 1))
+			-- ...and a solid 4 studs thick on the +Z side, so every side ray on that face starts inside it.
+			addWall(world, Vector3.new(0, 9, 4), Vector3.new(4, 6, 4))
+			expect(patchProblems(world, world:FindFirstChild("Patches"), flatSkin())).toEqual({})
+		end)
+	end)
+
+	it("the patch check skips a top no body can stand on", function()
+		inFakeWorld(function(world)
+			-- The first test's block: its top is at height 11, in the open...
+			addPatch(world, "Patch_Test_4", Vector3.new(0, 10, 0), Vector3.new(4, 2, 4))
+			-- ...under a ceiling 3 studs thick. Its underside (12.5) is 1.5 over the block's top, and it reaches 1 stud
+			-- past the block on every side. A body is taller than 1.5, so none stands on the block, and every top ray
+			-- starts inside the ceiling.
+			addWall(world, Vector3.new(0, 14, 0), Vector3.new(6, 3, 6))
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			expect(#startsWith(problems, "Tops:")).toBe(0)
+		end)
+	end)
+
+	it("the patch check skips a side no body can touch", function()
+		inFakeWorld(function(world)
+			-- The second test's block under the skin and its three walls...
+			addPatch(world, "Patch_Test_5", Vector3.new(0, 8.9, 0), Vector3.new(4, 2, 4)) -- top 9.9, bottom 7.9
+			addWall(world, Vector3.new(-2.5, 9, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(2.5, 9, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(0, 9, -2.5), Vector3.new(6, 6, 1))
+			-- ...and on the open +Z side a floor (top at the block's bottom, 7.9) and a ceiling (underside 0.1 over the
+			-- block's top, 10). Both reach 6 studs out and are 6 wide, 1 stud wider than the block on each side. The slot
+			-- between them is 2.1 tall: too low for a body to stand in or beside.
+			addWall(world, Vector3.new(0, 7.4, 5), Vector3.new(6, 1, 6))
+			addWall(world, Vector3.new(0, 10.5, 5), Vector3.new(6, 1, 6))
+			expect(patchProblems(world, world:FindFirstChild("Patches"), flatSkin())).toEqual({})
+		end)
+	end)
+
+	it("the patch check counts a neighbouring patch as solid", function()
+		inFakeWorld(function(world)
+			-- Two blocks, side by side, 0.1 under the skin. They share a face at x = 0.
+			addPatch(world, "Patch_Test_6", Vector3.new(-2, 8.9, 0), Vector3.new(4, 2, 4))
+			addPatch(world, "Patch_Test_7", Vector3.new(2, 8.9, 0), Vector3.new(4, 2, 4))
+			-- Walls close their outer sides: -X, +X, and one long wall each on -Z and +Z.
+			addWall(world, Vector3.new(-4.5, 9, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(4.5, 9, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(0, 9, -2.5), Vector3.new(10, 6, 1))
+			addWall(world, Vector3.new(0, 9, 2.5), Vector3.new(10, 6, 1))
+			expect(patchProblems(world, world:FindFirstChild("Patches"), flatSkin())).toEqual({})
+		end)
+	end)
+
+	-- The made-up recess for the closing-face tests: a floor, two side walls and a roof, open at -Z, so its mouth is the
+	-- plane z = 0. A fill block (the lid) stands behind the mouth with its edges 0.2 inside the walls, floor and roof. A back
+	-- wall stands one stud behind the lid (too narrow for a body, so the lid's back needs no cover). In front of the mouth a
+	-- ramp falls away at 30 degrees, down toward -Z. With `trench`, the floor between the mouth and the lid dips 1 stud.
+	local RECESS_HALF_WIDTH = 4 -- studs: the air inside is this far either side of the middle
+	local RECESS_HEIGHT = 6 -- studs: from the floor's top (height 0) to the roof's underside
+	local RECESS_WALL = 1 -- studs: thickness of the walls, floor, roof
+	local LID_DEPTH = 4 -- studs
+	local LID_OVERLAP = 0.2 -- studs: how far the lid's edges reach into the walls, floor and roof
+	local BACK_GAP = 1 -- studs: between the lid's back and the back wall
+	local BACK_WALL = 3 -- studs: thickness of the back wall
+	local RAMP_LENGTH = 8 -- studs: along the ground
+	local RAMP_DEGREES = 30
+	local TRENCH_DEPTH = 1 -- studs
+	local LIP_END = 0.3 -- studs: the trench starts this far past the mouth (a lip of floor lies between the ramp and the trench)
+
+	local function buildRecess(
+		world: WorldModel,
+		lidName: string,
+		lidFront: number,
+		lidBottom: number,
+		trench: boolean
+	): Part
+		local wide = 2 * (RECESS_HALF_WIDTH + RECESS_WALL)
+		local backFront = lidFront + LID_DEPTH + BACK_GAP
+		local backEnd = backFront + BACK_WALL
+		local tall = RECESS_HEIGHT + 2 * RECESS_WALL
+		for _, side in { -1, 1 } do
+			addWall(
+				world,
+				Vector3.new(side * (RECESS_HALF_WIDTH + RECESS_WALL / 2), RECESS_HEIGHT / 2, backEnd / 2),
+				Vector3.new(RECESS_WALL, tall, backEnd)
+			)
+		end
+		addWall(
+			world,
+			Vector3.new(0, RECESS_HEIGHT + RECESS_WALL / 2, backEnd / 2),
+			Vector3.new(wide, RECESS_WALL, backEnd)
+		) -- the roof
+		addWall(world, Vector3.new(0, RECESS_HEIGHT / 2, backFront + BACK_WALL / 2), Vector3.new(wide, tall, BACK_WALL)) -- the back wall
+		if trench then
+			-- a lip over the ramp's top, the trench, and the floor from the lid on
+			addWall(world, Vector3.new(0, -RECESS_WALL / 2, 0.1), Vector3.new(wide, RECESS_WALL, LIP_END + 0.1))
+			local trenchFrom, trenchTo = 0.2, lidFront + 0.1
+			addWall(
+				world,
+				Vector3.new(0, -TRENCH_DEPTH - RECESS_WALL / 2, (trenchFrom + trenchTo) / 2),
+				Vector3.new(wide, RECESS_WALL, trenchTo - trenchFrom)
+			)
+			addWall(
+				world,
+				Vector3.new(0, -RECESS_WALL / 2, (lidFront + backEnd) / 2),
+				Vector3.new(wide, RECESS_WALL, backEnd - lidFront)
+			)
+		else
+			addWall(world, Vector3.new(0, -RECESS_WALL / 2, backEnd / 2), Vector3.new(wide, RECESS_WALL, backEnd))
+		end
+		-- The ramp: a wedge's sloped face falls toward -Z from its tall back face, which stands in the mouth plane.
+		local rampHeight = RAMP_LENGTH * math.tan(math.rad(RAMP_DEGREES))
+		local ramp = Instance.new("WedgePart")
+		ramp.Name = "Ramp"
+		ramp.Size = Vector3.new(wide, rampHeight, RAMP_LENGTH)
+		ramp.Position = Vector3.new(0, -rampHeight / 2, -RAMP_LENGTH / 2)
+		ramp.Anchored = true
+		ramp.CanCollide = true
+		ramp.Parent = world
+		local lidTop = RECESS_HEIGHT + LID_OVERLAP
+		return addPatch(
+			world,
+			lidName,
+			Vector3.new(0, (lidBottom + lidTop) / 2, lidFront + LID_DEPTH / 2),
+			Vector3.new(2 * (RECESS_HALF_WIDTH + LID_OVERLAP), lidTop - lidBottom, LID_DEPTH)
+		)
+	end
+
+	local LID_BOTTOM_FLUSH = -LID_OVERLAP -- studs: the bottom edge reaches 0.2 into the floor
+	local LID_BOTTOM_RAISED = 0.6 -- studs: the bottom edge stops this far above the floor
+
+	it("a lid's closing face may have a body beside it", function()
+		inFakeWorld(function(world)
+			buildRecess(world, "Patch_CaveLid_1", 0, LID_BOTTOM_FLUSH, false)
+			expect(patchProblems(world, world:FindFirstChild("Patches"), flatSkin())).toEqual({})
+		end)
+	end)
+
+	it("a closing face with a gap at its rim is reported", function()
+		inFakeWorld(function(world)
+			buildRecess(world, "Patch_CaveLid_1", 0, LID_BOTTOM_RAISED, false)
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			local rims = startsWith(problems, "Rim:")
+			expect(#rims).toBe(1)
+			expect((string.find(rims[1], "Patch_CaveLid_1", 1, true))).never.toBeNil()
+			expect(#problems).toBe(1)
+		end)
+	end)
+
+	it("a closing face with a slot in front of it is reported", function()
+		inFakeWorld(function(world)
+			buildRecess(world, "Patch_CaveLid_1", 1.5, LID_BOTTOM_FLUSH, true)
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			local slots = startsWith(problems, "Slot:")
+			expect(#slots).toBe(1)
+			expect((string.find(slots[1], "Patch_CaveLid_1", 1, true))).never.toBeNil()
+			expect(#problems).toBe(1)
+		end)
+	end)
+
+	it("a slot ray that starts inside a solid is not a slot", function()
+		inFakeWorld(function(world)
+			-- The recess with the trench in front of the lid (see the slot test above): its two ground readings differ.
+			buildRecess(world, "Patch_CaveLid_1", 1.5, LID_BOTTOM_FLUSH, true)
+			-- A solid block over the trench, from 0.3 to 2 studs in front of the lid's face and 4 high: both ground rays
+			-- start inside it, so there is no room for a foot there.
+			addWall(world, Vector3.new(0, 2, 1.5 - 1.15), Vector3.new(2 * RECESS_HALF_WIDTH, 4, 1.7))
+			expect(patchProblems(world, world:FindFirstChild("Patches"), flatSkin())).toEqual({})
+		end)
+	end)
+
+	it("a closing face that leans back too far is reported as steep", function()
+		inFakeWorld(function(world)
+			local lid = buildRecess(world, "Patch_CaveLid_1", 0, LID_BOTTOM_FLUSH, false)
+			lid.CFrame = lid.CFrame * CFrame.Angles(math.rad(20), 0, 0) -- 70 degrees from flat: under the 72 needed
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			expect(#startsWith(problems, "Steep:")).toBe(1)
+		end)
+	end)
+
+	it("an open face on any other patch is still reported", function()
+		inFakeWorld(function(world)
+			buildRecess(world, "Patch_Cave_1", 0, LID_BOTTOM_FLUSH, false)
+			local problems = patchProblems(world, world:FindFirstChild("Patches"), flatSkin())
+			local sides = startsWith(problems, "Sides:")
+			expect(#sides).toBe(1)
+			expect((string.find(sides[1], "(0, 0, -1)", 1, true))).never.toBeNil() -- the face in the mouth
+			expect(#problems).toBe(1)
+		end)
+	end)
+
+	it("patches sit on his drawn skin, or are sealed inside him", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local walkSurfaces = (world :: Instance):FindFirstChild("WalkSurfaces")
+		expect(walkSurfaces).never.toBeNil()
+		local giant = (world :: Instance):FindFirstChild("Giant")
+		expect(giant).never.toBeNil()
+		local meshes: { MeshPart } = {}
+		for _, name in BODY_PIECES do
+			local piece = (giant :: Instance):FindFirstChild(name)
+			expect(piece).never.toBeNil()
+			table.insert(meshes, (piece :: Instance):FindFirstChild(name) :: MeshPart)
+		end
+		local skin = DrawnSkin.fromWorld(meshes, {})
+		local problems = patchProblems(Workspace, (walkSurfaces :: Instance):FindFirstChild("Patches"), skin)
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
+		end
+	end, BUILD_TIMEOUT_MS + TEST_TIMEOUT_MS)
+end)
+
+-- Stuck safety Task 22, test 6 (docs/plans/v2/stuck-safety.md, code_lead's panel ruling after the rule C rerun): the
+-- cave's mouth is closed by a visible skirt of 20 blocks in World.CaveSkirt. What a player sees is what the player bumps
+-- into (Rule 20, One collision source), so the skirt is drawn, solid, and wears designer's look.
+describe("the real world, the cave skirt", function()
+	local Workspace = game:GetService("Workspace")
+	local PhysicsService = game:GetService("PhysicsService")
+
+	local SKIRT_BLOCKS = 20 -- panel ruling: the 20 lid blocks of the final cave blocks
+	local CAVE_CAP_Y = 47.0 -- studs: panel ruling: every skirt top is at or under this, so the free spots keep their room
+	local TOP_SLACK = 0.001 -- studs: rounding in the numbers written into the world
+	-- designer on the cave skirt's look, decisions-plans.md. If designer switches to the shaded red #8A1C22, only the
+	-- colour changes.
+	local SKIRT_MATERIAL = Enum.Material.SmoothPlastic
+	local SKIRT_COLOR = Color3.fromRGB(194, 56, 62) -- #C2383E
+	local SKIRT_CAST_SHADOW = false
+
+	it("the cave skirt is drawn and solid", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local folder = (world :: Instance):FindFirstChild("CaveSkirt")
+		expect(folder).never.toBeNil()
+
+		local blocks: { BasePart } = {}
+		for _, child in (folder :: Instance):GetChildren() do
+			if child:IsA("BasePart") then
+				table.insert(blocks, child)
+			end
+		end
+		expect(#blocks).toBe(SKIRT_BLOCKS)
+
+		local problems: { string } = {}
+		for _, block in blocks do
+			local name = block.Name
+			if block.Transparency ~= 0 then
+				table.insert(problems, `Visible: {name} has Transparency {block.Transparency}, not 0`)
+			end
+			if not block.CanCollide then
+				table.insert(problems, `Solid: {name} has CanCollide off`)
+			end
+			if not block.CanQuery then
+				table.insert(problems, `Solid: {name} has CanQuery off`)
+			end
+			if not block.CanTouch then
+				table.insert(problems, `Solid: {name} has CanTouch off`)
+			end
+			if not block.Anchored then
+				table.insert(problems, `Solid: {name} is not anchored`)
+			end
+			if not PhysicsService:CollisionGroupsAreCollidable(Collisions.GROUP, block.CollisionGroup) then
+				table.insert(
+					problems,
+					`Solid: {name} is in collision group {block.CollisionGroup}, which players walk through`
+				)
+			end
+			if block.Material ~= SKIRT_MATERIAL then
+				table.insert(problems, `Look: {name} has Material {block.Material.Name}`)
+			end
+			if block.Color ~= SKIRT_COLOR then
+				table.insert(problems, `Look: {name} has Color {tostring(block.Color)}, not {tostring(SKIRT_COLOR)}`)
+			end
+			if block.MaterialVariant ~= "" then
+				table.insert(problems, `Look: {name} has MaterialVariant "{block.MaterialVariant}"`)
+			end
+			if block.CastShadow ~= SKIRT_CAST_SHADOW then
+				table.insert(problems, `Look: {name} has CastShadow {tostring(block.CastShadow)}`)
+			end
+			for _, child in block:GetDescendants() do
+				if child:IsA("Decal") or child:IsA("SurfaceAppearance") then
+					table.insert(problems, `Look: {name} has a {child.ClassName} called {child.Name}`)
+				end
+			end
+			local top = block.Position.Y + block.Size.Y / 2
+			if top > CAVE_CAP_Y + TOP_SLACK then
+				table.insert(problems, `Top: {name} top is {top}, over {CAVE_CAP_Y}`)
+			end
+		end
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
+		end
+	end)
 end)

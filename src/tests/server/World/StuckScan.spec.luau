@@ -52,6 +52,10 @@ local LANDING_RAY_LENGTH = 6 -- ...this far down
 -- NEST_REACH studs of its point can be walked to.
 local LADDER_REACH_STEPS = 2
 local NEST_REACH = 2 -- studs
+-- Stuck safety Task 22, test 4 (game_creator's check 5): the way to the beard ladder stays open. The walk-map spots
+-- within BEARD_FOOT_RADIUS studs of the ladder's foot must not drop below what they were before the patches.
+local BEARD_FOOT_SPOTS = 4 -- measured in step 22-0, after Task 25
+local BEARD_FOOT_RADIUS = 4 -- studs
 local BRIM_NESTS: { [string]: Vector3 } = {
 	["left brim nest"] = Vector3.new(-14, 117.1, 14),
 	["right brim nest"] = Vector3.new(14, 117.1, 14),
@@ -60,6 +64,59 @@ local SIDE_NESTS: { [string]: Vector3 } = {
 	["left side nest"] = Vector3.new(-17, 119, 28),
 	["right side nest"] = Vector3.new(17, 119, 28),
 }
+
+-- Stuck safety Task 22, test 1: the places the patches and the pillow's closer fit close. Each is a box (x, y, z minimum
+-- and maximum) around a group of stuck spots from the list after Task 26 (287 spots in 43 groups, 2026-10-21; the group
+-- numbers are the start list's). No stuck spot may lie in any of them, on every run, like the named V1 spots.
+type FixedPlace = { name: string, min: Vector3, max: Vector3 }
+local FIXED_PLACES: { FixedPlace } = {
+	-- Group 1: the flat top of the chair's back cushion, under the pillow.
+	{ name = "cushion top behind his head", min = Vector3.new(-30, 48, 49), max = Vector3.new(30, 58, 69) },
+	-- Group 2: the sealed air pocket under the cushion, inside the chair's back.
+	{ name = "cave under the cushion", min = Vector3.new(-21, 22, 49), max = Vector3.new(21, 36, 59) },
+	-- Groups 3, 18, 39 and 41: behind his head, on the right.
+	{ name = "behind his head, right", min = Vector3.new(14, 96, 36), max = Vector3.new(30, 114.5, 52) },
+	-- Groups 4, 13 and 42: behind his head, on the left.
+	{ name = "behind his head, left", min = Vector3.new(-28, 99, 36), max = Vector3.new(-9, 114.5, 54) },
+	-- The back of the neck, the right side of the neck, under the brim, the right chair arm (low and high) and the left
+	-- chair arm: moved to Task 23 by code_lead's ruling after step 22-8 (plan).
+}
+local FIXED_PLACE_SPOTS_SHOWN = 3 -- stuck spots written out for each place that fails
+
+-- Stuck safety Task 22, test 5: nobody walks into the cave under the cushion. The walk map has no link over the hump,
+-- so this test walks a body itself, from named starts, half a stud at a time.
+-- The cave's box (step 22-8f's pass rule): x -21 to 21, y 16 to 44, z 45.5 to 60. Feet inside it fail the test.
+local CAVE_BOX_MIN = Vector3.new(-21, 16, 45.5)
+local CAVE_BOX_MAX = Vector3.new(21, 44, 60)
+-- Ruling 6's Play walk: up the slope behind his back to here, over the hump, and down into the cave.
+local CAVE_TRAP_START = Vector3.new(-12, 23, 41)
+-- The hump points: z 41 and x -12, -6, 0, 6 and 12, at the trap start's height. Step 22-8f pushed toward the cave from
+-- these, and found ground with room for a body only near x -12: the others stand on no ground, and have no walk.
+local CAVE_HUMP_XS = { -12, -6, 0, 6, 12 }
+local CAVE_HUMP_Y = 23
+local CAVE_HUMP_Z = 41
+-- The two ledges over his shoulders, as ground points (step 22-8f3: the root stands 3.4 above them).
+local CAVE_LEDGE_LEFT = Vector3.new(-16.8, 48.4, 43)
+local CAVE_LEDGE_RIGHT = Vector3.new(17.2, 48.2, 43)
+-- Headings in degrees: 0 is toward +Z (toward the cave), a positive turn goes toward +X. From the hump, 5 headings
+-- (straight and 20 and 40 to each side); from a ledge, 3 (toward x 0 and 20 to each side).
+local CAVE_HUMP_TURNS = { -40, -20, 0, 20, 40 }
+local CAVE_LEDGE_TURNS = { -20, 0, 20 }
+local CAVE_LEDGE_LEFT_HEADING = 90 -- toward x 0 from the left ledge
+local CAVE_LEDGE_RIGHT_HEADING = -90 -- toward x 0 from the right ledge
+local CAVE_WALK_STEP = 0.5 -- studs along the heading at a time...
+local CAVE_WALK_STEPS = 20 -- ...for 10 studs
+local CAVE_START_RAY_ABOVE = 3 -- a start is put on the ground a ray finds from this far above it...
+local CAVE_START_RAY_LENGTH = 12 -- ...this far down; no ground there means nobody stands on that point
+local CAVE_STEP_RAY_ABOVE = 3 -- each step finds the ground with a ray from this far above the feet...
+local CAVE_STEP_RAY_LENGTH = 60 -- ...down to the ground, however far (a fall is a lower step)
+local CAVE_FALL_DROP = 1 -- studs: ground lower than this under the next step is a fall
+local CAVE_FALL_CARRY = 3 -- studs: a falling body goes on this far along the heading, to find where it lands
+-- A steep ramp ahead holds a body higher than the feet: half the body's width times the steepest slope's tangent
+-- (tan 70 degrees is 2.75). The body is tried held up this far in half-stud steps, and half a stud off the line.
+local CAVE_BODY_MAX_LIFT = 2.5
+local CAVE_BODY_LIFT_STEP = 0.5
+local CAVE_BODY_NUDGES = { 0, 0.25, -0.25, 0.5, -0.5 }
 
 type Landing = WorldIndex.LandingSpot
 
@@ -475,6 +532,165 @@ describe("the stuck scan on the real world", function()
 		end
 	end)
 
+	-- Stuck safety Task 22, test 1: no stuck spot lies in a fixed place. The message gives each failing place's name and
+	-- its count, and the first few spots in it.
+	it("no stuck spot in a fixed place", function()
+		local problems: { string } = {}
+		for _, place in FIXED_PLACES do
+			local inside: { Vector3 } = {}
+			for _, spot in stuck do
+				local p = spot.position
+				if
+					p.X >= place.min.X
+					and p.X <= place.max.X
+					and p.Y >= place.min.Y
+					and p.Y <= place.max.Y
+					and p.Z >= place.min.Z
+					and p.Z <= place.max.Z
+				then
+					table.insert(inside, p)
+				end
+			end
+			if #inside > 0 then
+				local shown: { string } = {}
+				for index = 1, math.min(#inside, FIXED_PLACE_SPOTS_SHOWN) do
+					table.insert(shown, format(inside[index]))
+				end
+				table.insert(problems, `{place.name}: {#inside} stuck spots, first {table.concat(shown, ", ")}`)
+			end
+		end
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
+		end
+	end)
+
+	-- Stuck safety Task 22, test 5 (product's condition on the cave lid): nobody walks into the cave under the cushion.
+	-- The test walks a body from each named start, half a stud along a heading at a time, up to 10 studs. Each step
+	-- finds the ground with a ray straight down from above the feet (players' collision group), and the feet go there,
+	-- down any drop. A step ends the walk when no body fits there (PathCheck.bodyFits). The walker is meant to be
+	-- generous: it goes anywhere a player can and a few places a player can't (a steep ramp holds the body higher, and
+	-- a body can stand half a stud off the line), so it may fail by mistake but never pass by mistake.
+	local function bodyFitsNear(feet: Vector3, heading: Vector3): boolean
+		local lift = 0
+		while lift <= CAVE_BODY_MAX_LIFT + 1e-6 do
+			for _, dx in CAVE_BODY_NUDGES do
+				for _, dz in CAVE_BODY_NUDGES do
+					if PathCheck.bodyFits(options, feet + Vector3.new(dx, lift, dz), nil, heading) then
+						return true
+					end
+				end
+			end
+			lift += CAVE_BODY_LIFT_STEP
+		end
+		return false
+	end
+
+	local function insideCave(feet: Vector3): boolean
+		return feet.X >= CAVE_BOX_MIN.X
+			and feet.X <= CAVE_BOX_MAX.X
+			and feet.Y >= CAVE_BOX_MIN.Y
+			and feet.Y <= CAVE_BOX_MAX.Y
+			and feet.Z >= CAVE_BOX_MIN.Z
+			and feet.Z <= CAVE_BOX_MAX.Z
+	end
+
+	-- Walks from `start` along `headingDegrees`. Returns where the feet were inside the cave's box, or nil. `stood` says
+	-- whether the start had ground under it.
+	local function walkTowardCave(start: Vector3, headingDegrees: number, ray: RaycastParams): (Vector3?, boolean)
+		local radians = math.rad(headingDegrees)
+		local heading = Vector3.new(math.sin(radians), 0, math.cos(radians))
+		local first = Workspace:Raycast(
+			start + Vector3.new(0, CAVE_START_RAY_ABOVE, 0),
+			Vector3.new(0, -CAVE_START_RAY_LENGTH, 0),
+			ray
+		)
+		if first == nil then
+			return nil, false
+		end
+		local feet = first.Position
+		for _ = 1, CAVE_WALK_STEPS do
+			local ahead = feet + heading * CAVE_WALK_STEP
+			local function groundAt(point: Vector3): RaycastResult?
+				return Workspace:Raycast(
+					Vector3.new(point.X, feet.Y + CAVE_STEP_RAY_ABOVE, point.Z),
+					Vector3.new(0, -CAVE_STEP_RAY_LENGTH, 0),
+					ray
+				)
+			end
+			local ground = groundAt(ahead)
+			if ground == nil then
+				return nil, true
+			end
+			local landing: RaycastResult? = nil
+			if ground.Position.Y < feet.Y - CAVE_FALL_DROP then
+				-- A fall: the body goes on along the heading while it drops, and lands where a body fits.
+				local carried = 0
+				while carried <= CAVE_FALL_CARRY + 1e-6 do
+					local found = groundAt(ahead + heading * carried)
+					if found ~= nil and bodyFitsNear(found.Position, heading) then
+						landing = found
+						break
+					end
+					carried += CAVE_WALK_STEP
+				end
+			elseif bodyFitsNear(ground.Position, heading) then
+				landing = ground
+			end
+			if landing == nil then
+				return nil, true
+			end
+			feet = landing.Position
+			if insideCave(feet) then
+				return feet, true
+			end
+		end
+		return nil, true
+	end
+
+	it("nobody walks into the cave under the cushion", function()
+		local ray = RaycastParams.new()
+		ray.CollisionGroup = Collisions.GROUP
+		ray.IgnoreWater = true
+
+		type Walk = { start: Vector3, heading: number, mustStand: boolean }
+		local walks: { Walk } = {}
+		for _, turn in CAVE_HUMP_TURNS do
+			table.insert(walks, { start = CAVE_TRAP_START, heading = turn, mustStand = true })
+		end
+		for _, x in CAVE_HUMP_XS do
+			for _, turn in CAVE_HUMP_TURNS do
+				table.insert(
+					walks,
+					{ start = Vector3.new(x, CAVE_HUMP_Y, CAVE_HUMP_Z), heading = turn, mustStand = false }
+				)
+			end
+		end
+		for _, turn in CAVE_LEDGE_TURNS do
+			table.insert(walks, { start = CAVE_LEDGE_LEFT, heading = CAVE_LEDGE_LEFT_HEADING + turn, mustStand = true })
+			table.insert(
+				walks,
+				{ start = CAVE_LEDGE_RIGHT, heading = CAVE_LEDGE_RIGHT_HEADING + turn, mustStand = true }
+			)
+		end
+		expect(#walks).toBe(36)
+
+		local problems: { string } = {}
+		for _, walk in walks do
+			local inside, stood = walkTowardCave(walk.start, walk.heading, ray)
+			if not stood and walk.mustStand then
+				table.insert(problems, `No ground: nobody can stand at {format(walk.start)}`)
+			elseif inside ~= nil then
+				table.insert(
+					problems,
+					`Walk-in: from {format(walk.start)}, heading {walk.heading}, inside at {format(inside)}`
+				)
+			end
+		end
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
+		end
+	end)
+
 	----------------------------------------------------------------------------------------------------------------
 	-- The ladders join their ends on the real walk map (stuck safety Task 25, test 6)
 	----------------------------------------------------------------------------------------------------------------
@@ -601,6 +817,58 @@ describe("the stuck scan on the real world", function()
 		expect(hasClimbLink(beardFoot :: number, capTop :: number)).toBe(false)
 		expect(hasClimbLink(beardTop :: number, capFoot :: number)).toBe(false)
 		expect(canWalk(beardFoot :: number, { capFoot :: number })).toBe(false)
+	end)
+
+	-- Stuck safety Task 22, test 4 (game_creator's check 5): the patches must not narrow or block the way past the beard
+	-- ladder's foot. From the walk-map spot nearest the foot, a walk alone reaches the spot nearest RoutePoint_Belly_4, and
+	-- at least BEARD_FOOT_SPOTS spots lie within BEARD_FOOT_RADIUS studs of the foot. It uses the walk map built above.
+	it("the way to the beard ladder stays open", function()
+		local ladder = (world :: any).WalkSurfaces:FindFirstChild("BeardLadder") :: Instance?
+		expect(ladder).never.toBeNil()
+		local truss = (ladder :: Instance):FindFirstChild("Climb") :: BasePart?
+		expect(truss).never.toBeNil()
+		-- The foot: the lower end of the truss's longest side, as ladderEndSpots finds it.
+		local size = (truss :: BasePart).Size
+		local half = if size.X >= size.Y and size.X >= size.Z
+			then Vector3.new(size.X / 2, 0, 0)
+			elseif size.Y >= size.Z then Vector3.new(0, size.Y / 2, 0)
+			else Vector3.new(0, 0, size.Z / 2)
+		local endA = (truss :: BasePart).CFrame:PointToWorldSpace(half)
+		local endB = (truss :: BasePart).CFrame:PointToWorldSpace(-half)
+		local foot = if endB.Y < endA.Y then endB else endA
+
+		local problems: { string } = {}
+		local near = 0
+		for _, spot in map.spots do
+			if (spot.position - foot).Magnitude <= BEARD_FOOT_RADIUS then
+				near += 1
+			end
+		end
+		if near < BEARD_FOOT_SPOTS then
+			table.insert(
+				problems,
+				`only {near} walk-map spots within {BEARD_FOOT_RADIUS} studs of the beard ladder's foot {format(foot)}, wanted at least {BEARD_FOOT_SPOTS}`
+			)
+		end
+
+		local footSpot = PathCheck.nearestSpot(map, foot, LADDER_REACH_STEPS * map.spacing)
+		local bellyFour: Vector3? = nil
+		for _, point in WorldIndex.loadRoute(world) do
+			if point.name == "RoutePoint_Belly_4" then
+				bellyFour = point.position
+			end
+		end
+		local goal = if bellyFour then PathCheck.nearestSpot(map, bellyFour, 2 * map.spacing) else nil
+		if footSpot == nil then
+			table.insert(problems, "no walk-map spot near the beard ladder's foot")
+		elseif goal == nil then
+			table.insert(problems, "no walk-map spot near RoutePoint_Belly_4")
+		elseif not canWalk(footSpot, { goal }) then
+			table.insert(problems, "no walk from the beard ladder's foot reaches RoutePoint_Belly_4's spot")
+		end
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
+		end
 	end)
 
 	it("the scan finishes within the time limit", function()

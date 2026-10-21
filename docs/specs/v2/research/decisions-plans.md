@@ -913,3 +913,139 @@ No visible panel for now. designer judges the lid from the step 22-13 highlight 
   - Play shots on computer and phone show a player pushing at the mouth is stopped, with no float and no visible gap.
   - 15 walks in from the chair seat all fail to enter.
 - **Story 1 ("never wedged"):** product noted that a real no-jump trap existed. It asks for the cave to be added to the tests as a named check, so it can never come back.
+
+## Task 22 step 22-8e: the simpler lid (code_lead, 2026-10-21)
+
+1. **The 2-stud front limit is dropped**, because the hump's top line itself runs z 40.5–45.0. Whether a gap shows is judged on the push shots, as product asked. If designer sees a gap you could walk into, a visible panel follows.
+2. **The lid's ends** stop where they meet his side walls, and every lid top stays under his roof. Test 5's ledge walks decide whether the open air above the side walls leads into the cave.
+3. **A slot ray that starts inside a solid is not a slot**, because no foot fits there. A real slot would show up as a new stuck spot near the cave, which already stops step 22-12.
+4. **Three one-round steps:**
+   - 22-8e2: the checker change, test first;
+   - 22-8e3: rebuild the lid from the measured files;
+   - 22-8e4: fill behind the lid and run the trial checks.
+   Any failure means stop and report, never a second round.
+
+## Task 22: the final lid ruling (code_lead, 2026-10-21)
+
+- **The lid:** step 22-8e3's lid (20 blocks) is the lid. No more lid rounds.
+- **Above y 47:** every leftover check line is there, in the open air over his shoulders and outside the cave, whose roof is at most y 44. Two other checks judge the lid's sides there: test 5 (nobody walks into the cave) and the Play walks. Patch tops are still checked everywhere.
+- **Step 22-8e4:** the fill behind the lid, in one pass. It passes only if all of these hold:
+  - the 64 cave spots have no room to stand;
+  - no open top;
+  - no Steep or Slot lines;
+  - side and Rim lines only above y 47;
+  - no new standing spots and no free spots touched;
+  - at most 80 blocks.
+- **Step 22-8e5:** test 3 skips side and rim points above y 47, for cave patches only (named value `CaveOpenAirFloorY = 47`), failing test first.
+
+## Task 22: one rule for the cave blocks (code_lead, 2026-10-21)
+
+- **Rule A:** no lid or fill block goes above y 47.0 (`CaveCapY`). The lowest ledge spot's feet are at y 48.2, so players keep 1.7 studs of room.
+- **Rule B:** any top that still has room for a body gets one 72° wedge instead of a flat top. The wedge is as wide as the block, faces −Z, and ends 1.2 studs before the nearest free spot.
+- **Pass marks:**
+  - open sides and rims now pass above y 44, the mouth's top (`CaveOpenAirFloorY` = 44);
+  - all 176 free spots must keep their room.
+- **If anything fails:** no more invisible-lid rounds. The cave goes to designer's visible panel instead.
+
+## Task 22: rule C for the cave lid (code_lead, 2026-10-21)
+
+- **Not a false positive:** in this game, characters hang in "Climbing" on 71–74° faces (Task 23's pillow note). So an invisible 72° slope over the hump is a real risk, and the checker stays as it is. The wedges are dropped.
+- **Rule C:** start from rule A's 61 blocks and split lids 17, 18 and 19 at z 41.8. The front part keeps its full height up to his roof. The back part, under the ledge, keeps the cap at 47.0. That makes 64 blocks.
+- **Pass:** all of rule A's marks still hold, and there are 0 open tops.
+- **If it fails:** the cave goes to designer's visible panel, with no more rounds.
+
+## Task 22: the visible cave skirt (code_lead, 2026-10-21)
+
+- **The panel is rule A's lid made visible.** The 20 lid blocks keep their size and place, are renamed `CaveSkirt_<n>`, and move to the folder `World.CaveSkirt`. Rule A passed everything except "flat tops with room for a body", and that only matters when a part is invisible.
+- **Limits:** the fronts stay on the hump's top line, the ends stay inside his side walls, and every top is at or under y 47.0, so all 176 free spots keep their room.
+- **Checks:** a visible part skips the flush, open-top and open-side rules, because what you see is what you bump into (Rule 20, One collision source). The skirt must still pass:
+  - test 5 (nobody walks in);
+  - no new stuck spot within 12 studs of the cave;
+  - all 176 free spots kept;
+  - no Climbing hang;
+  - feet right on its tops;
+  - the Play shots.
+- **Behind the skirt:** the 41 strip and fill blocks stay invisible patches under test 3.
+- **New steps:**
+  - 22-8e6 splits the block files;
+  - 22-8i adds test 6, "the cave skirt is drawn and solid", after the owners answer;
+  - 22-9 adds a "Cave skirt" world-script section;
+  - 22-8e5 is dropped.
+- **Questions:** designer gets the look and the stepped fronts; product gets Rule 20 "closed off" and the small reachable step by the ledge.
+
+## product on the visible cave skirt (2026-10-21)
+
+- **(a) Rule 20:** yes, but Rule 20 (One collision source) only allows invisible blocks today, so the spec changes first. Once designer approves the skirt's look (it must read as part of his cushion or pyjama), product adds one line to Rule 20 allowing a visible piece outside the walk area.
+- **(b) The reachable step by the ledge:** yes, if step 22-12 finds no stuck spot there and the Rule 82 (No new way onto the belly) check counts the skirt tops as jump surfaces and still passes.
+- **game_creator checks** that the perch behind his back gives no safe hiding spot during the slam and no quieter route to any egg. It must not change any egg score or Rule 41 (Every way up is equally loud).
+
+## designer on the cave skirt's look (2026-10-21)
+
+- **Each of the 20 skirt blocks:** Material SmoothPlastic, Color #C2383E (194, 56, 62), no MaterialVariant, no texture, CastShadow false (so the stepped blocks cast no staircase shadow on the hump).
+- **The colour:** it matches the cushion's lit red, about #C24244. That red comes from the cushion's texture.
+- **The stepped fronts:** fine as folds. They sit under the cushion's lip, in shade.
+- **What designer checks in the shots:** if the steps read as stairs, or the red is too bright in the shade, the colour changes to #8A1C22 (the cushion's shaded red).
+
+## game_creator on the cave-skirt perch (2026-10-21): approve, with two Play checks
+
+1. **No hiding during the slam:** the hit check (`Slams.caught`) ignores height, so a carrier on the perch can be slammed. But players are bounced off only in a giant zone, so if the skirt tops count as meadow, a player there stays put while he sits up.
+   - **Play check:** put a carrier on the skirt top by the ledge (x 13–19, z 40.5–42) and on one skirt top over the hump, then force a wake-up. Log the zone, whether the carrier is bounced, the slam target, whether `Slams.caught` includes them, and any position jump over 3 studs.
+   - **Pass:** bounced, or targeted and caught, and never pushed or flung by his body.
+2. **No quieter route and no score change:** the perch is a dead end behind his back.
+   - **Check:** run the egg-score and Rule 41 (Every way up is equally loud) checks before and after the skirt.
+   - **Pass:** all identical (0.0 change), and no new walk-map link from a skirt top to any nest.
+
+## Task 22 step 22-8f: keep the corridor behind his wall open (code_lead, 2026-10-21)
+
+- **The problem:** stepping off either shoulder ledge dropped a player into a dead-end pocket between his wall and the skirt. With the skirt off, the same drop walks out through a corridor at z 43–44.5.
+- **The fix:** every skirt block overlapping x −16 to 0 gets its front face at z = max(its front now, 44.6) (named value `SkirtCorridorFrontZ = 44.6`). Its back stays at 45.75, and its bottom goes 2 under the highest ground along the new front. Nothing else changes.
+- **New steps:**
+  - 22-8f2: the Edit checks again (cave spots closed, all 176 free spots kept, fill closed at y 44 and below);
+  - 22-8f3: both ledge drops and the hump push in Play. Each drop must walk out to the meadow within 20 s.
+- **If either fails:** a fresh code_lead decides.
+
+## Task 22 step 22-8h: skirt 19 moves back (code_lead, 2026-10-21)
+
+- **The problem:** two new stuck spots appeared on skirt 19's top, at (15.2, 47, 41) and (17.2, 47, 41). From there, his body's front lip blocks the only step up to the ledge. Raising the top never linked them to the ledge, and it blocked the ledge spot instead.
+- **The fix:** CaveSkirt_19's front moves from z 40.5 to z 41.25 (`SkirtLedgeFrontZ`). Its back, top (47.0), bottom and x stay the same. The z 41 row then lands on the cave-mouth floor, which is steeper than the 70° limit, so it is no spot at all, the same as before the skirt.
+- **The look:** the front moves 0.75 studs back and lines up with skirt 18's. designer judges it in the shots.
+- **New step 22-8h2:** rebuild the blocks and rerun the checks. To pass: exactly the 74 baseline stuck spots, tests 5 and 1 green, and all 176 free spots kept.
+
+## designer on the cave highlight shots (2026-10-21): approve
+
+- **Patches:** the invisible patches don't show or float.
+- **Colour:** keep #C2383E. It reads as cushion cloth in the shade.
+- **Eye point and pillow:** both fine.
+- **Still open, judged in Play:** whether the skirt's left panels read as stairs, because of a sawtooth bottom edge. If they do, the skirt's bottom row darkens to #8A1C22, with the sizes unchanged.
+- **The Play shots must include:** a computer and a phone game-camera view from the hump, facing the mouth at normal zoom, with no highlight and a player pushing on the mouth.
+
+## designer on the computer Play shots of the cave (2026-10-21): approve
+
+1. **The stairs don't read.** The one small notch reads as a cloth fold in the shade. Keep #C2383E, and don't darken the bottom row.
+2. **The player and the floor:** the player stands flush at the mouth, with the feet on the floor. The chair-front and beard-ladder shots are fine.
+3. **Two thin green slivers** show at the skirt's top edge, but only from a raised camera. They are probably grass seen through narrow gaps. Not a blocker; note it if the phone shows them from the player's own view.
+4. **The phone step needs three shots:**
+   - the same capture camera (−6.6, 51, 40) looking at the mouth;
+   - a game-camera shot walking along the corridor, about 6 studs before the mouth;
+   - a game-camera shot while pushing on the mouth.
+5. **A note for code_lead:** in the corridor, the game camera squeezes into the player's hair. That belongs to the corridor, not the skirt.
+
+## Task 22 step 22-14a: rulings (code_lead, 2026-10-21)
+
+1. **The notch behind his back** (a Climbing wedge at x −5.3..2.5, y about 22, z 39–40) was there before Task 22. It goes to Task 23, like the pillow's Climbing hang. No Task 22 part is within 4 studs.
+   - Step 22-14a2 proves it: walk 4 again with the Patches and CaveSkirt moved out on the Server. If it doesn't wedge without them, a fresh code_lead decides.
+   - It breaks Story 1 ("never wedged"), and the stuck scan doesn't see Climbing hangs. Rule 28's rescue covers players until Task 23 fixes it.
+2. **"Feet in the cave"** means the foot part's centre and the root. The foot mesh doesn't collide and pokes about half a stud into any wall. Walk 6 passes.
+3. **The retreat** follows the walk map's route to a meadow exit, as in 22-8f3. Pass: it reaches the meadow within 20 s with no Climbing hang. No route counts as a wedge.
+- **product's "15 walks in all fail to enter":** passes.
+
+## product on the notch wedge (2026-10-21): noted, with two additions to Task 23
+
+1. Prove in Play that Rule 28 (Stuck players are rescued) really rescues a player stuck in Climbing at the notch. The rescue skips climbing players who are moving, so it may not fire there.
+2. Two Climbing wedges were found by chance. So Task 23's no-hang walk check covers every steep spot by his back, chair and pillow, not only the known ones, with zero hangs allowed.
+
+## designer on the phone Play shots of Task 22 (2026-10-21): approve
+
+1. **Cave mouth on the phone:** passes. No green sliver shows from the player's own camera, and the buttons and banner are clear. The slivers show only from a raised camera a player can't reach.
+2. **The beard-ladder shot** (head under the meter bar) moves to the plan 2 build review, with no retake now. Task 22 changed neither the ladder nor the screen layout.
+3. **At the build review:** climb the beard ladder on the iPhone 14 with the Rare egg, using the player's own camera at its default zoom and pitch. Take a shot every 10 studs. If the head hides under the meter in more than one shot, designer sets a fix then: either the meter moves up, or the camera pitch changes on the ladder.
