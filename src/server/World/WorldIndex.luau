@@ -229,7 +229,6 @@ end
 -- The pieces of the climb that Task 8 builds, so the world check notices if they are missing.
 export type Climb = {
 	rightRamp: Instance,
-	rightBootsWalk: Instance,
 	steepGuards: Instance,
 }
 
@@ -240,7 +239,7 @@ function WorldIndex.readClimb(world: Instance): (Climb?, { string })
 	end
 	local problems: { string } = {}
 	local found: { [string]: Instance? } = {}
-	for _, name in { "RightBootRamp", "RightBoots_Walk", "SteepGuards" } do
+	for _, name in { "RightBootRamp", "SteepGuards" } do
 		found[name] = walk:FindFirstChild(name)
 		if found[name] == nil then
 			table.insert(problems, `WalkSurfaces is missing {name}`)
@@ -251,7 +250,6 @@ function WorldIndex.readClimb(world: Instance): (Climb?, { string })
 	end
 	return {
 		rightRamp = found.RightBootRamp :: Instance,
-		rightBootsWalk = found.RightBoots_Walk :: Instance,
 		steepGuards = found.SteepGuards :: Instance,
 	}, {}
 end

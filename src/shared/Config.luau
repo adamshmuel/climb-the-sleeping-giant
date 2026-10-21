@@ -87,6 +87,13 @@ export type Config = {
 		RampLift: number,
 		MaxShown: number,
 	},
+	Stuck: {
+		BodyWidth: number,
+		BodyHeight: number,
+		ScanSpacing: number,
+		ScanMargin: number,
+		ScanSeconds: number,
+	},
 	Tick: {
 		Seconds: number,
 	},
@@ -157,6 +164,17 @@ local config: Config = {
 	-- ground and the bottom of a footprint. RampLift: the same gap on the boot-ramp planks, so the cleats (cross-strips
 	-- 0.3 studs tall) don't cut through the footprints. MaxShown: how many copies are kept (no way needs more than 70).
 	Footprints = { Spacing = 3.6, UpdateSeconds = 0.25, Lift = 0.05, RampLift = 0.35, MaxShown = 100 },
+	-- Spec section 5, "Scan body size": the solid part of a standard player's body, measured in Play on 2026-10-19 (R15,
+	-- every body scale 1). Only HumanoidRootPart (2 x 2 x 1), UpperTorso and LowerTorso collide, on the Server and the
+	-- Client alike; the head, arms, hands, legs and feet do not. Together they are 2.0 wide, 1.05 to 1.09 deep and
+	-- 4.225 tall from the ground (the ground is 3.225 below the root part's middle). BodyWidth is the larger of width
+	-- and depth, because a player turns to face where it walks, so either side can lead. Both are rounded up to 0.1.
+	-- ScanSpacing (spec section 5, "Scan grid spacing"): studs between the spots of the walk map. 2 is the body's
+	-- width, so two next spots' bodies touch and nothing narrower than a body slips between them. If a full scan runs
+	-- over the 2-minute limit, product's trigger is 3.
+	-- ScanMargin: studs of meadow the stuck scan covers around the giant's box.
+	-- ScanSeconds: the scan's time limit, build plus search (spec section 5, "Scan grid spacing").
+	Stuck = { BodyWidth = 2, BodyHeight = 4.3, ScanSpacing = 2, ScanMargin = 10, ScanSeconds = 120 },
 	Tick = { Seconds = 0.1 },
 }
 

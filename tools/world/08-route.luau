@@ -26,20 +26,23 @@
 --     the sock and the teacup, never over water or through props), with a way past the ramp feet;
 --   * each ramp: Foot, Low, High, Top (the top is on the boot);
 --   * the boot tops: the two Uncommon egg spots of each boot;
---   * the belly path: Belly_1 .. Belly_4 on its middle and the four Rare egg spots. (The right boot top does not
---     join the belly path: there is a gap between his legs. The right ramp only leads to Uncommon_3 and _4.)
+--   * the belly path: Belly_1 .. Belly_4 on its middle, the six Belly_<place> points of stuck safety Task 24
+--     (Belly_BootStep on the step piece, Belly_AnkleTop, Belly_KneeFoot and Belly_KneeTop on the middle lines of the
+--     crossing ramps, Belly_BandTop on his skin just past the long knee ramp's tip, and Belly_Crest), and the four
+--     Rare egg spots. (The right boot top does not join the belly path:
+--     there is a gap between his legs. The right ramp only leads to Uncommon_3 and _4.)
 -- Workspace.World.LandingSpots is a Folder of LandingSpot_1 .. LandingSpot_8, the same kind of part, with its top
 -- centre on the meadow grass around his feet.
 --
 -- Before it changes anything, the script checks (the same checks as the real-world tests in RealWorld.spec):
 --   * every point has ground a player walks on under it, not water;
---   * every link is at most 25 studs long and walkable: sampled every 2 studs, a ray from 3 studs above the line
---     finds a solid, non-water surface within 4 studs, no steeper than StarterPlayer.CharacterMaxSlopeAngle and no
---     more than 1 stud from the line; a 2 x 4 x 2 box held 0.5 studs above the ground (tilted with it) touches
---     nothing with CanCollide on; and rays along the way at body height meet no part of the giant or the teacup.
---     Left out of the box check: the giant and the teacup, whose boxes are far bigger than their shapes (the cup's
---     box covers the end of bridge 6, 25 studs from the cup), so they get the rays instead; and the two ramp planks,
---     whose edges a player touches when stepping on or off a ramp foot;
+--   * every link is at most 25 studs long and walkable (the shared check, src/server/World/PathCheck): sampled
+--     every 2 studs, a ray from 3 studs above the line finds a solid, non-water surface within 4 studs, no steeper
+--     than StarterPlayer.CharacterMaxSlopeAngle and no more than 1 stud from the line; and room for a player's body
+--     (Config.Stuck: a box held 0.5 studs above the ground, tilted with it and turned to face the way it walks)
+--     that touches nothing with CanCollide on, checked on the exact shape of every part, not its outer box.
+--     Left out of the body check: the two ramp planks, whose edges a player touches when stepping on or off a ramp
+--     foot;
 --   * every link keeps clear of the props a player would walk through (every meadow prop has CanCollide off, so the
 --     checks above never see them): at least 3 studs from every sunflower stem and at least 1 stud from the edge of
 --     every bush or rock;
@@ -54,20 +57,13 @@
 -- clovers, water lilies) may be walked over, trees have solid trunks, and Workspace.World.FarTrees is left out.
 
 local Workspace = game:GetService("Workspace")
-local StarterPlayer = game:GetService("StarterPlayer")
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local PLOT_COUNT = 8
 local GATE_OUTSIDE = 5.5 -- studs from the middle of a Safe Gate toward its spawn spot
 local POINT_SIZE = Vector3.new(1, 0.2, 1)
 local MAX_LINK_LENGTH = 25
-local SAMPLE_STEP = 2
 local RAY_START_ABOVE = 3
-local RAY_LENGTH = 4
-local MAX_OFF_LINE = 1
-local BODY_BOX = Vector3.new(2, 4, 2)
-local BODY_LIFT = 0.5
-local GIANT_SWEEP_HEIGHTS = { 1, 2.5, 4 }
 local LANDING_SPACING = 10
 local LANDING_REACH = 110
 local LANDING_BOX = Vector3.new(4, 6, 4)
@@ -133,10 +129,28 @@ local HAND_POINTS: { [string]: { number } } = {
 	Ramp_Right_High = { 24, -78.2, 22 },
 	Ramp_Right_Top = { 24, -65.5, 32 },
 	-- the belly path (its flat start at the boot, the bend, the steep run, and the top turn)
-	Belly_1 = { -20.5, -51.25, 29.3 },
-	Belly_2 = { -17.5, -46.75, 29.3 },
-	Belly_3 = { -16, -44.72, 32.2 },
-	Belly_4 = { -4.67, -30.67, 60.2 },
+	-- (stuck safety Task 24: V1's invisible belly boards are gone, so these stand on his skin, or on a crossing ramp's
+	-- middle line. The rough heights are the ground now. Belly_1 moved (-0.6, -0.45) in x and z, just past the foot of
+	-- the ankle ramp; Belly_2 moved (-2.47, +1.5) onto the long knee ramp (Ruling 10) and then stayed; Belly_3 moved
+	-- (-3.62, +2.28) from V1's place onto the long knee ramp's middle line, 9 studs up from its foot; Belly_4 stayed. The
+	-- Belly_<place> points have no target.)
+	Belly_1 = { -21.1, -51.7, 25.5 },
+	Belly_2 = { -19.97, -45.25, 32 }, -- on the long knee ramp, 6.5 studs up from its foot, 1.3 studs off the middle line
+	Belly_3 = { -19.62, -42.44, 34.5 }, -- on the long knee ramp's middle line, 9.0 studs up from its foot
+	-- Belly_4 moved (-0.83, +4.67) in x and z, 4.7 studs north, to the gentle north end of the raised strip on his belly
+	-- (stuck safety Task 26, Rulings 10 and 11; product and game_creator both said yes). The closer fit shows the strip's
+	-- sides as steep walls (70 to 80 degrees), so the footprints go round its north end, not straight into a side.
+	Belly_4 = { -5.5, -26.0, 58.7 },
+	Belly_BootStep = { -22.6, -59.9, 30.2 }, -- on the step piece over the 1 stud step in the left boot top
+	Belly_AnkleTop = { -21.1, -56.1, 29.3 }, -- the top of the ankle ramp, on its middle line, at the boot's top edge
+	-- Belly_KneeFoot moved (-0.57, -0.82) in x and z, 1.0 stud back down the long knee ramp, to 0.2 studs up from its foot
+	-- edge (Ruling 11): from 0.6 studs up, the link from Belly_1 (beside the ramp's east edge) cuts across the ramp's side.
+	Belly_KneeFoot = { -24.631, -49.674, 25.7 }, -- the long knee ramp's foot, on its middle line, 0.2 studs up from the foot edge
+	Belly_KneeTop = { -17.68, -39.64, 37.9 }, -- the long knee ramp's top, on its middle line, 12.4 studs up (the tip is at 13.3)
+	-- Belly_BandTop (Ruling 11): on his skin 2.85 studs past the ramp's tip and 1 stud east of its middle line. A straight
+	-- link from Belly_KneeTop to Rare egg 1 touches Knee_Guard_2's end, so the way goes round it through this point.
+	Belly_BandTop = { -14.724, -37.134, 44.7 },
+	Belly_Crest = { -1.1, -30.1, 61.8 }, -- on the crest between Belly_4 and Rare egg 4 (a straight link is 1.2 studs off it)
 }
 
 -- The links, as pairs of point names (without the RoutePoint_ start). Every one is made on both ends.
@@ -193,14 +207,20 @@ for _, side in { "Left", "Right" } do
 end
 link("Ramp_Left_Top", "Egg_Uncommon_1")
 link("Egg_Uncommon_1", "Egg_Uncommon_2")
-link("Egg_Uncommon_2", "Belly_1")
-link("Belly_1", "Belly_2")
+link("Egg_Uncommon_2", "Belly_BootStep")
+link("Belly_BootStep", "Belly_AnkleTop")
+link("Belly_AnkleTop", "Belly_1")
+link("Belly_1", "Belly_KneeFoot")
+link("Belly_KneeFoot", "Belly_2")
 link("Belly_2", "Belly_3")
-link("Belly_3", "Egg_Rare_1")
+link("Belly_3", "Belly_KneeTop")
+link("Belly_KneeTop", "Belly_BandTop")
+link("Belly_BandTop", "Egg_Rare_1")
 link("Egg_Rare_1", "Egg_Rare_2")
 link("Egg_Rare_2", "Egg_Rare_3")
 link("Egg_Rare_3", "Belly_4")
-link("Belly_4", "Egg_Rare_4")
+link("Belly_4", "Belly_Crest")
+link("Belly_Crest", "Egg_Rare_4")
 link("Ramp_Right_Top", "Egg_Uncommon_3")
 link("Egg_Uncommon_3", "Egg_Uncommon_4")
 
@@ -253,10 +273,6 @@ local function groundAt(x: number, z: number, heightHint: number, label: string)
 	return hit
 end
 
-local function describeVector(vector: Vector3): string
-	return string.format("(%.1f, %.1f, %.1f)", vector.X, vector.Y, vector.Z)
-end
-
 local function flat(vector: Vector3): Vector3
 	return Vector3.new(vector.X, 0, vector.Z)
 end
@@ -265,75 +281,34 @@ local function topOf(part: BasePart): Vector3
 	return (part.CFrame * CFrame.new(0, part.Size.Y / 2, 0)).Position
 end
 
--- Finds what is wrong with walking from `from` to `to`, or nil. The same checks as RealWorld.spec.
-local function walkProblem(world: Instance, from: Vector3, to: Vector3): string?
-	local maxSlope = math.cos(math.rad(StarterPlayer.CharacterMaxSlopeAngle))
+-- The one shared walk check (src/server/World/PathCheck), loaded fresh on every run: a clone of the module, placed next
+-- to the original (the clone is removed again as soon as it is loaded).
+local PathCheck: any
+do
+	local original = game:GetService("ServerScriptService").Server.World.PathCheck :: ModuleScript
+	local clone = original:Clone()
+	clone.Parent = original.Parent
+	local loaded, result = pcall(require, clone)
+	clone:Destroy()
+	if not loaded then
+		error(`PathCheck did not load: {result}`)
+	end
+	PathCheck = result
+end
+
+-- What PathCheck.linkProblem needs to walk-check the real world, the same as RealWorld.spec: the shared defaults (the
+-- slope limit, the spacing and the meadow ground, Rule 23: One walk check for everything), then the two ramp planks.
+-- The planks are left out of the body check (a player steps on or off a ramp foot over their edges by design).
+local function walkOptions(world: Instance): any
 	local walk = world:FindFirstChild("WalkSurfaces") :: Instance
-	local giant = world:FindFirstChild("Giant") :: Instance
-	local things = world:FindFirstChild("GiantsThings") :: Instance
-	local teacup = things:FindFirstChild("Teacup") :: Instance
-	local swept: { Instance } = { giant, teacup }
-	local boxIgnores: { Instance } = { giant, teacup }
+	local boxIgnores: { Instance } = {}
 	for _, side in { "BootRamp", "RightBootRamp" } do
 		local plank = (walk:FindFirstChild(side) :: Instance):FindFirstChild("Ramp_Walk") :: Instance
 		table.insert(boxIgnores, plank)
 	end
-	local sweepParams = RaycastParams.new()
-	sweepParams.RespectCanCollide = true
-	sweepParams.FilterType = Enum.RaycastFilterType.Include
-	sweepParams.FilterDescendantsInstances = swept
-	local boxParams = OverlapParams.new()
-	boxParams.RespectCanCollide = true
-	boxParams.FilterType = Enum.RaycastFilterType.Exclude
-	boxParams.FilterDescendantsInstances = boxIgnores
-
-	local length = (to - from).Magnitude
-	local steps = math.max(1, math.ceil(length / SAMPLE_STEP))
-	local direction = (to - from).Unit
-	local previous: { position: Vector3, normal: Vector3 }? = nil
-	for step = 0, steps do
-		local onLine = from:Lerp(to, step / steps)
-		local where = describeVector(onLine)
-		local hit = Workspace:Raycast(
-			onLine + Vector3.new(0, RAY_START_ABOVE, 0),
-			Vector3.new(0, -RAY_LENGTH, 0),
-			groundParams()
-		)
-		if hit == nil then
-			return `no ground at {where}`
-		end
-		if hit.Material == Enum.Material.Water then
-			return `water at {where}`
-		end
-		if hit.Normal.Y < maxSlope then
-			return `too steep at {where} ({hit.Instance.Name})`
-		end
-		if math.abs(hit.Position.Y - onLine.Y) > MAX_OFF_LINE then
-			return `the ground is {hit.Position.Y - onLine.Y} studs off the line at {where} ({hit.Instance.Name})`
-		end
-		local normal = hit.Normal
-		local along = direction - normal * direction:Dot(normal)
-		if along.Magnitude < 1e-3 then
-			along = Vector3.xAxis
-		end
-		local across = along.Unit:Cross(normal)
-		local boxCFrame = CFrame.fromMatrix(hit.Position + normal * (BODY_LIFT + BODY_BOX.Y / 2), across, normal)
-		local touching = Workspace:GetPartBoundsInBox(boxCFrame, BODY_BOX, boxParams)
-		if #touching > 0 then
-			return `{touching[1]:GetFullName()} is in the way at {where}`
-		end
-		if previous then
-			for _, height in GIANT_SWEEP_HEIGHTS do
-				local start = previous.position + previous.normal * height
-				local finish = hit.Position + normal * height
-				if Workspace:Raycast(start, finish - start, sweepParams) then
-					return `the giant or the teacup is in the way at {where}, {height} studs up`
-				end
-			end
-		end
-		previous = { position = hit.Position, normal = normal }
-	end
-	return nil
+	local options = PathCheck.defaults(Workspace)
+	options.boxIgnores = boxIgnores
+	return options
 end
 
 -- True if `point` is inside the box of `part` (a zone box or a garden volume).
@@ -539,7 +514,7 @@ local function planWorld(world: Instance): Plan
 		if length > longest then
 			longest, longestName = length, `{pair[1]} to {pair[2]}`
 		end
-		local problem = walkProblem(world, from, to)
+		local problem = PathCheck.linkProblem(walkOptions(world), from, to)
 		if problem then
 			error(`link {pair[1]} to {pair[2]} is not walkable: {problem}`)
 		end
@@ -722,7 +697,8 @@ local function planWorld(world: Instance): Plan
 	end
 
 	-- for the report: does the right boot top join the belly path? (It does not: his legs have a gap between them.)
-	local rightToBelly = walkProblem(world, byName.Egg_Uncommon_4.position, byName.Belly_1.position)
+	local rightToBelly =
+		PathCheck.linkProblem(walkOptions(world), byName.Egg_Uncommon_4.position, byName.Belly_1.position)
 	local info: { string } = {
 		string.format("longest link: %.1f studs (%s)", longest, longestName),
 		string.format("props checked: %d sunflower stems, %d bush and rock circles", #stems, #circles),
@@ -1001,6 +977,7 @@ local function run(): string
 end
 
 local ok, message = pcall(run)
+PathCheck.cleanup({ world = Workspace }) -- the body probe never stays in the Workspace, whatever happened
 if not ok then
 	return "STOPPED WITH AN ERROR: " .. tostring(message)
 end

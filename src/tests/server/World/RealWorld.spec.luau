@@ -1,16 +1,19 @@
 --!strict
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
-local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local describe, it, expect, beforeAll = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.beforeAll
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Hud.Layout)
 local SpotModels = require(ServerScriptService.Server.Eggs.SpotModels)
+local Collisions = require(ServerScriptService.Server.Players.Collisions)
+local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 local CameraFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.CameraFx)
 local GiantFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.GiantFx)
+local DrawnSkin = require(game:GetService("ServerStorage").Tests.server.World.DrawnSkin)
 
 -- These tests only READ the real world (Workspace.World). They change nothing.
 -- The world is built by tools/world/01-gardens.luau.
@@ -120,33 +123,33 @@ describe("the real world, zones and extras", function()
 		expect(locate(beside)).toEqual({ zone = "Meadow", garden = nil })
 		expect(locate(ramp.Position + ramp.CFrame.UpVector * 3).zone).toBe("Boots")
 
-		-- the middle of the belly path
-		local bellyPieces = {}
-		for _, piece in walk:GetChildren() do
-			if piece.Name == "Belly_Walk" then
-				table.insert(bellyPieces, piece)
-			end
-		end
-		table.sort(bellyPieces, function(a, b)
-			return (a :: BasePart).Position.Y < (b :: BasePart).Position.Y
-		end)
-		local bellyMiddle = bellyPieces[math.ceil(#bellyPieces / 2)] :: BasePart
-		expect(locate(bellyMiddle.Position + up).zone).toBe("Belly")
+		-- the middle of the belly path: the middle one (the 9th of 17, counting up) of V1's Belly_Walk pieces, which stuck safety
+		-- Task 24 took away. Its place is written down from before that task (World.WalkSurfaces, measured 2026-10-20).
+		local bellyMiddle = Vector3.new(-9.303, 48.424, -36.275)
+		expect(locate(bellyMiddle + up).zone).toBe("Belly")
 
-		-- the beard ladder's middle, and the top of the nose pad
+		-- the beard ladder's middle
 		local ladderCenter = walk.BeardLadder:GetBoundingBox().Position
 		expect(locate(ladderCenter).zone).toBe("Beard")
-		local nose = walk.Nose_Walk :: BasePart
-		expect(locate(nose.Position + Vector3.new(0, nose.Size.Y / 2, 0) + up).zone).toBe("Beard")
 
-		-- the middle of the nightcap path
-		local capPieces = {}
-		for _, piece in walk:GetChildren() do
-			if piece.Name == "Nightcap_Walk" then
-				table.insert(capPieces, piece)
-			end
+		-- the top of his nose. Fixed named points (stuck safety Task 25 took V1's walk pieces away; measured 2026-10-20):
+		-- the top of V1's nose deck, Nose_Walk (centre (0, 99.74, -4.3), 1 stud thick), and the middle of the new open
+		-- nose top, his skin at x 0, z -8.5 (y 94.24).
+		local oldDeckTop = Vector3.new(0, 99.74 + 0.5, -4.3)
+		local noseTopMiddle = Vector3.new(0, 94.24, -8.5)
+		expect(locate(oldDeckTop + up).zone).toBe("Beard")
+		expect(locate(noseTopMiddle + up).zone).toBe("Beard")
+
+		-- the cap top. V1's three Nightcap_Walk pieces stood at these centres (the middle one is the 2nd); a player on the
+		-- cap where they were is in the Nightcap zone.
+		local oldCapPieces = {
+			Vector3.new(2.958, 119.6113, 12.493),
+			Vector3.new(14.857, 116.858, 14.9523), -- the middle piece
+			Vector3.new(8.8808, 118.6066, 13.4801),
+		}
+		for _, centre in oldCapPieces do
+			expect(locate(centre + up).zone).toBe("Nightcap")
 		end
-		expect(locate((capPieces[math.ceil(#capPieces / 2)] :: BasePart).Position + up).zone).toBe("Nightcap")
 
 		-- the centre of each garden is that garden
 		for _, garden in WorldIndex.loadGardens(world) do
@@ -207,7 +210,7 @@ describe("the real world, zones and extras", function()
 		end
 		expect(letters).toBe(3)
 		expect(world.GiantFX.SnoreEmitter.SnorePuff:IsA("ParticleEmitter")).toBe(true)
-		expect(world.GiantFX.MumbleAnchor.Mumble.Enabled).toBe(false)
+		expect(world.GiantFX.SnoreEmitter.Warning85Bubble.Enabled).toBe(false)
 	end)
 
 	-- The camera a player gets at spawn: spot top + 4.5 studs, the spot's look direction, 12.5 away, at Roblox's
@@ -318,6 +321,152 @@ describe("the real world, zones and extras", function()
 		end
 		table.sort(blocked)
 		expect(blocked).toEqual({})
+	end)
+
+	-- Stuck safety Task 25 (designer 5 and 7): the cap ladder must not hide either closed eye from where a player spawns.
+	-- The eyes are the lid and the lashes of SleepEyes.LeftLid and RightLid (they have no collision and no query, so
+	-- rays go through them). Sample points lie on the faces of every visible eye part. A point is seen when no part of
+	-- his six body pieces stands between the spawn camera and it. The ladder covers a seen point when the straight line
+	-- from the camera to it passes through a visible ladder part. That line test is plain maths, so a copy of the ladder
+	-- outside the Workspace can be checked too.
+	local EYE_POINTS_PER_SIDE = 4 -- sample points along each side of each face of an eye part
+	local EYE_MARGIN = 0.05 -- studs: a body hit this close to a point still means the point is seen
+	local EYE_BODY_PIECES =
+		{ "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
+
+	local function eyeSamplePoints(world: any): { Vector3 }
+		local points: { Vector3 } = {}
+		for _, lidName in { "LeftLid", "RightLid" } do
+			for _, part in world.Giant.SleepEyes[lidName]:GetDescendants() do
+				if part:IsA("BasePart") and part.Transparency < 1 then
+					local half = { part.Size.X / 2, part.Size.Y / 2, part.Size.Z / 2 }
+					for axis = 1, 3 do
+						local other1 = if axis == 1 then 2 else 1
+						local other2 = if axis == 3 then 2 else 3
+						for _, sign in { -1, 1 } do
+							for first = 0, EYE_POINTS_PER_SIDE - 1 do
+								for second = 0, EYE_POINTS_PER_SIDE - 1 do
+									local local_ = { 0, 0, 0 }
+									local_[axis] = sign * half[axis]
+									local_[other1] = (first / (EYE_POINTS_PER_SIDE - 1) * 2 - 1) * half[other1]
+									local_[other2] = (second / (EYE_POINTS_PER_SIDE - 1) * 2 - 1) * half[other2]
+									table.insert(
+										points,
+										part.CFrame:PointToWorldSpace(Vector3.new(local_[1], local_[2], local_[3]))
+									)
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		return points
+	end
+
+	-- The sample points a camera at `camera` really sees.
+	local function seenEyePoints(camera: CFrame, world: any): { Vector3 }
+		local bodies: { Instance } = {}
+		for _, name in EYE_BODY_PIECES do
+			table.insert(bodies, world.Giant[name][name])
+		end
+		local params = RaycastParams.new()
+		params.IncludeInstances = bodies
+		params.RespectCanCollide = false
+		local seen: { Vector3 } = {}
+		for _, point in eyeSamplePoints(world) do
+			local offset = point - camera.Position
+			local hit = game:GetService("Workspace"):Raycast(camera.Position, offset, params)
+			if hit == nil or hit.Distance >= offset.Magnitude - EYE_MARGIN then
+				table.insert(seen, point)
+			end
+		end
+		return seen
+	end
+
+	-- Does the straight line from `from` to `to` pass through the box of `part`?
+	local function lineThroughBox(from: Vector3, to: Vector3, part: BasePart): boolean
+		local start = part.CFrame:PointToObjectSpace(from)
+		local move = part.CFrame:PointToObjectSpace(to) - start
+		local starts = { start.X, start.Y, start.Z }
+		local moves = { move.X, move.Y, move.Z }
+		local halves = { part.Size.X / 2, part.Size.Y / 2, part.Size.Z / 2 }
+		local entry, exit = 0, 1
+		for axis = 1, 3 do
+			if math.abs(moves[axis]) < 1e-9 then
+				if math.abs(starts[axis]) > halves[axis] then
+					return false
+				end
+			else
+				local near = (-halves[axis] - starts[axis]) / moves[axis]
+				local far = (halves[axis] - starts[axis]) / moves[axis]
+				entry = math.max(entry, math.min(near, far))
+				exit = math.min(exit, math.max(near, far))
+				if entry > exit then
+					return false
+				end
+			end
+		end
+		return true
+	end
+
+	-- How many of the points `ladder` covers, seen from `camera`.
+	local function pointsCoveredBy(ladder: Instance, camera: CFrame, points: { Vector3 }): number
+		local parts: { BasePart } = {}
+		for _, descendant in ladder:GetDescendants() do
+			if descendant:IsA("BasePart") and descendant.Transparency < 1 then
+				table.insert(parts, descendant)
+			end
+		end
+		local covered = 0
+		for _, point in points do
+			local stop = point - (point - camera.Position).Unit * EYE_MARGIN
+			for _, part in parts do
+				if lineThroughBox(camera.Position, stop, part) then
+					covered += 1
+					break
+				end
+			end
+		end
+		return covered
+	end
+
+	it("the cap ladder does not cover his closed eyes from any spawn spot", function()
+		local world = realWorld() :: any
+		local ladder = world.WalkSurfaces.CapLadder :: Instance
+		local problems = {}
+		for _, garden in WorldIndex.loadGardens(world) do
+			local camera = spawnCameraFor(garden.spawnSpot)
+			local seen = seenEyePoints(camera, world)
+			if #seen == 0 then
+				table.insert(problems, `Plot_{garden.index} sees no point of his eyes, so the check proves nothing`)
+			end
+			local covered = pointsCoveredBy(ladder, camera, seen)
+			if covered > 0 then
+				table.insert(
+					problems,
+					`Plot_{garden.index}: the cap ladder covers {covered} of {#seen} seen points of his closed eyes`
+				)
+			end
+		end
+		table.sort(problems)
+		expect(problems).toEqual({})
+	end)
+
+	it("the eye check notices a copy of the cap ladder moved in front of an eye", function()
+		local world = realWorld() :: any
+		local garden = WorldIndex.loadGardens(world)[1]
+		local camera = spawnCameraFor(garden.spawnSpot)
+		local seen = seenEyePoints(camera, world)
+		expect(#seen > 0).toBe(true)
+		-- the copy is never parented, so it is never in the Workspace; its middle goes 80% of the way to a seen point
+		local copy = world.WalkSurfaces.CapLadder:Clone() :: Model
+		local middle = copy:GetBoundingBox().Position
+		local target = camera.Position:Lerp(seen[1], 0.8)
+		copy:PivotTo(copy:GetPivot() + (target - middle))
+		local covered = pointsCoveredBy(copy, camera, seen)
+		copy:Destroy()
+		expect(covered > 0).toBe(true)
 	end)
 
 	it("the Z Z Z sit below the sleep meter from every spawn spot, on phones and computers", function()
@@ -521,6 +670,37 @@ describe("the real world, zones and extras", function()
 		end
 	end)
 
+	-- Stuck safety Task 24, Ruling 5: a player standing on a crossing ramp is in the Boots zone, as on V1's path there
+	-- (the ankle ramp, the knee ramp and the steep-band ramp all stand on his left leg below Rare egg 1).
+	it("a player standing on each crossing ramp is in the Boots zone", function()
+		local Workspace = game:GetService("Workspace")
+		local world, locate = locator()
+		local walk = (world :: any).WalkSurfaces :: Instance
+		local found: { string } = {}
+		for _, rampName in { "CrossingRamp_Ankle", "CrossingRamp_Knee" } do
+			local ramp = walk:FindFirstChild(rampName)
+			expect({ ramp = rampName, exists = ramp ~= nil }).toEqual({ ramp = rampName, exists = true })
+		end
+		local wrong: { string } = {}
+		for _, ramp in walk:GetChildren() do
+			if ramp:IsA("BasePart") and string.match(ramp.Name, "^CrossingRamp_") then
+				table.insert(found, ramp.Name)
+				-- the middle of its top, then a player's root height above it
+				local params = RaycastParams.new()
+				params.IncludeInstances = { ramp }
+				params.RespectCanCollide = false
+				local top = Workspace:Raycast(ramp.Position + Vector3.new(0, 20, 0), Vector3.new(0, -40, 0), params)
+				expect({ ramp = ramp.Name, topFound = top ~= nil }).toEqual({ ramp = ramp.Name, topFound = true })
+				local zone = locate((top :: RaycastResult).Position + Vector3.new(0, 3, 0)).zone
+				if zone ~= "Boots" then
+					table.insert(wrong, `{ramp.Name}: {zone}`)
+				end
+			end
+		end
+		expect(wrong).toEqual({})
+		expect(#found >= 2).toBe(true)
+	end)
+
 	-- Check B3 (fair for every garden): the walk from a garden to the ramp's foot must be silent. A zone box over a
 	-- meadow path would make one garden's walk louder than another's. The first place along a link that is not in
 	-- the Meadow zone is reported (a garden counts as Meadow here, because a garden always reports the Meadow).
@@ -573,6 +753,13 @@ describe("the real world, zones and extras", function()
 		return math.deg(math.acos(math.clamp(math.abs(part.CFrame.UpVector.Y), 0, 1)))
 	end
 
+	-- The count that tools/world/15-real-shape.luau section 2 reported it leaves (2026-10-20): the step piece (Boots_Walk 1),
+	-- CrossingRamp_Ankle and CrossingRamp_Knee, the 2 ramp planks, Nose_Walk 1 and Nightcap_Walk 3 (9 in all).
+	-- Stuck safety Task 25 (plan section 2b of tools/world/15-real-shape.luau) took away 4 of them: Nose_Walk and the 3
+	-- Nightcap_Walk pieces. The 5 left are the 2 ramp planks (Ramp_Walk), the step piece (Boots_Walk 1), CrossingRamp_Ankle
+	-- and CrossingRamp_Knee.
+	local ROUTE_SURFACE_COUNT = 5
+
 	it("no walk surface on the route is steeper than 60 degrees", function()
 		local walk = (realWorld() :: any).WalkSurfaces :: Instance
 		-- the two ramps, and every piece named *_Walk (the ladders, trusses and guards are not walked on)
@@ -584,11 +771,18 @@ describe("the real world, zones and extras", function()
 			table.insert(surfaces, planks :: BasePart)
 		end
 		for _, piece in walk:GetChildren() do
-			if piece:IsA("BasePart") and string.match(piece.Name, "_Walk$") then
+			if
+				piece:IsA("BasePart")
+				and (string.match(piece.Name, "_Walk$") or string.match(piece.Name, "^CrossingRamp_"))
+			then
 				table.insert(surfaces, piece)
 			end
 		end
-		expect(#surfaces > 30).toBe(true)
+		-- The exact number of walk surfaces, so the test still fails if one goes missing (stuck safety Task 24, Ruling 5).
+		-- Before Task 24 it was 39: the 2 ramp planks, 33 legs and belly pieces (Boots_Walk 8, RightBoots_Walk 8,
+		-- Belly_Walk 17), Nose_Walk 1 and Nightcap_Walk 3. Task 24 made it the number its world script reports; Task 25
+		-- changes it again for the head.
+		expect(#surfaces).toBe(ROUTE_SURFACE_COUNT)
 		local tooSteep = {}
 		for _, surface in surfaces do
 			if slopeOf(surface) > 60 then
@@ -637,6 +831,20 @@ describe("the real world, zones and extras", function()
 		expect(wrong).toEqual({})
 	end)
 
+	-- Stuck safety Task 25 (game_creator's yes): V1's invisible middle forehead slab goes. The visible cap ladder is the
+	-- only way from his nose to his cap. The four side walls (|x| over 7) stay.
+	it("the middle forehead slab is gone", function()
+		local guard = ((realWorld() :: any).WalkSurfaces :: Instance):FindFirstChild("ForeheadGuard")
+		expect(guard).never.toBeNil()
+		local middle = {}
+		for _, child in (guard :: Instance):GetChildren() do
+			if child:IsA("BasePart") and child.Name == "Guard" and math.abs(child.Position.X) < 7 then
+				table.insert(middle, string.format("Guard at x %.1f, size x %.1f", child.Position.X, child.Size.X))
+			end
+		end
+		expect(middle).toEqual({})
+	end)
+
 	it("the forehead slabs beside the cap ladder are steeper than 75 degrees", function()
 		local guard = ((realWorld() :: any).WalkSurfaces :: Instance):FindFirstChild("ForeheadGuard")
 		expect(guard).never.toBeNil()
@@ -646,8 +854,9 @@ describe("the real world, zones and extras", function()
 		local beside = 0
 		for _, slab in slabs do
 			local part = slab :: BasePart
-			-- the middle slab stays under the cap ladder, so players can climb beside the ladder to the cap path
-			if part:IsA("BasePart") and math.abs(part.Position.X) > 7 then
+			-- only the four side walls count: the middle slab is gone (stuck safety Task 25, game_creator's yes), and
+			-- the side rails are upright rails, not slabs
+			if part:IsA("BasePart") and part.Name == "Guard" and math.abs(part.Position.X) > 7 then
 				beside += 1
 				local solidAndInvisible = part.Transparency == 1 and part.CanCollide and part.Anchored
 				if not solidAndInvisible or slopeOf(part) <= 75 then
@@ -662,8 +871,10 @@ describe("the real world, zones and extras", function()
 		expect(wrong).toEqual({})
 	end)
 
-	-- The two invisible side rails stand on both sides of the nose pad, so nobody can step off the pad onto the
-	-- ledge and into the slot between the forehead walls and his cheeks. They are built by tools/world/03b-forehead.luau.
+	-- The invisible side rails close both sides of the open top of his nose, and run beside the cap ladder, so nobody can
+	-- step off the nose onto the ledge and into the slot between the forehead walls and his cheeks. V1's pair was built
+	-- by tools/world/03b-forehead.luau; stuck safety Task 25 (tools/world/15-real-shape.luau section 2b) replaces it
+	-- with up to two parts per side.
 	local function sideRails(): { BasePart }
 		local guard = ((realWorld() :: any).WalkSurfaces :: Instance):FindFirstChild("ForeheadGuard")
 		expect(guard).never.toBeNil()
@@ -679,66 +890,329 @@ describe("the real world, zones and extras", function()
 		return rails
 	end
 
-	local function isInsidePart(part: BasePart, point: Vector3): boolean
-		local localPoint = part.CFrame:PointToObjectSpace(point)
-		local half = part.Size / 2
-		return math.abs(localPoint.X) <= half.X
-			and math.abs(localPoint.Y) <= half.Y
-			and math.abs(localPoint.Z) <= half.Z
+	-- The open top of his nose, row by row (stuck safety Task 25, test 7). Source: measured read-only in step 2b-3 on
+	-- 2026-10-20, with rays that see only his six body pieces. `middle` is the height of his skin at x 0. `right` and
+	-- `left` are the walkable half-width on each side, read sideways (plan Task 25, Ruling 1): going out from x 0, the
+	-- first place where the sideways tilt of the body-size plane (25 rays on a 4 by 4 stud square) reaches 65 degrees,
+	-- or where the skin steps more than 0.5 studs. At z -4.5 there is no edge out to 14 studs, so the row records 3.6,
+	-- the inner face of the cap part of the rails.
+	type NoseRow = { z: number, middle: number, right: number, left: number }
+	local NOSE_ROWS: { NoseRow } = {
+		{ z = -12.5, middle = 92.04, right = 2.6, left = 2.9 },
+		{ z = -11.5, middle = 93.11, right = 3.5, left = 3.4 },
+		{ z = -10.5, middle = 93.79, right = 3.5, left = 3.4 },
+		{ z = -9.5, middle = 94.08, right = 3.8, left = 3.7 },
+		{ z = -8.5, middle = 94.24, right = 4.5, left = 4.4 },
+		{ z = -7.5, middle = 94.17, right = 4.8, left = 5.7 },
+		{ z = -6.5, middle = 94.05, right = 5.7, left = 5.7 },
+		{ z = -5.5, middle = 93.84, right = 5.7, left = 5.4 },
+		{ z = -4.5, middle = 93.35, right = 3.6, left = 3.6 },
+	}
+	local RAIL_PAST_EDGE = 1.0 -- studs: a rail's inner face is at most this far past the row's walkable edge
+	local RAIL_HEIGHTS = { 0.5, 3, 8 } -- studs over his skin at x 0: where the sideways rays go
+	local RAIL_REACH = 14 -- studs: how far a sideways ray looks for a rail
+	local RAIL_GAP_ALLOWED = 0.2 -- studs: his skin may be this far under a rail's bottom (Ruling 10)
+	local RAIL_SKIN_RAY_ABOVE = 30
+	local RAIL_SLOT_STEP = 0.25 -- studs between the places a slot is looked for
+	local RAIL_MAX_PARTS_PER_SIDE = 2
+	local WALL_MIN_DEGREES = 75
+	local MAX_PROBLEM_LINES = 8
+
+	-- A ray that sees only his six body pieces.
+	local function bodyRayParams(): RaycastParams
+		local giant = (realWorld() :: any).Giant :: Instance
+		local meshes: { Instance } = {}
+		for _, name in { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" } do
+			table.insert(meshes, (giant:FindFirstChild(name) :: Instance):FindFirstChild(name) :: Instance)
+		end
+		local params = RaycastParams.new()
+		params.IncludeInstances = meshes
+		params.RespectCanCollide = false
+		return params
 	end
 
-	it("two smooth side rails stand on both sides of the nose pad", function()
-		local rails = sideRails()
-		expect(#rails).toBe(2)
-		local pad = (realWorld() :: any).WalkSurfaces.Nose_Walk :: BasePart
-		local padTop = pad.Position.Y + pad.Size.Y / 2
-		for index, rail in rails do
-			local side = if index == 1 then -1 else 1
-			expect(rail.Position.X * side > pad.Size.X / 2).toBe(true) -- outside the pad
-			expect(rail.Position.X * side < pad.Size.X / 2 + 2).toBe(true) -- right beside it
-			expect(rail.Transparency).toBe(1)
-			expect(rail.CanCollide).toBe(true)
-			expect(rail.Anchored).toBe(true)
-			expect(slopeOf(rail) > 75).toBe(true)
-			-- the rail covers the whole pad, front to back, and rises from the pad to the cap path
-			for _, z in { pad.Position.Z - pad.Size.Z / 2 + 0.5, pad.Position.Z, pad.Position.Z + pad.Size.Z / 2 } do
-				for _, y in { padTop + 0.5, padTop + 8, padTop + 19 } do
-					expect({ z = z, y = y, covered = isInsidePart(rail, Vector3.new(rail.Position.X, y, z)) }).toEqual({
-						z = z,
-						y = y,
-						covered = true,
-					})
-				end
+	-- A ray that sees only the side rails.
+	local function railParams(rails: { BasePart }): RaycastParams
+		local instances: { Instance } = {}
+		for _, rail in rails do
+			table.insert(instances, rail)
+		end
+		local params = RaycastParams.new()
+		params.IncludeInstances = instances
+		params.RespectCanCollide = false
+		return params
+	end
+
+	-- A sideways ray from the middle of a row, `over` studs over his skin, that sees only the side rails.
+	local function railHit(rails: { BasePart }, row: NoseRow, side: number, over: number): RaycastResult?
+		local params = railParams(rails)
+		return game:GetService("Workspace")
+			:Raycast(Vector3.new(0, row.middle + over, row.z), Vector3.new(side * RAIL_REACH, 0, 0), params)
+	end
+
+	local function wallDegrees(normal: Vector3): number
+		return math.deg(math.acos(math.clamp(math.abs(normal.Y), 0, 1)))
+	end
+
+	local function firstLines(lines: { string }): { count: number, first: { string } }
+		local first: { string } = {}
+		for index = 1, math.min(#lines, MAX_PROBLEM_LINES) do
+			table.insert(first, lines[index])
+		end
+		return { count = #lines, first = first }
+	end
+
+	-- Rule 20 (One collision source): the rails are not a shelf. At each row, a ray straight down from 30 studs above,
+	-- at the rail's bottom inner edge and its bottom outer edge, finds his skin no lower than 0.2 studs under the
+	-- rail's bottom (Ruling 10: a ray that starts inside his mesh can't hit it, so the old ray up from inside missed).
+	local function railGapProblems(skinParams: RaycastParams, hit: RaycastResult, label: string): { string }
+		local problems: { string } = {}
+		local rail = hit.Instance :: BasePart
+		local bottom = rail.Position.Y - rail.Size.Y / 2
+		local inner = Vector3.new(hit.Position.X, bottom, hit.Position.Z)
+		local localNormal = rail.CFrame:VectorToObjectSpace(hit.Normal)
+		local thickness = math.abs(localNormal.X) * rail.Size.X
+			+ math.abs(localNormal.Y) * rail.Size.Y
+			+ math.abs(localNormal.Z) * rail.Size.Z
+		local outer = inner + Vector3.new(-hit.Normal.X, 0, -hit.Normal.Z).Unit * thickness
+		local edges: { { name: string, point: Vector3 } } = {
+			{ name = "inner", point = inner },
+			{ name = "outer", point = outer },
+		}
+		for _, edge in edges do
+			local edgeName, point = edge.name, edge.point
+			local skin = game:GetService("Workspace"):Raycast(
+				point + Vector3.new(0, RAIL_SKIN_RAY_ABOVE, 0),
+				Vector3.new(0, -2 * RAIL_SKIN_RAY_ABOVE, 0),
+				skinParams
+			)
+			if skin == nil then
+				table.insert(problems, `{label}: no skin under the rail's bottom {edgeName} edge`)
+			elseif skin.Position.Y < bottom - RAIL_GAP_ALLOWED then
+				table.insert(
+					problems,
+					string.format(
+						"%s: his skin is %.2f studs under the rail's bottom %s edge (gap allowed %.1f)",
+						label,
+						bottom - skin.Position.Y,
+						edgeName,
+						RAIL_GAP_ALLOWED
+					)
+				)
 			end
 		end
+		return problems
+	end
+
+	-- No slot: between the row's walkable edge and the rail's inner face, no place where a standing body fits (the shared
+	-- walk check's own test, with the rails in the world).
+	local function railSlotProblems(
+		options: PathCheck.Options,
+		skinParams: RaycastParams,
+		row: NoseRow,
+		side: number,
+		edge: number,
+		railX: number,
+		label: string
+	): { string }
+		local problems: { string } = {}
+		local limit = math.cos(math.rad(game:GetService("StarterPlayer").CharacterMaxSlopeAngle))
+		local x = edge
+		while x < railX - 0.01 do
+			local skin = game:GetService("Workspace")
+				:Raycast(Vector3.new(side * x, 200, row.z), Vector3.new(0, -250, 0), skinParams)
+			if
+				skin ~= nil
+				and skin.Normal.Y >= limit
+				and skin.Material ~= Enum.Material.Water
+				and PathCheck.roomToStand(options, skin.Position, skin.Normal)
+			then
+				table.insert(
+					problems,
+					string.format("%s: a body fits at x %.2f between the edge and the rail", label, side * x)
+				)
+				break
+			end
+			x += RAIL_SLOT_STEP
+		end
+		return problems
+	end
+
+	it("smooth side rails close both sides of the nose top", function()
+		local rails = sideRails()
+		local problems: { string } = {}
+		local counts = { left = 0, right = 0 }
+		for _, rail in rails do
+			local name =
+				string.format("SideRail at (%.1f, %.1f, %.1f)", rail.Position.X, rail.Position.Y, rail.Position.Z)
+			if rail.Position.X < 0 then
+				counts.left += 1
+			else
+				counts.right += 1
+			end
+			if rail.Transparency ~= 1 or not rail.CanCollide or not rail.Anchored then
+				table.insert(problems, `{name} is not invisible, solid and anchored`)
+			end
+			if rail.Material ~= Enum.Material.SmoothPlastic then
+				table.insert(problems, `{name} is not smooth (SmoothPlastic)`)
+			end
+		end
+		if counts.left < 1 or counts.left > RAIL_MAX_PARTS_PER_SIDE then
+			table.insert(problems, `{counts.left} rail parts on his left (1 to {RAIL_MAX_PARTS_PER_SIDE} allowed)`)
+		end
+		if counts.right < 1 or counts.right > RAIL_MAX_PARTS_PER_SIDE then
+			table.insert(problems, `{counts.right} rail parts on his right (1 to {RAIL_MAX_PARTS_PER_SIDE} allowed)`)
+		end
+
+		-- At every row, from the middle: sideways rays at 0.5, 3 and 8 studs over his skin hit a rail (steeper than 75
+		-- degrees) no more than 1.0 stud past the row's walkable edge; no gap under it; no slot beside it.
+		local skinParams = bodyRayParams()
+		local options = PathCheck.defaults(game:GetService("Workspace"))
+		local ok, message = pcall(function()
+			for _, row in NOSE_ROWS do
+				for _, side in { -1, 1 } do
+					local edge = if side < 0 then row.left else row.right
+					local label = string.format("row z %.1f, %s", row.z, if side < 0 then "left" else "right")
+					for _, over in RAIL_HEIGHTS do
+						local hit = railHit(rails, row, side, over)
+						if hit == nil then
+							table.insert(problems, `{label}: no rail {over} studs over his skin`)
+						else
+							local face = math.abs(hit.Position.X)
+							if face > edge + RAIL_PAST_EDGE then
+								table.insert(
+									problems,
+									string.format(
+										"%s: the rail at %g studs over his skin is %.2f studs past the edge (%.1f), at most %.1f",
+										label,
+										over,
+										face - edge,
+										edge,
+										RAIL_PAST_EDGE
+									)
+								)
+							end
+							if wallDegrees(hit.Normal) <= WALL_MIN_DEGREES then
+								table.insert(
+									problems,
+									string.format(
+										"%s: the rail face is %.1f degrees steep, needs over %d",
+										label,
+										wallDegrees(hit.Normal),
+										WALL_MIN_DEGREES
+									)
+								)
+							end
+						end
+					end
+					local low = railHit(rails, row, side, RAIL_HEIGHTS[1])
+					if low ~= nil then
+						for _, line in railGapProblems(skinParams, low, label) do
+							table.insert(problems, line)
+						end
+						for _, line in
+							railSlotProblems(options, skinParams, row, side, edge, math.abs(low.Position.X), label)
+						do
+							table.insert(problems, line)
+						end
+					end
+				end
+			end
+		end)
+		PathCheck.cleanup(options) -- takes the body probe out of the Workspace, whatever the result
+		if not ok then
+			error(message)
+		end
+		expect(firstLines(problems)).toEqual({ count = 0, first = {} })
 	end)
 
-	it("the side rails run along both edges of the middle forehead slab", function()
+	-- Proof that the gap and slot checks can fail. A test rail (invisible, Archivable off, destroyed in the test, like the
+	-- body probe) beside row z -9.5 whose bottom is 1 stud over his skin has a gap under it, and one whose bottom is 25
+	-- studs inside him has none. A slot is found on the nose top at z -8.5 when the rail is 3 studs out and the edge is
+	-- taken as 0.5, and none when the rail stands at the edge.
+	it("the rail checks notice a gap under a rail and a slot beside it", function()
+		local row = NOSE_ROWS[4]
+		local skinParams = bodyRayParams()
+		local options = PathCheck.defaults(game:GetService("Workspace"))
+		local rail = Instance.new("Part")
+		rail.Name = "SideRailGapTestRail"
+		rail.Size = Vector3.new(1.5, 40, 4)
+		rail.Anchored = true
+		rail.Transparency = 1
+		rail.Archivable = false
+		local raised: { string } = {}
+		local sunk: { string } = {}
+		local slotFound: { string } = {}
+		local slotNone: { string } = {}
+		local ok, message = pcall(function()
+			local function problemsFor(bottom: number): { string }
+				rail.CFrame = CFrame.new(5, bottom + 20, row.z)
+				rail.Parent = game:GetService("Workspace")
+				local hit = railHit({ rail }, row, 1, 3)
+				if hit == nil then
+					return { "the test rail was not hit" }
+				end
+				return railGapProblems(skinParams, hit, "test")
+			end
+			raised = problemsFor(row.middle + 1)
+			sunk = problemsFor(row.middle - 25)
+			local flatRow = NOSE_ROWS[5]
+			slotFound = railSlotProblems(options, skinParams, flatRow, 1, 0.5, 3.0, "test")
+			slotNone = railSlotProblems(options, skinParams, flatRow, 1, flatRow.right, flatRow.right, "test")
+		end)
+		rail:Destroy()
+		PathCheck.cleanup(options)
+		if not ok then
+			error(message)
+		end
+		expect(#raised > 0).toBe(true)
+		expect(sunk).toEqual({})
+		expect(#slotFound).toBe(1)
+		expect(slotNone).toEqual({})
+	end)
+
+	it("the side rails run along both sides of the cap ladder", function()
 		local rails = sideRails()
-		expect(#rails).toBe(2)
-		local guard = (realWorld() :: any).WalkSurfaces.ForeheadGuard :: Instance
-		local middle = {}
-		for _, child in guard:GetChildren() do
-			if child:IsA("BasePart") and child.Name == "Guard" and math.abs(child.Position.X) <= 7 then
-				table.insert(middle, child)
+		local ladder = (realWorld() :: any).WalkSurfaces.CapLadder :: Instance
+		local rungs: { BasePart } = {}
+		for _, part in ladder:GetDescendants() do
+			if part:IsA("BasePart") and part.Name == "Rung" then
+				table.insert(rungs, part)
 			end
 		end
-		expect(#middle).toBe(1)
-		local slab = middle[1] :: BasePart
-		-- the slab's two long edges, sampled from its foot to its top: each point must stand inside a rail, so
-		-- a player on the slab can only walk up it or back down, never off its side
-		local uncovered = {}
-		for fraction = 0, 1, 0.1 do
+		expect(#rungs > 2).toBe(true)
+		table.sort(rungs, function(a, b)
+			return a.Position.Y < b.Position.Y
+		end)
+		-- up the ladder, and "out" from it: the direction a climber's body is from the rungs (toward his front)
+		local up = (rungs[#rungs].Position - rungs[1].Position).Unit
+		local out = Vector3.new(0, up.Z, -up.Y)
+		local params = railParams(rails)
+		-- at every rung, sideways rays from the rung's end, 1 and 3 studs out from the ladder, each hit a rail within 4.5
+		-- studs: a climber can only go up or down, never step off the ladder's side
+		local open = {}
+		for _, rung in rungs do
 			for _, side in { -1, 1 } do
-				local edge = slab.CFrame:PointToWorldSpace(
-					Vector3.new(side * (slab.Size.X / 2 - 0.2), slab.Size.Y / 2, (fraction - 0.5) * slab.Size.Z)
-				)
-				if not isInsidePart(rails[if edge.X < 0 then 1 else 2], edge) then
-					table.insert(uncovered, string.format("(%.1f, %.1f, %.1f)", edge.X, edge.Y, edge.Z))
+				for _, distance in { 1, 3 } do
+					local start = rung.Position + Vector3.new(side * rung.Size.X / 2, 0, 0) + out * distance
+					local hit = game:GetService("Workspace"):Raycast(start, Vector3.new(side * 4.5, 0, 0), params)
+					if hit == nil then
+						table.insert(
+							open,
+							string.format(
+								"no rail beside the rung at (%.1f, %.1f, %.1f), side %d, %d studs out",
+								rung.Position.X,
+								rung.Position.Y,
+								rung.Position.Z,
+								side,
+								distance
+							)
+						)
+					end
 				end
 			end
 		end
-		expect(uncovered).toEqual({})
+		expect(firstLines(open)).toEqual({ count = 0, first = {} })
 	end)
 
 	it("no wall sticks out in front of the edges of the middle forehead slab", function()
@@ -746,13 +1220,9 @@ describe("the real world, zones and extras", function()
 		-- a step that a player walking up the slab could wedge against. The walls must start where the slab ends.
 		local guard = ((realWorld() :: any).WalkSurfaces :: Instance):FindFirstChild("ForeheadGuard")
 		expect(guard).never.toBeNil()
-		local middleHalfWidth = 0
-		for _, child in (guard :: Instance):GetChildren() do
-			if child:IsA("BasePart") and child.Name == "Guard" and math.abs(child.Position.X) <= 7 then
-				middleHalfWidth = child.Size.X / 2
-			end
-		end
-		expect(middleHalfWidth > 0).toBe(true)
+		-- Task 25: the middle slab is gone, so its half width is the fixed number the walls were built against:
+		-- MIDDLE_HALF_WIDTH in tools/world/03b-forehead.luau (the slab was 13.5 wide).
+		local middleHalfWidth = 6.75
 		local inside = {}
 		for _, child in (guard :: Instance):GetChildren() do
 			if child:IsA("BasePart") and child.Name == "Guard" and math.abs(child.Position.X) > 7 then
@@ -768,15 +1238,16 @@ describe("the real world, zones and extras", function()
 		expect(inside).toEqual({})
 	end)
 
-	it("a player on the nose pad cannot walk off its sides", function()
-		-- Rays go sideways from just beside the cap ladder, over the open part of the pad (in front of the forehead) and above it. A see-through part (the
-		-- ladder's rails, the invisible eyes) is not a wall, so the ray looks past it.
-		local pad = (realWorld() :: any).WalkSurfaces.Nose_Walk :: BasePart
-		local padTop = pad.Position.Y + pad.Size.Y / 2
+	it("a player on the nose top cannot walk off its sides", function()
+		-- Rays go sideways from just beside the cap ladder, at every row of the open top of his nose (NOSE_ROWS) and from
+		-- 1 to 11 studs over it. A see-through part (the ladder's rails, the invisible eyes) is not a wall, so the ray
+		-- looks past it. The first wall must be no more than 1.0 stud past the row's walkable edge.
 		local open = {}
-		for _, direction in { -1, 1 } do
-			for z = pad.Position.Z - pad.Size.Z / 2 + 1, pad.Position.Z + 1, 2 do
-				for y = padTop + 1, padTop + 11, 2 do
+		for _, row in NOSE_ROWS do
+			for _, direction in { -1, 1 } do
+				local edge = if direction < 0 then row.left else row.right
+				local z = row.z
+				for y = row.middle + 1, row.middle + 11, 2 do
 					local ignore: { Instance } = {}
 					local wallAt: number? = nil
 					for _ = 1, 20 do
@@ -797,13 +1268,298 @@ describe("the real world, zones and extras", function()
 						end
 						table.insert(ignore, hit.Instance)
 					end
-					if wallAt == nil or math.abs(wallAt) > pad.Size.X / 2 + 2 then
-						table.insert(open, string.format("side %d at (z %.0f, y %.0f)", direction, z, y))
+					if wallAt == nil or math.abs(wallAt) > edge + RAIL_PAST_EDGE then
+						table.insert(open, string.format("side %d at (z %.1f, y %.1f)", direction, z, y))
 					end
 				end
 			end
 		end
-		expect(open).toEqual({})
+		expect(firstLines(open)).toEqual({ count = 0, first = {} })
+	end)
+
+	-- Stuck safety Task 25, test 10 (plan Ruling 12). Between the cap ladder's invisible truss (|x| 1.0) and the cap part
+	-- of the rails (part B, |x| 3.6) a body fits on his forehead. One invisible `LadderSlotBlock` per side, in
+	-- ForeheadGuard, closes it. The rule is "no body fits anywhere in the slot", not today's list of spots, so the grid
+	-- is 0.1 studs across (x) and 0.25 along (z): it also sees the thin opening on his right, at x 1.9. Task 26 (Ruling
+	-- 7): his closer-fitting head leaves a 69 degree band of forehead in front of the blocks (z -2.75 to -2), so the
+	-- box starts at z -2.75 and y 92.5, and each block grows forward and down to cover it. The box stays behind the
+	-- nose top's walkable part (38 degrees, from about z -3.5).
+	local SLOT_X_TENTHS_FROM = 10 -- |x| 1.0, in tenths of a stud
+	local SLOT_X_TENTHS_TO = 36 -- |x| 3.6
+	local SLOT_Z_QUARTERS_FROM = -11 -- z -2.75: the whole thin band of his forehead in front of the blocks
+	local SLOT_Z_QUARTERS_TO = 12 -- z 3
+	local SLOT_LOW_Y = 92.5 -- surfaces from this height (the band starts low, at y 94)...
+	local SLOT_HIGH_Y = 107.5 -- ...up to this one
+	local SLOT_RAY_START_Y = 112 -- above the cap's brim: the ray comes down through every layer
+	local SLOT_MAX_LAYERS = 20
+	local SLOT_BLOCK_NAME = "LadderSlotBlock"
+	local SLOT_BLOCKS_PER_SIDE = 1
+
+	-- Every place on one side of the slot where a body fits on a walkable surface that isn't the ladder's truss, as
+	-- text.
+	local function slotRoomSpots(options: PathCheck.Options, side: number): { string }
+		local Workspace = game:GetService("Workspace")
+		local spots: { string } = {}
+		local params = RaycastParams.new()
+		params.RespectCanCollide = true
+		params.CollisionGroup = Collisions.GROUP
+		local steepest = math.cos(math.rad(game:GetService("StarterPlayer").CharacterMaxSlopeAngle))
+		for xTenths = SLOT_X_TENTHS_FROM, SLOT_X_TENTHS_TO do
+			for zQuarters = SLOT_Z_QUARTERS_FROM, SLOT_Z_QUARTERS_TO do
+				local x, z = side * xTenths / 10, zQuarters / 4
+				local y = SLOT_RAY_START_Y
+				for _ = 1, SLOT_MAX_LAYERS do
+					local hit = Workspace:Raycast(Vector3.new(x, y, z), Vector3.new(0, SLOT_LOW_Y - y, 0), params)
+					if hit == nil then
+						break
+					end
+					if
+						hit.Position.Y <= SLOT_HIGH_Y
+						and not hit.Instance:IsA("TrussPart")
+						and hit.Normal.Y >= steepest
+						and PathCheck.roomToStand(options, hit.Position, hit.Normal)
+					then
+						table.insert(
+							spots,
+							string.format(
+								"(%.2f, %.2f, %.2f) on %s",
+								hit.Position.X,
+								hit.Position.Y,
+								hit.Position.Z,
+								hit.Instance.Name
+							)
+						)
+					end
+					y = hit.Position.Y - 0.01 -- on down, under this surface
+				end
+			end
+		end
+		return spots
+	end
+
+	-- What is wrong with the slot blocks: more than one a side, a block that is visible, see-through, loose or a
+	-- touch trigger, or one that touches the cap ladder's rails and rungs.
+	local function slotBlockProblems(world: WorldRoot, blocks: { BasePart }, ladderParts: { BasePart }): { string }
+		local problems: { string } = {}
+		local perSide: { [number]: number } = {}
+		local overlap = OverlapParams.new()
+		overlap.FilterType = Enum.RaycastFilterType.Include
+		local ladderInstances: { Instance } = {}
+		for _, ladderPart in ladderParts do
+			table.insert(ladderInstances, ladderPart)
+		end
+		overlap.FilterDescendantsInstances = ladderInstances
+		overlap.RespectCanCollide = false
+		for _, block in blocks do
+			local side = math.sign(block.Position.X)
+			perSide[side] = (perSide[side] or 0) + 1
+			if block.Transparency ~= 1 then
+				table.insert(problems, `a block at x {block.Position.X} is visible`)
+			end
+			if not block.CanCollide then
+				table.insert(problems, `a block at x {block.Position.X} is not solid`)
+			end
+			if not block.Anchored then
+				table.insert(problems, `a block at x {block.Position.X} is not anchored`)
+			end
+			if block.Material ~= Enum.Material.SmoothPlastic then
+				table.insert(problems, `a block at x {block.Position.X} is not SmoothPlastic`)
+			end
+			if block.CanTouch then
+				table.insert(problems, `a block at x {block.Position.X} has CanTouch on`)
+			end
+			for _, touched in world:GetPartsInPart(block, overlap) do
+				table.insert(problems, `a block at x {block.Position.X} touches the ladder's {touched.Name}`)
+			end
+		end
+		for side, count in perSide do
+			if count > SLOT_BLOCKS_PER_SIDE then
+				table.insert(problems, `{count} blocks on side {side} (at most {SLOT_BLOCKS_PER_SIDE})`)
+			end
+		end
+		table.sort(problems)
+		return problems
+	end
+
+	local function slotBlocks(): { BasePart }
+		local guard = ((realWorld() :: any).WalkSurfaces :: Instance):FindFirstChild("ForeheadGuard")
+		expect(guard).never.toBeNil()
+		local blocks: { BasePart } = {}
+		for _, child in (guard :: Instance):GetChildren() do
+			if child.Name == SLOT_BLOCK_NAME and child:IsA("BasePart") then
+				table.insert(blocks, child)
+			end
+		end
+		return blocks
+	end
+
+	local function ladderRailsAndRungs(): { BasePart }
+		local ladder = (realWorld() :: any).WalkSurfaces.CapLadder :: Instance
+		local parts: { BasePart } = {}
+		for _, part in ladder:GetDescendants() do
+			if part:IsA("BasePart") and (part.Name == "Rung" or part.Name == "Rail") then
+				table.insert(parts, part)
+			end
+		end
+		expect(#parts > 2).toBe(true)
+		return parts
+	end
+
+	it("no body fits beside the cap ladder", function()
+		local options = PathCheck.defaults(game:GetService("Workspace"))
+		local left: { string } = {}
+		local right: { string } = {}
+		local ok, message = pcall(function()
+			left = slotRoomSpots(options, -1)
+			right = slotRoomSpots(options, 1)
+		end)
+		PathCheck.cleanup(options) -- takes the body probe out of the Workspace, whatever the result
+		if not ok then
+			error(message)
+		end
+		local blockProblems = slotBlockProblems(game:GetService("Workspace"), slotBlocks(), ladderRailsAndRungs())
+		expect({ left = firstLines(left), right = firstLines(right), blocks = firstLines(blockProblems) }).toEqual({
+			left = { count = 0, first = {} },
+			right = { count = 0, first = {} },
+			blocks = { count = 0, first = {} },
+		})
+	end)
+
+	-- The slot-block checks, shown on made-up parts in a WorldModel: a good block passes; a second block on a side, a
+	-- visible, loose, touchable block and one that touches a rung are all named.
+	it("the slot block checks notice a bad block", function()
+		local world = Instance.new("WorldModel")
+		world.Archivable = false
+		world.Parent = game:GetService("ServerStorage")
+		local ok, message = pcall(function()
+			local function part(name: string, position: Vector3, size: Vector3): Part
+				local made = Instance.new("Part")
+				made.Name = name
+				made.Size = size
+				made.Position = position
+				made.Anchored = true
+				made.CanCollide = true
+				made.CanTouch = false
+				made.Transparency = 1
+				made.Material = Enum.Material.SmoothPlastic
+				made.Parent = world
+				return made
+			end
+			local rung = part("Rung", Vector3.new(0, 0, 0), Vector3.new(5, 0.4, 0.4))
+			local good = part(SLOT_BLOCK_NAME, Vector3.new(5, 0, 0), Vector3.new(1, 4, 4))
+			expect(slotBlockProblems(world, { good }, { rung })).toEqual({})
+			local second = part(SLOT_BLOCK_NAME, Vector3.new(7, 0, 0), Vector3.new(1, 4, 4))
+			expect(#slotBlockProblems(world, { good, second }, { rung })).toBe(1)
+			local bad = part(SLOT_BLOCK_NAME, Vector3.new(-5, 0, 0), Vector3.new(6, 4, 4))
+			bad.Transparency = 0
+			bad.CanCollide = false
+			bad.Anchored = false
+			bad.Material = Enum.Material.Wood
+			bad.CanTouch = true
+			expect(#slotBlockProblems(world, { bad }, { rung })).toBe(6)
+		end)
+		world:Destroy()
+		if not ok then
+			error(message)
+		end
+	end)
+
+	-- Stuck safety Task 25, test 11 (plan Ruling 13). Part A of each side's rails (the SideRail whose centre is in front
+	-- of z -5) must have no top a body can stand on. On a grid of at most 0.25 studs over its footprint, a ray straight
+	-- down that sees only that part hits a face steeper than 75 degrees.
+	local FRONT_RAIL_BEFORE_Z = -5 -- a SideRail whose centre is in front of this is part A
+	local FRONT_RAIL_GRID = 0.25 -- studs, at most
+	local FRONT_RAIL_RAY_ABOVE = 5
+
+	local function frontRailTopProblems(world: WorldRoot, rail: BasePart): { string }
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Include
+		params.FilterDescendantsInstances = { rail }
+		params.RespectCanCollide = false
+		local cellsX = math.ceil(rail.Size.X / FRONT_RAIL_GRID)
+		local cellsZ = math.ceil(rail.Size.Z / FRONT_RAIL_GRID)
+		local rays, flat, missed = 0, 0, 0
+		local flattest = 90
+		for cellX = 1, cellsX do
+			for cellZ = 1, cellsZ do
+				local localX = -rail.Size.X / 2 + (cellX - 0.5) * rail.Size.X / cellsX
+				local localZ = -rail.Size.Z / 2 + (cellZ - 0.5) * rail.Size.Z / cellsZ
+				local over = rail.CFrame:PointToWorldSpace(Vector3.new(localX, 0, localZ))
+				local top = rail.Position.Y + rail.Size.Y / 2
+				local hit = world:Raycast(
+					Vector3.new(over.X, top + FRONT_RAIL_RAY_ABOVE, over.Z),
+					Vector3.new(0, -(rail.Size.Y + 2 * FRONT_RAIL_RAY_ABOVE), 0),
+					params
+				)
+				rays += 1
+				if hit == nil then
+					missed += 1
+				else
+					local degrees = wallDegrees(hit.Normal)
+					flattest = math.min(flattest, degrees)
+					if degrees <= WALL_MIN_DEGREES then
+						flat += 1
+					end
+				end
+			end
+		end
+		if flat == 0 and missed == 0 then
+			return {}
+		end
+		return {
+			string.format(
+				"%s at x %.1f: %d of %d rays hit a face of 75 degrees or less (flattest %.1f), %d hit nothing",
+				rail.Name,
+				rail.Position.X,
+				flat,
+				rays,
+				flattest,
+				missed
+			),
+		}
+	end
+
+	it("nobody can stand on the rails' front parts", function()
+		local fronts: { BasePart } = {}
+		for _, rail in sideRails() do
+			if rail.Position.Z < FRONT_RAIL_BEFORE_Z then
+				table.insert(fronts, rail)
+			end
+		end
+		expect(#fronts).toBe(2)
+		local problems: { string } = {}
+		for _, rail in fronts do
+			for _, line in frontRailTopProblems(game:GetService("Workspace"), rail) do
+				table.insert(problems, line)
+			end
+		end
+		expect(problems).toEqual({})
+	end)
+
+	-- The top-face check, shown on made-up parts in a WorldModel: a flat box is named, a wedge with one steep slope is not.
+	it("the rail top check notices a flat top and accepts a steep slope", function()
+		local world = Instance.new("WorldModel")
+		world.Archivable = false
+		world.Parent = game:GetService("ServerStorage")
+		local ok, message = pcall(function()
+			local box = Instance.new("Part")
+			box.Anchored = true
+			box.Size = Vector3.new(1.5, 27.5, 6.7)
+			box.CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(0, math.rad(14.6), 0)
+			box.Parent = world
+			expect(#frontRailTopProblems(world, box)).toBe(1)
+			local wedge = Instance.new("Part")
+			wedge.Shape = Enum.PartType.Wedge
+			wedge.Anchored = true
+			wedge.Size = Vector3.new(6.7, 27.5, 1.5)
+			wedge.CFrame = CFrame.new(20, 0, 0) * CFrame.Angles(0, math.rad(-75.4), 0)
+			wedge.Parent = world
+			expect(frontRailTopProblems(world, wedge)).toEqual({})
+		end)
+		world:Destroy()
+		if not ok then
+			error(message)
+		end
 	end)
 
 	it("the slope limit is 70", function()
@@ -814,55 +1570,6 @@ describe("the real world, zones and extras", function()
 	it("phone auto-jump is off", function()
 		-- set in default.project.json: an automatic hop on the giant thuds and can wake him
 		expect(game:GetService("StarterPlayer").AutoJumpEnabled).toBe(false)
-	end)
-
-	-- The highest point of any part of a ladder (its rails, rungs and the climbable truss).
-	local function ladderTop(ladder: Instance): (number, Vector3)
-		local highest, where = -math.huge, Vector3.zero
-		for _, part in ladder:GetDescendants() do
-			if part:IsA("BasePart") then
-				local half = part.Size / 2
-				for _, sx in { -1, 1 } do
-					for _, sy in { -1, 1 } do
-						for _, sz in { -1, 1 } do
-							local corner =
-								part.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
-							if corner.Y > highest then
-								highest, where = corner.Y, corner
-							end
-						end
-					end
-				end
-			end
-		end
-		return highest, where
-	end
-
-	it("the beard ladder's top is level with the nose pad", function()
-		local walk = (realWorld() :: any).WalkSurfaces
-		local top = ladderTop(walk.BeardLadder)
-		local pad = walk.Nose_Walk :: BasePart
-		local padTop = pad.Position.Y + pad.Size.Y / 2
-		expect(math.abs(top - padTop) <= 0.3).toBe(true)
-	end)
-
-	it("the cap ladder's top meets the cap path", function()
-		local walk = (realWorld() :: any).WalkSurfaces
-		local top, where = ladderTop(walk.CapLadder)
-		-- the cap path piece the top of the ladder reaches (the ladder ends over its length)
-		local meets: BasePart? = nil
-		for _, piece in walk:GetChildren() do
-			if piece.Name == "Nightcap_Walk" and piece:IsA("BasePart") then
-				local halfLength = piece.Size.Z / 2
-				if math.abs(piece.Position.Z - where.Z) <= halfLength + 1 then
-					meets = piece
-				end
-			end
-		end
-		expect(meets).never.toBeNil()
-		local pathTop = (meets :: BasePart).Position.Y + (meets :: BasePart).Size.Y / 2
-		-- a climber steps off the top of the ladder onto the path: the ladder may end a little above it, never below it
-		expect(top >= pathTop - 0.3 and top <= pathTop + 2).toBe(true)
 	end)
 
 	it("the 7 props behind the landing spots are out of the meadow (designer's clear view)", function()
@@ -1017,13 +1724,13 @@ describe("the real world, egg spots", function()
 			EggSpot_Common_7 = { 88, -32 },
 			EggSpot_Common_8 = { 93, 12 },
 			EggSpot_Uncommon_1 = { -26, -62.5 },
-			EggSpot_Uncommon_2 = { -21.5, -55.5 },
+			EggSpot_Uncommon_2 = { -19.5, -62 }, -- moved in stuck safety Task 24 from (-21.5, -55.5), with all three owners' yes
 			EggSpot_Uncommon_3 = { 26, -61.5 },
-			EggSpot_Uncommon_4 = { 21.5, -55 },
+			EggSpot_Uncommon_4 = { 19.5, -62 }, -- moved in stuck safety Task 24 from (21.5, -55), with all three owners' yes
 			EggSpot_Rare_1 = { -12.5, -40.3 },
 			EggSpot_Rare_2 = { -11.2, -34.8 },
 			EggSpot_Rare_3 = { -8.1, -30.7 },
-			EggSpot_Rare_4 = { 2.5, -29.5 },
+			EggSpot_Rare_4 = { 2.5, -30.5 }, -- moved in stuck safety Task 25 from (2.5, -29.5), clear of the longer beard rail, with game_creator's and designer's yes
 		}
 		local spots = loadSpots()
 		expect(#spots).toBe(16)
@@ -1041,6 +1748,76 @@ describe("the real world, egg spots", function()
 			end
 		end
 		expect(off).toEqual({})
+	end)
+
+	local SKIN_REACH = 0.3 -- studs: a spot's Base top may be this far from his skin (the egg spot test's own limit)
+	local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
+
+	-- A ray that sees only his six body pieces.
+	local function bodyParams(): RaycastParams
+		local giant = (realWorld() :: any).Giant :: Instance
+		local meshes: { Instance } = {}
+		for _, name in BODY_PIECES do
+			table.insert(meshes, (giant:FindFirstChild(name) :: Instance):FindFirstChild(name) :: Instance)
+		end
+		local params = RaycastParams.new()
+		params.IncludeInstances = meshes
+		params.RespectCanCollide = false
+		return params
+	end
+
+	-- Stuck safety Task 24 (game_creator's condition): the two Uncommon eggs that moved stand on the flat top of the SAME
+	-- boot as before: egg 2 on the left boot, egg 4 on the right. The flat top is the part above the 1 stud step in the boot
+	-- top, from the toe to the step. Measured in Studio on 2026-10-20 (the boot top's skin is level there to within 1.5
+	-- studs; the step is at z -60.4, the toe's front edge at z -68, x where the skin is above y 29).
+	type Outline = { minX: number, maxX: number, minZ: number, maxZ: number }
+	local LEFT_BOOT_TOP: Outline = { minX = -30, maxX = -16, minZ = -68, maxZ = -60.4 }
+	local RIGHT_BOOT_TOP: Outline = { minX = 16, maxX = 30, minZ = -68, maxZ = -60.4 }
+	local EGG_BOOT_INSET = 1.5 -- studs: a moved egg is at least this far in from every edge of its boot top
+
+	local function standsInside(outline: Outline, x: number, z: number, inset: number): boolean
+		return x >= outline.minX + inset
+			and x <= outline.maxX - inset
+			and z >= outline.minZ + inset
+			and z <= outline.maxZ - inset
+	end
+
+	it("a moved egg spot stays on the same part of him: Uncommon egg 2 and 4 each on their own boot top", function()
+		local byName: { [string]: WorldIndex.EggSpot } = {}
+		for _, spot in loadSpots() do
+			byName[spot.name] = spot
+		end
+		local egg2 = byName.EggSpot_Uncommon_2.cframe.Position
+		local egg4 = byName.EggSpot_Uncommon_4.cframe.Position
+		expect({
+			egg2OnLeftBoot = standsInside(LEFT_BOOT_TOP, egg2.X, egg2.Z, EGG_BOOT_INSET),
+			egg4OnRightBoot = standsInside(RIGHT_BOOT_TOP, egg4.X, egg4.Z, EGG_BOOT_INSET),
+		}).toEqual({ egg2OnLeftBoot = true, egg4OnRightBoot = true })
+	end)
+
+	-- Proof that the test above can fail: an egg moved to the other boot is not on this boot's top.
+	it("tells one boot top from the other", function()
+		expect(standsInside(LEFT_BOOT_TOP, -19.5, -62, EGG_BOOT_INSET)).toBe(true)
+		expect(standsInside(LEFT_BOOT_TOP, 19.5, -62, EGG_BOOT_INSET)).toBe(false) -- egg 2 moved to the right boot
+		expect(standsInside(RIGHT_BOOT_TOP, -19.5, -62, EGG_BOOT_INSET)).toBe(false) -- egg 4 moved to the left boot
+		expect(standsInside(LEFT_BOOT_TOP, -21.5, -55.5, EGG_BOOT_INSET)).toBe(false) -- egg 2's old place, on the boot's edge
+	end)
+
+	-- designer: each moved egg touches the boot top: its Base top is at most 0.2 studs over his skin and sinks into it at
+	-- most 0.3 studs.
+	it("the two moved Uncommon eggs touch the boot top", function()
+		local byName: { [string]: WorldIndex.EggSpot } = {}
+		for _, spot in loadSpots() do
+			byName[spot.name] = spot
+		end
+		local params = bodyParams()
+		for _, name in { "EggSpot_Uncommon_2", "EggSpot_Uncommon_4" } do
+			local top = byName[name].cframe.Position
+			local hit = Workspace:Raycast(top + Vector3.new(0, 3, 0), Vector3.new(0, -8, 0), params)
+			expect({ spot = name, skinFound = hit ~= nil }).toEqual({ spot = name, skinFound = true })
+			local gap = top.Y - (hit :: RaycastResult).Position.Y
+			expect({ spot = name, touches = gap <= 0.2 and gap >= -0.3 }).toEqual({ spot = name, touches = true })
+		end
 	end)
 
 	it("each garden has its own Common egg near its spawn spot", function()
@@ -1129,6 +1906,16 @@ describe("the real world, egg spots", function()
 		then
 			best, kind = (grass.Position - top).Magnitude, "grass"
 		end
+		-- His own skin (stuck safety Task 24, Ruling 5): where the invisible walk pieces were taken away, a spot stands on
+		-- the skin itself. It counts only when a ray down hits one of his six body pieces (not a guard, patch or plank) and
+		-- the Base top is within SKIN_REACH of it: the same 0.3 studs a route point may be from the ground.
+		local bodyHit = Workspace:Raycast(top + Vector3.new(0, 3, 0), Vector3.new(0, -4, 0), bodyParams())
+		if bodyHit ~= nil and math.abs(bodyHit.Position.Y - top.Y) <= SKIN_REACH then
+			local distance = math.abs(bodyHit.Position.Y - top.Y)
+			if distance < best then
+				best, kind = distance, "his skin"
+			end
+		end
 		local limit = math.cos(math.rad(game:GetService("StarterPlayer").CharacterMaxSlopeAngle))
 		for _, part in (realWorld() :: any).WalkSurfaces:GetDescendants() do
 			if
@@ -1160,10 +1947,14 @@ describe("the real world, egg spots", function()
 			expect({ spot = spot.name, solid = hit ~= nil }).toEqual({ spot = spot.name, solid = true })
 			-- and a character can reach it by walking and climbing: the grab reach is 8 studs
 			local distance, kind = nearestStandingPlace(top)
-			local expectedKind = if spot.rarity == "Common" then "grass" else "walk surface"
-			expect({ spot = spot.name, kind = kind, reachable = distance <= 8 }).toEqual({
+			-- Uncommon and Rare spots stand on an invisible walk piece or, where the pieces were taken away, on his skin
+			local kindIsRight = if spot.rarity == "Common"
+				then kind == "grass"
+				else (kind == "walk surface" or kind == "his skin")
+			expect({ spot = spot.name, kind = kind, kindIsRight = kindIsRight, reachable = distance <= 8 }).toEqual({
 				spot = spot.name,
-				kind = expectedKind,
+				kind = kind,
+				kindIsRight = true,
 				reachable = true,
 			})
 		end
@@ -1610,13 +2401,7 @@ describe("the real world, route and landing spots", function()
 	local GATE_OUTSIDE = 5.5 -- studs from the middle of a Safe Gate toward its spawn spot: just outside the arch
 	local TARGET_REACH = 3 -- studs, across the ground, between a target point and the thing it stands at
 	local MAX_LINK_LENGTH = 25 -- studs: short links follow the walk surfaces, with no corner-cutting
-	local SAMPLE_STEP = 2 -- studs between the places checked along a link
-	local RAY_START_ABOVE = 3 -- the ground ray starts this far above the line...
-	local RAY_LENGTH = 4 -- ...and reaches this far down
-	local MAX_OFF_LINE = 1 -- studs: how far the ground may be from the line (a line above the ground is corner-cutting)
-	local BODY_BOX = Vector3.new(2, 4, 2) -- a player's body
-	local BODY_LIFT = 0.5 -- studs: the box is held this far above the ground
-	local GIANT_SWEEP_HEIGHTS = { 1, 2.5, 4 } -- studs above the ground: the giant is checked with rays at these heights
+	local RAY_START_ABOVE = 3 -- studs: a ground ray starts this far above the place it checks
 	local STAND_LIMIT = 0.3 -- studs: how far a point's top may be from the ground under it
 	local POINT_SIZE = Vector3.new(1, 0.2, 1)
 	local LANDING_COUNT = 8
@@ -1921,83 +2706,16 @@ describe("the real world, route and landing spots", function()
 		"every link is walkable: ground under the whole way, not too steep, no water, and nothing solid in the way",
 		function()
 			local world = realWorld()
-			local maxSlope = math.cos(math.rad(StarterPlayer.CharacterMaxSlopeAngle))
-			-- Left out of the box check, because its bounding box is far bigger than the thing's shape:
-			--   * the giant: a few huge meshes whose boxes cover the belly path and the ramps, so the box can't tell his skin
-			--     from a wall;
-			--   * the teacup: its box is turned and covers the end of bridge 6, 25 studs from the cup itself.
-			-- Both get rays along the way at body height instead (below).
-			-- Also left out: the two ramp planks. A player steps on or off a ramp foot over its edge, which the box
-			-- touches by design (the edge stands 1 to 2 studs above the grass beside it).
-			local giant = (world :: any).Giant :: Instance
-			local teacup = (world :: any).GiantsThings.Teacup :: Instance
+			-- Left out of the body check: the two ramp planks. A player steps on or off a ramp foot over its edge, which
+			-- the body box touches by design (the edge stands 1 to 2 studs above the grass beside it).
 			local rampPlanks: { Instance } = {
 				(world :: any).WalkSurfaces.BootRamp.Ramp_Walk,
 				(world :: any).WalkSurfaces.RightBootRamp.Ramp_Walk,
 			}
-			local boxIgnores: { Instance } = { giant, teacup, rampPlanks[1], rampPlanks[2] }
-			local giantRays = RaycastParams.new()
-			giantRays.RespectCanCollide = true
-			giantRays.FilterType = Enum.RaycastFilterType.Include
-			giantRays.FilterDescendantsInstances = { giant, teacup }
-			local boxParams = OverlapParams.new()
-			boxParams.RespectCanCollide = true
-			boxParams.FilterType = Enum.RaycastFilterType.Exclude
-			boxParams.FilterDescendantsInstances = boxIgnores
-
-			-- Returns what is wrong with walking from `from` to `to`, or nil.
-			local function walkProblem(from: Vector3, to: Vector3): string?
-				local length = (to - from).Magnitude
-				local steps = math.max(1, math.ceil(length / SAMPLE_STEP))
-				local direction = (to - from).Unit
-				local previous: { position: Vector3, normal: Vector3 }? = nil
-				for step = 0, steps do
-					local onLine = from:Lerp(to, step / steps)
-					local where = describeVector(onLine)
-					local hit = Workspace:Raycast(
-						onLine + Vector3.new(0, RAY_START_ABOVE, 0),
-						Vector3.new(0, -RAY_LENGTH, 0),
-						groundRay()
-					)
-					if hit == nil then
-						return `no ground at {where}`
-					end
-					if hit.Material == Enum.Material.Water then
-						return `water at {where}`
-					end
-					if hit.Normal.Y < maxSlope then
-						return `too steep at {where} ({hit.Instance.Name})`
-					end
-					if math.abs(hit.Position.Y - onLine.Y) > MAX_OFF_LINE then
-						return `the ground is {hit.Position.Y - onLine.Y} studs off the line at {where} ({hit.Instance.Name})`
-					end
-					-- the body box, held 0.5 studs above the ground and tilted with it
-					local normal = hit.Normal
-					local along = direction - normal * direction:Dot(normal)
-					if along.Magnitude < 1e-3 then
-						along = Vector3.xAxis
-					end
-					local across = along.Unit:Cross(normal)
-					local boxCFrame =
-						CFrame.fromMatrix(hit.Position + normal * (BODY_LIFT + BODY_BOX.Y / 2), across, normal)
-					local touching = Workspace:GetPartBoundsInBox(boxCFrame, BODY_BOX, boxParams)
-					if #touching > 0 then
-						return `{touching[1]:GetFullName()} is in the way at {where}`
-					end
-					-- the giant and the teacup, with rays at body height between this place and the last one
-					if previous then
-						for _, height in GIANT_SWEEP_HEIGHTS do
-							local start = previous.position + previous.normal * height
-							local finish = hit.Position + normal * height
-							if Workspace:Raycast(start, finish - start, giantRays) then
-								return `the giant or the teacup is in the way at {where}, {height} studs up`
-							end
-						end
-					end
-					previous = { position = hit.Position, normal = normal }
-				end
-				return nil
-			end
+			local options = PathCheck.defaults(Workspace)
+			options.boxIgnores = rampPlanks
+			-- Rule 23 (One walk check for everything): this check counts the meadow ground too, like the stuck scan.
+			expect(options.terrain).toBe(Workspace.Terrain)
 
 			local byName: { [string]: WorldIndex.RoutePoint } = {}
 			local points = loadRoute()
@@ -2005,18 +2723,20 @@ describe("the real world, route and landing spots", function()
 				byName[point.name] = point
 			end
 			local checked = 0
+			local problems: { [string]: string } = {}
 			for _, point in points do
 				for _, neighbourName in point.neighbours do
 					if point.name < neighbourName then -- each link once
 						checked += 1
-						local label = `{point.name} to {neighbourName}`
-						expect({ label = label, problem = walkProblem(point.position, byName[neighbourName].position) }).toEqual({
-							label = label,
-							problem = nil,
-						})
+						local problem = PathCheck.linkProblem(options, point.position, byName[neighbourName].position)
+						if problem ~= nil then
+							problems[`{point.name} to {neighbourName}`] = problem
+						end
 					end
 				end
 			end
+			PathCheck.cleanup(options) -- takes the body probe out of the Workspace, whatever the result
+			expect(problems).toEqual({}) -- every link that fails, with why
 			expect(checked > 50).toBe(true)
 		end
 	)
@@ -2839,4 +3559,3357 @@ describe("the real world, the garden sign faces", function()
 			end
 		end
 	end)
+end)
+
+-- Designer's mockup folders (Workspace.Mockup_*) are not part of the game. tools/world/11a-mockups-hands-off.luau
+-- makes every part in them not solid, not found by ray or box checks and not touchable, after saving each part's own
+-- three values as attributes so nothing designer set is lost.
+describe("the real world, the mockup folders", function()
+	local function mockupParts(): { BasePart }
+		local found: { BasePart } = {}
+		for _, child in game:GetService("Workspace"):GetChildren() do
+			if string.sub(child.Name, 1, 7) == "Mockup_" then
+				if child:IsA("BasePart") then
+					table.insert(found, child)
+				end
+				for _, descendant in child:GetDescendants() do
+					if descendant:IsA("BasePart") then
+						table.insert(found, descendant)
+					end
+				end
+			end
+		end
+		return found
+	end
+
+	-- A short list of full names, so a failure names the parts (and does not print thousands of lines).
+	local function names(parts: { BasePart }): { string }
+		local list: { string } = {}
+		for index, part in parts do
+			if index > 10 then
+				table.insert(list, `... and {#parts - 10} more`)
+				break
+			end
+			table.insert(list, part:GetFullName())
+		end
+		return list
+	end
+
+	it("nothing in a mockup folder is solid, found by ground checks or touchable", function()
+		local on: { BasePart } = {}
+		for _, part in mockupParts() do
+			if part.CanCollide or part.CanQuery or part.CanTouch then
+				table.insert(on, part)
+			end
+		end
+		expect(names(on)).toEqual({})
+	end)
+
+	it("every part in a mockup folder kept its own three values as attributes", function()
+		local missing: { BasePart } = {}
+		for _, part in mockupParts() do
+			for _, attribute in { "MockupCanCollide", "MockupCanQuery", "MockupCanTouch" } do
+				if typeof(part:GetAttribute(attribute)) ~= "boolean" then
+					table.insert(missing, part)
+					break
+				end
+			end
+		end
+		expect(names(missing)).toEqual({})
+	end)
+end)
+
+-- Nothing in designer's mockup folders (Workspace.Mockup_*) may show in Play: they are mockup pieces, not the game.
+-- tools/world/11b-mockups-out-of-sight.luau makes every part, decal and texture fully see-through, switches off every
+-- label, screen and effect, and hides the name of every avatar, after saving each old value as an attribute
+-- (MockupTransparency, MockupEnabled or MockupDisplayDistanceType), so designer can show a mockup again for a shot.
+describe("the real world, the mockup folders are out of sight", function()
+	local SWITCHED_CLASSES = {
+		"BillboardGui",
+		"SurfaceGui",
+		"Beam",
+		"Trail",
+		"ParticleEmitter",
+		"PointLight",
+		"SpotLight",
+		"SurfaceLight",
+		"Fire",
+		"Smoke",
+		"Sparkles",
+		"Highlight",
+	}
+
+	local function isSwitched(instance: Instance): boolean
+		for _, className in SWITCHED_CLASSES do
+			if instance:IsA(className) then
+				return true
+			end
+		end
+		return false
+	end
+
+	-- A title, the count and the first 3 full names, so a failure names the objects (and does not print thousands).
+	local function describeList(title: string, found: { string }): { string }
+		local list: { string } = {}
+		if #found == 0 then
+			return list
+		end
+		table.insert(list, `{title}: {#found}`)
+		for index, path in found do
+			if index > 3 then
+				break
+			end
+			table.insert(list, `  {path}`)
+		end
+		return list
+	end
+
+	it("nothing in a mockup folder shows in Play", function()
+		local visible: { string } = {}
+		local switchedOn: { string } = {}
+		local namesShown: { string } = {}
+		local missingSaved: { string } = {}
+		for _, folder in game:GetService("Workspace"):GetChildren() do
+			if string.sub(folder.Name, 1, 7) ~= "Mockup_" then
+				continue
+			end
+			for _, descendant in folder:GetDescendants() do
+				if descendant:IsA("BasePart") or descendant:IsA("Decal") or descendant:IsA("Texture") then
+					local thing = descendant :: BasePart
+					if thing.Transparency ~= 1 then
+						table.insert(visible, descendant:GetFullName())
+					elseif typeof(descendant:GetAttribute("MockupTransparency")) ~= "number" then
+						table.insert(missingSaved, descendant:GetFullName())
+					end
+				elseif isSwitched(descendant) then
+					if (descendant :: any).Enabled then
+						table.insert(switchedOn, descendant:GetFullName())
+					elseif typeof(descendant:GetAttribute("MockupEnabled")) ~= "boolean" then
+						table.insert(missingSaved, descendant:GetFullName())
+					end
+				elseif descendant:IsA("Humanoid") then
+					if descendant.DisplayDistanceType ~= Enum.HumanoidDisplayDistanceType.None then
+						table.insert(namesShown, descendant:GetFullName())
+					elseif typeof(descendant:GetAttribute("MockupDisplayDistanceType")) ~= "string" then
+						table.insert(missingSaved, descendant:GetFullName())
+					end
+				end
+			end
+		end
+		local problems: { string } = {}
+		for _, line in describeList("parts, decals and textures still visible", visible) do
+			table.insert(problems, line)
+		end
+		for _, line in describeList("labels, screens and effects still on", switchedOn) do
+			table.insert(problems, line)
+		end
+		for _, line in describeList("avatars still showing a name or health bar", namesShown) do
+			table.insert(problems, line)
+		end
+		for _, line in describeList("hidden without a saved value", missingSaved) do
+			table.insert(problems, line)
+		end
+		expect(problems).toEqual({})
+	end)
+end)
+
+-- Mockup avatars (models with a Humanoid, used to show a player's size in mockup shots) must not stand in the world.
+-- A character's body parts are solid again in Play, even with CanCollide off in Edit, so an invisible avatar on a
+-- spawn spot or a way up blocks or lifts a real player. tools/world/11c-mockup-avatars-away.luau moves each one to
+-- ServerStorage.ArtLibrary.MockupAvatars.<its mockup folder>, so designer can bring one back for a shot.
+describe("the real world, no mockup avatar stands in a player's way", function()
+	local Workspace = game:GetService("Workspace")
+
+	it("no mockup avatar is left in the Workspace", function()
+		local left: { string } = {}
+		for _, folder in Workspace:GetChildren() do
+			if string.sub(folder.Name, 1, 7) ~= "Mockup_" then
+				continue
+			end
+			for _, descendant in folder:GetDescendants() do
+				if descendant:IsA("Humanoid") then
+					table.insert(left, descendant:GetFullName())
+				end
+			end
+		end
+		table.sort(left)
+		expect(left).toEqual({})
+	end)
+
+	it(
+		"the six mockup avatars wait in ServerStorage.ArtLibrary.MockupAvatars, each in its mockup folder's name",
+		function()
+			local library = game:GetService("ServerStorage"):FindFirstChild("ArtLibrary")
+			expect(library).never.toBeNil()
+			local avatars = (library :: Instance):FindFirstChild("MockupAvatars")
+			expect(avatars).never.toBeNil()
+			local found: { string } = {}
+			for _, descendant in (avatars :: Instance):GetDescendants() do
+				if descendant:IsA("Humanoid") then
+					table.insert(found, (descendant.Parent :: Instance):GetFullName())
+				end
+			end
+			table.sort(found)
+			local base = "ServerStorage.ArtLibrary.MockupAvatars."
+			expect(found).toEqual({
+				base .. "Mockup_EggRanks.Avatar",
+				base .. "Mockup_LadderSlam.Avatar",
+				base .. "Mockup_Nests.Avatar",
+				base .. "Mockup_Rescue.Avatar",
+				base .. "Mockup_WakeUp.Avatar",
+				base .. "Mockup_WaysUp.Avatar",
+			})
+		end
+	)
+
+	it("a moved avatar keeps its Mockup attributes", function()
+		local library = game:GetService("ServerStorage"):FindFirstChild("ArtLibrary")
+		expect(library).never.toBeNil()
+		local avatars = (library :: Instance):FindFirstChild("MockupAvatars")
+		expect(avatars).never.toBeNil()
+		local without: { string } = {}
+		for _, descendant in (avatars :: Instance):GetDescendants() do
+			local lacksSaved = false
+			if descendant:IsA("BasePart") then
+				lacksSaved = typeof(descendant:GetAttribute("MockupTransparency")) ~= "number"
+			elseif descendant:IsA("Humanoid") then
+				lacksSaved = typeof(descendant:GetAttribute("MockupDisplayDistanceType")) ~= "string"
+			end
+			if lacksSaved then
+				table.insert(without, descendant:GetFullName())
+			end
+		end
+		table.sort(without)
+		expect(without).toEqual({})
+	end)
+end)
+
+-- The 85% warning's world pieces (V2 new-player safety, Task 7). tools/world/12-warning85.luau moves designer's tested
+-- snort nose and bubble out of Workspace.Mockup_Warning85 into World.GiantFX, gives them their saved values back and
+-- sends the rest of the mockup to ServerStorage.ArtLibrary. The tested values are in docs/design/v2/style-guide.md,
+-- "The 85% warning: tested values (2026-10-19)".
+describe("the real world, the 85% warning pieces", function()
+	local Workspace = game:GetService("Workspace")
+
+	local function giantFx(): Instance
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local fx = (world :: Instance):FindFirstChild("GiantFX")
+		expect(fx).never.toBeNil()
+		return fx :: Instance
+	end
+
+	-- The names of every Mockup* attribute left on an instance, as a list, so a failure names them.
+	local function mockupAttributes(instance: Instance): { string }
+		local found: { string } = {}
+		for name in instance:GetAttributes() do
+			if string.sub(name, 1, 6) == "Mockup" then
+				table.insert(found, name)
+			end
+		end
+		table.sort(found)
+		return found
+	end
+
+	local function sequenceText(keypoints: { NumberSequenceKeypoint }): string
+		local parts: { string } = {}
+		for _, keypoint in keypoints do
+			table.insert(parts, `{string.format("%.2f", keypoint.Time)}:{string.format("%.2f", keypoint.Value)}`)
+		end
+		return table.concat(parts, ",")
+	end
+
+	it("the snort nose sits at his nose tip, 2 by 0.4 by 2, untouchable, with the tested puff", function()
+		local nose = giantFx():FindFirstChild("SnortNose")
+		expect(nose).never.toBeNil()
+		local part = nose :: BasePart
+		expect(part:IsA("BasePart")).toBe(true)
+		expect((part.Position - Vector3.new(0, 89, -14)).Magnitude < 0.01).toBe(true)
+		expect((part.Size - Vector3.new(2, 0.4, 2)).Magnitude < 0.01).toBe(true)
+		expect(part.CanCollide).toBe(false)
+		expect(part.CanQuery).toBe(false)
+		expect(part.CanTouch).toBe(false)
+		expect(part.Transparency).toBe(1)
+		expect(part.Anchored).toBe(true)
+		-- the top face points out and up from his face
+		expect((part.CFrame.UpVector - Vector3.new(0, 0.5, -0.87)).Magnitude < 0.01).toBe(true)
+		expect(mockupAttributes(part)).toEqual({})
+
+		local puff = part:FindFirstChild("SnortPuff")
+		expect(puff).never.toBeNil()
+		local emitter = puff :: ParticleEmitter
+		expect(emitter:IsA("ParticleEmitter")).toBe(true)
+		expect(mockupAttributes(emitter)).toEqual({})
+		expect(emitter.Enabled).toBe(false)
+		expect(emitter.Rate).toBe(0)
+		expect(emitter.EmissionDirection).toBe(Enum.NormalId.Top)
+		expect(emitter.Texture).toBe("rbxasset://textures/particles/smoke_main.dds")
+		local colour = emitter.Color.Keypoints[1].Value
+		expect(math.abs(colour.R - 0.921569) < 0.001 and math.abs(colour.G - 0.960784) < 0.001 and colour.B == 1).toBe(
+			true
+		)
+		expect(sequenceText(emitter.Size.Keypoints)).toBe("0.00:6.00,1.00:20.00")
+		expect(emitter.Speed).toEqual(NumberRange.new(18, 24))
+		expect(emitter.SpreadAngle).toEqual(Vector2.new(25, 25))
+		expect(emitter.Drag).toBe(2)
+		expect(emitter.Lifetime).toEqual(NumberRange.new(1.2, 1.8))
+		expect(sequenceText(emitter.Transparency.Keypoints)).toBe("0.00:0.10,0.60:0.40,1.00:1.00")
+		expect(math.abs(emitter.LightEmission - 0.3) < 0.001).toBe(true)
+		expect(math.abs(emitter.LightInfluence - 0.6) < 0.001).toBe(true)
+	end)
+
+	it("the 85% bubble waits, off, in the Z Z Z emitter, with its words and its tail", function()
+		local snore = giantFx():FindFirstChild("SnoreEmitter")
+		expect(snore).never.toBeNil()
+		local bubble = (snore :: Instance):FindFirstChild("Warning85Bubble")
+		expect(bubble).never.toBeNil()
+		local gui = bubble :: BillboardGui
+		expect(gui:IsA("BillboardGui")).toBe(true)
+		expect(gui.Enabled).toBe(false)
+		expect(mockupAttributes(gui)).toEqual({})
+		local frame = gui:FindFirstChild("Frame")
+		expect(frame).never.toBeNil()
+		local words = (frame :: Instance):FindFirstChild("TextLabel")
+		expect(words).never.toBeNil()
+		expect((words :: TextLabel).Text).toBe("Mmm... my eggs...")
+		local tail = gui:FindFirstChild("Tail")
+		expect(tail).never.toBeNil()
+		expect((tail :: Instance):IsA("Frame")).toBe(true)
+		-- no Mockup* attribute left on any piece of the bubble
+		for _, piece in gui:GetDescendants() do
+			expect(`{piece:GetFullName()} {table.concat(mockupAttributes(piece), ",")}`).toBe(`{piece:GetFullName()} `)
+		end
+		-- it draws at the Z Z Z spot (the emitter), never at a part that left for the library
+		expect(gui.Adornee).toBeNil()
+	end)
+
+	it("nothing named MumbleAnchor is left in the Workspace: the old bubble went to the library", function()
+		local left: { string } = {}
+		for _, descendant in Workspace:GetDescendants() do
+			if descendant.Name == "MumbleAnchor" then
+				table.insert(left, descendant:GetFullName())
+			end
+		end
+		expect(left).toEqual({})
+	end)
+
+	it("the 85% bubble has no stale Note attribute left", function()
+		local snore = giantFx():FindFirstChild("SnoreEmitter")
+		expect(snore).never.toBeNil()
+		local bubble = (snore :: Instance):FindFirstChild("Warning85Bubble")
+		expect(bubble).never.toBeNil()
+		expect((bubble :: Instance):GetAttribute("Note")).toBeNil()
+	end)
+
+	it("nothing named Mockup_Warning85 is left in the Workspace", function()
+		local left: { string } = {}
+		for _, descendant in Workspace:GetDescendants() do
+			if descendant.Name == "Mockup_Warning85" then
+				table.insert(left, descendant:GetFullName())
+			end
+		end
+		expect(left).toEqual({})
+	end)
+
+	it("every part of his eyelids is not solid and not found by checks, so nobody can stand on a lid", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local giant = (world :: Instance):FindFirstChild("Giant")
+		expect(giant).never.toBeNil()
+		local eyes = (giant :: Instance):FindFirstChild("SleepEyes")
+		expect(eyes).never.toBeNil()
+		local solid: { string } = {}
+		local count = 0
+		for _, descendant in (eyes :: Instance):GetDescendants() do
+			if descendant:IsA("BasePart") then
+				count += 1
+				if descendant.CanCollide or descendant.CanQuery then
+					table.insert(solid, descendant:GetFullName())
+				end
+			end
+		end
+		expect(count > 0).toBe(true)
+		expect(solid).toEqual({})
+	end)
+end)
+
+-- The teacup's bowl (V2 stuck safety, Task 6). The cup's bowl is open on top, so a player who got in was wedged (the
+-- 4 stuck spots of the Task 18 review). tools/world/14-teacup-tea.luau sets the cup's collision to Hull (Roblox's smooth
+-- wrap, which fills the bowl up to its rim) and adds the tea: one flat brown disc just below the rim, so a player
+-- standing on top of the filled bowl stands over something they can see. The tea is tilted like the cup, because the
+-- cup's rim is not level (designer, docs/specs/v2/research/decisions-plans.md, "Stuck safety Task 6: the tea on a tilted
+-- rim").
+describe("the real world, the teacup's bowl", function()
+	local Workspace = game:GetService("Workspace")
+
+	-- MEASURED BY HAND on 2026-10-19, in Studio Edit mode, before the cup became Hull (once it is Hull the inside of the
+	-- bowl can't be measured again). The method: rays straight down onto the cup's own mesh (RespectCanCollide off,
+	-- only the cup in the filter), outwards from (76, -58) every 0.1 studs from 6 to 16 studs, at 72 angles 5 degrees
+	-- apart. The rim crest of each angle is its highest hit. The rim plane is the least-squares plane through the 72
+	-- crest points: y = RIM_SLOPE_X * x + RIM_SLOPE_Z * z + RIM_BASE. It tilts the rim 8.8 degrees, highest to the
+	-- west/north-west (lowest crest 18.35, highest on the bowl 23.0).
+	local RIM_SLOPE_X = -0.134338
+	local RIM_SLOPE_Z = -0.077725
+	local RIM_BASE = 26.486
+	-- The crest point that sits farthest below the plane (the worst one), 0.45336 studs under it.
+	local WORST_RIM_X = 69.55
+	local WORST_RIM_Z = -46.8283
+	local WORST_RIM_Y = 20.3291
+	-- The tea's top is this far under the rim plane: the worst point's distance plus 0.1 (designer).
+	local TEA_DROP = 0.5534
+	-- The circle fitted to the inside of the bowl at the tea's height (the wall found by rays down along 72 angles
+	-- in the tea's own plane): its centre, on the tea's top plane, and its radius. The tea's radius is that plus 0.3,
+	-- so its edge tucks into the cup wall (designer).
+	local CIRCLE_CENTRE_X = 77.3985
+	local CIRCLE_CENTRE_Z = -57.1986
+	local CIRCLE_RADIUS = 11.941
+	local TEA_RADIUS = CIRCLE_RADIUS + 0.3
+	local TEA_THICKNESS = 0.4
+	local TEA_COLOUR = Color3.fromHex("9C5E34")
+	-- A player's feet over the tea, measured straight down from the feet to the tea's top (designer).
+	local FEET_NEAREST = 0.4
+	local FEET_FARTHEST = 1.0
+	local TOLERANCE = 0.02
+
+	local function teacup(): Model
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local things = (world :: Instance):FindFirstChild("GiantsThings")
+		expect(things).never.toBeNil()
+		local cup = (things :: Instance):FindFirstChild("Teacup")
+		expect(cup).never.toBeNil()
+		return cup :: Model
+	end
+
+	local function cupMesh(): MeshPart
+		local mesh = teacup():FindFirstChild("body_geom", true)
+		expect(mesh).never.toBeNil()
+		return mesh :: MeshPart
+	end
+
+	-- Every part named Tea in the teacup.
+	local function teaParts(): { BasePart }
+		local found: { BasePart } = {}
+		for _, descendant in teacup():GetDescendants() do
+			if descendant.Name == "Tea" and descendant:IsA("BasePart") then
+				table.insert(found, descendant)
+			end
+		end
+		return found
+	end
+
+	-- The one tea part, or a failed test.
+	local function tea(): Part
+		local parts = teaParts()
+		expect(#parts).toBe(1)
+		return parts[1] :: Part
+	end
+
+	-- The tea's own top: the point in the middle of its top face, and the direction that face points (its X axis,
+	-- because Roblox's cylinder stands along X).
+	local function teaTop(part: BasePart): (Vector3, Vector3)
+		local up = part.CFrame.RightVector
+		return part.Position + up * (part.Size.X / 2), up
+	end
+
+	-- The height of the tea's top surface straight above or below (x, z).
+	local function teaTopHeightAt(part: BasePart, x: number, z: number): number
+		local point, up = teaTop(part)
+		return point.Y - (up.X * (x - point.X) + up.Z * (z - point.Z)) / up.Y
+	end
+
+	local function rimPlaneHeight(x: number, z: number): number
+		return RIM_SLOPE_X * x + RIM_SLOPE_Z * z + RIM_BASE
+	end
+
+	it("the teacup's collision is the smooth wrap", function()
+		expect(cupMesh().CollisionFidelity).toBe(Enum.CollisionFidelity.Hull)
+	end)
+
+	-- The stuck scan's standing places in the bowl, found with rays down onto the cup's own mesh on 2026-10-19 (before the
+	-- cup became Hull): each is where a ray lands and the ground's slope there. The first four are the stuck spots of the
+	-- Task 18 review (the scan listed them rounded to 0.1). The last is the bottom of the bowl, near the cup's middle.
+	-- A standing body fits at every one of them today; the box tilts with the slope, as the scan's does.
+	it("no standing body fits in the teacup's bowl", function()
+		local options = PathCheck.defaults(Workspace)
+		local spots: { { name: string, feet: Vector3, up: Vector3 } } = {
+			{
+				name = "stuck spot 1",
+				feet = Vector3.new(69.2, 11.6036, -61),
+				up = Vector3.new(0.8267, 0.5524, -0.1065).Unit,
+			},
+			{
+				name = "stuck spot 2",
+				feet = Vector3.new(69.2, 11.7288, -59),
+				up = Vector3.new(0.6058, 0.7956, 0.0002).Unit,
+			},
+			{
+				name = "stuck spot 3",
+				feet = Vector3.new(69.2, 11.7282, -57),
+				up = Vector3.new(0.6058, 0.7956, 0.0002).Unit,
+			},
+			{
+				name = "stuck spot 4",
+				feet = Vector3.new(69.2, 11.7276, -55),
+				up = Vector3.new(0.6058, 0.7956, 0.0002).Unit,
+			},
+			{
+				name = "bottom of the bowl",
+				feet = Vector3.new(75, 6.0759, -58),
+				up = Vector3.new(0.1949, 0.9799, -0.0424).Unit,
+			},
+		}
+		local fitting: { string } = {}
+		for _, spot in spots do
+			if PathCheck.roomToStand(options, spot.feet, spot.up) then
+				table.insert(fitting, spot.name)
+			end
+		end
+		PathCheck.cleanup(options) -- takes the body probe out of the Workspace, whatever the result
+		expect(fitting).toEqual({})
+	end)
+
+	it("there is exactly one Tea part in the teacup", function()
+		expect(#teaParts()).toBe(1)
+	end)
+
+	it("the tea is tea brown, smooth plastic and not see-through", function()
+		local part = tea()
+		expect(part.Color).toEqual(TEA_COLOUR)
+		expect(part.Material).toBe(Enum.Material.SmoothPlastic)
+		expect(part.Transparency).toBe(0)
+	end)
+
+	it("the tea is a round disc", function()
+		local part = tea()
+		expect(part:IsA("Part")).toBe(true)
+		expect(part.Shape).toBe(Enum.PartType.Cylinder)
+	end)
+
+	it("nobody bumps into the tea, finds it with a check or touches it, and it stays put", function()
+		local part = tea()
+		expect(part.CanCollide).toBe(false)
+		expect(part.CanQuery).toBe(false)
+		expect(part.CanTouch).toBe(false)
+		expect(part.Anchored).toBe(true)
+	end)
+
+	it("the tea is 0.4 studs thick and as wide as the bowl's inside plus 0.3 studs each side", function()
+		local part = tea()
+		expect(math.abs(part.Size.X - TEA_THICKNESS) < TOLERANCE).toBe(true)
+		expect(math.abs(part.Size.Y - TEA_RADIUS * 2) < TOLERANCE).toBe(true)
+		expect(math.abs(part.Size.Z - TEA_RADIUS * 2) < TOLERANCE).toBe(true)
+	end)
+
+	it("the tea lies in the same tilt as the cup's rim", function()
+		local part = tea()
+		local expected = Vector3.new(-RIM_SLOPE_X, 1, -RIM_SLOPE_Z).Unit
+		expect((part.CFrame.RightVector - expected).Magnitude < 0.001).toBe(true)
+	end)
+
+	it("the tea's middle is the fitted circle's middle and its top is 0.5534 studs under the rim plane", function()
+		local part = tea()
+		local point = teaTop(part)
+		expect(math.abs(point.X - CIRCLE_CENTRE_X) < TOLERANCE).toBe(true)
+		expect(math.abs(point.Z - CIRCLE_CENTRE_Z) < TOLERANCE).toBe(true)
+		local planeHeight = rimPlaneHeight(point.X, point.Z)
+		expect(math.abs(planeHeight - TEA_DROP - point.Y) < TOLERANCE).toBe(true)
+	end)
+
+	it("the tea never shows above the rim: it is at least 0.1 studs under the worst rim point", function()
+		local part = tea()
+		-- the worst crest point is 0.45336 under the plane; the tea's top is 0.1 under it
+		local gap = WORST_RIM_Y - teaTopHeightAt(part, WORST_RIM_X, WORST_RIM_Z)
+		expect(gap >= 0.1 - 0.001).toBe(true)
+	end)
+
+	it("a player on top of the filled bowl stands 0.4 to 1.0 studs over the tea, west, middle and east", function()
+		local part = tea()
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Include
+		params.FilterDescendantsInstances = { teacup() }
+		params.RespectCanCollide = true -- sees only what a player bumps into
+		local points: { [string]: Vector3 } = {
+			west = Vector3.new(68, 0, -58),
+			middle = Vector3.new(76, 0, -58),
+			east = Vector3.new(86, 0, -58),
+		}
+		local bad: { string } = {}
+		for name, point in points do
+			local hit = Workspace:Raycast(Vector3.new(point.X, 60, point.Z), Vector3.new(0, -80, 0), params)
+			if hit == nil then
+				table.insert(bad, `{name}: the ray hit nothing`)
+			else
+				local feetOver = hit.Position.Y - teaTopHeightAt(part, point.X, point.Z)
+				if feetOver < FEET_NEAREST or feetOver > FEET_FARTHEST then
+					table.insert(bad, `{name}: feet {string.format("%.2f", feetOver)} studs over the tea`)
+				end
+			end
+		end
+		table.sort(bad)
+		expect(bad).toEqual({})
+	end)
+end)
+
+-- Stuck safety Task 19: his real shape (docs/plans/v2/stuck-safety.md, "How his real shape is patched"). The giant's six
+-- body pieces keep Roblox's closest collision match of the mesh players see (tools/world/15-real-shape.luau), so the
+-- surface players stand on is the skin they see. The pieces stay in the normal collision group, so players, every check
+-- and the camera all meet the same surface. These tests only READ the world.
+describe("the real world, his real shape", function()
+	local Workspace = game:GetService("Workspace")
+
+	local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
+
+	local function bodyMesh(pieceName: string): MeshPart
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local giant = (world :: Instance):FindFirstChild("Giant")
+		expect(giant).never.toBeNil()
+		local piece = (giant :: Instance):FindFirstChild(pieceName)
+		expect(piece).never.toBeNil()
+		local mesh = (piece :: Instance):FindFirstChild(pieceName)
+		expect(mesh).never.toBeNil()
+		expect((mesh :: Instance):IsA("MeshPart")).toBe(true)
+		return mesh :: MeshPart
+	end
+
+	-- Task 26 ("Ruling after step 26-3", and Ruling 9 after step 26-4e): the belly and chair, the legs, the head and the
+	-- nightcap use the closer fit (Tunable at CollisionPrecision 1). Both arms keep Roblox's Precise shape.
+	local CLOSER_FIT_PIECES: { [string]: boolean } = {
+		legs_and_boots = true,
+		body_and_cushion = true,
+		head_with_beard = true,
+		nightcap = true,
+	}
+	local CLOSER_FIT_PRECISION = 0.99
+
+	it("his six body pieces use his real shape", function()
+		local wrong: { string } = {}
+		for _, pieceName in BODY_PIECES do
+			local mesh = bodyMesh(pieceName)
+			local wanted = if CLOSER_FIT_PIECES[pieceName]
+				then Enum.CollisionFidelity.Tunable
+				else Enum.CollisionFidelity.PreciseConvexDecomposition
+			local precisionOk = not CLOSER_FIT_PIECES[pieceName] or mesh.CollisionPrecision >= CLOSER_FIT_PRECISION
+			if mesh.CollisionFidelity ~= wanted or not precisionOk then
+				local precisionText = string.format("%.2f", mesh.CollisionPrecision)
+				local wantedText = wanted.Name
+				if CLOSER_FIT_PIECES[pieceName] then
+					wantedText ..= " with CollisionPrecision at least 0.99"
+				end
+				table.insert(
+					wrong,
+					`{pieceName}: CollisionFidelity is {mesh.CollisionFidelity.Name}, CollisionPrecision {precisionText}, wanted {wantedText}`
+				)
+			end
+			if not (mesh.CanCollide and mesh.CanQuery and mesh.CanTouch) then
+				table.insert(
+					wrong,
+					`{pieceName}: CanCollide {mesh.CanCollide}, CanQuery {mesh.CanQuery}, CanTouch {mesh.CanTouch}`
+				)
+			end
+			if mesh.CollisionGroup ~= "Default" then
+				table.insert(wrong, `{pieceName}: CollisionGroup is {mesh.CollisionGroup}`)
+			end
+		end
+		expect(wrong).toEqual({})
+	end)
+end)
+
+-- Stuck safety Task 26: his solid shape sits on his drawn skin (docs/plans/v2/stuck-safety.md, Task 26; spec 2 Rule 20,
+-- "One collision source", check 6). His solid shape is what a player stands on. His drawn skin is the mesh Roblox
+-- paints, plus any shirt folds (see DrawnSkin). Wherever a player can stand on his six body pieces, the solid shape may
+-- be at most 0.2 studs above the drawn skin and 0.3 studs below it. These tests only READ the world (the two "can fail"
+-- tests move one spot in memory, or one clone of the truss, and destroy it again).
+describe("the real world, his solid body sits where he's drawn", function()
+	local Workspace = game:GetService("Workspace")
+	local StarterPlayer = game:GetService("StarterPlayer")
+
+	local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
+	local ABOVE_LIMIT = 0.2 -- studs: his solid shape may be this far over his drawn skin...
+	local BELOW_LIMIT = 0.3 -- studs: ...and this far under it
+	local LIMIT_SLACK = 0.001 -- studs: rounding in the numbers written into the world
+	local GRID_STEP = 1 -- studs: the spots checked are this far apart, on a grid over the whole giant
+	local MAX_SURFACES = 200 -- most surfaces one column can have (a safety stop, as in PathCheck)
+	local RAY_RESTART = 0.01 -- studs: the next ray down a column starts this far below the last surface it hit
+	local COLUMNS_PER_YIELD = 200 -- the scan lets Studio breathe this often
+	local SKIN_SEARCH_ABOVE = 1 -- studs: the drawn skin is read up to this far over the solid shape (not the skin of a floor above)
+	local SPOT_RAY_ABOVE = 3 -- studs: a spot's ray starts this far over it
+	local SPOT_RAY_BELOW = 5 -- studs: ...and the spot is "on his body" if the ray hits it within this far under it
+	local MAX_EXAMPLES = 3 -- most examples written out for each piece
+	local BUILD_TIMEOUT_MS = 60000 -- reading the six meshes takes a few seconds
+	local TEST_TIMEOUT_MS = 60000
+	-- Task 24's belly-top climb: a player stands here (x, z) and walks into the beard ladder's climbing truss, `Climb`.
+	-- It is where V1's truss foot is.
+	local BELLY_TOP_X = 0
+	local BELLY_TOP_Z = -24.5
+	local MIN_TRUSS_OVERLAP = 1 -- studs: a standing player's head reaches this far into the truss
+	local FOOTPRINT_STEP = 0.25 -- studs between the places under a standing player's body that are read
+
+	local skin: DrawnSkin.Skin = nil :: any
+
+	local function realWorld(): Instance
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		return world :: Instance
+	end
+
+	local function bodyMeshes(): { MeshPart }
+		local giant = realWorld():FindFirstChild("Giant")
+		expect(giant).never.toBeNil()
+		local meshes: { MeshPart } = {}
+		for _, name in BODY_PIECES do
+			local model = (giant :: Instance):FindFirstChild(name)
+			expect(model).never.toBeNil()
+			local mesh = (model :: Instance):FindFirstChild(name)
+			expect(mesh).never.toBeNil()
+			expect((mesh :: Instance):IsA("MeshPart")).toBe(true)
+			table.insert(meshes, mesh :: MeshPart)
+		end
+		return meshes
+	end
+
+	-- The shirt folds: soft blocks and wedges in World.Giant.ShirtFolds that players pass through (none until Task 26
+	-- adds them).
+	local function shirtFolds(): { BasePart }
+		local giant = realWorld():FindFirstChild("Giant")
+		local folder = if giant then giant:FindFirstChild("ShirtFolds") else nil
+		local folds: { BasePart } = {}
+		if folder then
+			for _, descendant in folder:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					table.insert(folds, descendant)
+				end
+			end
+		end
+		return folds
+	end
+
+	-- A ray that sees only his solid shape (the six body pieces).
+	local function bodyParams(meshes: { MeshPart }): RaycastParams
+		local included: { Instance } = {}
+		for _, mesh in meshes do
+			table.insert(included, mesh)
+		end
+		local params = RaycastParams.new()
+		params.IncludeInstances = included
+		params.RespectCanCollide = false
+		return params
+	end
+
+	-- The box that holds all of the given parts, as (lowest corner, highest corner).
+	local function boundsOf(parts: { MeshPart }): (Vector3, Vector3)
+		local low = Vector3.new(math.huge, math.huge, math.huge)
+		local high = -low
+		for _, part in parts do
+			local right, up, look = part.CFrame.RightVector, part.CFrame.UpVector, part.CFrame.LookVector
+			local size = part.Size
+			local reach = Vector3.new(
+				(math.abs(right.X) * size.X + math.abs(up.X) * size.Y + math.abs(look.X) * size.Z) / 2,
+				(math.abs(right.Y) * size.X + math.abs(up.Y) * size.Y + math.abs(look.Y) * size.Z) / 2,
+				(math.abs(right.Z) * size.X + math.abs(up.Z) * size.Y + math.abs(look.Z) * size.Z) / 2
+			)
+			low = low:Min(part.Position - reach)
+			high = high:Max(part.Position + reach)
+		end
+		return low, high
+	end
+
+	local function describePoint(point: Vector3): string
+		return string.format("(%.1f, %.1f, %.1f)", point.X, point.Y, point.Z)
+	end
+
+	-- gap: solid shape height minus drawn skin height straight under the spot. sideways: only set when that gap is outside
+	-- the limits but the drawn skin within SIDE_REACH studs sideways fits them (product's measuring rule, check 6): then
+	-- it is the gap to that skin.
+	type Gap = { piece: string, position: Vector3, gap: number, sideways: number? }
+
+	local SIDE_REACH = 0.3 -- studs: the drawn skin is also read this far sideways of a spot (never the solid shape)
+	local SIDE_STEPS = 3 -- the sideways reads are SIDE_REACH / SIDE_STEPS = 0.1 studs apart, inside a circle
+
+	local function outsideLimits(gap: number): boolean
+		return gap ~= gap or gap > ABOVE_LIMIT + LIMIT_SLACK or gap < -BELOW_LIMIT - LIMIT_SLACK
+	end
+
+	-- The gap to the drawn skin within SIDE_REACH studs sideways of (x, z) that fits the limits and is the closest to
+	-- zero, or nil when no skin there fits. `solidY` is the solid shape's top at the spot.
+	local function sidewaysFit(reader: DrawnSkin.Skin, x: number, z: number, solidY: number): number?
+		local best: number? = nil
+		local step = SIDE_REACH / SIDE_STEPS
+		for i = -SIDE_STEPS, SIDE_STEPS do
+			for j = -SIDE_STEPS, SIDE_STEPS do
+				if i * i + j * j <= SIDE_STEPS * SIDE_STEPS then
+					local drawn = reader.heightAt(x + i * step, z + j * step, solidY + SKIN_SEARCH_ABOVE)
+					if drawn ~= nil then
+						local gap = solidY - drawn
+						if not outsideLimits(gap) and (best == nil or math.abs(gap) < math.abs(best)) then
+							best = gap
+						end
+					end
+				end
+			end
+		end
+		return best
+	end
+
+	-- A spot fails outright when neither the skin under it nor the skin within SIDE_REACH sideways fits the limits.
+	local function failsOutright(entry: Gap): boolean
+		return outsideLimits(entry.gap) and entry.sideways == nil
+	end
+
+	-- A spot passes only because of the sideways search when the skin under it does not fit but the skin beside it does.
+	local function passesBySideways(entry: Gap): boolean
+		return outsideLimits(entry.gap) and entry.sideways ~= nil
+	end
+
+	-- Every place a player can stand on his body, on a 1-stud grid over the giant. It follows the game's own walk map
+	-- (PathCheck.findSpots): a ray down each column through every surface of his six pieces; a surface counts when its
+	-- slope is under the walking limit and a player's body fits standing on it (PathCheck.roomToStand), which also drops
+	-- the faces hidden inside his solid shape. `gap` is NaN where no drawn skin is under the spot at all.
+	local function standableGaps(): ({ Gap }, number)
+		local meshes = bodyMeshes()
+		local params = bodyParams(meshes)
+		local low, high = boundsOf(meshes)
+		local options = PathCheck.defaults(Workspace)
+		local walkable = math.cos(math.rad(StarterPlayer.CharacterMaxSlopeAngle))
+		local gaps: { Gap } = {}
+		local columns = 0
+		for x = math.floor(low.X) + GRID_STEP / 2, high.X, GRID_STEP do
+			for z = math.floor(low.Z) + GRID_STEP / 2, high.Z, GRID_STEP do
+				local startY = high.Y + 1
+				for _ = 1, MAX_SURFACES do
+					local hit =
+						Workspace:Raycast(Vector3.new(x, startY, z), Vector3.new(0, -(startY - low.Y + 1), 0), params)
+					if hit == nil then
+						break
+					end
+					if hit.Normal.Y >= walkable and PathCheck.roomToStand(options, hit.Position, hit.Normal) then
+						local drawn = skin.heightAt(x, z, hit.Position.Y + SKIN_SEARCH_ABOVE)
+						local gap = if drawn == nil then 0 / 0 else hit.Position.Y - drawn
+						table.insert(gaps, {
+							piece = hit.Instance.Name,
+							position = hit.Position,
+							gap = gap,
+							sideways = if outsideLimits(gap) then sidewaysFit(skin, x, z, hit.Position.Y) else nil,
+						})
+					end
+					startY = hit.Position.Y - RAY_RESTART
+				end
+				columns += 1
+				if columns % COLUMNS_PER_YIELD == 0 then
+					task.wait()
+				end
+			end
+		end
+		PathCheck.cleanup(options)
+		return gaps, #gaps
+	end
+
+	local allGaps: { Gap } = {}
+	local allSpots = 0
+
+	-- How many spots pass only because of the sideways search, and the worst of them (the one furthest outside the
+	-- limits straight under it), as a sentence for the report.
+	local function sidewaysSummary(gaps: { Gap }): string
+		local count = 0
+		local worst: Gap? = nil
+		local worstOutside = -1
+		for _, entry in gaps do
+			if passesBySideways(entry) then
+				count += 1
+				local outside = if entry.gap ~= entry.gap
+					then math.huge
+					elseif entry.gap > 0 then entry.gap - ABOVE_LIMIT
+					else -BELOW_LIMIT - entry.gap
+				if outside > worstOutside then
+					worstOutside = outside
+					worst = entry
+				end
+			end
+		end
+		if worst == nil then
+			return `none pass only because of the {SIDE_REACH}-stud sideways search`
+		end
+		local example = worst :: Gap
+		return `{count} more pass only because of the {SIDE_REACH}-stud sideways search (worst: {describePoint(
+			example.position
+		)} is {string.format("%+.2f", example.gap)} over the skin under it and {string.format(
+			"%+.2f",
+			example.sideways :: number
+		)} over the skin beside it)`
+	end
+
+	beforeAll(function()
+		skin = DrawnSkin.fromWorld(bodyMeshes(), shirtFolds())
+		allGaps, allSpots = standableGaps()
+	end, BUILD_TIMEOUT_MS)
+
+	type PieceTally = {
+		over: number,
+		under: number,
+		noSkin: number,
+		worstOver: Gap?,
+		worstUnder: Gap?,
+		examples: { string },
+	}
+
+	-- The problems, one line per piece that has any, with its worst spots and the first few.
+	local function gapProblems(gaps: { Gap }): { string }
+		local tallies: { [string]: PieceTally } = {}
+		for _, entry in gaps do
+			if failsOutright(entry) then
+				local tally = tallies[entry.piece]
+				if tally == nil then
+					tally = { over = 0, under = 0, noSkin = 0, examples = {} }
+					tallies[entry.piece] = tally
+				end
+				local current = tally :: PieceTally
+				if entry.gap ~= entry.gap then
+					current.noSkin += 1
+				elseif entry.gap > 0 then
+					current.over += 1
+					if current.worstOver == nil or entry.gap > (current.worstOver :: Gap).gap then
+						current.worstOver = entry
+					end
+				else
+					current.under += 1
+					if current.worstUnder == nil or entry.gap < (current.worstUnder :: Gap).gap then
+						current.worstUnder = entry
+					end
+				end
+				if #current.examples < MAX_EXAMPLES then
+					table.insert(
+						current.examples,
+						`{describePoint(entry.position)} {string.format("%+.2f", entry.gap)}`
+					)
+				end
+			end
+		end
+		local problems: { string } = {}
+		for _, name in BODY_PIECES do
+			local tally = tallies[name]
+			if tally then
+				local parts: { string } = {}
+				if tally.over > 0 then
+					local worst = tally.worstOver :: Gap
+					table.insert(
+						parts,
+						`{tally.over} over (worst {string.format("%+.2f", worst.gap)} at {describePoint(worst.position)})`
+					)
+				end
+				if tally.under > 0 then
+					local worst = tally.worstUnder :: Gap
+					table.insert(
+						parts,
+						`{tally.under} under (worst {string.format("%+.2f", worst.gap)} at {describePoint(
+							worst.position
+						)})`
+					)
+				end
+				if tally.noSkin > 0 then
+					table.insert(parts, `{tally.noSkin} with no drawn skin under them`)
+				end
+				table.insert(
+					problems,
+					`{name}: {table.concat(parts, ", ")}; first: {table.concat(tally.examples, ", ")}`
+				)
+			end
+		end
+		return problems
+	end
+
+	it("his solid shape is at most 0.2 over and 0.3 under his drawn skin everywhere a player can stand", function()
+		expect(allSpots > 1000).toBe(true) -- the grid really found his body
+		local bad = 0
+		for _, entry in allGaps do
+			if failsOutright(entry) then
+				bad += 1
+			end
+		end
+		local summary = `{bad} of {allSpots} standable spots fail outright; {sidewaysSummary(allGaps)}`
+		print("check 6: " .. summary) -- both counts show even when the test passes
+		local problems = gapProblems(allGaps)
+		if #problems > 0 then
+			table.insert(problems, 1, summary)
+		end
+		expect(problems).toEqual({})
+	end, TEST_TIMEOUT_MS)
+
+	-- Proof that the sideways search bites (product's measuring rule, check 6). A made-up skin has a step: flat at height
+	-- 1 for x under 0 and flat at height 0 from x 0 on. A spot 0.2 from the step, with the solid shape 1.1 high, is far
+	-- above the low skin under it but fits the high skin beside it, so it passes by the sideways search. A spot 0.5 from
+	-- the step has no fitting skin within 0.3, and a spot with the solid shape 3 high fits nowhere.
+	describe("the sideways search", function()
+		local function flat(x0: number, x1: number, height: number): { DrawnSkin.Triangle }
+			local a, b = Vector3.new(x0, height, -10), Vector3.new(x1, height, -10)
+			local c, d = Vector3.new(x1, height, 10), Vector3.new(x0, height, 10)
+			return { { a = a, b = b, c = c }, { a = a, b = c, c = d } }
+		end
+
+		local function steppedSkin(): DrawnSkin.Skin
+			local triangles = flat(-10, 0, 1)
+			for _, triangle in flat(0, 10, 0) do
+				table.insert(triangles, triangle)
+			end
+			return DrawnSkin.new(triangles, {})
+		end
+
+		it("passes a spot whose own skin is far below but whose skin 0.2 beside it fits", function()
+			local reader = steppedSkin()
+			expect(outsideLimits(1.1 - (reader.heightAt(0.2, 0, 2) :: number))).toBe(true)
+			local gap = sidewaysFit(reader, 0.2, 0, 1.1)
+			expect(gap).never.toBeNil()
+			expect(math.abs((gap :: number) - 0.1) < 0.001).toBe(true)
+		end)
+
+		it("fails a spot with no fitting skin within 0.3 sideways", function()
+			expect(sidewaysFit(steppedSkin(), 0.5, 0, 1.1)).toBeNil()
+		end)
+
+		it("fails a spot whose solid shape is too high for any skin beside it", function()
+			expect(sidewaysFit(steppedSkin(), 0.2, 0, 3)).toBeNil()
+		end)
+
+		it("counts a spot only once: outright failure and sideways pass are separate", function()
+			local entry: Gap = { piece = "x", position = Vector3.zero, gap = 1.1, sideways = 0.1 }
+			expect(passesBySideways(entry)).toBe(true)
+			expect(failsOutright(entry)).toBe(false)
+			entry.sideways = nil
+			expect(passesBySideways(entry)).toBe(false)
+			expect(failsOutright(entry)).toBe(true)
+		end)
+	end)
+
+	-- Proof that the method reads his skin right: his left arm's solid shape follows its skin to 0.13 studs (measured
+	-- in Task 25), so every standable spot on it must read within the limits. A wrong mapping of the mesh into the world
+	-- (a turned, mirrored or mis-scaled skin) would fail this at once.
+	it("reads the drawn skin of his left arm where its solid shape is", function()
+		local checked = 0
+		local outside: { string } = {}
+		for _, entry in allGaps do
+			if entry.piece == "left_arm" then
+				checked += 1
+				if failsOutright(entry) and #outside < MAX_EXAMPLES then
+					table.insert(outside, `{describePoint(entry.position)} {string.format("%+.2f", entry.gap)}`)
+				end
+			end
+		end
+		expect(checked > 50).toBe(true)
+		expect(outside).toEqual({})
+	end)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- Eggs, footprints and landing spots on his drawn skin
+	----------------------------------------------------------------------------------------------------------------
+
+	type Spot = { name: string, position: Vector3 }
+
+	-- Every egg spot (the top of its Base), footprint route point and landing spot. Nests are added by plan 5.
+	local function worldSpots(): { Spot }
+		local world = realWorld()
+		local spots: { Spot } = {}
+		local eggSpots, eggProblems = WorldIndex.readEggSpots(world)
+		expect(eggProblems).toEqual({})
+		for _, spot in eggSpots :: { WorldIndex.EggSpot } do
+			table.insert(spots, { name = spot.name, position = spot.cframe.Position })
+		end
+		local route, routeProblems = WorldIndex.readRoute(world)
+		expect(routeProblems).toEqual({})
+		for _, point in route :: { WorldIndex.RoutePoint } do
+			table.insert(spots, { name = `route point {point.name}`, position = point.position })
+		end
+		local landings, landingProblems = WorldIndex.readLandingSpots(world)
+		expect(landingProblems).toEqual({})
+		for _, landing in landings :: { WorldIndex.LandingSpot } do
+			table.insert(spots, { name = `LandingSpot_{landing.index}`, position = landing.position })
+		end
+		return spots
+	end
+
+	-- The spots that are on his body, and the problems with those. A spot is on his body when the first thing a player
+	-- would stand on under it (a ray that sees what the Players group collides with) is one of his six pieces, within
+	-- a few studs. A spot on a crossing ramp or a ladder is not: those float over his skin by design.
+	local function spotProblems(spots: { Spot }): ({ string }, number)
+		local meshes = bodyMeshes()
+		local ground = RaycastParams.new()
+		ground.RespectCanCollide = true
+		ground.CollisionGroup = Collisions.GROUP
+		local problems: { string } = {}
+		local onBody = 0
+		for _, spot in spots do
+			local start = spot.position + Vector3.new(0, SPOT_RAY_ABOVE, 0)
+			local hit = Workspace:Raycast(start, Vector3.new(0, -(SPOT_RAY_ABOVE + SPOT_RAY_BELOW), 0), ground)
+			if hit and table.find(meshes, hit.Instance :: any) ~= nil then
+				onBody += 1
+				local drawn = skin.heightAt(spot.position.X, spot.position.Z, start.Y)
+				if drawn == nil then
+					table.insert(problems, `{spot.name} {describePoint(spot.position)}: no drawn skin under it`)
+				else
+					local gap = spot.position.Y - drawn
+					if outsideLimits(gap) then
+						table.insert(
+							problems,
+							`{spot.name} {describePoint(spot.position)}: {string.format("%+.2f", gap)} from his drawn skin`
+						)
+					end
+				end
+			end
+		end
+		return problems, onBody
+	end
+
+	it("eggs, footprints and landing spots on his body sit on his drawn skin", function()
+		local problems, onBody = spotProblems(worldSpots())
+		expect(onBody > 5).toBe(true) -- the Rare eggs, the belly route and the boots, at least
+		expect(problems).toEqual({})
+	end, TEST_TIMEOUT_MS)
+
+	-- Proof that the test above can fail: one spot that passes, moved 0.5 studs up, and then 0.5 studs down.
+	it("the spot check notices a spot 0.5 studs too high or too low", function()
+		local sound: Spot? = nil
+		for _, spot in worldSpots() do
+			local problems, onBody = spotProblems({ spot })
+			if onBody == 1 and #problems == 0 then
+				sound = spot
+				break
+			end
+		end
+		expect(sound).never.toBeNil()
+		local original = sound :: Spot
+		local higher = spotProblems({ { name = original.name, position = original.position + Vector3.new(0, 0.5, 0) } })
+		local lower = spotProblems({ { name = original.name, position = original.position - Vector3.new(0, 0.5, 0) } })
+		expect({ higher = #higher, lower = #lower }).toEqual({ higher = 1, lower = 1 })
+	end, TEST_TIMEOUT_MS)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- The beard ladder is within reach of a player standing on his belly top
+	----------------------------------------------------------------------------------------------------------------
+
+	local function beardTruss(): BasePart
+		local walk = realWorld():FindFirstChild("WalkSurfaces")
+		expect(walk).never.toBeNil()
+		local ladder = (walk :: Instance):FindFirstChild("BeardLadder")
+		expect(ladder).never.toBeNil()
+		local truss = (ladder :: Instance):FindFirstChild("Climb")
+		expect(truss).never.toBeNil()
+		return truss :: BasePart
+	end
+
+	-- Where his solid shape is at the belly-top spot: the height a player's feet stand at.
+	local function bellyTopStandY(): number
+		local meshes = bodyMeshes()
+		local low, high = boundsOf(meshes)
+		local hit = Workspace:Raycast(
+			Vector3.new(BELLY_TOP_X, high.Y + 1, BELLY_TOP_Z),
+			Vector3.new(0, -(high.Y - low.Y + 2), 0),
+			bodyParams(meshes)
+		)
+		expect(hit).never.toBeNil()
+		return (hit :: RaycastResult).Position.Y
+	end
+
+	-- How far a player's head, standing with feet at `standY`, reaches into the truss: the top of the body minus the
+	-- lowest point of the truss anywhere over the body's footprint. Negative: the head is under the truss.
+	local function trussOverlap(truss: BasePart, standY: number): number
+		local solid = DrawnSkin.solidOf(truss)
+		local half = Config.Stuck.BodyWidth / 2
+		local lowest = math.huge
+		for dx = -half, half, FOOTPRINT_STEP do
+			for dz = -half, half, FOOTPRINT_STEP do
+				local bottom = DrawnSkin.columnSpan(solid, BELLY_TOP_X + dx, BELLY_TOP_Z + dz)
+				if bottom ~= nil then
+					lowest = math.min(lowest, bottom)
+				end
+			end
+		end
+		return standY + Config.Stuck.BodyHeight - lowest
+	end
+
+	it("a player on his belly top can grab the beard ladder: his head reaches 1 stud into its truss", function()
+		local overlap = trussOverlap(beardTruss(), bellyTopStandY())
+		expect({ overlap = overlap, reaches = overlap >= MIN_TRUSS_OVERLAP }).toEqual({
+			overlap = overlap,
+			reaches = true,
+		})
+	end)
+
+	-- Proof that the test above can fail: the same truss 3 studs higher is out of reach.
+	it("the truss check notices a truss 3 studs too high", function()
+		local standY = bellyTopStandY()
+		local raised = beardTruss():Clone()
+		raised.CFrame = raised.CFrame + Vector3.new(0, 3, 0)
+		local realOverlap = trussOverlap(beardTruss(), standY)
+		local raisedOverlap = trussOverlap(raised, standY)
+		raised:Destroy()
+		expect(realOverlap >= MIN_TRUSS_OVERLAP).toBe(true)
+		expect(raisedOverlap < MIN_TRUSS_OVERLAP).toBe(true)
+	end)
+end)
+
+-- Stuck safety Task 24: V1's invisible walk pieces on his legs and belly sit on his skin (docs/plans/v2/stuck-safety.md,
+-- Task 24; spec 2 Rule 20, "One collision source", checks 2 and 4). A walk piece is an invisible board that players walk
+-- on. Its whole top must lie 0.2 studs below to 0.7 studs above his skin, checked about every stud. Where a near-vertical
+-- wall of his skin cannot be fitted (his left boot's top edge and his knee), a short solid crossing ramp joins the path
+-- instead, held to the same window only along the two edges where players step on and off. These tests only READ the
+-- world (the two "can fail" tests build one test part far from the map and destroy it again).
+describe("the real world, the walk pieces sit on his skin", function()
+	local Workspace = game:GetService("Workspace")
+	local StarterPlayer = game:GetService("StarterPlayer")
+
+	local WALK_NAMES: { [string]: boolean } = { Boots_Walk = true, RightBoots_Walk = true, Belly_Walk = true }
+	-- Stuck safety Task 25: the head's invisible walk pieces (V1's nose deck and its three nightcap pieces). His real
+	-- skin is walkable there, so the task removes them all; the walk-piece test below checks any that are left.
+	local HEAD_WALK_NAMES: { [string]: boolean } = { Nose_Walk = true, Nightcap_Walk = true }
+	-- Source: tools/world/15-real-shape.luau section 2b removes all four (stuck safety Task 25, "What changes" 1 and 2).
+	local EXPECTED_HEAD_WALK_PIECES = 0
+	local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }
+	local WINDOW_BELOW = 0.2 -- studs: a walk top may be this far under his skin
+	local WINDOW_ABOVE = 0.7 -- studs: ...and this far over it
+	local WINDOW_SLACK = 0.001 -- studs: rounding in the numbers written into the world
+	local GRID_STEP = 1 -- studs: the points checked on a top are at most this far apart
+	local GRID_INSET = 0.5 -- studs: ...and this far in from every edge, with both inner edges included
+	local RAY_ABOVE = 12
+	local RAY_LENGTH = 24
+	local MAX_EXAMPLES = 3 -- most examples written out for each piece
+	local MAX_RAMPS = 3
+	local RAMP_NAMES: { [string]: boolean } = {
+		CrossingRamp_Ankle = true,
+		CrossingRamp_Knee = true,
+		CrossingRamp_Steep = true,
+	}
+	local MAX_RAMP_DEGREES = 45
+	-- The stretch crossing ramps may stand in: his left leg between the left boot top and Rare egg 1 (the stretch that
+	-- plan 3, Task 6 removes). Rare egg 1's top is at (-12.5, 41.3, -40.3); the boot top's step is at z -60.4.
+	local STRETCH_MIN = Vector3.new(-32, 24, -61)
+	local STRETCH_MAX = Vector3.new(-8, 43, -38.5)
+	local WALL_DEGREES = 70 -- a wall step is steeper than this...
+	local WALL_RISE = 0.5 -- ...and rises more than this
+	local STEEP_BODY_DEGREES = 65 -- or the body-size slope is this steep or more (the seam angle)
+	local PROFILE_STEP = 0.1 -- studs between the places a span's profile is read
+	local BODY_PATCH_REACH = 2 -- the body-size slope: 25 rays 1 stud apart on a 4 by 4 stud square
+	local SLOT_REACH = 8 -- studs: how far under a piece a slot is looked for
+	local EDGE_ROW = 0.51 -- studs: the rows of a ramp top that count as its step-on and step-off edges
+
+	local function realWorld(): Instance
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		return world :: Instance
+	end
+
+	local function walkFolder(): Instance
+		local walk = realWorld():FindFirstChild("WalkSurfaces")
+		expect(walk).never.toBeNil()
+		return walk :: Instance
+	end
+
+	-- His six body pieces.
+	local function bodyInstances(): { Instance }
+		local giant = realWorld():FindFirstChild("Giant")
+		expect(giant).never.toBeNil()
+		local meshes: { Instance } = {}
+		for _, name in BODY_PIECES do
+			local model = (giant :: Instance):FindFirstChild(name)
+			expect(model).never.toBeNil()
+			local mesh = (model :: Instance):FindFirstChild(name)
+			expect(mesh).never.toBeNil()
+			table.insert(meshes, mesh :: Instance)
+		end
+		return meshes
+	end
+
+	-- A ray that sees only his six body pieces.
+	local function bodyParams(): RaycastParams
+		local params = RaycastParams.new()
+		params.IncludeInstances = bodyInstances()
+		params.RespectCanCollide = false
+		return params
+	end
+
+	local function describePoint(point: Vector3): string
+		return string.format("(%.1f, %.1f, %.1f)", point.X, point.Y, point.Z)
+	end
+
+	-- The places along one side of a top: GRID_INSET in from both edges, at most GRID_STEP apart, both inner edges included.
+	local function axisPoints(extent: number): { number }
+		local span = extent - 2 * GRID_INSET
+		if span <= 0 then
+			return { 0 }
+		end
+		local count = math.ceil(span / GRID_STEP)
+		local points: { number } = {}
+		for index = 0, count do
+			table.insert(points, -span / 2 + span * index / count)
+		end
+		return points
+	end
+
+	-- The grid of a flat piece's top, in world space.
+	local function topGrid(cframe: CFrame, size: Vector3): { Vector3 }
+		local points: { Vector3 } = {}
+		for _, x in axisPoints(size.X) do
+			for _, z in axisPoints(size.Z) do
+				table.insert(points, cframe:PointToWorldSpace(Vector3.new(x, size.Y / 2, z)))
+			end
+		end
+		return points
+	end
+
+	-- Where his skin is under `point`: a ray straight down from RAY_ABOVE over it, RAY_LENGTH long.
+	local function skinUnder(params: RaycastParams, point: Vector3): RaycastResult?
+		return Workspace:Raycast(point + Vector3.new(0, RAY_ABOVE, 0), Vector3.new(0, -RAY_LENGTH, 0), params)
+	end
+
+	local function walkPieces(): { BasePart }
+		local pieces: { BasePart } = {}
+		for _, piece in walkFolder():GetChildren() do
+			if piece:IsA("BasePart") and WALK_NAMES[piece.Name] then
+				table.insert(pieces, piece)
+			end
+		end
+		return pieces
+	end
+
+	local function headWalkPieces(): { BasePart }
+		local pieces: { BasePart } = {}
+		for _, piece in walkFolder():GetChildren() do
+			if piece:IsA("BasePart") and HEAD_WALK_NAMES[piece.Name] then
+				table.insert(pieces, piece)
+			end
+		end
+		return pieces
+	end
+
+	local function crossingRamps(): { BasePart }
+		local ramps: { BasePart } = {}
+		for _, piece in walkFolder():GetChildren() do
+			if piece:IsA("BasePart") and string.match(piece.Name, "^CrossingRamp_") then
+				table.insert(ramps, piece)
+			end
+		end
+		return ramps
+	end
+
+	it("the invisible walk pieces sit on his skin", function()
+		local params = bodyParams()
+		local over, under, noSkin, total = 0, 0, 0, 0
+		local examples: { string } = {}
+		local checkedPieces: { BasePart } = walkPieces()
+		local headPieces: { BasePart } = headWalkPieces()
+		for _, piece in headPieces do
+			table.insert(checkedPieces, piece)
+		end
+		for _, piece in checkedPieces do
+			local shown = 0
+			for _, point in topGrid(piece.CFrame, piece.Size) do
+				total += 1
+				local problem: string? = nil
+				local hit = skinUnder(params, point)
+				if hit == nil then
+					noSkin += 1
+					problem = `no skin within {RAY_ABOVE} studs`
+				else
+					local gap = point.Y - hit.Position.Y
+					if gap > WINDOW_ABOVE + WINDOW_SLACK then
+						over += 1
+						problem = string.format("%.2f studs over his skin (the most is %g)", gap, WINDOW_ABOVE)
+					elseif gap < -WINDOW_BELOW - WINDOW_SLACK then
+						under += 1
+						problem =
+							string.format("his skin pokes %.2f studs through (the most is %g)", -gap, WINDOW_BELOW)
+					end
+				end
+				if problem ~= nil and shown < MAX_EXAMPLES then
+					shown += 1
+					table.insert(examples, `{piece.Name} at {describePoint(point)}: {problem}`)
+				end
+			end
+		end
+		expect(total > 0).toBe(true)
+		expect({
+			headPieces = #headPieces,
+			over = over,
+			under = under,
+			noSkin = noSkin,
+			examples = examples,
+		}).toEqual({
+			headPieces = EXPECTED_HEAD_WALK_PIECES,
+			over = 0,
+			under = 0,
+			noSkin = 0,
+			examples = {},
+		})
+	end)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- Ladder ends (stuck safety Task 25, test 2)
+	----------------------------------------------------------------------------------------------------------------
+
+	local END_BELOW = 0.3 -- studs: a ladder's end may be this far under the ground a climber steps onto...
+	local END_ABOVE = 0.7 -- studs: ...and this far over it
+	local END_PAST = 1 -- studs: at a top, the ground is read this far past the end, along the ladder's flat direction
+	local END_RAY_ABOVE = 2 -- studs: the ground ray starts this far over the highest (or lowest) point of the ladder
+	local END_TOUCH = 0.5 -- studs: an end rung is this close to his skin or closer
+
+	-- The ladder's centre line is its truss, `Climb`: the longest side of the truss runs up the ladder.
+	type LadderAxis = { foot: Vector3, top: Vector3, up: Vector3, flat: Vector3, back: Vector3 }
+
+	local function ladderAxis(ladder: Instance): LadderAxis
+		local truss = ladder:FindFirstChild("Climb")
+		expect(truss).never.toBeNil()
+		local part = truss :: BasePart
+		local size = part.Size
+		local length = math.max(size.X, size.Y, size.Z)
+		local up = if size.X == length
+			then part.CFrame.RightVector
+			elseif size.Y == length then part.CFrame.UpVector
+			else part.CFrame.LookVector
+		if up.Y < 0 then
+			up = -up
+		end
+		local flatPart = Vector3.new(up.X, 0, up.Z)
+		local flat = flatPart.Unit
+		-- "back" is toward his face: along the flat direction and tilted down, square to the ladder.
+		local back = (flat * up.Y - Vector3.yAxis * flatPart.Magnitude).Unit
+		return {
+			foot = part.Position - up * length / 2,
+			top = part.Position + up * length / 2,
+			up = up,
+			flat = flat,
+			back = back,
+		}
+	end
+
+	-- The highest (or lowest) point of any part of a ladder: its rails, rungs and the climbable truss.
+	local function ladderExtreme(ladder: Instance, highest: boolean): number
+		local extreme = if highest then -math.huge else math.huge
+		for _, part in ladder:GetDescendants() do
+			if part:IsA("BasePart") then
+				local half = part.Size / 2
+				for _, sx in { -1, 1 } do
+					for _, sy in { -1, 1 } do
+						for _, sz in { -1, 1 } do
+							local corner =
+								part.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
+							extreme = if highest then math.max(extreme, corner.Y) else math.min(extreme, corner.Y)
+						end
+					end
+				end
+			end
+		end
+		return extreme
+	end
+
+	-- The rung at the top (or foot) end of a ladder: the one farthest along (or against) the ladder's up direction.
+	local function endRung(ladder: Instance, axis: LadderAxis, atTop: boolean): BasePart
+		local found: BasePart? = nil
+		local best = 0
+		for _, child in ladder:GetChildren() do
+			if child:IsA("BasePart") and child.Name == "Rung" then
+				local along = child.Position:Dot(axis.up) * (if atTop then 1 else -1)
+				if found == nil or along > best then
+					found, best = child, along
+				end
+			end
+		end
+		expect(found).never.toBeNil()
+		return found :: BasePart
+	end
+
+	-- How far from the rung's surface, in `direction`, his skin is (nil when it is farther than `length`, default a stud).
+	local function skinDistance(params: RaycastParams, rung: BasePart, direction: Vector3, length: number?): number?
+		local cframe = rung.CFrame
+		local half = rung.Size / 2
+		local reach = half.X * math.abs(cframe.RightVector:Dot(direction))
+			+ half.Y * math.abs(cframe.UpVector:Dot(direction))
+			+ half.Z * math.abs(cframe.LookVector:Dot(direction))
+		local hit = Workspace:Raycast(rung.Position + direction * reach, direction * (length or 1), params)
+		return if hit then hit.Distance else nil
+	end
+
+	-- The ends of the ladders a climber steps on or off: the beard ladder's top, and the cap ladder's foot and top.
+	-- Each end sits 0.3 studs under to 0.7 over the ground it meets, and its end rung touches his skin without being
+	-- inside him (designer 3, 6 and 8).
+	it("the ladder ends meet the walk surface, and each end rung touches him without sinking in", function()
+		local walk = walkFolder()
+		-- the ground a climber steps onto: his skin, or a head walk piece that is still there
+		local ground = bodyParams()
+		local included = bodyInstances()
+		for _, piece in headWalkPieces() do
+			table.insert(included, piece)
+		end
+		ground.IncludeInstances = included
+		local overlap = OverlapParams.new()
+		overlap.IncludeInstances = bodyInstances()
+		overlap.RespectCanCollide = false
+		local touching = bodyParams()
+
+		local ends: { { label: string, ladder: string, atTop: boolean } } = {
+			{ label = "beard ladder top", ladder = "BeardLadder", atTop = true },
+			{ label = "cap ladder foot", ladder = "CapLadder", atTop = false },
+			{ label = "cap ladder top", ladder = "CapLadder", atTop = true },
+		}
+		local problems: { string } = {}
+		for _, ladderEnd in ends do
+			local ladder = walk:FindFirstChild(ladderEnd.ladder)
+			expect(ladder).never.toBeNil()
+			local axis = ladderAxis(ladder :: Instance)
+			local endHeight = ladderExtreme(ladder :: Instance, ladderEnd.atTop)
+			local readAt = if ladderEnd.atTop then axis.top + axis.flat * END_PAST else axis.foot
+			local hit = Workspace:Raycast(
+				Vector3.new(readAt.X, endHeight + END_RAY_ABOVE, readAt.Z),
+				Vector3.new(0, -2 * END_RAY_ABOVE - 6, 0),
+				ground
+			)
+			if hit == nil then
+				table.insert(problems, `{ladderEnd.label}: no ground found at {describePoint(readAt)}`)
+			else
+				local gap = endHeight - hit.Position.Y
+				if gap > END_ABOVE + WINDOW_SLACK or gap < -END_BELOW - WINDOW_SLACK then
+					table.insert(
+						problems,
+						string.format(
+							"%s: the end is %+.2f studs from the ground at %s (it must be %g under to %g over)",
+							ladderEnd.label,
+							gap,
+							describePoint(hit.Position),
+							END_BELOW,
+							END_ABOVE
+						)
+					)
+				end
+			end
+
+			local rung = endRung(ladder :: Instance, axis, ladderEnd.atTop)
+			local inside = Workspace:GetPartsInPart(rung, overlap)
+			if #inside > 0 then
+				table.insert(problems, `{ladderEnd.label}: its end rung is inside {inside[1].Name}`)
+			end
+			local down = skinDistance(touching, rung, Vector3.new(0, -1, 0))
+			local behind = skinDistance(touching, rung, axis.back)
+			local nearest = math.min(down or math.huge, behind or math.huge)
+			if nearest > END_TOUCH + WINDOW_SLACK then
+				table.insert(
+					problems,
+					string.format(
+						"%s: its end rung is %s from his skin (it must touch within %g)",
+						ladderEnd.label,
+						if nearest == math.huge then "more than a stud" else string.format("%.2f studs", nearest),
+						END_TOUCH
+					)
+				)
+			end
+		end
+		expect(problems).toEqual({})
+	end)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- The ladders sit close to him and keep their look (stuck safety Task 25, tests 3 and 4)
+	----------------------------------------------------------------------------------------------------------------
+
+	local RAIL_END_REACH = 0.5 -- studs: a rail may touch his skin this close to either of its ends, and no farther in
+	local RAIL_TOUCH_GAP = 0.05 -- studs: a rail this close to his skin, or inside it, is touching
+	local RAIL_STEP = 0.25 -- studs between the places along a rail that are checked
+	local RAIL_RAY_FRONT = 3 -- studs: the ray that finds his skin behind a rail starts this far in front of the rail
+	local CAP_MIN_DEGREES = 68 -- the cap ladder is this steep or steeper...
+	local CAP_MAX_DEGREES = 72 -- ...and this steep or flatter (designer, shape B)
+	local CAP_MIDDLE_REACH = 2 -- studs: the cap ladder's middle rung is this close to his face or closer
+	local MIDDLE_TIE = 0.05 -- studs: two rungs this close to the middle are both "the middle rung"
+
+	local function ladderParts(ladder: Instance, name: string): { BasePart }
+		local found: { BasePart } = {}
+		for _, child in ladder:GetChildren() do
+			if child:IsA("BasePart") and child.Name == name then
+				table.insert(found, child)
+			end
+		end
+		return found
+	end
+
+	-- The direction a part's longest side runs, and that length.
+	local function longSide(part: BasePart): (Vector3, number)
+		local size = part.Size
+		local length = math.max(size.X, size.Y, size.Z)
+		local direction = if size.X == length
+			then part.CFrame.RightVector
+			elseif size.Y == length then part.CFrame.UpVector
+			else part.CFrame.LookVector
+		return direction, length
+	end
+
+	-- How far behind a rail's back face his skin starts, `along` studs from the rail's middle: negative when the rail is
+	-- inside him, nil when his skin is more than a couple of studs away. The ray starts in front of the rail, so a
+	-- rail that is buried still finds the skin in front of it.
+	local function railGap(
+		params: RaycastParams,
+		rail: BasePart,
+		direction: Vector3,
+		back: Vector3,
+		along: number
+	): number?
+		local cframe = rail.CFrame
+		local half = rail.Size / 2
+		local reach = half.X * math.abs(cframe.RightVector:Dot(back))
+			+ half.Y * math.abs(cframe.UpVector:Dot(back))
+			+ half.Z * math.abs(cframe.LookVector:Dot(back))
+		local origin = rail.Position + direction * along - back * (reach + RAIL_RAY_FRONT)
+		local hit = Workspace:Raycast(origin, back * (2 * reach + RAIL_RAY_FRONT + 2), params)
+		return if hit then hit.Distance - (2 * reach + RAIL_RAY_FRONT) else nil
+	end
+
+	-- The rails of one ladder that touch his skin farther than RAIL_END_REACH from their ends: one line for each.
+	local function railTouchProblems(
+		params: RaycastParams,
+		ladderName: string,
+		ladder: Instance,
+		back: Vector3
+	): { string }
+		local problems: { string } = {}
+		for _, rail in ladderParts(ladder, "Rail") do
+			local direction, length = longSide(rail)
+			local touches = 0
+			local first: Vector3? = nil
+			for step = 0, math.ceil(length / RAIL_STEP) do
+				local distance = math.min(step * RAIL_STEP, length)
+				if math.min(distance, length - distance) > RAIL_END_REACH then
+					local along = distance - length / 2
+					local gap = railGap(params, rail, direction, back, along)
+					if gap ~= nil and gap <= RAIL_TOUCH_GAP then
+						touches += 1
+						first = first or (rail.Position + direction * along)
+					end
+				end
+			end
+			if touches > 0 then
+				table.insert(
+					problems,
+					string.format(
+						"%s: a rail touches his skin at %d places away from its ends (the first near %s)",
+						ladderName,
+						touches,
+						describePoint(first :: Vector3)
+					)
+				)
+			end
+		end
+		return problems
+	end
+
+	-- The ladders sit on his face: no rung sinks into him, a rail touches him only within 0.5 studs of its ends, and the
+	-- cap ladder is 68 to 72 degrees steep with its middle rung within 2 studs of his face (designer 4 and 8).
+	it("no rung sinks into him, and the cap ladder stays close to his face", function()
+		local walk = walkFolder()
+		local overlap = OverlapParams.new()
+		overlap.IncludeInstances = bodyInstances()
+		overlap.RespectCanCollide = false
+		local params = bodyParams()
+		local problems: { string } = {}
+
+		for _, ladderName in { "BeardLadder", "CapLadder" } do
+			local ladder = walk:FindFirstChild(ladderName)
+			expect(ladder).never.toBeNil()
+			local axis = ladderAxis(ladder :: Instance)
+
+			local sunk = 0
+			local firstSunk: Vector3? = nil
+			for _, rung in ladderParts(ladder :: Instance, "Rung") do
+				if #Workspace:GetPartsInPart(rung, overlap) > 0 then
+					sunk += 1
+					firstSunk = firstSunk or rung.Position
+				end
+			end
+			if sunk > 0 then
+				table.insert(
+					problems,
+					`{ladderName}: {sunk} rungs are inside him (the first at {describePoint(firstSunk :: Vector3)})`
+				)
+			end
+
+			for _, line in railTouchProblems(params, ladderName, ladder :: Instance, axis.back) do
+				table.insert(problems, line)
+			end
+		end
+
+		local cap = walk:FindFirstChild("CapLadder")
+		expect(cap).never.toBeNil()
+		local capAxis = ladderAxis(cap :: Instance)
+		local degrees = math.deg(math.asin(capAxis.up.Y))
+		if degrees < CAP_MIN_DEGREES or degrees > CAP_MAX_DEGREES then
+			table.insert(
+				problems,
+				string.format(
+					"CapLadder: it is %.1f degrees steep (it must be %g to %g)",
+					degrees,
+					CAP_MIN_DEGREES,
+					CAP_MAX_DEGREES
+				)
+			)
+		end
+
+		-- the middle rung (or rungs, when two are equally near the middle) looks back at his face along the ladder's back
+		local middle = (capAxis.foot + capAxis.top) / 2
+		local rungs = ladderParts(cap :: Instance, "Rung")
+		local nearestToMiddle = math.huge
+		for _, rung in rungs do
+			nearestToMiddle = math.min(nearestToMiddle, math.abs((rung.Position - middle):Dot(capAxis.up)))
+		end
+		for _, rung in rungs do
+			if math.abs((rung.Position - middle):Dot(capAxis.up)) <= nearestToMiddle + MIDDLE_TIE then
+				local distance = skinDistance(params, rung, capAxis.back, CAP_MIDDLE_REACH)
+				if distance == nil then
+					table.insert(
+						problems,
+						`CapLadder: its middle rung at {describePoint(rung.Position)} is more than {CAP_MIDDLE_REACH} studs from his face`
+					)
+				end
+			end
+		end
+		expect(problems).toEqual({})
+	end)
+
+	-- What V1's ladders look like. Source: the V1 ladders as recorded before Task 25 (the state note's "STEP 1a" block,
+	-- read again from the open place on 2026-10-20). Rails are cylinders 0.45 across, rungs are blocks, the truss is the
+	-- invisible climbable part.
+	type PartLook = {
+		className: string,
+		shape: Enum.PartType?,
+		material: Enum.Material,
+		color: string,
+		transparency: number,
+		canCollide: boolean,
+		canQuery: boolean,
+		canTouch: boolean,
+	}
+	local RAIL_LOOK: PartLook = {
+		className = "Part",
+		shape = Enum.PartType.Cylinder,
+		material = Enum.Material.Fabric,
+		color = "f0deb4",
+		transparency = 0,
+		canCollide = false,
+		canQuery = true,
+		canTouch = true,
+	}
+	local RUNG_LOOK: PartLook = {
+		className = "Part",
+		shape = Enum.PartType.Block,
+		material = Enum.Material.Wood,
+		color = "c48c5c",
+		transparency = 0,
+		canCollide = false,
+		canQuery = true,
+		canTouch = true,
+	}
+	local TRUSS_LOOK: PartLook = {
+		className = "TrussPart",
+		shape = nil,
+		material = Enum.Material.Plastic,
+		color = "a3a2a5",
+		transparency = 1,
+		canCollide = true,
+		canQuery = true,
+		canTouch = true,
+	}
+	local RAIL_THICKNESS = 0.45 -- studs: a rail is 0.45 by 0.45 across (its length changes)
+	local RUNG_SIZE = Vector3.new(5.2, 0.45, 0.6)
+	local TRUSS_WIDTH = 2 -- studs: a truss is 2 by 2 across and a multiple of 2 long (Roblox docs, TrussPart)
+	local RUNG_SPACING = 1.8 -- studs between rung centres...
+	local SPACING_SLACK = 0.05 -- ...give or take this much
+	-- The foot of the beard ladder's truss. V1 built it at (0, 67.299, -24.501). Task 26 (his solid body sits where he's
+	-- drawn) makes the truss 2.0 studs longer at its bottom end, on the same line, with its top end unchanged (designer
+	-- said yes, on condition the climb starts on the visible ladder): the foot is now 2.0 lower along the ladder,
+	-- 16 studs from the truss centre (0, 80.018, -18.651) at 65.3 degrees, which is (0, 65.482, -25.337). Invisible, so
+	-- the look does not change. Task 26 Ruling 8: the truss grows 2.0 studs more at its bottom end (30 -> 32 long), so
+	-- the foot is 18 studs from that centre: (0, 63.665, -26.173). Task 26 Ruling 12: the foot end swings 1.0 stud back
+	-- toward his beard (top end unchanged, still 32 long), so the foot is (0, 63.261, -25.258).
+	local BEARD_FOOT = Vector3.new(0, 63.261, -25.258)
+	-- ...and its lowest rung's middle: designer's change after the side views (the rails reach his belly), now two
+	-- rungs 1.8 studs down the ladder each from V1's lowest rung, which was at (0, 67.2230, -24.5360). The second sits
+	-- in open air 1.64 studs from his drawn skin (measured on 2026-10-21, Task 25 step 1); a third would sink into him.
+	local BEARD_LOWEST_RUNG = Vector3.new(0, 63.952, -26.040)
+	local FOOT_SLACK = 0.05 -- studs the beard ladder's foot and lowest rung may move
+	local LOOK_SLACK = 0.001 -- studs: rounding in the sizes written into the world
+
+	local function lookProblems(part: BasePart, look: PartLook, label: string, problems: { string })
+		local function wrong(what: string, got: any, want: any)
+			table.insert(problems, `{label}: {what} is {got}, it must be {want}`)
+		end
+		if part.ClassName ~= look.className then
+			wrong("its kind", part.ClassName, look.className)
+		end
+		if look.shape ~= nil and part:IsA("Part") and part.Shape ~= look.shape then
+			wrong("its shape", part.Shape.Name, look.shape.Name)
+		end
+		if part.Material ~= look.material then
+			wrong("its material", part.Material.Name, look.material.Name)
+		end
+		if part.Color:ToHex():lower() ~= look.color then
+			wrong("its colour", part.Color:ToHex():lower(), look.color)
+		end
+		if part.Transparency ~= look.transparency then
+			wrong("its transparency", part.Transparency, look.transparency)
+		end
+		if part.CanCollide ~= look.canCollide then
+			wrong("CanCollide", part.CanCollide, look.canCollide)
+		end
+		if part.CanQuery ~= look.canQuery then
+			wrong("CanQuery", part.CanQuery, look.canQuery)
+		end
+		if part.CanTouch ~= look.canTouch then
+			wrong("CanTouch", part.CanTouch, look.canTouch)
+		end
+	end
+
+	-- Every way a ladder differs from V1's look: sizes across, colour, material, see-through and collision settings,
+	-- a truss a multiple of 2 long, rungs evenly spaced and, for the beard ladder, a foot and lowest rung where V1 had them.
+	-- Takes the ladder as an argument so the test below can check a damaged copy.
+	local function ladderLookProblems(ladder: Instance, ladderName: string): { string }
+		local problems: { string } = {}
+		for _, rail in ladderParts(ladder, "Rail") do
+			lookProblems(rail, RAIL_LOOK, `{ladderName} rail`, problems)
+			if
+				math.abs(rail.Size.Y - RAIL_THICKNESS) > LOOK_SLACK
+				or math.abs(rail.Size.Z - RAIL_THICKNESS) > LOOK_SLACK
+			then
+				table.insert(
+					problems,
+					`{ladderName} rail: it is {rail.Size.Y} by {rail.Size.Z} across, it must be 0.45`
+				)
+			end
+		end
+		local rungs = ladderParts(ladder, "Rung")
+		for _, rung in rungs do
+			lookProblems(rung, RUNG_LOOK, `{ladderName} rung`, problems)
+			if (rung.Size - RUNG_SIZE).Magnitude > LOOK_SLACK then
+				table.insert(problems, `{ladderName} rung: its size is {rung.Size}, it must be {RUNG_SIZE}`)
+			end
+		end
+		local trusses = ladderParts(ladder, "Climb")
+		if #trusses ~= 1 then
+			table.insert(problems, `{ladderName}: it has {#trusses} Climb parts, it must have 1`)
+		end
+		for _, truss in trusses do
+			lookProblems(truss, TRUSS_LOOK, `{ladderName} truss`, problems)
+			local half = truss.Size.Z / 2
+			if
+				math.abs(truss.Size.X - TRUSS_WIDTH) > LOOK_SLACK
+				or math.abs(truss.Size.Y - TRUSS_WIDTH) > LOOK_SLACK
+				or truss.Size.Z < TRUSS_WIDTH - LOOK_SLACK
+				or math.abs(half - math.round(half)) > LOOK_SLACK
+			then
+				table.insert(
+					problems,
+					`{ladderName} truss: its size is {truss.Size}, it must be 2 by 2 by a multiple of 2`
+				)
+			end
+		end
+
+		-- rungs evenly spaced, in order along the ladder
+		if #trusses == 1 and #rungs > 1 then
+			local axis = ladderAxis(ladder)
+			table.sort(rungs, function(a: BasePart, b: BasePart): boolean
+				return a.Position:Dot(axis.up) < b.Position:Dot(axis.up)
+			end)
+			local badSpacing = 0
+			local worst = 0
+			for index = 2, #rungs do
+				local spacing = (rungs[index].Position - rungs[index - 1].Position).Magnitude
+				if math.abs(spacing - RUNG_SPACING) > SPACING_SLACK then
+					badSpacing += 1
+					worst = if math.abs(spacing - RUNG_SPACING) > math.abs(worst - RUNG_SPACING) then spacing else worst
+				end
+			end
+			if badSpacing > 0 then
+				table.insert(
+					problems,
+					string.format(
+						"%s: %d rung gaps are not %g apart (the worst is %.2f)",
+						ladderName,
+						badSpacing,
+						RUNG_SPACING,
+						worst
+					)
+				)
+			end
+
+			if ladderName == "BeardLadder" then
+				if (axis.foot - BEARD_FOOT).Magnitude > FOOT_SLACK then
+					table.insert(problems, `BeardLadder: its foot moved to {describePoint(axis.foot)}`)
+				end
+				if (rungs[1].Position - BEARD_LOWEST_RUNG).Magnitude > FOOT_SLACK then
+					table.insert(problems, `BeardLadder: its lowest rung moved to {describePoint(rungs[1].Position)}`)
+				end
+			end
+		end
+		return problems
+	end
+
+	-- Both ladders keep their look, whatever their length or tilt (designer 3).
+	it("both ladders keep their look", function()
+		local walk = walkFolder()
+		local problems: { string } = {}
+		for _, ladderName in { "BeardLadder", "CapLadder" } do
+			local ladder = walk:FindFirstChild(ladderName)
+			expect(ladder).never.toBeNil()
+			for _, line in ladderLookProblems(ladder :: Instance, ladderName) do
+				table.insert(problems, line)
+			end
+		end
+		expect(problems).toEqual({})
+	end)
+
+	-- The check above is not a rubber stamp: a copy of the beard ladder (outside the Workspace) with one rung moved
+	-- 0.3 studs along the ladder is reported, and the copy is thrown away.
+	it("the look check notices one rung moved 0.3 studs", function()
+		local original = walkFolder():FindFirstChild("BeardLadder")
+		expect(original).never.toBeNil()
+		local copy = (original :: Instance):Clone()
+		local rungs = ladderParts(copy, "Rung")
+		local axis = ladderAxis(copy)
+		local moved = rungs[#rungs // 2]
+		moved.CFrame += axis.up * 0.3
+		local problems = ladderLookProblems(copy, "BeardLadder copy")
+		copy:Destroy()
+		expect(#problems).toBeGreaterThan(0)
+		expect(problems[1]).toContain("rung gaps are not")
+	end)
+
+	-- Designer's change after the side views (stuck safety Task 25, "Ruling after step 6b-1"): the beard ladder's visible
+	-- rails reach down to his belly. Each rail's lowest corners are at most 0.2 studs above his skin and at most 0.3
+	-- studs into it (a ray straight down from 1 stud over the corner, seeing only his body), and each rail's top end has
+	-- not moved from where V1 and Task 25's tilt put it.
+	local BEARD_RAIL_TOPS = { Vector3.new(-2.4, 92.919, -12.717), Vector3.new(2.4, 92.919, -12.717) } -- source: step 6b-1a
+	local BEARD_RAIL_TOP_SLACK = 0.05 -- studs the top end may move
+	local BEARD_RAIL_ABOVE = 0.2 -- studs: the lowest corner may be this far over his skin
+	local BEARD_RAIL_INTO = 0.3 -- studs: ...and this far into it
+	local BEARD_CORNER_RAY_ABOVE = 1 -- studs: the drawn skin is looked for from this far over the corner
+
+	-- What is wrong with each beard ladder rail's bottom end and top end, as short sentences (empty is good).
+	local function beardRailProblems(ladder: Instance, skin: DrawnSkin.Skin): { string }
+		local problems: { string } = {}
+		local rails = ladderParts(ladder, "Rail")
+		if #rails ~= 2 then
+			return { `the beard ladder has {#rails} rails, it must have 2` }
+		end
+		table.sort(rails, function(a: BasePart, b: BasePart): boolean
+			return a.Position.X < b.Position.X
+		end)
+		local axis = ladderAxis(ladder)
+		for index, rail in rails do
+			local direction, length = longSide(rail)
+			if direction:Dot(axis.up) < 0 then
+				direction = -direction
+			end
+			local half = rail.Size / 2
+			-- the top end's middle must not have moved
+			local top = rail.Position + direction * length / 2
+			local moved = (top - BEARD_RAIL_TOPS[index]).Magnitude
+			if moved > BEARD_RAIL_TOP_SLACK then
+				table.insert(problems, `rail {index}: its top end moved {string.format("%.2f", moved)} studs`)
+			end
+			-- the corners of the bottom end, lowest first
+			local corners: { Vector3 } = {}
+			for _, sx in { -1, 1 } do
+				for _, sy in { -1, 1 } do
+					for _, sz in { -1, 1 } do
+						local corner = rail.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
+						if (corner - rail.Position):Dot(direction) < 0 then
+							table.insert(corners, corner)
+						end
+					end
+				end
+			end
+			table.sort(corners, function(a: Vector3, b: Vector3): boolean
+				return a.Y < b.Y
+			end)
+			for cornerIndex = 1, #corners do
+				local corner = corners[cornerIndex]
+				if corner.Y - corners[1].Y > WINDOW_SLACK then
+					break
+				end
+				-- the drawn skin (not his solid shape) under the corner, looked for from 1 stud over it
+				local skinHeight = skin.heightAt(corner.X, corner.Z, corner.Y + BEARD_CORNER_RAY_ABOVE)
+				if skinHeight == nil then
+					table.insert(
+						problems,
+						`rail {index}: no drawn skin under its lowest corner {describePoint(corner)}`
+					)
+				else
+					local gap = corner.Y - skinHeight -- positive: over his skin, negative: into it
+					if gap > BEARD_RAIL_ABOVE + WINDOW_SLACK or gap < -BEARD_RAIL_INTO - WINDOW_SLACK then
+						table.insert(
+							problems,
+							`rail {index}: its lowest corner {describePoint(corner)} is {string.format("%.2f", gap)} studs over his skin, it must be between -0.3 and 0.2`
+						)
+					end
+				end
+			end
+		end
+		return problems
+	end
+
+	it("the beard ladder's rails reach his belly", function()
+		local ladder = walkFolder():FindFirstChild("BeardLadder")
+		expect(ladder).never.toBeNil()
+		-- measured against the skin that is DRAWN (the mesh triangles plus any shirt folds), as designer asked
+		local meshes: { MeshPart } = {}
+		for _, name in BODY_PIECES do
+			local piece = ((realWorld() :: any).Giant :: Instance):FindFirstChild(name)
+			table.insert(meshes, (piece :: Instance):FindFirstChild(name) :: MeshPart)
+		end
+		local folds: { BasePart } = {}
+		local foldFolder = ((realWorld() :: any).Giant :: Instance):FindFirstChild("ShirtFolds")
+		if foldFolder then
+			for _, descendant in foldFolder:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					table.insert(folds, descendant)
+				end
+			end
+		end
+		local skin = DrawnSkin.fromWorld(meshes, folds)
+		expect(beardRailProblems(ladder :: Instance, skin)).toEqual({})
+	end, 60000) -- reading the six meshes takes a few seconds
+
+	-- Task 26, Ruling 12 (designer's test for the hidden climbing truss: a player may only grab it where he visibly
+	-- touches the ladder). The truss is 2 studs thick and its centre line runs along the visible rails, so its front
+	-- face stands 1 stud out from the rungs: a walker crossing in front of the ladder's foot was lifted off his cloth.
+	-- The truss's top end stays where it is and its foot end swings back toward his beard, still 2 by 2 by 32.
+	local BEARD_TRUSS_TOP = Vector3.new(0, 92.7371, -12.8009) -- the truss's top end, as Ruling 8 left it
+	local BEARD_TRUSS_TOP_SLACK = 0.05 -- studs the top end may move
+	local BEARD_TRUSS_FRONT_BOTTOM_MIN_Z = -26.33 -- the front-bottom edge is no more than 0.3 south of the rails' foot
+	local BEARD_TRUSS_FRONT_BOTTOM_MAX_Y = 64.1
+	local BEARD_TRUSS_BEHIND_MIN = 0.5 -- studs: the truss's foot point is at least this far behind the rails' foot plane
+
+	-- What is wrong with the beard ladder's climbing truss, as short sentences (empty is good).
+	local function beardTrussStartProblems(ladder: Instance): { string }
+		local problems: { string } = {}
+		local truss = ladder:FindFirstChild("Climb")
+		expect(truss).never.toBeNil()
+		local part = truss :: BasePart
+		local sizes = { part.Size.X, part.Size.Y, part.Size.Z }
+		table.sort(sizes)
+		if
+			math.abs(sizes[1] - TRUSS_WIDTH) > LOOK_SLACK
+			or math.abs(sizes[2] - TRUSS_WIDTH) > LOOK_SLACK
+			or math.abs(sizes[3] - 32) > LOOK_SLACK
+		then
+			table.insert(problems, `the truss is {part.Size}, it must be 2 by 2 by 32`)
+		end
+
+		local axis = ladderAxis(ladder)
+		local moved = (axis.top - BEARD_TRUSS_TOP).Magnitude
+		if moved > BEARD_TRUSS_TOP_SLACK then
+			table.insert(problems, `the truss's top end moved {string.format("%.2f", moved)} studs`)
+		end
+
+		-- the front of the truss faces away from his beard; its front-bottom edge is half a thickness in front of the foot
+		local front = -axis.back
+		local frontBottom = axis.foot + front * (TRUSS_WIDTH / 2)
+		if frontBottom.Z < BEARD_TRUSS_FRONT_BOTTOM_MIN_Z - WINDOW_SLACK then
+			table.insert(
+				problems,
+				`the truss's front-bottom edge is at z {string.format("%.2f", frontBottom.Z)}, it must be {BEARD_TRUSS_FRONT_BOTTOM_MIN_Z} or more (toward his beard)`
+			)
+		end
+		if frontBottom.Y > BEARD_TRUSS_FRONT_BOTTOM_MAX_Y + WINDOW_SLACK then
+			table.insert(
+				problems,
+				`the truss's front-bottom edge is at y {string.format("%.2f", frontBottom.Y)}, it must be {BEARD_TRUSS_FRONT_BOTTOM_MAX_Y} or less`
+			)
+		end
+
+		-- the rails' foot plane: square to the ladder, through the middle of the two rails' lower ends
+		local rails = ladderParts(ladder, "Rail")
+		if #rails ~= 2 then
+			table.insert(problems, `the beard ladder has {#rails} rails, it must have 2`)
+			return problems
+		end
+		local railsFoot = Vector3.zero
+		for _, rail in rails do
+			local direction, length = longSide(rail)
+			if direction:Dot(axis.up) < 0 then
+				direction = -direction
+			end
+			railsFoot += (rail.Position - direction * length / 2) / 2
+		end
+		local behind = -(axis.foot - railsFoot):Dot(front)
+		if behind < BEARD_TRUSS_BEHIND_MIN - WINDOW_SLACK then
+			table.insert(
+				problems,
+				`the truss's foot point is {string.format("%.2f", behind)} studs behind the rails' foot plane, it must be at least {BEARD_TRUSS_BEHIND_MIN}`
+			)
+		end
+		return problems
+	end
+
+	it("the beard truss starts at the visible ladder's foot", function()
+		local ladder = walkFolder():FindFirstChild("BeardLadder")
+		expect(ladder).never.toBeNil()
+		expect(beardTrussStartProblems(ladder :: Instance)).toEqual({})
+	end)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- Crossing ramps
+	----------------------------------------------------------------------------------------------------------------
+
+	-- His body-size slope at (x, z) in degrees: the plane that best fits 25 rays straight down on a 4 by 4 stud square
+	-- (designer's rule, as in the seam test). nil when a ray misses him.
+	local function bodySlopeAt(params: RaycastParams, x: number, z: number): number?
+		local sumX, sumZ = 0, 0
+		for offsetX = -BODY_PATCH_REACH, BODY_PATCH_REACH do
+			for offsetZ = -BODY_PATCH_REACH, BODY_PATCH_REACH do
+				local hit =
+					Workspace:Raycast(Vector3.new(x + offsetX, 200, z + offsetZ), Vector3.new(0, -250, 0), params)
+				if hit == nil then
+					return nil
+				end
+				sumX += offsetX * hit.Position.Y
+				sumZ += offsetZ * hit.Position.Y
+			end
+		end
+		local squares = (2 * BODY_PATCH_REACH + 1)
+			* (BODY_PATCH_REACH * (BODY_PATCH_REACH + 1) * (2 * BODY_PATCH_REACH + 1) / 3)
+		local normal = Vector3.new(-sumX / squares, 1, -sumZ / squares).Unit
+		return math.deg(math.acos(math.clamp(normal.Y, -1, 1)))
+	end
+
+	-- Whether his skin has a wall or a steep band under a ramp's span: from `start` to `finish` (x and z only), along the
+	-- middle and the two sides `halfWidth` out, a run of steps steeper than WALL_DEGREES that rises more than WALL_RISE
+	-- studs, or a body-size slope of STEEP_BODY_DEGREES or more somewhere along the middle. A ramp where a fitted piece
+	-- would do is not allowed (Rule 20: the exception is only for walls).
+	local function spanHasWall(params: RaycastParams, start: Vector3, finish: Vector3, halfWidth: number): boolean
+		local flat = Vector3.new(finish.X - start.X, 0, finish.Z - start.Z)
+		local length = flat.Magnitude
+		local along = flat.Unit
+		local across = Vector3.new(-along.Z, 0, along.X)
+		local steps = math.max(1, math.floor(length / PROFILE_STEP))
+		for _, side in { -1, 0, 1 } do
+			local previous: number? = nil
+			local run = 0
+			for step = 0, steps do
+				local at = Vector3.new(start.X, 0, start.Z)
+					+ along * (length * step / steps)
+					+ across * (side * halfWidth)
+				local hit = Workspace:Raycast(Vector3.new(at.X, 200, at.Z), Vector3.new(0, -250, 0), params)
+				local height = if hit then hit.Position.Y else nil
+				if height ~= nil and previous ~= nil then
+					local degrees = math.deg(math.atan2(math.abs(height - previous), length / steps))
+					if degrees > WALL_DEGREES then
+						run += math.abs(height - previous)
+						if run > WALL_RISE then
+							return true
+						end
+					else
+						run = 0
+					end
+				end
+				previous = height
+			end
+		end
+		local count = math.max(1, math.floor(length))
+		for step = 0, count do
+			local at = Vector3.new(start.X, 0, start.Z) + along * (length * step / count)
+			local slope = bodySlopeAt(params, at.X, at.Z)
+			if slope ~= nil and slope >= STEEP_BODY_DEGREES then
+				return true
+			end
+		end
+		return false
+	end
+
+	-- A ramp's top: the points of a lattice 1 stud apart that lie on it, and the surface direction there. It is found by
+	-- rays that see only the ramp, so it works for any shape of ramp that has a top.
+	type RampTop = { points: { Vector3 }, middleNormal: Vector3, direction: Vector3, bottom: { number } }
+	local function rampTop(ramp: BasePart): RampTop
+		local params = RaycastParams.new()
+		params.IncludeInstances = { ramp }
+		params.RespectCanCollide = false
+		local half = ramp.Size / 2
+		local lowX, highX, lowZ, highZ, highY, lowY =
+			math.huge, -math.huge, math.huge, -math.huge, -math.huge, math.huge
+		for _, sx in { -1, 1 } do
+			for _, sy in { -1, 1 } do
+				for _, sz in { -1, 1 } do
+					local corner = ramp.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
+					lowX, highX = math.min(lowX, corner.X), math.max(highX, corner.X)
+					lowZ, highZ = math.min(lowZ, corner.Z), math.max(highZ, corner.Z)
+					highY, lowY = math.max(highY, corner.Y), math.min(lowY, corner.Y)
+				end
+			end
+		end
+		local points: { Vector3 } = {}
+		local bottom: { number } = {}
+		local x = lowX + GRID_INSET
+		while x <= highX - GRID_INSET + 1e-6 do
+			local z = lowZ + GRID_INSET
+			while z <= highZ - GRID_INSET + 1e-6 do
+				local down =
+					Workspace:Raycast(Vector3.new(x, highY + 1, z), Vector3.new(0, -(highY - lowY + 2), 0), params)
+				if down ~= nil then
+					table.insert(points, down.Position)
+					-- the lowest the ramp reaches under this point: a ray up from far below, seeing only the ramp
+					local up =
+						Workspace:Raycast(Vector3.new(x, lowY - 1, z), Vector3.new(0, highY - lowY + 2, 0), params)
+					table.insert(bottom, if up ~= nil then up.Position.Y else down.Position.Y)
+				end
+				z += GRID_STEP
+			end
+			x += GRID_STEP
+		end
+		local middle = Workspace:Raycast(
+			Vector3.new(ramp.Position.X, highY + 1, ramp.Position.Z),
+			Vector3.new(0, -(highY - lowY + 2), 0),
+			params
+		)
+		local normal = if middle ~= nil then middle.Normal else Vector3.yAxis
+		local direction = Vector3.new(normal.X, 0, normal.Z)
+		return {
+			points = points,
+			middleNormal = normal,
+			direction = if direction.Magnitude > 1e-3 then direction.Unit else Vector3.zAxis,
+			bottom = bottom,
+		}
+	end
+
+	-- What is wrong with one crossing ramp, as short sentences (an empty list is a good ramp).
+	local function rampProblems(params: RaycastParams, ramp: BasePart): { string }
+		local problems: { string } = {}
+		local top = rampTop(ramp)
+		if #top.points == 0 then
+			return { "no top was found" }
+		end
+		-- inside the stretch
+		local at = ramp.Position
+		if
+			at.X < STRETCH_MIN.X
+			or at.X > STRETCH_MAX.X
+			or at.Y < STRETCH_MIN.Y
+			or at.Y > STRETCH_MAX.Y
+			or at.Z < STRETCH_MIN.Z
+			or at.Z > STRETCH_MAX.Z
+		then
+			table.insert(
+				problems,
+				`stands at {describePoint(at)}, outside the stretch between the left boot top and Rare egg 1`
+			)
+		end
+		-- no steeper than 45 degrees
+		local degrees = math.deg(math.acos(math.clamp(top.middleNormal.Y, -1, 1)))
+		if degrees > MAX_RAMP_DEGREES + 0.01 then
+			table.insert(problems, string.format("its top is %.1f degrees (the most is %d)", degrees, MAX_RAMP_DEGREES))
+		end
+		-- the step-on and step-off edges are the first and last rows along the slope's direction
+		local lowest, highest = math.huge, -math.huge
+		for _, point in top.points do
+			local along = point:Dot(top.direction)
+			lowest, highest = math.min(lowest, along), math.max(highest, along)
+		end
+		for index, point in top.points do
+			local along = point:Dot(top.direction)
+			if along - lowest <= EDGE_ROW or highest - along <= EDGE_ROW then
+				local hit = skinUnder(params, point)
+				if hit == nil then
+					table.insert(problems, `edge point {describePoint(point)} has no skin under it`)
+				else
+					local gap = point.Y - hit.Position.Y
+					if gap > WINDOW_ABOVE + WINDOW_SLACK or gap < -WINDOW_BELOW - WINDOW_SLACK then
+						table.insert(
+							problems,
+							string.format("edge point %s is %.2f studs from his skin", describePoint(point), gap)
+						)
+					end
+				end
+			end
+			-- solid all the way down: its lowest point under this place is at or under his skin
+			local skin = skinUnder(params, point)
+			if skin ~= nil and top.bottom[index] > skin.Position.Y + WINDOW_SLACK then
+				table.insert(
+					problems,
+					string.format(
+						"under %s the ramp ends %.2f studs over his skin (a gap)",
+						describePoint(point),
+						top.bottom[index] - skin.Position.Y
+					)
+				)
+			end
+		end
+		-- a wall or a steep band really is under its span
+		local startPoint = ramp.Position - top.direction * ((highest - lowest) / 2)
+		local finishPoint = ramp.Position + top.direction * ((highest - lowest) / 2)
+		local crossWidth = math.min(ramp.Size.X, ramp.Size.Z) / 2
+		if not spanHasWall(params, startPoint, finishPoint, math.max(crossWidth - 1, 0)) then
+			table.insert(
+				problems,
+				"no wall and no steep band of his skin is under its span, so a fitted piece would do"
+			)
+		end
+		return problems
+	end
+
+	it("there are at most 3 crossing ramps, named for the left leg's walls", function()
+		local ramps = crossingRamps()
+		local names: { string } = {}
+		local unknown: { string } = {}
+		for _, ramp in ramps do
+			table.insert(names, ramp.Name)
+			if not RAMP_NAMES[ramp.Name] then
+				table.insert(unknown, ramp.Name)
+			end
+		end
+		table.sort(names)
+		expect(unknown).toEqual({})
+		expect(#ramps <= MAX_RAMPS).toBe(true)
+		-- his left leg has two walls (the boot's top edge and the knee), so both ramps must be there
+		expect(table.find(names, "CrossingRamp_Ankle") ~= nil).toBe(true)
+		expect(table.find(names, "CrossingRamp_Knee") ~= nil).toBe(true)
+	end)
+
+	it("a crossing ramp is invisible and solid, like the walk pieces", function()
+		local wrong: { string } = {}
+		local ramps = crossingRamps()
+		expect(#ramps >= 2).toBe(true)
+		for _, ramp in ramps do
+			if
+				ramp.Transparency ~= 1
+				or not ramp.Anchored
+				or not ramp.CanCollide
+				or not ramp.CanQuery
+				or not ramp.CanTouch
+				or ramp.CollisionGroup ~= "Default"
+			then
+				table.insert(wrong, ramp.Name)
+			end
+		end
+		expect(wrong).toEqual({})
+	end)
+
+	it("each crossing ramp is a short solid ramp at a wall", function()
+		local params = bodyParams()
+		local ramps = crossingRamps()
+		expect(#ramps >= 2).toBe(true)
+		local problems: { [string]: { string } } = {}
+		for _, ramp in ramps do
+			local found = rampProblems(params, ramp)
+			if #found > 0 then
+				problems[ramp.Name] = { table.unpack(found, 1, math.min(#found, 6)) }
+			end
+		end
+		expect(problems).toEqual({})
+	end)
+
+	-- Proof that the wall part of the test above can fail: over the flat top of his left boot (the part above the step,
+	-- no wall and no steep band) it says no, and over the boot's top edge it says yes.
+	it("finds no wall under a span over the flat boot top, and finds the boot's top edge", function()
+		local params = bodyParams()
+		expect(spanHasWall(params, Vector3.new(-24, 0, -66), Vector3.new(-24, 0, -62), 1.5)).toBe(false)
+		expect(spanHasWall(params, Vector3.new(-24, 0, -58), Vector3.new(-24, 0, -53), 1.5)).toBe(true)
+	end)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- Edge guards (Ruling 7): the sides of a crossing ramp are guarded where they cross steep skin
+	----------------------------------------------------------------------------------------------------------------
+
+	local GUARD_FOLDER = "CrossingGuards" -- kept apart from V1's SteepGuards, so plan 3, Task 6 removes it with the ramps
+	local SIDE_REACH = 2 -- studs beside a ramp's side that are looked at
+	local SIDE_LOOK_STEP = 0.25
+	local STEEP_SKIN_DEGREES = 70 -- skin this steep, or steeper, beside a side needs a guard...
+	local STEEP_SKIN_RISE = 0.5 -- ...if it rises more than this within one look step
+	local GUARD_RAY_HEIGHTS = { 1, 3, 4.2 } -- studs over the ramp top: a body is 4.3 tall, so 4.2 is its top
+	local GUARD_SIDE_INSET = 0.3 -- studs: the sideways ray starts this far inside the side
+	local GUARD_NEAR = 1 -- studs: a guard stands within this far of the side
+	local NO_FLAT_TOP_DEGREES = 72 -- every face of a guard that looks up is at least this steep
+	local MAX_GUARDS_PER_RAMP = 2
+	local GUARD_FOOTPRINT_STEP = 0.25
+
+	-- His skin's height at (x, z), or nil.
+	local function skinHeightAt(params: RaycastParams, x: number, z: number): number?
+		local hit = Workspace:Raycast(Vector3.new(x, 200, z), Vector3.new(0, -250, 0), params)
+		return if hit ~= nil then hit.Position.Y else nil
+	end
+
+	-- Whether his skin at (x, z) is steep: its local slope (read ±0.25 studs around the place) is over STEEP_SKIN_DEGREES
+	-- and it rises more than STEEP_SKIN_RISE within that look, or its body-size slope is STEEP_SKIN_DEGREES or more.
+	local function steepSkinAt(params: RaycastParams, x: number, z: number): boolean
+		local reach = SIDE_LOOK_STEP
+		local east = skinHeightAt(params, x + reach, z)
+		local west = skinHeightAt(params, x - reach, z)
+		local north = skinHeightAt(params, x, z + reach)
+		local south = skinHeightAt(params, x, z - reach)
+		if east ~= nil and west ~= nil and north ~= nil and south ~= nil then
+			local gradientX = (east - west) / (2 * reach)
+			local gradientZ = (north - south) / (2 * reach)
+			local degrees = math.deg(math.atan(math.sqrt(gradientX * gradientX + gradientZ * gradientZ)))
+			local rise = math.max(math.abs(east - west), math.abs(north - south))
+			if degrees > STEEP_SKIN_DEGREES and rise > STEEP_SKIN_RISE then
+				return true
+			end
+		end
+		local body = bodySlopeAt(params, x, z)
+		return body ~= nil and body >= STEEP_SKIN_DEGREES
+	end
+
+	type SidePoint = { base: Vector3, top: number, outward: Vector3, steep: boolean }
+
+	-- The points along both long sides of a ramp, every 1 stud from 0.5 in from the ends: the place on the side edge, the
+	-- ramp's top height there, the direction away from the ramp, and whether steep skin lies beside it (out to SIDE_REACH).
+	local function sidePoints(params: RaycastParams, ramp: BasePart): { SidePoint }
+		local rampParams = RaycastParams.new()
+		rampParams.IncludeInstances = { ramp }
+		rampParams.RespectCanCollide = false
+		local half = ramp.Size / 2
+		-- the ramp's own long direction on the ground, and its side direction (a pitch or yaw only, so both are level)
+		local right = Vector3.new(ramp.CFrame.RightVector.X, 0, ramp.CFrame.RightVector.Z).Unit
+		local topNormal = Workspace:Raycast(ramp.Position + Vector3.new(0, 40, 0), Vector3.new(0, -80, 0), rampParams)
+		local ascent = Vector3.zAxis
+		if topNormal ~= nil then
+			ascent = -Vector3.new(topNormal.Normal.X, 0, topNormal.Normal.Z).Unit
+		end
+		local lowest, highest = math.huge, -math.huge
+		for _, sx in { -1, 1 } do
+			for _, sy in { -1, 1 } do
+				for _, sz in { -1, 1 } do
+					local corner = ramp.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
+					local along = corner:Dot(ascent)
+					lowest, highest = math.min(lowest, along), math.max(highest, along)
+				end
+			end
+		end
+		local centreAlong = ramp.Position:Dot(ascent)
+		local foot = ramp.Position - ascent * (centreAlong - lowest)
+		local points: { SidePoint } = {}
+		local reach = 0.5
+		while reach <= highest - lowest - 0.5 + 1e-6 do
+			for _, side in { -1, 1 } do
+				local outward = right * side
+				local base = foot + ascent * reach + outward * (half.X - 0.05)
+				local top = Workspace:Raycast(Vector3.new(base.X, 200, base.Z), Vector3.new(0, -250, 0), rampParams)
+				if top ~= nil then
+					local steep = false
+					for look = SIDE_LOOK_STEP, SIDE_REACH + 1e-6, SIDE_LOOK_STEP do
+						local beside = base + outward * look
+						if steepSkinAt(params, beside.X, beside.Z) then
+							steep = true
+							break
+						end
+					end
+					table.insert(points, { base = base, top = top.Position.Y, outward = outward, steep = steep })
+				end
+			end
+			reach += 1
+		end
+		return points
+	end
+
+	-- What is wrong with the guards of one ramp: at every side point with steep skin beside it, a sideways ray from 1, 3
+	-- and 4.2 studs over the ramp top (starting just inside the side, seeing only `guards`) must hit a guard within
+	-- GUARD_NEAR of the side. Returns the problems and how many side points needed a guard.
+	local function guardProblems(params: RaycastParams, ramp: BasePart, guards: { BasePart }): ({ string }, number)
+		local problems: { string } = {}
+		local guardParams = RaycastParams.new()
+		local included: { Instance } = {}
+		for _, guard in guards do
+			table.insert(included, guard)
+		end
+		guardParams.IncludeInstances = included
+		guardParams.RespectCanCollide = false
+		local needed = 0
+		for _, point in sidePoints(params, ramp) do
+			if point.steep then
+				needed += 1
+				for _, height in GUARD_RAY_HEIGHTS do
+					local inside = point.base - point.outward * GUARD_SIDE_INSET
+					local start = Vector3.new(inside.X, point.top + height, inside.Z)
+					local hit = Workspace:Raycast(start, point.outward * (GUARD_SIDE_INSET + GUARD_NEAR), guardParams)
+					if hit == nil then
+						table.insert(
+							problems,
+							string.format(
+								"%s: no guard beside the side at %s, %g studs over the ramp",
+								ramp.Name,
+								describePoint(point.base),
+								height
+							)
+						)
+					end
+				end
+			end
+		end
+		return problems, needed
+	end
+
+	local function crossingGuards(): { BasePart }
+		local folder = walkFolder():FindFirstChild(GUARD_FOLDER)
+		expect(folder).never.toBeNil()
+		local guards: { BasePart } = {}
+		for _, guard in (folder :: Instance):GetChildren() do
+			expect(guard:IsA("BasePart")).toBe(true)
+			table.insert(guards, guard :: BasePart)
+		end
+		return guards
+	end
+
+	it("each crossing ramp's sides are guarded where they cross steep skin", function()
+		local params = bodyParams()
+		local guards = crossingGuards()
+		local problems: { string } = {}
+		local neededByRamp: { [string]: number } = {}
+		for _, ramp in crossingRamps() do
+			local found, needed = guardProblems(params, ramp, guards)
+			neededByRamp[ramp.Name] = needed
+			for index = 1, math.min(#found, 6) do
+				table.insert(problems, found[index])
+			end
+		end
+		-- the check is not empty: his ankle and knee walls have steep skin beside the ramps' sides
+		expect((neededByRamp.CrossingRamp_Ankle or 0) > 0).toBe(true)
+		expect((neededByRamp.CrossingRamp_Knee or 0) > 0).toBe(true)
+		expect(problems).toEqual({})
+	end)
+
+	it(
+		"every crossing guard is invisible, solid, has no flat top, reaches down to his skin, and there are at most 2 per ramp",
+		function()
+			local params = bodyParams()
+			local wrong: { string } = {}
+			local guards = crossingGuards()
+			expect(#guards >= 2).toBe(true)
+			for _, guard in guards do
+				if
+					guard.Transparency ~= 1
+					or not guard.Anchored
+					or not guard.CanCollide
+					or not guard.CanQuery
+					or guard.CollisionGroup ~= "Default"
+				then
+					table.insert(wrong, `{guard.Name}: not invisible, anchored and solid`)
+				end
+				local onlyGuard = RaycastParams.new()
+				onlyGuard.IncludeInstances = { guard }
+				onlyGuard.RespectCanCollide = false
+				-- the footprint of the guard (its bounding box seen from above), read every GUARD_FOOTPRINT_STEP studs
+				local half = guard.Size / 2
+				local lowX, highX, lowZ, highZ, highY, lowY =
+					math.huge, -math.huge, math.huge, -math.huge, -math.huge, math.huge
+				for _, sx in { -1, 1 } do
+					for _, sy in { -1, 1 } do
+						for _, sz in { -1, 1 } do
+							local corner =
+								guard.CFrame:PointToWorldSpace(Vector3.new(half.X * sx, half.Y * sy, half.Z * sz))
+							lowX, highX = math.min(lowX, corner.X), math.max(highX, corner.X)
+							lowZ, highZ = math.min(lowZ, corner.Z), math.max(highZ, corner.Z)
+							highY, lowY = math.max(highY, corner.Y), math.min(lowY, corner.Y)
+						end
+					end
+				end
+				local flatTop, gap, hitsCount = 0, 0, 0
+				local x = lowX + GUARD_FOOTPRINT_STEP / 2
+				while x <= highX do
+					local z = lowZ + GUARD_FOOTPRINT_STEP / 2
+					while z <= highZ do
+						local down = Workspace:Raycast(
+							Vector3.new(x, highY + 1, z),
+							Vector3.new(0, -(highY - lowY + 2), 0),
+							onlyGuard
+						)
+						if down ~= nil then
+							hitsCount += 1
+							if down.Normal.Y > math.cos(math.rad(NO_FLAT_TOP_DEGREES)) then
+								flatTop += 1
+							end
+							local up = Workspace:Raycast(
+								Vector3.new(x, lowY - 1, z),
+								Vector3.new(0, highY - lowY + 2, 0),
+								onlyGuard
+							)
+							local skin = skinHeightAt(params, x, z)
+							if up ~= nil and skin ~= nil and up.Position.Y > skin + WINDOW_SLACK then
+								gap += 1
+							end
+						end
+						z += GUARD_FOOTPRINT_STEP
+					end
+					x += GUARD_FOOTPRINT_STEP
+				end
+				if hitsCount == 0 then
+					table.insert(wrong, `{guard.Name}: no top was found`)
+				end
+				if flatTop > 0 then
+					table.insert(
+						wrong,
+						`{guard.Name}: {flatTop} places on top are flatter than {NO_FLAT_TOP_DEGREES} degrees`
+					)
+				end
+				if gap > 0 then
+					table.insert(wrong, `{guard.Name}: {gap} places have a gap under it, over his skin`)
+				end
+			end
+			-- Every guard is named for the ramp it guards ("Ankle_Guard_1" for CrossingRamp_Ankle), and a ramp has at most
+			-- MAX_GUARDS_PER_RAMP of them. (Where a guard really stands is checked by the test above, which looks for it.)
+			local countByRamp: { [string]: number } = {}
+			for _, guard in guards do
+				local rampName = string.match(guard.Name, "^(%a+)_Guard_%d+$")
+				if rampName == nil or walkFolder():FindFirstChild("CrossingRamp_" .. rampName) == nil then
+					table.insert(wrong, `{guard.Name}: not named for a crossing ramp ("Ankle_Guard_1")`)
+				else
+					countByRamp[rampName] = (countByRamp[rampName] or 0) + 1
+				end
+			end
+			for rampName, count in countByRamp do
+				if count > MAX_GUARDS_PER_RAMP then
+					table.insert(wrong, `CrossingRamp_{rampName}: {count} guards (the most is {MAX_GUARDS_PER_RAMP})`)
+				end
+			end
+			expect(wrong).toEqual({})
+		end
+	)
+
+	-- Proof that the guard test can fail: the real ankle ramp, looked at with no guards, has places that need one, and
+	-- the same ramp with its real guards has none. (The first is the "a test ramp with a steep side and no guard fails"
+	-- check: the ramp stands over a side that is known to be steep, and nothing guards it.)
+	it("finds a missing guard beside the ankle ramp's steep side, and none when the guards are there", function()
+		local params = bodyParams()
+		local ankle = walkFolder():FindFirstChild("CrossingRamp_Ankle")
+		expect(ankle).never.toBeNil()
+		local without, needed = guardProblems(params, ankle :: BasePart, {})
+		expect(needed > 0).toBe(true)
+		expect(#without).toBe(needed * #GUARD_RAY_HEIGHTS)
+		local with = guardProblems(params, ankle :: BasePart, crossingGuards())
+		expect(with).toEqual({})
+	end)
+
+	-- Ruling 12: a player cutting the corner to Rare egg 1 pressed against the end of Knee_Guard_2 and the 68 degree skin
+	-- past it and stood still. The guard's friction held them, so both knee guards are frictionless (the ankle guards keep
+	-- the material's own friction). Walking into them still stops the player: friction does not change a wall.
+	it("the long knee ramp's guards let a player slide along them", function()
+		local kneeGuards: { BasePart } = {}
+		for _, guard in crossingGuards() do
+			if guard.Name:match("^Knee_Guard_%d+$") then
+				table.insert(kneeGuards, guard)
+			end
+		end
+		expect(#kneeGuards).toBe(2)
+		for _, guard in kneeGuards do
+			local physics = guard.CustomPhysicalProperties
+			expect(physics).never.toBeNil()
+			expect((physics :: PhysicalProperties).Friction).toBe(0)
+			expect((physics :: PhysicalProperties).FrictionWeight).toBe(100)
+		end
+	end)
+
+	----------------------------------------------------------------------------------------------------------------
+	-- No slot under a walk piece (product's check 2)
+	----------------------------------------------------------------------------------------------------------------
+
+	-- The places on the ground under a piece where a standing body fits: under each point of its top, a ray from just
+	-- under the piece goes down SLOT_REACH studs; a walkable surface with room for a body (the shared walk check's own
+	-- test, with the piece in the world) is a slot a player could stand in.
+	local function slotsUnder(options: PathCheck.Options, piece: BasePart): { string }
+		local limit = math.cos(math.rad(StarterPlayer.CharacterMaxSlopeAngle))
+		local slots: { string } = {}
+		local params = RaycastParams.new()
+		params.RespectCanCollide = true
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = { piece }
+		for _, point in topGrid(piece.CFrame, piece.Size) do
+			local below = point - piece.CFrame.UpVector * (piece.Size.Y + 0.05)
+			local hit = Workspace:Raycast(below, Vector3.new(0, -SLOT_REACH, 0), params)
+			if hit ~= nil and hit.Normal.Y >= limit and hit.Material ~= Enum.Material.Water then
+				if PathCheck.roomToStand(options, hit.Position, hit.Normal) then
+					table.insert(slots, `a body fits at {describePoint(hit.Position)} under {piece.Name}`)
+				end
+			end
+		end
+		return slots
+	end
+
+	it("no slot under a walk piece or a crossing ramp", function()
+		local options = PathCheck.defaults(Workspace)
+		local slots: { string } = {}
+		local checked = 0
+		local ok, message = pcall(function()
+			local all: { BasePart } = walkPieces()
+			for _, ramp in crossingRamps() do
+				table.insert(all, ramp)
+			end
+			for _, piece in all do
+				checked += 1
+				local found = slotsUnder(options, piece)
+				for index = 1, math.min(#found, MAX_EXAMPLES) do
+					table.insert(slots, found[index])
+				end
+			end
+		end)
+		PathCheck.cleanup(options) -- takes the body probe out of the Workspace, whatever the result
+		expect(ok).toBe(true)
+		if not ok then
+			error(message)
+		end
+		expect(checked > 0).toBe(true)
+		expect(slots).toEqual({})
+	end)
+
+	-- Proof that the slot test can fail: a test board raised 6 studs over the flat boot top has a slot under it (a body is
+	-- 4.3 studs tall, so a 3 stud gap would not be one), and the same board 0.3 studs over his skin has none. The board
+	-- stands over the boot top for a moment, with Archivable off, and is destroyed in the test, like the body probe.
+	it("sees a slot under a board raised 6 studs, and none under a board resting on his skin", function()
+		local params = bodyParams()
+		local flatPoint = Vector3.new(-24, 0, -64)
+		local skin = skinUnder(params, Vector3.new(flatPoint.X, 40, flatPoint.Z))
+		expect(skin).never.toBeNil()
+		local floor = (skin :: RaycastResult).Position.Y
+		local options = PathCheck.defaults(Workspace)
+		local board = Instance.new("Part")
+		board.Name = "WalkPieceSlotTestBoard"
+		board.Size = Vector3.new(8, 1, 8)
+		board.Anchored = true
+		board.Transparency = 1
+		board.Archivable = false
+		local raised: { string } = {}
+		local resting: { string } = {}
+		local ok, message = pcall(function()
+			board.CFrame = CFrame.new(flatPoint.X, floor + 6.5, flatPoint.Z)
+			board.Parent = Workspace
+			raised = slotsUnder(options, board)
+			board.CFrame = CFrame.new(flatPoint.X, floor + 0.3 - 0.5, flatPoint.Z)
+			resting = slotsUnder(options, board)
+		end)
+		board:Destroy()
+		PathCheck.cleanup(options)
+		if not ok then
+			error(message)
+		end
+		expect(#raised > 0).toBe(true)
+		expect(resting).toEqual({})
+	end)
+end)
+
+-- Stuck safety Task 21: his slide line is the seam (docs/plans/v2/stuck-safety.md, Task 21; spec 2 Rule 20, "One
+-- collision source", check 3). A player slides below spec 5's seam and doesn't above it, within the 1-stud seam match.
+-- So where his real shape turns steeper than 65 degrees must lie within 1 stud of the style guide's seam line, side by
+-- side and along each cuff's rim. If it doesn't, designer moves the stitched seam art to the real line (the style
+-- guide's table and rim line); the numbers below are then copied from the style guide again, never fitted to the
+-- result. These tests only READ the world.
+describe("the real world, his slide line is the seam", function()
+	local Workspace = game:GetService("Workspace")
+
+	-- Spec 5 (docs/specs/v2/egg-nests-and-climbing.md), section 5: "Seam angle" 65 degrees (the walk area is under it,
+	-- and the seam sits where his side gets steeper) and "Seam match" 1 stud (the walk area's edge lies within 1 stud
+	-- of the seam's stitches).
+	local SEAM_ANGLE_DEGREES = 65
+	local SEAM_MATCH = 1
+	-- Cloth up to this steep is cloth a character still walks on in Play. The steepest body-size slope a character still
+	-- walked on in Play (stuck safety Task 21 round 3, 2026-10-20): the highest slope at the last walking frame before
+	-- the slip, over the six side walk-offs, rounded up (77.6 became 78). Plan 5's steep layer lists the places up to here.
+	local SLIP_DEGREES = 78
+
+	-- The style guide's seam line (docs/design/v2/style-guide.md, "The seam: where walking ends", the table "Along his
+	-- side"): (x, y, z) of each point on his left and on his right, from z -38 to z -14.
+	local SEAM_LEFT: { Vector3 } = {
+		Vector3.new(-16.5, 41.7, -38),
+		Vector3.new(-18.5, 42.9, -36),
+		Vector3.new(-20.5, 43.9, -34),
+		Vector3.new(-22.5, 44.5, -32),
+		Vector3.new(-24.5, 44.6, -30),
+		Vector3.new(-26, 45.2, -28),
+		Vector3.new(-29, 45.4, -24),
+		Vector3.new(-31, 45.6, -20),
+		Vector3.new(-32, 46.8, -16),
+		Vector3.new(-32.5, 47, -14),
+	}
+	local SEAM_RIGHT: { Vector3 } = {
+		Vector3.new(15, 43.4, -38),
+		Vector3.new(17.5, 44.4, -36),
+		Vector3.new(20, 44.7, -34),
+		Vector3.new(22, 45.3, -32),
+		Vector3.new(24.5, 44.8, -30),
+		Vector3.new(26, 45.2, -28),
+		Vector3.new(29, 45.6, -24),
+		Vector3.new(30.5, 46.7, -20),
+		Vector3.new(31.5, 47.6, -16),
+		Vector3.new(31.5, 48.9, -14),
+	}
+	-- The same guide, on his arms (docs/design/v2/style-guide.md, "The seam: where walking ends", the cuff table, moved
+	-- 2026-10-20): the five points of the outer rim of each white cuff, front to back. Each point is a station, copied as
+	-- written; his left has the negative x.
+	local CUFF_LEFT: { Vector3 } = {
+		Vector3.new(-46.0, 39.25, -13.0),
+		Vector3.new(-50.5, 39.0, -10.2),
+		Vector3.new(-52.75, 39.3, -5.75),
+		Vector3.new(-51.2, 39.25, -0.6),
+		Vector3.new(-49.5, 39.25, 4.0),
+	}
+	local CUFF_RIGHT: { Vector3 } = {
+		Vector3.new(46.0, 39.25, -13.0),
+		Vector3.new(50.5, 39.0, -10.2),
+		Vector3.new(52.75, 39.3, -5.75),
+		Vector3.new(51.2, 39.25, -0.6),
+		Vector3.new(49.5, 39.25, 4.0),
+	}
+	-- Where the strap to the cuff pockets starts (style guide, "The Epic cuff pockets", the table of the strap's parts,
+	-- row "Strap top": "Joins the walkable back of the cuff top at about (-52, 38.3, 3.8)"; the seam section's cuff
+	-- note only says the strap starts near point 5), and how wide it is (spec 5,
+	-- docs/specs/v2/egg-nests-and-climbing.md, "A 6.2-wide strap"). The strap is walk area, so a station within half its
+	-- width of its start is still measured and shown, but never counts as a fail.
+	local STRAP_START_LEFT = Vector3.new(-52, 38.3, 3.8)
+	local STRAP_START_RIGHT = Vector3.new(52, 38.3, 3.8)
+	local STRAP_WIDTH = 6.2
+	local STRAP_GAP = STRAP_WIDTH / 2
+	-- The seam lies on one piece: the side table on body_and_cushion, each cuff rim on its arm.
+	local SIDE_PIECE = "body_and_cushion"
+
+	-- How the real line is found.
+	local STEP = 0.25 -- studs between the places a walk looks at
+	local PAST_THE_LINE = 6 -- studs a walk goes on past the first place steeper than the seam angle
+	local PATCH_REACH = 2 -- his slope at body size: 25 rays 1 stud apart on a 4 by 4 stud square around the place
+	local SIDE_REACH = 80 -- studs: the farthest a walk from his middle goes before giving up
+	local CUFF_BACK = 4 -- studs a cuff walk starts on the sleeve's top side of the rim
+	local CUFF_REACH = 40 -- studs: the farthest a cuff walk goes past the rim before giving up
+	local RAY_ABOVE = 150 -- the rays start this high...
+	local RAY_LENGTH = 250 -- ...and look this far down
+
+	type Place = { offset: number, position: Vector3, slope: number }
+	-- One walk: where the style guide says the line is, the first place steeper than the seam angle (nil if none), and
+	-- every place on the walk that is steeper than the seam angle (the list later keeps only those up to SLIP_DEGREES).
+	-- `lastSeen` is the last place whose whole square of rays hit his piece. `ranOff` says how the walk stopped: true when
+	-- a ray of the next square missed his piece (the square reached past the edge, the rays ran out), false when the walk
+	-- reached its full length. `onCuff` rows are the ones where the end of his arm counts as a place where walking ends.
+	type Row = {
+		name: string,
+		guide: Vector3,
+		first: Place?,
+		steeperThanSeam: { Place },
+		lastSeen: Place?,
+		ranOff: boolean,
+		onCuff: boolean,
+		byStrap: boolean,
+		strapStart: Vector3?,
+	}
+
+	local function bodyMesh(pieceName: string): MeshPart
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local giant = (world :: Instance):FindFirstChild("Giant")
+		expect(giant).never.toBeNil()
+		local piece = (giant :: Instance):FindFirstChild(pieceName)
+		expect(piece).never.toBeNil()
+		local mesh = (piece :: Instance):FindFirstChild(pieceName)
+		expect(mesh).never.toBeNil()
+		expect((mesh :: Instance):IsA("MeshPart")).toBe(true)
+		return mesh :: MeshPart
+	end
+
+	-- A ray that sees only this one piece of him.
+	local function onlyParams(piece: Instance): RaycastParams
+		local params = RaycastParams.new()
+		params.IncludeInstances = { piece }
+		params.RespectCanCollide = false
+		return params
+	end
+
+	-- His slope at body size around (x, z): the steepness in degrees of the flat plane that best fits 25 rays straight
+	-- down on a 4 by 4 stud square (designer's rule). Gives the height of the middle ray too. Nil when a ray misses (the
+	-- square reaches past the piece's edge). The grid is even, so the best-fit plane comes from two sums.
+	local function slopeAt(params: RaycastParams, x: number, z: number): (number?, number?)
+		local sumX, sumZ, middleY = 0, 0, 0
+		for offsetX = -PATCH_REACH, PATCH_REACH do
+			for offsetZ = -PATCH_REACH, PATCH_REACH do
+				local hit = Workspace:Raycast(
+					Vector3.new(x + offsetX, RAY_ABOVE, z + offsetZ),
+					Vector3.new(0, -RAY_LENGTH, 0),
+					params
+				)
+				if hit == nil then
+					return nil, nil
+				end
+				sumX += offsetX * hit.Position.Y
+				sumZ += offsetZ * hit.Position.Y
+				if offsetX == 0 and offsetZ == 0 then
+					middleY = hit.Position.Y
+				end
+			end
+		end
+		-- for offsets -2 to 2 the sum of offset squared over the grid is 5 columns of (4 + 1 + 0 + 1 + 4) = 50
+		local squares = (2 * PATCH_REACH + 1) * (PATCH_REACH * (PATCH_REACH + 1) * (2 * PATCH_REACH + 1) / 3)
+		local normal = Vector3.new(-sumX / squares, 1, -sumZ / squares).Unit
+		return math.deg(math.acos(math.clamp(normal.Y, -1, 1))), middleY
+	end
+
+	-- Walks from `origin` (x and z only) along `direction` (flat, length 1), STEP studs at a time, from `fromOffset` to
+	-- `toOffset`. Finds the first place steeper than the seam angle, keeps going PAST_THE_LINE studs, and keeps every
+	-- place on the way that is steeper than the seam angle.
+	local function walk(
+		name: string,
+		guide: Vector3,
+		params: RaycastParams,
+		origin: Vector3,
+		direction: Vector3,
+		fromOffset: number,
+		toOffset: number,
+		onCuff: boolean
+	): Row
+		local row: Row = {
+			name = name,
+			guide = guide,
+			first = nil,
+			steeperThanSeam = {},
+			lastSeen = nil,
+			ranOff = false,
+			onCuff = onCuff,
+			byStrap = false,
+		}
+		local stopAt = toOffset
+		local count = math.floor((toOffset - fromOffset) / STEP + 0.5)
+		for index = 0, count do
+			local offset = fromOffset + index * STEP
+			if offset > stopAt then
+				break
+			end
+			local x, z = origin.X + direction.X * offset, origin.Z + direction.Z * offset
+			local slope, y = slopeAt(params, x, z)
+			if slope == nil or y == nil then
+				row.ranOff = true -- the square reaches past the edge of the piece: his top ends here
+				break
+			end
+			local place: Place = { offset = offset, position = Vector3.new(x, y, z), slope = slope }
+			row.lastSeen = place
+			if slope > SEAM_ANGLE_DEGREES then
+				if row.first == nil then
+					row.first = place
+					stopAt = offset + PAST_THE_LINE
+				end
+				table.insert(row.steeperThanSeam, place)
+			end
+		end
+		return row
+	end
+
+	-- The 5 stations of a cuff are the style guide's 5 points. At each one, the rim's direction is the average of the two
+	-- flat rim pieces that meet there (stations 1 and 5 have only one piece).
+	local function cuffStations(line: { Vector3 }): { { position: Vector3, along: Vector3 } }
+		local stations: { { position: Vector3, along: Vector3 } } = {}
+		for index, point in line do
+			local sum = Vector3.zero
+			if index > 1 then
+				sum += Vector3.new(point.X - line[index - 1].X, 0, point.Z - line[index - 1].Z).Unit
+			end
+			if index < #line then
+				sum += Vector3.new(line[index + 1].X - point.X, 0, line[index + 1].Z - point.Z).Unit
+			end
+			table.insert(stations, { position = point, along = sum.Unit })
+		end
+		return stations
+	end
+
+	local function sideRows(line: { Vector3 }, sideName: string, towards: number): { Row }
+		local params = onlyParams(bodyMesh(SIDE_PIECE))
+		local rows: { Row } = {}
+		for _, point in line do
+			table.insert(
+				rows,
+				walk(
+					`{sideName} side, z {point.Z}`,
+					point,
+					params,
+					Vector3.new(0, 0, point.Z),
+					Vector3.new(towards, 0, 0),
+					0,
+					SIDE_REACH,
+					false
+				)
+			)
+		end
+		return rows
+	end
+
+	local function cuffRows(line: { Vector3 }, cuffName: string, pieceName: string, strapStart: Vector3): { Row }
+		local params = onlyParams(bodyMesh(pieceName))
+		local rows: { Row } = {}
+		for number, station in cuffStations(line) do
+			-- across the rim, flat, at right angles to the rim line; the sleeve's top side is the side where his skin
+			-- is higher 4 studs from the station, so a walk starts there and goes outward
+			local across = Vector3.new(-station.along.Z, 0, station.along.X)
+			local _, heightOne =
+				slopeAt(params, station.position.X + across.X * CUFF_BACK, station.position.Z + across.Z * CUFF_BACK)
+			local _, heightTwo =
+				slopeAt(params, station.position.X - across.X * CUFF_BACK, station.position.Z - across.Z * CUFF_BACK)
+			local outward = if (heightOne or -math.huge) > (heightTwo or -math.huge) then -across else across
+			local row = walk(
+				`{cuffName} cuff, station {number}`,
+				station.position,
+				params,
+				station.position,
+				outward,
+				-CUFF_BACK,
+				CUFF_REACH,
+				true
+			)
+			-- by the strap: within half the strap's width of where it starts, flat across the ground
+			row.byStrap = Vector3.new(station.position.X - strapStart.X, 0, station.position.Z - strapStart.Z).Magnitude
+				<= STRAP_GAP
+			row.strapStart = strapStart
+			table.insert(rows, row)
+		end
+		return rows
+	end
+
+	local function format(position: Vector3): string
+		return string.format("(%.2f, %.2f, %.2f)", position.X, position.Y, position.Z)
+	end
+
+	-- Where walking ends on this walk, and what it was. Everywhere it is the first place steeper than the seam angle (a
+	-- 65 degree turn). On a cuff, if there is none and the walk ran off his arm, it is the last place the square still fit
+	-- (the end of his arm: his arm is a rounded tube that may end before it gets that steep). Nil when the walk reached
+	-- its full length with neither, or measured no place at all.
+	local TURN = `{SEAM_ANGLE_DEGREES}° turn`
+	local ARM_END = "end of his arm"
+	local function whereWalkingEnds(row: Row): (Place?, string?)
+		if row.first ~= nil then
+			return row.first, TURN
+		end
+		if row.onCuff and row.ranOff and row.lastSeen ~= nil then
+			return row.lastSeen, ARM_END
+		end
+		return nil, nil
+	end
+
+	-- How far the place where walking ends is from the style guide's point, flat across the ground, or nil if the walk
+	-- has none.
+	local function apart(row: Row): number?
+		local place = whereWalkingEnds(row)
+		if place == nil then
+			return nil
+		end
+		return Vector3.new(place.position.X - row.guide.X, 0, place.position.Z - row.guide.Z).Magnitude
+	end
+
+	local function describeRow(row: Row): string
+		local note = if row.byStrap then "  (by the strap (walk area): not counted)" else ""
+		local place, kind = whereWalkingEnds(row)
+		local distance = apart(row)
+		if place == nil or kind == nil or distance == nil then
+			local last = row.lastSeen
+			local ended = if last == nil
+				then "no place was measured"
+				else if row.ranOff
+					then string.format(
+						"the walk ran out of his piece at %s (%.1f degrees there), %.2f studs from the style guide",
+						format(last.position),
+						last.slope,
+						Vector3.new(last.position.X - row.guide.X, 0, last.position.Z - row.guide.Z).Magnitude
+					)
+					else "the walk reached its full length without a turn"
+			local wanted = if row.onCuff then `a {TURN} or the end of his arm` else `a {TURN}`
+			return `{row.name}: the style guide says {format(row.guide)}; walking never ends at {wanted} ({ended})  <-- NO PLACE PAST {SEAM_ANGLE_DEGREES}{note}`
+		end
+		return string.format(
+			"%s: the style guide says %s; walking ends at the %s at %s (%.1f degrees there): %.2f studs apart%s%s",
+			row.name,
+			format(row.guide),
+			kind,
+			format(place.position),
+			place.slope,
+			distance,
+			if distance <= SEAM_MATCH then "" else "  <-- TOO FAR",
+			note
+		)
+	end
+
+	local function failures(rows: { Row }): { string }
+		local lines: { string } = {}
+		for _, row in rows do
+			local distance = apart(row)
+			if not row.byStrap and (distance == nil or distance > SEAM_MATCH) then
+				table.insert(lines, describeRow(row))
+			end
+		end
+		return lines
+	end
+
+	-- The message of a failing check: the places that fail first, then every place with its distance.
+	local function report(rows: { Row }): string
+		local bad = failures(rows)
+		local all: { string } = {}
+		for _, row in rows do
+			table.insert(all, "  " .. describeRow(row))
+		end
+		return `\n{#bad} of {#rows} are not within {SEAM_MATCH} stud of the style guide's line (where walking ends, either a {TURN} or the end of his arm, is within {SEAM_MATCH} stud of the line):\n  {table.concat(
+			bad,
+			"\n  "
+		)}\nevery place measured:\n{table.concat(all, "\n")}`
+	end
+
+	-- For plan 5's steep layer: the lines that list one walk's cloth that is steeper than the seam angle but that a
+	-- character still walks on in Play (no steeper than SLIP_DEGREES, and only up to the first place that is). One line a
+	-- walk, or "none".
+	local STRAP_MOUTH_TAG = "(strap mouth: walk area, no steep layer)"
+	local ARM_NOTE = " (past the end of his arm this test can't measure: plan 5, Task 15 uses the Play walk-off)"
+
+	local function describeWalkedOn(row: Row): { string }
+		local _, kind = whereWalkingEnds(row)
+		local distance = apart(row)
+		local howFar = if kind == nil or distance == nil
+			then "no place where walking ends"
+			else string.format("walking ends at the %s, %.2f studs from the guide", kind, distance)
+		if row.byStrap then
+			howFar ..= ", by the strap (walk area): not counted"
+		end
+		-- a cuff walk that ran off his arm can't be measured past the end of his arm
+		local armNote = if row.onCuff and row.ranOff then ARM_NOTE else ""
+		-- cloth in the strap's mouth (within half the strap's width of where it starts) is walk area: plan 5 leaves it out
+		local forSteepLayer: { Place } = {}
+		local inTheMouth: { Place } = {}
+		for _, place in row.steeperThanSeam do
+			local start = row.strapStart
+			if place.slope > SLIP_DEGREES then
+				break -- a character slips here in Play: this and everything farther on is not cloth they walk on
+			end
+			if
+				start ~= nil
+				and Vector3.new(place.position.X - start.X, 0, place.position.Z - start.Z).Magnitude <= STRAP_GAP
+			then
+				table.insert(inTheMouth, place)
+			else
+				table.insert(forSteepLayer, place)
+			end
+		end
+		local function listLine(places: { Place }, tag: string): string
+			return string.format(
+				"%s (%s): %d places from %s to %s (%.1f to %.1f studs along the walk)%s%s",
+				row.name,
+				howFar,
+				#places,
+				format(places[1].position),
+				format(places[#places].position),
+				places[1].offset,
+				places[#places].offset,
+				tag,
+				armNote
+			)
+		end
+		local lines: { string } = {}
+		if #forSteepLayer > 0 then
+			table.insert(lines, listLine(forSteepLayer, ""))
+		elseif #inTheMouth == 0 then
+			table.insert(lines, `{row.name} ({howFar}): none{armNote}`)
+		end
+		if #inTheMouth > 0 then
+			table.insert(lines, listLine(inTheMouth, " " .. STRAP_MOUTH_TAG))
+		end
+		return lines
+	end
+
+	-- Computed once: the walks read thousands of rays.
+	local measured: { left: { Row }, right: { Row }, leftCuff: { Row }, rightCuff: { Row } }? = nil
+	local function measure()
+		if measured == nil then
+			measured = {
+				left = sideRows(SEAM_LEFT, "left", -1),
+				right = sideRows(SEAM_RIGHT, "right", 1),
+				leftCuff = cuffRows(CUFF_LEFT, "left", "left_arm", STRAP_START_LEFT),
+				rightCuff = cuffRows(CUFF_RIGHT, "right", "right_arm", STRAP_START_RIGHT),
+			}
+		end
+		return measured :: { left: { Row }, right: { Row }, leftCuff: { Row }, rightCuff: { Row } }
+	end
+
+	it("on his sides, he turns steeper than the seam angle within the seam match of the style guide's line", function()
+		local rows: { Row } = {}
+		for _, row in measure().left do
+			table.insert(rows, row)
+		end
+		for _, row in measure().right do
+			table.insert(rows, row)
+		end
+		expect(#rows).toBe(20)
+		if #failures(rows) > 0 then
+			error(report(rows), 0)
+		end
+	end)
+
+	it(
+		"on his cuffs, where walking ends, either a 65° turn or the end of his arm, is within 1 stud of the line",
+		function()
+			local rows: { Row } = {}
+			for _, row in measure().leftCuff do
+				table.insert(rows, row)
+			end
+			for _, row in measure().rightCuff do
+				table.insert(rows, row)
+			end
+			expect(#rows).toBe(#CUFF_LEFT + #CUFF_RIGHT)
+			-- the strap's gap must not swallow more of the line if the table or the strap moves
+			local stationsInTheGap: { string } = {}
+			for _, row in rows do
+				if row.byStrap then
+					table.insert(stationsInTheGap, row.name)
+				end
+			end
+			expect(stationsInTheGap).toEqual({ "left cuff, station 5", "right cuff, station 5" })
+			if #failures(rows) > 0 then
+				error(report(rows), 0)
+			end
+		end
+	)
+
+	-- The end of his arm only counts on a cuff, and only when the walk really ran off his arm: a walk that reached its
+	-- full length, or measured nothing, still fails. (Made-up walks; the world is not read.)
+	it("counts the end of his arm only for a cuff walk that ran off his arm", function()
+		local lastPlace: Place = { offset = 3, position = Vector3.new(0.75, 39, 0), slope = 40 }
+		local function walkLike(changes: { onCuff: boolean?, ranOff: boolean?, lastSeen: Place?, first: Place? }): Row
+			local row: Row = {
+				name = "made-up walk",
+				guide = Vector3.zero,
+				first = changes.first,
+				steeperThanSeam = {},
+				lastSeen = changes.lastSeen,
+				ranOff = changes.ranOff == true,
+				onCuff = changes.onCuff == true,
+				byStrap = false,
+			}
+			return row
+		end
+		-- a cuff walk that ran off his arm: the last place the square fit counts, with its distance
+		local ranOffCuff = walkLike({ onCuff = true, ranOff = true, lastSeen = lastPlace })
+		expect(apart(ranOffCuff)).toBe(0.75)
+		expect(describeRow(ranOffCuff)).toContain("end of his arm")
+		-- a cuff walk that reached its full length with no turn: no place
+		expect(apart(walkLike({ onCuff = true, ranOff = false, lastSeen = lastPlace }))).toBeNil()
+		-- a cuff walk that measured no place at all: no place
+		expect(apart(walkLike({ onCuff = true, ranOff = true, lastSeen = nil }))).toBeNil()
+		-- a side walk that ran off his piece: the end of his piece is not a place where walking ends
+		expect(apart(walkLike({ onCuff = false, ranOff = true, lastSeen = lastPlace }))).toBeNil()
+		-- a real 65° turn wins over the end of his arm
+		local turn: Place = { offset = 1, position = Vector3.new(0.5, 39, 0), slope = 66 }
+		local withTurn = walkLike({ onCuff = true, ranOff = true, lastSeen = lastPlace, first = turn })
+		expect(apart(withTurn)).toBe(0.5)
+		expect(describeRow(withTurn)).toContain("65° turn")
+	end)
+
+	-- A station by the strap is measured and shown, but never counts as a fail. (A made-up walk that finds no place.)
+	it("shows a station by the strap as not counted, even if it finds no place", function()
+		local byTheStrap: Row = {
+			name = "made-up station",
+			guide = Vector3.zero,
+			first = nil,
+			steeperThanSeam = {},
+			lastSeen = nil,
+			ranOff = false,
+			onCuff = true,
+			byStrap = true,
+		}
+		local elsewhere: Row = table.clone(byTheStrap)
+		elsewhere.byStrap = false
+		expect(failures({ byTheStrap })).toEqual({})
+		expect(#failures({ elsewhere })).toBe(1)
+		expect(describeRow(byTheStrap)).toContain("by the strap (walk area): not counted")
+	end)
+
+	-- The list for plan 5 stops where a character really slips in Play: at the first place steeper than SLIP_DEGREES,
+	-- not at any gentler place farther on. (A made-up row: places at 66, 72, 79 and then 70 degrees.)
+	it("lists only the cloth a character still walks on in Play, up to SLIP_DEGREES", function()
+		local gentle: Place = { offset = 1, position = Vector3.new(-20, 43, -36), slope = 66 }
+		local steep: Place = { offset = 2, position = Vector3.new(-21, 42, -36), slope = 72 }
+		local slipping: Place = { offset = 3, position = Vector3.new(-22, 41, -36), slope = 79 }
+		-- a gentler place farther on, past the steeper stretch: the character has already slipped by then
+		local pastTheSlip: Place = { offset = 4, position = Vector3.new(-23, 30, -36), slope = 70 }
+		local row: Row = {
+			name = "made-up side",
+			guide = Vector3.zero,
+			first = gentle,
+			steeperThanSeam = { gentle, steep, slipping, pastTheSlip },
+			lastSeen = pastTheSlip,
+			ranOff = false,
+			onCuff = false,
+			byStrap = false,
+		}
+		local text = table.concat(describeWalkedOn(row), "\n")
+		expect(text).toContain("2 places")
+		expect(text).toContain(format(gentle.position))
+		expect(text).toContain(format(steep.position))
+		expect(text).never.toContain(format(slipping.position))
+		expect(text).never.toContain(format(pastTheSlip.position))
+	end)
+
+	-- A cuff row that ran off his arm can't see past the end of his arm, so its list line says plan 5 uses the Play
+	-- walk-off there. (Made-up rows.)
+	it("says on a cuff row that ran off his arm that the list can't see past the end of his arm", function()
+		local place: Place = { offset = 1, position = Vector3.new(50, 39, -6), slope = 66 }
+		local function cuffRow(ranOff: boolean, onCuff: boolean): Row
+			return {
+				name = "made-up row",
+				guide = Vector3.zero,
+				first = place,
+				steeperThanSeam = { place },
+				lastSeen = place,
+				ranOff = ranOff,
+				onCuff = onCuff,
+				byStrap = false,
+			}
+		end
+		local note = "past the end of his arm this test can't measure: plan 5, Task 15 uses the Play walk-off"
+		expect(table.concat(describeWalkedOn(cuffRow(true, true)), "\n")).toContain(note)
+		expect(table.concat(describeWalkedOn(cuffRow(false, true)), "\n")).never.toContain(note)
+		expect(table.concat(describeWalkedOn(cuffRow(true, false)), "\n")).never.toContain(note)
+	end)
+
+	-- Cloth under the game's own slope limit never slips, so the list must reach at least that steep.
+	it("never lists below the steepest slope the game lets a player stand on", function()
+		expect(SLIP_DEGREES).toBeGreaterThanOrEqual(game:GetService("StarterPlayer").CharacterMaxSlopeAngle)
+	end)
+
+	-- A place in the strap's mouth is walk area, not cloth for the steep layer: the list says so, so plan 5 never covers
+	-- the strap's way in. (A made-up walk.)
+	it("tags cloth in the strap's mouth as walk area in the list for plan 5", function()
+		local strapStart = Vector3.new(52, 38.3, 3.8)
+		local inTheMouth: Place = { offset = 5, position = Vector3.new(50, 38, 4), slope = 67 }
+		local outside: Place = { offset = 6, position = Vector3.new(48, 38, -6), slope = 68 }
+		local row: Row = {
+			name = "made-up cuff",
+			guide = Vector3.zero,
+			first = nil,
+			steeperThanSeam = { inTheMouth, outside },
+			lastSeen = nil,
+			ranOff = false,
+			onCuff = true,
+			byStrap = false,
+			strapStart = strapStart,
+		}
+		local lines = describeWalkedOn(row)
+		local tag = STRAP_MOUTH_TAG
+		local tagged, untagged = {}, {}
+		for _, line in lines do
+			table.insert(if string.find(line, tag, 1, true) then tagged else untagged, line)
+		end
+		-- the place in the mouth is on a tagged line alone; the other place is on a plain line alone
+		expect(#tagged).toBe(1)
+		expect(tagged[1]).toContain(format(inTheMouth.position))
+		expect(tagged[1]).never.toContain(format(outside.position))
+		expect(#untagged).toBe(1)
+		expect(untagged[1]).toContain(format(outside.position))
+		expect(untagged[1]).never.toContain(format(inTheMouth.position))
+	end)
+
+	-- For plan 5's steep layer: the cloth that is steeper than the seam angle but that a character still walks on in Play
+	-- (up to SLIP_DEGREES), found on every walk. It never fails; it writes one line a walk.
+	it(
+		"lists the cloth below the seam that a character still walks on in Play (up to SLIP_DEGREES degrees), for plan 5's steep layer",
+		function()
+			local all: { Row } = {}
+			for _, group in { measure().left, measure().right, measure().leftCuff, measure().rightCuff } do
+				for _, row in group do
+					table.insert(all, row)
+				end
+			end
+			local lines: { string } = {}
+			for _, row in all do
+				for _, line in describeWalkedOn(row) do
+					table.insert(lines, line)
+				end
+			end
+			print(
+				`Seam: where walking ends on every walk, and the cloth below the seam that a character still walks on in Play (steeper than {SEAM_ANGLE_DEGREES} and up to SLIP_DEGREES, {SLIP_DEGREES} degrees), for plan 5's steep layer\n`
+					.. table.concat(lines, "\n")
+			)
+			expect(#all).toBe(20 + #CUFF_LEFT + #CUFF_RIGHT)
+		end
+	)
 end)

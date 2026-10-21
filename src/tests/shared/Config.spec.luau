@@ -177,6 +177,25 @@ describe("Config", function()
 		expect(Config.Tick.Seconds).toBe(0.1)
 	end)
 
+	it("the stuck scan's body size is a positive width and height", function()
+		expect(type(Config.Stuck.BodyWidth)).toBe("number")
+		expect(type(Config.Stuck.BodyHeight)).toBe("number")
+		expect(Config.Stuck.BodyWidth > 0).toBe(true)
+		expect(Config.Stuck.BodyHeight > 0).toBe(true)
+	end)
+
+	it("the stuck scan's grid is 2 studs apart", function()
+		expect(Config.Stuck.ScanSpacing).toBe(2)
+	end)
+
+	it("the stuck scan covers 10 studs of meadow around the giant", function()
+		expect(Config.Stuck.ScanMargin).toBe(10)
+	end)
+
+	it("the stuck scan has a time limit of 120 seconds", function()
+		expect(Config.Stuck.ScanSeconds).toBe(120)
+	end)
+
 	it("Config can't be changed while the game runs", function()
 		expect(function()
 			(Config.Meter :: any).Max = 5
