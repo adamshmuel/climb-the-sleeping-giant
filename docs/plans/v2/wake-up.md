@@ -183,7 +183,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   - moves the 7 dust spots into `World.GiantFX.WakeDust`, emitters off;
   - moves the 24 birds into `ReplicatedStorage.Assets.WakeBirds` (each device copies them at the wake);
   - marks every store flower model with `ShakesOnSlam = true`;
-  - marks his right arm's resting solid shape with `RightArmRest = true` (the `right_arm` mesh today, or plan 2's shell pieces for that arm, whichever plan 2 Task 6 chose);
+  - marks his right arm's resting solid shape with `RightArmRest = true` (the `right_arm` mesh: plan 2 kept his real shape, so the arm has no separate collision pieces);
   - moves the rest of `Mockup_WakeUp` (the avatar, the props, `Saved` and the 3 ModuleScripts) to `ServerStorage.ArtLibrary`.
 - Failing tests first: the world contract reports a missing `AwakeMouth`, `Bang`, `ZPop`, `WakeDust` (7 spots), `WakeBirds` (24 birds) or `RightArmRest` piece; on the real world, after the script: `AwakeMouth.Mouth` is within 0.1 studs of (0, 80.3, −15.6) and its Tongue of (0, 77.0, −16.7); no part of `AwakeMouth` collides; at least 100 flower models are marked and nothing else is; `Mockup_WakeUp` is gone from the Workspace.
 - Done when: the script runs twice (the second run says "already done"), the tests pass, and **Adam saves the place**. Screenshots from garden 4 (computer and the iPhone 14) show the sleeping giant with no mouth, no "!", no birds and no mockup avatar. The main chat sends them to designer.

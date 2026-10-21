@@ -28,7 +28,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 |---|---|
 | No arm twitch at 85% (Rule 100: Nothing you stand on moves while he sleeps) | Plan 1, Task 8. Task 9 here only checks that the cuff pieces stay still too |
 | The walk map, the stuck scan, the bot walk | Plan 2, Tasks 1 to 4 and 8 |
-| One collision source for the giant (his meshes or the invisible shell) | Plan 2, Tasks 5 to 7. **Every new walk piece here sits on whichever one won** |
+| One collision source for the giant | Plan 2, Tasks 19 to 24 and 7: his real shape, patched. **Every new walk piece here sits on his real shape** (plan 2, Task 21 lists the walkable cloth just below the seam for this plan's steep layer) |
 | The belly ramps, rail guards, zone boxes for the ways up, the footprint route plan | Plan 3, Tasks 5 to 8 |
 | The heist replay and one search per way up (`HeistScore`, `PathCheck.costsFrom`), Rule 41's check (Every way up is equally loud) for Rare egg 1 and the Uncommon rank | Plan 3, Tasks 11 and 12 |
 | The difficulty score, ranks, the "nest sits on something you can see" check (it already measures a `Nest` part), the report, `NestName` on V1's spots, beams 10 studs long on him | Plan 4, Tasks 4, 6 to 11 |
@@ -200,9 +200,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What the script does: makes each cuff's solid, invisible strap and ledge from the art's `StrapWalk` and `LedgeWalk` (the front ledge with its corner cut back, and the small join piece between the two pockets), each marked `StitchedEdge` (Task 10's slide test), the cuff ridge (x ±35 to ±49, z −17 to −12.5, top edge at height 44.5, steeper than 68°, no flat top), and one Belly box per cuff (see "Decisions"). Every right-cuff piece gets `RidesRightArm`.
 - Failing tests first (real world):
   1. Each strap is at least 5 wide, no steeper than 39° over any 5 studs and never over 60°; its step from his cloth is at most 0.2 and onto the ledge 0; each ledge is level at height 32.5 (within 0.1).
-  2. Each strap and ledge sits at most 1 stud above the visible strap or pocket under it.
-  3. Points every stud over each strap, ledge and cuff top, out to x ±68, are in the Belly zone; the side pads, thigh planks and side ladders are still Boots.
-  4. Each ridge is solid, invisible, steeper than 68° with no flat top, and covers x ±35 to ±49.
+  2. Each strap and ledge's top sits 0.2 studs below to 0.7 above the visible strap or pocket under it, checked about every stud over its whole top (Rule 79's window, product, 2026-10-20).
+  3. Points every stud over each strap, ledge and cuff top, out to x ±68, are in the Belly zone, including the rounded end of each arm at cuff points 4 and 5 down to where a player steps off it (product, stuck safety Task 21 round 3: it is walk area); the side pads, thigh planks and side ladders are still Boots.
+  4. Each ridge is solid, invisible, with both faces at least spec 5's "Steep face" (75°, product and designer, 2026-10-20) and no flat top, and covers x ±35 to ±49. Task 15's Play check walks onto it.
   5. Every right-cuff piece, and no left-cuff piece, has `RidesRightArm`.
   6. Every solid strap and ledge, and nothing else, has `StitchedEdge`.
 - Done when: the tests pass and the second run says "already done".
@@ -212,11 +212,11 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Files: `src/server/World/WalkAreaCheck.luau` (new), `src/tests/server/World/WalkAreaCheck.spec.luau` (new, fake worlds), `WalkMap.spec.luau`, `src/server/World/PathCheck.luau` (the scan area out to x ±64).
 - What it checks, on the one walk map (see "Decisions" for "walk area"):
   - **Too steep:** no walk-area spot is 65° or steeper.
-  - **Floating:** a ray down from each walk-area spot, seeing only visible surfaces, hits one within 1 stud.
+  - **Floating or sunk:** at each walk-area spot that isn't on his skin, the visible surface under it is 0.2 studs above the feet (sunk) to 0.7 below them (floating), measured with a ray straight down from 1 stud above the feet that sees only visible surfaces (Rule 79's window).
   - **Gaps:** sample points every 2 studs on his visible pyjama above the seam's stitches, on the tops of his sleeves and cuffs, and on each strap and ledge each have a walk-area spot within 1.5 studs.
   - **Zone:** every walk-area spot is Belly.
-  - **Seam match:** for each stitch part in `World.Seam`, 1 stud up the slope a body stands, and 1 stud down it slides (steeper than 70°, or the steep layer).
-- Failing tests first (fake worlds): a 60° slope passes and a 66° one fails "too steep"; an invisible plank 1.3 above a visible floor fails "floating"; a hole in a walkable floor fails "gap" naming the point; a stitch 2 studs inside the walkable edge fails "seam match". Then on the real world: **expected to fail** today, and that list is the failing test for Tasks 15 and 16. Until then it is the only accepted failure in the run.
+  - **Seam match:** for each stitch part in `World.Seam`, 1 stud up the slope a body stands, and 1 stud down it slides (the steep layer, or bare cloth steeper than plan 2 Task 21's `SLIP_DEGREES`: on his cloth a character still walks up to about 78°, not 70°).
+- Failing tests first (fake worlds): a 60° slope passes and a 66° one fails "too steep"; an invisible plank 1.0 above a visible floor fails "floating" and one 0.5 above passes; a visible floor 0.4 above an invisible plank's top fails "sunk"; a hole in a walkable floor fails "gap" naming the point; a stitch 2 studs inside the walkable edge fails "seam match". Then on the real world: **expected to fail** today, and that list is the failing test for Tasks 15 and 16. Until then it is the only accepted failure in the run.
 - Done when: the fake-world tests pass, and the real world's failure list is in the task report.
 
 **Task 15: World prep: the walk layer, the steep layer and the three fixes**
@@ -224,12 +224,13 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Files: `tools/world/23-walk-area.luau` (new), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
 - What the script does, on plan 2's chosen collision source, the same on both sides:
-  - **the walk layer:** where the source already sits within 1 stud of his pyjama and under 65°, it is used as it is; elsewhere in the walk area, smooth invisible pieces follow his visible surface, joined edge to edge with no step over 0.3 studs, including the beard tip and the sleeve tops;
-  - **the steep layer:** below the seam, wherever his cloth is under 70°, smooth invisible pieces steeper than 70° with no flat top;
+  - **the walk layer:** where the source already sits 0.2 studs below to 0.7 above his pyjama and under 65°, it is used as it is; elsewhere in the walk area, smooth invisible pieces follow his visible surface, joined edge to edge with no step over 0.3 studs, including the beard tip and the sleeve tops;
+  - **the steep layer** (designer, 2026-10-20, at plan 2's Task 21 round 2): it starts at the seam line and runs down until his bare cloth makes a character slip by itself: plan 2 Task 21's list (every place up to `SLIP_DEGREES`, about 78° by his body-size slope), and on each cuff only at cuff points 1 to 3 (at points 4 and 5 players step off the rounded end of his arm with no slide; designer and product, stuck safety Task 21 round 3: no steep layer there, don't try to "fix" it). Smooth invisible pieces with no flat top, steep enough that a character really slips in Play (spec 5's "Steep face": at least 75°), at most 1 stud out from his skin and never through it, so a sliding character never visibly hovers;
   - **the crease filler** from (±30, 32, −30) to (±19, 35, −42), and **the low-seam lift** (z −39 to −33: the walk area starts at height 44.5, ending at z −39.5 so the belly ramp's top and Rare egg 1 stay open with no step);
   - solid, invisible ledges for the knee and belly pockets from their `LedgeWalk` parts;
   - finds which parts let a player climb near (−14, 67, −14) (Task 22's climb probe in Play shows it) and changes them so they can't be climbed.
 - Failing test first: Task 14's real-world list (all but "seam match", which Task 16 finishes), plus the stuck scan with the bigger area: zero stuck spots.
+- **Play, moved here from plan 2 Task 21** (computer and iPhone 14, sound muted): plan 2 Task 21's 10 walk-offs (his sides at z −36, −28 and −16, each cuff at station 3 and station 4), with Task 21's rule for when the slip starts (the jump in flat speed, with its two round 3 details: the 0.1 s window holds only frames after the 1-stud mark, and a jump on cloth under 65° is not a slip). On his sides and at cuff station 3, each passes when the slip starts within 1 stud of the seam line, either side; on bare cloth today it starts 2.2 to 2.8 studs past the line. At cuff station 4 it passes when there is no slip before the character leaves the end of his arm (today 3.84 to 3.92 studs past the line) and it lands somewhere it can walk from. Also walk onto each face of the crease filler, the low-seam lift and the cuff ridge (Task 13): the character slips at once, and never stands or walks on it. Shots as in Task 21; designer says yes.
 - Done when: those pass, every Rule 45 check (One way onto the belly) of plan 3 (Task 10) still passes, the second run says "already done", and the report names how many new pieces were made.
 
 **Task 16: World prep: the seam**
@@ -252,6 +253,8 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   5. Spot rule 4: the lap fold and knee pocket anchors are more than 8 studs from every belly ramp piece.
   6. (Footprints, fake) a locked nest's egg is never a trail's target.
 - Done when: the tests pass, `08-route` run twice says "already done" the second time, and Play shows the trail from garden 4 forking to a right-side Rare (screenshot).
+- **From stuck safety Task 25 (designer's condition 9 and game_creator's condition 2, 2026-10-20):** the trail to each cap nest leads across the nose top to the cap ladder's foot, up the ladder and on up the cap's front slope. Play, on computer and phone: a shot on the nose top with the trail leading to the cap ladder's foot, and one at the ladder's top with the trail going on up the slope. The main chat sends them to designer and game_creator.
+- **From stuck safety Task 25 (designer's condition 10, moved here on 2026-10-20 because the nests weren't built yet):** from the cap ladder's top, the Legendary cap nests show as a short walk ahead, like `docs/design/v2/mockups/view-cap-nests.png` and `view-phone-cap-nests.png`. Play, on computer and iPhone 14: stand at the ladder's top with the real game camera looking up the cap's front slope, and take one shot on each screen. If the 60° slope hides the nests until the player is nearly there, that is a change for designer.
 
 ### Part 3: Checks on the walk map
 
@@ -259,7 +262,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Spec rules: Rule 82 (No new way onto the belly), all three points, and spec 3's Rule 45 (One way onto the belly) as Rule 82 (No new way onto the belly) widens it. Section 5: "Seam height", "Climbable-part height". Story E's first case. Section 8: "A player on the side pad jumps at his cuff".
 - Files: `src/server/World/WaysUpCheck.luau` (plan 3, Task 10), `src/tests/server/World/WaysUpCheck.spec.luau`, `WalkMap.spec.luau`.
 - What it adds, from every jump-surface spot (the meadow round him, the side pads, thigh planks, boot tops, lap planks and the tops of invisible guards), with the jump reach in "Decisions":
-  - every walk-area spot within jump reach sideways is at least 12 studs above that jump surface;
+  - every walk-area spot within jump reach sideways is at least 12 studs above that jump surface, the rounded end of each arm at cuff points 4 and 5 included (product, stuck safety Task 21 round 3);
   - every climbable part (every `TrussPart`) other than the six ways up and the beard and cap ladders has its lowest point at least 15 studs above every jump surface within reach; and there is none on him today;
   - no nest reached through the lap landing is within 8 studs of the body anywhere in a jump's reach, and no nest is over a side pad.
   - The run fails naming the jump surface and the spot.
@@ -271,7 +274,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Files: `tools/world/21-nests.luau` (its spot table), `docs/egg-ranks.md` (from `tools/report/egg-ranks.luau`), `WalkMap.spec.luau`.
 - What it does: plan 4's check (Task 9) now scores all 38 nests on the real world with the walk area, the straps and the ledges built. Each nest whose score is outside its target, or less than 3 points inside its band, is moved by the spec's own fix, in the script's table, never by changing its rank or a number: a Rare nest over 80 slides toward Rare egg 1 (no closer than 6 studs); the back cuff pocket over 127 moves toward the front pocket (no further than z −8); a cap nest under 130 moves up the cap, and one with a Tiptoe peak of 60 or more moves toward the cap ladder top; a nest that scores too low gets a longer walk, never a move toward his face. A move that would break a spot rule, the eye limit or a twin is not made: the report goes to the main chat for game_creator and designer.
 - Failing test first: the check itself on the 38 nests (expected to name some nests the first time).
-- Done when: the check passes, every rank has its count by score, every nest passes Rule 59 (the fold nests lean, their eggs stand upright), `docs/egg-ranks.md` is rewritten from the tool and matches the run, and designer is sent the list of moved nests to re-check the eye limit from all 8 gardens.
+- **Slide guards** (game_creator's condition at stuck safety Task 23): plan 2's test "slide guards stay off the walk area and out of players' way" gets every real nest added to its list of places players need, so no guard is within 2 studs of a nest. If one is, that guard becomes a flush patch (plan 2's rules), not a moved nest.
+- **game_creator's condition from stuck safety Task 25 (2026-10-20):** the cap stays the hardest zone: every cap nest scores at least as hard as every beard nest. If one doesn't, it moves by the spec's fix (up the cap), never by bringing back V1's middle forehead slab (stuck safety Task 25 removed it). The report names any such nest.
+- Done when: the check passes, every rank has its count by score, every nest passes Rule 59 (the fold nests lean, their eggs stand upright), `docs/egg-ranks.md` is rewritten from the tool and matches the run, plan 2's slide-guard test passes with the nests in its list, and designer is sent the list of moved nests to re-check the eye limit from all 8 gardens.
 
 **Task 20: Every rank is fair from every way up**
 - Spec rules: Rule 73 (Every rank is fair from every way up). Spec 3's Rule 41 (Every way up is equally loud): the beard–belly fold and the Epic cuff front pocket heists through all six ways up, and "a solo walking heist to any Rare nest must not wake him". Story E's second case. Spec 3's Check A1 (the parts left to this plan).
@@ -330,6 +335,27 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Failing test first: a fake hold with one tick in the air is refused; one on the ground all along passes.
 - Done when: the test passes and Task 22's mid-air try is repeated.
 
+**Task 26: The ladder ways down are quiet** (added 2026-10-21 at the stuck safety Task 25 review, from game_creator's decisions in `docs/specs/v2/research/decisions-plans.md`, "Getting down the ladders", "Spec 3's four leaning ladders" and "Thuds found in Task 25 Play"; built after Task 10, before Task 19)
+- Spec rules: changed Rule 8 (Steps make noise), V1, as written in `docs/specs/core-heist.md`, "The set ways down must not thud": the boot and side ladders, his head, and the belly's raised strip. Rule 84 (A slide is a fall, and the first one gets a tip) stays as Task 10 builds it.
+- **Why.** Roblox can't climb down a leaning ladder, and every ladder leans, so a drop is each ladder's only way down. Today these drops thud. In stuck safety Task 25's Play (iPhone 14, sleep meter held at zero), the thuds were: the right brim nest dropping to the nose top +60.6; letting go of the beard ladder from its top or its middle, sliding about 7.5 studs down his skin, +29.8 (none on the computer); walking off the cap ladder's sides onto the nose top +39.8 (computer too); a run on down the beard face to the belly path +59.8; crossing the nose top through the cap ladder's foot, which grabs it and drops +39.9. The one quiet drop was walking off the cap's front at x 0 (10.4 studs).
+- Files: `src/server/Players/LandingDetector.luau` (a finished fall also says whether it is a set way down), `src/server/Players/PlayerTracker.luau` (passes where the fall began and ended, and whether it began on a ladder), `src/shared/Config.luau` (the starting values below, in `Config.Noise`), `src/server/World/WorldIndex.luau` (a `readLadders`: each ladder's climbing truss and its foot, from the world), and their tests.
+- What it does: a fall with no jump that is a set way down adds no thud, only the step noise for its length (as if walked) plus the carried egg's usual extra. Every other fall thuds once, as today. A set way down is:
+  1. **His head:** it starts in the Nightcap or Beard zone (his cap, the cap ladder, the nose top, the beard ladder, the beard face) and ends in the Beard zone (the nose top) or on the belly path (Belly zone), and never passes below the seam line (then it is a slide, Rule 84, and thuds).
+  2. **A boot or side ladder:** it begins on the ladder (its first airborne point is within 1.5 studs of the ladder's climbing truss, or within 2 studs of the truss's top end) and ends on the grass within 8 studs (flat) of the ladder's foot. Starting values: Play below confirms them.
+  3. **The belly's raised strip:** it starts and ends in the Belly zone, drops at most 4 studs (the strip's sides are at most 3.8), and never passes below the seam line.
+- Failing tests first (pure, fake falls; each red before the change):
+  1. Off the cap's top onto the nose top, 10.4 down: no thud. The same fall ending in the meadow: one Nightcap thud.
+  2. Off the cap ladder's side onto the nose top, 8 down: no thud. From the right brim nest onto the nose top: no thud.
+  3. Letting go of the beard ladder and sliding to the belly path: no thud. Walking off the nose's front edge down the beard face to the belly path: no thud. The same run ending on a boot top or the lap landing: one Beard thud.
+  4. Any jump from the nose top, the cap or a ladder: one thud, wherever it lands.
+  5. A let-go from a boot ladder and from a side ladder, landing near its foot: no thud. A fall off the boot 1 stud beside the ladder's rail: one Boots thud.
+  6. Off the strip's side onto the belly beside it: no thud. A fall that passes below the seam and ends on his hand: one thud (Task 10's slide test still passes).
+  7. A quiet drop adds the step noise for its length, plus the egg's extra, and no more.
+- Whole-session test (`tdd.md`): a new player climbs the beard ladder, crosses the nose top, climbs the cap ladder to a Legendary cap nest, takes the egg and goes home by the set ways down (walk off the cap's top, let go of the beard ladder, walk down the belly path and a boot ladder): no thud on the way, and the meter at home is what the walk alone adds.
+- **Starting values and their triggers** (game_creator): quiet. If Task 19's scores show a cap trip home quieter than a beard trip, the cap way down gets half a cap thud (30). If the ladder gardens come out more than 5 points quieter than the ramp gardens (Task 20), a boot or side ladder drop gets half a thud (+10).
+- Done when: the tests pass, and Play (computer and iPhone 14, sound muted, the real sleep meter, not held at zero) repeats every drop in "Why" above plus a let-go from each boot and side ladder: each one is quiet, and a fall 1 stud beside each ladder thuds once. The meter before and after each drop goes in the report.
+- **On the phone, the game camera turns by itself during a climb** (found in stuck safety Task 25: the move direction drifted and a climber stepped off the side of the cap ladder onto the nose top). In this task's phone Play, climb each ladder 3 times with the thumbstick and the game's own camera (no camera pinned), and count side step-offs. Each must end quiet and on ground with a way on (the nose top, the belly path or the grass). If more than 1 of 3 climbs on any ladder steps off its side, it goes to designer and game_creator (how the climb feels), and code_lead plans the fix before the plan's build review.
+
 ## Every rule is covered
 
 | Rule | Tasks |
@@ -354,6 +380,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 | Changed: Rule 41 (Every way up is equally loud), spec 3 | 20 |
 | Changed: Rule 45 (One way onto the belly), spec 3 | 17 (Check D5), 18 |
 | Changed: Rule 59 (Eggs sit on something you can see), spec 4 | 19 |
+| Changed: Rule 8 (Steps make noise), V1: the set ways down don't thud | 26 |
 | Spec 3's Rule 36 (The lap planks), condition 3 | 17, 23 |
 
 ## Checked only by playing

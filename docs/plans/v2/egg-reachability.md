@@ -128,6 +128,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Files: `src/tests/server/World/WalkMap.spec.luau`, `src/server/World/FairnessCheck.luau` (plan 3, Task 12).
 - What changes:
   - `WalkMap.spec` runs `ReachCheck`, `NestSeat` and `EggRanks` on every egg spot of the real world, on the same walk map as the stuck scan, and prints the report (Task 10). The whole file (map, scan, Rule 45 and Rule 41 checks, scores) must finish within 2 minutes; the time is printed.
+  - **No scored route goes past a slide guard** (game_creator's condition at stuck safety Task 23): no step of any nest's scored heist route stands within 2 studs of a part in `World.WalkSurfaces.SlideGuards`. A step that does is named in the report, and that guard becomes a flush patch (plan 2's rules).
   - `FairnessCheck` adds spec 3's remaining Rule 41 parts that need ranks: no heist to a nest of Rare rank reaches 100 through any way up; and per rank, the quietest nest through one way up is within 5 points of the quietest through any other, with Epic and Legendary compared on the replay with no 100 cap.
 - Failing test first: the check itself. **It is expected to fail on today's world**: V1's ranks are set by zone, so game_creator expects Rare eggs 2 to 4 to score Epic or higher, and Rare egg 4's spot floats about 2.2 studs (designer). That list is the failing test for Task 11. Until Task 11 makes it pass, it is the only accepted failure in the run.
 - If the whole file takes longer than 2 minutes: the walk map is already built once and shared, so the spec's trigger (section 5, "Check time limit") is the scan grid from 2 to 3 studs (`Config.Stuck.ScanSpacing`). It changes the stuck scan too, so the builder asks code_lead first and the report says so.
@@ -143,9 +144,10 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 **Task 11: World prep: every nest's rank from the first report**
 - Spec rules: Rule 53 (A nest's rank is fixed), Rule 50 (The score sets the rank), Rule 59 (Eggs sit on something you can see): "the spot is lowered onto his skin". Rule 57 (A report Adam can read): the file.
 - Files: `tools/world/20-egg-ranks.luau` (new), `docs/egg-ranks.md` (new, from `tools/report/egg-ranks.luau`).
-- What the script does: gives every egg spot its `NestName`; lowers `EggSpot_Rare_4` straight down onto his skin; sets each spot's `Rarity` to the rank its score gives in the Task 9 report. Never a band or a noise number. If a spot is close to an edge, the report says so, and it is not moved (spec 5 places nests away from edges).
+- What the script does: gives every egg spot its `NestName`; lowers `EggSpot_Rare_4` straight down onto his skin (stuck safety Task 24 already does this, so this step should find nothing to do; keep it as a check); sets each spot's `Rarity` to the rank its score gives in the Task 9 report. Never a band or a noise number. If a spot is close to an edge, the report says so, and it is not moved (spec 5 places nests away from edges).
 - Failing test first: Task 9's check, red until now.
 - Done when: the check passes, the second run says "already done", `docs/egg-ranks.md` is written from the tool and matches the run's printed report, and the report names how many nests each rank has (game_creator accepts only one Rare-rank nest until spec 5, section 5's worked example). The place has unsaved world changes (Adam saves it). designer is told Rare egg 4's spot was lowered and still fails the eye limit until plan 5 replaces it.
+- **game_creator's condition from stuck safety Task 24:** every Uncommon egg spot still scores easier than every Rare egg spot. If an egg spot that stuck safety Task 24 moved now breaks this, it goes back toward its old place in `tools/world/04-egg-spots.luau`'s table, rather than take a new rank; the report names it.
 
 ### Part 3: Analytics, a whole session, and the Play proof
 

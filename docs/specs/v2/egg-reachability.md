@@ -15,6 +15,8 @@ Status: `approved` by Adam (2026-10-18).
 - **Rule 59 (Eggs sit on something you can see):** a visible surface is now a number, "less than half see-through" (section 5).
 - **Analytics:** "GiantWoke" has no free breakdown left, so the waker's carried rank goes in a new "WakeRank" event (section 10). The band trigger in section 5 now reads "WakeRank".
 
+**Changed on 2026-10-20** (stuck safety Task 25, in `research/decisions-plans.md`, "Getting down the ladders"): Roblox can't climb down a leaning ladder, so the walk check now counts a leaning ladder's way down (letting go, or walking off its top) as the way back from a nest past it, with that drop's noise from Rule 8 (Steps make noise). Without it, no nest on his beard or cap could be reached there and back.
+
 ## 1. Goal and why
 
 Today an egg's rarity comes from its zone: boots are Uncommon, the belly is Rare. But two belly eggs can be very different to steal. Rare egg 1 peaks the meter at about 66%, while Rare eggs 3 and 4 can wake him (`core-heist.md`, worked example 1). This spec gives every egg nest a **difficulty score**, worked out from the real world, so an egg's rank always tells the truth: "this one needs more tiptoeing". It also fixes one colour per rank, and makes a harder rank hatch better pets, so the risk is worth it.
@@ -26,7 +28,7 @@ It covers Adam's reachability idea (the V2 plan, step 1, row 4), `research/gamep
 - **Rank:** how hard a nest is: Common, Uncommon, Rare, Epic or Legendary. The egg on a nest has the nest's rank. "Rank" and "rarity" mean the same thing to the player.
 - **Peak:** the highest the sleep meter gets during one heist (a trip out, a grab and a trip home).
 - **Difficulty score:** a nest's peak, worked out by the check below, in points of the meter (0 to 100 means he stays asleep; over 100 means a player who never tiptoes would wake him).
-- **Walk check:** the shared "can a player walk from here to there with no jump?" test from `stuck-safety.md` (Rule 23: One walk check for everything). It uses the game's own **walk map** (`stuck-safety.md`, "Words used here"): ground no steeper than 70° (the steepest a player can walk) with room for a player's body, steps that pass V1's footprint step check, and ladders, never a jump. This check counts only walking and ladders. Sliding or dropping off an edge counts for the stuck scan, but not here, because a fast drop makes a thud (Rule 8: Steps make noise) and a nest must be walkable there and back.
+- **Walk check:** the shared "can a player walk from here to there with no jump?" test from `stuck-safety.md` (Rule 23: One walk check for everything). It uses the game's own **walk map** (`stuck-safety.md`, "Words used here"): ground no steeper than 70° (the steepest a player can walk) with room for a player's body, steps that pass V1's footprint step check, and ladders, never a jump. This check counts only walking, climbing and a leaning ladder's way down. Roblox can't climb down a leaning ladder, so its way down is letting go of it or walking off its top (`stuck-safety.md`, "Walk map"), and it adds the noise Rule 8 (Steps make noise) gives it. Any other slide or drop off an edge counts for the stuck scan, but not here, because a fast drop makes a thud (Rule 8: Steps make noise) and a nest must be walkable there and back.
 - **Band:** the range of scores that gives a rank, for example Rare is 40 to 85.
 - **Hatch-odds table:** the chances of each pet rarity when an egg hatches. Hatching itself is spec 2 (Hatching and pets).
 

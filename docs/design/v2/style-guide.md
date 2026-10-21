@@ -333,7 +333,20 @@ Above the seam you can walk anywhere on his belly top, his upper sides and the t
 | −14 (where his arm starts) | (−32.5, 47.0) | (31.5, 48.9) |
 
 - The two sides match within 0.5 studs across and up to 2 studs in height (his right is a little higher near the arm).
-- **On his arm**, the seam is the top rim of his white cuff: y 38 to 40.5, from (±46, −13) out to (±52.5, −4) and back to (±49.5, 4).
+- **On his arm**, the seam is the outer rim of his white cuff, where its top turns down. It runs through five points (moved 2026-10-20 to where his real shape turns steeper than 65°, measured in Play):
+
+  | Point on the cuff rim | x (his left −, right +), y, z | Note |
+  |---|---|---|
+  | 1, front, where the cuff starts | (±46.0, 39.25, −13.0) | Unchanged |
+  | 2 | (±50.5, 39.0, −10.2) | Moved 2 studs out to the cuff's outer edge |
+  | 3, the cuff's outermost point | (±52.75, 39.3, −5.75) | Moved 1.25 studs out to the cuff's outer edge |
+  | 4 | (±51.2, 39.25, −0.6) | Unchanged |
+  | 5, back, by the strap | (±49.5, 39.25, 4.0) | Unchanged |
+
+  - On his sides and at cuff points 1 to 3, **the slide starts within 1 stud of the line.** "The slide starts" means the moment a player visibly starts sliding sideways, not their first step down.
+  - **At points 4 and 5 there is no slide.** His arm is a rounded tube that never gets steeper than 65° there (39–61°). Players walk on down the rounded end of his cuff and step off the end of his arm about 4 studs past the cuff rim (3.84–3.87 studs at point 4, measured in Play on 2026-10-20). This is accepted: the end of his arm is the edge players see, and stepping off it is fair. The 1-stud match doesn't apply here, and no invisible steep layer goes on these two points.
+  - The strap to the cuff pockets starts near point 5. It is walk area, so the seam leaves a gap for it (see "The Epic cuff pockets").
+  - The rim gets no stitches (below), so moving these points moves no art.
 - **In front of z −39** (toward his lap) there is no seam. His lower belly runs gently (60–65°) into his hip and lap. That edge is closed by the invisible guards of spec 3, and the ramps from the lap landing are the only way through it.
 
 **Can a player stand on his arm? Yes.** The top of his sleeve and cuff is gentle (mostly under 55°), from y 37 to 57, and it joins his belly top between z −12 and −2 with no steep band. So his arms are part of the walk-anywhere area, above the seam.
@@ -349,10 +362,10 @@ Above the seam you can walk anywhere on his belly top, his upper sides and the t
 | His arm (cuff front) | the cuff top is y 36.5 to 39 | Fails: the cuff top is 4 to 7 studs above the side pad and 8.5 studs from it. A player can jump onto it and walk up onto his belly. code_lead saw this in Play |
 | Guard tops | none built yet | Spec 3's guards must have steep tops, never flat ones |
 
-**Three invisible fixes** (smooth, invisible, solid, steeper than 68°, no flat tops, built the same on both sides):
+**Three invisible fixes** (smooth, invisible, solid, no flat tops, built the same on both sides). Each face is at least 75°: steep enough that a player slips in Play. The game lets players walk on slopes up to 70°, so anything gentler can be stood on. 75° is a starting value; a Play walk-off onto each fix confirms it:
 1. **Crease filler:** fills his hip crease from the thigh plank's inner edge up his side, from (±30, 32, −30) to (±19, 35, −42), so nobody can stand in the groove.
 2. **Low-seam lift:** from z −39 to −33 the walk area starts at y 44.5 instead of at the natural seam. A steep layer covers the cloth between them. The edge moves in by up to 3.5 studs (at z −38 on his left, from x −16.5 to x −13). It ends at z −39.5, so the ramp top and Rare egg 1 stay open. The stitched seam (its stitch dashes and hem band) follows the lifted edge.
-3. **Cuff ridge:** over the front of each white cuff, x ±35 to ±49, z −17 to −12.5. Both faces are steeper than 68° and its top edge is at y 44.5 (12.3 studs above the side pad). The rest of the cuff top and the sleeve stay walkable.
+3. **Cuff ridge:** over the front of each white cuff, x ±35 to ±49, z −17 to −12.5. Both faces are at least 75° (steep enough that a player slips in Play) and its top edge is at y 44.5 (12.3 studs above the side pad). The rest of the cuff top and the sleeve stay walkable.
 
 **How the seam looks:** a stitched hem on his pyjama, like the edge of a sewn panel.
 - A row of cream running stitches `#FFF4DC` along the line above: dashes 1.5 studs long and 0.5 wide, with 0.7-stud gaps, lying flat on his cloth.
@@ -620,8 +633,12 @@ Measured from all 8 spawn views, no egg above Common can wait on the upper belly
 ### Belly top and the walk layer
 
 Measured on a half-stud grid of his visible mesh:
-- **The belly top is two halves, z −38 to −16 and x 10 to 26 on each side.** Their slope is under 55° almost everywhere and 55–65° near the seam. Bumps are under 1 stud, so a walk layer can sit at most 1 stud above his skin.
-- **The beard tip in the middle (x −8 to 8) is a raised strip** 1 to 5 studs above the belly, with steep edges. The walk layer goes up over it, following the top of the beard.
+- **The belly top is two halves, z −38 to −16 and x 10 to 26 on each side.** Their slope is under 55° almost everywhere and 55–65° near the seam. Bumps are under 1 stud. Players stand on his solid shape, which sits on his drawn skin: at most 0.2 above it and 0.3 below, by Rule 20 (One collision source).
+- **The beard tip in the middle (x −8 to 8) is a raised strip** 1 to 5 studs above the belly, with steep edges. Its steepest sides (70° to 80°, up to 3.8 studs high) run along x −4 and x +4, from about z −34 to −27.
+- **Players walk around the beard tip, not over its steep sides** (changed 2026-10-21, Rule 79 (Walk anywhere down to the seam)). His solid shape now follows his drawn skin, so the steep sides stop players the way a wall would. The white beard runs on north to the beard ladder, so it has no open north end. The glowing footprints bend onto its gentle lower north-west side, near z −26 (checked in Play on 2026-10-21), then go up onto it to the crest.
+  - **From the game camera,** the steep sides read as the edge of his white beard, not as flat cloth. The footprints never look like they pass through the beard.
+  - **Feet stay on his cloth** at the foot of each steep side: no gap over 0.2, no sinking over 0.3, measured under the middle of the player. On a slope, Roblox keeps each foot flat, so one edge of a foot sinks a little and the other floats a little. That is normal in every Roblox game and is fine.
+  - **No shirt fold or ramp is added** along the sides. The beard is already there for players to see, so it needs no new art.
 
 ### Queued for the next Studio session
 
@@ -660,7 +677,7 @@ The original list, for reference:
 - The seam at 65°: players slide off below it and never slip above it.
 - The crease filler, low-seam lift and cuff ridge: the bot walk jumps from the side pads and thigh planks and never reaches walkable cloth (Rule 82).
 - Whether a player jumping off a thigh plank can grab Rare egg 1 or the belly pocket egg in mid-air.
-- Walking across the beard tip on the walk layer without tripping.
+- Walking onto the beard tip's gentle north-west side on the footprint path without tripping, and stopping cleanly against its steep sides (no jitter, hop or half-climb).
 - The jump reach numbers are worked out, not tested.
 
 Studio markers: every nest on him is a small ball in its rank colour in `Workspace.Mockup_Nests.NestMarkers`, with its name (38 balls; the ramp pocket balls are removed).

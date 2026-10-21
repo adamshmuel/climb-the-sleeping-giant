@@ -18,7 +18,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 |---|---|
 | The solo drain of 1.5 a second (section 5) | Plan 1, Task 1 |
 | The walk map, routes, the stuck scan and the bot walk | Plan 2, Tasks 1 to 4 and 8 |
-| One collision source for the giant (his meshes or the invisible shell) | Plan 2, Tasks 5 to 7. **Every new surface in this plan sits on whichever one won**, never on a mesh that no longer collides |
+| One collision source for the giant | Plan 2, Tasks 19 to 24 and 7: his real shape, patched (his meshes on Roblox's closest collision shape, plus invisible patches and slide guards in `WalkSurfaces`). **Every new surface in this plan sits on his real shape**, and the stuck scan must stay at zero |
 
 ## Decisions for the build
 
@@ -97,7 +97,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   4. Every ladder (the four new ones, the beard and the cap) has a `Climb` truss and a `Look` model, and `Look` holds only visible parts.
   5. The new ladders' look matches the beard ladder's (rung and rope colour and material).
   6. Each pad's open edges have guards, and no guard has a flat top a player could stand on.
-- Done when: the tests pass, the second run says "already done", screenshots from gardens 1 and 3 show the new pieces, and `docs/progress.md` says the place has unsaved world changes.
+- Done when: the tests pass, the second run says "already done", screenshots from gardens 1 and 3 show the new pieces, and `docs/progress/index.md` ("Place file") says the place has unsaved world changes.
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
 - Spec rules: Rule 36 (The lap planks): the landing and apron, the rail guards and conditions 1, 2 and 6 of Rule 45 (One way onto the belly). Check D1.
@@ -109,7 +109,9 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   2. The landing is 11.2 × 7 at (0, 33, −50); the apron is 11.2 wide, top 33.2, z −53.5 to −59.1; each plank's end lies fully on the landing and the apron (rays down at the end's corners hit one of them).
   3. Every open edge of the landing and the apron has a guard; the only openings are where the planks and the two belly ramps join.
   4. Each rail guard stands within 0.2 studs of its plank's inner rope rail, is 12 tall, has no flat top, and ends within 0.5 studs of where its lap plank meets the landing; each boot's two guards meet with no gap.
-  5. The planks, the landing and the apron are solid, and their decks are visible wood.
+  5. V1's Uncommon egg spots 2 and 4 (moved by stuck safety Task 24 to (−19.5, −62) and (19.5, −62), on the toe side of each lap plank's boot end) are not covered by a plank, a guard or the landing, and a player still reaches each from its boot top with no jump. The test names the spot if not (code_lead, 2026-10-20).
+  5b. Each lap plank's boot end rests on the boot top with no step over 0.3 studs where a player steps off it. On the left boot it meets stuck safety Task 24's fitted step piece (a `Boots_Walk` at x −25 to −21, z −61.6 to −58.8, over a 1-stud step in the boot top at z −60.4). If the plank end lands on it or beside it with a step, this task's script refits or removes that piece and the report says so; the right boot top has no step piece (code_lead, 2026-10-20).
+  6. The planks, the landing and the apron are solid, and their decks are visible wood.
 - Done when: the tests pass, the second run says "already done", and screenshots match `plank-desktop.png` and `view-plank.png` (camera 5° down, turned 42° toward his belly).
 
 **Task 6: World prep: the two belly ramps, their edge guards and his skin**
@@ -120,13 +122,13 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   - builds the left belly ramp along code_lead's stations (the `LeftStations` attribute on `RampBuild_CodeLead`, from (−1.4, 33.2, −49.8) to Rare egg 1 at (−12.5, 41.6, −40.3)) and the right one as its exact mirror: invisible, 5 wide, level from side to side and solid all the way down to the deck and his skin, replacing V1's 7th belly path piece;
   - adds smooth invisible edge guards wherever a ramp crosses skin of 70° or steeper, stopping where the ramp joins the belly;
   - closes his own skin between each boot top and the belly, wherever it is walkable (under 70°), with smooth invisible guards like V1's steep guards;
-  - removes V1's lowest 6 left belly path pieces, from (−20.6, 28.8, −51.3) to (−14.1, 36.1, −42.4);
+  - removes V1's lowest 6 left belly path pieces, from (−20.6, 28.8, −51.3) to (−14.1, 36.1, −42.4). Stuck safety Task 24 reshapes that stretch (pieces removed, split or fitted, and up to 3 solid `CrossingRamp_*` pieces at the ankle and knee walls), so this step removes every left belly path piece and every crossing ramp left between the left boot top and Rare egg 1, and the whole `WalkSurfaces.CrossingGuards` folder (the ramps' edge guards), by the list in Task 24's report (code_lead, 2026-10-20);
   - moves `Mockup_WaysUp`, `Mockup_Nests.LapBuild_Designer` and `Mockup_Nests.RampBuild_CodeLead` to `ServerStorage.ArtLibrary`.
 - Failing tests first (real world):
   1. Each left ramp station is within 0.2 studs of code_lead's list; each right station is its mirror (x turned round) within 0.05; both ramps are the same length within 0.1.
   2. Each ramp is 5 wide and level across; no piece is steeper than 45°; a ray down from each piece's middle finds no gap before the deck or his skin.
   3. Each ramp starts on the landing's back edge, and its top doesn't cover or sink Rare egg 1's spot (or its mirror) and meets the belly at z −39.5 with no step over 0.3 studs.
-  4. None of V1's 6 removed pieces is left.
+  4. None of the removed pieces is left: no left belly path piece, no `CrossingRamp_*` between the left boot top and Rare egg 1, and no `WalkSurfaces.CrossingGuards` (stuck safety Task 24's list).
   5. The walk from the landing to Rare egg 1 along the new route is at most 3 studs longer than V1's (measured: +1.4).
   6. Every guard is invisible, solid and has no flat top.
 - Done when: the tests pass, every other world test still passes (V1's belly path tests updated for the removed pieces, listed in the report), the second run says "already done", and screenshots of the fork match `view-lapfork-own.png` and `view-lapfork-cross.png`.
@@ -148,7 +150,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Spec rules: Rule 42 (Footprints take the quickest way): the route. Rule 43 (Landing spots on every side). Rule 35 (Every garden has a way up close by). Rule 45 (One way onto the belly), point 3: the fork.
 - Files: `tools/world/08-route.luau`, `src/shared/RouteData.luau` (reads `Ladder`, `WayUpFoot` and `WayUpTop`), `src/shared/Config.luau` (`Config.WaysUp`), `src/server/World/WorldIndex.luau` (12 landing spots; `readWaysUp` from the route points), `RouteData.spec`, `WorldIndex.spec`, `RealWorld.spec.luau`.
 - What changes:
-  - **Route:** new points at each new ladder's foot and top, along each thigh plank and lap plank, on the landing, and up each belly ramp. The landing's back-edge point links to both ramp bottoms, so the trail forks there. `Belly_1` to `Belly_3` go (the old left path).
+  - **Route:** new points at each new ladder's foot and top, along each thigh plank and lap plank, on the landing, and up each belly ramp. The landing's back-edge point links to both ramp bottoms, so the trail forks there. `Belly_1` to `Belly_3` go (the old left path), and so do the hand points stuck safety Task 24 added at its crossing ramps (named `Belly_` plus a place word, such as `Belly_KneeFoot`; listed in its report).
   - **Landing spots:** 5 and 7 move to about (−62, −64) and (62, −64); 9 to 12 are new, one near each new ladder's foot.
   - **The route test** checks a ladder link as a climb (a `Climb` truss joins its two points; the foot is on the grass, the top on the pad or boot top) instead of with the walk check, and checks every other link as today.
   - **Plan 2's stuck scan** names V1's old belly spots by position, not by route point name, because `Belly_1` to `Belly_3` are gone.

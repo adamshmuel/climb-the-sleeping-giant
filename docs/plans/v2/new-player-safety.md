@@ -130,7 +130,7 @@ Words used here:
   2. `GiantFX.SnoreEmitter.Warning85Bubble` exists, is off, and says "Mmm... my eggs...", with a tail.
   3. Nothing named `Mockup_Warning85` is left in the Workspace.
   4. Every part of his eyelids (`Giant.SleepEyes`) has `CanCollide` and `CanQuery` off, so nobody can stand on a lid (designer's check of 2026-10-18). This one passes at once (all 20 lid parts are already off on 2026-10-19), so the builder proves it can fail: switch one lid's `CanQuery` on in Edit, watch it go red, switch it back.
-- Done when: the tests pass, the second run says "already done", and `docs/progress.md` says the place has unsaved world changes (Adam saves it).
+- Done when: the tests pass, the second run says "already done", and `docs/progress/index.md` ("Place file") says the place has unsaved world changes (Adam saves it).
 
 **Task 8: The 85% warning: a double snort, no arm twitch**
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps), Rule 17 (A free save replays the 85% warning): the snort values. Rule 10 (He warns before he wakes).
