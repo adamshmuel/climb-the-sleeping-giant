@@ -37,6 +37,7 @@ Each version or large feature set is a folder, so an agent only reads what it ne
 Use the project `roblox-docs` skill before relying on memory for any Roblox API. Never guess API names or signatures.
 
 ## Dev loop
+0. **Keep the Mac awake.** Before any Studio work, the main chat checks `pgrep -x caffeinate`. If nothing runs, it starts `caffeinate -d -i -u` in the background (only one copy). This stops the Mac and its screen from sleeping, so long Studio jobs, playtests and `screen_capture` don't fail. Stop it when the session's Studio work is done.
 1. Edit `src/`. The PostToolUse hook runs StyLua and selene on `.luau` files, so fix any lint errors it reports.
 2. Make sure this project's `rojo serve` is running and the Studio plugin is connected. Start it in the background if it isn't running. Rojo only syncs in edit mode, and the plugin can disconnect after playtests (`[Rojo-Warn] Disconnected` in the console). Before trusting Studio, `script_read` a file you changed. If it's stale, ask the user to click Connect in the Rojo plugin.
    - **Port 34873, not Rojo's default 34872.** Another game on this Mac (Grab-It & Run!) serves on 34872. Connecting to it once copied that game's code into this place (2026-10-26). `servePort` in `default.project.json` sets 34873, and the plugin's port box must say 34873.
