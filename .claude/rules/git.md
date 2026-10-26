@@ -14,6 +14,7 @@ How work gets into git. The main chat makes the commits. Adam pushes.
 - One branch per plan (one feature), made from `main` when that plan's coding starts. Name: `<version>/<plan-file-name>`, for example `v2/stuck-safety`.
 - Setup and rule changes that don't belong to a plan go on their own short branch, for example `setup/git-rules`.
 - Work happens on the branch, never directly on `main`.
+- Delete a setup branch (`git branch -d`) as soon as it's merged into `main`, so only `main` and the current feature branch are left. Its commits stay in `main`.
 
 ## Commits
 
