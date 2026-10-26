@@ -237,3 +237,79 @@ In the trial Play, three places broke the rule "never 3 or more `Climbing` frame
 - **Question for product:** a player standing still in `Climbing` who walks off normally at the first move (the Sock: 125 frames, then down the ramp at once). Is that a hang Rule 22 must fix, or only a hang where the player can't get out? The answer sets Task 29's pass line. Starting choice until product answers: it counts as a hang.
 
 **product's answer (2026-10-26, `work/answer-product-hang.md`):** standing still in `Climbing` is not a hang; the count starts at the first press to move. The forehead guard and beard pocket guard 1 stay fails. **code_lead:** the Sock ramp stays in Task 29, because its first-press frames weren't measured and Task 23 has no step left to measure them. Task 29 measures it first with the new pass line; if it passes, it goes in unchanged. Nothing in step 23-10 changes.
+
+## Task 29: handoff rulings (code_lead, product approved, 2026-10-26)
+
+- **Ruling 19 (Beard hang goes to Task 27):** the hang the reviewer saw at (4, 78.6, −12.65) was there before Task 23. It is 11 studs from beard pocket 1, on surfaces Task 29 doesn't change. Task 27's step 6 (the known places) gains it: 3 walks going −x and a 2-second push each way. Standing still doesn't count as a hang.
+- **Top-lip check:** a guard's top edge must be within 0.3 studs of his skin, or meet the roof with a gap of 0.1 or less, or have at least 5.5 studs of clear air above it. product: measure the clear air at both ends and the middle of the top edge, each with a 2-wide, 1-deep box straight up; the smallest counts. Try F2 (forehead guard top meets V1's forehead roof) is allowed.
+- **Hang line, as Task 29 counts it:** a try counts from the first press until the player is "out" (more than 6 studs away, or at the end of the walk-out); 7 tries per place. Hangs after "out" go to Task 27, except a hang before the first landing after leaving a Task 29 part, which is a Task 29 fail. A re-run of a wedge on the walk-out's straight line excuses only the wedge, never a pressed `Climbing` run of 3 or more frames.
+- **Hang count (product, 2026-10-26):** pressed `Climbing` frames are counted literally, with no extra grace. The line already allows up to 2 frames, which covers a 1–2 frame lag.
+
+## Task 29: the Sock gets a sealed fill (code_lead, Ruling 20, 2026-10-26)
+
+- **Ruling 20 (The Sock gets a fill, not a new ramp):** step 29-1 found the Sock fails 7 of 7 tries (pressed `Climbing` runs of 3 to 16 frames). The pose comes from the Sock's own overhang: its `body_geom` sits 5.3 studs over the spot, and a player is about 5 studs tall. A new ramp only changes the way down, so the overhang would stay.
+- The fix is the decision table's kind 3 (a pocket under a roof within 6 studs): a sealed fill `Patch_Sock_<n>` in `SmallPatches`, at most 20 boxes. `Ramp_Sock_1` stays as fitted.
+- Part caps: Task 29 at most 25 parts in all; 46 of the 200 are left for Task 27's fixes.
+- Task 22's patch test gets one named exception: for `Patch_Sock_<n>`, the Sock's `body_geom` counts as skin. This adds a check on a prop and loosens nothing on the giant.
+- Full text: `work/handoff-p2-task29.md`, "Ruling 20".
+- **product on Ruling 20:** no objection, if the fill's outer face stays under the Sock's overhang (no further out than its lip seen from above) and more than 2 studs from any egg or path. Step 29-4 walks along the Sock once to check it.
+
+## Task 29: the forehead band gets a sealed fill (code_lead, Ruling 21, 2026-10-26; product approved)
+
+- **Step 29-2 found no passing guard:** V1's `ForeheadGuard.Guard` plate leaves only 3.9 to 5.1 studs of air over the band (y 96 to about 98.8), and a player is about 5 tall. Every guard try either left the spot or left a lip under the plate.
+- **Ruling 21 (The forehead band gets a fill):** it is a pocket under a roof (decision-table kind 3), like the Sock (Ruling 20). `Patch_Forehead_<n>` in `SmallPatches`, at most 10 boxes, from his skin up to the plate with a gap of at most 0.1. `SlideGuard_ForeheadBand_1` is dropped. Not a vertical-fronted cap (a new shape with no checks), and V1's plate isn't changed (the table forbids it; it also shapes the forehead slide).
+- **Tries, in order:** kind 3's cuts at 5, 6, 7, then 4; then one cut at the line where his skin becomes standable (about y 101); Ruling 17's "fill only around the spot" for any cut over 10 boxes. Every fill column has the plate as its roof.
+- **Part cap:** Task 29 at most 32 parts (Sock 20, forehead 10, beard 2); 39 of the 200 left for Task 27.
+- **Patch test:** one shared named-exception table (exact prefix, the one roof or mesh it's read against, reason, ruling number); every other patch keeps the strict check. The forehead row is added only if the fit needs it.
+- **product (approve):** step 29-4 walks along the plate's lower edge both ways; a block felt in open air under a visible roof edge is a fail. The drop from above the plate is counted by product's change a.
+
+## Task 29: the beard pocket 1 guard (code_lead, Ruling 22, 2026-10-26)
+
+- **Ruling 22 (The beard guard passes by clear air):** step 29-3 found no beard guard with its top within 0.3 of his skin that also removes the spot. The three kept guards (try B2, fall line turned 10°, 76°, width 1.6) have their top 0.87 to 0.94 off his skin, inside the 0.95 window. They pass the top-lip check's clear-air form, measured product's way: nothing within 8 studs above. In 23-9 the 0.9 lip only hung because a roof was over it; here there is none.
+- **Open check, first call of step 29-4:** a candidate with any bottom point buried less than 0.3 passes only if his skin there is 74° or steeper (Ruling 15); otherwise it's dropped. If all 3 are dropped, the builder stops.
+- **29-4 decides** with 7 tries each, watching the old walk-out climb at (−9.5, 84, −9.9) and the wedge against V1's beard slab. **29-5:** test 6's beard entry is `kind = "clear"` (at least 5.5 studs, product's three boxes).
+- **product on Ruling 22:** no objection. A chosen beard guard must clear the 29-1 walk-out wedge at about (−11, 82.8, −9.2) in all 7 tries of 29-4.
+
+## Task 29: the fills' open faces and the gap mark (code_lead, Ruling 23, 2026-10-26; product approved)
+
+- **Why:** the Sock fill (18–20 boxes) passed every mark except Task 22's sides rule (its open "mouth" face) and Ruling 12's mark (b) (it read the inside of the Sock's mesh as air).
+- **Ruling 23 (Fills may face open air only under their roof):** the shared named patch exception covers sides as well as tops, for `Patch_Sock_<n>` and `Patch_Forehead_<n>`. A side point passes only if a ray straight up from it hits that row's named roof (the Sock's mesh, or `ForeheadGuard.Guard`) within 6 studs. Every other side point and patch keeps the strict check. Two made-up-world tests, red first.
+- Mark (b)'s gap measure also treats the fill's named floor and roof part as solid (0.1-cube check). Any gap a body can enter still fails.
+- Task 29's cap is 33 parts: `Ramp_Sock_1` counts (Sock fill 20, forehead 10, beard 2, ramp 1); 38 of the 200 left for Task 27.
+- **product (approve):** 29-4 keeps the walk along the Sock and along the plate's edge; a block felt anywhere a ray would miss (for example at the ends of the mouth) is a fail.
+
+## Task 29: the Sock moves to Task 32 (code_lead, Ruling 24, 2026-10-26; product approved)
+
+- **Why:** with Ruling 23, the Sock fill still failed only at the two ends of its mouth (open-air faces past the Sock's lip, and 1–2 small gaps under the ends).
+- **Ruling 24 (The Sock's fill gets shorter ends, in Task 32):** each end is cut back one column at a time until every open face sits under the Sock's overhang, no gap of 1 stud or more is left under any box, and the stuck spot is still inside the fill. At most 20 boxes plus `Ramp_Sock_1`. Task 32 runs after Tasks 30 and 31 and before Task 27.
+- Task 29 now covers the forehead fill and beard pocket 1's guard. Part caps: Task 29 at most 12, Task 32 at most 21 (33 in all; 38 of the 200 left for Task 27).
+- **product (approve):** Task 32's pass list includes: "the scan: 0 new stuck spots, 0 free spots lost; kind 3's marks pass; Play: the Sock's 7 tries by product's hang line (changes a and b), plus a walk into each shortened end, pressing for 2 seconds, and a walk along the Sock both ways, with no hang, no wedge and no block felt in open air." The Sock's three lines stay accepted reds until Task 32, but stuck safety can't reach its build review (Gate 4) while they are red.
+
+## Task 29: the forehead fill passes when the scan frees the spot (code_lead, Ruling 25, 2026-10-26)
+
+- **Why:** the forehead fit's T6 (6 boxes) and T7 (8 boxes) passed every mark except "the spot is inside a fill part": the spot's column under V1's plate is 7.3 studs high and every cut was 7 or less. The scan still removes the spot.
+- **Ruling 25 (The forehead spot may be freed, not filled):** "inside a fill part" was code_lead's own extra rule in Ruling 21. The decision table and Task 29's finish line already accept a spot that is gone, inside a fill, or free with a route. T6 is the first candidate, T7 the second; both go to step 29-4's Play tries. A cut above 7 isn't used, because its upper face would sit more than 6 studs under the plate (Ruling 23's side limit).
+- Test 6's forehead entry stays `kind = "patch"`, rooted at the centre of the chosen fill's cell nearest the spot.
+- The builder's four fit changes are accepted: the roof must be a `Guard` plate, the 2.8 merge tolerance, V1's old forehead spot (20, 104, 6) added as a place players need, and the 99.5 cut.
+- Long Studio jobs start in one call (`task.spawn`, results and a done flag in `shared.T29*`) and are fetched in later calls; fetch calls count toward the step's cap.
+- **product on Ruling 25:** no objection; the spot only has to be gone, and the fill closes the low slot that caused the hangs. 29-4 Play still decides.
+
+## Task 29: the beard moves to Task 33, and the forehead control run (code_lead, Ruling 26, 2026-10-26)
+
+- **Step 29-4 found no winner:** all 3 beard guards were buried only 0.15–0.17 studs on 61° skin (Ruling 15's exception needs 74°+). Forehead T6 (6 boxes) and T7 (8 boxes) passed the world compare and 6 of 7 tries; the push-up try hung 14–16 pressed `Climbing` frames under the nightcap's brim at about (11.2, 105.6, 2.3).
+- **product:** decide the brim hang with a control run (same drop and push up, 3 tries, no fill). If it hangs with no fill, it existed before: it goes to Task 27's known places and the fill passes 7 of 7. If not, the fill caused it.
+- **Ruling 26 (Beard pocket 1 becomes Task 33):** a refit with the bottom at least 0.3 into his skin, the top-lip check in any of its three forms, Ruling 16's corners, at most 2 parts, and all 7 Play tries clearing the wedge at about (−11, 82.8, −9.2). Built after Task 32, before Task 27. Its stuck spot and test 2's beard box stay accepted reds, with the same Gate 4 condition as the Sock's. Task 29 finishes with the forehead fill only (cap 10).
+- **Step 29-4b:** the control run; if it hangs, T6 does the slide from above the plate and the walk along the plate's edge. If the control doesn't hang, or either T6 check fails, the forehead also moves to Task 33 and Task 29 ends with no world change.
+- **product on Ruling 26:** approve. The beard's two lines stay accepted reds until Task 33; stuck safety can't reach Gate 4 while they're red. Task 33's pass list also includes Play changes a and b and, from the scan, "0 new stuck spots, 0 free spots lost".
+- **Step 29-4b result:** the control run with no fill also hangs under the nightcap's brim, so that hang existed before. It goes to Task 27 step 6 with the invisible block at about x 8.3, y 105, z 2. The forehead fill T6 passes 7 of 7 tries.
+- **Ruling 27 (the forehead's last re-run, step 29-4c):**
+  - **Slide:** it starts on the nightcap's front slope, because above the plate's top edge there is only the flat nightcap top. There are 3 drops at x 10.4, 11.2 and 12.0, each run with no fill and with T6. A hang fails T6 unless the no-fill run has one within 1 stud. A slide that never comes within 2 studs of the fill passes.
+  - **Edge walk:** walks along his skin at standable heights, about y 102.5 and 104.5, from x 12 to 5 and back, with and without T6. A stop at a fill box fails only if a ray straight up misses the forehead plate within 6 studs.
+  - **Result:** if both checks pass, T6 is built (steps 29-5 and 29-6). If either fails, the forehead moves to Task 33.
+- **product on Ruling 27:** approves all three points. A hang that also happens with no fill goes to Task 27 step 6 with its frame count and the part in front. Each slide's end point is logged for game_creator's landing check in Task 28.
+- **Step 29-4c result:** T6 passes the slide and the edge walk. Every hang and stop also happens with no fill (against V1's brow and under the nightcap), so they go to Task 27 step 6. On one walk, T6's run fell 14 studs onto the beard.
+- **product after 29-4c:** go ahead with 29-5. 29-6's Play re-runs that walk 3 times with and 3 times without the fill. It passes if no landing hangs or wedges and each landing has a route back; game_creator judges the drop at Task 28.
+- **Step 29-6:** T6 is built into the world. The full test run shows only the expected reds, and the scan has one stuck spot fewer (95 → 94), with 0 new stuck and 0 free lost. product's re-run of the walk found one problem: with the fill, the walk stops at (6.6, 105.6, 1.9) and the player wedges trying to walk out (3 of 3). Without the fill, the walk carries on.
+- **product:** this is a fail of the fill (Rule 22, What counts as stuck). The fill turns an old no-route pocket into a trap. Fix: trim the −x ends of boxes 5 and 6 so they are out of the walking band.
+- **Ruling 29 (code_lead):** the trim is new fit work, so it becomes **Task 34, "The forehead fill leaves the walking band"**. It is built after Task 31 and before Tasks 32 and 33. Task 29 is reviewed as built, with the trap as an open fail owned by Task 34, and Gate 4 waits for it. If no trim passes, T6 comes out and the forehead joins Task 33. The pocket goes to Task 27 step 6 ("existed before"), and the fall's landing at (7.5, 91.8, −3.5) goes to Task 28 for game_creator.
+- **product on Ruling 29:** approves. Task 34 must also keep the slot under the plate closed and the scan at 0 new stuck, 0 free lost and 0 stuck in the band box. If the walking band touches box 5 or 6 anywhere but its −x end, no trim passes and the forehead goes to Task 33. The trap is named in the progress file and in Task 29's report.

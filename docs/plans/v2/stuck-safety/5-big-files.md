@@ -66,7 +66,7 @@ Words used here:
   6. **30-6: The HUD and world client tests.** `Messages`, `Footprints`, `SpotLabels`. Final full run.
 - Done when: no file under `src/tests` is over 1000 lines, and only the files the table allows are over 600; the name list is identical to the baseline (same count, same names, same passes, same planned reds); the full run takes at most 20% longer; `scripts/check.sh` passes; no helper is in two places.
 
-**Task 31: Split the big code files and the world script, and keep every file under the limit** (added on 2026-10-26 for the "No big files" rule; built after Task 30, before Task 27)
+**Task 31: Split the big code files and the world script, and keep every file under the limit** (added on 2026-10-26 for the "No big files" rule; built after Task 30, before Task 34)
 - Spec rules: none (project rule "No big files"). The game, its look and the world script's results stay the same.
 - Files: `src/client/Fx/CameraFx.luau` and `src/client/Fx/GiantFx.luau` (each becomes a folder module), `tools/world/15-real-shape.luau` (becomes a folder), `scripts/check.sh`. Tests: none change.
 - **Before step 31-3, the main chat** adds `tools` to the Rojo project as `ServerStorage.Tools` (`default.project.json`, and the layout list in `CLAUDE.md`), so the world script's parts can `require` each other (see `docs/architecture.md`, section 8).

@@ -10,4 +10,4 @@ New entries go at the end of the last part. When a part nears 600 lines, start a
 | `decisions-plans/stuck-tasks-4-to-25.md` | Stuck safety Tasks 4, 5, 6, 18, 19, 21, 24 and 25 | 27 |
 | `decisions-plans/stuck-tasks-25-26.md` | Stuck safety Task 25 (later rulings) and Task 26 | 10 |
 | `decisions-plans/stuck-task-22.md` | Stuck safety Task 22 (pillow, cave lid and skirt) | 35 |
-| `decisions-plans/stuck-tasks-23-29.md` | Stuck safety Tasks 23, 23b and 29 | 17 |
+| `decisions-plans/stuck-tasks-23-29.md` | Stuck safety Tasks 23, 23b and 29 | 18 |
