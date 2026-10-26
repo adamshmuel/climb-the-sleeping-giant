@@ -72,6 +72,8 @@ Steps (checkpoints): 1. ... 2. ... (the builder stops and reports after each)
 ```
 Split every task into steps that each end at a safe point: a green test run, never in the middle of a world change. The builder stops and reports after each step, so no builder's memory grows past the project's agent memory limit (`.claude/rules/agent-workflow.md`, "Agent memory size"). Size tasks so a builder can finish one well under that limit; split a task that keeps stopping.
 
+**A task has at most 6 steps.** When the work outgrows the plan (new cases found mid-task), don't add steps to the running task: finish and review what it has, and put the extra work in a new numbered task with its own review. Don't go smaller than one behavior per task, because every task also pays for a fresh builder reading its files and a full review.
+
 When a task has many cases of the same kind, add a decision table to the handoff: each kind of case, the fix it gets, and when to stop. Ask the owners it touches to check it once, before the builder starts, so the builder doesn't stop for a ruling on every case (`agent-workflow.md`, "Fewer round trips"). When the builder brings cases the table doesn't cover, rule on all of them in one reply, and add the new kinds to the table.
 
 The main chat passes it on. Answer the builder's technical questions the same way. If a question is really about the spec, the look or the gameplay, say who owns it.
