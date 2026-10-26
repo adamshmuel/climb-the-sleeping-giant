@@ -32,19 +32,20 @@ local childrenNamed = FolderShared.childrenNamed
 --   - 85 small patches, named Patch_<Place>_<n>, in the new folder World.WalkSurfaces.SmallPatches: the 39 notch boxes
 --     and the 46 boxes that fill the groove and the slot. (Section 3b's folder Patches is not touched: it holds only
 --     what section 3b recorded.)
--- Task 29 (step 29-5, Rulings 25 and 26) adds 6 more small patches, Patch_Forehead_1 to Patch_Forehead_6 (try T6; rows
--- forehead|1|... of work/t29/candidates.txt): a sealed fill under the forehead plate, so a player there is not caught.
--- That makes 94 parts. SlideGuard_ForeheadBand_1 is not made (the fill takes its place), SlideGuard_BeardPocket_1 moved
--- to Task 33 and Ramp_Sock_1 to Task 32; neither is made here.
+-- Task 29 (step 29-5, Rulings 25 and 26) added 6 more small patches, Patch_Forehead_1 to Patch_Forehead_6 (try T6; rows
+-- forehead|1|... of work/t29/candidates.txt), a sealed fill under the forehead plate. Task 34 (Rulings 30 and 31) takes
+-- them out again: they stood where players walk along his skin, and no trim of them cleared the walking band. So this
+-- section makes 88 parts (3 guards and 85 small patches), and the forehead fill is Task 33's. SlideGuard_ForeheadBand_1
+-- and SlideGuard_BeardPocket_1 move to Task 33 and Ramp_Sock_1 to Task 32; none is made here.
 -- Every part has the steep guards' settings (step 22-0): Transparency 1, CanCollide, CanQuery, CanTouch off, CastShadow
 -- off, SmoothPlastic, collision group Default, Anchored, Archivable on (Archivable on, so the place file keeps them).
 -- It knows three worlds, and changes nothing on any difference:
 --   (a) before: neither folder is there (and no part named like these stands anywhere in World). Both folders are made,
---       with all 94 parts.
---   (b) after Task 23 only: both folders hold exactly Task 23's 88 parts and none of the 6 forehead boxes. The 6 boxes are
---       added to SmallPatches.
---   (c) all present: both folders hold exactly the 94 recorded parts, each within the file's size and place tolerance,
---       with its settings. It says "already done".
+--       with all 88 parts.
+--   (b) after Task 23 only: both folders hold exactly the 88 recorded parts, each within the file's size and place
+--       tolerance, with its settings. It says "already done".
+--   (c) T6 as built in 29-6A: Task 23's 88 parts and the 6 forehead boxes, all as recorded. Exactly the 6 forehead boxes
+--       are removed, and nothing else is changed.
 --   Anything else (for example only some of the 6 forehead boxes) stops with nothing changed and names what differs.
 -- Both folders are checked before anything is changed. The change runs between two ChangeHistoryService waypoints, with
 -- the folders built away from the Workspace first, and is checked again afterwards.
@@ -111,14 +112,14 @@ local function sectionSlideGuards(): string
 		}
 	end
 
-	-- Measured in steps 23-8b and 23-C1 (fix-b.txt, trial-parts.txt); BeardPocket_1 and ForeheadBand_1 went to Task 29.
+	-- Measured in steps 23-8b and 23-C1 (fix-b.txt, trial-parts.txt); BeardPocket_1 and ForeheadBand_1 went to Tasks 29 and 33.
 	local GUARDS: { FolderRecord } = {
 		wedge("SlideGuard_Cushion_1", 2.4, 6.016, 1.5, -16.4, 22.462, 40.36, 0, -1),
 		wedge("SlideGuard_BeardPocket_2", 2.4, 2.232, 0.556, 7.208, 81.432, -11.009, 0.6615, -0.7499),
 		wedge("SlideGuard_BeardPocket_3", 2.4, 3.396, 0.847, 9.207, 77.726, -13.01, 0.579, -0.8153),
 	}
 	-- Measured in steps 23-8b (the notch, refit B, Ruling 12) and 23-C2 (the groove and the slot, Ruling 17). The notch is
-	-- 39 boxes, the groove 18 and the slot 28. Ramp_Sock_1 went to Task 29.
+	-- 39 boxes, the groove 18 and the slot 28. Ramp_Sock_1 is Task 32's and the forehead fill is Task 33's.
 	local PATCHES_23: { FolderRecord } = {
 		block("Patch_Notch_1", 0.25, 5.6, 0.25, -10.75, 26.224, 41.25),
 		block("Patch_Notch_2", 0.25, 6.141, 0.5, -10.5, 25.599, 41.125),
@@ -208,7 +209,8 @@ local function sectionSlideGuards(): string
 	}
 
 	-- Task 29, step 29-5 (Rulings 25 and 26): the forehead band's fill, try T6: 6 boxes, one per 0.25 stud slice in z,
-	-- copied from the rows forehead|1|... of work/t29/candidates.txt (checked equal by a script).
+	-- copied from the rows forehead|1|... of work/t29/candidates.txt (checked equal by a script). Task 34 takes them out
+	-- (Rulings 30 and 31): they are only here to recognise the world T6 as built in 29-6A and to remove exactly these 6.
 	local PATCHES_29: { FolderRecord } = {
 		block("Patch_Forehead_1", 0.75, 1.882, 0.25, 7, 99.265, 0),
 		block("Patch_Forehead_2", 4.25, 2.503, 0.25, 8.75, 100.261, 0.25),
@@ -217,8 +219,8 @@ local function sectionSlideGuards(): string
 		block("Patch_Forehead_5", 3.5, 6.756, 0.25, 8.625, 102.388, 1),
 		block("Patch_Forehead_6", 1.25, 6.741, 0.25, 7.75, 103.813, 1.25),
 	}
-	local PATCHES: { FolderRecord } = table.clone(PATCHES_23) -- Task 23's and Task 29's small patches
-	table.move(PATCHES_29, 1, #PATCHES_29, #PATCHES + 1, PATCHES)
+	local PATCHES_T6: { FolderRecord } = table.clone(PATCHES_23) -- the small patches of the world T6 as built in 29-6A
+	table.move(PATCHES_29, 1, #PATCHES_29, #PATCHES_T6 + 1, PATCHES_T6)
 
 	local function slideGeometry(part: BasePart, recorded: FolderRecord): { string }
 		local same, why = sameAs(part, recorded.size, recorded.cframe)
@@ -227,7 +229,8 @@ local function sectionSlideGuards(): string
 	local SLIDE_SPEC: FolderSpec = { look = PART_LOOK, color = nil, geometry = slideGeometry }
 
 	-- Which of this section's worlds a WalkSurfaces folder holds, read from its two folders only: "before" (neither
-	-- folder), "task23" (Task 23's 88 parts, no forehead box), "all" (the 94 parts) or "other", with what differs.
+	-- folder), "task23" (the 88 parts, no forehead box), "t6" (the 88 parts and the 6 forehead boxes) or "other", with what
+	-- differs.
 	local function worldOf(walk: Instance): (string, { string })
 		local problems: { string } = {}
 		for _, folderName in { GUARD_FOLDER, SMALL_FOLDER } do
@@ -253,20 +256,20 @@ local function sectionSlideGuards(): string
 		end
 		local kind = "other"
 		if smallFolder ~= nil then
-			local allProblems = folderProblems(smallFolder, PATCHES, SLIDE_SPEC)
+			local t6Problems = folderProblems(smallFolder, PATCHES_T6, SLIDE_SPEC)
 			local task23Problems = folderProblems(smallFolder, PATCHES_23, SLIDE_SPEC)
-			if #allProblems == 0 then
-				kind = "all"
+			if #t6Problems == 0 then
+				kind = "t6"
 			elseif #task23Problems == 0 then
 				kind = "task23"
 			else
 				-- Neither: name what differs from the world it is nearest to. A folder with some forehead boxes is
-				-- read against all 94 (so the missing box is named); one with none, against Task 23's.
+				-- read against the T6 world (so the missing box is named); one with none, against Task 23's.
 				local hasForehead = false
 				for _, recorded in PATCHES_29 do
 					hasForehead = hasForehead or smallFolder:FindFirstChild(recorded.name) ~= nil
 				end
-				local nearer = if hasForehead then allProblems else task23Problems
+				local nearer = if hasForehead then t6Problems else task23Problems
 				for _, text in nearer do
 					table.insert(problems, `4 {text}`)
 				end
@@ -276,6 +279,22 @@ local function sectionSlideGuards(): string
 			return "other", problems
 		end
 		return kind, problems
+	end
+
+	-- What each world needs. "before": both folders are built away from the Workspace, then put in. "t6": exactly the 6
+	-- forehead boxes are destroyed, and Task 23's folders stay as they are.
+	local function changeWalk(walk: Instance, kind: string)
+		if kind == "before" then
+			local newGuards = makeFolder(GUARD_FOLDER, GUARDS, PART_LOOK, GUARD_COLOR)
+			local newPatches = makeFolder(SMALL_FOLDER, PATCHES_23, PART_LOOK, GUARD_COLOR)
+			newGuards.Parent = walk
+			newPatches.Parent = walk
+		else
+			local smallFolder = walk:FindFirstChild(SMALL_FOLDER) :: Instance
+			for _, recorded in PATCHES_29 do
+				(smallFolder:FindFirstChild(recorded.name) :: Instance):Destroy()
+			end
+		end
 	end
 
 	-- Which world is it?
@@ -289,7 +308,7 @@ local function sectionSlideGuards(): string
 	for _, recorded in GUARDS do
 		homeOf[recorded.name] = GUARD_FOLDER
 	end
-	for _, recorded in PATCHES do
+	for _, recorded in PATCHES_T6 do
 		homeOf[recorded.name] = SMALL_FOLDER
 	end
 	local strays: { string } = {}
@@ -320,38 +339,25 @@ local function sectionSlideGuards(): string
 	end
 	if #problems > 0 then
 		error(
-			`nothing was changed. This is none of the three worlds section 4 knows (before, after Task 23 only, all present): {someProblems(
+			`nothing was changed. This is none of the three worlds section 4 knows (before, after Task 23 only, T6 as built in 29-6A): {someProblems(
 				problems
 			)}`
 		)
 	end
 	local guardsText = countsText(GUARDS)
-	local patchesText = countsText(PATCHES)
-	if kind == "all" then
+	local patchesText = countsText(PATCHES_23)
+	if kind == "task23" then
 		return `already done: World.WalkSurfaces.SlideGuards holds {guardsText} and World.WalkSurfaces.SmallPatches holds {patchesText}, all as recorded`
 	end
 
-	-- The change itself: build what is missing away from the Workspace, then put it in between two waypoints.
-	local newGuards = if kind == "before" then makeFolder(GUARD_FOLDER, GUARDS, PART_LOOK, GUARD_COLOR) else nil
-	local newPatches = if kind == "before"
-		then makeFolder(SMALL_FOLDER, PATCHES, PART_LOOK, GUARD_COLOR)
-		else makeFolder(SMALL_FOLDER, PATCHES_29, PART_LOOK, GUARD_COLOR)
+	-- The change itself, between two waypoints.
 	local descendantsBefore = #world:GetDescendants()
 	pcall(function()
 		ChangeHistoryService:SetWaypoint("15-real-shape section 4: before")
 	end)
 	local changed, whyNot = pcall(function()
-		if newGuards ~= nil then
-			newGuards.Parent = walk
-			newPatches.Parent = walk
-		else
-			-- Task 23's folders stay; only the forehead boxes go in.
-			local smallFolder = walk:FindFirstChild(SMALL_FOLDER) :: Instance
-			for _, part in newPatches:GetChildren() do
-				part.Parent = smallFolder
-			end
-			newPatches:Destroy()
-		end
+		changeWalk(walk, kind)
+		return nil
 	end)
 	pcall(function()
 		ChangeHistoryService:SetWaypoint("15-real-shape section 4: after")
@@ -364,8 +370,8 @@ local function sectionSlideGuards(): string
 
 	-- The same check afterwards, on the live folders.
 	local afterKind, wrong = worldOf(walk)
-	if afterKind ~= "all" then
-		table.insert(wrong, `the world reads as "{afterKind}", expected "all"`)
+	if afterKind ~= "task23" then
+		table.insert(wrong, `the world reads as "{afterKind}", expected "task23"`)
 	end
 	if #wrong > 0 then
 		error(
@@ -376,7 +382,7 @@ local function sectionSlideGuards(): string
 		"%s; World now has %d descendants (%d before). Guards: %s. Small patches: %s",
 		if kind == "before"
 			then "made World.WalkSurfaces.SlideGuards and World.WalkSurfaces.SmallPatches"
-			else `added the {#PATCHES_29} forehead boxes to World.WalkSurfaces.SmallPatches`,
+			else `removed the {#PATCHES_29} forehead boxes from World.WalkSurfaces.SmallPatches`,
 		#world:GetDescendants(),
 		descendantsBefore,
 		guardsText,

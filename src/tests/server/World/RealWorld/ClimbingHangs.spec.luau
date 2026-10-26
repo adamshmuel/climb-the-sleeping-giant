@@ -29,11 +29,8 @@ describe("the real world, slide guards", function()
 	type HangPlace = { name: string, kind: "patch" | "guard", root: Vector3, prefix: string, face: string? }
 	local NOTCH_PATCH_PREFIX = "Patch_Notch_"
 	local FOREHEAD_PATCH_PREFIX = "Patch_Forehead_"
-	-- Task 29: the forehead band's fill, chosen try T6 (6 boxes, `forehead|1|...` rows of work/t29/candidates.txt, one
-	-- box per 0.25 stud slice in z). The old stuck spot (11.2, 98.2, 1) sits just outside the boxes, so the root is the
-	-- middle of the fill's column nearest to it: x 11.0, z 0.5 (box 3, which spans x 6.625 to 11.125, y 96.36 to 102.93).
-	-- The test shows that the slot under the plate is filled there.
-	local FOREHEAD_FILL_ROOT = Vector3.new(11.0, 99.644, 0.5)
+	-- Task 34: the forehead band's fill (Task 29's try T6) came out again, because it stood where players walk along his
+	-- skin (code_lead's Rulings 30 and 31). The forehead hang place has no test here until Task 33 brings the fill back.
 	-- Where the characters ended up hanging (steps 23-5 and 23-6, Play on the computer): the five notch walks W03, W04,
 	-- W08, W09 and W14, and the pillow's spot 1 (35.2, 75.4, 65) after its slide down the +x/+z face. Spots 2 and 3 of
 	-- the pillow never hung and get no fix.
@@ -50,7 +47,6 @@ describe("the real world, slide guards", function()
 			prefix = "",
 			face = "body_geom", -- the pillow's mesh part (World.GiantsThings.Pillow.body.body_geom)
 		},
-		{ name = "forehead band", kind = "patch", root = FOREHEAD_FILL_ROOT, prefix = FOREHEAD_PATCH_PREFIX },
 	}
 
 	-- Whether a point is inside a block or a wedge (the sloped half only). Any other shape counts as not inside: a patch
@@ -339,5 +335,21 @@ describe("the real world, slide guards", function()
 		if #problems > 0 then
 			error("\n" .. table.concat(problems, "\n"), 0)
 		end
+	end)
+
+	it("the forehead fill stays out until Task 33", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local walk = (world :: Instance):FindFirstChild("WalkSurfaces")
+		expect(walk).never.toBeNil()
+		local smallFolder = (walk :: Instance):FindFirstChild(SMALL_PATCHES_FOLDER)
+		expect(smallFolder).never.toBeNil()
+		local found: { string } = {}
+		for _, child in (smallFolder :: Instance):GetChildren() do
+			if string.sub(child.Name, 1, #FOREHEAD_PATCH_PREFIX) == FOREHEAD_PATCH_PREFIX then
+				table.insert(found, child.Name)
+			end
+		end
+		expect(found).toEqual({})
 	end)
 end)
