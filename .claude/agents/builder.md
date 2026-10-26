@@ -5,7 +5,6 @@ model: sonnet
 effort: high
 skills:
   - roblox-docs
-  - roblox-dev-skill
   - roblox-testing
 tools: Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, Skill, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__script_read, mcp__Roblox_Studio__script_grep, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__start_stop_play, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__skill, mcp__Roblox_Studio__screen_capture, mcp__Roblox_Studio__character_navigation, mcp__Roblox_Studio__user_keyboard_input, mcp__Roblox_Studio__user_mouse_input
 ---
@@ -56,7 +55,7 @@ Never change a test to make broken code pass. Run tests the way `docs/architectu
 - **Keep it fast.** No `FindFirstChild`, `GetDescendants` or `Instance.new` every frame; use events instead of polling loops; reuse params objects such as `RaycastParams`.
 - Banned: Knit, ProfileService and deprecated APIs.
 
-The `roblox-dev-skill` skill has deeper Roblox guidance. Where it suggests `multi_edit` or Script Sync, ignore that part: this project uses Rojo.
+The `roblox-dev-skill` skill has deeper Roblox guidance; it isn't preloaded (it's large), so load it with the Skill tool when a task needs new Roblox systems, not for world fitting or test work. Where it suggests `multi_edit` or Script Sync, ignore that part: this project uses Rojo.
 
 ## Before you say "done"
 
