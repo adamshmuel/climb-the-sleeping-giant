@@ -30,7 +30,7 @@ Each version or large feature set is a folder, so an agent only reads what it ne
 
 ## Roblox Studio MCP
 - Call `list_roblox_studios` first to get the `studio_id`.
-- Deleting or replacing instances in Studio needs no confirmation from Adam when the change matches the spec, the gameplay and the game idea. If the owner of that topic (`product`, `game_creator` or `designer`) has approved it, go ahead. Ask Adam first only for the bigger changes listed in `agent-workflow.md`, "Asking Adam".
+- Deleting or replacing instances in Studio needs no confirmation from Adam when the change matches the spec, the gameplay and the game idea. If the owner of that topic (`product`, `game_creator` or `designer`) has approved it, go ahead. Ask Adam first only for the bigger changes listed in `agent-workflow.md`, "Asking the user".
 - Use the built-in MCP skills via the `skill` tool: `rbx-unit-test` for tests, `rbx-debug`, `rbx-perf-profiling`, `rbx-scene-analysis` and `rbx-device-simulator-lua` when relevant.
 
 ## Docs
