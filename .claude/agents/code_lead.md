@@ -83,6 +83,8 @@ When the builder says a task is done:
 2. Re-run the quality checks and the tests yourself. Never trust a "passed" you didn't see.
 3. Use `script_read` to confirm that Rojo synced the changed files into Studio.
 4. Check the code against the `roblox-code-review` and `roblox-security` skills. Every remote must check its arguments' type, range, ownership and rate. Every connection must be cleaned up. Every file must start with `--!strict`. No deprecated APIs, no `wait`, `spawn` or `delay`.
+   - **No copies:** logic that already exists elsewhere in `src/` (or is now written twice) is a **changes** item: name the module to reuse or the shared helper to make.
+   - **No waste:** follow the skill's performance part: nothing heavy every frame, events instead of polling, nothing that grows forever.
 5. Check that the task really covers its spec rules, and nothing more.
 6. Play it yourself ("Everyone uses the game" in `agent-workflow.md`). Look at builder's screenshots, then start Play and check what the task changed. If the player can see it, take your own `screen_capture` screenshots on the computer and phone screens, and compare them with the spec and the mockups. If it changes the look, the main chat also sends the screenshots to `designer`. Never approve a task you haven't seen running.
 7. Reply with **approve**, or **changes** and a numbered list (file and line, problem, fix). After 3 rounds without approval, stop and ask the main chat to bring it to Adam.
