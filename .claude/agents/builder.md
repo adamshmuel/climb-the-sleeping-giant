@@ -51,6 +51,8 @@ Never change a test to make broken code pass. Run tests the way `docs/architectu
 - The server decides everything. Check every remote argument's type, range, ownership and rate. Never trust the client for currency, damage or position.
 - DataStores: use ProfileStore, or `pcall` and `UpdateAsync`, and save on `PlayerRemoving` and `game:BindToClose`.
 - Clean up every connection and every instance you create.
+- **Reuse before you write.** Before adding a function, search `src/` and the module list in `docs/architecture.md` for one that already does the job, and use it. If the same logic ends up in two places (code or tests), move it into one shared module or test helper in the Refactor step.
+- **Keep it fast.** No `FindFirstChild`, `GetDescendants` or `Instance.new` every frame; use events instead of polling loops; reuse params objects such as `RaycastParams`.
 - Banned: Knit, ProfileService and deprecated APIs.
 
 The `roblox-dev-skill` skill has deeper Roblox guidance. Where it suggests `multi_edit` or Script Sync, ignore that part: this project uses Rojo.
