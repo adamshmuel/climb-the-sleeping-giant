@@ -6,6 +6,7 @@ Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox
 - `src/shared` → `ReplicatedStorage.Shared` (ModuleScripts used by both sides)
 - `src/server` → `ServerScriptService.Server` (`init.server.luau` = Script)
 - `src/client` → `StarterPlayer.StarterPlayerScripts.Client` (`init.client.luau` = LocalScript)
+- `tools` → `ServerStorage.Tools` (world scripts; run by requiring a copy)
 
 Logic goes in ModuleScripts. `init.*.luau` files only require and wire things up, which keeps the logic unit-testable.
 
