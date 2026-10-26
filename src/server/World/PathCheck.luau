@@ -74,6 +74,13 @@ export type Rules = { allow: AllowedKinds?, cost: ((Link) -> number)? }
 local ROOM_TURNS = { 0, 15, 30, 45, 60, 75 } -- degrees: a square repeats every 90
 local RAY_RESTART = 0.01 -- studs: the next ray down a column starts this far below the last surface it hit
 local MAX_SURFACES = 200 -- most surfaces one column can have (a safety stop)
+-- A column also casts a fresh ray down from every START_STEP studs of height. A ray that starts inside a solid piece
+-- (a mesh or a union) skips every surface of that whole piece, so the ray that follows a body down the column can miss
+-- the floor under an overhang of the same piece. Every spot has clear air from BODY_LIFT (0.5) to the top of the body
+-- box (Config.Stuck.BodyHeight, 4.3 above the spot's surface, so 3.8 studs tall); a start every 3 studs always lands in
+-- that air, and its first hit is that spot's surface.
+local START_STEP = 3 -- studs
+local SAME_SURFACE = 0.05 -- studs: two hits on the same part this close in height are one surface
 local COLUMNS_PER_YIELD = 200
 local SPOTS_PER_YIELD = 200
 -- A ladder's foot and top join the nearest spot within this many grid steps of them. Two, because a ladder's end is the
@@ -407,7 +414,57 @@ function PathCheck.nearestSpot(map: WalkMap, position: Vector3, maxStuds: number
 	return best
 end
 
--- Casts down column by column through every surface and makes a spot of each one a body can stand on.
+-- Every surface in one column, top to bottom: the chain of rays that follows the column down (each starts just below the
+-- surface the last one hit), plus the first hit of a fresh ray from every START_STEP studs of height, with the same
+-- surface dropped when two rays find it.
+local function columnSurfaces(
+	world: WorldRoot,
+	ground: RaycastParams,
+	area: Area,
+	x: number,
+	z: number
+): { RaycastResult }
+	local hits: { RaycastResult } = {}
+	local y = area.max.Y
+	for _ = 1, MAX_SURFACES do
+		if y <= area.min.Y then
+			break
+		end
+		local hit = world:Raycast(Vector3.new(x, y, z), Vector3.new(0, area.min.Y - y, 0), ground)
+		if hit == nil then
+			break
+		end
+		table.insert(hits, hit)
+		-- the next ray starts just below this surface (a ray never hits the part it starts inside)
+		y = hit.Position.Y - RAY_RESTART
+	end
+	local chainCount = #hits
+	local startY = area.max.Y - START_STEP
+	while startY > area.min.Y do
+		local hit = world:Raycast(Vector3.new(x, startY, z), Vector3.new(0, area.min.Y - startY, 0), ground)
+		if hit ~= nil then
+			local known = false
+			for _, other in hits do
+				if other.Instance == hit.Instance and math.abs(other.Position.Y - hit.Position.Y) <= SAME_SURFACE then
+					known = true
+					break
+				end
+			end
+			if not known then
+				table.insert(hits, hit)
+			end
+		end
+		startY -= START_STEP
+	end
+	if #hits > chainCount then
+		table.sort(hits, function(a, b)
+			return a.Position.Y > b.Position.Y
+		end)
+	end
+	return hits
+end
+
+-- Goes down column by column through every surface and makes a spot of each one a body can stand on.
 local function findSpots(options: Options, map: WalkMap, area: Area)
 	local world = options.world
 	local settings = settingsFor(options)
@@ -419,20 +476,11 @@ local function findSpots(options: Options, map: WalkMap, area: Area)
 			local x = map.origin.X + ix * map.spacing
 			local z = map.origin.Z + iz * map.spacing
 			local ids: { number } = {}
-			local y = area.max.Y
 			local justAfterWater = false
-			for _ = 1, MAX_SURFACES do
-				if y <= area.min.Y then
-					break
-				end
-				local hit = world:Raycast(Vector3.new(x, y, z), Vector3.new(0, area.min.Y - y, 0), ground)
-				if hit == nil then
-					break
-				end
+			for _, hit in columnSurfaces(world, ground, area, x, z) do
 				-- a surface is a spot if it isn't too steep, isn't water, isn't right under water (a player there swims,
 				-- and swimming isn't walking) and a body fits on it with nothing left out. A ladder is never a spot (a
-				-- player who touches a ladder climbs it, so the climb link covers being on one); the ray goes on down
-				-- below it.
+				-- player who touches a ladder climbs it, so the climb link covers being on one).
 				local isWater = hit.Material == Enum.Material.Water
 				if
 					not justAfterWater
@@ -452,8 +500,6 @@ local function findSpots(options: Options, map: WalkMap, area: Area)
 					table.insert(ids, id)
 				end
 				justAfterWater = isWater
-				-- the next ray starts just below this surface (a ray never hits the part it starts inside)
-				y = hit.Position.Y - RAY_RESTART
 			end
 			map.columns[iz * map.countX + ix] = ids
 			columnsDone += 1

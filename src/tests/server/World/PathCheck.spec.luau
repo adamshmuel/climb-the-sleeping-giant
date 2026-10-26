@@ -9,6 +9,7 @@ local describe, it, expect, beforeEach, afterEach, beforeAll, afterAll =
 	JestGlobals.beforeAll,
 	JestGlobals.afterAll
 
+local GeometryService = game:GetService("GeometryService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local PhysicsService = game:GetService("PhysicsService")
@@ -822,6 +823,34 @@ describe("PathCheck walk map", function()
 		expect(under).never.toBe(on)
 		expect(map.spots[under :: number].standsOn.Name).toBe("Floor")
 		expect(map.spots[on :: number].standsOn.Name).toBe("Overhang")
+	end)
+
+	it("a floor under a piece the column's ray starts inside is still a spot", function()
+		addFloor()
+		-- One solid piece shaped like a C: a top block, a side wall and a low seat, with clear room over the seat. A ray
+		-- that starts inside a piece skips the whole piece, so the ray that follows the top block's surface down the
+		-- column at the middle never sees the seat.
+		local top = addBox("Top", Vector3.new(-5, 28, -5), Vector3.new(5, 30, 5))
+		local wall = addBox("Wall", Vector3.new(4, 4, -5), Vector3.new(6, 30, 5))
+		local seat = addBox("Seat", Vector3.new(-5, 4, -5), Vector3.new(5, 6, 5))
+		local made, pieces = pcall(function()
+			return GeometryService:UnionAsync(top, { wall, seat }, {
+				CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
+			})
+		end)
+		assert(made, `the union could not be made: {pieces}`)
+		expect(#pieces).toBe(1)
+		top:Destroy()
+		wall:Destroy()
+		seat:Destroy()
+		local hook = pieces[1]
+		hook.Name = "Hook"
+		hook.Anchored = true
+		hook.Parent = world
+		local map = PathCheck.buildMap(options, { min = Vector3.new(-20, -12, -20), max = Vector3.new(20, 40, 20) })
+		local onSeat = PathCheck.nearestSpot(map, Vector3.new(0, 6, 0), 0.5)
+		expect(onSeat).never.toBeNil()
+		expect(map.spots[onSeat :: number].standsOn.Name).toBe("Hook")
 	end)
 
 	it("there is no spot where a body doesn't fit, under a ceiling lower than a body", function()
