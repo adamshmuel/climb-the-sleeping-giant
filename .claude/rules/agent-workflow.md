@@ -56,7 +56,9 @@ Adam's only jobs are the gates and the rare decisions that are his to make (see 
 
 **When one agent works, the whole team works.** While a step is under way (any agent is working on it), the main chat starts or resumes any other agent that step needs, such as an owner to answer a question or check a change, without asking Adam. Relaying messages never needs permission.
 
-**Starting a new step needs Adam's go-ahead.** When nothing is under way, for example at a gate or after a step is finished, the main chat doesn't start the next step on its own, even when the flow says it comes next. It says which step is next and waits for Adam. Once Adam says "let's start coding X", the main chat may start and resume `builder` and `qa` for X whenever `code_lead` hands work to them.
+**Starting a new step of the flow needs Adam's go-ahead.** A "step" here is one of the numbered steps in "The flow" below (idea, design, specs, plan, code), never a task. When one of those steps is finished, or the work is waiting at a gate, the main chat doesn't start the next flow step on its own. It says which step is next and waits for Adam.
+
+**Inside coding, the main chat never waits between tasks.** Once Adam says "let's start coding X" (or has pre-approved it), the main chat runs X to its next gate on its own: after a task is committed it goes straight to the next task in the plan's order, starting `code_lead`, `builder`, `qa` and the owners as needed. It stops only at a gate (Gate 4 for each finished feature), for the "Asking the user" list, or when only Adam can do something (for example, Rojo Connect). It tells Adam what finished in one line and keeps going.
 
 ## Main chat is the messenger
 
