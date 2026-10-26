@@ -102,6 +102,15 @@ describe("the real world, the patches", function()
 		return false
 	end
 
+	-- Task 32 (Rulings 20, 23 and 24): the one named exception. A `Patch_Sock_<n>` block (the Sock's sealed fill) is read
+	-- against the Sock's mesh `body_geom`, not against his skin: a top against the Sock's drawn skin, and a side point
+	-- passes only where a ray straight up from it meets that mesh within SOCK_ROOF_REACH studs (the fill's open mouth stands
+	-- under the Sock's overhang). Every other patch keeps the strict check. Without a `sock`, the exception is off.
+	local SOCK_PATCH_PREFIX = "Patch_Sock_"
+	local SOCK_ROOF_REACH = 6 -- studs: the roof must be this close straight above a side point
+	local SOCK_ROOF_OUT = 0 -- studs: the roof ray starts on the side point itself (Ruling 23)
+	type SockRoof = { geom: BasePart, skin: DrawnSkin.Skin }
+
 	-- The checker. Returns its problems as sentences, each starting with the name of its rule; none means the patches
 	-- pass. `world` is the Workspace, or a made-up WorldModel. A top counts only where a body can stand on it, and a side
 	-- only where a body can stand beside it (see BODY_WIDTH). Use patchProblems, which cleans up when a check throws.
@@ -112,7 +121,8 @@ describe("the real world, the patches", function()
 		world: WorldRoot,
 		folder: Instance?,
 		skin: DrawnSkin.Skin,
-		smallFolder: Instance?
+		smallFolder: Instance?,
+		sock: SockRoof?
 	): { string }
 		-- (a) Folder
 		local patches: { BasePart } = {}
@@ -144,6 +154,10 @@ describe("the real world, the patches", function()
 		local params = RaycastParams.new()
 		params.RespectCanCollide = true
 		params.CollisionGroup = Collisions.GROUP
+		-- A ray that sees only the Sock's mesh (the roof of its fill).
+		local roofOnly = RaycastParams.new()
+		roofOnly.FilterType = Enum.RaycastFilterType.Include
+		roofOnly.FilterDescendantsInstances = if sock ~= nil then { sock.geom } else {}
 		-- A ray that sees only the grass.
 		local grassOnly = RaycastParams.new()
 		grassOnly.FilterType = Enum.RaycastFilterType.Include
@@ -205,6 +219,10 @@ describe("the real world, the patches", function()
 				)
 			end
 
+			-- The named exception: a Sock fill block is read against the Sock's mesh (see SOCK_PATCH_PREFIX).
+			local underSock = sock ~= nil and string.sub(patch.Name, 1, #SOCK_PATCH_PREFIX) == SOCK_PATCH_PREFIX
+			local patchSkin = if underSock and sock ~= nil then sock.skin else skin
+
 			-- The top face faces up the most, the bottom face the least; the others are sides.
 			local faces = facesOf(patch)
 			local topIndex, bottomIndex = 1, 1
@@ -235,11 +253,12 @@ describe("the real world, the patches", function()
 						and PathCheck.roomToStand(options, hit.Position, hit.Normal)
 					then
 						met += 1
-						local drawn = skin.heightAt(hit.Position.X, hit.Position.Z, hit.Position.Y + SKIN_SEARCH_ABOVE)
+						local drawn =
+							patchSkin.heightAt(hit.Position.X, hit.Position.Z, hit.Position.Y + SKIN_SEARCH_ABOVE)
 						local gap = if drawn == nil then 0 / 0 else hit.Position.Y - drawn
 						if
 							outsideLimits(gap)
-							and sidewaysFit(skin, hit.Position.X, hit.Position.Z, hit.Position.Y) == nil
+							and sidewaysFit(patchSkin, hit.Position.X, hit.Position.Z, hit.Position.Y) == nil
 						then
 							bad += 1
 							if #examples < EXAMPLES_SHOWN then
@@ -281,7 +300,20 @@ describe("the real world, the patches", function()
 						if not insideSolid and (grass == nil or grass.Position.Y <= start.Y) then
 							total += 1
 							local hit = world:Raycast(start, -outward * (RAY_OUTSIDE + RAY_MARGIN), params)
-							if hit ~= nil and hit.Instance == patch and bodyFitsBeside(options, point, outward) then
+							local roofed = false
+							if underSock then
+								roofed = world:Raycast(
+									point + outward * SOCK_ROOF_OUT,
+									Vector3.new(0, SOCK_ROOF_REACH, 0),
+									roofOnly
+								) ~= nil
+							end
+							if
+								hit ~= nil
+								and hit.Instance == patch
+								and not roofed
+								and bodyFitsBeside(options, point, outward)
+							then
 								met += 1
 								if #examples < EXAMPLES_SHOWN then
 									table.insert(examples, describePoint(hit.Position))
@@ -312,9 +344,10 @@ describe("the real world, the patches", function()
 		world: WorldRoot,
 		folder: Instance?,
 		skin: DrawnSkin.Skin,
-		smallFolder: Instance?
+		smallFolder: Instance?,
+		sock: SockRoof?
 	): { string }
-		local ok, result = pcall(runPatchChecks, world, folder, skin, smallFolder)
+		local ok, result = pcall(runPatchChecks, world, folder, skin, smallFolder, sock)
 		if not ok then
 			for _, child in world:GetChildren() do
 				if child.Name == PROBE_NAME then
@@ -327,11 +360,24 @@ describe("the real world, the patches", function()
 		return result
 	end
 
-	-- A flat drawn skin at height 10 made of two triangles, 40 studs square.
-	local function flatSkin(): DrawnSkin.Skin
-		local a, b = Vector3.new(-20, 10, -20), Vector3.new(20, 10, -20)
-		local c, d = Vector3.new(20, 10, 20), Vector3.new(-20, 10, 20)
+	-- A flat drawn skin (height 10, or `height`) made of two triangles, 40 studs square.
+	local function flatSkin(height: number?): DrawnSkin.Skin
+		local y = height or 10
+		local a, b = Vector3.new(-20, y, -20), Vector3.new(20, y, -20)
+		local c, d = Vector3.new(20, y, 20), Vector3.new(-20, y, 20)
 		return DrawnSkin.new({ { a = a, b = b, c = c }, { a = a, b = c, c = d } }, {})
+	end
+
+	-- A made-up Sock (Task 32): a slab named body_geom, with a flat drawn skin at `skinHeight` standing for its mesh.
+	local function addSock(world: WorldModel, position: Vector3, size: Vector3, skinHeight: number): SockRoof
+		local geom = Instance.new("Part")
+		geom.Name = "body_geom"
+		geom.Size = size
+		geom.Position = position
+		geom.Anchored = true
+		geom.CanCollide = true
+		geom.Parent = world
+		return { geom = geom, skin = flatSkin(skinHeight) }
 	end
 
 	-- A patch with the steep guards' settings, in a folder inside the world (Patches, or `folderName`).
@@ -491,6 +537,56 @@ describe("the real world, the patches", function()
 		end)
 	end)
 
+	-- Task 32 (Rulings 20, 23 and 24): the Sock's fill, `Patch_Sock_<n>`, is read against the Sock's mesh, not his skin. The
+	-- one exception has two limits: a top is read against the Sock's drawn skin, and a side point passes only where the
+	-- Sock's roof is within 6 studs straight above it.
+	it(
+		"the patch check reads a Patch_Sock side against the Sock: under its roof it passes, past it it is named",
+		function()
+			inFakeWorld(function(world)
+				-- A block from height 6 to 10, walled on three sides as in the second test, and open on the +Z side. Its top is
+				-- under the roof, so no body stands on it.
+				addPatch(world, "Patch_Sock_1", Vector3.new(0, 8, 0), Vector3.new(4, 4, 4), SMALL_PATCHES_FOLDER)
+				addWall(world, Vector3.new(-2.5, 8, 0), Vector3.new(1, 6, 6))
+				addWall(world, Vector3.new(2.5, 8, 0), Vector3.new(1, 6, 6))
+				addWall(world, Vector3.new(0, 8, -2.5), Vector3.new(6, 6, 1))
+				-- The Sock's roof: its underside is at height 11, and it reaches 6 studs past the block on every side.
+				local sock = addSock(world, Vector3.new(0, 11.5, 0), Vector3.new(12, 1, 12), 10)
+				local small = world:FindFirstChild(SMALL_PATCHES_FOLDER)
+				expect(patchProblems(world, nil, flatSkin(), small, sock)).toEqual({})
+				-- The same fill with the roof moved back so that it ends at z 1.5: the open face (z 2) is past it.
+				sock.geom.Size = Vector3.new(12, 1, 7.5)
+				sock.geom.Position = Vector3.new(0, 11.5, -2.25)
+				local problems = patchProblems(world, nil, flatSkin(), small, sock)
+				local sides = startsWith(problems, "Sides:")
+				expect(#sides).toBe(1)
+				expect((string.find(sides[1], "Patch_Sock_1", 1, true))).never.toBeNil()
+				expect((string.find(sides[1], "(0, 0, 1)", 1, true))).never.toBeNil()
+				expect(#problems).toBe(1)
+			end)
+		end
+	)
+
+	it(
+		"the patch check reads a Patch_Sock top against the Sock's mesh, and any other patch's top against his skin",
+		function()
+			inFakeWorld(function(world)
+				-- His skin is at height 10 and the Sock's mesh at 13. The block's top is at 13, in the open. The Sock's slab
+				-- itself stands away from the block.
+				local sock = addSock(world, Vector3.new(0, 30, 30), Vector3.new(4, 1, 4), 13)
+				local block =
+					addPatch(world, "Patch_Sock_1", Vector3.new(0, 12, 0), Vector3.new(4, 2, 4), SMALL_PATCHES_FOLDER)
+				local small = world:FindFirstChild(SMALL_PATCHES_FOLDER)
+				expect(#startsWith(patchProblems(world, nil, flatSkin(), small, sock), "Tops:")).toBe(0)
+				-- The same block under another name is read against his skin, 3 studs under it.
+				block.Name = "Patch_Test_9"
+				local tops = startsWith(patchProblems(world, nil, flatSkin(), small, sock), "Tops:")
+				expect(#tops).toBe(1)
+				expect((string.find(tops[1], "Patch_Test_9", 1, true))).never.toBeNil()
+			end)
+		end
+	)
+
 	it("patches sit on his drawn skin, or are sealed inside him", function()
 		local world = Workspace:FindFirstChild("World")
 		expect(world).never.toBeNil()
@@ -505,11 +601,17 @@ describe("the real world, the patches", function()
 			table.insert(meshes, (piece :: Instance):FindFirstChild(name) :: MeshPart)
 		end
 		local skin = DrawnSkin.fromWorld(meshes, {})
+		-- The Sock's mesh, for the Patch_Sock_<n> exception (Task 32).
+		local things = (world :: Instance):FindFirstChild("GiantsThings")
+		expect(things).never.toBeNil()
+		local sockMesh = (things :: any).Sock.body.body_geom :: MeshPart
+		local sock: SockRoof = { geom = sockMesh :: BasePart, skin = DrawnSkin.fromWorld({ sockMesh }, {}) }
 		local problems = patchProblems(
 			Workspace,
 			(walkSurfaces :: Instance):FindFirstChild("Patches"),
 			skin,
-			(walkSurfaces :: Instance):FindFirstChild(SMALL_PATCHES_FOLDER)
+			(walkSurfaces :: Instance):FindFirstChild(SMALL_PATCHES_FOLDER),
+			sock
 		)
 		if #problems > 0 then
 			error("\n" .. table.concat(problems, "\n"), 0)

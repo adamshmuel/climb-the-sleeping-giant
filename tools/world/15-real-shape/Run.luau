@@ -41,8 +41,8 @@
 --   3c. The cave skirt (Task 22, step 22-9): 20 visible red blocks (CaveSkirt_<n>) in the new folder World.CaveSkirt across
 --       the cave's mouth, solid for players. See "Section 3b and 3c" below.
 --   4. Slide guards and small patches (Task 23, step 23-10): 3 invisible slide guards (SlideGuard_<Place>_<n>) in the new
---      folder World.WalkSurfaces.SlideGuards and 85 invisible small patches (Patch_<Place>_<n>) in the new folder
---      World.WalkSurfaces.SmallPatches. See "Section 4" below.
+--      folder World.WalkSurfaces.SlideGuards and 105 invisible small patches (Patch_<Place>_<n>, and the Sock's
+--      Ramp_Sock_1) in the new folder World.WalkSurfaces.SmallPatches (Task 32 added the 20 Sock parts). See "Section 4" below.
 -- Section 1 does this:
 --   - It refuses to run in Play: a running game can't change CollisionFidelity.
 --   - It checks everything first. Each of the six body pieces (World.Giant.<piece>.<piece>, a MeshPart) must be there

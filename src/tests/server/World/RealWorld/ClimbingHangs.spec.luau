@@ -29,6 +29,7 @@ describe("the real world, slide guards", function()
 	type HangPlace = { name: string, kind: "patch" | "guard", root: Vector3, prefix: string, face: string? }
 	local NOTCH_PATCH_PREFIX = "Patch_Notch_"
 	local FOREHEAD_PATCH_PREFIX = "Patch_Forehead_"
+	local SOCK_PATCH_PREFIX = "Patch_Sock_"
 	-- Task 34: the forehead band's fill (Task 29's try T6) came out again, because it stood where players walk along his
 	-- skin (code_lead's Rulings 30 and 31). The forehead hang place has no test here until Task 33 brings the fill back.
 	-- Where the characters ended up hanging (steps 23-5 and 23-6, Play on the computer): the five notch walks W03, W04,
@@ -40,6 +41,9 @@ describe("the real world, slide guards", function()
 		{ name = "notch, walk 8", kind = "patch", root = Vector3.new(-5.3, 21.6, 39.0), prefix = NOTCH_PATCH_PREFIX },
 		{ name = "notch, walk 9", kind = "patch", root = Vector3.new(2.6, 22.6, 39.8), prefix = NOTCH_PATCH_PREFIX },
 		{ name = "notch, walk 14", kind = "patch", root = Vector3.new(-1.1, 22.2, 39.7), prefix = NOTCH_PATCH_PREFIX },
+		-- Task 32: the Sock's open spot (-68.8, 4.4, -45) (stuck scan, test 2's Sock box). It lies inside Patch_Sock_10 of the
+		-- chosen fill (rank 1 of work/t32/cands-2b.txt: x -75.625 to -66.125, y 3.643 to 10.299, z -45.125 to -44.875).
+		{ name = "Sock", kind = "patch", root = Vector3.new(-68.8, 4.4, -45), prefix = SOCK_PATCH_PREFIX },
 		{
 			name = "pillow spot 1",
 			kind = "guard",

@@ -1,4 +1,4 @@
-# Stuck safety plan, Part 2d: no hangs, the finished surface, the pillow, the rest of the game (Tasks 29, 34, 32, 33, 27, 28, 23b, 7)
+# Stuck safety plan, Part 2d: no hangs, the finished surface, the pillow, the rest of the game (Tasks 29, 34, 32, 35, 33, 27, 28, 23b, 7)
 
 Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plans/v2/stuck-safety.md` ("Words used here", and which file holds which task).
 
@@ -48,15 +48,47 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - The fix (Ruling 24): Ruling 20's sealed fill, `Patch_Sock_<n>` in `SmallPatches`, with its **two ends shortened** column by column until every open face sits under the Sock's overhang (Ruling 23's side limit) and no gap of 1 stud or more is left under any box. The stuck spot stays inside the fill. At most 20 boxes, plus `Ramp_Sock_1` exactly as fitted in Task 23 (21 parts).
 - Files (after Tasks 30 and 31 split them): the world script's section 4 file, `tools/world/15-real-shape/S4SlideGuards.luau` (run as in Task 34); in `src/tests/server/World/RealWorld/`, the files that hold test 6, Task 22's patch test and the ramp test.
 - Failing tests first: test 6 gains the Sock (`kind = "patch"`, root (−68.8, 4.4, −45)), red. Task 22's patch test gains the `Patch_Sock_<n>` row of the shared named exception (tops and sides read against the Sock's mesh, only under it; reason Rulings 20 and 23), with its made-up-world tests red first. Already red: the Sock's stuck scan spot, test 2's Sock box, the ramp test's "Sock has no ramp".
+- Handoff: `work/handoff-p2-task32.md` (2026-10-26), with the decision table and each step's Studio-call cap.
+- **Review (code_lead, 2026-10-26): approved as built.** The fill is variant 1 of `work/t32/cands-2b.txt` (Task 29's plan T6 r9 v1z, each end cut by 2 slices): 19 invisible boxes, `Patch_Sock_1` to `Patch_Sock_19`, plus `Ramp_Sock_1`, all in `SmallPatches` (85 → 105). The Sock's stuck spot is inside `Patch_Sock_10`, so the scan has 94 stuck spots instead of 95, with 0 new stuck spots and 0 free spots lost. Test 6's Sock line and the two new made-up-world tests were shown red, then green. The world script's second run says "already done" in all 17 sections. code_lead's own run: 2588 tests, 2585 pass, the 3 planned reds with only the pillow's, the beard's and the forehead's lines; the ramp test is green. In Play, pushing into the mouth for 2 seconds (twice) and walking 26 studs along it both ways gave no `Climbing` frame. The hangs on the Sock's own lips are **Task 35**.
+- **Ruling 32 (2026-10-26, after step 32-2):** no fill passed, because of two hangs. The east end was re-fitted with deeper cuts (32-2b fit, 32-2c Play). The 7 tries are still never excused by "existed before", because they test the pocket the fill changes. **Corrected in 32-2c:** the east "hang only with the fill" was a gap in the Play script (the end walks never ran without the fill). Without the fill the player hangs at the east lip too. Both lips are the Sock mesh's own, outside the fill.
+- **product (2026-10-26):** a pressed `Climbing` run on either lip (only the Sock mesh in front, no fill box within 1 stud, and the no-fill world hangs there within 1 stud) goes to Task 35 and doesn't fail Task 32. So does the 3-frame run 0.95 from `Patch_Sock_19`: it is one run along the lip, and the no-fill world hangs at both of its points.
+- **Ruling 33 (2026-10-26):** the patch test's roof ray starts on the side point itself, as Ruling 23 says ("a ray straight up from it"), the same as the fit.
+- **Ruling 34 (2026-10-26):** trial copies of the small patches keep `Archivable` as the real parts have it; only the trial folder is not archivable. To remove a synced folder from `src/`, delete its files first, then the empty folder (removing the whole folder at once crashed Rojo).
 - Steps (the builder stops and reports after each):
   1. **Fit (Edit, trial, one script, at most 4 Studio calls):** start from Task 29's six T6 and T7 plans (`work/t29/gen-fitsock.py`) and shorten each end. Pass: every mark of kind 3 with Rulings 17 and 23, the scan (0 new stuck, 0 free lost outside the fill), the ramp test, at least 2 studs from places players need. Keep the first 2 that pass. None passes: stop, and code_lead brings it to product.
   2. **Play (computer, no shots):** the 7 tries from the nearest free walk-map spot at the fill's mouth (one push straight into the fill's face), a walk into each shortened end, and one walk along the Sock both ways (product: no block felt in open air). The first candidate with no hang and no wedge is chosen.
   3. **Tests, red first:** test 6's entry and the patch test's exception row, then the trial tests on a trial copy.
   4. **Section 4 gains the Sock's parts** (written, with the dry run): the known worlds become "Tasks 23 and 29 only" (add the Sock's parts) and "all present" ("already done").
   5. **Run 1 and run 2, the full test run, the scan compare and the report.**
-- Done when: the scan: 0 new stuck spots, 0 free spots lost; kind 3's marks pass; Play: the Sock's 7 tries by product's hang line (changes a and b), plus a walk into each shortened end, pressing for 2 seconds, and a walk along the Sock both ways, with no hang, no wedge and no block felt in open air. Also: the only reds are the pillow's lines (Task 23b); the ramp test is green; at most 21 parts, and all patches, guards and small patches together at most 200; the world script's second run says "already done"; the place has unsaved world changes (Adam saves it).
+- Done when: the scan: 0 new stuck spots, 0 free spots lost; kind 3's marks pass; Play: the Sock's 7 tries by product's hang line (changes a and b), plus a walk into each shortened end, pressing for 2 seconds, and a walk along the Sock both ways, with no hang, no wedge and no block felt in open air. Also: the only reds are 3 test names, with only the pillow's, the beard's and the forehead's lines inside them (Tasks 23b and 33, after Rulings 26 and 31); the ramp test is green; the full run is 2588 tests (2 new made-up-world tests in the patch test); at most 21 parts, and all patches, guards and small patches together at most 200; the world script's second run says "already done"; the place has unsaved world changes (Adam saves it).
 
-**Task 33: Beard pocket 1 gets a way out with no hang** (moved out of Task 29 on 2026-10-26 by Ruling 26; built after Task 32, before Task 27)
+**Task 35: The Sock's lips have no hang** (added on 2026-10-26 by Ruling 32 and product's answers; built right after Task 32, before Task 33; stuck safety can't reach Gate 4 until it is done)
+- Spec rules: Rule 20 (One collision source), check 1 (No stuck spots). Rule 22 (What counts as stuck), "every Climbing hang a player reaches without a jump is fixed", by product's hang line with its changes a and b.
+- Why: a player walking along the Sock, or into the ends of its fill, hangs in `Climbing` on the lip of the Sock's own mesh, outside the fill. The world without the fill hangs at the same places within 1 stud, so the lips were there before Task 32. A player reaches them without a jump.
+- The hang runs to fix (step 32-2c, `work/t32/report-32-2c.md`; frames in a row while pressing, and where the hang starts):
+
+| Lip | Run | Frames | Where |
+|---|---|---|---|
+| West | Walk into the fill's east end, run 3 | 9 | (−75.26, 5.33, −42.33) |
+| West | Scrape walk going +x, run 1 | 10 | (−76.61, 5.42, −42.13) |
+| West | Scrape walk going +x, run 2 | 7 | (−77.05, 5.35, −42.22) |
+| West | Try "push along −x" | 13, then 3 | (−75.47, 5.32, −42.30), then (−74.75, 5.22, −42.43) |
+| West | Straight walk along the Sock (step 32-2) | 34 | about x −77.5, z −42.2 |
+| East | Walk into the fill's east end, run 1 | 8, then 3 | (−64.65, 5.21, −43.37), then (−65.04, 6.43, −43.22) |
+| East | Walk into the fill's east end, run 3 | 8 | (−64.72, 5.33, −43.32) |
+
+- The fix: small invisible parts in `SmallPatches` that take each lip's ledge away (a sealed fill under the lip, or a wedge that lifts the player past it; the fit step picks the kind, with Ruling 23's side limit). It is fitted and checked **with Task 32's fill in place**; Task 32's parts never change. At most 6 parts (3 per lip). All patches, guards and small patches together stay at most 200 (today 149).
+- Files: the world script's section 4 file, `tools/world/15-real-shape/S4SlideGuards.luau`; the test 6 file, `src/tests/server/World/RealWorld/ClimbingHangs.spec.luau`. If the patch test's Sock exception must also cover the new parts, `src/tests/server/World/RealWorld/Patches.spec.luau`, with a made-up-world test red first.
+- Failing test first: test 6 gains "Sock, west lip" and "Sock, east lip", each with a root inside the chosen part (its source in a comment), red against today's world.
+- Steps (the builder stops and reports after each):
+  1. **Fit (Edit, trial, one script, at most 4 Studio calls):** measure each lip's ledge under the hang points above, and fit parts for both lips. Pass: kind 3's marks, the scan (0 new stuck spots, 0 free spots lost, the Sock spot stays gone), at least 2 studs from places players need, and no overlap with Task 32's parts over 0.05.
+  2. **Play (computer, no shots, at most 5 Studio calls):** every run in the table above, 3 runs each, plus the straight walks along the Sock both ways on both lines (1.5 studs in front of the mouth, and the 15° scrape), and Task 32's 7 tries again. The first candidate with no hang, no wedge and no block felt in open air is chosen.
+  3. **Tests, red first:** test 6's two entries, then the trial tests on a trial copy (Ruling 34).
+  4. **Section 4 gains the lip parts** (written, with the dry run): today's world ("after Task 32") gets the parts added; the world with them says "already done"; anything else stops with nothing changed.
+  5. **Run 1 and run 2, the full test run, the scan compare and the report.**
+- Done when: none of the runs above has a pressed `Climbing` run of 3 or more frames at either lip, with no wedge and no block felt in open air; Task 32's 7 tries still pass; the scan finds 0 new stuck spots and 0 free spots lost; the only reds are the 3 test names with only the pillow's, the beard's and the forehead's lines inside them; the world script's second run says "already done"; the place has unsaved world changes (Adam saves it).
+
+**Task 33: Beard pocket 1 gets a way out with no hang** (moved out of Task 29 on 2026-10-26 by Ruling 26; built after Task 35, before Task 27)
 - Spec rules: Rule 20 (One collision source), check 1 (No stuck spots). Rule 22 (What counts as stuck), by product's hang line.
 - Why: Task 29's three guards passed the scan, but their bottom edges were only 0.15 to 0.17 studs into his 61° skin, and kind 1 needs at least 0.3. Ruling 15's exception only covers skin of 74° or steeper.
 - The fix: a refit of `SlideGuard_BeardPocket_1` (kind 2) with its bottom edge buried at least 0.3 along its whole length. Its top must pass the top-lip check in any of its three forms (Ruling 22). All 8 corners stay at least 0.2 inside Ruling 13's left box (Ruling 16). At most 2 parts.
