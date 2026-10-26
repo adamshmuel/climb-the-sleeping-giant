@@ -53,8 +53,11 @@ Words used here:
 | `src/tests` | `ServerStorage.Tests` | The tests and the test runner. ServerStorage is never sent to players. |
 | `Packages` (made by Wally) | `ReplicatedStorage.Packages` | Outside libraries both sides use: Trove and Signal. |
 | `DevPackages` (made by Wally) | `ServerStorage.DevPackages` | The test tool (Jest). Never sent to players. |
+| `tools` (from stuck safety Task 31) | `ServerStorage.Tools` | The world scripts and reports, so a big world script can be split into parts that `require` each other (section 8). Nothing here runs unless an agent runs it. Never sent to players. |
 
 `init.server.luau` and `init.client.luau` only load modules and connect them. They contain no game rules. Why: rules in modules can be tested on their own.
+
+**No file over 1000 lines** (the project rule "No big files"; aim for under 600). A module that grows too big becomes a **folder module**: `<Module>/init.luau` plus child modules, one per topic. Rojo turns `init.luau` into the module itself, so every `require` of it stays the same. The children require each other with `script.Parent`, never through `init` (that would be a loop). `init` returns the same table and re-exports the same types as before. Why: a reader (or an agent) can open one small file about one thing. `CameraFx` and `GiantFx` are split this way in stuck safety Task 31. `scripts/check.sh` fails on any `.luau` or `.md` file in `src/`, `tools/` or `docs/` over 1000 lines (section 7).
 
 ### Server modules (`src/server`)
 
@@ -319,6 +322,7 @@ We compared three options:
 ### How tests are written
 
 - Each module has one test file in the same place under `src/tests`, named `<Module>.spec.luau`. Example: `src/server/Giant/Noise.luau` is tested by `src/tests/server/Giant/Noise.spec.luau`.
+- **When a test file grows past about 600 lines,** it becomes a folder with the module's name, `src/tests/.../<Module>/`, holding one `<Topic>.spec.luau` per topic and, if they share helpers, one `Helpers.luau` (a plain module: Jest only runs files ending in `.spec`). Each topic file keeps the original `describe` names, so a test's full name doesn't depend on which file it is in. The runner's name filter matches the path, so `("RealWorld")` still runs every file in `RealWorld/`. Tests that share an expensive `beforeAll` (such as the stuck scan's real walk map) stay in one file. A helper is never copied into a second file. Stuck safety Task 30 splits today's big test files this way.
 - Each `it(...)` checks one behaviour and is named after it, for example `it("adds no noise while standing still")`.
 - Every test file starts with `--!strict` and loads Jest like this:
   ```luau
@@ -362,6 +366,7 @@ It runs, in order, and stops at the first failure:
 
 | Step | Tool | Checks |
 |---|---|---|
+| Size (from stuck safety Task 31) | a line count | No `.luau` or `.md` file in `src/`, `tools/` or `docs/` is over 1000 lines; it names any that are |
 | Build | `rojo build` | The project builds into a place file |
 | Format | `stylua --check src tools` | The code is formatted the house way (tabs, 120 columns) |
 | Lint | `selene src tools` | Common mistakes |
@@ -377,6 +382,7 @@ It runs, in order, and stops at the first failure:
 
 - Play sessions start with `start_stop_play`, and end with it before any code change, because Rojo only syncs in edit mode.
 - World changes go through a script in `tools/world/`. The script checks before it creates, so running it twice does no harm. It returns a short report of what it changed.
+- **A big world script is a folder** (from stuck safety Task 31): `tools/world/<nn-name>/` with `Shared.luau` (helpers two sections use), one file per section (each returns a function that runs its section and returns its message; nothing happens when a file is only required), and `Run.luau`, which runs the sections in order and joins their messages. Rojo syncs `tools` into `ServerStorage.Tools`, and it is run in Edit mode with `local folder = game:GetService("ServerStorage").Tools.world["15-real-shape"]:Clone() return require(folder.Run)()`. The copy makes sure the newest code runs. A new section is a new file plus one line in `Run`. Why: the parts can `require` each other, so no helper is copied and the type checker sees every part; small world scripts stay one file and are still pasted into `execute_luau`.
 - Every model that the game copies into `Workspace` has all its parts `Anchored`. An unanchored copy falls below the world's floor (`FallenPartsDestroyHeight`) and Roblox deletes it. Models stored in `ServerStorage` don't fall, because physics doesn't run there.
 - After world changes, the place must be saved by Adam. The progress map (`docs/progress/index.md`, "Place file") says when the place has unsaved world changes.
 - Play test tools (V2), such as the bot walk, live in `tools/play/`. They are run with `execute_luau` in Play, like the world scripts in Edit mode, and are never part of the game.

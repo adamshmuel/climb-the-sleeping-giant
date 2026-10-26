@@ -1,0 +1,89 @@
+# Stuck safety plan, Part 5: the big files (Tasks 30, 31)
+
+Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plans/v2/stuck-safety.md` ("Words used here", and which file holds which task).
+
+### Part 5: Splitting the big files
+
+The project rule "No big files" (`.claude/rules/agent-workflow.md`, 2026-10-26) says no file in `src/`, `tools/` or `docs/` goes over 1000 lines. Fifteen code and test files are over it today. Tasks 30 and 31 split them by topic and add a check that keeps every file under the limit. They cover no spec rule and **change no behaviour**: the game, the world scripts and every test do exactly what they did before.
+
+**When:** right after Task 29 is approved and committed, before Task 27. Task 29 edits `RealWorld.spec.luau` (test 6) and section 4 of `15-real-shape.luau` and uses Studio until its review ends. Tasks 30 and 31 run every test in Studio, so they wait for it; then Tasks 27, 28 and 23b work on the small files.
+
+Words used here:
+- **Folder module:** a ModuleScript that is a folder in `src/`: `<Module>/init.luau` plus child modules. Rojo makes `init.luau` the module itself and the other files its children, so `require(...Fx.GiantFx)` still works unchanged.
+- **Helpers file:** a plain ModuleScript next to test files (like today's `DrawnSkin.luau`). Jest only runs files whose names end in `.spec`, so a helpers file is never run as a test.
+- **The name list:** every test's full name (its `describe` names plus its `it` name) and its result (pass or fail), sorted. If the name list is the same before and after a split, every test still exists, with the same result.
+- **Topic file:** one of the new, smaller test files. It holds the tests about one thing, for example `RealWorld/EggSpots.spec.luau`.
+
+#### The rules for every split (both tasks)
+
+| Case | What the builder does |
+|---|---|
+| A top-level `describe` under about 600 lines | Moves whole into its topic file. Its name stays exactly the same. |
+| A `describe` over 600 lines | Splits at `it` boundaries, by topic, into 2 or more files. Each file wraps its tests in a `describe` with **the same name**, so every full name stays the same. |
+| A helper (function, constant, type) used by one topic file only | Moves into that file. |
+| A helper used by two or more topic files | Goes into the folder's `Helpers.luau` once, exported and typed. Never copied. |
+| A helper that already exists in another file (found while splitting) | The topic files use the existing one. If both copies are in this step's files, they become one; if not, the copy is listed in the state note for code_lead. |
+| Tests that share an expensive `beforeAll` (the stuck scan's real walk map, 2 minutes; the drawn-body check) | Stay in one file. To bring that file under 600, its helper functions move to a helpers file instead. A second file would build the map again and slow every run. |
+| A topic file that stays between 600 and 1000 lines because of a shared `beforeAll` | Allowed; the state note says why. Never over 1000. |
+| A test's body or its `expect` lines | Never changed. Only `require` lines and helper names change. |
+| The name list differs, a test fails that passed, or the full run is more than 20% slower | **Stop.** Put it back to the last green state and report. Never change a test to make the list match. |
+
+**The name list check** (from step 30-1 on): `work/t30/test-names.luau` runs Jest in Studio edit mode like `TestRunner`, and builds the name list. The first run keeps it in Studio as the baseline, in a `StringValue` in `ServerStorage` with `Archivable` off (so it is never saved with the place), and writes its count and a short fingerprint (a checksum of the list) into the state note `work/t30/state.md`. Every later run compares with the baseline and returns only the names that differ, at most 20, plus the counts and the run time. If Studio restarts and the baseline is gone, the builder rebuilds it from the last committed tree and checks its fingerprint against the state note. The last full run before Task 29 was 2581 pass and 4 planned reds; the baseline is whatever the full run gives after Task 29 is committed.
+
+**Names and the test filter.** A split test file becomes a folder with the same name: `RealWorld.spec.luau` becomes `RealWorld/` with topic files in it. The runner's name filter matches the file's path, so `("RealWorld")` still runs every real-world test. Step 30-1 proves this before moving anything else.
+
+**Line numbers below** are from 2026-10-26, before Task 29, to help find things. The `describe` names are what count.
+
+---
+
+**Task 30: Split the big test files** (added on 2026-10-26 for the "No big files" rule; built after Task 29, before Task 31)
+- Spec rules: none (project rule "No big files"). Every test keeps doing what it does.
+- Files: the 13 test files over 1000 lines below, each replaced by a folder of topic files and, where needed, one `Helpers.luau`. `work/t30/test-names.luau` (the name list check, a working file).
+- Failing test first: none, because no behaviour changes. The safety net is the name list: identical after every step, with the same passes and the same planned reds.
+- How each file is split (target: every new file under 600 lines):
+
+| Today's file (lines) | New folder | Topic files (by `describe` name) |
+|---|---|---|
+| `server/World/RealWorld.spec` (9507) | `server/World/RealWorld/` | `Helpers.luau` (the file's header: the limits, `bodySizeSlopeAt`, `describePoint`, `facesOf`, `inFakeWorld`, `startsWith`, the cloth slope helpers, `sidewaysFit`, and helpers two files need). Then: `Basics` ("the real world"); "zones and extras" (1553 lines) in four: `Zones` (zones, the Z Z Z and the view checks), `ClimbAndForehead` (the climb check, boot and crossing ramps, route slopes, guards, forehead slabs, slope limit, auto-jump, the 7 props), `NoseRails` (side rails, nose top), `CapLadderSlot` (slot blocks, rails' front parts); `EggSpots`; `HomeSpots`; `RouteAndLanding`; `GiantPieces` (awake pieces, footprints, slam spots, slam surface, slam arm); `SignsAndMockups` (sign faces, the three mockup folder checks, the 85% warning pieces); `TeacupAndShape` (the teacup's bowl, his real shape); `DrawnBody` (his solid body sits where he's drawn, with its `beforeAll`); "the walk pieces sit on his skin" (1530 lines) in three topic files; `SlideLine`; `PillowAndPatches`; `CaveSkirt`; "slide guards" (1385 lines) in two topic files plus `ClimbingHangs` (test 6, "every known Climbing hang place has its fix", which Tasks 27 and 23b add to); `MeadowRamps` |
+| `server/World/StuckScan.spec` (1802) | `server/World/StuckScan/` | `Helpers.luau` (the 556-line header); `ScanFacts.luau` (the rare and closed facts, the stuck report and the named-place checks, taking the walk map as an argument); `RealWorld.spec` ("the stuck scan on the real world": one file, because its `beforeAll` builds the real walk map once); `MadeUpWorlds.spec` (the rare-spot check and the closed-void check) |
+| `server/World/PathCheck.spec` (1235) | `server/World/PathCheck/` | `Helpers.luau` (the fake world builders); `Steps` (`linkProblem`, `bodyFits`, `roomToStand`, `defaults`); `WalkMap`; `MeadowAndGroups` (the meadow ground, collision groups) |
+| `server/World/WorldIndex.spec` (1056) | `server/World/WorldIndex/` | `Helpers.luau`; `GardensAndZones`; `ClimbAndEggs` (climb, egg spots, egg templates); `RouteAndLanding` (route, landing spots, the giant's face) |
+| `server/Giant/GiantDirector.spec` (1836) | `server/Giant/GiantDirector/` | `Helpers.luau` (the 264-line header); `MeterAndWarnings` (meter, tiptoe speed, thuds, warnings); `FreeSave`; `Waking` (waking, bounce-off, wake-up timeline); `RunAndWrites` (Meter writes, `run`); `Slams` (slams, slammed signal) |
+| `server/Analytics.spec` (1516) | `server/Analytics/` | `Helpers.luau`; `OnboardingAndFunnel`; `EggAndGiant` (EggHome, GiantWoke, FreeSaveUsed, FreeSaveResult); `SlamAndService` (Slam, PlayerCaught, the service failing, `stop`) |
+| `client/Fx/SlamFx.spec` (1737) | `client/Fx/SlamFx/` | `Helpers.luau`; `Maths` (constants, colours, `fistHeight`, `circleTransparency`); `Circle` (the red circle, building it over frames); `FistAndLanding`; `Lifetime` (housekeeping, stop, `onCircle`); `Surfaces` (`huggableParts`, `workspaceCastHug`, `workspaceSurfaceNormal`) |
+| `client/Fx/CameraFx.spec` (3259) | `client/Fx/CameraFx/` | `Helpers.luau` (the watcher's fake parts and clock, used by every watch file); `ViewMaths` (`spawnView` to `renderBinder`); `EaseAndInput` (`newEaseBack`, `rotationInput`, `shouldReplace`); "CameraFx.watch" (1948 lines) in four, each wrapped in `describe("CameraFx.watch")`: `WatchBounce` (its first tests, the spawn view, the bounce's view, look, landing, turn and cancel), `WatchTrail` (the footprint trail, the red circle on the low camera), `WatchCaught` (the four "caught" groups), `WatchTurnAndRaise` (turning away from the first egg, the raised camera, with the wake shake); `ShakeAndSpot` (`whenSpotIsThere`, `shakeOffset`, `shakeOnWake`) |
+| `client/Fx/GiantFx.spec` (3057) | `client/Fx/GiantFx/` | `Helpers.luau` (the 435-line header); `Plans` (the pure functions: `warningPlan`, `flutterLift`, snort settings, the fades, `poseShare`, `headTurn`, `armRaise`, `slamTurn`, `slamShare`, the arm constants, `slamFixedAim`, `slamAim`); `Warnings` (the 60 and 85 warnings); `Bubble` (the 85 bubble, the replayed 85); `SleepSigns` (the Z Z Z and puffs coming back, streaming, the snort cloud, the bubble's saved look, the step, stop); `WakingPose` (the waking pose, back to sleep, already awake, stop during the pose); `ArmSwing` (the arm swing, the arm and his body, `workspaceArmClear`); `HeavySleep` (its 7 groups) |
+| `client/Hud/Messages.spec` (1598) | `client/Hud/Messages/` | `Helpers.luau`; `WordsAndStart` (every "words" group, `carryText`, `safeText`, the green safe-home card, `start`); `CarryAndTips` (the carry pill and the three tips); `WakeBanner` (the wake banner, where it stands, how it looks, the green card and carry pill and 85% tip while he is awake); `CaughtCard` (its four groups) |
+| `client/World/Footprints.spec` (1211) | `client/World/Footprints/` | `Helpers.luau`; `Way` (the way to an egg, carrying, how often, the copies); `Ground` (lying on the ground, straight up, respawning); `BounceAndStop`; `FeetAndGround` (`feetOf`, `workspaceGround`, `firstEgg`) |
+| `client/World/SpotLabels.spec` (1195) | `client/World/SpotLabels/` | `Helpers.luau`; `Text`; `Lifetime` (a waiting egg, an empty spot, the rest of the lifetime); `Placing` (`pickShown` twice, `wordsRect`, overlapping labels, where the screen is told); `TimingAndView` (countdowns, under the meter, how often, stopping, `screenView`) |
+
+- Steps (the builder stops and reports after each, at a green run with the same name list):
+  1. **30-1: The name list, and the real world's first half.** Write the name list check and take the baseline. Prove the filter `("RealWorld")` runs a test in the new folder. Make `RealWorld/Helpers.luau`, then move every `describe` from "the real world" through "the 85% warning pieces" into its topic files. The rest stays in the old file for now.
+  2. **30-2: The real world's second half.** From "the teacup's bowl" to "ramps on meadow props". The old file is deleted.
+  3. **30-3: The other world tests.** `StuckScan`, `PathCheck`, `WorldIndex`.
+  4. **30-4: The giant and analytics tests, and SlamFx.** `GiantDirector`, `Analytics`, `SlamFx`.
+  5. **30-5: The two biggest client tests.** `CameraFx`, `GiantFx`.
+  6. **30-6: The HUD and world client tests.** `Messages`, `Footprints`, `SpotLabels`. Final full run.
+- Done when: no file under `src/tests` is over 1000 lines, and only the files the table allows are over 600; the name list is identical to the baseline (same count, same names, same passes, same planned reds); the full run takes at most 20% longer; `scripts/check.sh` passes; no helper is in two places.
+
+**Task 31: Split the big code files and the world script, and keep every file under the limit** (added on 2026-10-26 for the "No big files" rule; built after Task 30, before Task 27)
+- Spec rules: none (project rule "No big files"). The game, its look and the world script's results stay the same.
+- Files: `src/client/Fx/CameraFx.luau` and `src/client/Fx/GiantFx.luau` (each becomes a folder module), `tools/world/15-real-shape.luau` (becomes a folder), `scripts/check.sh`. Tests: none change.
+- **Before step 31-3, the main chat** adds `tools` to the Rojo project as `ServerStorage.Tools` (`default.project.json`, and the layout list in `CLAUDE.md`), so the world script's parts can `require` each other (see `docs/architecture.md`, section 8).
+- How each file is split:
+
+| Today's file (lines) | Becomes | Parts |
+|---|---|---|
+| `client/Fx/CameraFx.luau` (1268) | `client/Fx/CameraFx/init.luau` | `View` (`spawnView` to `withPitch`, `shakeOffset`, `whenSpotIsThere` and its point checks); `Ease` (`renderBinder`, `newEaseBack`, `newHeightEase` and its offset helpers, `rotationInput`, `shouldReplace`); `Watch` (`watch`); `Shake` (`shakeOnWake`). `init` holds the shared types and returns one `CameraFx` table with every function it has today. |
+| `client/Fx/GiantFx.luau` (1390) | `client/Fx/GiantFx/init.luau` | `Motion` (the pure functions: `warningPlan` to `fadedInTransparency`, with `smooth`, `heavyLetterShare`, `heavySign`, `scaledPuffSize`); inside `start` (1020 lines today), three parts made by `start` and given one shared state table: `BubbleLook` (save, paint, place and restore the 85 bubble), `SleepSigns` (the Z Z Z letters, the sign and the puffs), `Pose` (the lids, head, right arm and eyes). `init` keeps `start`'s wiring: its events, `applyState`, the step and `stop`, all cleaned up by the one `Trove`. |
+| `tools/world/15-real-shape.luau` (6272) | `tools/world/15-real-shape/` | `Shared.luau` (helpers two or more sections use: records, `fixedRays`, `readRays`, `findPieces`, `waitForShapes`, `sameAs`, `makePart`, the folder-record helpers). One file per section, in today's order: `S1HisRealShape`, `S2WalkPieces`, `S2bHead` (over 1000 lines today: its head records go to `S2bHeadParts`), `S2cZone`, `S2dRailTops`, `S2eBeardFoot`, `S2fBodyFollowsSkin`, `S2f2CloserFit`, `S2f3SlotBlocks`, `S2f4TrussAndPartB`, `S2f5LegsCloserFit`, `S2f6TrussSwing`, `S2gBeardBelly`, `S3aPillowCloserFit`, `S3a2LitLikeBefore`, `S3bcCave`, `S4SlideGuards`. Each returns a function that runs its section and returns its message; nothing runs when a file is only required. `Run.luau` runs them in order and returns today's report, word for word. |
+
+- **Running the world script after the split** (Edit mode, `execute_luau`): `local folder = game:GetService("ServerStorage").Tools.world["15-real-shape"]:Clone() return require(folder.Run)()`. The copy makes sure the newest code runs; inside it, each part requires its neighbours with `script.Parent`. The old "stripped copy" pasted into `execute_luau` is no longer needed. From then on, a task that adds a section adds a new section file and one line in `Run`.
+- Failing test first: none for the splits (no behaviour changes); the name list from Task 30 stays identical. The size check is new: it is proven to fail on a file over the limit before it is trusted.
+- Steps (the builder stops and reports after each):
+  1. **31-1: CameraFx.** "Before" shots first, in Play (sound muted), on the computer and the iPhone 14: the spawn view, a bounce with its footprint trail, and being caught. Then `CameraFx` becomes a folder module. Name list identical.
+  2. **31-2: GiantFx, and the Play check.** "Before" shots of the 85 bubble, the waking pose with the slam swing, and Heavy Sleep's big Z Z Z. Then `GiantFx` becomes a folder module. Name list identical. "After" shots of every moment from steps 1 and 2, computer and phone, side by side with the "before" shots; the console has no new errors or warnings.
+  3. **31-3: The world script, cut.** First run today's file as it is run now and keep its report (`work/t31/report-before.txt`: "already done" in every section). Then cut it into the folder above. `scripts/check.sh` passes (format, lint, types: every name each part uses is found). Nothing is run in Studio in this step.
+  4. **31-4: The world script, run.** Check `ServerStorage.Tools` is synced (`script_read` of `Run`). Run it twice in Edit: both reports match `report-before.txt` word for word, and nothing in the world changes (the Workspace's part count and the counts in `WalkSurfaces` are the same before and after). The old file is deleted.
+  5. **31-5: The size check.** `scripts/check.sh` gains a first step, "Size": it lists every `.luau` and `.md` file in `src/`, `tools/` and `docs/` with more than 1000 lines, and fails if there is one. Proven: a temporary 1001-line file in `docs/` makes it fail and name the file; with the file deleted, it passes. Then the full checks and the full test run, name list identical.
+- Done when: no `.luau` or `.md` file in `src/`, `tools/` or `docs/` is over 1000 lines, and `scripts/check.sh` fails if one ever is; the name list is identical to Task 30's baseline; the world script's report is the same word for word, and a second run says "already done" in every section; the "after" shots match the "before" shots on both screens; `require` paths outside the split modules are unchanged.
