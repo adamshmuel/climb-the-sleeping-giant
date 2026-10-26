@@ -5,7 +5,7 @@
     "$className": "DataModel",
     "ReplicatedStorage": { "Shared": { "$path": "src/shared" }, "Packages": { "$path": "Packages" } },
     "ServerScriptService": { "Server": { "$path": "src/server" } },
-    "ServerStorage": { "Tests": { "$path": "src/tests" }, "DevPackages": { "$path": "DevPackages" } },
+    "ServerStorage": { "Tests": { "$path": "src/tests" }, "DevPackages": { "$path": "DevPackages" }, "Tools": { "$path": "tools" } },
     "StarterPlayer": {
       "$properties": { "CharacterMaxSlopeAngle": 70, "AutoJumpEnabled": false },
       "StarterPlayerScripts": { "Client": { "$path": "src/client" } }
