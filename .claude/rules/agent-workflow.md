@@ -89,7 +89,7 @@ A fresh agent gets the file paths it needs (idea, design, spec, plan, progress) 
 
 The main chat's own memory grows too, and it follows two rules:
 - **Relay by file, not by pasting.** When an agent's report has to go to another agent, the main chat saves it once in the `work/` folder and sends the path with a short summary. It never pastes a long report into a message. Reports to Adam stay short.
-- **Let the app compact it.** The chat can't compact itself, and Adam isn't asked to. The app compacts the chat automatically at about 300k tokens (`autoCompactWindow` in `.claude/settings.local.json`), which can happen at any moment. So the main chat updates the "Now" section of `docs/handoff.md` after every agent step, not only after every approved task, and a compacted chat picks up from that file with nothing lost.
+- **Let the app compact it.** The chat can't compact itself, and Adam isn't asked to. The app compacts the chat automatically at about 200k tokens (`autoCompactWindow` in `.claude/settings.local.json`), which can happen at any moment. So the main chat updates the "Now" section of `docs/handoff.md` after every agent step, not only after every approved task, and a compacted chat picks up from that file with nothing lost.
 
 ## Fewer round trips
 
