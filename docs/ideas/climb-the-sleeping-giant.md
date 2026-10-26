@@ -445,7 +445,7 @@ The prices in "Monetization" are unchanged since this rewrite. They sit in the m
 What would change them:
 - After 2 weeks with players, use Roblox's price optimization tool.
 - Fewer than 1 in 200 players buys a Lullaby in the first week: test 9 Robux.
-- Any price change, and anything new for sale, is Adam's decision ("Asking Adam").
+- Any price change, and anything new for sale, is Adam's decision ("Asking the user").
 
 ### My checks at Gate 4 (first-impression review of a built feature)
 

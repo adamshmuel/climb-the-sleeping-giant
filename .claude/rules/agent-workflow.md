@@ -50,7 +50,7 @@ references/top-games/
 
 ## Adam only approves
 
-Adam's only jobs are the gates and the rare decisions that are his to make (see "Asking Adam" below). Never give him manual work, such as resizing windows, clicking in Studio, or setting things up. Agents and the main chat solve it themselves, or accept the limit and say so in one line.
+Adam's only jobs are the gates and the rare decisions that are his to make (see "Asking the user" below). Never give him manual work, such as resizing windows, clicking in Studio, or setting things up. Agents and the main chat solve it themselves, or accept the limit and say so in one line.
 
 **Stop when Studio isn't connected.** If a step needs Studio and `list_roblox_studios` comes back empty, the agent stops and reports it before doing anything that depends on it. It never picks a workaround on its own.
 
@@ -145,7 +145,7 @@ After every approved task, it updates the "Now" section of `docs/handoff.md` (un
 
 Nothing reaches Adam with open questions: not an idea, a design, a spec or a review. Every question is answered by its owner from the "Who owns what" table before the gate. A question that "can wait until after the playtest" still gets a decision now: a starting choice, plus the playtest result that would change it.
 
-## Asking Adam
+## Asking the user
 
 Owners decide everything in their area, including changes to things Adam already approved at a gate (the idea, the mockups, a spec, a built feature), as long as the change fits the game idea. The owner makes the change, and the main chat tells Adam in one line afterwards: what changed and why.
 

@@ -3,6 +3,7 @@
 The agents in `.claude/agents/` will be reused to build other Roblox games. So an agent definition describes a role and how to do it well, for any game.
 
 - **Nothing about this game goes in an agent file:** no game name, mechanics, characters, numbers, file names of this game's docs, or decisions.
+- **No person's name either.** Agent files say "the user" for whoever runs the project. Who the user is and how to talk to them live in the project rules (`communication.md`); in this project the user is Adam.
 - **Game facts live elsewhere:**
 
 | Kind of fact | Where it goes |
