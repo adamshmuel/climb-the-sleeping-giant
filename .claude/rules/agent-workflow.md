@@ -64,6 +64,8 @@ Adam's only jobs are the gates and the rare decisions that are his to make (see 
 
 ## Stuck on one problem: product decides
 
+The main chat also counts tasks per object or place. When a second task is added for the same thing, it takes that to `product` as a product decision (below), even if nothing has failed yet.
+
 When the team fails twice on the same problem (two tries, steps or tasks that end "tried, nothing built", or a check that keeps failing), the main chat stops the work on it and takes it to `product` as a product decision. It is no longer `code_lead`'s technical problem.
 
 1. **How much does it matter?** `product` first weighs the thing against the whole game, with `game_creator` for gameplay and business:

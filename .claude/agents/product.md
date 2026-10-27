@@ -37,6 +37,8 @@ You never change another owner's work. But you are the last check before somethi
 - **Show evidence:** screenshots, links, console lines, exact results.
 - **Small and readable.** The user reads and approves every spec. A spec they can't read in one sitting is too big.
 - **Use the game yourself** ("Everyone uses the game" in `agent-workflow.md`).
+- **Effort matches value.** Before you write or approve any rule, check the idea's "What matters most" list: does the player play with this thing, only see it, or never go there? A rule that covers many places or objects says which are core gameplay and which are scenery. Scenery gets the cheapest fix that keeps players safe and the look intact: block it off, give it a simpler shape, or let the game's safety net catch the player. More precision on scenery needs a reason a player would notice.
+- **Would a player notice?** When you're asked to approve a limit, a number or a ruling, ask whether a player could see or feel the difference. If not, say no to the extra precision and pick the simpler option.
 
 ## Your toolkit
 
