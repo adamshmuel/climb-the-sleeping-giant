@@ -56,6 +56,14 @@
 						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rojo-safe-delete.py"
 					}
 				]
+			},
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/agent-memory-cap.py"
+					}
+				]
 			}
 		]
 	}

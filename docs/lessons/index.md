@@ -34,6 +34,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 22 | Long Play work runs in the background | `studio-and-scripts.md` |
 | 23 | A Studio script returns a short summary, never a list | `teamwork.md` |
 | 24 | The handoff names the exact files and lines | `teamwork.md` |
+| 25 | A hook enforces the memory limit, not a guess | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

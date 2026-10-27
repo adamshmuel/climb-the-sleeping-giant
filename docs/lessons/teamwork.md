@@ -26,3 +26,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** two builder steps in a row ran over their caps (37-6 on Studio calls, 41-2 on tool calls). In 41-2 the builder spent its 30 calls reading code to find where to edit, and ran only 2 of its 8 Studio calls (2026-10-27).
 - **Do instead:** every handoff step lists the exact files (and functions or line numbers) to read and edit, and the builder reads only those. A builder that carries on from another starts from the state note, not from the code.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 25: A hook enforces the memory limit, not a guess
+- **What happened:** the builder went over its 150k limit a third time (Task 41 step 3: 184k in 27 tool calls). The call cap and Lesson 23 both held, but its Play scripts were about 18k characters each, and it wrote each one twice (once to a file, then pasted into Studio). Every proxy cap missed a new way to grow (2026-10-27).
+- **Do instead:** `.claude/hooks/agent-memory-cap.py` reads each project agent's real memory size before every tool call. At 85% it warns the agent to wrap up. A builder at its limit is blocked from everything except writing its state note in `work/`. Agents also write a long script once: paste it straight into Studio, never into a file and then again into Studio.
+- **Who checks:** the hook; `code_lead` keeps handoff scripts short.
