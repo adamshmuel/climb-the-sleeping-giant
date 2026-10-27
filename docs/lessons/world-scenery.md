@@ -16,3 +16,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** the slide guard checks measured the Sock's cloth by looking straight down, so they missed its upright, overhanging lip and failed boards that were fine (Task 37, step 37-2).
 - **Do instead:** measure an upright or overhanging surface along the direction it faces, not from above.
 - **Who checks:** `code_lead`, `builder`.
+
+## Lesson 9: Rank what matters before fixing the world
+- **What happened:** the Sock, the pillow and the forehead's sides got many tasks before anyone wrote down that players never play with them (2026-10-26 to 10-27). The "What matters most" list came only after the time was spent.
+- **Do instead:** `game_creator` writes the idea's "What matters most" list before a version's first world-fixing task, and `code_lead` checks each new task against it ("what it's for").
+- **Who checks:** `game_creator`, `code_lead`.
