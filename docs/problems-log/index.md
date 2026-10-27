@@ -23,7 +23,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Rojo crash | Lesson 3 (Removing a synced folder crashes Rojo) | 2026-10-27 |
 | Studio out of date | Lesson 3 | 2026-10-27 |
 | Idle turn | Lesson 4 (Never end a turn on a promise) | 2026-10-27 |
-| Scenery overrun | Lesson 1 (Scenery gets the cheap fix) | 2026-10-27 |
+| Scenery overrun | Lesson 1 (Scenery gets the cheap fix), and after a planned fix broke Lesson 19, Lesson 30 (A new lesson rechecks the open tasks) | 2026-10-27 |
 | Studio busy ("not reachable") | Lesson 22, extended to test runs | 2026-10-27 |
 | Script error | Lesson 7 (A Luau line can't start with "("), Lesson 22 (Long Play work runs in the background) | 2026-10-27 |
 | Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines), and after it came back Lesson 29 (Fetch background work once, when it's done) | 2026-10-27 |
@@ -33,6 +33,6 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 3 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 4 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 7 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 9 |

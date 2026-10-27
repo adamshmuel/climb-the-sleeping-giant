@@ -36,3 +36,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** two stuck spots at the cushion's front edge were found only at Task 41's review, though Task 41 didn't touch the cushion. Earlier task closes hadn't compared the scan's unlisted spots with the planned reds (2026-10-27).
 - **Do instead:** at every task close, `code_lead` lists the stuck scan's unlisted spots and checks each one against the planned reds in `docs/progress/index.md`. Any spot that isn't planned is named at once and gets an owner.
 - **Who checks:** `code_lead`.
+
+## Lesson 30: A new lesson rechecks the open tasks
+- **What happened:** Task 33's plan still fixed the beard pocket with a guard fitted to his skin, a kind of fix Lesson 19 had forbidden since. Nobody had checked the open tasks against the new lesson, so it was only caught when the handoff was written (2026-10-27).
+- **Do instead:** when the main chat adds a lesson, it asks `code_lead` to check every open task's planned fix against it, and to change any that break it, before the next handoff.
+- **Who checks:** the main chat (asks), `code_lead`.

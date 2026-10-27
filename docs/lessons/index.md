@@ -39,6 +39,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 27 | Every task close compares the scan with the planned reds | `teamwork.md` |
 | 28 | Each object's recorded places live in one module | `studio-and-scripts.md` |
 | 29 | Fetch background work once, when it's done | `studio-and-scripts.md` |
+| 30 | A new lesson rechecks the open tasks | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
