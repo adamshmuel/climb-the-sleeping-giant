@@ -2,6 +2,15 @@
 
 How the project agents work together. Today: `game_creator`, `designer`, `product`, `code_lead` and `builder` (`qa` comes later). New agents get a row in each table below.
 
+## The viral test
+
+Every decision about how the game looks or plays answers two questions, with evidence (real screenshots of the top games next to ours, or a play of the build):
+
+1. **Could it go viral looking and feeling like this?** Would players share it, come back to it, and bring friends?
+2. **Would a kid pick ours over the top game next to it?**
+
+This covers ideas, designs, mockups, specs, gameplay rules, redesigns, cuts and built features, and every review and approval of them. A "no" or "not sure" means changes, even if every rule passes. A cheaper or simpler choice must still pass both questions. The main chat asks them again before passing any approval to Adam.
+
 ## Everyone uses the game
 
 Nobody approves what they haven't seen in the running game. Reading code and passing tests is not enough.

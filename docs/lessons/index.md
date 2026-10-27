@@ -21,7 +21,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 9 | Rank what matters before fixing the world | `world-scenery.md` |
 | 10 | Check the safety net reaches the spot | `world-scenery.md` |
 | 11 | Judge the look next to the top games | `look-and-art.md` |
-| 12 | Every approval asks "would a kid pick ours?" | `look-and-art.md` |
+| 12 | Every decision asks "could it go viral?" | `look-and-art.md` |
 | 13 | Real art comes from the store and the generator | `look-and-art.md` |
 | 14 | Generated models need waiting, checking and hinges | `look-and-art.md` |
 | 15 | Search before guessing, and Bing works for images | `research-and-tools.md` |
