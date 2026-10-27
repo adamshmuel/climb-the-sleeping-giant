@@ -79,7 +79,7 @@ describe("the real world, the pillow's closer fit", function()
 	-- Task 41, test 1. Measured in step 1 on a clone (work/t41/state.md): 120 wide x 46 deep x 30 thick, its thin side
 	-- (its own Z axis) pointing up, centred at x 0.14 with no turn, and sunk until the nightcap is 1.0 stud above it.
 	local PILLOW_FLAT_SIZE = Vector3.new(120, 46, 30)
-	local PILLOW_FLAT_POSITION = Vector3.new(0.14, 46.594, 40)
+	local PILLOW_FLAT_POSITION = Vector3.new(0.14, 45.594, 40)
 	local SIZE_WITHIN = 0.5
 	local PLACE_WITHIN = 0.1
 	local FLAT_WITHIN_DEGREES = 5

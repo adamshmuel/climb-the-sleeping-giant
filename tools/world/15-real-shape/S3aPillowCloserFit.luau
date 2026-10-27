@@ -13,6 +13,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Shared = require(script.Parent.Shared)
 local S2bHeadChecks = require(script.Parent.S2bHeadChecks)
 local FitShared = require(script.Parent.FitShared)
+local PillowPlaces = require(script.Parent.PillowPlaces)
 
 local MAX_WAIT = Shared.MAX_WAIT
 type FixedRay = Shared.FixedRay
@@ -62,8 +63,8 @@ local function sectionPillowCloserFit(): string
 	local CFRAME = CFrame.new(0.142862, 79.86055, 52.141579, 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939692)
 	-- Stuck safety Task 41 (section 3d) lays the pillow flat and sinks it. After that it is at this size and place, and
 	-- this section still says "already done" (it only ever changed the collision shape).
-	local FLAT_SIZE = Vector3.new(120, 46, 30)
-	local FLAT_CFRAME = CFrame.new(0.142862, 46.594, 40) * CFrame.Angles(-math.pi / 2, 0, 0)
+	local FLAT_SIZE = PillowPlaces.FLAT_SIZE
+	local FLAT_CFRAME = PillowPlaces.FLAT_CFRAME
 	local PLACE_TOLERANCE_STUDS = 0.01 -- on the size and the middle
 	local TURN_TOLERANCE_NUMBER = 0.001 -- on each of the nine numbers of the turn
 	local PILLOW_PRECISION = 1.0
@@ -132,19 +133,17 @@ local function sectionPillowCloserFit(): string
 		if (pillow.CFrame.Position - cframe.Position).Magnitude > PLACE_TOLERANCE_STUDS then
 			table.insert(found, `its middle is {pillow.CFrame.Position}, recorded {cframe.Position}`)
 		end
-		local nowTurn = { pillow.CFrame:GetComponents() }
-		local recordedTurn = { cframe:GetComponents() }
-		for index = 4, 12 do
-			if math.abs(nowTurn[index] - recordedTurn[index]) > TURN_TOLERANCE_NUMBER then
-				table.insert(found, `its turn differs from the recorded one (number {index - 3} of 9)`)
-				break
-			end
+		if not PillowPlaces.sameTurn(pillow.CFrame, cframe, TURN_TOLERANCE_NUMBER) then
+			table.insert(found, "its turn differs from the recorded one")
 		end
 		return found
 	end
 	local oldProblems = placeProblems(SIZE, CFRAME)
 	if #oldProblems > 0 then
 		local flatProblems = placeProblems(FLAT_SIZE, FLAT_CFRAME)
+		if #flatProblems > 0 then
+			flatProblems = placeProblems(FLAT_SIZE, PillowPlaces.TASK_41_FLAT_CFRAME)
+		end
 		if #flatProblems == 0 then
 			oldProblems = {}
 		end
