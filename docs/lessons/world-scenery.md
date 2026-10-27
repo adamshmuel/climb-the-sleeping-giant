@@ -26,3 +26,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** the rescue (Rule 28: Stuck players are rescued) only covers players on the giant. The Sock lies on the meadow, so it had no safety net and had to be made perfect (2026-10-26 to 10-27).
 - **Do instead:** before choosing a cheap fix for scenery, check that the safety net really reaches that spot. If it doesn't, simplify or block off the object first.
 - **Who checks:** `product`, `code_lead`.
+
+## Lesson 19: Sink scenery instead of fitting parts to it
+- **What happened:** players hung on edges that stick out near the ground: the Sock's lips and the pillow's bulging back. Each was fixed by fitting invisible parts to its curved shape, task after task (2026-10-26 to 10-27).
+- **Do instead:** sink the scenery into the ground or the hill until no edge hangs over. If a hang is left, sink it a little more (one number), never fit parts to it.
+- **Who checks:** `designer`, `code_lead`.
