@@ -85,7 +85,7 @@ When the team fails twice on the same problem (two tries, steps or tasks that en
 The team writes down what went wrong, so it is caught early next time and never happens a third time.
 
 - **Lessons (`docs/lessons/`).** One index file, `docs/lessons/index.md`, lists every lesson by number, short name and topic file. Every agent reads the index before planning, writing a rule, placing an object or starting a task, opens only the topic files that match, and follows them. A task or ruling that follows a lesson names it, for example "Lesson 2 (Change the scenery, not the giant)". An agent that spots a new lesson ends its report with one line: `LESSON: <what happened> → <do instead>`. The main chat writes it into the topic file that fits and adds its line to the index.
-- **Problems log (`docs/problems-log/`).** One index file, `docs/problems-log/index.md`, lists the open and fixed kinds of problem and the month files. The main chat adds one line to this month's file for every unplanned stop as soon as it happens: a crash, a stale Studio, an idle turn, an agent over its memory limit, a failed script, a task over its size, a second task on the same object. Before logging, it checks the index's open kinds. **The same kind twice means fix the cause:** the main chat stops, finds why, fixes it (a rule, a script or a hook), and adds a lesson. A workaround alone is never the fix the second time.
+- **Problems log (`docs/problems-log/`).** One index file, `docs/problems-log/index.md`, lists the open and fixed kinds of problem and the area files (one per area, feature or gameplay part, never by date). The main chat adds one line to the matching area file for every unplanned stop as soon as it happens: a crash, a stale Studio, an idle turn, an agent over its memory limit, a failed script, a task over its size, a second task on the same object. Before logging, it checks the index's open kinds. **The same kind twice means fix the cause:** the main chat stops, finds why, fixes it (a rule, a script or a hook), and adds a lesson. A workaround alone is never the fix the second time.
 - **Health check (`python3 scripts/health.py`).** The main chat runs it at every task close and at the start of every session. It reads the session records and prints the hours worked and idle, each agent's size, Rojo crashes and commits, then the alarms. It checks these by hand too:
 
   | Alarm | What it means |
@@ -229,4 +229,4 @@ Adam talks only to the main chat. When he asks why an agent decided something, o
 | `docs/reviews/<feature>.md` | `product` | yes |
 | `docs/architecture.md`, `docs/plans/<version>/index.md`, `docs/plans/<version>/<feature>.md`, `docs/progress.md` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |
-| `docs/lessons/` (index plus topic files), `docs/problems-log/` (index plus month files) | main chat | yes |
+| `docs/lessons/` (index plus topic files), `docs/problems-log/` (index plus area files) | main chat | yes |
