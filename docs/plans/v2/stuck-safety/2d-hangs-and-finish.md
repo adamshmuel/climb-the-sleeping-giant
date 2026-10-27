@@ -93,10 +93,24 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Spec rules: the same as Task 35: Rule 20 (One collision source), check 1 (No stuck spots); Rule 22 (What counts as stuck).
 - Why: Task 35's Play test (step 35-2x) showed the player climbs the Sock's cloth wall itself. Invisible boards standing from the grass up to the cloth stopped every lip hang (0 hangs in 15 runs). A fill under the lip didn't stop them, and neither did boards that stop short of the grass.
 - The fix: Task 35's 4 fill boxes (`Patch_Sock_20` to `_23`) plus slide guards `SlideGuard_Sock_<n>` along both lips: a vertical face at the cloth's front edge, dropping straight to the grass under the belly and the cave, with a steep top sunk in the cloth. At most 8 boards. Task 32's parts never change. The owners' conditions are in `work/handoff-p2-task35.md` (product's and designer's answers to Rulings 37 and 39).
-- Files: `tools/world/15-real-shape/S4SlideGuards.luau`; `src/tests/server/World/RealWorld/ClimbingHangs.spec.luau` (test 6).
-- Failing test first: test 6 gains "Sock, west lip" and "Sock, east lip" (kind guard, from the real hang roots) and "Sock, west gap" and "Sock, east gap" (kind patch, at the seal points), red against today's world.
-- Steps: 36-1 fit the boards and save their numbers; 36-2 Play, the hangs; 36-3 Play, Task 32's 7 tries and the shots; 36-4 tests, red first; 36-5 section 4 with the dry run; 36-6 run 1 and run 2, the scan and the full test run. Handoff: `work/handoff-p2-task35.md`, Ruling 39.
-- Done when: Task 35's "Done when", plus 0 wedges at the Sock's west end and no stop more than 1 stud from the drawn Sock.
+- Changed on 2026-10-27 by Ruling 40: Task 36 proves the boards in Play as a trial (nothing kept). Building them into the world moved to **Task 37**, because the Play runs and the shots need 5 steps of their own. The fit (step 36-1) picked variant V2: 8 boards (5 west, 3 east). The limit is 8 boards in all (Ruling 39), not 4 per lip (Ruling 37 was for leaning boards).
+- Files: none in `src/`. Working files in `work/t36/`.
+- Steps (the builder stops and reports after each; each Studio step has at most 6 Studio calls, screenshots included):
+  1. **Fit (Edit, done):** the boards' exact numbers are saved as the `board` rows of `work/t36/cands.txt`.
+  2. **The stuck scan of V2, and the Play script (Edit, at most 3 Studio calls):** the scan must match (stuck 94, 0 new, 0 lost, rare 15, closed 42). Then the builder writes the ready Play script and the stand-in script for steps 3 to 6, so those steps only run them.
+  3. **Play, all the runs (computer, no shots):** the 3 walks that hung, 5 times each; the other walks along the Sock, 3 times each; a 2-second push straight into each board and one at 45° into it, 3 times each; Task 32's 7 tries; 2 jumps at each lip, 3 times each (logged, not counted as hangs, Rule 22).
+  4. **Shots on the computer:** a player stopped at each lip, from behind and side-on (the west one under the belly).
+  5. **Shots on the phone (iPhone 14):** the same 4 shots.
+  6. **The corner and jump shots (computer):** side-on at the west-end corner, and a side-on jump shot at each lip.
+- Done when: in step 3, no pressed `Climbing` run of 3 or more frames from x −80 to −63 in any run except the jumps; 0 wedges, with 0 at (−79.0, 5.2, −44.9) in 5 of 5 west end walks; no stop on a walk along the Sock from x −80 to −78 (today's world has none); no stop where the part that stopped the player stands more than 1 stud in front of the drawn Sock; Task 32's 7 tries pass; the scan matches; designer says yes to the shots (no daylight between body and cuff above knee height; light under the belly below the knee is expected; the player touches the cloth at the corner; a jump doesn't hold him in the air beside the cuff). Handoff: `work/handoff-p2-task35.md`, Ruling 40.
+
+**Task 37: The Sock's lip boards are built into the world** (added on 2026-10-27 by Ruling 40; built right after Task 36, before Task 33; stuck safety can't reach Gate 4 until it is done)
+- Spec rules: the same as Task 35: Rule 20 (One collision source), check 1 (No stuck spots); Rule 22 (What counts as stuck).
+- What: the 8 boards (`SlideGuard_Sock_1` to `_8`, in `SlideGuards`) and Task 35's 4 fill boxes (`Patch_Sock_20` to `_23`, in `SmallPatches`) that passed Task 36, from the `board` rows of `work/t36/cands.txt`, exactly as tried. Task 32's parts never change. All patches, guards and small patches together stay at most 200.
+- Files: `tools/world/15-real-shape/S4SlideGuards.luau`; `src/tests/server/World/RealWorld/ClimbingHangs.spec.luau` (test 6). If the slide guard checks or the patch test's Sock exception must learn the new parts, the matching test file, with a made-up-world test red first.
+- Failing test first: test 6 gains "Sock, west lip" and "Sock, east lip" (kind guard, from the real hang roots) and "Sock, west gap" and "Sock, east gap" (kind patch, at the seal points), red against today's world; the slide guard checks run through Jest on a trial copy (Ruling 34).
+- Steps: 1. tests, red first; 2. section 4 gains the parts, with the dry run; 3. run 1 and run 2, the scan and the full test run.
+- Done when: Task 35's "Done when" (the reds are only the 3 planned test names; the second run says "already done"; the scan finds 0 new stuck spots and 0 free spots lost; the place has unsaved world changes, which Adam saves); plus code_lead's own Play check of one west end walk and one push at each lip, with no hang.
 
 **Task 33: Beard pocket 1 gets a way out with no hang** (moved out of Task 29 on 2026-10-26 by Ruling 26; built after Task 35, before Task 27)
 - Spec rules: Rule 20 (One collision source), check 1 (No stuck spots). Rule 22 (What counts as stuck), by product's hang line.
@@ -137,7 +151,10 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
   4. **Highlight shots for designer (Edit, at most 4 shots):** every guard and small patch with a temporary highlight, from free air: the chair and the ledge between the boots, the neck and the head, the notch from the hump, the cushion.
   5. **Play on the phone (iPhone 14, at most 4 shots):** the first climb with the thumbstick, the forehead slide, one guard slide-off (the one from step 2's shot), notch walk W04 with the thumbstick. The controls don't cover the player.
   6. **The phone cost and the report:** four Play sessions in a row (finished surface, control, finished surface, control), the control with `Patches`, `SlideGuards` and `SmallPatches` moved to `ServerStorage` in Edit and put back after (checked). Judged on the averages of the two pairs: `Instances` plus `BaseParts` plus `PhysicsCollision` memory at most 15 MB more, and both frame times within 1 ms.
-- Done when: every step passes; game_creator has the slide-off log and approves the meadow landings; designer says yes to the highlight shots; code_lead approves only after both.
+- Also in this task (added on 2026-10-27):
+  - **The phone's "Caught!" banner** (product, Task 36): on the phone, the "Caught!" banner covers the "Follow the glowing footprints!" hint. designer decides where each goes, and it is fixed before Gate 4. Step 5 shows both on the iPhone 14 with neither covering the other.
+  - **The Sock's lip boards** (Task 37) are in step 2's slide-off log (where each push from Task 36 step 3 ended) and in step 4's highlight shots (the 8 boards, whose tops are sunk in the cuff).
+- Done when: every step passes; game_creator has the slide-off log and approves the meadow landings; designer says yes to the highlight shots and the banner; code_lead approves only after both.
 - **If a check fails,** the builder stops; the fix becomes a new numbered task.
 
 **Task 23b: The pillow's back gets a way out** (split from Task 23 on 2026-10-21, after the last guard fit failed; built after Task 28 since 2026-10-26, before Task 7)
