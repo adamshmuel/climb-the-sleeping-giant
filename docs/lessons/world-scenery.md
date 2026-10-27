@@ -42,3 +42,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened again:** in Task 33 the forehead fix assumed V1's plate roofed the spot, and the beard box assumed a two-wall crease. Neither was measured: removing or shortening the plate left the spot stuck, and the real crease had one back wall and a roof, so both trials failed (2026-10-27).
 - **Do instead:** before choosing a fix for stuck spots, run the cheap read-only check on about 5 real examples and confirm the cause. Only then pick the fix. For a single spot, the check names the actual parts above it and around it (a ray straight up plus rays around it from the spot). A fix that moves, cuts or blocks a part names that part as measured, never as guessed.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 32: The walk map can't see the walking band
+- **What happened:** in Task 33 product ruled on whether a stuck spot was "reachable from the band", but the walk map has no spots on the forehead's walking band, so it could never answer. code_lead had to measure the trough by hand and found players can slide straight down into the spot (2026-10-27).
+- **Do instead:** before a ruling depends on reaching a spot from the band, measure the band's shape around that spot (rays from the band's walking height down to the spot). Never read "no walk-map link" as "not reachable" near the band.
+- **Who checks:** `code_lead` (in the handoff), `product` (before ruling).

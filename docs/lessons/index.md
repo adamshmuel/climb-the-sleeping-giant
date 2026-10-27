@@ -41,6 +41,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 29 | Fetch background work once, when it's done | `studio-and-scripts.md` |
 | 30 | A new lesson rechecks the open tasks | `teamwork.md` |
 | 31 | A background job reports as it goes | `studio-and-scripts.md` |
+| 32 | The walk map can't see the walking band | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
