@@ -29,6 +29,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 17 | Don't install unknown tools | `research-and-tools.md` |
 | 18 | Clean up after a test, and say what's left | `research-and-tools.md` |
 | 19 | Sink scenery instead of fitting parts to it | `world-scenery.md` |
+| 20 | Cap each builder step by tool calls | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
