@@ -23,6 +23,9 @@ export type Solid = { cframe: CFrame, size: Vector3, isWedge: boolean }
 export type Skin = {
 	-- The highest drawn surface at (x, z) that is at or below maxY (any height when maxY is nil), or nil if none.
 	heightAt: (x: number, z: number, maxY: number?) -> number?,
+	-- The distance from `origin` along `direction` to the nearest triangle the line meets, within `reach` studs, or nil
+	-- when it meets none. Only the triangles count, never the folds (Task 37: the Sock has none).
+	distanceAlong: (origin: Vector3, direction: Vector3, reach: number) -> number?,
 	triangleCount: number,
 	solidCount: number,
 }
@@ -107,6 +110,33 @@ local function triangleHeight(triangle: Triangle, x: number, z: number): number?
 	return a.Y + u * (b.Y - a.Y) + v * (c.Y - a.Y)
 end
 
+-- How far along the line `origin + direction * t` (direction a unit vector) it meets the triangle, for t from 0 to
+-- `reach`, or nil. Either side of the triangle counts.
+local function triangleDistance(triangle: Triangle, origin: Vector3, direction: Vector3, reach: number): number?
+	local first = triangle.b - triangle.a
+	local second = triangle.c - triangle.a
+	local across = direction:Cross(second)
+	local determinant = first:Dot(across)
+	if math.abs(determinant) < PARALLEL then
+		return nil -- the line runs along the triangle's plane
+	end
+	local fromCorner = origin - triangle.a
+	local u = fromCorner:Dot(across) / determinant
+	if u < -INSIDE_SLACK or u > 1 + INSIDE_SLACK then
+		return nil
+	end
+	local along = fromCorner:Cross(first)
+	local v = direction:Dot(along) / determinant
+	if v < -INSIDE_SLACK or u + v > 1 + INSIDE_SLACK then
+		return nil
+	end
+	local distance = second:Dot(along) / determinant
+	if distance < 0 or distance > reach then
+		return nil
+	end
+	return distance
+end
+
 -- A skin made of these triangles (world space) and these blocks and wedges.
 function DrawnSkin.new(triangles: { Triangle }, solids: { Solid }?): Skin
 	local solidList: { Solid } = solids or {}
@@ -155,7 +185,36 @@ function DrawnSkin.new(triangles: { Triangle }, solids: { Solid }?): Skin
 		return best
 	end
 
-	return { heightAt = heightAt, triangleCount = #triangles, solidCount = #solidList }
+	-- The nearest triangle a straight line meets, tried only in the grid cells the line's box covers.
+	local function distanceAlong(origin: Vector3, direction: Vector3, reach: number): number?
+		local unit = direction.Unit
+		local finish = origin + unit * reach
+		local best: number? = nil
+		for cellX = math.floor(math.min(origin.X, finish.X) / CELL), math.floor(math.max(origin.X, finish.X) / CELL) do
+			local column = cells[cellX]
+			if column ~= nil then
+				for cellZ = math.floor(math.min(origin.Z, finish.Z) / CELL), math.floor(math.max(origin.Z, finish.Z) / CELL) do
+					local list: { Triangle }? = (column :: any)[cellZ]
+					if list ~= nil then
+						for _, triangle in list do
+							local distance = triangleDistance(triangle, origin, unit, reach)
+							if distance ~= nil and (best == nil or distance < best) then
+								best = distance
+							end
+						end
+					end
+				end
+			end
+		end
+		return best
+	end
+
+	return {
+		heightAt = heightAt,
+		distanceAlong = distanceAlong,
+		triangleCount = #triangles,
+		solidCount = #solidList,
+	}
 end
 
 -- The mesh triangles of one MeshPart, in world space. The editable mesh is destroyed before this returns.

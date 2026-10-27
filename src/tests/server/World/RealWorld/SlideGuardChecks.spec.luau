@@ -18,6 +18,8 @@ local GUARD_FOLDER = SlideGuardHelpers.GUARD_FOLDER
 local fakeFolder = SlideGuardHelpers.fakeFolder
 local guardCloseProblems = SlideGuardHelpers.guardCloseProblems
 local guardProblems = SlideGuardHelpers.guardProblems
+local addBoard = SlideGuardHelpers.addBoard
+local addWall = SlideGuardHelpers.addWall
 
 -- Stuck safety Task 23, test 4 (docs/plans/v2/stuck-safety.md, Task 23 test 3 and product's condition 1): the slide
 -- guards in World.WalkSurfaces.SlideGuards are steep enough to slide off, stand only on steep cloth (or the chair), and
@@ -25,32 +27,6 @@ local guardProblems = SlideGuardHelpers.guardProblems
 -- can prove that each rule bites.
 describe("the real world, slide guards", function()
 	local Workspace = game:GetService("Workspace")
-
-	-- A solid wall: everything at z 0 or less, from y -30 to 30.
-	local function addWall(world: WorldModel): Part
-		local wall = Instance.new("Part")
-		wall.Name = "Wall"
-		wall.Size = Vector3.new(60, 60, 60)
-		wall.Position = Vector3.new(0, 0, -30)
-		wall.Anchored = true
-		wall.CanCollide = true
-		wall.Parent = world
-		return wall
-	end
-
-	-- A thin board `length` studs long and 4 wide. Its big faces slope `degrees` from flat, facing +z and up. Its top end
-	-- centre is at `topEnd`; the board leans down and out toward +z from there.
-	local function addBoard(folder: Folder, topEnd: Vector3, degrees: number, length: number): Part
-		local fromVertical = math.rad(90 - degrees)
-		local board = Instance.new("Part")
-		board.Name = "SlideGuard_Fake_1"
-		board.Size = Vector3.new(4, length, 0.5)
-		board.CFrame = CFrame.new(topEnd) * CFrame.Angles(-fromVertical, 0, 0) * CFrame.new(0, -length / 2, 0)
-		board.Anchored = true
-		board.CanCollide = true
-		board.Parent = folder
-		return board
-	end
 
 	-- A thin sheet of made-up cloth 0.4 studs behind the board's back face, as big as the board and then some, so a ray in
 	-- from the board's top face finds it within reach wherever the board stands.

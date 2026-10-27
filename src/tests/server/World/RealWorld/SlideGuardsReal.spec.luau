@@ -14,6 +14,7 @@ type Context = SlideGuardHelpers.Context
 type Need = SlideGuardHelpers.Need
 local GUARD_FOLDER = SlideGuardHelpers.GUARD_FOLDER
 local guardCloseProblems = SlideGuardHelpers.guardCloseProblems
+local guardLeanProblems = SlideGuardHelpers.guardLeanProblems
 local guardProblems = SlideGuardHelpers.guardProblems
 
 describe("the real world, slide guards", function()
@@ -56,6 +57,16 @@ describe("the real world, slide guards", function()
 		return parts
 	end
 
+	-- The Sock's mesh (World.GiantsThings.Sock.body.body_geom): the cloth and the drawn skin of the Sock's lip boards (Task 37).
+	local function sockGeometry(world: Instance): MeshPart
+		local things = world:FindFirstChild("GiantsThings")
+		local sock = if things then things:FindFirstChild("Sock") else nil
+		local body = if sock then sock:FindFirstChild("body") else nil
+		local geometry = if body then body:FindFirstChild("body_geom") else nil
+		expect(geometry).never.toBeNil()
+		return geometry :: MeshPart
+	end
+
 	-- Every place players need and the seam: the one list in PlayerNeeds, which the stuck scan's rare-spot check reads too.
 	-- Both ladders' trusses must exist, so a missing ladder can't hide as a shorter list.
 	local function realNeeds(world: Instance): { Need }
@@ -81,6 +92,11 @@ describe("the real world, slide guards", function()
 		clothOnly.FilterType = Enum.RaycastFilterType.Include
 		clothOnly.FilterDescendantsInstances = cloth
 		clothOnly.RespectCanCollide = false
+		local sockMesh = sockGeometry(world :: Instance)
+		local sockOnly = RaycastParams.new()
+		sockOnly.FilterType = Enum.RaycastFilterType.Include
+		sockOnly.FilterDescendantsInstances = { sockMesh }
+		sockOnly.RespectCanCollide = false
 		local context: Context = {
 			world = Workspace,
 			clothParams = clothOnly,
@@ -99,6 +115,8 @@ describe("the real world, slide guards", function()
 			beardPocketBoxes = BEARD_POCKET_BOXES,
 			solids = cloth,
 			needs = realNeeds(world :: Instance),
+			-- The Sock's lip boards read the slope from a fan of rays along their face (Ruling 47), not from a slope reader.
+			sock = { clothParams = sockOnly, solids = { sockMesh } },
 		}
 		local problems = guardProblems((walk :: Instance):FindFirstChild(GUARD_FOLDER), context)
 		if #problems > 0 then
@@ -127,7 +145,13 @@ describe("the real world, slide guards", function()
 			end
 		end
 		local skin = DrawnSkin.fromWorld(meshes, folds)
-		local problems = guardCloseProblems((walk :: Instance):FindFirstChild(GUARD_FOLDER), skin)
+		local sockSkin = DrawnSkin.fromWorld({ sockGeometry(world :: Instance) }, {})
+		local guardFolder = (walk :: Instance):FindFirstChild(GUARD_FOLDER)
+		local problems = guardCloseProblems(guardFolder, skin, sockSkin)
+		-- Under knee height a Sock lip board is not read against the skin, so its foot may not lean out (Ruling 47).
+		for _, problem in guardLeanProblems(guardFolder) do
+			table.insert(problems, problem)
+		end
 		if #problems > 0 then
 			error("\n" .. table.concat(problems, "\n"), 0)
 		end

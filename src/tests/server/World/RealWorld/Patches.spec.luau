@@ -83,8 +83,13 @@ describe("the real world, the patches", function()
 		return points
 	end
 
+	-- A direction to two decimals without trailing zeros, so a turned side shows its turn (Task 37: "(0.34, 0, 0.94)") and a
+	-- straight one stays "(0, 0, 1)".
 	local function describeDirection(direction: Vector3): string
-		return string.format("(%.0f, %.0f, %.0f)", direction.X, direction.Y, direction.Z)
+		local function shortNumber(value: number): string
+			return string.format("%g", math.round(value * 100) / 100 + 0) -- "+ 0" turns -0 into 0
+		end
+		return `({shortNumber(direction.X)}, {shortNumber(direction.Y)}, {shortNumber(direction.Z)})`
 	end
 
 	-- Whether a body fits standing beside a face. Three feet are tried: each is the face point moved out along the face's
@@ -413,7 +418,7 @@ describe("the real world, the patches", function()
 		return patch
 	end
 
-	local function addWall(world: WorldModel, position: Vector3, size: Vector3)
+	local function addWall(world: WorldModel, position: Vector3, size: Vector3): Part
 		local wall = Instance.new("Part")
 		wall.Name = "Wall"
 		wall.Size = size
@@ -421,6 +426,7 @@ describe("the real world, the patches", function()
 		wall.Anchored = true
 		wall.CanCollide = true
 		wall.Parent = world
+		return wall
 	end
 
 	it("the patch check names a block that stands up in the open", function()
@@ -566,6 +572,47 @@ describe("the real world, the patches", function()
 			end)
 		end
 	)
+
+	-- Task 37 (Task 39's turned boxes, Patch_Sock_24 and _25): a box turned about the up axis is read like an unturned one,
+	-- and the side it names carries its turned direction, not that direction rounded to the nearest whole axis.
+	it("the patch check names the open side of a turned Patch_Sock box with its turned direction", function()
+		-- A 4-stud box from height 6 to 10 turned by `degrees`, walled (in its own turned frame) on three sides, open on its
+		-- local +Z side, under a made-up Sock whose roof ends before that side. Returns the "Sides:" lines.
+		local function sidesOfBox(degrees: number): { string }
+			local sides: { string } = {}
+			inFakeWorld(function(world)
+				local frame = CFrame.new(0, 8, 0) * CFrame.Angles(0, math.rad(degrees), 0)
+				local box =
+					addPatch(world, "Patch_Sock_1", Vector3.new(0, 8, 0), Vector3.new(4, 4, 4), SMALL_PATCHES_FOLDER)
+				box.CFrame = frame
+				for _, wall in
+					{
+						{ offset = Vector3.new(-2.5, 0, 0), size = Vector3.new(1, 6, 6) },
+						{ offset = Vector3.new(2.5, 0, 0), size = Vector3.new(1, 6, 6) },
+						{ offset = Vector3.new(0, 0, -2.5), size = Vector3.new(6, 6, 1) },
+					}
+				do
+					addWall(world, Vector3.zero, wall.size).CFrame = frame * CFrame.new(wall.offset)
+				end
+				-- The roof ends at z 0.5, short of every point on the open side (z 1.2 to 2.6 once turned 20 degrees).
+				local sock = addSock(world, Vector3.new(0, 11.5, -2.75), Vector3.new(12, 1, 6.5), 10)
+				local small = world:FindFirstChild(SMALL_PATCHES_FOLDER)
+				local problems = patchProblems(world, nil, flatSkin(), small, sock)
+				expect(#problems).toBe(#startsWith(problems, "Sides:"))
+				sides = startsWith(problems, "Sides:")
+			end)
+			return sides
+		end
+		local turned = sidesOfBox(20)
+		expect(#turned).toBe(1)
+		expect((string.find(turned[1], "Patch_Sock_1", 1, true))).never.toBeNil()
+		expect((string.find(turned[1], "(0.34, 0, 0.94)", 1, true))).never.toBeNil() -- sin 20, 0, cos 20
+		-- The same world unturned names the plain +Z side, so the turn changes what the line says.
+		local plain = sidesOfBox(0)
+		expect(#plain).toBe(1)
+		expect((string.find(plain[1], "(0, 0, 1)", 1, true))).never.toBeNil()
+		expect((string.find(plain[1], "(0.34, 0, 0.94)", 1, true))).toBeNil() -- the unturned box fails the turned check
+	end)
 
 	it(
 		"the patch check reads a Patch_Sock top against the Sock's mesh, and any other patch's top against his skin",

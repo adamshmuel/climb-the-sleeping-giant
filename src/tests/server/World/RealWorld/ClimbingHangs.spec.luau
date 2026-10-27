@@ -44,6 +44,34 @@ describe("the real world, slide guards", function()
 		-- Task 32: the Sock's open spot (-68.8, 4.4, -45) (stuck scan, test 2's Sock box). It lies inside Patch_Sock_10 of the
 		-- chosen fill (rank 1 of work/t32/cands-2b.txt: x -75.625 to -66.125, y 3.643 to 10.299, z -45.125 to -44.875).
 		{ name = "Sock", kind = "patch", root = Vector3.new(-68.8, 4.4, -45), prefix = SOCK_PATCH_PREFIX },
+		-- Task 37: the Sock's lips and gaps (the boards and boxes of work/t36/cands.txt, "board|2|" rows).
+		{
+			name = "Sock, west lip",
+			kind = "guard",
+			-- Task 35's hang table, "Scrape walk going +x, run 1"
+			root = Vector3.new(-76.61, 5.42, -42.13),
+			prefix = "",
+			face = "body_geom", -- the Sock's mesh part (World.GiantsThings.Sock.body.body_geom)
+		},
+		{
+			name = "Sock, east lip",
+			kind = "guard",
+			-- Task 35's hang table, "Walk into the fill's east end, run 1"
+			root = Vector3.new(-64.65, 5.21, -43.37),
+			prefix = "",
+			face = "body_geom",
+		},
+		-- Inside Patch_Sock_20, in the gap under the west ledge (work/t35/results-35-1.txt, rows Ws1 and Ws2).
+		{ name = "Sock, west gap", kind = "patch", root = Vector3.new(-77.0, 3.0, -44.0), prefix = SOCK_PATCH_PREFIX },
+		-- Inside Patch_Sock_23, in the open cave under the east ledge (work/t35/results-35-1.txt, row E1a).
+		{ name = "Sock, east gap", kind = "patch", root = Vector3.new(-64.75, 3.0, -45.1), prefix = SOCK_PATCH_PREFIX },
+		-- Task 39's hang start (step 39-3), moved 0.5 studs into Patch_Sock_25 so the turned corner boxes have a red-first test.
+		{
+			name = "Sock, west corner",
+			kind = "patch",
+			root = Vector3.new(-76.5, 7.03, -49.0),
+			prefix = SOCK_PATCH_PREFIX,
+		},
 		{
 			name = "pillow spot 1",
 			kind = "guard",

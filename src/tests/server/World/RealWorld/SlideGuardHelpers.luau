@@ -2,15 +2,23 @@
 local DrawnSkin = require(game:GetService("ServerStorage").Tests.server.World.DrawnSkin)
 local PlayerNeeds = require(game:GetService("ServerStorage").Tests.server.World.PlayerNeeds)
 local Helpers = require(script.Parent.Helpers)
+local SockGuardReads = require(script.Parent.SockGuardReads)
 type Face = Helpers.Face
+local UP_FACE_MIN = Helpers.UP_FACE_MIN
 local describePoint = Helpers.describePoint
 local facesOf = Helpers.facesOf
+local pointsOver = Helpers.pointsOver
+local topFaceOf = Helpers.topFaceOf
+local plateUnder = SockGuardReads.plateUnder
+local SOCK_GUARD_PATTERN = SockGuardReads.SOCK_GUARD_PATTERN
 
 local GUARD_FOLDER = "SlideGuards" -- World.WalkSurfaces.SlideGuards (stuck safety Task 23, decision 3)
 
 export type Box = { name: string, min: Vector3, max: Vector3 }
 
 export type Need = PlayerNeeds.Need
+
+export type SockCloth = SockGuardReads.SockCloth
 
 export type Context = {
 	world: WorldRoot, -- the world the guards are in (the probe ball goes here)
@@ -24,6 +32,7 @@ export type Context = {
 	beardPocketBoxes: { Box },
 	solids: { Instance }, -- what a buried face or a buried corner is buried in
 	needs: { Need }, -- the places players need, and the seam
+	sock: SockCloth?, -- the Sock's mesh; without it, the Sock exceptions are off and every board gets the strict check
 }
 
 -- Product's condition 1 (docs/specs/v2/research/decisions-plans.md, "product on slide guards in the Belly zone") and
@@ -32,11 +41,27 @@ local MIN_GUARD_DEGREES = 72 -- a guard's faces that face up are at least this s
 
 local MAX_UP_NORMAL_Y = math.cos(math.rad(MIN_GUARD_DEGREES)) -- a face this steep has an up-direction of at most this
 
-local UP_FACE_MIN = 0.001 -- a face counts as facing up when its up-direction is more than this
-
 local NORMAL_SLACK = 1e-6 -- rounding in a face's direction
 
 local MIN_CLOTH_DEGREES = 65 -- a guard stands on cloth this steep or more (spec 5, "Seam angle", the body-size slope)
+
+-- The close-fit check (stuck safety Task 23, test 5): a guard is invisible, so the player sees the skin under it. A guard far
+-- out from the skin looks like a float, and a guard sunk deep into it hides its slide.
+local MAX_OUT = 1 -- studs a guard may stand out from the drawn skin around it
+
+local MAX_IN = 0.5 -- studs a guard may sink into the drawn skin
+
+local GAP_SLACK = 0.001 -- studs: rounding in the numbers written into the world
+
+local GAP_REACH = 2 -- studs: the skin is looked for this far out from a point and this far in
+
+local LIMITS: SockGuardReads.Limits = {
+	minSlopeDegrees = MIN_CLOTH_DEGREES,
+	maxOut = MAX_OUT,
+	maxIn = MAX_IN,
+	slack = GAP_SLACK,
+	reach = GAP_REACH,
+}
 
 local KEEP_AWAY = 2 -- studs from every place players need, the seam and spec 5's steep layer
 
@@ -64,46 +89,6 @@ local CLOTH_REACH = 2 -- studs
 -- product on 2026-10-26): the three beard pocket spots sit on cloth of 50 to 57 degrees with no walk out, so a small
 -- guard there may stand on cloth gentler than MIN_CLOTH_DEGREES. The exception needs both the name and a box.
 local BEARD_POCKET_GUARD_PATTERN = "^SlideGuard_BeardPocket_%d+$"
-
--- The points of a grid over a face, `step` studs apart at most, in world space.
-local function pointsOver(guard: BasePart, face: Face, step: number): { Vector3 }
-	local points: { Vector3 } = {}
-	local uCount = math.max(1, math.ceil(2 * face.uHalf / step - 1e-9))
-	local vCount = math.max(1, math.ceil(2 * face.vHalf / step - 1e-9))
-	for i = 1, uCount do
-		for j = 1, vCount do
-			local u = ((i - 0.5) / uCount * 2 - 1) * face.uHalf
-			local v = ((j - 0.5) / vCount * 2 - 1) * face.vHalf
-			table.insert(points, guard.CFrame:PointToWorldSpace(face.center + face.u * u + face.v * v))
-		end
-	end
-	return points
-end
-
--- The face a player slides down: of the faces that face up, the biggest (a steep board's end faces are small). A
--- guard with no face up uses the one that faces the most up.
-local function topFaceOf(guard: BasePart): Face
-	local faces = facesOf(guard)
-	local best: Face = faces[1]
-	local anyUp = false
-	local bestArea = -1
-	local bestUp = -math.huge
-	for _, face in faces do
-		local up = guard.CFrame:VectorToWorldSpace(face.normal).Y
-		if up > UP_FACE_MIN then
-			local area = face.uHalf * face.vHalf
-			if not anyUp or area > bestArea then
-				best = face
-				bestArea = area
-			end
-			anyUp = true
-		elseif not anyUp and up > bestUp then
-			best = face
-			bestUp = up
-		end
-	end
-	return best
-end
 
 local function insideAnyBox(point: Vector3, boxes: { Box }): boolean
 	for _, box in boxes do
@@ -208,9 +193,27 @@ local function guardProblems(folder: Instance?, context: Context): { string }
 	inside.FilterType = Enum.RaycastFilterType.Include
 	inside.FilterDescendantsInstances = context.solids
 	inside.RespectCanCollide = false
+	-- A Sock board is also buried in the Sock's mesh.
+	local sockSolids = table.clone(context.solids)
+	if context.sock ~= nil then
+		for _, solid in context.sock.solids do
+			table.insert(sockSolids, solid)
+		end
+	end
+	local insideSock = OverlapParams.new()
+	insideSock.FilterType = Enum.RaycastFilterType.Include
+	insideSock.FilterDescendantsInstances = sockSolids
+	insideSock.RespectCanCollide = false
 
 	local ok, message = pcall(function(): string?
 		for _, guard in guards do
+			-- Task 37: a Sock lip board (with a Sock in the context) reads the Sock's mesh as its cloth, along its face
+			-- (SockGuardReads); a skirt under a plate has no Cloth line.
+			local sockCloth = if context.sock ~= nil and string.match(guard.Name, SOCK_GUARD_PATTERN) ~= nil
+				then context.sock
+				else nil
+			local buriedIn = if sockCloth ~= nil then insideSock else inside
+			local underPlate = plateUnder(guard, folder :: Instance) ~= nil
 			-- Steepness: one line for the first open face that faces up too flat.
 			for _, face in facesOf(guard) do
 				local normal = guard.CFrame:VectorToWorldSpace(face.normal)
@@ -218,7 +221,7 @@ local function guardProblems(folder: Instance?, context: Context): { string }
 					local open: Vector3? = nil
 					for _, point in pointsOver(guard, face, BURY_STEP) do
 						probe.Position = point
-						if #context.world:GetPartsInPart(probe, inside) == 0 then
+						if #context.world:GetPartsInPart(probe, buriedIn) == 0 then
 							open = point
 							break
 						end
@@ -250,11 +253,19 @@ local function guardProblems(folder: Instance?, context: Context): { string }
 			end
 			local gentle = 0
 			local example: string? = nil
-			for _, spot in spots do
+			local function isBuried(point: Vector3): boolean
+				probe.Position = point
+				return #context.world:GetPartsInPart(probe, buriedIn) > 0
+			end
+			if sockCloth ~= nil and not underPlate then
+				gentle, example =
+					SockGuardReads.clothGentle(guard, top, spots, sockCloth, context.world, isBuried, LIMITS)
+			end
+			local strictSpots: { Vector3 } = if sockCloth == nil then spots else {}
+			for _, spot in strictSpots do
 				-- A point buried in his solid shape or the pillow is skipped (decision 4 buries a guard's top end). The
 				-- chair exception counts only for the chair's own cloth, never for another piece.
-				probe.Position = spot
-				local buried = #context.world:GetPartsInPart(probe, inside) > 0
+				local buried = isBuried(spot)
 				local chair = insideAnyBox(spot, context.chairBoxes)
 					and context.clothNameAt(spot.X, spot.Z) == CHAIR_CLOTH
 				if not buried and not chair then
@@ -274,7 +285,7 @@ local function guardProblems(folder: Instance?, context: Context): { string }
 			-- Ruling 13 and Ruling 16: a beard pocket guard (by name) with all 8 corners in one pocket box skips this check.
 			local pocketGuard = string.match(guard.Name, BEARD_POCKET_GUARD_PATTERN) ~= nil
 				and insideOneBox(guard, context.beardPocketBoxes)
-			if gentle > 0 and not pocketGuard then
+			if gentle > 0 and not pocketGuard and not underPlate then
 				table.insert(
 					problems,
 					`Cloth: {guard.Name} stands on cloth under {MIN_CLOTH_DEGREES} degrees at {gentle} of {#spots} points, for example {example :: string}`
@@ -335,14 +346,6 @@ end
 -- measured straight down would read 3 to 4 times too big.
 local GRID_STEP = 1 -- studs between the points on a guard's top face
 
-local MAX_OUT = 1 -- studs a guard may stand out from the drawn skin around it
-
-local MAX_IN = 0.5 -- studs a guard may sink into the drawn skin
-
-local GAP_SLACK = 0.001 -- studs: rounding in the numbers written into the world
-
-local GAP_REACH = 2 -- studs: the skin is looked for this far out from a point and this far in
-
 local GAP_MARCH = 0.05 -- studs between the reads along that line
 
 local SKIN_WINDOW = 4 -- studs: the skin is read up to this far over a read point (a sunk steep face has skin well over it)
@@ -386,7 +389,8 @@ end
 --   Out: the guard stands out from the skin by more than MAX_OUT at some points.
 --   In: the guard sinks into the skin by more than MAX_IN at some points.
 --   Skin: no drawn skin within GAP_REACH of some points.
-local function guardCloseProblems(folder: Instance?, skin: DrawnSkin.Skin): { string }
+-- `sockSkin` is the Sock's drawn skin for the Sock lip boards (Task 37); a skirt under a plate gets no line.
+local function guardCloseProblems(folder: Instance?, skin: DrawnSkin.Skin, sockSkin: DrawnSkin.Skin?): { string }
 	local guards: { BasePart } = {}
 	if folder ~= nil then
 		for _, child in folder:GetChildren() do
@@ -401,6 +405,14 @@ local function guardCloseProblems(folder: Instance?, skin: DrawnSkin.Skin): { st
 
 	local problems: { string } = {}
 	for _, guard in guards do
+		-- Task 37: a skirt under a plate is read against that plate (no line); a Sock lip board reads the Sock's drawn
+		-- skin (see SOCK_GUARD_PATTERN).
+		if plateUnder(guard, folder :: Instance) ~= nil then
+			continue
+		end
+		local lipSkin = if sockSkin ~= nil and string.match(guard.Name, SOCK_GUARD_PATTERN) ~= nil
+			then sockSkin
+			else nil
 		-- The top face: the biggest face that faces up.
 		local top: Face? = nil
 		local topNormal = Vector3.yAxis
@@ -416,31 +428,48 @@ local function guardCloseProblems(folder: Instance?, skin: DrawnSkin.Skin): { st
 			continue
 		end
 
-		local points = pointsOver(guard, top, GRID_STEP)
+		-- Every grid point that fails, with how far out it is: a lip board is read along its face (SockGuardReads), any
+		-- other guard straight out from its face.
+		local failures: { SockGuardReads.Failure }
+		local pointCount: number
+		if lipSkin ~= nil then
+			failures, pointCount = SockGuardReads.skinFailures(guard, folder :: Instance, lipSkin, LIMITS)
+		else
+			failures = {}
+			local points = pointsOver(guard, top, GRID_STEP)
+			pointCount = #points
+			for _, point in points do
+				local gap = gapToSkin(skin, point, topNormal)
+				local kind = SockGuardReads.classifyGap(gap, LIMITS)
+				if kind ~= nil then
+					table.insert(failures, { point = point, kind = kind, gap = gap })
+				end
+			end
+		end
 		local tooFar, worstOut, outExample = 0, 0, nil :: Vector3?
 		local tooDeep, worstIn, inExample = 0, 0, nil :: Vector3?
 		local missing, missingExample = 0, nil :: Vector3?
-		for _, point in points do
-			local gap = gapToSkin(skin, point, topNormal)
-			if gap == nil then
+		for _, failure in failures do
+			local gap = failure.gap
+			if failure.kind == "missing" then
 				missing += 1
-				missingExample = missingExample or point
-			elseif gap > MAX_OUT + GAP_SLACK then
+				missingExample = missingExample or failure.point
+			elseif failure.kind == "out" and gap ~= nil then
 				tooFar += 1
 				if gap > worstOut then
-					worstOut, outExample = gap, point
+					worstOut, outExample = gap, failure.point
 				end
-			elseif gap < -MAX_IN - GAP_SLACK then
+			elseif gap ~= nil then
 				tooDeep += 1
 				if -gap > worstIn then
-					worstIn, inExample = -gap, point
+					worstIn, inExample = -gap, failure.point
 				end
 			end
 		end
 		if tooFar > 0 then
 			table.insert(
 				problems,
-				`Out: {guard.Name} stands up to {string.format("%.2f", worstOut)} studs out from the drawn skin at {tooFar} of {#points} points (wanted at most {MAX_OUT}), worst at {describePoint(
+				`Out: {guard.Name} stands up to {string.format("%.2f", worstOut)} studs out from the drawn skin at {tooFar} of {pointCount} points (wanted at most {MAX_OUT}), worst at {describePoint(
 					outExample :: Vector3
 				)}`
 			)
@@ -448,7 +477,7 @@ local function guardCloseProblems(folder: Instance?, skin: DrawnSkin.Skin): { st
 		if tooDeep > 0 then
 			table.insert(
 				problems,
-				`In: {guard.Name} sinks up to {string.format("%.2f", worstIn)} studs into the drawn skin at {tooDeep} of {#points} points (wanted at most {MAX_IN}), worst at {describePoint(
+				`In: {guard.Name} sinks up to {string.format("%.2f", worstIn)} studs into the drawn skin at {tooDeep} of {pointCount} points (wanted at most {MAX_IN}), worst at {describePoint(
 					inExample :: Vector3
 				)}`
 			)
@@ -456,10 +485,43 @@ local function guardCloseProblems(folder: Instance?, skin: DrawnSkin.Skin): { st
 		if missing > 0 then
 			table.insert(
 				problems,
-				`Skin: {guard.Name} has no drawn skin within {GAP_REACH} studs at {missing} of {#points} points, for example at {describePoint(
+				`Skin: {guard.Name} has no drawn skin within {GAP_REACH} studs at {missing} of {pointCount} points, for example at {describePoint(
 					missingExample :: Vector3
 				)}`
 			)
+		end
+	end
+	return problems
+end
+
+-- Row 3c+ (Ruling 47): every problem with a Sock lip board's foot leaning out, one line for each board. Under knee height
+-- a lip board is not read against the drawn skin, so its face may not stand further out at the foot than it does at its
+-- knee point by more than LEAN. A skirt under a plate is read against that plate and has no line.
+local function guardLeanProblems(folder: Instance?): { string }
+	local problems: { string } = {}
+	if folder == nil then
+		return problems
+	end
+	for _, guard in folder:GetChildren() do
+		if
+			guard:IsA("BasePart")
+			and string.match(guard.Name, SOCK_GUARD_PATTERN) ~= nil
+			and plateUnder(guard, folder) == nil
+			and guard.CFrame:VectorToWorldSpace(topFaceOf(guard).normal).Y > UP_FACE_MIN
+		then
+			local worst: { point: Vector3, lean: number }? = nil
+			local failures = SockGuardReads.leanFailures(guard)
+			for _, failure in failures do
+				if worst == nil or failure.lean > worst.lean then
+					worst = failure
+				end
+			end
+			if worst ~= nil then
+				problems[#problems + 1] =
+					`Lean: {guard.Name} leans out up to {string.format("%.2f", worst.lean)} studs past its knee point at {#failures} places under knee height (wanted at most {SockGuardReads.LEAN}), worst at {describePoint(
+						worst.point
+					)}`
+			end
 		end
 	end
 	return problems
@@ -472,10 +534,40 @@ local function fakeFolder(world: WorldModel): Folder
 	return folder
 end
 
+-- A solid wall: everything at z 0 or less, from y -30 to 30.
+local function addWall(world: WorldModel): Part
+	local wall = Instance.new("Part")
+	wall.Name = "Wall"
+	wall.Size = Vector3.new(60, 60, 60)
+	wall.Position = Vector3.new(0, 0, -30)
+	wall.Anchored = true
+	wall.CanCollide = true
+	wall.Parent = world
+	return wall
+end
+
+-- A thin board `length` studs long and 4 wide. Its big faces slope `degrees` from flat, facing +z and up. Its top end
+-- centre is at `topEnd`; the board leans down and out toward +z from there.
+local function addBoard(folder: Folder, topEnd: Vector3, degrees: number, length: number): Part
+	local fromVertical = math.rad(90 - degrees)
+	local board = Instance.new("Part")
+	board.Name = "SlideGuard_Fake_1"
+	board.Size = Vector3.new(4, length, 0.5)
+	board.CFrame = CFrame.new(topEnd) * CFrame.Angles(-fromVertical, 0, 0) * CFrame.new(0, -length / 2, 0)
+	board.Anchored = true
+	board.CanCollide = true
+	board.Parent = folder
+	return board
+end
+
 return {
 	CHAIR_CLOTH = CHAIR_CLOTH,
+	addBoard = addBoard,
+	addWall = addWall,
 	GUARD_FOLDER = GUARD_FOLDER,
+	LEAN = SockGuardReads.LEAN,
 	fakeFolder = fakeFolder,
 	guardCloseProblems = guardCloseProblems,
+	guardLeanProblems = guardLeanProblems,
 	guardProblems = guardProblems,
 }

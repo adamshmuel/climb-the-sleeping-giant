@@ -98,6 +98,65 @@ local function facesOf(patch: BasePart): { Face }
 	return faces
 end
 
+local UP_FACE_MIN = 0.001 -- a face counts as facing up when its up-direction is more than this
+
+-- The points of a grid over a face, `step` studs apart at most, in world space.
+local function pointsOver(guard: BasePart, face: Face, step: number): { Vector3 }
+	local points: { Vector3 } = {}
+	local uCount = math.max(1, math.ceil(2 * face.uHalf / step - 1e-9))
+	local vCount = math.max(1, math.ceil(2 * face.vHalf / step - 1e-9))
+	for i = 1, uCount do
+		for j = 1, vCount do
+			local u = ((i - 0.5) / uCount * 2 - 1) * face.uHalf
+			local v = ((j - 0.5) / vCount * 2 - 1) * face.vHalf
+			table.insert(points, guard.CFrame:PointToWorldSpace(face.center + face.u * u + face.v * v))
+		end
+	end
+	return points
+end
+
+-- The face a player slides down: of the faces that face up, the biggest (a steep board's end faces are small). A
+-- guard with no face up uses the one that faces the most up.
+local function topFaceOf(guard: BasePart): Face
+	local faces = facesOf(guard)
+	local best: Face = faces[1]
+	local anyUp = false
+	local bestArea = -1
+	local bestUp = -math.huge
+	for _, face in faces do
+		local up = guard.CFrame:VectorToWorldSpace(face.normal).Y
+		if up > UP_FACE_MIN then
+			local area = face.uHalf * face.vHalf
+			if not anyUp or area > bestArea then
+				best = face
+				bestArea = area
+			end
+			anyUp = true
+		elseif not anyUp and up > bestUp then
+			best = face
+			bestUp = up
+		end
+	end
+	return best
+end
+
+-- The 8 corners of a part's bounding box, in world space.
+local function cornersOf(part: BasePart): { Vector3 }
+	local half = part.Size / 2
+	local corners: { Vector3 } = {}
+	for _, signX in { -1, 1 } do
+		for _, signY in { -1, 1 } do
+			for _, signZ in { -1, 1 } do
+				table.insert(
+					corners,
+					part.CFrame:PointToWorldSpace(Vector3.new(signX * half.X, signY * half.Y, signZ * half.Z))
+				)
+			end
+		end
+	end
+	return corners
+end
+
 -- Runs `run` with a made-up WorldModel that is destroyed afterwards, even when `run` fails.
 local function inFakeWorld(run: (world: WorldModel) -> ())
 	local world = Instance.new("WorldModel")
@@ -319,11 +378,13 @@ return {
 	SKIN_SIDE_REACH = SKIN_SIDE_REACH,
 	SMALL_PATCHES_FOLDER = SMALL_PATCHES_FOLDER,
 	STAND_LIMIT = STAND_LIMIT,
+	UP_FACE_MIN = UP_FACE_MIN,
 	WALL_MIN_DEGREES = WALL_MIN_DEGREES,
 	bodyMesh = bodyMesh,
 	bodySizeSlopeAt = bodySizeSlopeAt,
 	bodySizeSlopeAtCloth = bodySizeSlopeAtCloth,
 	bodySizeSlopeFacing = bodySizeSlopeFacing,
+	cornersOf = cornersOf,
 	describePoint = describePoint,
 	describeVector = describeVector,
 	facesOf = facesOf,
@@ -334,9 +395,11 @@ return {
 	loadRoute = loadRoute,
 	locator = locator,
 	outsideLimits = outsideLimits,
+	pointsOver = pointsOver,
 	realWorld = realWorld,
 	sideRails = sideRails,
 	sidewaysFit = sidewaysFit,
 	startsWith = startsWith,
+	topFaceOf = topFaceOf,
 	wallDegrees = wallDegrees,
 }

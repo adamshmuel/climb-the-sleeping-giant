@@ -92,6 +92,33 @@ describe("DrawnSkin", function()
 		end)
 	end)
 
+	-- Task 37 (3b): the Sock's lip is an upright curtain, which a straight-down read can't see. A line read gives the
+	-- distance to the nearest triangle a straight line meets, in any direction.
+	describe("a line along a flat direction", function()
+		-- An upright triangle in the plane z = 5: corners (0,0,5), (8,0,5), (0,8,5).
+		local function curtain(z: number): DrawnSkin.Triangle
+			return triangle(Vector3.new(0, 0, z), Vector3.new(8, 0, z), Vector3.new(0, 8, z))
+		end
+
+		it("reads the distance to an upright triangle along a flat line", function()
+			local skin = DrawnSkin.new({ curtain(5) })
+			expect(skin.distanceAlong(Vector3.new(2, 2, 0), Vector3.zAxis, 10)).toBeCloseTo(5, 5)
+			expect(skin.distanceAlong(Vector3.new(2, 2, 9), -Vector3.zAxis, 10)).toBeCloseTo(4, 5)
+		end)
+
+		it("finds nothing past the triangle's edge or beyond the reach", function()
+			local skin = DrawnSkin.new({ curtain(5) })
+			expect(skin.distanceAlong(Vector3.new(7, 7, 0), Vector3.zAxis, 10)).toBeNil() -- past the long edge
+			expect(skin.distanceAlong(Vector3.new(2, 2, 0), Vector3.zAxis, 4)).toBeNil() -- 5 away, reach 4
+			expect(skin.distanceAlong(Vector3.new(2, 2, 6), Vector3.zAxis, 10)).toBeNil() -- the triangle is behind
+		end)
+
+		it("takes the nearer of two triangles on the line", function()
+			local skin = DrawnSkin.new({ curtain(5), curtain(3), curtain(8) })
+			expect(skin.distanceAlong(Vector3.new(2, 2, 0), Vector3.zAxis, 10)).toBeCloseTo(3, 5)
+		end)
+	end)
+
 	describe("shirt folds", function()
 		it("reads the top of a block", function()
 			local part = newBlock(Vector3.new(4, 2, 4), CFrame.new(10, 5, 10))
