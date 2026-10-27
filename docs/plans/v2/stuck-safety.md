@@ -48,7 +48,7 @@ This file is the plan's map. Each task lives in one part file in `docs/plans/v2/
 | `3-4-bot-and-rescue.md` | 8 to 16 | Part 3: the bot walk. Part 4: getting a player out |
 | `5-big-files.md` | 30, 31 | Splitting every file over 1000 lines, and a check that keeps them under it |
 
-**Build order** (unchanged, plus Tasks 30 and 31): 1 to 4, 17, 18, 5, 6, 19, 20, 21, 24, 25 (to step 6b-1e), 26, the rest of 25, 22, 23, **29, 30, 31, 34, 32, 35, 36, 37, 33**, 27, 28, 23b, 7, then 8 to 16. (Task 32, the Sock, was moved out of Task 29 on 2026-10-26. Task 35, the Sock's lips, was added after it the same day. Tasks 36 and 37 were added on 2026-10-27 to finish it.)
+**Build order** (unchanged, plus Tasks 30 and 31): 1 to 4, 17, 18, 5, 6, 19, 20, 21, 24, 25 (to step 6b-1e), 26, the rest of 25, 22, 23, **29, 30, 31, 34, 32, 35, 36, 38, 39, 37, 33**, 27, 28, 23b, 7, then 8 to 16. (Task 32, the Sock, was moved out of Task 29 on 2026-10-26. Task 35, the Sock's lips, was added after it the same day. Tasks 36 to 39 were added on 2026-10-27 to finish it.)
 
 Old notes and handoffs in `work/` and in `docs/specs/v2/research/decisions-plans/` point to "`docs/plans/v2/stuck-safety.md`, Task N". That still works: the table above says which part file holds Task N.
 
@@ -56,9 +56,9 @@ Old notes and handoffs in `work/` and in `docs/specs/v2/research/decisions-plans
 
 | Rule | Tasks |
 |---|---|
-| Rule 20 (One collision source) | 5, 19, 21, 24, 25, 26, 22, 23, 29, 32, 35, 36, 37, 33, 27, 28, 23b, 7, 8 (its "bot walk passes" check) |
+| Rule 20 (One collision source) | 5, 19, 21, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 33, 27, 28, 23b, 7, 8 (its "bot walk passes" check) |
 | Rule 21 (The stuck scan runs on every test run) | 4, 23 |
-| Rule 22 (What counts as stuck) | 2, 3, 4, 17, 18, 6, 19, 20, 24, 25, 26, 22, 23, 29, 32, 35, 36, 37, 33, 27, 23b |
+| Rule 22 (What counts as stuck) | 2, 3, 4, 17, 18, 6, 19, 20, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 33, 27, 23b |
 | Rule 23 (One walk check for everything) | 1, 2, 3, 19 |
 | Rule 24 (A bot walks every way) | 8, 16 |
 | Rule 25 (Reset on the giant takes you back) | 11, 13 |
