@@ -43,3 +43,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 33's plan still fixed the beard pocket with a guard fitted to his skin, a kind of fix Lesson 19 had forbidden since. Nobody had checked the open tasks against the new lesson, so it was only caught when the handoff was written (2026-10-27).
 - **Do instead:** when the main chat adds a lesson, it asks `code_lead` to check every open task's planned fix against it, and to change any that break it, before the next handoff.
 - **Who checks:** the main chat (asks), `code_lead`.
+
+## Lesson 33: A ruling names what each fix must leave alone
+- **What happened:** in Task 33 product's ruling chose the forehead fix by what the roof was made of ("an added part → move or shorten it"). It missed that the plate is also a wall of the walking band, the only way to the Legendary eggs. So the measurement needed another ruling before anything could be built (2026-10-27).
+- **Do instead:** a ruling that offers fix paths also says what each fix must leave untouched (the core path, a route, a ladder end). Then a measurement can pick the path without another round trip.
+- **Who checks:** `product`; `code_lead` when it turns a ruling into a handoff.
