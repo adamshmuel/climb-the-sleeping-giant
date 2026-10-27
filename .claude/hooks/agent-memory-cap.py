@@ -41,12 +41,29 @@ def memory_size(path):
     return None
 
 
+def in_work_folder(data):
+    raw = (data.get("tool_input") or {}).get("file_path") or ""
+    if not raw:
+        return False
+    project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
+    work_root = os.path.realpath(os.path.join(project, "work"))
+    full = os.path.realpath(os.path.join(data.get("cwd") or project, os.path.expanduser(raw)))
+    return full.startswith(work_root + os.sep)
+
+
 def main():
-    data = json.load(sys.stdin)
+    try:
+        data = json.load(sys.stdin)
+    except ValueError:
+        print("agent-memory-cap: hook input was not JSON", file=sys.stderr)
+        return
     agent_type = data.get("agent_type") or ""
     agent_id = data.get("agent_id") or ""
     main_transcript = data.get("transcript_path") or ""
-    if agent_type not in PROJECT_AGENTS or not agent_id or not main_transcript:
+    if agent_type not in PROJECT_AGENTS or not agent_id:
+        return
+    if not main_transcript.endswith(".jsonl"):
+        print("agent-memory-cap: unexpected transcript path", file=sys.stderr)
         return
     path = os.path.join(main_transcript[: -len(".jsonl")], "subagents", f"agent-{agent_id}.jsonl")
     size = memory_size(path)
@@ -55,9 +72,7 @@ def main():
     limit = LIMITS.get(agent_type, DEFAULT_LIMIT)
     k = f"{size // 1000}k of your {limit // 1000}k limit"
 
-    tool = data.get("tool_name", "")
-    file_path = (data.get("tool_input") or {}).get("file_path", "")
-    note_write = tool in ("Write", "Edit") and "/work/" in file_path
+    note_write = data.get("tool_name") in ("Write", "Edit") and in_work_folder(data)
 
     if size >= limit and agent_type == "builder" and not note_write:
         out = {
