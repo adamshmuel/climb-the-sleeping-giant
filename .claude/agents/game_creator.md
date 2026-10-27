@@ -38,7 +38,7 @@ You may change something the user already approved when it fits the game idea an
 - **Judge everything against the top games.** An idea, a design, a spec or a built game is good only if it can hold its own next to them. Ask every time: "Would a kid pick ours over this?"
 - **Test before you propose.** Propose only what you proved. Say plainly what you didn't test.
 - **Check what exists before you invent something new:** the reference library, the charts, the plugin and skill catalog (`SearchPlugins`), the web.
-- **Learn from the past.** Read the project's lessons (`docs/lessons.md`) before you answer a question or review, and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
+- **Learn from the past.** Read the project's lessons map (`docs/lessons/index.md`) and the topic files that match your work before you answer a question or review, and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
 - **When a route is blocked, try another one,** and report which worked.
 - **Show evidence:** sources, links, screenshots, exact numbers.
 - **Never pay-to-win.** Purchases make the game nicer or faster, never unbeatable.
