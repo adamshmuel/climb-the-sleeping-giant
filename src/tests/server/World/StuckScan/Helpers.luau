@@ -278,21 +278,48 @@ local function closedAsRare(closed: { ClosedSpot }): { RareSpot }
 	return asRare
 end
 
--- The indexes of the stuck spots that are on neither the rare list nor the closed list.
-local function unlistedStuck(positions: { Vector3 }, rare: { RareSpot }, closed: { ClosedSpot }): { number }
+export type AcceptedSpot = { name: string, position: Vector3, laterSpec: string }
+
+-- Spec Rule 22, "Accepted for now: the beard wedge": the one stuck spot that is neither fixed, nor on the rare list, nor a
+-- closed hollow. The rescue covers it, and the later spec brings its fix. A test keeps this list at exactly one entry.
+local ACCEPTED_FOR_NOW: { AcceptedSpot } = {
+	{ name = "Beard wedge", position = Vector3.new(-6.8, 81.5, -11), laterSpec = "Launch polish: Beard wedge" },
+}
+
+local function acceptedAsRare(accepted: { AcceptedSpot }): { RareSpot }
+	local asRare: { RareSpot } = {}
+	for _, spot in accepted do
+		table.insert(asRare, { name = spot.name, group = 0, position = spot.position, proof = spot.laterSpec })
+	end
+	return asRare
+end
+
+-- The indexes of the stuck spots that are on none of the rare list, the closed list and the accepted-for-now list.
+local function unlistedStuck(
+	positions: { Vector3 },
+	rare: { RareSpot },
+	closed: { ClosedSpot },
+	accepted: { AcceptedSpot }
+): { number }
 	local notRare = unlistedSpots(positions, rare)
 	local rest: { Vector3 } = {}
 	for _, index in notRare do
 		table.insert(rest, positions[index])
 	end
+	local notClosed = unlistedSpots(rest, closedAsRare(closed))
+	local last: { Vector3 } = {}
+	for _, restIndex in notClosed do
+		table.insert(last, rest[restIndex])
+	end
 	local unlisted: { number } = {}
-	for _, restIndex in unlistedSpots(rest, closedAsRare(closed)) do
-		table.insert(unlisted, notRare[restIndex])
+	for _, lastIndex in unlistedSpots(last, acceptedAsRare(accepted)) do
+		table.insert(unlisted, notRare[notClosed[lastIndex]])
 	end
 	return unlisted
 end
 
 return {
+	ACCEPTED_FOR_NOW = ACCEPTED_FOR_NOW,
 	CLOSED_RAY_LENGTH = CLOSED_RAY_LENGTH,
 	CLOSED_SPOTS = CLOSED_SPOTS,
 	CLOSED_TILT_DEGREES = CLOSED_TILT_DEGREES,

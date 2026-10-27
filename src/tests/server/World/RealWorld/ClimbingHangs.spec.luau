@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Collisions = require(ServerScriptService.Server.Players.Collisions)
 local Helpers = require(script.Parent.Helpers)
 local SlideGuardHelpers = require(script.Parent.SlideGuardHelpers)
+local ForeheadBand = require(script.Parent.ForeheadBand)
 local SMALL_PATCHES_FOLDER = Helpers.SMALL_PATCHES_FOLDER
 local describePoint = Helpers.describePoint
 local inFakeWorld = Helpers.inFakeWorld
@@ -31,7 +32,8 @@ describe("the real world, slide guards", function()
 	local FOREHEAD_PATCH_PREFIX = "Patch_Forehead_"
 	local SOCK_PATCH_PREFIX = "Patch_Sock_"
 	-- Task 34: the forehead band's fill (Task 29's try T6) came out again, because it stood where players walk along his
-	-- skin (code_lead's Rulings 30 and 31). The forehead hang place has no test here until Task 33 brings the fill back.
+	-- skin (code_lead's Rulings 30 and 31). Task 33 fills only the forehead slot under V1's plate (which stays): the
+	-- "forehead slot" place below. The beard wedge is accepted for now (spec Rule 22) and gets no fill.
 	-- Where the characters ended up hanging (steps 23-5 and 23-6, Play on the computer): the five notch walks W03, W04,
 	-- W08, W09 and W14. (The pillow's spot 1 went with the old pillow in Task 41: the pillow now lies flat and sunk.)
 	local HANG_PLACES: { HangPlace } = {
@@ -64,6 +66,10 @@ describe("the real world, slide guards", function()
 		{ name = "Sock, west gap", kind = "patch", root = Vector3.new(-77.0, 3.0, -44.0), prefix = SOCK_PATCH_PREFIX },
 		-- Inside Patch_Sock_23, in the open cave under the east ledge (work/t35/results-35-1.txt, row E1a).
 		{ name = "Sock, east gap", kind = "patch", root = Vector3.new(-64.75, 3.0, -45.1), prefix = SOCK_PATCH_PREFIX },
+		-- The beard wedge has no fix for now: spec Rule 22, "Accepted for now: the beard wedge"; it is listed in
+		-- StuckScan/Helpers.luau, ACCEPTED_FOR_NOW.
+		-- Task 33: the forehead slot under V1's plate ForeheadGuard.Guard (stuck scan spot (11.2, 98.2, 1)), closed by Patch_Forehead_*.
+		{ name = "forehead slot", kind = "patch", root = Vector3.new(11.2, 98.2, 1), prefix = FOREHEAD_PATCH_PREFIX },
 		-- Task 39's hang start (step 39-3), moved 0.5 studs into Patch_Sock_25 so the turned corner boxes have a red-first test.
 		{
 			name = "Sock, west corner",
@@ -361,19 +367,84 @@ describe("the real world, slide guards", function()
 		end
 	end)
 
-	it("the forehead fill stays out until Task 33", function()
+	-- Task 33: the forehead box must stay clear of the band where players walk along his skin (code_lead's Rulings 30
+	-- and 31, the reason Task 34 took the first fill out). The real band is ForeheadBand.luau.
+	local BAND_CLEARANCE = 0.3 -- studs
+
+	-- The gap between two boxes (0 when they touch or overlap), the distance of their nearest points.
+	local function gapBetween(aMin: Vector3, aMax: Vector3, bMin: Vector3, bMax: Vector3): number
+		local gap = Vector3.new(
+			math.max(aMin.X - bMax.X, bMin.X - aMax.X, 0),
+			math.max(aMin.Y - bMax.Y, bMin.Y - aMax.Y, 0),
+			math.max(aMin.Z - bMax.Z, bMin.Z - aMax.Z, 0)
+		)
+		return gap.Magnitude
+	end
+
+	-- Half the size of the box that holds a part however it is turned.
+	local function outerHalfSize(part: BasePart): Vector3
+		local _, _, _, r00, r01, r02, r10, r11, r12, r20, r21, r22 = part.CFrame:GetComponents()
+		local h = part.Size / 2
+		return Vector3.new(
+			math.abs(r00) * h.X + math.abs(r01) * h.Y + math.abs(r02) * h.Z,
+			math.abs(r10) * h.X + math.abs(r11) * h.Y + math.abs(r12) * h.Z,
+			math.abs(r20) * h.X + math.abs(r21) * h.Y + math.abs(r22) * h.Z
+		)
+	end
+
+	-- One line per forehead patch whose outer box (turned or not) comes closer than `clearance` to a band box.
+	local function bandProblems(folder: Instance, band: { ForeheadBand.Box }, clearance: number): { string }
+		local problems: { string } = {}
+		for _, child in folder:GetChildren() do
+			if child:IsA("BasePart") and string.sub(child.Name, 1, #FOREHEAD_PATCH_PREFIX) == FOREHEAD_PATCH_PREFIX then
+				local half = outerHalfSize(child)
+				local min = child.Position - half
+				local max = child.Position + half
+				for _, bandBox in band do
+					local gap = gapBetween(min, max, bandBox.min, bandBox.max)
+					if gap < clearance then
+						table.insert(
+							problems,
+							`{child.Name} comes within {string.format("%.2f", gap)} of the walking band (needs {clearance})`
+						)
+					end
+				end
+			end
+		end
+		return problems
+	end
+
+	it("the band check names a patch inside the band", function()
+		inFakeWorld(function(world)
+			local folder = fakePatchFolder(world)
+			addPatch(folder, "Patch_Forehead_9", false)
+			local band: { ForeheadBand.Box } = { { min = Vector3.new(-1, -1, -1), max = Vector3.new(1, 1, 1) } }
+			local problems = bandProblems(folder, band, 0.3)
+			expect(#problems).toBe(1)
+			expect((string.find(problems[1], "Patch_Forehead_9", 1, true))).never.toBeNil()
+		end)
+	end)
+
+	it("the band check passes a patch that is 0.6 from the band", function()
+		inFakeWorld(function(world)
+			local folder = fakePatchFolder(world)
+			addPatch(folder, "Patch_Forehead_9", false) -- fills -2 to 2 on every axis
+			local band: { ForeheadBand.Box } = { { min = Vector3.new(-1, 2.6, -1), max = Vector3.new(1, 5, 1) } }
+			expect(bandProblems(folder, band, 0.3)).toEqual({})
+		end)
+	end)
+
+	it("no forehead patch comes within 0.3 of the walking band", function()
 		local world = Workspace:FindFirstChild("World")
 		expect(world).never.toBeNil()
 		local walk = (world :: Instance):FindFirstChild("WalkSurfaces")
 		expect(walk).never.toBeNil()
 		local smallFolder = (walk :: Instance):FindFirstChild(SMALL_PATCHES_FOLDER)
 		expect(smallFolder).never.toBeNil()
-		local found: { string } = {}
-		for _, child in (smallFolder :: Instance):GetChildren() do
-			if string.sub(child.Name, 1, #FOREHEAD_PATCH_PREFIX) == FOREHEAD_PATCH_PREFIX then
-				table.insert(found, child.Name)
-			end
+		expect((smallFolder :: Instance):FindFirstChild("Patch_Forehead_1")).never.toBeNil()
+		local problems = bandProblems(smallFolder :: Instance, ForeheadBand.BOXES, BAND_CLEARANCE)
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
 		end
-		expect(found).toEqual({})
 	end)
 end)

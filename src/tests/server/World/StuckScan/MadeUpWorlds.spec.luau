@@ -338,8 +338,17 @@ describe("the closed-void check on a made-up world", function()
 		local unlisted = unlistedStuck(
 			{ onRare, onClosed, onNeither },
 			{ rareSpot("Rare_Made_Up_1", 1, 0, 30, 0) },
-			{ closedAt("Closed_Made_Up_1", onClosed) }
+			{ closedAt("Closed_Made_Up_1", onClosed) },
+			{}
 		)
 		expect(unlisted).toEqual({ 3 })
+	end)
+
+	-- Spec Rule 22, "Accepted for now: the beard wedge", condition 1: the scan fails if any other spot joins it.
+	it("a stuck spot on the accepted-for-now list is not unlisted, and one a grid step beside it is", function()
+		local accepted = Helpers.ACCEPTED_FOR_NOW[1].position
+		local beside = accepted + Vector3.new(2, 0, 0) -- the scan's grid step is 2 studs
+		local unlisted = unlistedStuck({ accepted, beside }, {}, {}, Helpers.ACCEPTED_FOR_NOW)
+		expect(unlisted).toEqual({ 2 })
 	end)
 end)

@@ -115,6 +115,9 @@ describe("the real world, the patches", function()
 	local SOCK_ROOF_REACH = 6 -- studs: the roof must be this close straight above a side point
 	local SOCK_ROOF_OUT = 0 -- studs: the roof ray starts on the side point itself (Ruling 23)
 	type SockRoof = { geom: BasePart, skin: DrawnSkin.Skin }
+	-- Task 33 (Ruling 23): the forehead's fill, `Patch_Forehead_<n>`, goes through the same roof exception: its roof is V1's
+	-- plate (the `Guard` parts of ForeheadGuard). Its top keeps the strict check against his skin.
+	local FOREHEAD_PATCH_PREFIX = "Patch_Forehead_"
 
 	-- The checker. Returns its problems as sentences, each starting with the name of its rule; none means the patches
 	-- pass. `world` is the Workspace, or a made-up WorldModel. A top counts only where a body can stand on it, and a side
@@ -127,7 +130,8 @@ describe("the real world, the patches", function()
 		folder: Instance?,
 		skin: DrawnSkin.Skin,
 		smallFolder: Instance?,
-		sock: SockRoof?
+		sock: SockRoof?,
+		foreheadRoof: { BasePart }?
 	): { string }
 		-- (a) Folder
 		local patches: { BasePart } = {}
@@ -159,10 +163,24 @@ describe("the real world, the patches", function()
 		local params = RaycastParams.new()
 		params.RespectCanCollide = true
 		params.CollisionGroup = Collisions.GROUP
-		-- A ray that sees only the Sock's mesh (the roof of its fill).
-		local roofOnly = RaycastParams.new()
-		roofOnly.FilterType = Enum.RaycastFilterType.Include
-		roofOnly.FilterDescendantsInstances = if sock ~= nil then { sock.geom } else {}
+		-- Rays that see only a fill's roof: the Sock's mesh for `Patch_Sock_<n>`, the plate for `Patch_Forehead_<n>`.
+		local roofRays: { [string]: RaycastParams } = {}
+		local function addRoof(prefix: string, roofs: { BasePart })
+			local only = RaycastParams.new()
+			only.FilterType = Enum.RaycastFilterType.Include
+			local list: { Instance } = {}
+			for _, roof in roofs do
+				table.insert(list, roof)
+			end
+			only.FilterDescendantsInstances = list
+			roofRays[prefix] = only
+		end
+		if sock ~= nil then
+			addRoof(SOCK_PATCH_PREFIX, { sock.geom })
+		end
+		if foreheadRoof ~= nil then
+			addRoof(FOREHEAD_PATCH_PREFIX, foreheadRoof)
+		end
 		-- A ray that sees only the grass.
 		local grassOnly = RaycastParams.new()
 		grassOnly.FilterType = Enum.RaycastFilterType.Include
@@ -227,6 +245,12 @@ describe("the real world, the patches", function()
 			-- The named exception: a Sock fill block is read against the Sock's mesh (see SOCK_PATCH_PREFIX).
 			local underSock = sock ~= nil and string.sub(patch.Name, 1, #SOCK_PATCH_PREFIX) == SOCK_PATCH_PREFIX
 			local patchSkin = if underSock and sock ~= nil then sock.skin else skin
+			local roofOnly: RaycastParams? = nil
+			for prefix, only in roofRays do
+				if string.sub(patch.Name, 1, #prefix) == prefix then
+					roofOnly = only
+				end
+			end
 
 			-- The top face faces up the most, the bottom face the least; the others are sides.
 			local faces = facesOf(patch)
@@ -306,7 +330,7 @@ describe("the real world, the patches", function()
 							total += 1
 							local hit = world:Raycast(start, -outward * (RAY_OUTSIDE + RAY_MARGIN), params)
 							local roofed = false
-							if underSock then
+							if roofOnly ~= nil then
 								roofed = world:Raycast(
 									point + outward * SOCK_ROOF_OUT,
 									Vector3.new(0, SOCK_ROOF_REACH, 0),
@@ -350,9 +374,10 @@ describe("the real world, the patches", function()
 		folder: Instance?,
 		skin: DrawnSkin.Skin,
 		smallFolder: Instance?,
-		sock: SockRoof?
+		sock: SockRoof?,
+		foreheadRoof: { BasePart }?
 	): { string }
-		local ok, result = pcall(runPatchChecks, world, folder, skin, smallFolder, sock)
+		local ok, result = pcall(runPatchChecks, world, folder, skin, smallFolder, sock, foreheadRoof)
 		if not ok then
 			for _, child in world:GetChildren() do
 				if child.Name == PROBE_NAME then
@@ -573,6 +598,40 @@ describe("the real world, the patches", function()
 		end
 	)
 
+	-- Task 33 (Ruling 23 names Patch_Forehead_<n> with V1's plate ForeheadGuard.Guard as the roof): the forehead fill goes
+	-- through the same exception as the Sock's. A side point passes only where a ray straight up meets the plate within 6.
+	it("a forehead patch side point with no plate above it is named", function()
+		inFakeWorld(function(world)
+			-- A block from height 6 to 10, walled on three sides, open on the +Z side, as in the Sock's test.
+			addPatch(world, "Patch_Forehead_1", Vector3.new(0, 8, 0), Vector3.new(4, 4, 4), SMALL_PATCHES_FOLDER)
+			addWall(world, Vector3.new(-2.5, 8, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(2.5, 8, 0), Vector3.new(1, 6, 6))
+			addWall(world, Vector3.new(0, 8, -2.5), Vector3.new(6, 6, 1))
+			local small = world:FindFirstChild(SMALL_PATCHES_FOLDER)
+			-- No plate: the open face is named.
+			local bare = startsWith(patchProblems(world, nil, flatSkin(), small, nil, {}), "Sides:")
+			expect(#bare).toBe(1)
+			expect((string.find(bare[1], "Patch_Forehead_1", 1, true))).never.toBeNil()
+			expect((string.find(bare[1], "(0, 0, 1)", 1, true))).never.toBeNil()
+			-- A plate whose underside is at height 11 reaches past the open face: it passes.
+			local plate: BasePart = addWall(world, Vector3.new(0, 11.5, 0), Vector3.new(12, 1, 12))
+			plate.Name = "Guard"
+			expect(patchProblems(world, nil, flatSkin(), small, nil, { plate })).toEqual({})
+			-- The plate ends at z 1.5, short of the open face (z 2): named again.
+			plate.Size = Vector3.new(12, 1, 7.5)
+			plate.Position = Vector3.new(0, 11.5, -2.25)
+			local short = startsWith(patchProblems(world, nil, flatSkin(), small, nil, { plate }), "Sides:")
+			expect(#short).toBe(1)
+			-- The same block under another name gets no exception, even with the plate over it.
+			plate.Size = Vector3.new(12, 1, 12)
+			plate.Position = Vector3.new(0, 11.5, 0)
+			for _, child in (small :: Instance):GetChildren() do
+				child.Name = "Patch_Test_1"
+			end
+			expect(#startsWith(patchProblems(world, nil, flatSkin(), small, nil, { plate }), "Sides:")).toBe(1)
+		end)
+	end)
+
 	-- Task 37 (Task 39's turned boxes, Patch_Sock_24 and _25): a box turned about the up axis is read like an unturned one,
 	-- and the side it names carries its turned direction, not that direction rounded to the nearest whole axis.
 	it("the patch check names the open side of a turned Patch_Sock box with its turned direction", function()
@@ -653,12 +712,22 @@ describe("the real world, the patches", function()
 		expect(things).never.toBeNil()
 		local sockMesh = (things :: any).Sock.body.body_geom :: MeshPart
 		local sock: SockRoof = { geom = sockMesh :: BasePart, skin = DrawnSkin.fromWorld({ sockMesh }, {}) }
+		-- V1's plate, the roof of the forehead fill, for the Patch_Forehead_<n> exception (Task 33).
+		local foreheadGuard = (walkSurfaces :: Instance):FindFirstChild("ForeheadGuard")
+		expect(foreheadGuard).never.toBeNil()
+		local plates: { BasePart } = {}
+		for _, child in (foreheadGuard :: Instance):GetChildren() do
+			if child:IsA("BasePart") and child.Name == "Guard" then
+				table.insert(plates, child)
+			end
+		end
 		local problems = patchProblems(
 			Workspace,
 			(walkSurfaces :: Instance):FindFirstChild("Patches"),
 			skin,
 			(walkSurfaces :: Instance):FindFirstChild(SMALL_PATCHES_FOLDER),
-			sock
+			sock,
+			plates
 		)
 		if #problems > 0 then
 			error("\n" .. table.concat(problems, "\n"), 0)

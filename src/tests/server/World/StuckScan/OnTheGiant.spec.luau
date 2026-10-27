@@ -129,7 +129,7 @@ local FIXED_PLACES: { FixedPlace } = {
 	groupBox("chair's side, group 10", Vector3.new(19.2, 14.5, 37), Vector3.new(23.2, 16.7, 37)),
 	groupBox("chair's side, group 16", Vector3.new(21.2, 10.9, 35), Vector3.new(23.2, 12.2, 35)),
 	groupBox("chair's side, group 17", Vector3.new(-30.8, 6.4, 1), Vector3.new(-30.8, 6.4, 1)),
-	groupBox("under the chin, group 21", Vector3.new(-6.8, 81.5, -11), Vector3.new(-6.8, 81.5, -11)),
+	-- Group 21 (the beard wedge) is accepted for now (spec Rule 22); spec 10, Launch polish, brings this box back.
 	groupBox("under the chin, group 25", Vector3.new(7.2, 81.1, -11), Vector3.new(7.2, 81.1, -11)),
 	groupBox("under the chin, group 27", Vector3.new(9.2, 77.3, -13), Vector3.new(9.2, 77.3, -13)),
 	groupBox("right forehead band, group 28", Vector3.new(11.2, 98.2, 1), Vector3.new(11.2, 98.2, 1)),
@@ -286,6 +286,20 @@ local function scanArea(giant: Model, landings: { Landing }, margin: number): Pa
 	}
 end
 
+-- Spec Rule 22, "Accepted for now: the beard wedge": the exception stays one named spot and never joins the rare list.
+describe("the accepted-for-now list", function()
+	it("holds only the beard wedge, and it is not on the rare list", function()
+		expect(#Helpers.ACCEPTED_FOR_NOW).toBe(1)
+		local wedge = Helpers.ACCEPTED_FOR_NOW[1]
+		expect(wedge.name).toBe("Beard wedge")
+		expect(wedge.position).toEqual(Vector3.new(-6.8, 81.5, -11))
+		expect(wedge.laterSpec).toBe("Launch polish: Beard wedge")
+		for _, spot in RARE_SPOTS do
+			expect((spot.position - wedge.position).Magnitude > Helpers.RARE_MATCH).toBe(true)
+		end
+	end)
+end)
+
 describe("the stuck scan on the real world", function()
 	local world: Instance
 	local options: PathCheck.Options
@@ -439,11 +453,14 @@ describe("the stuck scan on the real world", function()
 			table.insert(positions, spot.position)
 		end
 		local unlisted: { StuckSpot } = {}
-		for _, index in unlistedStuck(positions, RARE_SPOTS, CLOSED_SPOTS) do
+		for _, index in unlistedStuck(positions, RARE_SPOTS, CLOSED_SPOTS, Helpers.ACCEPTED_FOR_NOW) do
 			table.insert(unlisted, stuck[index])
 		end
 		if #unlisted > 0 then
-			table.insert(problems, "Stuck spots that are on neither the rare list nor the closed list:")
+			table.insert(
+				problems,
+				"Stuck spots that are on neither the rare list, the closed list nor the accepted-for-now list:"
+			)
 			for _, line in stuckReport(unlisted, world) do
 				table.insert(problems, line)
 			end
