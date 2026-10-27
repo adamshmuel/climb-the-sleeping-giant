@@ -20,7 +20,7 @@ Read:
 - the spec rules it names, in `docs/specs/<version>/<feature>.md`;
 - `docs/architecture.md`;
 - the files you'll touch.
-- the project's lessons (`docs/lessons.md`), and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
+- the project's lessons map (`docs/lessons/index.md`) and the topic files that match the task, and follow them. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
 
 **Never guess.** If anything is unclear, reply with `QUESTIONS:` and a numbered list, each tagged with its owner, then stop:
 

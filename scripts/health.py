@@ -17,8 +17,12 @@ IDLE_ALARM_MIN = 30
 BUILDER_LIMIT = 150_000
 OTHER_LIMIT = 200_000
 ACTIVE_GAP_S = 600  # two events this close count as continuous work
+FILE_LIMIT = 1000
+FILE_WARN = 900
+SIZE_DIRS = ("src", "tools", "scripts", "docs", ".claude")
+TEXT_ENDINGS = (".luau", ".lua", ".md", ".py", ".sh", ".json", ".txt")
 
-ROOT = os.environ.get("HEALTH_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RECORDS = os.path.expanduser("~/.claude/projects/" + ROOT.replace("/", "-"))
 
 
@@ -70,7 +74,7 @@ def main():
                 with open(record[:-6] + ".meta.json") as meta:
                     kind = json.load(meta).get("agentType", "agent")
             except (OSError, json.JSONDecodeError):
-                kind = "agent"
+                kind = "unknown agent"
             files.append((record, kind))
         for path, kind in files:
             last, peak = None, 0
@@ -90,7 +94,7 @@ def main():
                 peak = max(peak, size)
             if kind != "main chat" and peak:
                 peaks[kind] = max(peaks.get(kind, 0), peak)
-                limit = BUILDER_LIMIT if kind == "builder" else OTHER_LIMIT
+                limit = OTHER_LIMIT if kind not in ("builder", "unknown agent", "agent") else BUILDER_LIMIT  # unknown: strictest
                 if peak > limit:
                     over.append(f"{kind} {peak // 1000}k")
 
@@ -104,7 +108,7 @@ def main():
         idle.append((cursor, until))
 
     crashes = 0
-    for output in glob.glob(f"/private/tmp/claude-*/{ROOT.replace('/', '-')}/*/tasks/*.output"):
+    for output in glob.glob(f"/private/tmp/claude-{os.getuid()}/{glob.escape(ROOT.replace('/', '-'))}/*/tasks/*.output"):
         if os.path.getmtime(output) >= cutoff:
             with open(output, errors="replace") as text:
                 log_text = text.read()
@@ -115,6 +119,17 @@ def main():
         ["git", "-C", ROOT, "log", f"--since={since.isoformat()}", "--no-merges", "--format=%s"],
         capture_output=True, text=True,
     ).stdout.splitlines()
+
+    tracked = subprocess.run(
+        ["git", "-C", ROOT, "ls-files", *SIZE_DIRS], capture_output=True, text=True
+    ).stdout.splitlines()
+    big = []
+    for name in tracked:
+        if name.endswith(TEXT_ENDINGS) and os.path.isfile(os.path.join(ROOT, name)):
+            with open(os.path.join(ROOT, name), errors="replace") as text:
+                lines = sum(1 for _ in text)
+            if lines > FILE_WARN:
+                big.append((lines, name))
 
     print(f"Health check, last {window:g} h (to {until:%Y-%m-%d %H:%M} UTC)")
     print(f"- Something working: {hours(working):.1f} h. Nothing working: {window - hours(working):.1f} h.")
@@ -135,8 +150,11 @@ def main():
         alarms.append(f"Nothing running for {gap:.0f} min from {start:%m-%d %H:%M} UTC{reason}")
     if over:
         alarms.append(f"Over memory limit: {len(over)} agent(s), biggest " + ", ".join(sorted(over, key=lambda o: -int(o.split()[-1][:-1]))[:3]))
+    for lines, name in sorted(big, reverse=True):
+        verdict = "over the limit: split it now" if lines > FILE_LIMIT else "near the limit: split it before adding more"
+        alarms.append(f"{name} has {lines} lines, {verdict}")
     if crashes:
-        alarms.append(f"Rojo crashed {crashes} time(s): log it in docs/problems-log.md")
+        alarms.append(f"Rojo crashed {crashes} time(s): log it in docs/problems-log/")
     print("ALARMS:" if alarms else "ALARMS: none")
     for alarm in alarms:
         print(f"- {alarm}")
