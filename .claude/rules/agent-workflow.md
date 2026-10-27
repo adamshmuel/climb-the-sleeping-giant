@@ -64,6 +64,8 @@ Adam's only jobs are the gates and the rare decisions that are his to make (see 
 
 ## Stuck on one problem: product decides
 
+This covers **every task that costs too much time**, whatever it is: a feature, a rule, a tool or scenery. It starts at any of these: a task goes past its planned size, the team fails twice on the same problem, or a second task is added for the same thing.
+
 The main chat also counts tasks per object or place. When a second task is added for the same thing, it takes that to `product` as a product decision (below), even if nothing has failed yet.
 
 When the team fails twice on the same problem (two tries, steps or tasks that end "tried, nothing built", or a check that keeps failing), the main chat stops the work on it and takes it to `product` as a product decision. It is no longer `code_lead`'s technical problem.
@@ -78,7 +80,11 @@ When the team fails twice on the same problem (two tries, steps or tasks that en
    - **Change the design:** `designer` reshapes, moves or simplifies the thing so the problem goes away.
    - **Accept it for now:** a safety net covers the player; it is written into a named later spec.
    - **Cut it:** take it out of this version.
-3. **Scenery goes to `designer` first.** When the thing is scenery (the idea's "What matters most" list) and it has already cost real time, `product` asks `designer` before any more tries: "This item is costly because of x, y and z. Can you design it differently so these problems can't happen? If you can, what does the new design cost to build?" If `designer` can, `product` weighs that cost against the fix still planned and picks the cheaper safe one. If `designer` can't, `product` takes it to `game_creator` to advise: keep it, simplify it or cut it.
+3. **Ask whether it can be done differently, before any more tries.** `product` explains the cost to the owner who could change it, and asks: "This is costly because of x, y and z. Can it be done differently so these problems can't happen? If you can, what does that cost?"
+   - the look or shape of a thing: `designer`;
+   - the gameplay or the business: `game_creator`;
+   - the technical approach, the tests or the tools: `code_lead`.
+   If the owner can, `product` weighs that cost against the fix still planned and picks the cheaper safe one. If nobody can, `product` takes it to `game_creator` to advise: keep it as it is, simplify it or cut it. The "What matters most" tier sets how much more time it may get: scenery gets the least, core gameplay the most.
 4. If the path changes approved work, the "Asking the user" checks apply as usual.
 
 ## Learning from experience
