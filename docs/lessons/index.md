@@ -31,6 +31,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 19 | Sink scenery instead of fitting parts to it | `world-scenery.md` |
 | 20 | Cap each builder step by tool calls | `teamwork.md` |
 | 21 | Never start a walk, check or camera inside a mesh | `world-scenery.md` |
+| 22 | Long Play work runs in the background | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

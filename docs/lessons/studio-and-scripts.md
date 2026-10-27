@@ -16,3 +16,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** pasted trial scripts failed to parse because a statement started with `(`, which Luau reads as part of the line before (Tasks 32 and 37). Each failure wasted a Studio call.
 - **Do instead:** put the value in a local first, for example `local parts = (...)`.
 - **Who checks:** `builder`.
+
+## Lesson 22: Long Play work runs in the background
+- **What happened:** in Task 37's last Play check, code_lead's two client calls each waited inside the call and came back "Request timeout", so nothing was measured (2026-10-27). The builder's earlier scripts also depended on a helper module it removed before the next check.
+- **Do instead:** a client call starts long work with `task.spawn`, stores the results in `shared`, and returns at once; a second call fetches them. A helper module a later check needs stays in Studio until that task closes.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
