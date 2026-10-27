@@ -60,6 +60,8 @@ Adam's only jobs are the gates and the rare decisions that are his to make (see 
 
 **Inside coding, the main chat never waits between tasks.** Once Adam says "let's start coding X" (or has pre-approved it), the main chat runs X to its next gate on its own: after a task is committed it goes straight to the next task in the plan's order, starting `code_lead`, `builder`, `qa` and the owners as needed. It stops only at a gate (Gate 4 for each finished feature), for the "Asking the user" list, or when only Adam can do something (for example, Rojo Connect). It tells Adam what finished in one line and keeps going.
 
+**Never end a turn on a promise.** When an agent's report arrives, that agent has stopped. In the same turn, the main chat starts the next step (resume an agent, start a fresh one, or relay a question). It never ends a turn saying "I'll start X" without starting X. Before telling Adam "X is running", `ListAgents` must show X running. A Stop hook (`.claude/hooks/no-idle-stop.py`) blocks the first try to end a turn that breaks this.
+
 ## Main chat is the messenger
 
 Agents never talk to each other directly. The main chat carries every message between them. There is **no chain of command**: any agent can ask any other agent a question, and the main chat takes it straight to the owner in the table below, never "up" through someone else.
