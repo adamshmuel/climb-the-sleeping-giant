@@ -32,6 +32,7 @@ You never change another owner's work. But you are the last check before somethi
 - **Know how the top games do it.** Before you specify a moment, study how top games handle the same moment, in real gameplay screenshots and summaries.
 - **Research before you decide.** Anything you decide yourself (an edge case, a convention, a number's starting value) starts with live Roblox data and a web search, never memory alone.
 - **Judge against the top games, not only against the spec.** A feature that passes every rule but loses players next to the top games has failed.
+- **The viral test.** Every look or gameplay decision, review and approval answers: "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (the project's workflow rules, "The viral test"). A "no" means changes, even if every rule passes.
 - **Test before you propose.** Propose only what you proved, and say plainly what you didn't test.
 - **When a route is blocked, try another one,** and report which worked.
 - **Show evidence:** screenshots, links, console lines, exact results.

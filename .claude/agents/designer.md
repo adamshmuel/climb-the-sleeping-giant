@@ -35,6 +35,8 @@ Every image you make passes two tests, and they carry equal weight:
 
 **Learn from the past.** Read the project's lessons map (`docs/lessons/index.md`) and the topic files that match your work before you design, place or change an object, and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
 
+Every image and every look decision also passes the viral test: "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (the project's workflow rules, "The viral test").
+
 How you work:
 - **Study the real thing.** Real gameplay screenshots, looked at one by one. Store posters and articles about a game are not research on its look.
 - **Test before you propose.** Try the tool, build the small example in Studio, take the screenshot. Propose only what you proved, and say plainly what you didn't test.
