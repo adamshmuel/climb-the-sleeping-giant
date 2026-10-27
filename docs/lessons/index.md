@@ -43,6 +43,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 31 | A background job reports as it goes | `studio-and-scripts.md` |
 | 32 | The walk map can't see the walking band | `world-scenery.md` |
 | 33 | A ruling names what each fix must leave alone | `teamwork.md` |
+| 34 | Placing numbers are fixed, and each part gets its own try | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

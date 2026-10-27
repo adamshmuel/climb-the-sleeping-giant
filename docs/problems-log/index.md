@@ -14,7 +14,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
-| Check started inside a mesh, or a start check that's wrong | 4 | 2026-10-27 | `world-scenery.md` |
+| Check started inside a mesh, or a start check that's wrong | 5 | 2026-10-27 | `world-scenery.md` |
 
 ## Fixed kinds
 
@@ -34,6 +34,6 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 5 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 6 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 7 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 11 |
