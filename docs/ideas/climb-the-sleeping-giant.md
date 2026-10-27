@@ -145,6 +145,70 @@ The core loop is the set of actions a player repeats over and over.
 
 **Fun in the first 10 seconds:** you spawn at your garden gate looking straight at the giant's enormous sleeping face. His snores blow the grass flat and "Zzz" bubbles float up. Glowing footprints lead to an egg next to his boot, eight steps away.
 
+## What matters most
+
+This list sorts every real thing in the world by how much it matters to the player. Use it to match effort to value. It follows Lesson 1 (Scenery gets the cheap fix) and Lesson 2 (Change the scenery, not the giant), in `docs/lessons/world-scenery.md`.
+
+| Tier | What it means | How much effort a problem gets |
+|---|---|---|
+| **Core gameplay** | Players play with it in the core loop: sneak, grab, carry home, hatch, earn, upgrade | Real time. Fix it properly and check it in Play |
+| **Supporting** | Helps the core loop: keeps players safe, shows the way, or rewards them | A solid fix, but the simplest one that does the job |
+| **Scenery** | There only for looks and story. No egg, no path and no noise zone sits on it, and nothing in the game sends players there | The cheapest fix that keeps players safe and the look intact: block it off, make it smaller or simpler, move it, or let the rescue (Rule 28: Stuck players are rescued) catch the player. A second task on the same thing goes to `product` first |
+
+**Keep it current:** when a spec adds a part or an object, it gets a row here. Pets join the core list when hatching (spec 2) is built.
+
+### Core gameplay
+
+| Thing | Why it's core |
+|---|---|
+| His face, his eyelids and the sleep meter (the big "Zzz" bubble), with its warnings: the eyelid flutter, the snoring stopping, the double snort and the "Mmm... my eggs..." bubble | Sneaking is the core loop. These tell every player how close he is to waking |
+| The wake-up: sitting up, the bounce-off, the slam fist and the red slam circles | The shared danger, and the funniest moment of the twist |
+| His boots and knees: the boot tops, the boot toe nests, the knee pockets and the lap fold | Boots and Knees zone, Uncommon eggs |
+| The six ways up: two boot ramps, two boot ladders, two side ladders with their side pads and thigh planks, the two lap planks, the lap landing with its front apron, the two belly ramps and the belly path | The only roads onto him. Every heist uses one, and each garden has its own close by |
+| His belly top and upper sides down to the stitched seam, with the lower belly nests and the 2 belly pockets | Belly zone, Rare eggs, walk anywhere |
+| His arms out to his white cuffs, the 4 cuff pockets and the 2 cuff straps | Epic eggs |
+| His beard: the beard ladder, the path up its front to his nose, and the beard–belly fold nests at its foot | The way up to his head, and Rare eggs |
+| The top of his nose | The Dream Egg during Deep Sleep, and the step from the beard ladder to the cap ladder |
+| The middle strip of his forehead: the one walkable slab from his nose to the cap ladder | The only way from his nose to his nightcap |
+| His nightcap: the cap ladder, the brim and the side stripe | Legendary eggs, the top of the climb |
+| Every egg and its straw nest: 16 in the meadow, 22 on him | What players come for |
+| Each garden: the Safe Gate, the incubators, the pet pads, the cash chest, and the plank bridge over the stream | Home: carry the egg in, hatch it, earn and upgrade. Every heist starts and ends here |
+
+### Supporting
+
+| Thing | How it helps |
+|---|---|
+| The glowing footprints | Show the way to the next egg and back home |
+| The stitched seam and its blue hem band | Show where walking ends on his sides |
+| The invisible guards: rail guards on the planks, edge guards, slide guards, and the forehead guard's smooth side walls and side rails | Stop falls and stuck spots |
+| The rescue and its lavender puff (Rule 28: Stuck players are rescued, and Rule 33: What a rescue looks like) | Gets a stuck player back to their last safe spot |
+| The 12 landing spots in the meadow | Where players float down when he wakes |
+| Egg glow, sparkles, light beams, rank words and the refill pop | Let players spot an egg and its rank from far away |
+| The picket fences and stepping stones in each garden | Show where your safe plot starts, and lead to the pads, incubators and chest |
+| The light on his face | Keeps his face, and its warnings, bright |
+| The safe-home confetti, the caught puff and the slam dust | Reward and feedback moments |
+
+### Scenery
+
+| Thing | Notes |
+|---|---|
+| The pillow behind his head, and the red cushion he leans on (the chair) with its armrests | See below |
+| The Sock, the teacup and the candle (things he dropped) | Story props. The footprints guide players, not these |
+| Trees, bushes, flowers, mushrooms, rocks, logs, stumps, lantern posts, the stream, the hills, the garden hedges and flower borders, the pollen and petals | The storybook valley that makes the game look full |
+| The lace bows on his boot tops | Players walk straight through them |
+| The tail and pom-pom of his nightcap | Their nests were dropped in spec 5 (Egg nests and climbing) |
+| The parts of him off every route: his back, under his beard, his cheeks, the sides of his forehead, his skin below the seam | Only for looks. But he is the star of every thumbnail, so **he is never reshaped**: block these parts off with smooth guards, or change the scenery next to them (Lesson 2) |
+
+### The things that touch the giant
+
+| Thing | Tier | Does the player play with it? | Would a player notice if it were smaller, simpler or moved? |
+|---|---|---|---|
+| **The Sock** | Scenery | No. No egg, no path, no noise. Players only bump into it in the meadow by his left side, near the ladders gardens 1 to 3 use | No, if it still reads as a giant sock from the gardens. Smaller, with no overhanging edge, or moved a few studs off the walk: nobody would notice |
+| **The pillow** | Scenery | No. No egg and no path. A player only lands on it by stepping or jumping off the back of his nightcap, so it only has to let them slide off safely. (Zone 5 is called "Beard, Pillow and Nightcap", but nothing is played on the pillow) | Half as big, with his head still clearly leaning on it: no. Moved away from his head: yes, because his head would float |
+| **The nightcap** | Core gameplay (the brim, the side stripe and the cap ladder) | Yes. The 4 Legendary nests, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
+| **The beard** | Core gameplay (the ladder, the path up its front and the fold at its foot) | Yes. It is the way up to his head, with Rare nests at its foot | Yes, if the ladder moved or the path narrowed. Its outer edges and underside are scenery: block them, never reshape them |
+| **The forehead** | Core gameplay for the middle strip only; the sides are scenery | The middle strip, yes: it is the only way from his nose to the cap ladder. The sides, no: nothing is there, and that is where a player got stuck in the first playtest | Middle strip: yes. Sides: no. A smooth guard that slides players off is enough |
+
 ## Twist
 
 **One colossal giant, and you climb on him.**
