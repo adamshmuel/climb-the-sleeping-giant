@@ -1,5 +1,7 @@
 # MyRobloxGame
 
+**The goal: a game that can go viral.** Every look, feel and gameplay decision answers "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (`.claude/rules/viral-goal.md`). This comes before every other rule.
+
 Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox Studio is driven through the Roblox Studio MCP.
 
 ## Layout (default.project.json)

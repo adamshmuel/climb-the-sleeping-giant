@@ -9,7 +9,7 @@ About how the game looks, the art and models, and approving a design. The map of
 
 ## Lesson 12: Every decision asks "could it go viral?"
 - **What happened:** the main chat passed each approval along without asking the questions that mattered, and `product` wrote specs from the mockups as they were (2026-10-11). Asked afterwards, "Could it go viral looking like this?", the honest answer was "almost no chance".
-- **Do instead:** every look or gameplay decision, review and relay of an approval answers the viral test (`agent-workflow.md`, "The viral test"): "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" A "no" or "not sure" means changes, even if every rule passes.
+- **Do instead:** every look or gameplay decision, review and relay of an approval answers the viral test (`.claude/rules/viral-goal.md`): "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" A "no" or "not sure" means changes, even if every rule passes.
 - **Who checks:** every reviewer, the main chat.
 
 ## Lesson 13: Real art comes from the store and the generator

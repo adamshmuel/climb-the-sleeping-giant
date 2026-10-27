@@ -2,14 +2,9 @@
 
 How the project agents work together. Today: `game_creator`, `designer`, `product`, `code_lead` and `builder` (`qa` comes later). New agents get a row in each table below.
 
-## The viral test
+## The goal comes first
 
-Every decision about how the game looks or plays answers two questions, with evidence (real screenshots of the top games next to ours, or a play of the build):
-
-1. **Could it go viral looking and feeling like this?** Would players share it, come back to it, and bring friends?
-2. **Would a kid pick ours over the top game next to it?**
-
-This covers ideas, designs, mockups, specs, gameplay rules, redesigns, cuts and built features, and every review and approval of them. A "no" or "not sure" means changes, even if every rule passes. A cheaper or simpler choice must still pass both questions. The main chat asks them again before passing any approval to Adam.
+The game's goal is to go viral. Every look, feel and gameplay decision, review and approval passes the viral test in `viral-goal.md`.
 
 ## Everyone uses the game
 
@@ -79,7 +74,7 @@ The main chat also counts tasks per object or place. When a second task is added
 
 When the team fails twice on the same problem (two tries, steps or tasks that end "tried, nothing built", or a check that keeps failing), the main chat stops the work on it and takes it to `product` as a product decision. It is no longer `code_lead`'s technical problem.
 
-1. **How much does it matter?** `product` first weighs the thing against the whole game, with `game_creator` for gameplay and business:
+1. **How much does it matter?** `product` first weighs the thing against the whole game, with `game_creator` for gameplay and business. What helps the game go viral (`viral-goal.md`) gets the most time:
    - the core loop and the gameplay: does the player play with it, or is it there for looks?
    - the final product: would a player notice or care if it changed?
    - the project goals: retention, the new-player experience, the release date and the cost so far.
