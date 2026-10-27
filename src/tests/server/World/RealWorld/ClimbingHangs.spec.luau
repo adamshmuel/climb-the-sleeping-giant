@@ -33,8 +33,7 @@ describe("the real world, slide guards", function()
 	-- Task 34: the forehead band's fill (Task 29's try T6) came out again, because it stood where players walk along his
 	-- skin (code_lead's Rulings 30 and 31). The forehead hang place has no test here until Task 33 brings the fill back.
 	-- Where the characters ended up hanging (steps 23-5 and 23-6, Play on the computer): the five notch walks W03, W04,
-	-- W08, W09 and W14, and the pillow's spot 1 (35.2, 75.4, 65) after its slide down the +x/+z face. Spots 2 and 3 of
-	-- the pillow never hung and get no fix.
+	-- W08, W09 and W14. (The pillow's spot 1 went with the old pillow in Task 41: the pillow now lies flat and sunk.)
 	local HANG_PLACES: { HangPlace } = {
 		{ name = "notch, walk 3", kind = "patch", root = Vector3.new(-5.3, 21.7, 39.1), prefix = NOTCH_PATCH_PREFIX },
 		{ name = "notch, walk 4", kind = "patch", root = Vector3.new(2.3, 22.6, 39.8), prefix = NOTCH_PATCH_PREFIX },
@@ -71,13 +70,6 @@ describe("the real world, slide guards", function()
 			kind = "patch",
 			root = Vector3.new(-76.5, 7.03, -49.0),
 			prefix = SOCK_PATCH_PREFIX,
-		},
-		{
-			name = "pillow spot 1",
-			kind = "guard",
-			root = Vector3.new(42.0, 45.8, 72.2),
-			prefix = "",
-			face = "body_geom", -- the pillow's mesh part (World.GiantsThings.Pillow.body.body_geom)
 		},
 	}
 

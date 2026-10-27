@@ -130,6 +130,7 @@ local sectionTrussSwing = require(script.Parent.S2f6TrussSwing)
 local sectionBeardBelly = require(script.Parent.S2gBeardBelly)
 local sectionPillowCloserFit = require(script.Parent.S3aPillowCloserFit)
 local sectionLitLikeBefore = require(script.Parent.S3a2LitLikeBefore)
+local sectionPillowFlat = require(script.Parent.S3dPillowFlat)
 local sectionFolderRecords = require(script.Parent.S3bcCave)
 local sectionSlideGuards = require(script.Parent.S4SlideGuards)
 
@@ -415,6 +416,41 @@ return function(): string
 			.. "\nSTOPPED WITH AN ERROR in section 3a2: "
 			.. tostring(litMessage)
 	end
+	local okFlat, flatMessage = pcall(sectionPillowFlat)
+	if not okFlat then
+		return "SECTION 1: "
+			.. message
+			.. "\nSECTION 2: "
+			.. walkMessage
+			.. "\nSECTION 2b: "
+			.. headMessage
+			.. "\nSECTION 2c: "
+			.. zoneMessage
+			.. "\nSECTION 2d: "
+			.. railsMessage
+			.. "\nSECTION 2e: "
+			.. footMessage
+			.. "\nSECTION 2f: "
+			.. bodyMessage
+			.. "\nSECTION 2f2: "
+			.. closerMessage
+			.. "\nSECTION 2f3: "
+			.. slotMessage
+			.. "\nSECTION 2f4: "
+			.. trussMessage
+			.. "\nSECTION 2f5: "
+			.. legsMessage
+			.. "\nSECTION 2f6: "
+			.. swingMessage
+			.. "\nSECTION 2g: "
+			.. bellyMessage
+			.. "\nSECTION 3a: "
+			.. pillowMessage
+			.. "\nSECTION 3a2: "
+			.. litMessage
+			.. "\nSTOPPED WITH AN ERROR in section 3d: "
+			.. tostring(flatMessage)
+	end
 	local okCave, caveMessage = pcall(sectionFolderRecords)
 	if not okCave then
 		return "SECTION 1: "
@@ -447,6 +483,8 @@ return function(): string
 			.. pillowMessage
 			.. "\nSECTION 3a2: "
 			.. litMessage
+			.. "\nSECTION 3d: "
+			.. flatMessage
 			.. "\nSTOPPED WITH AN ERROR in sections 3b and 3c: "
 			.. tostring(caveMessage)
 	end
@@ -482,6 +520,8 @@ return function(): string
 			.. pillowMessage
 			.. "\nSECTION 3a2: "
 			.. litMessage
+			.. "\nSECTION 3d: "
+			.. flatMessage
 			.. "\nSECTIONS 3b and 3c: "
 			.. caveMessage
 			.. "\nSTOPPED WITH AN ERROR in section 4: "
@@ -517,6 +557,8 @@ return function(): string
 		.. pillowMessage
 		.. "\n\nSECTION 3a2 (lit like before): "
 		.. litMessage
+		.. "\n\nSECTION 3d (the pillow laid flat and sunk under his head): "
+		.. flatMessage
 		.. "\n\nSECTIONS 3b and 3c (the cave's patches and the cave skirt): "
 		.. caveMessage
 		.. "\n\nSECTION 4 (slide guards and small patches): "

@@ -60,6 +60,10 @@ local function sectionPillowCloserFit(): string
 	local TEXTURE_ID = "rbxassetid://138710597423165"
 	local SIZE = Vector3.new(95.004646, 91.194412, 35.748734)
 	local CFRAME = CFrame.new(0.142862, 79.86055, 52.141579, 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939692)
+	-- Stuck safety Task 41 (section 3d) lays the pillow flat and sinks it. After that it is at this size and place, and
+	-- this section still says "already done" (it only ever changed the collision shape).
+	local FLAT_SIZE = Vector3.new(120, 46, 30)
+	local FLAT_CFRAME = CFrame.new(0.142862, 46.594, 40) * CFrame.Angles(-math.pi / 2, 0, 0)
 	local PLACE_TOLERANCE_STUDS = 0.01 -- on the size and the middle
 	local TURN_TOLERANCE_NUMBER = 0.001 -- on each of the nine numbers of the turn
 	local PILLOW_PRECISION = 1.0
@@ -120,19 +124,33 @@ local function sectionPillowCloserFit(): string
 	if pillow.TextureID ~= TEXTURE_ID then
 		table.insert(problems, `TextureID is {pillow.TextureID}, recorded {TEXTURE_ID}`)
 	end
-	if (pillow.Size - SIZE).Magnitude > PLACE_TOLERANCE_STUDS then
-		table.insert(problems, `Size is {pillow.Size}, recorded {SIZE}`)
-	end
-	if (pillow.CFrame.Position - CFRAME.Position).Magnitude > PLACE_TOLERANCE_STUDS then
-		table.insert(problems, `its middle is {pillow.CFrame.Position}, recorded {CFRAME.Position}`)
-	end
-	local nowTurn = { pillow.CFrame:GetComponents() }
-	local recordedTurn = { CFRAME:GetComponents() }
-	for index = 4, 12 do
-		if math.abs(nowTurn[index] - recordedTurn[index]) > TURN_TOLERANCE_NUMBER then
-			table.insert(problems, `its turn differs from the recorded one (number {index - 3} of 9)`)
-			break
+	local function placeProblems(size: Vector3, cframe: CFrame): { string }
+		local found: { string } = {}
+		if (pillow.Size - size).Magnitude > PLACE_TOLERANCE_STUDS then
+			table.insert(found, `Size is {pillow.Size}, recorded {size}`)
 		end
+		if (pillow.CFrame.Position - cframe.Position).Magnitude > PLACE_TOLERANCE_STUDS then
+			table.insert(found, `its middle is {pillow.CFrame.Position}, recorded {cframe.Position}`)
+		end
+		local nowTurn = { pillow.CFrame:GetComponents() }
+		local recordedTurn = { cframe:GetComponents() }
+		for index = 4, 12 do
+			if math.abs(nowTurn[index] - recordedTurn[index]) > TURN_TOLERANCE_NUMBER then
+				table.insert(found, `its turn differs from the recorded one (number {index - 3} of 9)`)
+				break
+			end
+		end
+		return found
+	end
+	local oldProblems = placeProblems(SIZE, CFRAME)
+	if #oldProblems > 0 then
+		local flatProblems = placeProblems(FLAT_SIZE, FLAT_CFRAME)
+		if #flatProblems == 0 then
+			oldProblems = {}
+		end
+	end
+	for _, found in oldProblems do
+		table.insert(problems, found)
 	end
 	if #problems > 0 then
 		error(`nothing was changed. The pillow is not the one recorded in step 22-0: {someProblems(problems)}`)

@@ -28,6 +28,7 @@ local giantModel = ScanFacts.giantModel
 local namedProblems = ScanFacts.namedProblems
 local stuckReport = ScanFacts.stuckReport
 local rareFacts = ScanFacts.rareFacts
+local PillowWayUp = require(script.Parent.PillowWayUp)
 local closedFacts = ScanFacts.closedFacts
 local WalkFacts = require(script.Parent.WalkFacts)
 local walkTowardCave = WalkFacts.walkTowardCave
@@ -125,21 +126,9 @@ local FIXED_PLACES: { FixedPlace } = {
 	-- Task 23: the 33 groups of "t22/start-list-task23.md" (extent from its table, plus GROUP_BOX_MARGIN on each side).
 	groupBox("ledge between the boots, group 1", Vector3.new(-2.8, 6.2, -37), Vector3.new(3.2, 6.3, -31)),
 	groupBox("chair's side, group 2", Vector3.new(15.2, 18.2, 39), Vector3.new(23.2, 21.2, 39)),
-	groupBox("pillow's back, group 3", Vector3.new(-22.8, 90.9, 65), Vector3.new(-16.8, 94.2, 65)),
-	groupBox("pillow's back, group 4", Vector3.new(-16.8, 88.9, 67), Vector3.new(-10.8, 90.3, 67)),
-	groupBox("pillow's back, group 5", Vector3.new(-0.8, 85.6, 69), Vector3.new(5.2, 85.8, 69)),
-	groupBox("pillow's back, group 6", Vector3.new(9.2, 84, 69), Vector3.new(15.2, 85.2, 69)),
-	groupBox("pillow's back, group 7", Vector3.new(-16.8, 83.5, 69), Vector3.new(-12.8, 84.5, 69)),
-	groupBox("pillow's back, group 8", Vector3.new(13.2, 88.8, 67), Vector3.new(17.2, 89.9, 67)),
-	groupBox("pillow's back, group 9", Vector3.new(17.2, 92.3, 65), Vector3.new(21.2, 94.2, 65)),
 	groupBox("chair's side, group 10", Vector3.new(19.2, 14.5, 37), Vector3.new(23.2, 16.7, 37)),
-	groupBox("pillow's back, group 12", Vector3.new(-22.8, 96.1, 63), Vector3.new(-20.8, 97.3, 63)),
-	groupBox("pillow's back, group 13", Vector3.new(1.2, 80.2, 71), Vector3.new(3.2, 80.3, 71)),
-	groupBox("pillow's back, group 14", Vector3.new(11.2, 79, 71), Vector3.new(13.2, 79.5, 71)),
-	groupBox("pillow's back, group 15", Vector3.new(21.2, 96.1, 63), Vector3.new(23.2, 97.3, 63)),
 	groupBox("chair's side, group 16", Vector3.new(21.2, 10.9, 35), Vector3.new(23.2, 12.2, 35)),
 	groupBox("chair's side, group 17", Vector3.new(-30.8, 6.4, 1), Vector3.new(-30.8, 6.4, 1)),
-	groupBox("pillow's edge, group 19", Vector3.new(-22.8, 100.8, 61), Vector3.new(-22.8, 100.8, 61)),
 	groupBox("under the chin, group 21", Vector3.new(-6.8, 81.5, -11), Vector3.new(-6.8, 81.5, -11)),
 	groupBox("under the chin, group 25", Vector3.new(7.2, 81.1, -11), Vector3.new(7.2, 81.1, -11)),
 	groupBox("under the chin, group 27", Vector3.new(9.2, 77.3, -13), Vector3.new(9.2, 77.3, -13)),
@@ -187,12 +176,14 @@ local CAVE_LEDGE_LEFT_HEADING = 90 -- toward x 0 from the left ledge
 
 local CAVE_LEDGE_RIGHT_HEADING = -90 -- toward x 0 from the right ledge
 
--- The 15 rare spots. The first 10 are from step 23-S (t23/sort-23-S.txt, after the re-measure against Rule 79's walk
+-- The 76 rare spots. The first 10 are from step 23-S (t23/sort-23-S.txt, after the re-measure against Rule 79's walk
 -- area); their names are the start list's group numbers. Group 30 (the right side of the neck, 4.4 studs from the right
 -- arm top) is not here. The last 5 are from step 23-S2 (t23/sort-23-S2.txt; product checked each one): two pockets
 -- between the knees, a pocket in the right arm and two spots on the nightcap. They belong to no start-list group, so
 -- their group is 0. A knee pocket that is re-measured under MUST_FIX_DISTANCE studs from a place players need turns this
 -- test red on its own.
+-- The last 61 (Rare_Cap_*) are from Task 41: the flat pillow left them reachable only by a jump or a fall; their rescue
+-- proof is Task 12's.
 local RARE_SPOTS: { RareSpot } = {
 	rareSpot("Rare_G11_1", 11, 25.2, 11.5, 9), -- right chair arm, low
 	rareSpot("Rare_G11_2", 11, 25.2, 11.7, 9),
@@ -209,6 +200,68 @@ local RARE_SPOTS: { RareSpot } = {
 	rareSpot("Rare_RightArm_1", 0, 41.2, 25, -15), -- a pocket in the right arm
 	rareSpot("Rare_Nightcap_1", 0, -40.8, 77.9, 45), -- the left end of the nightcap
 	rareSpot("Rare_Nightcap_2", 0, 41.2, 78.2, 45), -- the right end of the nightcap
+	-- Task 41: the nightcap's lower sides and back, reached only by a jump or a fall (product, 2026-10-27, work/t41/decision-cap-spots.md); rescue proof in Task 12
+	rareSpot("Rare_Cap_1", 0, 35.2, 86.5, 39),
+	rareSpot("Rare_Cap_2", 0, -32.8, 79.7, 41),
+	rareSpot("Rare_Cap_3", 0, 33.2, 79.8, 41),
+	rareSpot("Rare_Cap_4", 0, 35.2, 79.2, 41),
+	rareSpot("Rare_Cap_5", 0, -38.8, 78.3, 43),
+	rareSpot("Rare_Cap_6", 0, -36.8, 77.9, 43),
+	rareSpot("Rare_Cap_7", 0, -34.8, 77.1, 43),
+	rareSpot("Rare_Cap_8", 0, 35.2, 77.1, 43),
+	rareSpot("Rare_Cap_9", 0, 37.2, 77.9, 43),
+	rareSpot("Rare_Cap_10", 0, 39.2, 78.5, 43),
+	rareSpot("Rare_Cap_11", 0, -38.8, 77.7, 45),
+	rareSpot("Rare_Cap_12", 0, -36.8, 77.6, 45),
+	rareSpot("Rare_Cap_13", 0, -34.8, 76.9, 45),
+	rareSpot("Rare_Cap_14", 0, 31.2, 77.8, 45),
+	rareSpot("Rare_Cap_15", 0, 35.2, 77.1, 45),
+	rareSpot("Rare_Cap_16", 0, 37.2, 77.6, 45),
+	rareSpot("Rare_Cap_17", 0, 39.2, 77.8, 45),
+	rareSpot("Rare_Cap_18", 0, -38.8, 77.2, 47),
+	rareSpot("Rare_Cap_19", 0, -36.8, 77.2, 47),
+	rareSpot("Rare_Cap_20", 0, -34.8, 76.6, 47),
+	rareSpot("Rare_Cap_21", 0, -30.8, 78.8, 47),
+	rareSpot("Rare_Cap_22", 0, 31.2, 78.5, 47),
+	rareSpot("Rare_Cap_23", 0, 35.2, 76.9, 47),
+	rareSpot("Rare_Cap_24", 0, 37.2, 77.1, 47),
+	rareSpot("Rare_Cap_25", 0, 39.2, 77.1, 47),
+	rareSpot("Rare_Cap_26", 0, 41.2, 77.6, 47),
+	rareSpot("Rare_Cap_27", 0, -38.8, 76.9, 49),
+	rareSpot("Rare_Cap_28", 0, -36.8, 76.6, 49),
+	rareSpot("Rare_Cap_29", 0, -32.8, 77, 49),
+	rareSpot("Rare_Cap_30", 0, -30.8, 79.4, 49),
+	rareSpot("Rare_Cap_31", 0, 29.2, 80.3, 49),
+	rareSpot("Rare_Cap_32", 0, 31.2, 78.8, 49),
+	rareSpot("Rare_Cap_33", 0, 35.2, 76.4, 49),
+	rareSpot("Rare_Cap_34", 0, 37.2, 76.8, 49),
+	rareSpot("Rare_Cap_35", 0, -34.8, 76.9, 51),
+	rareSpot("Rare_Cap_36", 0, -32.8, 78.2, 51),
+	rareSpot("Rare_Cap_37", 0, -30.8, 80.1, 51),
+	rareSpot("Rare_Cap_38", 0, -28.8, 81.7, 51),
+	rareSpot("Rare_Cap_39", 0, 29.2, 81.9, 51),
+	rareSpot("Rare_Cap_40", 0, 31.2, 79.5, 51),
+	rareSpot("Rare_Cap_41", 0, 33.2, 77.5, 51),
+	rareSpot("Rare_Cap_42", 0, -32.8, 80.7, 53),
+	rareSpot("Rare_Cap_43", 0, -30.8, 82.2, 53),
+	rareSpot("Rare_Cap_44", 0, -28.8, 83.8, 53),
+	rareSpot("Rare_Cap_45", 0, 27.2, 83.5, 53),
+	rareSpot("Rare_Cap_46", 0, 29.2, 83.3, 53),
+	rareSpot("Rare_Cap_47", 0, 31.2, 81.5, 53),
+	rareSpot("Rare_Cap_48", 0, 35.2, 79.2, 53),
+	rareSpot("Rare_Cap_49", 0, -30.8, 85.4, 55),
+	rareSpot("Rare_Cap_50", 0, -28.8, 86.3, 55),
+	rareSpot("Rare_Cap_51", 0, -26.8, 87.4, 55),
+	rareSpot("Rare_Cap_52", 0, 27.2, 87.1, 55),
+	rareSpot("Rare_Cap_53", 0, 29.2, 86.4, 55),
+	rareSpot("Rare_Cap_54", 0, 31.2, 85.2, 55),
+	rareSpot("Rare_Cap_55", 0, 33.2, 85.7, 55),
+	rareSpot("Rare_Cap_56", 0, -26.8, 90.9, 57),
+	rareSpot("Rare_Cap_57", 0, 25.2, 90.8, 57),
+	rareSpot("Rare_Cap_58", 0, 27.2, 90.7, 57),
+	rareSpot("Rare_Cap_59", 0, 29.2, 90.5, 57),
+	rareSpot("Rare_Cap_60", 0, 13.2, 83.6, 63),
+	rareSpot("Rare_Cap_61", 0, 7.2, 84.5, 65),
 }
 
 -- The area to scan: the giant's box grown to hold every landing spot, then `margin` studs of meadow on each side in x
@@ -653,4 +706,113 @@ describe("the stuck scan on the real world", function()
 	it("the scan finishes within the time limit", function()
 		expect(buildAndSearchSeconds).toBeLessThanOrEqual(Config.Stuck.ScanSeconds)
 	end)
+
+	-- Stuck safety Task 41, test 3: the pillow has no stuck spot. The report's "Pillow" line counts the spots standing on
+	-- a part of World.GiantsThings.Pillow.
+	it("the pillow has no stuck spot", function()
+		local pillow = (world :: any).GiantsThings.Pillow :: Instance
+		local onPillow: { string } = {}
+		for _, spot in stuck do
+			if spot.standsOn:IsDescendantOf(pillow) then
+				table.insert(onPillow, format(spot.position))
+			end
+		end
+		local shown: { string } = {}
+		for index = 1, math.min(#onPillow, 5) do
+			table.insert(shown, onPillow[index])
+		end
+		expect(`{#onPillow} stuck spots on the pillow, first: {table.concat(shown, ", ")}`).toBe(
+			"0 stuck spots on the pillow, first: "
+		)
+	end)
+
+	-- Task 41, test 6: the pillow gives no way up. Red first on a made-up map with a step from the top to a nest.
+	it("the way-up check notices a step from the pillow's top to a nest", function()
+		local spots: { PillowWayUp.Spot } = {
+			{ id = 1, position = Vector3.new(0, 0, 0) },
+			{ id = 2, position = Vector3.new(5, 1, 0) },
+			{ id = 3, position = Vector3.new(10, 1, 0) },
+		}
+		local function rulesFor(jumps: boolean): PillowWayUp.Rules
+			return {
+				isGround = function(spot)
+					return spot.id == 1
+				end,
+				isBlocked = function(_spot)
+					return false
+				end,
+				isTop = function(spot)
+					return spot.id == 2
+				end,
+				isTarget = function(spot)
+					return spot.id == 3
+				end,
+				canJump = function(_from, _to)
+					return jumps
+				end,
+			}
+		end
+		local withStep: PillowWayUp.MapLike =
+			{ spots = spots, links = { [1] = { { to = 2, kind = "Walk" } }, [2] = { { to = 3, kind = "Walk" } } } }
+		local noStep: PillowWayUp.MapLike = { spots = spots, links = { [1] = { { to = 2, kind = "Walk" } } } }
+		local unreachable: PillowWayUp.MapLike = { spots = spots, links = { [2] = { { to = 3, kind = "Walk" } } } }
+		expect(#PillowWayUp.problems(withStep, rulesFor(false))).toBeGreaterThan(0)
+		expect(#PillowWayUp.problems(noStep, rulesFor(true))).toBeGreaterThan(0)
+		expect(PillowWayUp.problems(noStep, rulesFor(false))).toEqual({})
+		expect(PillowWayUp.problems(unreachable, rulesFor(false))).toEqual({})
+	end)
+
+	it("the pillow gives no way up", function()
+		local pillow = (world :: any).GiantsThings.Pillow :: Instance
+		local giant = giantModel(world)
+		local nests: { Vector3 } = {}
+		for _, part in (world :: any).EggSpots:GetDescendants() do
+			if part:IsA("BasePart") then
+				table.insert(nests, part.Position)
+			end
+		end
+		local player = game:GetService("StarterPlayer")
+		local gravity = Workspace.Gravity
+		local jumpHeight = (
+			if player.CharacterUseJumpPower
+				then player.CharacterJumpPower ^ 2 / (2 * gravity)
+				else player.CharacterJumpHeight
+		) + 0.5
+		local walkSpeed = (Config :: any).Movement.WalkSpeed :: number
+		local rules: PillowWayUp.Rules = {
+			isGround = function(spot)
+				return spot.standsOn == Workspace.Terrain
+			end,
+			isBlocked = function(spot)
+				return spot.standsOn ~= nil and spot.standsOn:IsDescendantOf(giant)
+			end,
+			isTop = function(spot)
+				return spot.standsOn ~= nil and spot.standsOn:IsDescendantOf(pillow)
+			end,
+			isTarget = function(spot)
+				local on = spot.standsOn
+				if
+					on ~= nil
+					and (
+						on:IsDescendantOf((giant :: any).nightcap) or on:IsDescendantOf((giant :: any).head_with_beard)
+					)
+				then
+					return true
+				end
+				for _, nest in nests do
+					if (spot.position - nest).Magnitude <= NEST_REACH then
+						return true
+					end
+				end
+				return false
+			end,
+			canJump = function(from, to)
+				if not PillowWayUp.jumpReaches(from, to, jumpHeight, gravity, walkSpeed) then
+					return false
+				end
+				return PathCheck.bodyFits(options, PillowWayUp.apexBetween(from, to, jumpHeight))
+			end,
+		}
+		expect(PillowWayUp.problems(map :: any, rules)).toEqual({})
+	end, SCAN_TIMEOUT_MS)
 end)

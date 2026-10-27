@@ -379,7 +379,10 @@ local function run(): any
 		-- the sides of the nightcap, in strips along his length
 		for start = 12, 60, 8 do
 			-- (the left side's along-axis points toward -z, so its strips are given as negative numbers)
-			slab(`CapSideLeft_{start}`, leftSide, -(start + 8), -start, 84, 112, 80)
+			-- (CapSideLeft_52 is not made: Task 41 removed it, it touched only the old pillow)
+			if start ~= 52 then
+				slab(`CapSideLeft_{start}`, leftSide, -(start + 8), -start, 84, 112, 80)
+			end
 			slab(`CapSideRight_{start}`, rightSide, start, start + 8, 84, 112, 80)
 		end
 		-- the fronts of both boots, beside the ramps (the ramps are 9 wide, so the walls start 1 stud outside them)
