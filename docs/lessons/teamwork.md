@@ -49,3 +49,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **Do instead:** a ruling that offers fix paths also says what each fix must leave untouched (the core path, a route, a ladder end). Then a measurement can pick the path without another round trip.
 - **Also:** a ruling that asks for a check ("no shortcut by a jump") writes down the rule to check by: how high, how far, and from which spots. Otherwise the check invents its own rule, and its result needs another round trip (Task 33's beard shortcut check). In the same call, the check follows every spot it finds: where it leads by walking, and whether players can already reach it today.
 - **Who checks:** `product`; `code_lead` when it turns a ruling into a handoff.
+
+## Lesson 36: Stand-in numbers name what replaces them
+- **What happened:** Task 33's band test had to use measured stand-in numbers for the walking band, because the Play walks that should record the band never ran. They moved to Task 28 (2026-10-27).
+- **Do instead:** when a test runs on stand-in numbers, the plan names them and the recorded run that replaces them, and puts that replacement in a named task step.
+- **Who checks:** `code_lead`.
