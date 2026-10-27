@@ -7,8 +7,9 @@ local Helpers = require(ServerStorage.Tests.server.World.RealWorld.Helpers)
 local StartCheck = require(ServerStorage.Tools.checks.StartCheck)
 local inFakeWorld = Helpers.inFakeWorld
 
--- Stuck safety Task 27, step 1 (lesson 21): the shared start check, tested on made-up worlds. A roof here is a thick
--- slab: a ray from 10 studs up starts inside it, so (like a ray in the giant) it never hits the roof and finds the floor.
+-- Stuck safety Task 27, step 1 (lesson 21): the shared start check, tested on made-up worlds. Since step 1b the rays
+-- start 0.5 studs over the spot (RAY_ABOVE), not 10. The thick roofs here are kept so the old cases still run: a ray
+-- from 0.5 up still starts inside a thick slab, so (like a ray in the giant) it never hits the roof and finds the floor.
 describe("StartCheck.find", function()
 	local SLOPE = math.rad(20) -- the floor's tilt in the slope tests: +X is uphill, so downhill is -X
 

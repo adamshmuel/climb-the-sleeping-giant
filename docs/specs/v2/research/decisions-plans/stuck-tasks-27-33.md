@@ -201,3 +201,71 @@ If a far sample hangs, its square's other spots are played in the fix task's re-
 The "Unstuck" event (spec section 10), broken down by zone, shows the rescues. If rescues in the Belly or the Nightcap zone stand out, Launch polish plays the far spots that weren't sampled.
 
 Viral test: yes. Every hang a kid can meet on the climb is found and fixed. On the back, nobody goes, so the rescue is enough. The 22 calls saved go to the phone checks in Task 28.
+
+## Task 27 step 2b: list kept as modules (code_lead, 2026-10-27)
+
+## What happened
+Step 2's list job was pasted straight into Studio and never kept. Step 2b found nothing left in `shared`, rebuilt the list from its best guess at step 2's rule, got 678 spots instead of 681, and stopped at the count check. Nothing was grouped and no start was tried. `ServerStorage.T27Starts` still holds step 2's old 11 lines.
+
+## 1. The list: the rule is written down, not matched to 681
+- 681 is retired as a target. Nobody can say which 3 spots differ, because step 2's exact ray details are lost. Chasing them costs Studio calls and tells players nothing.
+- The list rule from now on is the one written below, kept in a tested module. Its first real run sets the new reference count, written into `work/t27/list.txt`. Every later run (Task 43, the fix task's re-run) must give that same count unless the world was changed on purpose.
+- **The rule** (step 2b's rebuild, written exactly):
+  - **Steep ground:** a walk-map spot that stands on a part named `body_and_cushion` inside `World.Giant` (the pillow is not in there), where the ground leans 45 degrees or more from flat (the angle of the spot's `up`).
+  - **Near a wall:** any other such spot where one of 16 down-rays hits ground steeper than the climb limit (`StarterPlayer.CharacterMaxSlopeAngle`). The rays: 8 directions, 45 degrees apart starting at +x, at 1 and 2 studs out from the spot, each from 2 studs above the spot's height to 5 below. Same ray filter as the walk map's build.
+  - **Slide guards:** the top middle of all 11 parts in `World.WalkSurfaces.SlideGuards` (product's addendum). No "cloth underneath" test any more.
+  - **Order:** guards first (by name), then steepest first; ties by x, then z, so labels never change between runs.
+- **The count check** (these 4 numbers don't depend on the lost ray detail): walk map 7487 spots, 1632 on `body_and_cushion`, 665 steep, 11 guards. If any differs, the world or the map changed: stop and report. The near-wall count and the total are printed and become the reference (expected about 12 near-wall, so about 688 in all).
+
+## 2. Keeping it: yes, as tested modules
+Three runs need the same list (Task 43, a remake of `T27Starts` if Studio closes, the fix task's re-run). A rule that lives only in a pasted script gets rebuilt by guess each time. So the list, the grouping and the known places become kept modules in `tools/checks/`, tested like `StartCheck` (Lesson 38: the tests cover the kinds of spot the list holds). The job that uses them is then about 20 lines.
+
+## 3. Task 27 closes; the rest is a new Task 45
+- Task 27 already has 5 steps and has used its 11 planned Studio calls. Three more steps would make 8, over the 6-step limit. So Task 27 closes with what it built: the start check and its 12 tests (steps 1, 1b, 1c). Steps 2 and 2b were read-only counting jobs; their findings are data for Task 45. Task 27 goes to review now.
+- **New Task 45: The steep list, its groups and its starts are kept and tested.** 3 steps, 6 Studio calls (2 + 2 + 2). Written in `work/handoff-p2-task27.md`, "Task 45". Task 43 starts after Task 45 is approved and reads `T27Starts` as before.
+- **Size:** the steep-list work was planned at 11 calls in Task 27 and now needs 17 (11 + 6), with a second task on the same list. Per "Stuck on one problem", the main chat takes this to `product` before Task 45 starts.
+
+## Known places
+They move into one data module, `tools/checks/KnownPlaces.luau` (Lesson 28: each object's recorded places live in one module). The five notch walk roots already sit in `ClimbingHangs.spec.luau` lines 40-44; that spec reads them from the new module instead of keeping its own copy. Item (f) is placed at (1.9, 102.5, 2.0), walking +x: where the y 102.5 band walk crosses x 1.9 (the plan's words), not the slot block part's own centre.
+
+LESSON: Step 2's list job was pasted into Studio and never kept, so step 2b couldn't rebuild its list (678, not 681) and stopped with nothing done → a job whose results a later task reuses (a list, a set of starts) lives in a tested module in `tools/checks/`; only a short wrapper that calls it is pasted.
+
+## Task 45: later product rulings (2026-10-27)
+### Addendum: the 10 other slide guards (2026-10-27, step 2b's question)
+
+- **Add them.** All 11 guard tops are core spots, so the list becomes 691. Players slide onto these guards from the routes. Task 28 step 2 only slides off each guard once; it doesn't push in 4 directions to look for a hang.
+- **Task 43's budget doesn't change (14 calls).** The guards go first in the played list. If the list then passes 200, the far square grows to 8 studs, as already ruled. Core spots are never cut.
+- **Start check:** a guard top with no open start goes on the "no open start" list for code_lead, the same as the known places.
+
+### Size ruling: Task 45 (2026-10-27, after step 2b stopped at 678)
+
+- **Go ahead with Task 45.** The list decides which hangs players meet on the core climb, and three later runs reuse it. Keeping it in tested modules (Lesson 40: A job a later step reuses lives in a tested module) is cheaper than guessing it again each time. Retiring 681 is right: no player can feel 3 spots.
+- **One cheaper path, for code_lead:** can steps 1 and 2 share one red run and one green run, so the task takes 4 Studio calls instead of 6? Take it only if the step stays within the 30-tool-call cap. If not, keep the 3 steps as planned.
+- **Hard cap: 6 calls.** There is no third task on this list. If step 3 fails its count check or its 95% line, stop and bring it to product. I will then choose between playing only the core spots and the known places, or the rescue.
+- **Viral test:** yes. A kept list means every core hang is found the same way each time, so no kid hits a hang we already fixed and lost track of.
+
+### Task 45, a 7th call (2026-10-27)
+- **Yes, for one fetch only.** It is used only if call 6 comes back "not done" at 30 s, and it waits for the job's own finish time before fetching (Lesson 29: Fetch background work once, when it's done). It allows no re-run and no new logic. A fetch that fails, or a job that's still running, stops at 7 and comes back to product with the last progress line.
+- **Viral test:** yes. This fetch only reads the list that every core hang check depends on, so no new guesses go in.
+
+### Task 45 step 2: 245 spots against the cap of 200 (2026-10-27)
+- **Keep the cap at 200, and keep all 157 core and out-of-reach spots.** The far samples fill the other 43 places. The far spots are scenery that the rescue covers (Lesson 1: Scenery gets the cheap fix), so they don't get a fifth batch.
+- **How the far samples shrink:** try 12-stud squares, then 16. If 16 still gives more than 43, keep the steepest 43, ties by x then z. Spread across his back comes first, because the sample is there to find each kind of hang (Lesson 26). `PlayedList` gets this as one rule, with its test red first.
+- **Task 45 hard cap: 10 Studio calls**, so at most 4 more: the test red, then green, the job re-run, and one fetch only if the re-run isn't done at 30 s. If code_lead can't fit that, it comes back to product before anything starts.
+- **Far samples are not left to the fix task.** Its re-run plays only the batches that failed, so it would never find a new kind of hang.
+- **Viral test:** yes. Every spot a kid reaches near the climb is still played, and the batch saved on scenery that nobody visits goes to phone checks instead.
+
+### Task 45, call 10 (2026-10-27)
+- **Yes.** Call 10 may be the re-run, with job and result in one call, but only after code_lead approves `work/t45/job.luau`. The wrapper stays saved, so it's never rebuilt from memory (Lesson 40: A job a later step reuses lives in a tested module). If it fails, or isn't done inside the call, Task 45 stops at 10 and comes back to product. There's no 11th call.
+- **Viral test:** yes. It's the same check with the count guard in place, so a wrong list can't reach the hang tests.
+
+### Task 45 stopped at 89% open (2026-10-27): second failure on finding starts
+- **Path: lower the bar.** Accept 176 of 197 open as the line for this list. Task 45 closes at 10 calls with its modules and tests. The 21 not-open spots aren't accepted for the rescue: 19 are R spots low on his skin edge, where the rescue doesn't reach (Lesson 10: Check the safety net reaches the spot). So they get walked into from open ground instead of dropped onto. C-003 is the cushion front edge, already in Task 28's cushion walk-in, and it is walked here too.
+- **Known places and the 21:** each is walked into from points 2 to 8 studs back. Each point is checked directly with `StartCheck.find`, not snapped to the nearest walk-map spot. The walk map has no spots on the band (Lesson 32), and the meadow beside the low spots is open ground. They run in Task 43's known-places step.
+- **Question for code_lead (step 3 of "Stuck on one problem"):** "At 21 spots the walk map and the start check disagree about whether a body fits, and 12 known places have no walk-map spot near them. Can `KnownPlaces` check its candidate points directly with `StartCheck.find`, test first, inside Task 43? What does it cost in calls?" If it costs more than 2 calls, it comes back to product.
+- **Saving the starts:** Task 43's first call, an Edit call, re-runs the saved `work/t45/job.luau` with the line at 176 and the direct walk-in starts, and writes `T27Starts`. Task 43's budget goes from 14 to 15.
+- **Stop rule:** no third try on starts. If a core or out-of-reach place still has no open start, it goes to product. I'll choose between designer reshaping that spot and widening the rescue's reach.
+- **Viral test:** yes. Every spot near the climb and the meadow edge is still played or walked into, and none is left without a safety net.
+
+### code_lead's answer on direct walk-in starts (2026-10-27)
+Yes, 2 calls (red run; fetch only if the job isn't done in 30 s). `PlayedList.backPoints` makes points 2 to 8 studs back, each raised by its distance; `PlayedList.firstOpen` checks each with `StartCheck.find` and again 3 studs over the feet found, and skips a start more than its distance + 1 stud above or below the place (a roof or a drop is not a walk-in). The old `candidates` (moved tries to the nearest walk-map spot, Lesson 43) goes. Task 43: 5 steps, 17 Studio calls.

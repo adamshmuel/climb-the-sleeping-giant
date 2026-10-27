@@ -3,6 +3,7 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ServerScriptService = game:GetService("ServerScriptService")
 local Collisions = require(ServerScriptService.Server.Players.Collisions)
+local KnownPlaces = require(game:GetService("ServerStorage").Tools.checks.KnownPlaces)
 local Helpers = require(script.Parent.Helpers)
 local SlideGuardHelpers = require(script.Parent.SlideGuardHelpers)
 local ForeheadBand = require(script.Parent.ForeheadBand)
@@ -37,11 +38,11 @@ describe("the real world, slide guards", function()
 	-- Where the characters ended up hanging (steps 23-5 and 23-6, Play on the computer): the five notch walks W03, W04,
 	-- W08, W09 and W14. (The pillow's spot 1 went with the old pillow in Task 41: the pillow now lies flat and sunk.)
 	local HANG_PLACES: { HangPlace } = {
-		{ name = "notch, walk 3", kind = "patch", root = Vector3.new(-5.3, 21.7, 39.1), prefix = NOTCH_PATCH_PREFIX },
-		{ name = "notch, walk 4", kind = "patch", root = Vector3.new(2.3, 22.6, 39.8), prefix = NOTCH_PATCH_PREFIX },
-		{ name = "notch, walk 8", kind = "patch", root = Vector3.new(-5.3, 21.6, 39.0), prefix = NOTCH_PATCH_PREFIX },
-		{ name = "notch, walk 9", kind = "patch", root = Vector3.new(2.6, 22.6, 39.8), prefix = NOTCH_PATCH_PREFIX },
-		{ name = "notch, walk 14", kind = "patch", root = Vector3.new(-1.1, 22.2, 39.7), prefix = NOTCH_PATCH_PREFIX },
+		{ name = "notch, walk 3", kind = "patch", root = KnownPlaces.get("N03").place, prefix = NOTCH_PATCH_PREFIX },
+		{ name = "notch, walk 4", kind = "patch", root = KnownPlaces.get("N04").place, prefix = NOTCH_PATCH_PREFIX },
+		{ name = "notch, walk 8", kind = "patch", root = KnownPlaces.get("N08").place, prefix = NOTCH_PATCH_PREFIX },
+		{ name = "notch, walk 9", kind = "patch", root = KnownPlaces.get("N09").place, prefix = NOTCH_PATCH_PREFIX },
+		{ name = "notch, walk 14", kind = "patch", root = KnownPlaces.get("N14").place, prefix = NOTCH_PATCH_PREFIX },
 		-- Task 32: the Sock's open spot (-68.8, 4.4, -45) (stuck scan, test 2's Sock box). It lies inside Patch_Sock_10 of the
 		-- chosen fill (rank 1 of work/t32/cands-2b.txt: x -75.625 to -66.125, y 3.643 to 10.299, z -45.125 to -44.875).
 		{ name = "Sock", kind = "patch", root = Vector3.new(-68.8, 4.4, -45), prefix = SOCK_PATCH_PREFIX },
