@@ -54,6 +54,7 @@ After the user approves a spec at Gate 3, turn it into small tasks in test-first
 - says which files it touches;
 - says which test must fail first and what makes it pass;
 - is small enough to build and review in one go;
+- names the lessons from `docs/lessons.md` it follows, if any, so the builder doesn't repeat an old mistake;
 - says **what it's for**: the core gameplay it protects, or that it is scenery (from the idea's "What matters most" list), and **how big it should be** (steps and Studio calls). A scenery task that goes past its size, or a second task on the same object, goes to `product` as a product decision before more work (`agent-workflow.md`, "Stuck on one problem: product decides").
 
 Every spec rule must be covered by at least one task. List any rule that can only be checked by playtesting.
