@@ -50,6 +50,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 38 | A shared check is tested on the spots it will be used on | `world-scenery.md` |
 | 39 | Count the list before sizing the task | `teamwork.md` |
 | 40 | A job a later step reuses lives in a tested module | `studio-and-scripts.md` |
+| 41 | One test filter per runner call, and check the suite count | `studio-and-scripts.md` |
+| 42 | A job keeps slow results in `shared`, and takes data shapes from the server's own calls | `studio-and-scripts.md` |
+| 43 | One "does a body fit here" check, or test the points directly | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

@@ -46,4 +46,16 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 ## Lesson 40: A job a later step reuses lives in a tested module
 - **What happened:** Task 27 step 2's list job was pasted straight into Studio and never kept. Step 2b had to rebuild the list by guessing its ray rule, got 678 spots instead of 681, and stopped with nothing done (2026-10-27).
 - **Do instead:** a job whose results a later step or task reuses (a list, a set of starts, a grouping) lives in a tested module in `tools/checks/`. Only a short wrapper that calls it is pasted into Studio. One-off jobs are still pasted once and not kept.
+- **Also (Task 45 step 3):** the wrapper itself is kept too, in `work/`, and every re-run pastes that same file. Call 6's wrapper wasn't kept, so call 9 rebuilt it with a different ray filter (693 spots, not 691), and the count check stopped it.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 41: One test filter per runner call, and check the suite count
+- **What happened:** Task 45 used a test runner filter "SteepList|PlayedList". The runner ignores `|`: it ran only the first name, so one spec looked red or green while the other never ran. It cost a Studio call (2026-10-27).
+- **Do instead:** run each name in its own runner call (several calls fit inside one `execute_luau`), and check that each one ran: the runner's report has no suite count, so count the matching spec files in the same call.
+- **Also:** Vector3 maths is 32-bit, so a 45° angle reads as about 44.99999°. A "45 or more" test needs a tolerance of about 1e-3 degrees.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 42: A job keeps slow results in `shared`, and takes data shapes from the server's own calls
+- **What happened:** Task 45 step 2's wrapper passed the gardens raw from `WorldIndex.loadGardens`, but `Zones.locate` wants the boxes the server makes with `PlayerTracker.gardenBoxes`. The job failed after building the walk map, and the map was in a local variable, so the last allowed Studio call had to rebuild it (2026-10-27).
+- **Do instead:** a job that builds something slow (a walk map, a list) stores it in `shared` before using it, so a later bug costs a fetch, not a rebuild. When a wrapper calls game modules, copy how the server calls them (the init script), not the loader's return type.
 - **Who checks:** `code_lead` (in the handoff), `builder`.

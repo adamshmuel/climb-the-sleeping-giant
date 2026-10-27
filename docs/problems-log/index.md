@@ -15,6 +15,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
 | Check started inside a mesh, or a start check that's wrong | 7 | 2026-10-27 | `world-scenery.md` |
+| A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 
 ## Fixed kinds
 
@@ -29,7 +30,6 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines), and after it came back Lesson 29 (Fetch background work once, when it's done) and Lesson 31 (A background job reports as it goes) | 2026-10-27 |
 | A new part fails an existing test (first time) | Lesson 37 (A trial part must also pass the tests for its kind) | 2026-10-27 |
 | A fill makes its own stuck spots | Lesson 35 (A fill's top is a new floor) | 2026-10-27 |
-| A rerun rebuilt from memory | Lesson 40 (A job a later step reuses lives in a tested module) | 2026-10-27 |
 | Fix planned on an unconfirmed cause | Lesson 26 (Try 5 examples before choosing a fix), extended after Task 33, and the cause line in `agent-workflow.md`, "Decision table first" | 2026-10-27 |
 | Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess), extended after a fourth (code_lead) to every agent | 2026-10-27 |
 

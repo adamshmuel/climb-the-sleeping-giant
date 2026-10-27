@@ -67,3 +67,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 27's shared start check was fixed for thin roofs by starting its rays 0.5 studs above the spot (step 1b). Its tests had only flat floors. On a steep slope the uphill rays then start inside the giant, so 211 of 224 starts on his steep back came back "not open", and step 2's list proved nothing (2026-10-27). The thin-roof change was ruled by the main chat, not by `code_lead`.
 - **Do instead:** before a shared check is used on a list, its tests cover the kinds of spot on that list (for start checks: a 45° to 70° slope with its uphill corners, a thin roof, and a flat floor) in the same run. A change to a shared check, even a small one, goes to `code_lead`, who names the cases it must still pass.
 - **Who checks:** `code_lead` (in the handoff), `builder`, main chat.
+
+## Lesson 43: One "does a body fit here" check, or test the points directly
+- **What happened:** the walk map and the shared start check each decide whether a body fits. They disagreed at 21 spots, and 12 known places had no walk-map spot near them, because their start tries were moved to the nearest walk-map spot. Task 45 failed its 95% line at its last allowed call: the second failed task on finding open starts (2026-10-27).
+- **Do instead:** one shared fit check decides both, or a check tests its own candidate points directly with `StartCheck.find`, never moved to another check's spots.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
