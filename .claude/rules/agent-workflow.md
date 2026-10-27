@@ -80,6 +80,26 @@ When the team fails twice on the same problem (two tries, steps or tasks that en
    - **Cut it:** take it out of this version.
 3. If the path changes approved work, the "Asking the user" checks apply as usual.
 
+## Learning from experience
+
+The team writes down what went wrong, so it is caught early next time and never happens a third time.
+
+- **Lessons (`docs/lessons.md`).** Every agent reads it before planning, writing a rule, placing an object or starting a task, and follows any lesson that matches. A task or ruling that follows a lesson names it, for example "Lesson 2 (Change the scenery, not the giant)". An agent that spots a new lesson ends its report with one line: `LESSON: <what happened> → <do instead>`. The main chat writes it into the file.
+- **Problems log (`docs/problems-log.md`).** The main chat adds one line for every unplanned stop as soon as it happens: a crash, a stale Studio, an idle turn, an agent over its memory limit, a failed script, a task over its size, a second task on the same object. **The same kind twice means fix the cause:** the main chat stops, finds why, fixes it (a rule, a script or a hook), and adds a lesson. A workaround alone is never the fix the second time.
+- **Health check (`python3 scripts/health.py`).** The main chat runs it at every task close and at the start of every session. It reads the session records and prints the hours worked and idle, each agent's size, Rojo crashes and commits, then the alarms. It checks these by hand too:
+
+  | Alarm | What it means |
+  |---|---|
+  | Nothing running for more than 30 minutes, and nobody knew | an idle turn: log it, and start the next step now |
+  | Two tasks in a row closed with nothing built | the team is stuck: "Stuck on one problem" above |
+  | A task went past its planned size | stop and ask `code_lead` to split it or `product` whether it's worth it |
+  | A second task on the same object | a product decision: "Stuck on one problem" above |
+  | Any Rojo crash, agent over its limit or other unplanned stop | a problems-log line; twice means fix the cause |
+
+  An alarm means stop and step back before the next step, and take it to the owner (usually `product`). Never carry on as if nothing happened.
+- **Look back at each task close.** Before the commit, the main chat asks in one line: what slowed this task down, and could a lesson have stopped it? Anything found goes into the log or the lessons.
+- **Time in every update.** Each update to Adam about a task says the time so far against the plan, for example "Task 7: 6 h so far, planned 2 h". A big gap is an alarm.
+
 ## Main chat is the messenger
 
 Agents never talk to each other directly. The main chat carries every message between them. There is **no chain of command**: any agent can ask any other agent a question, and the main chat takes it straight to the owner in the table below, never "up" through someone else.
@@ -209,3 +229,4 @@ Adam talks only to the main chat. When he asks why an agent decided something, o
 | `docs/reviews/<feature>.md` | `product` | yes |
 | `docs/architecture.md`, `docs/plans/<version>/index.md`, `docs/plans/<version>/<feature>.md`, `docs/progress.md` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |
+| `docs/lessons.md`, `docs/problems-log.md` | main chat | yes |
