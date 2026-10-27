@@ -46,6 +46,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 34 | Placing numbers are fixed, and each part gets its own try | `studio-and-scripts.md` |
 | 35 | A fill's top is a new floor | `world-scenery.md` |
 | 36 | Stand-in numbers name what replaces them | `teamwork.md` |
+| 37 | A trial part must also pass the tests for its kind | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

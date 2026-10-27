@@ -54,3 +54,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **Do instead:** before placing a fill, the measuring call lists the walk-map spots that its top will create and checks that each one can walk, climb or slide off. If any can't, choose a different top before placing. Try 2 or 3 fixed shapes in one read-only call and keep the one that passes: in Task 33, moving the beard box's side in by 1 stud turned 6 stuck spots into 0.
 - **Also (product, Task 33):** when a fill's own surface makes new stuck spots, product chooses between one more fix and the rescue after that first failure, not after a second. Task 33 spent two shape tries on the beard before taking the rescue anyway.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 37: A trial part must also pass the tests for its kind
+- **What happened:** Task 33's forehead box passed every check made for it (the stuck scan, the band gap, the look), but when the full tests ran, it failed the existing test that every small patch sits on his drawn skin or is sealed inside him. That came at the last allowed Studio call, so it couldn't be fixed in the task's budget (2026-10-27).
+- **Do instead:** the trial call that places a part also runs the existing tests for every part of its kind (for patches, the "sealed or on his skin" test), not only the checks written for this fix. The handoff names those tests.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
