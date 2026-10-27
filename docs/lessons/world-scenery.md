@@ -47,3 +47,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** in Task 33 product ruled on whether a stuck spot was "reachable from the band", but the walk map has no spots on the forehead's walking band, so it could never answer. code_lead had to measure the trough by hand and found players can slide straight down into the spot (2026-10-27).
 - **Do instead:** before a ruling depends on reaching a spot from the band, measure the band's shape around that spot (rays from the band's walking height down to the spot). Never read "no walk-map link" as "not reachable" near the band.
 - **Who checks:** `code_lead` (in the handoff), `product` (before ruling).
+
+## Lesson 35: A fill's top is a new floor
+- **What happened:** in Task 33 the beard box filled a gap and ended level with the free skin next to it. Its flat top became a new floor that players couldn't leave: 5 new stuck spots appeared on it. Task 29's forehead fill (T6) failed the same way (2026-10-27).
+- **Do instead:** before placing a fill, the measuring call lists the walk-map spots that its top will create and checks that each one can walk, climb or slide off. If any can't, choose a different top before placing.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
