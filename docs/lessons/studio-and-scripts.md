@@ -30,6 +30,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 ## Lesson 29: Fetch background work once, when it's done
 - **What happened:** in Task 42 step 2 the builder started the world script and the full tests in the background (Lesson 22), then fetched twice before they finished. Both fetches found nothing new, the step went 2 calls over its cap, and the results were never read (2026-10-27). Lesson 24 had fixed this kind once already, for a different cause.
 - **Do instead:** the background job sets a `done` flag and its finish time in `shared`. Before fetching, wait in Bash for the job's usual time (the handoff gives it, for example a full test run). The fetch call itself waits inside for the `done` flag for up to 30 seconds (under Studio's ~45-second limit), then returns what it has. One fetch per job.
+- **Also (Task 33 step b):** a job that skipped most of its starts finished in 95 s, but the builder waited the full 300 s and missed the moment it held the player for a shot. Wait for the job's own finish time (it writes its expected end into `shared` at the start), not a fixed time, and take shots inside the job's hold, not after it.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
 
 ## Lesson 31: A background job reports as it goes
