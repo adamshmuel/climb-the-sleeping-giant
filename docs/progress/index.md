@@ -12,7 +12,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 21 of 40 | ◐ Task 32 approved 2026-10-26 (the Sock's pocket is filled; its stuck spot is gone); Task 35 (the Sock's lips) measured the fix; Task 36 tried the lip boards in Play (6 of 8 pass); Task 38 closed (the two mouth boards moved under Task 32's plates pass every run and shot); now Task 39 (a rare hang inside the pocket) and Task 37 (built into the world), then Task 40 (the pillow moves back so the nightcap doesn't poke through it), then Task 33 (the beard and the forehead); the old forehead pocket is Task 27 step 6; the pillow is Task 23b |
+| 2. Stuck safety | `v2/stuck-safety.md` | 22 of 40 | ◐ Task 32 approved 2026-10-26 (the Sock's pocket is filled; its stuck spot is gone); Task 35 (the Sock's lips) measured the fix; Task 36 tried the lip boards in Play (6 of 8 pass); Task 38 closed (the two mouth boards moved under Task 32's plates pass every run and shot); Task 39 closed (two invisible turned boxes stop the hang deep in the pocket); now Task 37 (built into the world), then Task 40 (the pillow moves back so the nightcap doesn't poke through it), then Task 33 (the beard and the forehead); the old forehead pocket is Task 27 step 6; the pillow is Task 23b |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |
