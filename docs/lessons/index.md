@@ -18,6 +18,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 6 | Never pull the whole console into an agent's memory | `studio-and-scripts.md` |
 | 7 | A Luau line can't start with "(" | `studio-and-scripts.md` |
 | 8 | Checks that look straight down miss upright surfaces | `world-scenery.md` |
+| 9 | Rank what matters before fixing the world | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
