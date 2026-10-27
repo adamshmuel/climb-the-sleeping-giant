@@ -26,3 +26,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 41's flat pillow had its size, place and turn check written twice, in two world-script sections, because the second section copied the first one's numbers (2026-10-27). Changing one would silently break the other.
 - **Do instead:** an object's recorded sizes and places go in one shared module that every section and test reads, never copied into a second file.
 - **Who checks:** `code_lead` (in the review), `builder`.
+
+## Lesson 29: Fetch background work once, when it's done
+- **What happened:** in Task 42 step 2 the builder started the world script and the full tests in the background (Lesson 22), then fetched twice before they finished. Both fetches found nothing new, the step went 2 calls over its cap, and the results were never read (2026-10-27). Lesson 24 had fixed this kind once already, for a different cause.
+- **Do instead:** the background job sets a `done` flag and its finish time in `shared`. Before fetching, wait in Bash for the job's usual time (the handoff gives it, for example a full test run). The fetch call itself waits inside for the `done` flag for up to 30 seconds (under Studio's ~45-second limit), then returns what it has. One fetch per job.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
