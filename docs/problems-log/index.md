@@ -28,7 +28,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Script error | Lesson 7 (A Luau line can't start with "("), Lesson 22 (Long Play work runs in the background) | 2026-10-27 |
 | Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines), and after it came back Lesson 29 (Fetch background work once, when it's done) and Lesson 31 (A background job reports as it goes) | 2026-10-27 |
 | Fix planned on an unconfirmed cause | Lesson 26 (Try 5 examples before choosing a fix), extended after Task 33, and the cause line in `agent-workflow.md`, "Decision table first" | 2026-10-27 |
-| Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess) | 2026-10-27 |
+| Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess), extended after a fourth (code_lead) to every agent | 2026-10-27 |
 
 ## Area files
 
@@ -36,4 +36,4 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 |---|---|---|
 | `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 5 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 7 |
-| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 10 |
+| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 11 |

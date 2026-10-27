@@ -4,8 +4,8 @@
 Runs before every tool call. Inside a project agent it reads that agent's
 own transcript, takes the size of its last request (its memory), and:
 - near the limit: lets the call through with a warning to wrap up;
-- builder over its limit: blocks every tool except Write/Edit into work/,
-  so it can only write its state note and report.
+- any project agent over its limit: blocks every tool except Write/Edit
+  into work/, so it can only write its state note or answer and report.
 Call caps alone kept missing this (tool calls of very different sizes).
 """
 
@@ -74,15 +74,15 @@ def main():
 
     note_write = data.get("tool_name") in ("Write", "Edit") and in_work_folder(data)
 
-    if size >= limit and agent_type == "builder" and not note_write:
+    if size >= limit and not note_write:
         out = {
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",
                 "permissionDecisionReason": (
                     f"Memory at {k} (agent-workflow.md, 'Agent memory size'). "
-                    "Stop now: write your state note in work/ (Write/Edit there still works), "
-                    "then end with your report. A fresh builder carries on."
+                    "Stop now: write your state note or answer in work/ (Write/Edit there still works), "
+                    "then end with your report. A fresh agent carries on."
                 ),
             }
         }
