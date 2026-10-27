@@ -53,7 +53,8 @@ After the user approves a spec at Gate 3, turn it into small tasks in test-first
 - names the spec rules it covers, by number and name, for example "Rule 7 (Coins survive a rejoin)";
 - says which files it touches;
 - says which test must fail first and what makes it pass;
-- is small enough to build and review in one go.
+- is small enough to build and review in one go;
+- says **what it's for**: the core gameplay it protects, or that it is scenery (from the idea's "What matters most" list), and **how big it should be** (steps and Studio calls). A scenery task that goes past its size, or a second task on the same object, goes to `product` as a product decision before more work (`agent-workflow.md`, "Stuck on one problem: product decides").
 
 Every spec rule must be covered by at least one task. List any rule that can only be checked by playtesting.
 
@@ -75,6 +76,8 @@ Split every task into steps that each end at a safe point: a green test run, nev
 **A task has at most 6 steps.** When the work outgrows the plan (new cases found mid-task), don't add steps to the running task: finish and review what it has, and put the extra work in a new numbered task with its own review. Don't go smaller than one behavior per task, because every task also pays for a fresh builder reading its files and a full review.
 
 When a task has many cases of the same kind, add a decision table to the handoff: each kind of case, the fix it gets, and when to stop. Ask the owners it touches to check it once, before the builder starts, so the builder doesn't stop for a ruling on every case (`agent-workflow.md`, "Fewer round trips"). When the builder brings cases the table doesn't cover, rule on all of them in one reply, and add the new kinds to the table.
+
+**Don't ask owners about numbers players can't see.** A tolerance, a margin or a measuring method inside the spec's rules is yours to set. Ask `product` or `designer` only when the change is something a player could see or feel, or when it changes what a spec rule says.
 
 The main chat passes it on. Answer the builder's technical questions the same way. If a question is really about the spec, the look or the gameplay, say who owns it.
 
