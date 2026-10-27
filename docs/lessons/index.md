@@ -19,6 +19,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 7 | A Luau line can't start with "(" | `studio-and-scripts.md` |
 | 8 | Checks that look straight down miss upright surfaces | `world-scenery.md` |
 | 9 | Rank what matters before fixing the world | `world-scenery.md` |
+| 10 | Check the safety net reaches the spot | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

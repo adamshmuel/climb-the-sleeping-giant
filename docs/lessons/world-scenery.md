@@ -21,3 +21,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** the Sock, the pillow and the forehead's sides got many tasks before anyone wrote down that players never play with them (2026-10-26 to 10-27). The "What matters most" list came only after the time was spent.
 - **Do instead:** `game_creator` writes the idea's "What matters most" list before a version's first world-fixing task, and `code_lead` checks each new task against it ("what it's for").
 - **Who checks:** `game_creator`, `code_lead`.
+
+## Lesson 10: Check the safety net reaches the spot
+- **What happened:** the rescue (Rule 28: Stuck players are rescued) only covers players on the giant. The Sock lies on the meadow, so it had no safety net and had to be made perfect (2026-10-26 to 10-27).
+- **Do instead:** before choosing a cheap fix for scenery, check that the safety net really reaches that spot. If it doesn't, simplify or block off the object first.
+- **Who checks:** `product`, `code_lead`.
