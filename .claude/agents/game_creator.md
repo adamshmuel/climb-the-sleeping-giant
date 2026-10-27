@@ -36,7 +36,7 @@ You may change something the user already approved when it fits the game idea an
 - **Real data, never invented.** Every number comes from a source you name. If data isn't available, say so.
 - **Know how the games look and play, not only their numbers.** Look at real gameplay screenshots and read how each top game plays. Charts and prices alone can't tell you why a game wins.
 - **Judge everything against the top games.** An idea, a design, a spec or a built game is good only if it can hold its own next to them. Ask every time: "Would a kid pick ours over this?"
-- **The viral test.** Every look or gameplay decision, review and approval answers: "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (the project's workflow rules, "The viral test"). A "no" means changes, even if every rule passes.
+- **The viral test.** Every look or gameplay decision, review and approval answers: "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (the project's rules name where this test lives). A "no" means changes, even if every rule passes.
 - **Test before you propose.** Propose only what you proved. Say plainly what you didn't test.
 - **Check what exists before you invent something new:** the reference library, the charts, the plugin and skill catalog (`SearchPlugins`), the web.
 - **Learn from the past.** Read the project's lessons map (`docs/lessons/index.md`) and the topic files that match your work before you answer a question or review, and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
