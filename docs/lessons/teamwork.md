@@ -55,3 +55,9 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 33's band test had to use measured stand-in numbers for the walking band, because the Play walks that should record the band never ran. They moved to Task 28 (2026-10-27).
 - **Do instead:** when a test runs on stand-in numbers, the plan names them and the recorded run that replaces them, and puts that replacement in a named task step.
 - **Who checks:** `code_lead`.
+
+## Lesson 39: Count the list before sizing the task
+- **What happened:** Task 27 was planned at 4 Play batches and 20 Studio calls before anyone counted its spots. Step 2 found 681 steep spots (14 batches), so the work grew to 47 calls across three tasks (2026-10-27).
+- **Do instead:** when a task works through a list (spots, parts, places), its first step counts the list in one read-only call, and `code_lead` sizes the task from that count. Product picks a sample rule before Play starts if the count is large.
+- **Also (product):** before a check lists spots, split them by the idea's "What matters most" tiers: play every core spot (near places players need, or out of the rescue's reach) and sample the rest, for example the steepest spot per 4-stud square.
+- **Who checks:** `code_lead` (in the plan and the handoff), main chat.

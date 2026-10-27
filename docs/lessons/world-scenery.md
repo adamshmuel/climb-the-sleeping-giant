@@ -62,3 +62,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **Also (Task 33 step e):** the roof exception freed only 1 of the 23 failing rays, because the plate isn't straight above the box's -z face. Before choosing a roof exception, measure the roof distance on every open side.
 - **Also (code_lead review):** a job that places a part and then runs the full tests never shows the new real-world test red. Run that test once before placing, in the same job.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 38: A shared check is tested on the spots it will be used on
+- **What happened:** Task 27's shared start check was fixed for thin roofs by starting its rays 0.5 studs above the spot (step 1b). Its tests had only flat floors. On a steep slope the uphill rays then start inside the giant, so 211 of 224 starts on his steep back came back "not open", and step 2's list proved nothing (2026-10-27). The thin-roof change was ruled by the main chat, not by `code_lead`.
+- **Do instead:** before a shared check is used on a list, its tests cover the kinds of spot on that list (for start checks: a 45° to 70° slope with its uphill corners, a thin roof, and a flat floor) in the same run. A change to a shared check, even a small one, goes to `code_lead`, who names the cases it must still pass.
+- **Who checks:** `code_lead` (in the handoff), `builder`, main chat.
