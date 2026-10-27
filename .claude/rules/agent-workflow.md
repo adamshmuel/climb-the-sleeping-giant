@@ -62,6 +62,22 @@ Adam's only jobs are the gates and the rare decisions that are his to make (see 
 
 **Never end a turn on a promise.** When an agent's report arrives, that agent has stopped. In the same turn, the main chat starts the next step (resume an agent, start a fresh one, or relay a question). It never ends a turn saying "I'll start X" without starting X. Before telling Adam "X is running", `ListAgents` must show X running. A Stop hook (`.claude/hooks/no-idle-stop.py`) blocks the first try to end a turn that breaks this.
 
+## Stuck on one problem: product decides
+
+When the team fails twice on the same problem (two tries, steps or tasks that end "tried, nothing built", or a check that keeps failing), the main chat stops the work on it and takes it to `product` as a product decision. It is no longer `code_lead`'s technical problem.
+
+1. **How much does it matter?** `product` first weighs the thing against the whole game, with `game_creator` for gameplay and business:
+   - the core loop and the gameplay: does the player play with it, or is it there for looks?
+   - the final product: would a player notice or care if it changed?
+   - the project goals: retention, the new-player experience, the release date and the cost so far.
+   Something that is only for looks never gets more tries than something players play with.
+2. **Pick one path**, with its reasons:
+   - **Lower the bar:** change the rule or the limit so it asks only what the player needs.
+   - **Change the design:** `designer` reshapes, moves or simplifies the thing so the problem goes away.
+   - **Accept it for now:** a safety net covers the player; it is written into a named later spec.
+   - **Cut it:** take it out of this version.
+3. If the path changes approved work, the "Asking the user" checks apply as usual.
+
 ## Main chat is the messenger
 
 Agents never talk to each other directly. The main chat carries every message between them. There is **no chain of command**: any agent can ask any other agent a question, and the main chat takes it straight to the owner in the table below, never "up" through someone else.
