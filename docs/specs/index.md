@@ -27,7 +27,7 @@ Each spec has at most 15 rules. Status words:
 | 7 | Friends | Friend Boost, and the invite reward (a free Rare egg for both friends). | `todo` |
 | 8 | Daily rewards | The 7-day login streak with a gift each day. | `todo` |
 | 9 | Shop and Robux | The Shop: game passes (2x Cash, Fast Hatch, VIP, +4 Pet Pads) and repeatable buys (Lullaby, Starter Pack, cash packs). | `todo` |
-| 10 | Launch polish | A tiptoe walking animation, a speed check on real phones, and the store page (icon, thumbnails, description). The music and sound effects moved to V2 (`v2/audio.md`). | `todo` |
+| 10 | Launch polish | A tiptoe walking animation, a speed check on real phones, and the store page (icon, thumbnails, description), and the beard wedge fix (V2 stuck safety's one stuck spot left to the rescue for now, Rule 22: What counts as stuck). The music and sound effects moved to V2 (`v2/audio.md`). | `todo` |
 
 ## Notes for the next product agent
 
