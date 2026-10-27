@@ -39,5 +39,6 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 
 ## Lesson 26: Try 5 examples before choosing a fix
 - **What happened:** in Task 41 the team guessed that players wedged in a gap and planned to sink the pillow to close it. A slide simulation showed sinking it 0.1 to 3 studs changed nothing, so the guess was wrong (2026-10-27).
-- **Do instead:** before choosing a fix for stuck spots, run the cheap read-only check on about 5 real examples and confirm the cause. Only then pick the fix.
+- **What happened again:** in Task 33 the forehead fix assumed V1's plate roofed the spot, and the beard box assumed a two-wall crease. Neither was measured: removing or shortening the plate left the spot stuck, and the real crease had one back wall and a roof, so both trials failed (2026-10-27).
+- **Do instead:** before choosing a fix for stuck spots, run the cheap read-only check on about 5 real examples and confirm the cause. Only then pick the fix. For a single spot, the check names the actual parts above it and around it (a ray straight up plus rays around it from the spot). A fix that moves, cuts or blocks a part names that part as measured, never as guessed.
 - **Who checks:** `code_lead` (in the handoff), `builder`.

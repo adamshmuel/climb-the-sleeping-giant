@@ -2,7 +2,7 @@
 
 One line for every unplanned stop: anything that halted or slowed the work and wasn't part of the plan. The main chat adds the line as soon as it happens, in the file for the area, feature or gameplay part it belongs to. **The same kind twice means fix the cause** (`agent-workflow.md`, "Learning from experience"), and the fix becomes a lesson (`docs/lessons/index.md`).
 
-Kinds: **Rojo crash**, **Studio out of date**, **Idle turn** (nothing ran and nobody knew), **Over memory limit** (an agent went past its limit), **Script error** (a pasted script failed), **Over budget** (a task went past its planned size), **Scenery overrun** (a second task on the same scenery object).
+Kinds: **Rojo crash**, **Studio out of date**, **Idle turn** (nothing ran and nobody knew), **Over memory limit** (an agent went past its limit), **Script error** (a pasted script failed), **Over budget** (a task went past its planned size), **Scenery overrun** (a second task on the same scenery object), **Fix planned on an unconfirmed cause** (a fix aimed at a part nobody measured).
 
 **How to use it.** Agents read this map and only the area files that match their work. Before logging a problem, check the "Open kinds" table: a kind already there means this is the second time, so the cause gets fixed now.
 
@@ -27,12 +27,13 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Studio busy ("not reachable") | Lesson 22, extended to test runs | 2026-10-27 |
 | Script error | Lesson 7 (A Luau line can't start with "("), Lesson 22 (Long Play work runs in the background) | 2026-10-27 |
 | Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines), and after it came back Lesson 29 (Fetch background work once, when it's done) and Lesson 31 (A background job reports as it goes) | 2026-10-27 |
+| Fix planned on an unconfirmed cause | Lesson 26 (Try 5 examples before choosing a fix), extended after Task 33, and the cause line in `agent-workflow.md`, "Decision table first" | 2026-10-27 |
 | Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess) | 2026-10-27 |
 
 ## Area files
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 4 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 5 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 7 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 10 |
