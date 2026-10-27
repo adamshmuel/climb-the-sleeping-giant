@@ -36,3 +36,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** three times a script started inside a part and believed what it found: the gap walk in step 39-5c and in step 37-5 started inside the Sock's fill, and in step 37-6 the shot camera sat inside the Sock's mesh. A ray never hits the part it starts in, so each check said "clear" (2026-10-27).
 - **Do instead:** before a walk, check or shot, test the start spot is open (nothing overlaps it). Place a camera with a ray from the player's head out to the camera, the way Roblox's camera does. Every handoff with a walk or a shot says how its start is checked.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 26: Try 5 examples before choosing a fix
+- **What happened:** in Task 41 the team guessed that players wedged in a gap and planned to sink the pillow to close it. A slide simulation showed sinking it 0.1 to 3 studs changed nothing, so the guess was wrong (2026-10-27).
+- **Do instead:** before choosing a fix for stuck spots, run the cheap read-only check on about 5 real examples and confirm the cause. Only then pick the fix.
+- **Who checks:** `code_lead` (in the handoff), `builder`.

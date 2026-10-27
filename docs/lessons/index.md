@@ -35,6 +35,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 23 | A Studio script returns a short summary, never a list | `teamwork.md` |
 | 24 | The handoff names the exact files and lines | `teamwork.md` |
 | 25 | A hook enforces the memory limit, not a guess | `teamwork.md` |
+| 26 | Try 5 examples before choosing a fix | `world-scenery.md` |
+| 27 | Every task close compares the scan with the planned reds | `teamwork.md` |
+| 28 | Each object's recorded places live in one module | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

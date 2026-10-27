@@ -19,5 +19,10 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 
 ## Lesson 22: Long Play work runs in the background
 - **What happened:** in Task 37's last Play check, code_lead's two client calls each waited inside the call and came back "Request timeout", so nothing was measured (2026-10-27). The builder's earlier scripts also depended on a helper module it removed before the next check.
-- **Do instead:** a client call starts long work with `task.spawn`, stores the results in `shared`, and returns at once; a second call fetches them. A helper module a later check needs stays in Studio until that task closes.
+- **Do instead:** a client call starts long work with `task.spawn`, stores the results in `shared`, and returns at once; a second call fetches them. A helper module a later check needs stays in Studio until that task closes. A full test run keeps Studio busy the same way: start it, wait in Bash, then fetch the result. A call that comes back "Studio not reachable" means Studio is busy; wait in Bash before the next call, never retry at once.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 28: Each object's recorded places live in one module
+- **What happened:** Task 41's flat pillow had its size, place and turn check written twice, in two world-script sections, because the second section copied the first one's numbers (2026-10-27). Changing one would silently break the other.
+- **Do instead:** an object's recorded sizes and places go in one shared module that every section and test reads, never copied into a second file.
+- **Who checks:** `code_lead` (in the review), `builder`.
