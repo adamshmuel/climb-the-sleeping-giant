@@ -1,20 +1,20 @@
 # Problems log
 
-One line for every unplanned stop: anything that halted or slowed the work and wasn't part of the plan. The main chat adds the line as soon as it happens, in this month's file. **The same kind twice means fix the cause** (`agent-workflow.md`, "Learning from experience"), and the fix becomes a lesson (`docs/lessons/index.md`).
+One line for every unplanned stop: anything that halted or slowed the work and wasn't part of the plan. The main chat adds the line as soon as it happens, in the file for the area, feature or gameplay part it belongs to. **The same kind twice means fix the cause** (`agent-workflow.md`, "Learning from experience"), and the fix becomes a lesson (`docs/lessons/index.md`).
 
 Kinds: **Rojo crash**, **Studio out of date**, **Idle turn** (nothing ran and nobody knew), **Over memory limit** (an agent went past its limit), **Script error** (a pasted script failed), **Over budget** (a task went past its planned size), **Scenery overrun** (a second task on the same scenery object).
 
-**How to use it.** Agents read this map and only the month files they need. Before logging a problem, check the "Open kinds" table: a kind already there means this is the second time, so the cause gets fixed now.
+**How to use it.** Agents read this map and only the area files that match their work. Before logging a problem, check the "Open kinds" table: a kind already there means this is the second time, so the cause gets fixed now.
 
-**Size.** One file per month, `docs/problems-log/<year>-<month>.md`. No file here goes over 1000 lines. If a month nears the limit, start `<year>-<month>-b.md`.
+**Files by area, never by date.** One file per area of the project, feature or gameplay part, for example `world-scenery.md`, or a feature from the spec index such as `stuck-safety.md`. A problem that fits no file starts a new one, with a line in the "Area files" table. No file here goes over 1000 lines: when one nears the limit, split it into narrower areas (for example `world-scenery.md` into `the-sock.md` and `the-pillow.md`) and update this map.
 
 ## Open kinds
 
 A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
-| Kind | Times | Last seen | Month file |
+| Kind | Times | Last seen | Area file |
 |---|---|---|---|
-| Over memory limit | 4+ tasks | 2026-10-27 | `2026-10.md` |
+| Over memory limit | 4+ tasks | 2026-10-27 | `teamwork.md` |
 
 ## Fixed kinds
 
@@ -26,8 +26,10 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Scenery overrun | Lesson 1 (Scenery gets the cheap fix) | 2026-10-27 |
 | Script error | Lesson 7 (A Luau line can't start with "(") | 2026-10-27 |
 
-## Month files
+## Area files
 
-| File | Rows |
-|---|---|
-| `2026-10.md` | 9 |
+| File | What it covers | Rows |
+|---|---|---|
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 1 |
+| `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 5 |
+| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 3 |
