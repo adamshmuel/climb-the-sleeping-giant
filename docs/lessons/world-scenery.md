@@ -34,7 +34,7 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 
 ## Lesson 21: Never start a walk, check or camera inside a mesh
 - **What happened:** three times a script started inside a part and believed what it found: the gap walk in step 39-5c and in step 37-5 started inside the Sock's fill, and in step 37-6 the shot camera sat inside the Sock's mesh. A ray never hits the part it starts in, so each check said "clear" (2026-10-27).
-- **Do instead:** before a walk, check or shot, test the start spot is open (nothing overlaps it). Place a camera with a ray from the player's head out to the camera, the way Roblox's camera does. Every handoff with a walk or a shot says how its start is checked.
+- **Do instead:** before a walk, check or shot, test the start spot is open (nothing overlaps it). Test it with `GetPartsInPart` on a body-sized probe part, which uses the real shapes. Never use `GetPartBoundsInBox` for this: it compares rough outer boxes, so near the giant every spot looks closed (Task 41 step 3, Task 42 step 1 and its review, 2026-10-27). Place a camera with a ray from the player's head out to the camera, the way Roblox's camera does. Every handoff with a walk or a shot says how its start is checked.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
 
 ## Lesson 26: Try 5 examples before choosing a fix
