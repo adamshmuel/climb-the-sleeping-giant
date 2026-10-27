@@ -15,7 +15,6 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
 | Check started inside a mesh | 3 | 2026-10-27 | `world-scenery.md` |
-| Task over its size (step over its call cap) | 1 | 2026-10-27 | `teamwork.md` |
 
 ## Fixed kinds
 
@@ -26,6 +25,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Idle turn | Lesson 4 (Never end a turn on a promise) | 2026-10-27 |
 | Scenery overrun | Lesson 1 (Scenery gets the cheap fix) | 2026-10-27 |
 | Script error | Lesson 7 (A Luau line can't start with "("), Lesson 22 (Long Play work runs in the background) | 2026-10-27 |
+| Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines) | 2026-10-27 |
 | Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), plus Lesson 23 (A Studio script returns a short summary, never a list) after it came back once | 2026-10-27 |
 
 ## Area files
@@ -34,4 +34,4 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 |---|---|---|
 | `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 2 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 6 |
-| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 6 |
+| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 7 |

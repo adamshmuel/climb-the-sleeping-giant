@@ -33,6 +33,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 21 | Never start a walk, check or camera inside a mesh | `world-scenery.md` |
 | 22 | Long Play work runs in the background | `studio-and-scripts.md` |
 | 23 | A Studio script returns a short summary, never a list | `teamwork.md` |
+| 24 | The handoff names the exact files and lines | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
