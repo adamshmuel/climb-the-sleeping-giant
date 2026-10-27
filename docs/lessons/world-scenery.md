@@ -31,3 +31,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** players hung on edges that stick out near the ground: the Sock's lips and the pillow's bulging back. Each was fixed by fitting invisible parts to its curved shape, task after task (2026-10-26 to 10-27).
 - **Do instead:** sink the scenery into the ground or the hill until no edge hangs over. If a hang is left, sink it a little more (one number), never fit parts to it.
 - **Who checks:** `designer`, `code_lead`.
+
+## Lesson 21: Never start a walk, check or camera inside a mesh
+- **What happened:** three times a script started inside a part and believed what it found: the gap walk in step 39-5c and in step 37-5 started inside the Sock's fill, and in step 37-6 the shot camera sat inside the Sock's mesh. A ray never hits the part it starts in, so each check said "clear" (2026-10-27).
+- **Do instead:** before a walk, check or shot, test the start spot is open (nothing overlaps it). Place a camera with a ray from the player's head out to the camera, the way Roblox's camera does. Every handoff with a walk or a shot says how its start is checked.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
