@@ -47,4 +47,5 @@ About handing work between agents and asking owners. The map of all lessons is `
 ## Lesson 33: A ruling names what each fix must leave alone
 - **What happened:** in Task 33 product's ruling chose the forehead fix by what the roof was made of ("an added part → move or shorten it"). It missed that the plate is also a wall of the walking band, the only way to the Legendary eggs. So the measurement needed another ruling before anything could be built (2026-10-27).
 - **Do instead:** a ruling that offers fix paths also says what each fix must leave untouched (the core path, a route, a ladder end). Then a measurement can pick the path without another round trip.
+- **Also:** a ruling that asks for a check ("no shortcut by a jump") writes down the rule to check by: how high, how far, and from which spots. Otherwise the check invents its own rule, and its result needs another round trip (Task 33's beard shortcut check).
 - **Who checks:** `product`; `code_lead` when it turns a ruling into a handoff.
