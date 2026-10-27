@@ -136,6 +136,8 @@ A fresh agent gets the file paths it needs (idea, design, spec, plan, progress) 
 
 `code_lead` sizes tasks so a builder can finish one well under 150k tokens. A task that keeps stopping or needs a new approach is split into smaller tasks.
 
+**Size steps by tool calls.** A fresh agent starts at about 50k tokens (rules, tools and its definition) before it does anything, and every tool call adds about 2.4k (measured 2026-10-27). So every builder step has a cap of **at most 30 tool calls** (Studio, shell and file reads together), written in the handoff next to its Studio-call cap. A step that needs more is split. The builder stops and reports at the cap, even mid-step, as long as it isn't in the middle of a world change.
+
 **Working files live in `work/`.** Handoffs, state notes, reports and trial scripts go in the project's `work/` folder, which git ignores (`.git/info/exclude`). Never in the system scratchpad: it is under `/tmp`, which the Mac empties when it restarts.
 
 The main chat's own memory grows too, and it follows two rules:
