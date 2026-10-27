@@ -20,9 +20,19 @@ What this project learned the hard way, so it doesn't happen again.
 | 8 | Checks that look straight down miss upright surfaces | `world-scenery.md` |
 | 9 | Rank what matters before fixing the world | `world-scenery.md` |
 | 10 | Check the safety net reaches the spot | `world-scenery.md` |
+| 11 | Judge the look next to the top games | `look-and-art.md` |
+| 12 | Every approval asks "would a kid pick ours?" | `look-and-art.md` |
+| 13 | Real art comes from the store and the generator | `look-and-art.md` |
+| 14 | Generated models need waiting, checking and hinges | `look-and-art.md` |
+| 15 | Search before guessing, and Bing works for images | `research-and-tools.md` |
+| 16 | A new tool works only after a fresh start | `research-and-tools.md` |
+| 17 | Don't install unknown tools | `research-and-tools.md` |
+| 18 | Clean up after a test, and say what's left | `research-and-tools.md` |
 
 | File | What it covers |
 |---|---|
 | `world-scenery.md` | Placing, fitting or fixing objects in the world, and checks that measure them |
 | `studio-and-scripts.md` | Deleting files, reading output, and writing scripts for Studio |
 | `teamwork.md` | Handing work between agents and asking owners |
+| `look-and-art.md` | How the game looks, art and models, and approving a design |
+| `research-and-tools.md` | Searching the web, reference pictures, and adding or trying tools |
