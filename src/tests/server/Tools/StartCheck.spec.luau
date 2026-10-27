@@ -1,0 +1,184 @@
+--!strict
+local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
+local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local ServerStorage = game:GetService("ServerStorage")
+local StarterPlayer = game:GetService("StarterPlayer")
+local Helpers = require(ServerStorage.Tests.server.World.RealWorld.Helpers)
+local StartCheck = require(ServerStorage.Tools.checks.StartCheck)
+local inFakeWorld = Helpers.inFakeWorld
+
+-- Stuck safety Task 27, step 1 (lesson 21): the shared start check, tested on made-up worlds. A roof here is a thick
+-- slab: a ray from 10 studs up starts inside it, so (like a ray in the giant) it never hits the roof and finds the floor.
+describe("StartCheck.find", function()
+	local SLOPE = math.rad(20) -- the floor's tilt in the slope tests: +X is uphill, so downhill is -X
+
+	local function solid(world: WorldModel, name: string, size: Vector3, frame: CFrame): Part
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Anchored = true
+		part.Size = size
+		part.CFrame = frame
+		part.Parent = world
+		return part
+	end
+
+	-- A level floor whose top is y 0.
+	local function flatFloor(world: WorldModel)
+		solid(world, "Floor", Vector3.new(200, 1, 200), CFrame.new(0, -0.5, 0))
+	end
+
+	-- A floor tilted 20 degrees whose top passes through the origin (height = tan(20) * x).
+	local function slopedFloor(world: WorldModel)
+		solid(world, "Floor", Vector3.new(200, 1, 200), CFrame.Angles(0, 0, SLOPE) * CFrame.new(0, -0.5, 0))
+	end
+
+	it("is open on a flat floor at floor + 0.1", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			local result = StartCheck.find(Vector3.new(0, 3, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(0)
+			expect(result.position).never.toBeNil()
+			expect((result.position :: Vector3).Y).toBeCloseTo(0.1, 3)
+		end)
+	end)
+
+	it("is not open under a low roof, and names the roof", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			solid(world, "LowRoof", Vector3.new(200, 40, 200), CFrame.new(0, 23, 0)) -- y 3 to 43
+			local result = StartCheck.find(Vector3.new(0, 1, 0), world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("LowRoof")
+		end)
+	end)
+
+	it("is open after 1 downhill move on a wedge slope", function()
+		inFakeWorld(function(world)
+			slopedFloor(world)
+			solid(world, "Wall", Vector3.new(10, 20, 30), CFrame.new(5.8, 10, 0)) -- x 0.8 to 10.8: touches the first try only
+			local result = StartCheck.find(Vector3.new(0, 3, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(1)
+			expect((result.position :: Vector3).X).toBeCloseTo(-0.5, 3)
+		end)
+	end)
+
+	it("is not open after 4 moves inside a closed box", function()
+		inFakeWorld(function(world)
+			slopedFloor(world)
+			solid(world, "BoxRoof", Vector3.new(200, 40, 200), CFrame.new(0, 23, 0))
+			local result = StartCheck.find(Vector3.new(0, 1, 0), world)
+			expect(result.open).toBe(false)
+			expect(result.moves).toBe(4)
+			expect(result.blockers).toContain("BoxRoof")
+		end)
+	end)
+
+	it("says a spot inside a solid part is not open", function()
+		inFakeWorld(function(world)
+			solid(world, "Block", Vector3.new(60, 60, 60), CFrame.new(0, 5, 0))
+			local result = StartCheck.find(Vector3.new(0, 5, 0), world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("Block")
+		end)
+	end)
+
+	it("says a spot under a thin roof is not open, and names the roof", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			solid(world, "ThinRoof", Vector3.new(200, 0.5, 200), CFrame.new(0, 4.25, 0)) -- y 4 to 4.5
+			local result = StartCheck.find(Vector3.new(0, 3, 0), world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("ThinRoof")
+		end)
+	end)
+
+	-- A floor tilted `degrees` whose top passes through the origin, uphill toward the direction `yaw` turns +X to.
+	local function tiltedFloor(world: WorldModel, degrees: number, yawDegrees: number?)
+		local turn = CFrame.Angles(0, math.rad(yawDegrees or 0), 0)
+		solid(
+			world,
+			"Floor",
+			Vector3.new(200, 1, 200),
+			turn * CFrame.Angles(0, 0, math.rad(degrees)) * CFrame.new(0, -0.5, 0)
+		)
+	end
+
+	-- Stuck safety Task 27, step 1c (lesson 38): steep ground. The uphill corner rays start inside the slope.
+	it("is open on a 45 degree slope, standing above its uphill corners", function()
+		inFakeWorld(function(world)
+			tiltedFloor(world, 45)
+			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(0)
+			expect((result.position :: Vector3).Y).toBeCloseTo(math.tan(math.rad(45)) + 0.1, 2)
+		end)
+	end)
+
+	it("is open on a slope 1 degree under the climb limit", function()
+		inFakeWorld(function(world)
+			local angle = StarterPlayer.CharacterMaxSlopeAngle - 1
+			tiltedFloor(world, angle)
+			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(0)
+			expect((result.position :: Vector3).Y).toBeCloseTo(math.tan(math.rad(angle)) + 0.1, 2)
+		end)
+	end)
+
+	it("is open on a 60 degree slope that rises toward a corner", function()
+		inFakeWorld(function(world)
+			tiltedFloor(world, 60, -45) -- uphill is +X +Z: the corner (1, 1) is the highest
+			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(0)
+			expect((result.position :: Vector3).Y).toBeCloseTo(math.sqrt(2) * math.tan(math.rad(60)) + 0.1, 2)
+		end)
+	end)
+
+	it("at the foot of a wall steeper than the climb limit, it stands on the floor", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			local degrees = StarterPlayer.CharacterMaxSlopeAngle + 10
+			-- A wall whose face leaves the floor at x 0.8 and rises toward +X.
+			solid(
+				world,
+				"SteepWall",
+				Vector3.new(60, 1, 60),
+				CFrame.new(0.8, 0, 0) * CFrame.Angles(0, 0, math.rad(degrees)) * CFrame.new(0, -0.5, 0)
+			)
+			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(1)
+			expect((result.position :: Vector3).X).toBeCloseTo(-0.5, 2)
+			expect((result.position :: Vector3).Y).toBeCloseTo(0.1, 2)
+			expect((result.position :: Vector3).Z).toBeCloseTo(0, 2)
+		end)
+	end)
+
+	it("a thin ledge over two corners is not read as ground", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			solid(world, "Ledge", Vector3.new(4.4, 0.2, 10), CFrame.new(2.8, 2.1, 0)) -- y 2.0 to 2.2, x 0.6 to 5
+			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("Ledge")
+		end)
+	end)
+
+	it("leaves no probe behind", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			solid(world, "LowRoof", Vector3.new(200, 40, 200), CFrame.new(0, 23, 0))
+			StartCheck.find(Vector3.new(0, 1, 0), world) -- blocked
+			StartCheck.find(Vector3.new(500, 3, 500), world) -- no ground
+			solid(world, "FarFloor", Vector3.new(200, 1, 200), CFrame.new(300, -0.5, 0))
+			StartCheck.find(Vector3.new(300, 3, 0), world) -- open
+			tiltedFloor(world, 45)
+			StartCheck.find(Vector3.new(0, 0, 0), world) -- open, on steep ground
+			expect(#world:GetChildren()).toBe(4)
+			expect(world:FindFirstChild("StartCheckProbe")).toBeNil()
+		end)
+	end)
+end)

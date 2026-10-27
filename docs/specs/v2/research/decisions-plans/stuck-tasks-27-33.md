@@ -95,3 +95,109 @@ LESSON: a fill under an overhang always has an open mouth → the measuring call
 2. Budget: 2 more calls, the task ends at 28, checks only (one background full test run incl. Red 1's fix and the scan; one fetch). Final allowance. New test red first. Forehead Play proof stays in Task 28 step 5 (blocks Gate 4).
 3. If the exception's check fails (any ray not under the plate): no more calls, no reshape in Task 33. Task 33 closes with that red named as accepted in the plan; reshape (a) becomes its own small task, measured first (Lesson 26), decided by product after Task 28's forehead Play results.
 Viral test: yes only if Task 28 shows 7 of 7 forehead drops and clean band walks.
+
+## Task 27 decision table (product, 2026-10-27)
+Changes (applied to `work/handoff-p2-task27.md`):
+1. Row A: "both ladders' ends" becomes "every ladder's ends".
+2. Row A's untouched list adds: no new way up and no shortcut past a ladder to a nest, checked with the jump rule (7.2 up, 4 sideways, from any free spot, each spot followed by walking), saying whether each new spot is reachable today. Rows B, C, D and Scenery inherit it.
+3. Scenery row: "away from every route" becomes "more than 12 studs (the must-fix distance) from every place players need in Rule 22's condition 2, and nothing in the game sends players there".
+4. Scenery row: only where the rescue reaches it (Lesson 10); a cushion spot is checked like the pillow; "Never a second try; a failure goes to product".
+Budget: 18 Studio calls accepted. Hang counting change approved.
+Viral test: yes. This task only finds and sorts hangs, and the table now protects every way up and every shortcut to a nest.
+
+## Task 27 step 2: start check and split (code_lead, 2026-10-27)
+
+Answers the 3 questions in `work/t27/step2-report.md`. The steps are written into `work/handoff-p2-task27.md`.
+
+## 1. The start check reads steep ground: step 1c, then step 2b re-runs the starts
+
+**Cause (from the builder's reasoning; step 1c's red tests confirm it):** since step 1b every ray starts 0.5 studs over the spot. On a slope the uphill corners (up to 1.41 studs sideways) rise more than 0.5, so their rays start inside the slope. A ray never hits the part it starts in, so the highest hit comes out too low and the probe digs into the slope.
+
+**The fix: two readings per corner** (code_lead's choice).
+- Every ray first starts 0.5 over the spot, as now.
+- If a corner's start point is inside a solid (a tiny 0.1-stud probe, `GetPartsInPart`, players' collision group: the real shape), that corner is read again from higher up: 0.5 + d × tan(climb limit) over the spot. d is the corner's sideways distance (1.41). The climb limit is read from `StarterPlayer.CharacterMaxSlopeAngle`, never typed.
+- A corner whose start is in open air keeps its low reading. So a thin roof or ledge over a corner is never read as ground.
+- A hit on ground steeper than the climb limit (from the hit's normal) is a wall, not ground. It never sets the probe's height, but it counts at its height when the way downhill is picked.
+
+**Why not the two options suggested:**
+
+| Option | Problem |
+|---|---|
+| Raise every corner ray to 0.5 + d × tan(limit) | A thin ledge over a corner is read as ground, and the probe stands on it (test e) |
+| The centre ray as the base | Task 33 step 1 tried it: the probe dug into every 51° to 76° slope (Lesson 21) |
+
+**Cases the tests cover before the check is used again (Lesson 38).** Each new case is red first:
+
+| Test | Kind of spot | Red on |
+|---|---|---|
+| a | 45° slope, uphill corners | today's check |
+| b | 1° under the climb limit | today's check |
+| c | 60° slope rising toward a corner | today's check |
+| d | at the foot of a wall steeper than the limit | today's check |
+| e | thin ledge over two corners (not the centre) | the raise without the inside test (step 1c, call 2) |
+| old 7 | flat floor, low roof, 20° wedge, closed box, inside a solid, thin roof over the spot, no probe left | stay green |
+
+Then the real-spot check (Lesson 38): step 2b passes only if at least 95% of the 681 listed spots come back open. If fewer, it stops with 5 not-open examples, and no Play starts.
+
+**Step 2's job re-runs:** yes, as step 2b, for all 681 spots at once (not only the first 200). The starts go into `ServerStorage.T27Starts`, so the Play tasks need no more Edit calls for starts.
+
+## 2. The known places: walk in from a checked start, never from the exact root
+
+Starting exactly on the recorded roots without a check repeats Lesson 21's sixth time: Task 33's 19 hand-picked starts were all inside V1's plate or the SideRail, and the Play job proved nothing.
+
+- Each place is reached by **walking in** from open ground. Candidates: the walk-map spot nearest to a point 2, 3, 4, 6 or 8 studs back from the place, against the walk's direction (`PathCheck.nearestSpot`). A candidate more than 1.5 studs sideways from its point is skipped.
+- A place with no walk direction (a drop or push: item (a), the beard pushes, V1's old forehead spot, the forehead slots) tries +x, -x, +z, -z in that order, at the same distances.
+- The first candidate `StartCheck.find` prints open wins. Its label says the direction and distance.
+- None open: listed as "no open start" with its first blocker. It is not tried in Play; code_lead rules on it at Task 27's review.
+
+## 3. The task is split (6-step limit)
+
+Task 27 already has 3 steps (1, 1b, 2). With 1c, 2b and the old steps 3 to 6 it would have 9, over the 6-step limit. So:
+
+| Task | What | Steps | Studio calls |
+|---|---|---|---|
+| Task 27: The shared start check and every steep spot's start | steps 1, 1b, 2 (done), 1c, 2b | 5 | 11 (6 used) |
+| Task 43: No Climbing hang: steep batches 1 to 4 and the known places | the old steps 3, 4, 5 and 6 | 4 | 14 |
+| Task 44: No Climbing hang: steep batches 5 to 14 | 5 Play steps of 2 batches, then causes and the close | 6 | 22 |
+
+The fix task gets its number when code_lead writes it, from Task 43's and Task 44's causes.
+
+## 4. Studio calls
+
+- Used: 6 (step 1: 2, step 1b: 2, step 2: 2; `work/t27/state.md`).
+- Task 27 now: 11. Its first plan was 18, plus 2 for step 1b, and that covered all of the batches.
+- The same work now costs 47 calls (Tasks 27, 43 and 44), against 20 planned. **This is past the planned size.** It goes to product. One way to lower the bar is product's call, not code_lead's: Play only one spot per 4-stud square instead of all 681. That is about 4 hours of Play at 20 seconds a spot.
+
+## Task 27 scope (product, 2026-10-27)
+
+Path: lower the search, not the bar. Rule 22 (What counts as stuck) keeps its wording: every hang that is found and can be reached without a jump gets fixed. What changes is how many spots are played, and this ruling sets that by the idea's "What matters most" tiers (Lesson 1: Scenery gets the cheap fix).
+
+## 1. Which spots get played
+
+Step 2b (one Edit job, already planned) puts each of the 681 spots into one of three groups:
+
+| Group | Which spots | Played? |
+|---|---|---|
+| Core | Within 12 studs (the must-fix distance) of any place players need, from Rule 22's condition 2: route points and links, egg spots and nests, landing spots, every ladder's ends, walk pieces, and spec 5's walk area. Also all 11 slide guards. | All of them |
+| Out of the rescue's reach | Any spot that Rule 28 (Stuck players are rescued) doesn't count as "on the giant" (Lesson 10: Check the safety net reaches the spot) | All of them |
+| Far | Every other spot: his back and the cushion, where no egg, route or ladder sends players | One per 4-stud square: the steepest spot in each square |
+
+- The known places (Task 43 step 3, items a to f, the notch walks and the beard) are always played.
+- The 95% open line in step 2b counts only the spots that will be played.
+
+Why: a hang near a route, a nest or a ladder end is a "the game is broken" clip, so every one of those spots is played. A player on his steep back is exploring off every route. If they hang there, the rescue moves them back within about 4 seconds, with their egg. The sample still finds every kind of hang (Lesson 26: Try 5 examples before choosing a fix). Fixes go by kind, so one hang in the sample gets its whole kind fixed.
+
+If a far sample hangs, its square's other spots are played in the fix task's re-run, so nothing near a known hang is skipped.
+
+## 2. The tasks
+
+- Merge Tasks 43 and 44 into one Task 43, aimed at 4 batches (200 spots) plus the known places: 14 Studio calls.
+- If the played list is over 200, the far square grows to 8 studs first. Core spots are never sampled.
+- Task 44 is kept only if the core spots alone need more than 4 batches. It then plays only the extra core batches, 4 calls per 2 batches, plus its close.
+- Target: 11 + 14 = 25 calls, against 47 for the old plan.
+
+## 3. After launch
+
+The "Unstuck" event (spec section 10), broken down by zone, shows the rescues. If rescues in the Belly or the Nightcap zone stand out, Launch polish plays the far spots that weren't sampled.
+
+Viral test: yes. Every hang a kid can meet on the climb is found and fixed. On the back, nobody goes, so the rescue is enough. The 22 calls saved go to the phone checks in Task 28.
