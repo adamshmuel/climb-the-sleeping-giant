@@ -77,7 +77,7 @@ Task 5 chose the invisible shell. It failed on his legs four times (the last try
 
 | Whose | Condition | Where |
 |---|---|---|
-| product 1 | Zero stuck spots, and the bot walk passes | Task 23 and Task 23b (the scan), Task 8 (the bot walk) |
+| product 1 | Zero stuck spots, and the bot walk passes | Task 23 and Task 41 (the scan; Task 41 replaced Task 23b on 2026-10-27), Task 8 (the bot walk) |
 | product 2 | No slot beside or under the belly path's invisible floors or any other invisible walk piece | Task 24, tests 1 to 3 (crossing ramps solid down, and test 2b: their sides guarded); Task 25, test 1 |
 | product (Task 24) | One window for every invisible walk piece: its top 0.2 studs below to 0.7 above his skin, checked about every stud over its whole top. A piece goes where his skin is under the seam angle (65°); where his skin is too steep, the walk line moves to gentler cloth, never onto a shelf. The stretches where a piece was removed still pass the stuck scan, the bot walk and the feet Play check | Task 24 (tests 1 to 3, Play; between the left boot top and Rare egg 1, crossing ramps: Rulings 1, 7 and 10), Task 25 (test 1, Play), Task 23 (the scan at zero), Task 8 (the bot walk walks the boots and the belly path) |
 | game_creator (Task 24) 1 | Uncommon eggs 1 to 4 and Rare egg 4 stay in view from where a new player comes toward them, not tucked into a fold once lowered; Uncommon egg 2 stays on the same boot top if it moves sideways | Task 24 (test 4 and Play) |

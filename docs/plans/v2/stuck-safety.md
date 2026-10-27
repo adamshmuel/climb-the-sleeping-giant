@@ -44,11 +44,11 @@ This file is the plan's map. Each task lives in one part file in `docs/plans/v2/
 | `2a-real-shape.md` | 5, 6, 19, 20, 21 | Part 2 starts: his collision shape, the teacup's bowl, why he stands on his real shape now, how it is patched, the meadow ground, the slide line |
 | `2b-walk-pieces-and-head.md` | 24, 25 | His walk pieces on his skin: legs and belly, then the nose deck, the nightcap and the ladder ends |
 | `2c-drawn-body-and-patches.md` | 26, 22, 23 | His solid body where he's drawn, the patches for the open dents, the last steep spots |
-| `2d-hangs-and-finish.md` | 29, 34, 32, 35, 36, 38, 39, 37, 40, 33, 27, 28, 23b, 7 | No `Climbing` hang (the forehead fill in Task 29, its trim out of the walking band in Task 34, the Sock's fill in Task 32, the Sock's lips measured in Task 35, tried in Play in Task 36, its mouth ends fixed in Task 38, a pocket hang checked in Task 39, and built in Task 37, the pillow moved back off the nightcap in Task 40, beard pocket 1 in Task 33), the finished surface in Play, the pillow, the rest of the game |
+| `2d-hangs-and-finish.md` | 29, 34, 32, 35, 36, 38, 39, 37, 41, 33, 27, 28, 7 (40 and 23b removed) | No `Climbing` hang (the forehead fill in Task 29, its trim out of the walking band in Task 34, the Sock's fill in Task 32, the Sock's lips measured in Task 35, tried in Play in Task 36, its mouth ends fixed in Task 38, a pocket hang checked in Task 39, and built in Task 37, the pillow laid flat and sunk under his head in Task 41 (it replaced Tasks 40 and 23b), beard pocket 1 in Task 33), the finished surface in Play, the pillow, the rest of the game |
 | `3-4-bot-and-rescue.md` | 8 to 16 | Part 3: the bot walk. Part 4: getting a player out |
 | `5-big-files.md` | 30, 31 | Splitting every file over 1000 lines, and a check that keeps them under it |
 
-**Build order** (unchanged, plus Tasks 30 and 31): 1 to 4, 17, 18, 5, 6, 19, 20, 21, 24, 25 (to step 6b-1e), 26, the rest of 25, 22, 23, **29, 30, 31, 34, 32, 35, 36, 38, 39, 37, 40, 33**, 27, 28, 23b, 7, then 8 to 16. (Task 32, the Sock, was moved out of Task 29 on 2026-10-26. Task 35, the Sock's lips, was added after it the same day. Tasks 36 to 39 were added on 2026-10-27 to finish it. Task 40, the pillow moved back so the nightcap doesn't poke through, was added the same day.)
+**Build order** (unchanged, plus Tasks 30 and 31): 1 to 4, 17, 18, 5, 6, 19, 20, 21, 24, 25 (to step 6b-1e), 26, the rest of 25, 22, 23, **29, 30, 31, 34, 32, 35, 36, 38, 39, 37, 41, 33**, 27, 28, 7, then 8 to 16. (Task 32, the Sock, was moved out of Task 29 on 2026-10-26. Task 35, the Sock's lips, was added after it the same day. Tasks 36 to 39 were added on 2026-10-27 to finish it. Task 40, the pillow moved back so the nightcap doesn't poke through, was added the same day. Later that day product's decision removed Tasks 40 and 23b and added Task 41: the pillow is redesigned, laid flat and sunk, never fitted.)
 
 Old notes and handoffs in `work/` and in `docs/specs/v2/research/decisions-plans/` point to "`docs/plans/v2/stuck-safety.md`, Task N". That still works: the table above says which part file holds Task N.
 
@@ -56,15 +56,15 @@ Old notes and handoffs in `work/` and in `docs/specs/v2/research/decisions-plans
 
 | Rule | Tasks |
 |---|---|
-| Rule 20 (One collision source) | 5, 19, 21, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 40, 33, 27, 28, 23b, 7, 8 (its "bot walk passes" check) |
+| Rule 20 (One collision source) | 5, 19, 21, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 41, 33, 27, 28, 7, 8 (its "bot walk passes" check) |
 | Rule 21 (The stuck scan runs on every test run) | 4, 23 |
-| Rule 22 (What counts as stuck) | 2, 3, 4, 17, 18, 6, 19, 20, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 40, 33, 27, 23b |
+| Rule 22 (What counts as stuck) | 2, 3, 4, 17, 18, 6, 19, 20, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 41, 33, 27 |
 | Rule 23 (One walk check for everything) | 1, 2, 3, 19 |
 | Rule 24 (A bot walks every way) | 8, 16 |
 | Rule 25 (Reset on the giant takes you back) | 11, 13 |
 | Rule 26 (Reset off the giant is unchanged) | 11 |
 | Rule 27 (Safe spots are really safe) | 2, 9, 10, 11 |
-| Rule 28 (Stuck players are rescued) | 12 |
+| Rule 28 (Stuck players are rescued) | 12 (its reach includes the redesigned pillow from Task 41) |
 | Rule 29 (No rescue loops) | 11, 12, 13 |
 | Rule 30 (You keep your egg) | 11, 12, 13 |
 | Rule 31 (Being stuck is silent) | 10 |
@@ -90,7 +90,7 @@ Tasks 30 and 31 cover no spec rule. They follow the project rule "No big files" 
 | No wedge under the chair's front lip, walking in from the meadow | Rule 20, Task 22 | builder, code_lead |
 | Pushing at the cave's mouth under the cushion is stopped, with no float and no visible gap, on computer and phone | Rule 20, Task 22 | builder, code_lead, designer, product |
 | Feet on his cloth on every patch; carrying an egg across the patches feels like his skin; the way past the chin patch to the beard ladder is no narrower | Rule 20, Task 22 | builder, code_lead, designer, game_creator |
-| The pillow's back and the forehead: a clean slide, no float in view, landing somewhere walkable (the pillow's back: a walk or slide down, onto the shelf, if product agrees) | Rule 20, Task 28 (forehead), Task 23b (pillow) | builder, code_lead, product, game_creator |
+| The pillow's back and the forehead: a clean slide, no float in view, landing somewhere walkable (the pillow: stepping off the nightcap onto it, a walk or slide off it, product's decision of 2026-10-27) | Rule 20, Task 28 (forehead), Task 41 (pillow) | builder, code_lead, product, game_creator |
 | A new player's first climb with the phone thumbstick: no hops, no snagging, feet on his cloth | Rule 20, Task 28 | builder, code_lead, game_creator |
 | Rare egg 2 is still easy to reach after its route point moves | Rule 20, Task 19 | builder, code_lead, game_creator |
 | His new shapes are kept with the place (rays in Play match Edit) | Rule 20, Task 19 | builder, code_lead |
