@@ -1,4 +1,4 @@
-# Stuck safety plan, Part 2d: no hangs, the finished surface, the pillow, the rest of the game (Tasks 29, 34, 32, 35, 36, 38, 39, 37, 33, 27, 28, 23b, 7)
+# Stuck safety plan, Part 2d: no hangs, the finished surface, the pillow, the rest of the game (Tasks 29, 34, 32, 35, 36, 38, 39, 37, 40, 33, 27, 28, 23b, 7)
 
 Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plans/v2/stuck-safety.md` ("Words used here", and which file holds which task).
 
@@ -135,6 +135,33 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Failing test first: test 6 gains "Sock, west lip" and "Sock, east lip" (kind guard, from the real hang roots) and "Sock, west gap" and "Sock, east gap" (kind patch, at the seal points), red against today's world; the slide guard checks run through Jest on a trial copy (Ruling 34).
 - Steps: 1. tests, red first; 2. section 4 gains the parts, with the dry run; 3. run 1 and run 2, the scan and the full test run.
 - Done when: Task 35's "Done when" (the reds are only the 3 planned test names; the second run says "already done"; the scan finds 0 new stuck spots and 0 free spots lost; the place has unsaved world changes, which Adam saves); plus code_lead's own Play check of one west end walk and one push at each lip, with no hang.
+
+**Task 40: The nightcap doesn't poke through the pillow** (added on 2026-10-27 from Adam's screenshot and designer's ruling; built right after Task 37, when the Sock work is finished, and before Task 33; stuck safety can't reach Gate 4 until it is done)
+- Spec rules: Rule 20 (One collision source), check 1 (No stuck spots) and check 4 (the pillow's back slides off cleanly); Rule 22 (What counts as stuck). The look itself is designer's ruling: red patches of the nightcap show on the pillow's far side, and that isn't meant to be.
+- Why here: the fix moves the pillow (`World.GiantsThings.Pillow`), and the pillow is part of the climbing routes. So it goes after the Sock tasks, which are run as trials in the world as it is today, and before Tasks 33, 27, 28 and 23b. Those tasks scan the surface and fit the pillow's back, so they must see the pillow in its new place. Task 23b's measured numbers (the 69° back from z 65 to 71, the bulge at z 75.6, the foot at z 72) shift with the pillow, so 23b measures them again at its start.
+- The fix (designer): **move the whole pillow straight back, away from his head**, only as far as needed for no red to show on its far side (probably 1 to 3 studs). Its tilt and height stay exactly the same, and only its flat position changes. **The nightcap never moves**, because the cap ladder hangs on it. Everything fitted to the pillow moves with it by the same amount: its slide guards and the fill under the cushion from Task 22 (commit 1c6029e, section `S3bcCave`).
+- Decision table for step 1 (designer checks it once before step 2):
+
+| Part | What happens |
+|---|---|
+| The pillow model and everything inside it | moves by the offset |
+| A guard, fill or skirt part fitted only to the pillow (it touches the pillow and not his body, cap or chair) | moves by the same offset |
+| A part fitted to his body, the cap, the cap ladder or the chair | stays |
+| A part touching both the pillow and something that stays | the builder lists it and stops; code_lead rules it with designer |
+| Something else placed by the pillow (an egg, a footprint, a way-up piece) | the builder lists it and stops; its owner rules it |
+
+- Files: a new world-script section `tools/world/15-real-shape/S3dPillowBack.luau`, plus its line in `Run.luau`; `src/tests/server/World/RealWorld/PillowFit.spec.luau`; and any test file holding the pillow's place or its guards' and fill's places (`SlideGuardsReal.spec.luau`, `StuckScan/ScanFacts.luau`). Working files go in `work/t40/`.
+- Failing test first: (RealWorld) "no part of the nightcap comes out the pillow's far side": a grid of rays from behind the pillow, aimed at his head, must meet the pillow before any nightcap part. It is red today. The pillow's expected place, and the expected places of its guards and fill, move by the offset (red today). A new test also checks that the nightcap's parts and the cap ladder keep their exact places (green before and after).
+- Steps (the builder stops and reports after each):
+  1. **Measure (Edit, read-only; at most 4 Studio calls and 4 screenshots).** Work out the flat direction away from his head: the pillow's own flat axis that points most nearly from his head toward the pillow. Then find the smallest offset, in half-stud steps from 0.5 to 4, at which the ray grid shows no cap on the far side. Try it on a clone of the pillow outside the world, never on the live one. Take one Edit screenshot from Adam's angle (behind and above the pillow, looking over it toward his face and the teacup) for the chosen offset, with the clone in place of the pillow, then restore. Fill in the decision table's parts list. **Stop if more than 4 studs is needed:** that goes to designer.
+  2. **Tests, red first (no world change).** Add the tests above and run them: the right ones are red, for the right reason.
+  3. **The world section (Edit).** `S3dPillowBack` moves the pillow and the listed parts by the offset, between two ChangeHistoryService waypoints, with a dry run first. Run 1, then run 2 says "already done". Every test is green except the planned reds named in `docs/progress/index.md`.
+  4. **The stuck scan and the full test run.** Compare against Task 37's last scan: 0 new stuck spots and 0 free spots lost. The gap that opens between his head and the pillow gets its own line in the report: how wide it is, and whether the scan finds any spot in it.
+  5. **Play and shots (at most 8 Studio calls; computer and phone).** Climb the cap ladder to the top, step onto the pillow, walk along its top and back, and drop to the meadow, with no hang by product's line. designer's shots: Adam's angle (Edit), and a player on the cap ladder looking at the pillow (Play), on the computer and the phone.
+- Done when: the new ray test passes, and designer sees no red on the pillow's far side in the step 5 shots; the pillow's tilt and height are unchanged, and the nightcap and cap ladder haven't moved; the guards and fill moved by exactly the offset; the scan finds 0 new stuck spots and 0 free spots lost; every test passes except the planned reds; Play shows the cap ladder and pillow walk with no hang; the place has unsaved world changes, which Adam saves.
+- Owners to check:
+  - **designer:** the decision table (before step 2), the offset shot (step 1), and the step 5 shots.
+  - **product:** (1) the new gap between his head and the pillow can't trap a player, by Rule 22 (What counts as stuck); (2) climbing from the cap ladder onto the pillow still works as the climbing spec says; (3) Rule 20's check 4 still holds: a player on the pillow's back slides off cleanly.
 
 **Task 33: Beard pocket 1 gets a way out with no hang** (moved out of Task 29 on 2026-10-26 by Ruling 26; built after Task 35, before Task 27)
 - Spec rules: Rule 20 (One collision source), check 1 (No stuck spots). Rule 22 (What counts as stuck), by product's hang line.
