@@ -59,4 +59,5 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 33's forehead box passed every check made for it (the stuck scan, the band gap, the look), but when the full tests ran, it failed the existing test that every small patch sits on his drawn skin or is sealed inside him. That came at the last allowed Studio call, so it couldn't be fixed in the task's budget (2026-10-27).
 - **Do instead:** the trial call that places a part also runs the existing tests for every part of its kind (for patches, the "sealed or on his skin" test), not only the checks written for this fix. The handoff names those tests.
 - **Also (code_lead):** a fill under an overhang always has an open mouth, so the measuring call runs the patch "Sides" check on each candidate box. Then the exception or the reshape is decided before the last Studio calls.
+- **Also (Task 33 step e):** the roof exception freed only 1 of the 23 failing rays, because the plate isn't straight above the box's -z face. Before choosing a roof exception, measure the roof distance on every open side.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
