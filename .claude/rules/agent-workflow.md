@@ -78,7 +78,8 @@ When the team fails twice on the same problem (two tries, steps or tasks that en
    - **Change the design:** `designer` reshapes, moves or simplifies the thing so the problem goes away.
    - **Accept it for now:** a safety net covers the player; it is written into a named later spec.
    - **Cut it:** take it out of this version.
-3. If the path changes approved work, the "Asking the user" checks apply as usual.
+3. **Scenery goes to `designer` first.** When the thing is scenery (the idea's "What matters most" list) and it has already cost real time, `product` asks `designer` before any more tries: "This item is costly because of x, y and z. Can you design it differently so these problems can't happen? If you can, what does the new design cost to build?" If `designer` can, `product` weighs that cost against the fix still planned and picks the cheaper safe one. If `designer` can't, `product` takes it to `game_creator` to advise: keep it, simplify it or cut it.
+4. If the path changes approved work, the "Asking the user" checks apply as usual.
 
 ## Learning from experience
 
