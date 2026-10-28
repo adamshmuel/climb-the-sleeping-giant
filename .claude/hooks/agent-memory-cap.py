@@ -54,13 +54,14 @@ def memory_size(path):
 
 def is_new_job(entry):
     # Only the first prompt (a plain user entry) or a message from the main
-    # chat (the harness marks it with "origin") starts a new job. Skill loads
+    # chat (the harness marks it with origin kind "coordinator") starts a new job. Skill loads
     # and system reminders are user entries too, but marked isMeta with no
     # origin, so they must never reset the count.
-    if entry.get("type") != "user" and "origin" not in entry:
+    if entry.get("type") != "user":
         return False
-    if "origin" in entry:
-        return True
+    origin = entry.get("origin")
+    if origin is not None:
+        return isinstance(origin, dict) and origin.get("kind") == "coordinator"
     if entry.get("isMeta"):
         return False
     content = entry.get("message", {}).get("content")
@@ -78,7 +79,7 @@ def tool_calls(path):
     try:
         with open(path, encoding="utf-8", errors="ignore") as f:
             for line in f:
-                if '"tool_use"' not in line and '"user"' not in line and '"origin"' not in line:
+                if '"tool_use"' not in line and '"user"' not in line:
                     continue
                 try:
                     entry = json.loads(line)
