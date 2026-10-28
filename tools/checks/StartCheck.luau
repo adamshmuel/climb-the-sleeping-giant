@@ -12,6 +12,11 @@
 -- start is inside a solid (a tiny probe asks) is read again from higher up, by its sideways distance x tan(climb limit).
 -- A hit steeper than the climb limit is a wall: it pulls the way downhill but never sets the probe's height.
 -- The probe is only used by the players' collision group, so other players' bodies never count.
+--
+-- Stuck safety Task 46: the walk map and this check must agree (lesson 43), so whether a body fits is asked of the walk
+-- map's own test, `PathCheck.roomToStand`, standing on the centre ray's hit with the ground's normal (its box tilts with
+-- the ground, and may turn). And the start needs a floor (lesson 47): the centre ray must hit ground within MAX_FLOOR
+-- studs under the spot, else "no floor". A corner ray landing on a thin plate never counts as the floor for the body.
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,6 +24,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local Workspace = game:GetService("Workspace")
 
 local Collisions = require(ServerScriptService.Server.Players.Collisions)
+local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local Config = require(ReplicatedStorage.Shared.Config)
 
 local RAY_ABOVE = 0.5 -- studs: the rays start this far over the spot (a roof higher than this is never mistaken for ground)
@@ -28,6 +34,8 @@ local PROBE_LIFT = 0.1 -- studs: the probe's bottom is this far over the highest
 local STEP = 0.5 -- studs: one move downhill
 local MAX_MOVES = 4
 local MAX_BLOCKERS = 5
+local MAX_FLOOR = 8 -- studs: the floor under the centre of the start is at most this far under the spot
+local NO_FLOOR = "no floor"
 local TINY = 0.1 -- studs: the size of the probe that asks whether a ray's start point is inside a part
 local PROBE_NAME = "StartCheckProbe"
 
@@ -100,7 +108,7 @@ local function isInside(point: Vector3, world: WorldRoot, probe: Part, overlap: 
 	return inside
 end
 
-local function search(spot: Vector3, world: WorldRoot, probe: Part): Result
+local function search(spot: Vector3, world: WorldRoot, probe: Part, options: PathCheck.Options): Result
 	local rays = newRayParams()
 	local overlap = newOverlapParams()
 	local width, height = Config.Stuck.BodyWidth, Config.Stuck.BodyHeight
@@ -114,6 +122,7 @@ local function search(spot: Vector3, world: WorldRoot, probe: Part): Result
 		local offsets: { Vector3 } = {}
 		local heights: { number } = {}
 		local highest = -math.huge
+		local centre: RaycastResult? = nil
 		for _, offset in OFFSETS do
 			local from = Vector3.new(x + offset.X, spot.Y + RAY_ABOVE, z + offset.Z)
 			local rise = offset.Magnitude * climb
@@ -124,6 +133,9 @@ local function search(spot: Vector3, world: WorldRoot, probe: Part): Result
 			local reach = from.Y - (spot.Y - RAY_BELOW)
 			local hit = world:Raycast(from, Vector3.new(0, -reach, 0), rays)
 			if hit ~= nil then
+				if offset.Magnitude == 0 then
+					centre = hit
+				end
 				table.insert(offsets, offset)
 				table.insert(heights, hit.Position.Y)
 				-- A hit steeper than the climb limit is a wall: it pulls the way downhill, but never sets the height.
@@ -133,28 +145,30 @@ local function search(spot: Vector3, world: WorldRoot, probe: Part): Result
 			end
 		end
 
-		if highest == -math.huge then
-			-- No ground to read (no ray hit ground: the spot is over nothing, or only walls): the body is
-			-- tested where the spot is, so the part it sits in gets named.
-			probe.CFrame = CFrame.new(spot)
-			return {
-				open = false,
-				position = nil,
-				moves = moves,
-				blockers = namesOf(world:GetPartsInPart(probe, overlap)),
-			}
+		if highest == -math.huge or centre == nil or spot.Y - centre.Position.Y > MAX_FLOOR then
+			-- No floor to stand on. With no ground under the centre, the body is tested where the spot is, so the part
+			-- it sits in gets named; with nothing there, or a centre floor too far down, the blocker is "no floor".
+			local names = { NO_FLOOR }
+			if centre == nil then
+				probe.CFrame = CFrame.new(spot)
+				local inside = namesOf(world:GetPartsInPart(probe, overlap))
+				if #inside > 0 then
+					names = inside
+				end
+			end
+			return { open = false, position = nil, moves = moves, blockers = names }
 		end
 
 		local feet = Vector3.new(x, highest + PROBE_LIFT, z)
-		probe.CFrame = CFrame.new(feet + Vector3.new(0, height / 2, 0))
-		local touching = world:GetPartsInPart(probe, overlap)
-		if #touching == 0 then
+		local fits, inTheWay = PathCheck.roomToStand(options, centre.Position, centre.Normal)
+		if fits then
 			return { open = true, position = feet, moves = moves, blockers = {} }
 		end
 
 		local way = if moves < MAX_MOVES then downhill(offsets, heights) else nil
 		if way == nil then
-			return { open = false, position = nil, moves = moves, blockers = namesOf(touching) }
+			local blockers = if inTheWay ~= nil then { inTheWay.Name } else {}
+			return { open = false, position = nil, moves = moves, blockers = blockers }
 		end
 		x += way.X * STEP
 		z += way.Z * STEP
@@ -177,8 +191,10 @@ function StartCheck.find(spot: Vector3, root: Instance?): Result
 	probe.Transparency = 1
 	probe.Parent = world
 
-	local ok, outcome = pcall(search, spot, world, probe)
+	local options = PathCheck.defaults(world)
+	local ok, outcome = pcall(search, spot, world, probe, options)
 	probe:Destroy()
+	pcall(PathCheck.cleanup, options)
 	if not ok then
 		error(outcome, 0)
 	end

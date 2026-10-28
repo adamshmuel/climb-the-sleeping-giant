@@ -57,7 +57,10 @@ describe("StartCheck.find", function()
 	it("is open after 1 downhill move on a wedge slope", function()
 		inFakeWorld(function(world)
 			slopedFloor(world)
-			solid(world, "Wall", Vector3.new(10, 20, 30), CFrame.new(5.8, 10, 0)) -- x 0.8 to 10.8: touches the first try only
+			-- x 0.6 to 10.6. The walk map's tilted, lifted box reaches x 0.77 on the 20 degree wedge, so the first
+			-- try is blocked by 0.17. After the move it reaches x 0.27, clear by 0.33. That try's uphill corner
+			-- ray at x 0.5 stays 0.1 clear of the wall's face.
+			solid(world, "Wall", Vector3.new(10, 20, 30), CFrame.new(5.6, 10, 0))
 			local result = StartCheck.find(Vector3.new(0, 3, 0), world)
 			expect(result.open).toBe(true)
 			expect(result.moves).toBe(1)
@@ -165,6 +168,30 @@ describe("StartCheck.find", function()
 			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
 			expect(result.open).toBe(false)
 			expect(result.blockers).toContain("Ledge")
+		end)
+	end)
+
+	-- Stuck safety Task 46: the walk map's own fit test (PathCheck.roomToStand) decides whether the body fits, and the
+	-- centre of the start must have a floor.
+	it("is open on a 65 degree slope with an overhang over its uphill side, where the tilted body fits", function()
+		inFakeWorld(function(world)
+			tiltedFloor(world, 65)
+			-- A block high over the uphill side (x 0.9 and more, from y 5): an upright body reaches it, a body leaning with the slope does not.
+			solid(world, "Overhang", Vector3.new(10, 4, 10), CFrame.new(5.9, 7, 0))
+			local result = StartCheck.find(Vector3.new(0, 0, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(0)
+			expect((result.position :: Vector3).Y).toBeCloseTo(math.tan(math.rad(65)) + 0.1, 2)
+		end)
+	end)
+
+	it("says a start with no floor under its centre is not open, even with a thin plate under two corners", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			solid(world, "Plate", Vector3.new(4.4, 0.2, 10), CFrame.new(2.8, 19.5, 0)) -- y 19.4 to 19.6, x 0.6 to 5
+			local result = StartCheck.find(Vector3.new(0, 20, 0), world) -- the floor is 20 studs under the centre
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("no floor")
 		end)
 	end)
 
