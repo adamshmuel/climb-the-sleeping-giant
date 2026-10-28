@@ -107,6 +107,9 @@ if grep -nE 'string\.format\([A-Za-z_]+, *\.\.\.\)' "$@"; then
 	fail=1
 fi
 
+echo "== Service members (Task 10: the type check let SoundService.Volume through)"
+python3 scripts/job-props.py "$@" || fail=1
+
 echo "== Format"
 stylua --check "$@" || fail=1
 
