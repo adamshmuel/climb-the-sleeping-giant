@@ -82,6 +82,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 70 | Load a generated model by its asset id, never by a name search | `look-and-art.md` |
 | 71 | A check passes on the unchanged world before it judges a trial | `studio-and-scripts.md` |
 | 72 | Map the whole gap before designing a fill | `world-scenery.md` |
+| 73 | The hook counts an agent's tool calls, not the agent | `studio-and-scripts.md` |
+| 74 | A Studio script requires a tools module through a clone | `studio-and-scripts.md` |
+| 75 | Re-check a start from the point it was found from | `studio-and-scripts.md` |
+| 76 | A job script is checked in the shell before its first paste | `studio-and-scripts.md` |
+| 77 | A start meant to be inside a gap is checked to be under its roof | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

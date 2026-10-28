@@ -27,16 +27,17 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Scenery overrun | Lesson 1 (Scenery gets the cheap fix), and after a planned fix broke Lesson 19, Lesson 30 (A new lesson rechecks the open tasks) | 2026-10-27 |
 | Studio busy ("not reachable") | Lesson 22, extended to test runs; came back 2026-10-28 (Task 46): Lesson 51 and a runner task that pauses between spec files | 2026-10-27 |
 | Script error | Lesson 7 (A Luau line can't start with "("), Lesson 22 (Long Play work runs in the background); came back 2026-10-28 (Task 47): a hook blocks the "(" line | 2026-10-27 |
-| Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines), and after it came back Lesson 29 (Fetch background work once, when it's done) and Lesson 31 (A background job reports as it goes) | 2026-10-27 |
+| Task over its size (step over its call cap) | Lesson 24 (The handoff names the exact files and lines), and after it came back Lesson 29 (Fetch background work once, when it's done) and Lesson 31 (A background job reports as it goes); came back 2026-10-28 (Task 54 place step 3, 51 of 30 calls): Lesson 73, the hook counts each agent's tool calls | 2026-10-27 |
 | A new part fails an existing test (first time) | Lesson 37 (A trial part must also pass the tests for its kind) | 2026-10-27 |
 | A fill makes its own stuck spots | Lesson 35 (A fill's top is a new floor) | 2026-10-27 |
 | Fix planned on an unconfirmed cause | Lesson 26 (Try 5 examples before choosing a fix), extended after Task 33, and the cause line in `agent-workflow.md`, "Decision table first" | 2026-10-27 |
-| Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess), extended after a fourth (code_lead) to every agent | 2026-10-27 |
+| Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess), extended after a fourth (code_lead) to every agent; came back 2026-10-28 (Task 54 Play job, 1106 lines in one file): Lesson 63 extended with a line budget per job file | 2026-10-27 |
+| A job stopped before judging anything | Lesson 71 (baseline first), Lesson 61 (fresh counts), and after the third time (Task 54 call 10) Lesson 76 and `scripts/job-check.sh` | 2026-10-28 |
 
 ## Area files
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 16 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 18 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 11 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 18 |

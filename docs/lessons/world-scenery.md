@@ -122,3 +122,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 54 sized its brim fix from a "slot along the lip" found by rays in one direction. The tuft closed only 1 or 2 of 5 crease points, because the gap is one hollow under the whole nightcap that runs more than 14 studs past every point. A design round and a measure call were spent on the wrong shape (2026-10-28).
 - **Do instead:** before designing a fill, map the gap across the whole area (rays down from above, then up from the skin, on a grid), and find where it ends and where players can get in. The fill is sized to that map, not to one line of points.
 - **Who checks:** `code_lead` (the measure), `designer` (before it designs).
+
+## Lesson 77: A start meant to be inside a gap is checked to be under its roof
+- **What happened:** Task 54's two crease starts were placed at "highest ray hit + 0.1", which put their feet at y 116.3, above the cap's underside there (114.6). Both push-in tries started on top of the brim and walked across the cap, so Play never pushed into the crease it was meant to test (2026-10-28). The open crease point went to the build review by hand.
+- **Do instead:** a start meant to be inside a gap or under an overhang prints the height of the roof above it and is dropped if it isn't under that roof. Every push try logs its highest point, so a try that rode over the top shows it.
+- **Who checks:** `code_lead` (in the handoff's starts table), whoever writes the job.

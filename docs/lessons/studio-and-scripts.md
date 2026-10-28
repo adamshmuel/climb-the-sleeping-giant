@@ -112,6 +112,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 28 step 1b's builder was resumed at 110k to write and paste an 801-line job. Writing it took it to 143k of 150k, so it stopped before the paste (2026-10-28).
 - **Do instead:** a job over about 300 lines is split (for example, a starts job and a separate check job), or a fresh builder does only the paste and the fetch. The main chat never resumes a builder above 100k for a step that writes a big job.
 - **Also (Task 28 step 1c, 2026-10-28):** a fresh builder writing a 944-line job from pieces of an older one still reached 127k before the paste. Writing and pasting a job over about 300 lines are always two builders: one writes and checks the file, a fresh one only reads it once, pastes it and writes up. The main chat starts them that way even if the handoff names one step.
+- **Came back (Task 54 Play, 2026-10-28):** the handoff asked one writer for a whole Play job with no size limit; it grew to 1106 lines and the writer ran out of memory at 162k before it was clean. **Now:** every handoff that asks for a job file gives it a line budget of at most 300 lines. A job that needs more is split into separate files (for example setup, walks, re-test), each pasted in its own call or loaded by the first. A writer that passes the budget stops and reports for a split.
 - **Who checks:** `code_lead` (sizing the step), the main chat (choosing to resume or start fresh).
 
 ## Lesson 64: A job's walk map holds every place it measures
@@ -139,4 +140,26 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 ## Lesson 71: A check passes on the unchanged world before it judges a trial
 - **What happened:** in Task 54 call 2 the nest-route check found 0 of 4 routes even with no tuft placed, and a name search found 0 of 4 nests, so neither could judge the trial tufts. One of the task's few Studio calls was spent partly blind (2026-10-28).
 - **Do instead:** each check in a trial call runs once on the world without the change first, and must pass there, before it scores any trial. A handoff names every part a check needs by its full path (the nests too), never by a name search.
+- **Came back (Task 54 call 3, 2026-10-28):** the next measure ran the baseline first, as this lesson says, and the nest-route check again found 0 of 4, so a second call judged nothing. It had rewritten the test suite's nest check with a typed start and 1-stud spacing, while the test (`OnTheGiant.spec.luau`) starts at the ladder's top end and spaces spots 2 studs apart. **Now:** a measure that repeats a test's check calls the same helpers the test uses (for example `WalkFacts.ladderEndSpots`) with the test's spacing and pass rule, never a rewrite.
 - **Who checks:** `code_lead` (in the job), the main chat (in the handoff).
+
+## Lesson 73: The hook counts an agent's tool calls, not the agent
+- **What happened:** Task 54 place step 3's builder had to write a new 409-line job and then run it. It spent 36 shell reads finding the pieces, used 51 tool calls against a cap of 30, and reported "about 24 of 30" (2026-10-28). The main chat had started one builder for both writing and pasting, against Lesson 63.
+- **Do instead:** the memory hook (`.claude/hooks/agent-memory-cap.py`) counts each agent's tool calls since its last prompt or resume. From call 25 it shows the real count. Past 30 only a Studio call (to finish a world change or fetch a running job) or a note still works; past 35 only a note. Reports give the hook's count, never a guess. A handoff step that writes a new job over about 300 lines and runs it is always two builders (Lesson 63), even when the handoff names one step.
+- **Who checks:** the hook; the main chat (splitting the step); `code_lead` (sizing the handoff).
+
+## Lesson 74: A Studio script requires a tools module through a clone
+- **What happened:** in Task 54's names check, a plain `require` of `ServerStorage.Tools.checks.StartCheck` in Edit gave back an old cached copy, so `nearSpot` was nil ("attempt to call a nil value") and the start re-check was lost (2026-10-28). The builder's call 7 used `require(...StartCheck:Clone())` and worked.
+- **Do instead:** in **Edit**, a Studio script requires a tools or test module as `require(module:Clone())`, the same way the test runner is run. A plain `require` returns whatever copy Studio cached first, even after Rojo synced a newer one.
+- **Came back the other way (Task 54 Play call 10, 2026-10-28):** the Play setup cloned `WorldIndex` too. A clone has no parent, and `WorldIndex` loads `script.Parent.Parent.Giant.Zones`, so it failed with "Requested module experienced an error while loading" and the whole Play run was lost. **Now:** clone only a module that never uses `script.Parent` (check with grep first). In **Play**, require game modules the plain way: Play starts a fresh copy of the place, so nothing is cached from Edit. A handoff lists, for each module a job requires, "clone" or "plain" and why.
+- **Who checks:** whoever writes the script (grep each module for `script.Parent`); `code_lead` (in the handoff).
+
+## Lesson 75: Re-check a start from the point it was found from
+- **What happened:** Task 54's Play setup re-checked each start with `StartCheck.nearSpot(feet, 1)`, using the feet point that `find` had returned. `find` puts the feet 0.1 stud above the highest of its 5 ground rays, so on a slope they sit more than 1 stud above the ground under the centre. All three starts on slopes (the cap top and both brim crease points) were dropped with "no walk-map spot" (2026-10-28).
+- **Do instead:** a re-check starts from the same point the start was first found from, with the same reach (for example 3 studs), never from the lifted feet point with a smaller reach. It prints how far each start moved.
+- **Who checks:** `code_lead` (in the handoff), whoever writes the job.
+
+## Lesson 76: A job script is checked in the shell before its first paste
+- **What happened:** Task 54 lost 3 Studio calls (calls 3, 4 and 10) to measure and setup scripts that stopped before they judged anything: a rewritten check, a wrong expected count, and a module loaded as an unparented clone. Each was the script's first run anywhere (2026-10-28).
+- **Do instead:** before a new or changed job script's first Studio paste, the writer runs `scripts/job-check.sh <files>` (size, "(" lines, clones of modules that use `script.Parent`, format, lint, types) until it passes. Then `code_lead` reads the script against the lessons the handoff names. The script stops early with a clear message if anything it needs fails to load or comes up short, so a broken setup never lets the long job run.
+- **Who checks:** the writer builder (the check script), `code_lead` (the read before the paste), the main chat (no paster starts before both).
