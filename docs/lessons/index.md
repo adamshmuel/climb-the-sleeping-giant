@@ -89,6 +89,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 77 | A start meant to be inside a gap is checked to be under its roof | `world-scenery.md` |
 | 78 | A measure's shapes come from saved measurements, and every dependent test is scored | `world-scenery.md` |
 | 79 | Every stop prints the check that fired and its own failure | `studio-and-scripts.md` |
+| 80 | A job never picks a part by a search; the handoff names it | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

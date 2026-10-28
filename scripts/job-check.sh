@@ -3,11 +3,31 @@
 # Three Task 54 Studio calls were lost to job scripts that stopped before
 # judging anything (Lesson 76). This catches the mistakes a shell can see.
 # Usage: scripts/job-check.sh work/t54/server-p.luau [more files]
+# A handoff is checked with --handoff work/handoff-x.md (Lesson 80).
 # A job split into parts (Lesson 63) is checked with --joined part-a part-b:
 # each part's size, then every other check on the parts joined in paste order.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.rokit/bin:$PATH"
+if [ "${1:-}" = "--handoff" ]; then
+	# A part a job picks by a search at paste time is first seen by the
+	# paste (Task 7 step 2, Lesson 80). Every pick is made in code_lead's
+	# names-check call, and the handoff names the part by path or position.
+	shift
+	# A pick that can only happen in Play (for example, the landing spot
+	# nearest where the player landed) is marked "(runtime pick)" on its line.
+	pick='\b(nearest|finds? (it|them) by|picks? the|whichever)\b'
+	named='(Workspace|World|ServerStorage|ReplicatedStorage)\.[A-Za-z_]|\(-?[0-9.]+, *-?[0-9.]+, *-?[0-9.]+\)|\(runtime pick\)|search "'
+	found=$(grep -nEi "$pick" "$@" | grep -vE "$named")
+	if [ -n "$found" ]; then
+		echo "$found"
+		echo "Handoff check FAILED: each line above picks a part by a rule with no path or position."
+		echo "Run the pick in the names-check call and name the part (Lesson 80)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part."
+	exit 0
+fi
 joined=0
 if [ "${1:-}" = "--joined" ]; then
 	joined=1
