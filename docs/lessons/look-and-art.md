@@ -21,3 +21,8 @@ About how the game looks, the art and models, and approving a design. The map of
 - **What happened:** the generator's normal call reported a time-out though the model still finished; one piece came out with a patchy texture; a moving piece turned the wrong way because its hinge point wasn't set (2026-10-11).
 - **Do instead:** run the generator in the background and wait for the result. Look at every generated model and regenerate or retexture bad ones. Generate moving models in named pieces and set each piece's hinge point before moving it.
 - **Who checks:** `designer`, `builder`.
+
+## Lesson 57: Size a prop from its visible mesh, not the model's outer box
+- **What happened:** for Task 48, designer sized the R-141 bush from the model's outer box (`GetBoundingBox`, 12.9 x 9 x 13). The round leaves inside were only 9.6 wide, and 4 to 5 studs wide near the ground, so the placed bush was too small to hide the box (2026-10-28, second failure on R-141).
+- **Do instead:** size a prop from its visible mesh's width at the heights the gap needs, never from the model's outer box.
+- **Who checks:** `designer`, `code_lead` (in the handoff).
