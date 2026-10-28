@@ -9,6 +9,12 @@ own transcript, takes the size of its last request (its memory), and:
   answer and report. Job scripts in work/ are blocked too: two builders kept
   writing .luau jobs there past the limit (Task 28 step 4).
 Call caps alone kept missing this (tool calls of very different sizes).
+
+It also counts the agent's own tool calls since its last prompt or resume against the 30-call cap per job
+("Size steps by tool calls"): a step 3 builder in Task 54 reported "about
+24 of 30" after 51 calls, so the count can't be left to the agent. From call
+25 it shows the count; past 30 only a Studio call (to finish a world change
+or fetch a running job) or a note still works; past 35 only a note.
 """
 
 import json
@@ -19,6 +25,9 @@ LIMITS = {"builder": 150_000}
 DEFAULT_LIMIT = 200_000
 PROJECT_AGENTS = {"builder", "code_lead", "product", "designer", "game_creator", "qa"}
 WARN_AT = 0.85
+CALL_CAP = 30
+CALL_WARN = 25
+CALL_GRACE = 5
 
 
 def memory_size(path):
@@ -41,6 +50,46 @@ def memory_size(path):
                 + usage.get("cache_creation_input_tokens", 0)
             )
     return None
+
+
+def is_new_job(entry):
+    # A prompt or a resume message starts a new job; tool results don't.
+    if entry.get("type") != "user":
+        return False
+    content = entry.get("message", {}).get("content")
+    if isinstance(content, str):
+        return True
+    if isinstance(content, list):
+        return any(isinstance(b, dict) and b.get("type") == "text" for b in content) and not any(
+            isinstance(b, dict) and b.get("type") == "tool_result" for b in content
+        )
+    return False
+
+
+def tool_calls(path):
+    ids = set()
+    try:
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if '"tool_use"' not in line and '"user"' not in line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except ValueError:
+                    continue
+                if not isinstance(entry, dict):
+                    continue
+                if is_new_job(entry):
+                    ids = set()
+                    continue
+                content = (entry.get("message") or {}).get("content")
+                if entry.get("type") == "assistant" and isinstance(content, list):
+                    for block in content:
+                        if isinstance(block, dict) and block.get("type") == "tool_use":
+                            ids.add(block.get("id"))
+    except OSError:
+        return None
+    return len(ids)
 
 
 NOTE_ENDINGS = (".md", ".txt")
@@ -79,40 +128,59 @@ def main():
         return
     path = os.path.join(main_transcript[: -len(".jsonl")], "subagents", f"agent-{agent_id}.jsonl")
     size = memory_size(path)
-    if size is None:
-        return
+    calls = tool_calls(path)
     limit = LIMITS.get(agent_type, DEFAULT_LIMIT)
-    k = f"{size // 1000}k of your {limit // 1000}k limit"
-
     note_write = data.get("tool_name") in ("Write", "Edit") and is_work_note(data)
+    studio_call = data.get("tool_name") == "mcp__Roblox_Studio__execute_luau"
 
-    if size >= limit and not note_write:
+    deny = []
+    context = []
+    if size is not None:
+        k = f"{size // 1000}k of your {limit // 1000}k limit"
+        if size >= limit:
+            deny.append(
+                f"Memory at {k} (agent-workflow.md, 'Agent memory size'). "
+                "Stop now: write your state note or answer as a .md or .txt file in work/ (only that still works), "
+                "then end with your report. A fresh agent carries on."
+            )
+        elif size >= limit * WARN_AT:
+            if agent_type == "builder":
+                advice = (
+                    "Finish the call you're on (never stop mid world change), "
+                    "write your state note in work/, and report. Start nothing new."
+                )
+            else:
+                advice = (
+                    "Finish the review or answer you're on with as few calls as you can, "
+                    "then report. Take on nothing new; a fresh agent picks up after."
+                )
+            context.append(f"Memory at {k}. {advice}")
+    if calls is not None:
+        n = f"This is about tool call {calls + 1}; the cap is {CALL_CAP} per job (agent-workflow.md, 'Size steps by tool calls')."
+        if calls >= CALL_CAP + CALL_GRACE or (calls >= CALL_CAP and not studio_call):
+            deny.append(
+                f"{n} Over the cap: only a .md or .txt note in work/ still works"
+                + (f", and up to {CALL_GRACE} Studio calls to finish a world change or fetch a running job" if calls < CALL_CAP + CALL_GRACE else "")
+                + ". Write your state note and report the real count."
+            )
+        elif calls >= CALL_CAP:
+            context.append(f"{n} Over the cap: use this Studio call only to finish a world change or fetch a running job, then write your note and report.")
+        elif calls + 1 >= CALL_WARN:
+            context.append(f"{n} Report the real count from these notes, never a guess.")
+
+    if deny and not note_write:
         out = {
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",
-                "permissionDecisionReason": (
-                    f"Memory at {k} (agent-workflow.md, 'Agent memory size'). "
-                    "Stop now: write your state note or answer as a .md or .txt file in work/ (only that still works), "
-                    "then end with your report. A fresh agent carries on."
-                ),
+                "permissionDecisionReason": " ".join(deny),
             }
         }
-    elif size >= limit * WARN_AT:
-        if agent_type == "builder":
-            advice = (
-                "Finish the call you're on (never stop mid world change), "
-                "write your state note in work/, and report. Start nothing new."
-            )
-        else:
-            advice = (
-                "Finish the review or answer you're on with as few calls as you can, "
-                "then report. Take on nothing new; a fresh agent picks up after."
-            )
+    elif context or deny:
         out = {
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
-                "additionalContext": f"Memory at {k}. {advice}",
+                "additionalContext": " ".join(context + deny),
             }
         }
     else:
