@@ -87,3 +87,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** after Task 43, code_lead suggested the rescue for the Sock and for walk-in spots more than 12 studs away. Rule 22 allows the rescue only on the giant, and only for spots reached by a jump, and the rescue doesn't reach the meadow (Lesson 10) (2026-10-28).
 - **Do instead:** before proposing the rescue for a spot, check it against Rule 22's 4 rare-spot conditions and Lesson 10. A spot a player can walk or slide into gets fixed.
 - **Who checks:** `code_lead`, `product`.
+
+## Lesson 55: A part goes in the script that owns its folder
+- **What happened:** Task 48's box for R-141 would have gone into `SmallPatches` from a new world script, but `S4SlideGuards.luau` owns that folder and counts its parts, so its "already done" check would have broken (code_lead caught it in planning, 2026-10-28).
+- **Do instead:** a world script never adds parts to a folder another script owns and counts. Add the part to the owning script's records.
+- **Who checks:** `code_lead` (in the plan), `builder`.

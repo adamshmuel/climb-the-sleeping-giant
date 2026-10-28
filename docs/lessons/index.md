@@ -64,6 +64,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 52 | `expect` takes one value | `studio-and-scripts.md` |
 | 53 | A Play job matches labels by their first word, and counts every call | `studio-and-scripts.md` |
 | 54 | A check that finds nothing shows its closest case | `studio-and-scripts.md` |
+| 55 | A part goes in the script that owns its folder | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
