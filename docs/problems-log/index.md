@@ -14,7 +14,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
-| Check started inside a mesh, or a start check that's wrong | 8 | 2026-10-28 | `world-scenery.md` |
+| Check started inside a mesh, or a start check that's wrong | 9 | 2026-10-28 | `world-scenery.md` |
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 
 ## Fixed kinds
