@@ -200,3 +200,13 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** in Task 8b's bot walk, 3 ladder drops kept pressing "away" for the whole 8 s, so the bot landed, walked about 112 studs across the meadow and never settled (NO_LANDING): a job fault that cost a re-run. The 13 short fail lines printed only each start, so a whole fix task is needed just to learn why they failed. And drop #346 passed as "let go from the top" without ever grabbing the ladder (2026-10-28).
 - **Do instead:** once a body has fallen, the press stops as soon as the feet touch a floor. Every fail line, short or full, prints its reason word and end feet; it costs no call. A leg that should grab something logs whether it did, and the proof says so when it didn't.
 - **Who checks:** `code_lead` (in the handoff and the read before the paste), the writer.
+
+## Lesson 86: A walk job measures what the body really did, never what the plan expected
+- **What happened:** in Task 8c the step-off press stopped only near the leg's planned landing height, so #279 landed on a higher ledge and pressed into a wall for 8 s (a false NO_LANDING). The walk-out re-placed the bot at its end feet, which can't work for a ladder hang. And the touchdown fix changed how every leg moves, so old passes could turn into fails (2026-10-28).
+- **Do instead:** a rule about falling measures the fall itself (feet drop since the fall began), never the planned target. An escape from a hang presses from where the body is, without re-placing it. A job fix that changes how every leg moves says so in the proof, and the next full walk re-checks every leg on the new job.
+- **Who checks:** `code_lead` (plan and job read), the writer.
+
+## Lesson 87: Prove a check ran, and fetch only what is saved
+- **What happened:** in Task 8c a joined job-check was given file names from another folder, found no files, checked an empty job and "passed"; code_lead's re-run found a real type error. A fetch re-pasted the whole 470-line job (about 7k tokens) when the lines were already in `shared`. And the re-walk's shot plan only picked unknown reason words, so a NO_LANDING that fit no row would have had no shot (2026-10-28).
+- **Do instead:** a report pastes the last line of each check it ran; job-check now fails on a missing file. A fetch reads the saved state (for example `shared.T8cRewalk.lines`) with a short call. A shot plan also names any known reason that fits no table row.
+- **Who checks:** `code_lead` (re-runs the checks before the paste), the builder.
