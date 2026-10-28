@@ -12,15 +12,15 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 42 of 53 | ◐ Task 54 closed: the two hidden brim blocks stay; the open crease point and W2 are checked by hand in the build review. Next: Task 33b (reshape the forehead box), 7 Studio calls plus 1 spare, waiting on product's OK for the Play step. |
+| 2. Stuck safety | `v2/stuck-safety.md` | 43 of 53 | ◐ Task 33b done: the forehead box is reshaped and no test is red. Next: Task 7 (the rest of the game on his real shape). |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |
 | 6. Wake-up | `v2/wake-up.md` | 0 of 23 | ☐ not started |
 | 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
-| **All of V2** | | **60 of 173** (setups included) | |
+| **All of V2** | | **61 of 173** (setups included) | |
 
-**Next:** stuck safety Task 33b (reshape the forehead box, `work/handoff-t33b.md`): steps 1 to 5 can start; the Play step waits for product's OK on 7 Studio calls plus 1 spare. Then Tasks 7 to 16 (the order is in `docs/plans/v2/stuck-safety.md`).
+**Next:** stuck safety Task 7 (the rest of the game on his real shape); code_lead sizes it, with a Studio-call count for every step, before it starts. Then Tasks 8 to 16 (the order is in `docs/plans/v2/stuck-safety.md`).
 
 **Place file:** `climb-the-sleeping-giant.rbxl` is kept in git since 2026-10-14. Adam saves it in Studio with File → Download a Copy (his Studio has no "Save to File As"). The world changes from `11a-mockups-hands-off`, `11b-mockups-out-of-sight`, `11c-mockup-avatars-away`, `12-warning85` and `12b-old-bubble-away` were saved that way and committed in e838a42 with plan 1. **Unsaved now** (waiting for plan 2's Gate 4): stuck safety Task 6 (the teacup's smooth wrap (`Hull`) and the `Tea` part, colour `#9C5E34`, from `tools/world/14-teacup-tea.luau`) and Task 19 (all six body pieces on `PreciseConvexDecomposition`, from `tools/world/15-real-shape.luau`, and `RoutePoint_Egg_Rare_2` moved 0.324 studs, from `tools/world/08-route.luau`), and Task 24 (from `tools/world/15-real-shape.luau` section 2: V1's 33 walk pieces on his legs and belly removed; one fitted `Boots_Walk` step piece, `CrossingRamp_Ankle`, the long `CrossingRamp_Knee` and the `CrossingGuards` folder with 4 guards added, the two knee guards with no friction; from `tools/world/04-egg-spots.luau`: Uncommon egg spots 2 and 4 moved to (−19.5, −62) and (19.5, −62), and five other spots moved up or down; from `tools/world/08-route.luau`: 6 new `Belly_` route points, 12 moved, the links and landing spots rebuilt), Task 25 (from `tools/world/15-real-shape.luau` sections 2b to 2e and 2g: the nose deck, the three nightcap pieces and the middle forehead slab removed, the cap ladder re-made at 71.5°, the beard ladder at 65.3° with its visible rails 34.6 long and 18 rungs, the nose-top side rails and the 2 blocks beside the cap ladder, the Beard zone grown over the rails; from `tools/world/04-egg-spots.luau`: Rare egg spot 4 moved 1 stud south to (2.5, −30.5); from `tools/world/08-route.luau`: its route point moved with it), and Task 26 (from `tools/world/15-real-shape.luau` sections 2f to 2f6: his belly and chair, head, nightcap and legs on `Tunable` at precision 1 with their texture put back, the beard ladder's hidden climbing bar 32 long with its foot swung 1 stud back, the blocks beside the cap ladder 1 × 17 × 6, one cap-ladder side wall ending at z 2.5; from `tools/world/04-egg-spots.luau`: Rare egg spots 2, 3 and 4 dropped onto his cloth; from `tools/world/08-route.luau`: their route points dropped and `RoutePoint_Belly_4` moved to (−5.5, 58.68, −26.0)). Task 22 (from `tools/world/15-real-shape.luau` sections 3a to 3c: the pillow on `Tunable` at precision 1 with `CastShadow` off; `World.WalkSurfaces.Patches` with 41 invisible parts; `World.CaveSkirt` with 20 visible parts). A save-format copy check showed the closer fit and the textures survive saving. At plan 2's Gate 4, Adam saves the place and commits it with those scripts.
 
@@ -28,8 +28,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Tests that are red today
 
-One, on purpose, accepted at Task 33's close (product's ruling, 2026-10-27). It stays red until Task 33b, and stuck safety can't reach Gate 4 while it is red.
-- "the real world, the patches: patches sit on his drawn skin, or are sealed inside him" (stuck safety Task 33). It names `Patch_Forehead_1`, the invisible box under his forehead plate: on its -z side, 22 of 39 rays find open air with no plate within 6 studs above them (for example (10.2, 96.0, -0.6)). Its +x side passes.
+None. Task 33's accepted red ("patches sit on his drawn skin, or are sealed inside him", on `Patch_Forehead_1`) turned green in Task 33b (2026-10-28): 2697 passed, 0 failed.
 
 The stuck scan is green: 117 stuck spots, all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
 

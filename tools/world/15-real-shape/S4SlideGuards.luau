@@ -363,12 +363,17 @@ local function sectionSlideGuards(): string
 	}
 	local PATCHES_AFTER37: { FolderRecord } = table.clone(PATCHES_AFTER32) -- the small patches after Task 37
 	table.move(PATCHES_37, 1, #PATCHES_37, #PATCHES_AFTER37 + 1, PATCHES_AFTER37)
-	-- Task 33: the forehead slot's box (work/t33/box.txt, its Patch_Forehead_1 line; its top is y 101.4).
-	local PATCHES_33: { FolderRecord } = {
+	-- Task 33: the forehead slot's first box (work/t33/box.txt, its Patch_Forehead_1 line; its top is y 101.4). Worlds built
+	-- before Task 33b hold this one.
+	local PATCHES_33_FIRST: { FolderRecord } = {
 		block("Patch_Forehead_1", 3.0, 12.7, 3.4, 11.2, 95.05, 1.1),
 	}
 	local PATCHES_FINAL: { FolderRecord } = table.clone(PATCHES_AFTER37) -- the small patches after Task 33
-	table.move(PATCHES_33, 1, #PATCHES_33, #PATCHES_FINAL + 1, PATCHES_FINAL)
+	table.move(PATCHES_33_FIRST, 1, #PATCHES_33_FIRST, #PATCHES_FINAL + 1, PATCHES_FINAL)
+	-- Task 33b: the same box reshaped, its -z face at z -0.3 (work/t33b/measure.md line 25; only sizeZ and z changed).
+	local PATCHES_33: { FolderRecord } = {
+		block("Patch_Forehead_1", 3.0, 12.7, 3.10, 11.2, 95.05, 1.25),
+	}
 	-- Task 48: the box inside the meadow bush at R-141's notch (work/t48/designer-bush.md, item 4; fixed numbers in the handoff).
 	local PATCHES_48: { FolderRecord } = {
 		turned(
@@ -379,8 +384,13 @@ local function sectionSlideGuards(): string
 			{ 0.9063, 0, 0.4226, 0, 1, 0, -0.4226, 0, 0.9063 }
 		),
 	}
-	local PATCHES_ALL: { FolderRecord } = table.clone(PATCHES_FINAL) -- the small patches after Task 48 (today's world)
+	local PATCHES_ALL: { FolderRecord } = table.clone(PATCHES_FINAL) -- the small patches after Task 48 (the first box)
 	table.move(PATCHES_48, 1, #PATCHES_48, #PATCHES_ALL + 1, PATCHES_ALL)
+	local PATCHES_TARGET: { FolderRecord } = table.clone(PATCHES_AFTER37) -- the small patches after Task 33b (today's world)
+	table.move(PATCHES_33, 1, #PATCHES_33, #PATCHES_TARGET + 1, PATCHES_TARGET)
+	table.move(PATCHES_48, 1, #PATCHES_48, #PATCHES_TARGET + 1, PATCHES_TARGET)
+	-- The worlds whose guard folder already holds all 11 guards (Task 37 adds the boards and the 6 boxes together).
+	local HAS_ALL_GUARDS: { [string]: boolean } = { task37 = true, task33 = true, task48 = true, task33b = true }
 	local GUARDS_FINAL: { FolderRecord } = table.clone(GUARDS) -- the guards after Task 37
 	table.move(GUARDS_37, 1, #GUARDS_37, #GUARDS_FINAL + 1, GUARDS_FINAL)
 
@@ -392,7 +402,8 @@ local function sectionSlideGuards(): string
 
 	-- Which of this section's worlds a WalkSurfaces folder holds, read from its two folders only: "before" (neither
 	-- folder), "task23" (the 88 parts, no forehead box), "t6" (the 88 parts and the 6 forehead boxes), "task32" (108
-	-- parts), "task37" (122 parts), "task33" (123 parts) or "task48" (all 124 parts) or "other", with what differs. The guard folder holds either the 3 older guards
+	-- parts), "task37" (122 parts), "task33" (123 parts), "task48" (all 124 parts) or "task33b" (124 parts, the forehead box
+	-- reshaped by Task 33b: today's world) or "other", with what differs. The guard folder holds either the 3 older guards
 	-- or all 11, and it has to match the small patches (the 6 new boxes come with the 8 boards).
 	local function worldOf(walk: Instance): (string, { string })
 		local problems: { string } = {}
@@ -440,6 +451,7 @@ local function sectionSlideGuards(): string
 			local task37Problems = folderProblems(smallFolder, PATCHES_AFTER37, SLIDE_SPEC)
 			local task33Problems = folderProblems(smallFolder, PATCHES_FINAL, SLIDE_SPEC)
 			local task48Problems = folderProblems(smallFolder, PATCHES_ALL, SLIDE_SPEC)
+			local task33bProblems = folderProblems(smallFolder, PATCHES_TARGET, SLIDE_SPEC)
 			if #t6Problems == 0 then
 				kind = "t6"
 			elseif #task23Problems == 0 then
@@ -452,6 +464,8 @@ local function sectionSlideGuards(): string
 				kind = "task33"
 			elseif #task48Problems == 0 then
 				kind = "task48"
+			elseif #task33bProblems == 0 then
+				kind = "task33b"
 			else
 				-- None: name what differs from the world it is nearest to. A folder with any of Task 37's boxes is read
 				-- against the final world (with Task 48's box) or the one before it; else one with any Sock part against the world after Task 32; else one with
@@ -466,7 +480,7 @@ local function sectionSlideGuards(): string
 				end
 				local nearer = if hasAny(PATCHES_37)
 					then (if hasAny(PATCHES_48)
-						then task48Problems
+						then task33bProblems
 						elseif hasAny(PATCHES_33) then task33Problems
 						else task37Problems)
 					elseif hasAny(PATCHES_32) then task32Problems
@@ -476,11 +490,7 @@ local function sectionSlideGuards(): string
 					table.insert(problems, `4 {text}`)
 				end
 			end
-			if
-				guardsAre ~= "other"
-				and (kind == "task37" or kind == "task33" or kind == "task48") ~= (guardsAre == "new")
-				and #problems == 0
-			then
+			if guardsAre ~= "other" and (HAS_ALL_GUARDS[kind] == true) ~= (guardsAre == "new") and #problems == 0 then
 				table.insert(
 					problems,
 					`the small patches are "{kind}" but the guards are {guardsAre} (Task 37 adds both folders' parts together)`
@@ -493,20 +503,24 @@ local function sectionSlideGuards(): string
 		return kind, problems
 	end
 
-	-- The small patches a world still needs: the 20 Sock parts of Task 32 (unless it has them: "task32", "task37", "task33"),
-	-- Task 37's 6 boxes (unless it has them: "task37", "task33"), Task 33's forehead box (unless it has it) and Task 48's bush box.
+	-- The small patches a world still needs: the 20 Sock parts of Task 32 (unless it has them: every world from "task32"
+	-- on), Task 37's 6 boxes (unless it has them: "task37" and later), the reshaped forehead box of Task 33b (unless it
+	-- is "task33b"; "task33" and "task48" first lose their first box, see changeWalk) and Task 48's bush box (unless
+	-- it has it: "task48", "task33b").
 	local function smallToAdd(kind: string): { FolderRecord }
 		local list: { FolderRecord } = {}
-		if kind ~= "task32" and kind ~= "task37" and kind ~= "task33" then
+		if kind ~= "task32" and not HAS_ALL_GUARDS[kind] then
 			table.move(PATCHES_32, 1, #PATCHES_32, #list + 1, list)
 		end
-		if kind ~= "task37" and kind ~= "task33" then
+		if not HAS_ALL_GUARDS[kind] then
 			table.move(PATCHES_37, 1, #PATCHES_37, #list + 1, list)
 		end
-		if kind ~= "task33" then
+		if kind ~= "task33b" then
 			table.move(PATCHES_33, 1, #PATCHES_33, #list + 1, list)
 		end
-		table.move(PATCHES_48, 1, #PATCHES_48, #list + 1, list)
+		if kind ~= "task48" and kind ~= "task33b" then
+			table.move(PATCHES_48, 1, #PATCHES_48, #list + 1, list)
+		end
 		return list
 	end
 	-- Parts made away from the Workspace, then put into a folder.
@@ -523,11 +537,12 @@ local function sectionSlideGuards(): string
 	-- (unless it is "task32", "task37" or "task33"), Task 37's 6 boxes (unless it is "task37" or "task33"), Task 33's
 	-- forehead box (unless it is "task33") and Task 48's bush box in SmallPatches, and the 8 Sock boards in SlideGuards (unless it is "task37" or
 	-- "task33", which have them). The parts it already
-	-- has stay as they are.
+	-- has stay as they are, except the first forehead box of Task 33 ("task33", "task48"): it is destroyed first, and the
+	-- reshaped one of Task 33b takes its place.
 	local function changeWalk(walk: Instance, kind: string)
 		if kind == "before" then
 			local newGuards = makeFolder(GUARD_FOLDER, GUARDS_FINAL, PART_LOOK, GUARD_COLOR)
-			local newPatches = makeFolder(SMALL_FOLDER, PATCHES_ALL, PART_LOOK, GUARD_COLOR)
+			local newPatches = makeFolder(SMALL_FOLDER, PATCHES_TARGET, PART_LOOK, GUARD_COLOR)
 			newGuards.Parent = walk
 			newPatches.Parent = walk
 		else
@@ -536,9 +551,13 @@ local function sectionSlideGuards(): string
 				for _, recorded in PATCHES_29 do
 					(smallFolder:FindFirstChild(recorded.name) :: Instance):Destroy()
 				end
+			elseif kind == "task33" or kind == "task48" then
+				for _, recorded in PATCHES_33_FIRST do
+					(smallFolder:FindFirstChild(recorded.name) :: Instance):Destroy()
+				end
 			end
 			addParts(smallFolder, smallToAdd(kind))
-			if kind ~= "task37" and kind ~= "task33" then
+			if not HAS_ALL_GUARDS[kind] then
 				addParts(walk:FindFirstChild(GUARD_FOLDER) :: Instance, GUARDS_37)
 			end
 		end
@@ -598,20 +617,20 @@ local function sectionSlideGuards(): string
 	end
 	if #problems > 0 then
 		error(
-			`nothing was changed. This is none of the seven worlds section 4 knows (before, after Task 23 only, T6 as built in 29-6A, after Task 32, after Task 37, after Task 33, after Task 48): {someProblems(
+			`nothing was changed. This is none of the eight worlds section 4 knows (before, after Task 23 only, T6 as built in 29-6A, after Task 32, after Task 37, after Task 33, after Task 48, after Task 33b): {someProblems(
 				problems
 			)}`
 		)
 	end
 	local guardsText = countsText(GUARDS_FINAL)
-	local patchesText = countsText(PATCHES_ALL)
-	if kind == "task48" then
+	local patchesText = countsText(PATCHES_TARGET)
+	if kind == "task33b" then
 		return `already done: World.WalkSurfaces.SlideGuards holds {guardsText} and World.WalkSurfaces.SmallPatches holds {patchesText}, all as recorded`
 	end
 
 	-- The change itself, between two waypoints.
 	local descendantsBefore = #world:GetDescendants()
-	local addedSmall = if kind == "before" then #PATCHES_ALL else #smallToAdd(kind)
+	local addedSmall = if kind == "before" then #PATCHES_TARGET else #smallToAdd(kind)
 	pcall(function()
 		ChangeHistoryService:SetWaypoint("15-real-shape section 4: before")
 	end)
@@ -630,16 +649,19 @@ local function sectionSlideGuards(): string
 
 	-- The same check afterwards, on the live folders.
 	local afterKind, wrong = worldOf(walk)
-	if afterKind ~= "task48" then
-		table.insert(wrong, `the world reads as "{afterKind}", expected "task48"`)
+	if afterKind ~= "task33b" then
+		table.insert(wrong, `the world reads as "{afterKind}", expected "task33b"`)
 	end
 	if #wrong > 0 then
 		error(
 			`the change was made, but the check afterwards found: {someProblems(wrong)}. Undo it in Studio (Ctrl+Z, back to the waypoint) and tell code_lead`
 		)
 	end
-	local addedGuards = if kind == "task33" then 0 else #GUARDS_37
-	local removedText = if kind == "t6" then `removed the {#PATCHES_29} forehead boxes, ` else ""
+	local addedGuards = if HAS_ALL_GUARDS[kind] then 0 else #GUARDS_37 -- "task37" has its 8 boards already
+	local removedText = if kind == "t6"
+		then `removed the {#PATCHES_29} forehead boxes, `
+		elseif kind == "task33" or kind == "task48" then "replaced Task 33's first forehead box, "
+		else ""
 	return string.format(
 		"%s; World now has %d descendants (%d before). Guards: %s. Small patches: %s",
 		if kind == "before"

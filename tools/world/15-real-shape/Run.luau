@@ -135,476 +135,87 @@ local sectionFolderRecords = require(script.Parent.S3bcCave)
 local sectionSlideGuards = require(script.Parent.S4SlideGuards)
 local sectionBrimFill = require(script.Parent.S4bBrimFill)
 
+type Step = { short: string, stop: string, title: string, run: () -> string }
+
+-- Every section in the order it runs: its short label for an error report, the words after "STOPPED WITH AN ERROR in",
+-- its title for the full report, and the function. Section 1 stops with no label.
+local STEPS: { Step } = {
+	{ short = "SECTION 1", stop = "", title = "his real shape", run = sectionHisRealShape },
+	{ short = "SECTION 2", stop = "section 2", title = "walk pieces", run = sectionWalkPieces },
+	{ short = "SECTION 2b", stop = "section 2b", title = "his head", run = sectionHead },
+	{ short = "SECTION 2c", stop = "section 2c", title = "zone over the nose rails", run = sectionZone },
+	{ short = "SECTION 2d", stop = "section 2d", title = "rail tops and the ladder slot", run = sectionRailTops },
+	{ short = "SECTION 2e", stop = "section 2e", title = "the beard ladder's foot", run = sectionBeardFoot },
+	{
+		short = "SECTION 2f",
+		stop = "section 2f",
+		title = "his body follows his skin",
+		run = sectionBodyFollowsSkin,
+	},
+	{ short = "SECTION 2f2", stop = "section 2f2", title = "a closer fit", run = sectionCloserFit },
+	{
+		short = "SECTION 2f3",
+		stop = "section 2f3",
+		title = "the slot blocks reach his closer skin",
+		run = sectionSlotBlocks,
+	},
+	{
+		short = "SECTION 2f4",
+		stop = "section 2f4",
+		title = "the beard truss 32 long, part B ends sooner",
+		run = sectionTrussAndPartB,
+	},
+	{ short = "SECTION 2f5", stop = "section 2f5", title = "the legs' closer fit", run = sectionLegsCloserFit },
+	{
+		short = "SECTION 2f6",
+		stop = "section 2f6",
+		title = "the beard truss's foot swings back",
+		run = sectionTrussSwing,
+	},
+	{
+		short = "SECTION 2g",
+		stop = "section 2g",
+		title = "the beard rails reach his drawn belly",
+		run = sectionBeardBelly,
+	},
+	{ short = "SECTION 3a", stop = "section 3a", title = "the pillow's closer fit", run = sectionPillowCloserFit },
+	{ short = "SECTION 3a2", stop = "section 3a2", title = "lit like before", run = sectionLitLikeBefore },
+	{
+		short = "SECTION 3d",
+		stop = "section 3d",
+		title = "the pillow laid flat and sunk under his head",
+		run = sectionPillowFlat,
+	},
+	{
+		short = "SECTIONS 3b and 3c",
+		stop = "sections 3b and 3c",
+		title = "the cave's patches and the cave skirt",
+		run = sectionFolderRecords,
+	},
+	{
+		short = "SECTION 4",
+		stop = "section 4",
+		title = "slide guards and small patches",
+		run = sectionSlideGuards,
+	},
+	{ short = "SECTION 4b", stop = "section 4b", title = "the hidden brim blocks", run = sectionBrimFill },
+}
+
 return function(): string
-	local ok, message = pcall(sectionHisRealShape)
-	if not ok then
-		return "STOPPED WITH AN ERROR: " .. tostring(message)
+	-- One line per finished section ("SECTION 2: <its message>") for an error report, and the full-report line.
+	local shortLines: { string } = {}
+	local fullLines: { string } = {}
+	for index, step in STEPS do
+		local ok, message = pcall(step.run)
+		if not ok then
+			if index == 1 then
+				return "STOPPED WITH AN ERROR: " .. tostring(message)
+			end
+			table.insert(shortLines, `STOPPED WITH AN ERROR in {step.stop}: {tostring(message)}`)
+			return table.concat(shortLines, "\n")
+		end
+		table.insert(shortLines, `{step.short}: {message}`)
+		table.insert(fullLines, `{step.short} ({step.title}): {message}`)
 	end
-	local okWalk, walkMessage = pcall(sectionWalkPieces)
-	if not okWalk then
-		return "SECTION 1: " .. message .. "\nSTOPPED WITH AN ERROR in section 2: " .. tostring(walkMessage)
-	end
-	local okHead, headMessage = pcall(sectionHead)
-	if not okHead then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2b: "
-			.. tostring(headMessage)
-	end
-	local okZone, zoneMessage = pcall(sectionZone)
-	if not okZone then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2c: "
-			.. tostring(zoneMessage)
-	end
-	local okRails, railsMessage = pcall(sectionRailTops)
-	if not okRails then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2d: "
-			.. tostring(railsMessage)
-	end
-	local okFoot, footMessage = pcall(sectionBeardFoot)
-	if not okFoot then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2e: "
-			.. tostring(footMessage)
-	end
-	local okBody, bodyMessage = pcall(sectionBodyFollowsSkin)
-	if not okBody then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2f: "
-			.. tostring(bodyMessage)
-	end
-	local okCloser, closerMessage = pcall(sectionCloserFit)
-	if not okCloser then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2f2: "
-			.. tostring(closerMessage)
-	end
-	local okSlot, slotMessage = pcall(sectionSlotBlocks)
-	if not okSlot then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2f3: "
-			.. tostring(slotMessage)
-	end
-	local okTruss, trussMessage = pcall(sectionTrussAndPartB)
-	if not okTruss then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2f4: "
-			.. tostring(trussMessage)
-	end
-	local okLegs, legsMessage = pcall(sectionLegsCloserFit)
-	if not okLegs then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2f5: "
-			.. tostring(legsMessage)
-	end
-	local okSwing, swingMessage = pcall(sectionTrussSwing)
-	if not okSwing then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2f6: "
-			.. tostring(swingMessage)
-	end
-	local okBelly, bellyMessage = pcall(sectionBeardBelly)
-	if not okBelly then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSTOPPED WITH AN ERROR in section 2g: "
-			.. tostring(bellyMessage)
-	end
-	local okPillow, pillowMessage = pcall(sectionPillowCloserFit)
-	if not okPillow then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSECTION 2g: "
-			.. bellyMessage
-			.. "\nSTOPPED WITH AN ERROR in section 3a: "
-			.. tostring(pillowMessage)
-	end
-	local okLit, litMessage = pcall(sectionLitLikeBefore)
-	if not okLit then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSECTION 2g: "
-			.. bellyMessage
-			.. "\nSECTION 3a: "
-			.. pillowMessage
-			.. "\nSTOPPED WITH AN ERROR in section 3a2: "
-			.. tostring(litMessage)
-	end
-	local okFlat, flatMessage = pcall(sectionPillowFlat)
-	if not okFlat then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSECTION 2g: "
-			.. bellyMessage
-			.. "\nSECTION 3a: "
-			.. pillowMessage
-			.. "\nSECTION 3a2: "
-			.. litMessage
-			.. "\nSTOPPED WITH AN ERROR in section 3d: "
-			.. tostring(flatMessage)
-	end
-	local okCave, caveMessage = pcall(sectionFolderRecords)
-	if not okCave then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSECTION 2g: "
-			.. bellyMessage
-			.. "\nSECTION 3a: "
-			.. pillowMessage
-			.. "\nSECTION 3a2: "
-			.. litMessage
-			.. "\nSECTION 3d: "
-			.. flatMessage
-			.. "\nSTOPPED WITH AN ERROR in sections 3b and 3c: "
-			.. tostring(caveMessage)
-	end
-	local okGuards, guardsMessage = pcall(sectionSlideGuards)
-	if not okGuards then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSECTION 2g: "
-			.. bellyMessage
-			.. "\nSECTION 3a: "
-			.. pillowMessage
-			.. "\nSECTION 3a2: "
-			.. litMessage
-			.. "\nSECTION 3d: "
-			.. flatMessage
-			.. "\nSECTIONS 3b and 3c: "
-			.. caveMessage
-			.. "\nSTOPPED WITH AN ERROR in section 4: "
-			.. tostring(guardsMessage)
-	end
-	local okBrim, brimMessage = pcall(sectionBrimFill)
-	if not okBrim then
-		return "SECTION 1: "
-			.. message
-			.. "\nSECTION 2: "
-			.. walkMessage
-			.. "\nSECTION 2b: "
-			.. headMessage
-			.. "\nSECTION 2c: "
-			.. zoneMessage
-			.. "\nSECTION 2d: "
-			.. railsMessage
-			.. "\nSECTION 2e: "
-			.. footMessage
-			.. "\nSECTION 2f: "
-			.. bodyMessage
-			.. "\nSECTION 2f2: "
-			.. closerMessage
-			.. "\nSECTION 2f3: "
-			.. slotMessage
-			.. "\nSECTION 2f4: "
-			.. trussMessage
-			.. "\nSECTION 2f5: "
-			.. legsMessage
-			.. "\nSECTION 2f6: "
-			.. swingMessage
-			.. "\nSECTION 2g: "
-			.. bellyMessage
-			.. "\nSECTION 3a: "
-			.. pillowMessage
-			.. "\nSECTION 3a2: "
-			.. litMessage
-			.. "\nSECTION 3d: "
-			.. flatMessage
-			.. "\nSECTIONS 3b and 3c: "
-			.. caveMessage
-			.. "\nSECTION 4: "
-			.. guardsMessage
-			.. "\nSTOPPED WITH AN ERROR in section 4b: "
-			.. tostring(brimMessage)
-	end
-	return "SECTION 1 (his real shape): "
-		.. message
-		.. "\n\nSECTION 2 (walk pieces): "
-		.. walkMessage
-		.. "\n\nSECTION 2b (his head): "
-		.. headMessage
-		.. "\n\nSECTION 2c (zone over the nose rails): "
-		.. zoneMessage
-		.. "\n\nSECTION 2d (rail tops and the ladder slot): "
-		.. railsMessage
-		.. "\n\nSECTION 2e (the beard ladder's foot): "
-		.. footMessage
-		.. "\n\nSECTION 2f (his body follows his skin): "
-		.. bodyMessage
-		.. "\n\nSECTION 2f2 (a closer fit): "
-		.. closerMessage
-		.. "\n\nSECTION 2f3 (the slot blocks reach his closer skin): "
-		.. slotMessage
-		.. "\n\nSECTION 2f4 (the beard truss 32 long, part B ends sooner): "
-		.. trussMessage
-		.. "\n\nSECTION 2f5 (the legs' closer fit): "
-		.. legsMessage
-		.. "\n\nSECTION 2f6 (the beard truss's foot swings back): "
-		.. swingMessage
-		.. "\n\nSECTION 2g (the beard rails reach his drawn belly): "
-		.. bellyMessage
-		.. "\n\nSECTION 3a (the pillow's closer fit): "
-		.. pillowMessage
-		.. "\n\nSECTION 3a2 (lit like before): "
-		.. litMessage
-		.. "\n\nSECTION 3d (the pillow laid flat and sunk under his head): "
-		.. flatMessage
-		.. "\n\nSECTIONS 3b and 3c (the cave's patches and the cave skirt): "
-		.. caveMessage
-		.. "\n\nSECTION 4 (slide guards and small patches): "
-		.. guardsMessage
-		.. "\n\nSECTION 4b (the hidden brim blocks): "
-		.. brimMessage
+	return table.concat(fullLines, "\n\n")
 end
