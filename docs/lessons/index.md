@@ -57,6 +57,10 @@ What this project learned the hard way, so it doesn't happen again.
 | 45 | A place a fix has filled is replayed from its own start | `world-scenery.md` |
 | 46 | A Play job counts climbable parts and play time up front | `studio-and-scripts.md` |
 | 47 | A start point has a floor under it | `world-scenery.md` |
+| 48 | Check Rule 22 before suggesting the rescue | `world-scenery.md` |
+| 49 | A test that places a blocker by a body's reach says which check it comes from | `studio-and-scripts.md` |
+| 50 | When a real-world test turns red, read the part it checks first | `studio-and-scripts.md` |
+| 51 | A full test run is fetched again, never started again | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

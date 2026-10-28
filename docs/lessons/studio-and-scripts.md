@@ -69,3 +69,19 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 43 step 2 counted any 3 `Climbing` frames as a hang, so pushes into the real BeardLadder counted. It also ran about 20 s per spot, so one step played only 100 of 203 starts, and 35 hang records were lost when Play stopped (2026-10-28).
 - **Do instead:** a Play job's handoff names the real climbable parts it leaves out (ladders), the time per spot and how many spots fit a step, and sends every record to the server before Play stops (Lesson 42). The step that fetches the records writes the whole list to a file in `work/` and checks it holds every label; a handoff never points at labels it hasn't checked are in the file (step 3 lost 16 labels and about 25 minutes this way).
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 49: A test that places a blocker by a body's reach says which check it comes from
+- **What happened:** StartCheck's wedge test put its wall at x 0.8, just inside the old upright box's reach (1.0). When Task 46 swapped in the walk map's tilted box (reach 0.77), the test broke, and a ruling plus extra Studio calls were needed (2026-10-28).
+- **Do instead:** when a test sets a blocker by a body's reach, its comment gives that reach and names the check it comes from. A plan that changes a shared check lists those tests up front as "setup moves, expectations stay".
+- **Who checks:** `code_lead` (in the plan), `builder`.
+
+## Lesson 50: When a real-world test turns red, read the part it checks first
+- **What happened:** in Task 46's full run, 3 garden tests went red. The team first blamed two overlapping test runs and spent a clean full run proving it wasn't that. The real cause was `Plot_2.GardenVolume`, moved by hand in Studio since the last clean run (2026-10-28).
+- **Do instead:** when a real-world test turns red and the task didn't touch what it checks, first read that part in Edit (position, size, its pair) and compare it with the last clean run, before re-running anything.
+- **Also:** a moved part is put back with the same math the world script that built it uses (here `tools/world/01-gardens.luau` step 8), never a guessed rule such as a mirror. The full test runner's result text is cut at 1024 characters, so a run started with `task.spawn` stores its result, and the scan line separately, in a short-lived attribute that a later call fetches.
+- **Who checks:** `builder`, `code_lead`.
+
+## Lesson 51: A full test run is fetched again, never started again
+- **What happened:** a full test run holds Studio for about 56 seconds, past the tool's limit of about 45. Calls made during it came back "not reachable", the retries started second runs, and Task 46 lost about 10 Studio calls (2026-10-28; second time after Lesson 22).
+- **Do instead:** start the full run in the background, with errors caught and a guard that refuses a second start. Wait 60 seconds in Bash, then make one fetch that waits up to 30 seconds and also returns the scan line. After "not reachable", fetch again; never start the run again. The cause fix: the test runner pauses with `task.wait()` after each spec file, so Studio stays reachable (a small task, planned by code_lead).
+- **Who checks:** `code_lead` (in every handoff with a full run), `builder`.

@@ -82,3 +82,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 43's walk-in start for V1F stood in open air, with no floor for 40 studs below, so its "hang" was a falling body, not a trap. A whole Play run and a measuring slot were spent on it (2026-10-28).
 - **Do instead:** before recording a start, cast a ray down and check there is a floor within 8 studs. The start-check fix task adds this to the shared start check, test first.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 48: Check Rule 22 before suggesting the rescue
+- **What happened:** after Task 43, code_lead suggested the rescue for the Sock and for walk-in spots more than 12 studs away. Rule 22 allows the rescue only on the giant, and only for spots reached by a jump, and the rescue doesn't reach the meadow (Lesson 10) (2026-10-28).
+- **Do instead:** before proposing the rescue for a spot, check it against Rule 22's 4 rare-spot conditions and Lesson 10. A spot a player can walk or slide into gets fixed.
+- **Who checks:** `code_lead`, `product`.
