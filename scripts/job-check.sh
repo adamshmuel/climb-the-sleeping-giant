@@ -13,8 +13,12 @@ args=()
 for a in "$@"; do
 	if [ -e "$a" ]; then
 		args+=("$(cd "$(dirname "$a")" && pwd)/$(basename "$a")")
-	else
+	elif [[ "$a" == --* ]]; then
 		args+=("$a")
+	else
+		# A missing file once made the --joined check pass on an empty job.
+		echo "Job check FAILED: $a does not exist (give a path from this folder)."
+		exit 1
 	fi
 done
 set -- "${args[@]}"
