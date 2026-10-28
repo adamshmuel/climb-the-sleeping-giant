@@ -76,6 +76,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 64 | A job's walk map holds every place it measures | `studio-and-scripts.md` |
 | 65 | A dry check call comes before the long Play run | `studio-and-scripts.md` |
 | 66 | Job scripts in work/ pass the type check with a require cast | `studio-and-scripts.md` |
+| 67 | A gap proof aims the camera across the gap | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

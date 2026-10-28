@@ -103,3 +103,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 48 added a new world kind to `S4SlideGuards.luau`, and the old final world (task33) turned into a "before" world. Its list of missing parts had never been checked, so run 1 added the R-141 box plus 26 copies of parts already there. Run 2 then saw a world it didn't know and stopped (2026-10-28).
 - **Do instead:** before placing anything, a world script prints how many parts it will add. The job stops unless that matches the plan (for Task 48: 1).
 - **Who checks:** `code_lead` (in the plan and handoff), `builder`.
+
+## Lesson 67: A gap proof aims the camera across the gap
+- **What happened:** two posed shots of the Sock's gap (Task 28 steps 3 and 5) didn't prove it. The paster blamed a fern, but a zoom showed the camera looked past the player into the Sock, so the Sock's near edge hid the body and its bottom edge ran off the screen (2026-10-28).
+- **Do instead:** for a gap proof, aim the camera at a right angle to the line between the two edges (about 10 studs away, 3 up), with both edges and the gap inside the frame. Zoom the shot before naming what blocks it.
+- **Who checks:** `designer` (the camera rule in the handoff), the builder (zoom before reporting).
