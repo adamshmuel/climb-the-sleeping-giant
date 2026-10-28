@@ -124,3 +124,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **Also (code_lead's probe, 2026-10-28):** the walks drove `Humanoid:Move` from Heartbeat, copied from older jobs. Roblox's control script overwrites Move and Jump every frame, so it only worked when frame timing let it through (the probe lost 21% of the distance). Every job drives Move and Jump from one `BindToRenderStep` at Input+1, and stops with "INPUT DEAD" if the first second moves under 8 studs.
 - **Also (Task 28 step 4d, 2026-10-28):** job-1d, written from pieces of job-1c, used `T.jumpClosest` but never created it, so the cushion's jump result threw and was lost. Its result table was typed `any`, which hides a missing field from the type check. A job's result table gets a real type (or every field it fills is listed when it is made), and the writer runs `luau-lsp` on it before the paste.
 - **Who checks:** `code_lead` (in the handoff), the builder (the dry check call).
+
+## Lesson 66: Job scripts in work/ pass the type check with a require cast
+- **What happened:** in Task 28 step 5, luau-lsp rejected `require(<Instance variable>)` in a work/ job ("Unknown require: unsupported path"), and a macOS `sed -i 's|..|..|' file` took the script as a backup suffix and broke the edit (2026-10-28).
+- **Do instead:** in a job script, cast once: `local requireModule: (ModuleScript) -> any = require :: any`, and call that. On macOS, edit with the Edit tool or `sed -i ''`, never a bare `sed -i`.
+- **Who checks:** the writer builder.
