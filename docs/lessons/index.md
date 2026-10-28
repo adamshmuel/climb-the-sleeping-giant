@@ -97,6 +97,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 85 | A press that waits for a landing stops at touchdown, and every fail line says why | `studio-and-scripts.md` |
 | 86 | A walk job measures what the body really did, never what the plan expected | `studio-and-scripts.md` |
 | 87 | Prove a check ran, and fetch only what is saved | `studio-and-scripts.md` |
+| 88 | A test helper can't pass nil through a loop | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

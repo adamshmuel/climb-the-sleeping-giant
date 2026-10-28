@@ -210,3 +210,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** in Task 8c a joined job-check was given file names from another folder, found no files, checked an empty job and "passed"; code_lead's re-run found a real type error. A fetch re-pasted the whole 470-line job (about 7k tokens) when the lines were already in `shared`. And the re-walk's shot plan only picked unknown reason words, so a NO_LANDING that fit no row would have had no shot (2026-10-28).
 - **Do instead:** a report pastes the last line of each check it ran; job-check now fails on a missing file. A fetch reads the saved state (for example `shared.T8cRewalk.lines`) with a short call. A shot plan also names any known reason that fits no table row.
 - **Who checks:** `code_lead` (re-runs the checks before the paste), the builder.
+
+## Lesson 88: A test helper can't pass nil through a loop
+- **What happened:** in Task 9 the test "saves nothing with no ground under the feet" failed although the module was right. Its `sample(overrides)` helper copied the overrides with a `for` loop, and a Luau table loop never visits a key set to `nil`, so `groundNormal = nil` never reached the module (2026-10-28).
+- **Do instead:** a test that needs a missing value builds the sample first and then sets that field to `nil` on it directly. A helper with overrides is only for values that exist.
+- **Who checks:** the builder, and `code_lead` in review.
