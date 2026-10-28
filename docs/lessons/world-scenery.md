@@ -92,3 +92,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 48's box for R-141 would have gone into `SmallPatches` from a new world script, but `S4SlideGuards.luau` owns that folder and counts its parts, so its "already done" check would have broken (code_lead caught it in planning, 2026-10-28).
 - **Do instead:** a world script never adds parts to a folder another script owns and counts. Add the part to the owning script's records.
 - **Who checks:** `code_lead` (in the plan), `builder`.
+
+## Lesson 56: A fill next to a slanted wall turns to follow it
+- **What happened:** Task 48's trial gap rays started inside the giant's skin, so they called a 25° wedge slot between the plain box and the skin "open". code_lead's measurement found a V-shaped slot 0.3 to 2.5 studs wide: the same trap the box was meant to close. Widening the box buried the slot but made new standing spots with no way down (2026-10-28).
+- **Do instead:** a fill next to a slanted wall measures the wall's distance from inside the fill at several heights, and turns the fill to follow the wall instead of widening it. A high hit counts as a new reach only if a body has room to stand there and it has no routed spot.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
