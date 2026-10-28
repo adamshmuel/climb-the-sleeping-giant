@@ -15,6 +15,7 @@ describe("the real world, ramps on meadow props", function()
 	local RAMP_PLACES = { "Sock" } -- places that must have a ramp
 	local RAMP_PATTERN = "^Ramp_(%w+)_%d+$" -- Ramp_<Place>_<n>
 	local PATCH_PATTERN = "^Patch_%w+_%d+$" -- Patch_<Place>_<n>
+	local BLOCK_PATTERN = "^Block_%w+_%d+$" -- Block_<Place>_<n>: a sealing block, read by the hang test
 	local MAX_RAMP_DEGREES = 45 -- the crossing ramps' limit: a player walks up it without a jump
 	local MAX_EDGE_GAP = 0.2 -- studs: the gap to the prop's surface, and to the ground where the ramp meets it
 	local STEP_HEIGHT = 1.4 -- studs: the most the ramp's top may stand over the ground (the step it replaces)
@@ -245,8 +246,9 @@ describe("the real world, ramps on meadow props", function()
 		return problems
 	end
 
-	-- Every part of the small patches folder is named Patch_<Place>_<n> or Ramp_<Place>_<n>, so each one is read by
-	-- either Task 22's patch test or the ramp test.
+	-- Every part of the small patches folder is named Patch_<Place>_<n>, Ramp_<Place>_<n> or Block_<Place>_<n>, so each
+	-- one is read by a test: Task 22's patch test, the ramp test, or (for a Block_ part) the hang test, which reads it as
+	-- a "patch" row with that prefix (ClimbingHangs.spec.luau).
 	local function nameProblems(folder: Instance?): { string }
 		local problems: { string } = {}
 		if folder ~= nil then
@@ -255,10 +257,11 @@ describe("the real world, ramps on meadow props", function()
 					descendant:IsA("BasePart")
 					and string.match(descendant.Name, PATCH_PATTERN) == nil
 					and string.match(descendant.Name, RAMP_PATTERN) == nil
+					and string.match(descendant.Name, BLOCK_PATTERN) == nil
 				then
 					table.insert(
 						problems,
-						`Name: {descendant.Name} is neither Patch_<Place>_<n> nor Ramp_<Place>_<n>, so no test reads it`
+						`Name: {descendant.Name} is not Patch_<Place>_<n>, Ramp_<Place>_<n> or Block_<Place>_<n>, so no test reads it`
 					)
 				end
 			end
@@ -375,6 +378,19 @@ describe("the real world, ramps on meadow props", function()
 			local folder = Instance.new("Folder")
 			folder.Parent = world
 			for _, name in { "Patch_Notch_1", "Patch_ChairFoot_12", "Ramp_Sock_1" } do
+				local part = Instance.new("Part")
+				part.Name = name
+				part.Parent = folder
+			end
+			expect(nameProblems(folder)).toEqual({})
+		end)
+	end)
+
+	it("the name check passes a sealing block named Block_<Place>_<n>, such as Block_R141_1", function()
+		inFakeWorld(function(world)
+			local folder = Instance.new("Folder")
+			folder.Parent = world
+			for _, name in { "Patch_Notch_1", "Block_R141_1" } do
 				local part = Instance.new("Part")
 				part.Name = name
 				part.Parent = folder

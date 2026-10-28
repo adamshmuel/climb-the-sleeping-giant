@@ -78,6 +78,14 @@ describe("the real world, slide guards", function()
 			root = Vector3.new(-76.5, 7.03, -49.0),
 			prefix = SOCK_PATCH_PREFIX,
 		},
+		-- Task 48: the meadow notch at the giant's foot (stuck scan R-141). A bush stands in front of it and the invisible
+		-- Block_R141_1 inside the bush seals it, because meadow bushes have no collision.
+		{
+			name = "meadow foot corner R-141",
+			kind = "patch",
+			root = KnownPlaces.get("R141").place,
+			prefix = "Block_R141_",
+		},
 	}
 
 	-- Whether a point is inside a block or a wedge (the sloped half only). Any other shape counts as not inside: a patch

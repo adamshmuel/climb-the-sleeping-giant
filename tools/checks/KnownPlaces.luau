@@ -28,6 +28,8 @@ KnownPlaces.all = {
 	{ name = "Fd", place = Vector3.new(11.4, 107.4, 5.5), walk = MINUS_X },
 	{ name = "Fe", place = Vector3.new(5.5, 109.0, 4.7), walk = PLUS_X },
 	{ name = "Ff", place = Vector3.new(1.9, 102.5, 2.0), walk = PLUS_X },
+	-- Task 48: the meadow notch at the giant's foot (stuck scan R-141), where players walk in on the way to the boot ramps.
+	{ name = "R141", place = Vector3.new(56.9, 5.6, 0.5) },
 } :: { Place }
 
 -- One place by its name. A name that isn't there is a mistake in the caller, so it fails loudly.
