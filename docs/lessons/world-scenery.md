@@ -115,4 +115,10 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 ## Lesson 69: Only a walk-out decides "got out"
 - **What happened:** after Task 28w's walks, game_creator read W2's and W6's END points as "the player got out", because each was lower than its wedge. Both were only 3.2 studs lower: the wedge is logged at the body centre and the END at the feet (2026-10-28). Without product's check, two real wedges would have been accepted as escapes.
 - **Do instead:** walk logs print the feet height for both the END and the wedge. A wedge counts as "got out" only when a walk-out check (4 directions plus a jump, Rule 22) moves the player away.
+- **Also (Task 28x, 2026-10-28):** the W2 re-test logged a "wedge" where its walk arrived on the meadow, 30 studs from the cushion wedge it was meant to re-test, and reported a pass. Every walk leg stops on arrival before it can count a wedge, and a re-test counts only if its wedge is within a few studs of the original, on the same part.
 - **Who checks:** `code_lead` (in the job), `product` (when it reads the results).
+
+## Lesson 72: Map the whole gap before designing a fill
+- **What happened:** Task 54 sized its brim fix from a "slot along the lip" found by rays in one direction. The tuft closed only 1 or 2 of 5 crease points, because the gap is one hollow under the whole nightcap that runs more than 14 studs past every point. A design round and a measure call were spent on the wrong shape (2026-10-28).
+- **Do instead:** before designing a fill, map the gap across the whole area (rays down from above, then up from the skin, on a grid), and find where it ends and where players can get in. The fill is sized to that map, not to one line of points.
+- **Who checks:** `code_lead` (the measure), `designer` (before it designs).

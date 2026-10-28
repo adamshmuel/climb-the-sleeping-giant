@@ -26,3 +26,8 @@ About how the game looks, the art and models, and approving a design. The map of
 - **What happened:** for Task 48, designer sized the R-141 bush from the model's outer box (`GetBoundingBox`, 12.9 x 9 x 13). The round leaves inside were only 9.6 wide, and 4 to 5 studs wide near the ground, so the placed bush was too small to hide the box (2026-10-28, second failure on R-141).
 - **Do instead:** size a prop from its visible mesh's width at the heights the gap needs, never from the model's outer box.
 - **Who checks:** `designer`, `code_lead` (in the handoff).
+
+## Lesson 70: Load a generated model by its asset id, never by a name search
+- **What happened:** in Task 54 designer generated the brim tuft, then searched the world for it by the word "tuft". The search found the live meadow `Nature_GrassTuft` and moved it into the mockup folder. Two more Studio calls went to putting it back, so designer ran out of its 6 calls with no mockup and no shots (2026-10-28).
+- **Do instead:** a mockup script loads a generated model only by its asset id, into its own mockup folder. It never moves or changes anything a world search finds. A mockup's first call makes the folder and loads the model, before anything else.
+- **Who checks:** `designer`.

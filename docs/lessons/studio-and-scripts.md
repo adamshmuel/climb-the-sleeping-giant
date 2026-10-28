@@ -135,3 +135,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** at Task 28's close, 14 run guards and walk maps from finished jobs were still sitting in `shared` in Edit mode (2026-10-28). A stale guard can make a new job think it already ran, or read an old map.
 - **Do instead:** each task's last Studio call clears the `shared` keys its jobs made, unless a named later task still needs one (then the handoff says which and why).
 - **Who checks:** `code_lead` (in the close handoff), the builder.
+
+## Lesson 71: A check passes on the unchanged world before it judges a trial
+- **What happened:** in Task 54 call 2 the nest-route check found 0 of 4 routes even with no tuft placed, and a name search found 0 of 4 nests, so neither could judge the trial tufts. One of the task's few Studio calls was spent partly blind (2026-10-28).
+- **Do instead:** each check in a trial call runs once on the world without the change first, and must pass there, before it scores any trial. A handoff names every part a check needs by its full path (the nests too), never by a name search.
+- **Who checks:** `code_lead` (in the job), the main chat (in the handoff).

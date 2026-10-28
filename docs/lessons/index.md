@@ -79,6 +79,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 67 | A gap proof aims the camera across the gap | `world-scenery.md` |
 | 68 | A task's close clears its own shared keys | `studio-and-scripts.md` |
 | 69 | Only a walk-out decides "got out" | `world-scenery.md` |
+| 70 | Load a generated model by its asset id, never by a name search | `look-and-art.md` |
+| 71 | A check passes on the unchanged world before it judges a trial | `studio-and-scripts.md` |
+| 72 | Map the whole gap before designing a fill | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
