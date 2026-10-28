@@ -111,3 +111,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 28 step 1b's builder was resumed at 110k to write and paste an 801-line job. Writing it took it to 143k of 150k, so it stopped before the paste (2026-10-28).
 - **Do instead:** a job over about 300 lines is split (for example, a starts job and a separate check job), or a fresh builder does only the paste and the fetch. The main chat never resumes a builder above 100k for a step that writes a big job.
 - **Who checks:** `code_lead` (sizing the step), the main chat (choosing to resume or start fresh).
+
+## Lesson 64: A job's walk map holds every place it measures
+- **What happened:** Task 28 step 1b's jump check used a walk map that covered only the giant's box, the landings and 10 more studs. The egg by the Sock, the Sock's west half and the gardens were outside it, so 5 guards "failed" the egg limit and the gardens showed no spots (2026-10-28).
+- **Do instead:** a job widens the map to hold every place it measures (eggs, guard tops, gardens, with 20 studs around each) and prints the map's edges before the long part.
+- **Who checks:** `code_lead` (in the handoff), builder.

@@ -73,6 +73,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 61 | A handoff's world names are checked before the builder starts | `teamwork.md` |
 | 62 | A saved walk map goes stale when the world changes | `studio-and-scripts.md` |
 | 63 | A big job is pasted by a builder with room to spare | `studio-and-scripts.md` |
+| 64 | A job's walk map holds every place it measures | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
