@@ -12,7 +12,13 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 
 ### Part 3: The bot walk
 
-**Task 8: A bot walks every way**
+**Task 8: A bot walks every way** (split by code_lead on 2026-10-28, before any build: this block had no size or Studio-call count (Lesson 60) and its legs list is reused by plans 3 and 5, so it lives in a tested module (Lesson 40). **Task 8 now builds and tests the legs in Edit only; the walk in Play is Task 8b below.** The text under "What it does" stays the whole tool's description.)
+- **What it's for:** core gameplay. It proves every way up and every step-off on him works (Rule 24), so no climb or fall strands a player. Players never see the tool.
+- **Size (Task 8):** 2 steps, **6 Studio calls, none in Play**: (1) code_lead's names check, (2) red run, filter "BotLegs", (3) green run, (4) the legs run in Edit, (5) full run in the background, (6) its one fetch. At most 30 tool calls per step (Lesson 73).
+- **Files (Task 8):** `tools/checks/BotLegs.luau` (new, tested: the legs from `Workspace.World.Route` and the walk map's Slide links, a step-off every 10 studs along each edge, plus the two cuff step-offs by name), `src/tests/server/Tools/BotLegs.spec.luau` (new), and the kept wrapper `work/t8/legs.luau` (Lesson 40, "Also").
+- **Failing tests first (Task 8):** in a made-up world, "gives an up leg and a down leg for each way up", "gives a step-off every 10 studs along an edge", "adds the two cuff step-offs by name". Red because `BotLegs` doesn't exist.
+- **Lessons (Task 8):** 40, 41, 44, 51, 60, 61, 63, 73, 74, 76, 80.
+- Handoff: `work/handoff-t8.md`.
 - Spec rules: Rule 24 (A bot walks every way).
 - Files: `tools/play/bot-walk-legs.luau` (new, run in Edit mode: works out the legs and prints them), `tools/play/bot-walk.luau` (new, run on the Client in Play: walks them). Test tools, not game code.
 - What it does:
@@ -21,6 +27,12 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
   - **Result:** a table of every leg, pass or fail, saved in `work/` (the run returns the count and the first 5 fails, Lesson 23), and a screenshot of each of the first 5 fails (the rest are listed in the table). The walk runs in the background in chunks of about 2 minutes, one fetch per chunk (Lesson 29).
 - Failing test first: none (a Play tool). It is proven by one leg made to fail on purpose (a test wall across a ramp, made at runtime in Play only).
 - Done when: the whole walk runs in under about 10 minutes, every leg passes, and the table goes into this spec's build proof. Plans 3 and 5 run it again before their build reviews.
+
+**Task 8b: The bot walks the legs in Play** (proposed by code_lead on 2026-10-28; **waiting for product's size ruling**: a second task on the bot walk, and the biggest Play job left in this plan)
+- **What it's for:** core gameplay, as Task 8. It runs Task 8's legs with the player's own character.
+- **Size (proposed): 14 Studio calls + 1 spare, all in Play, in at most 4 steps:** (1) Play start, (2) server setup, (3) client setup and the test-wall leg made to fail on purpose, (4) to (8) five walk chunks of about 2 minutes, each call fetching the last chunk and starting the next (Lesson 29), (9) to (13) at most 5 fail shots, (14) stop; spare: one more fetch. If every leg passes, calls 9 to 13 are not used.
+- **Files:** `tools/checks/BotWalk.luau` (new, tested: the pass and fail rules: 8 s per leg; a step-off passes on the meadow, or when the walk-out gets the player 3 studs away, Lesson 69, feet logged), its spec, and Play job files in `work/t8b/` (one writer per file, at most 300 lines each).
+- **Failing tests first:** the pass and fail rules on made-up walk logs. The test-wall leg proves a fail in Play.
 
 ### Part 4: Getting a player out
 

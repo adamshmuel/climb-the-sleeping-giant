@@ -49,7 +49,9 @@ local FLOOR_RAY_UP = 3 -- studs: the floor check's ray starts this far over a sp
 local FLOOR_RAY_LENGTH = 10 -- studs: and looks this far down
 local NO_SPOT = "no walk-map spot"
 
-export type Result = { open: boolean, position: Vector3?, moves: number, blockers: { string } }
+-- `position` is the highest ray's hit + 0.1 (so no start digs into a slope); `ground` is the centre ray's hit, the
+-- ground under the body's middle (Lesson 75). In a dip they are far apart: measure a settle from `ground`.
+export type Result = { open: boolean, position: Vector3?, ground: Vector3?, moves: number, blockers: { string } }
 
 local StartCheck = {}
 
@@ -172,7 +174,7 @@ local function search(spot: Vector3, world: WorldRoot, probe: Part, options: Pat
 		local feet = Vector3.new(x, highest + PROBE_LIFT, z)
 		local fits, inTheWay = PathCheck.roomToStand(options, centre.Position, centre.Normal)
 		if fits then
-			return { open = true, position = feet, moves = moves, blockers = {} }
+			return { open = true, position = feet, ground = centre.Position, moves = moves, blockers = {} }
 		end
 
 		local way = if moves < MAX_MOVES then downhill(offsets, heights) else nil

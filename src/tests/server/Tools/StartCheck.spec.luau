@@ -195,6 +195,23 @@ describe("StartCheck.find", function()
 		end)
 	end)
 
+	-- Stuck safety Task 55 (lesson 75): `position` is the highest ray's hit + 0.1, so in a dip it is not the ground under
+	-- the body's middle. `ground` is that middle ground, for jobs that measure how far a body settles.
+	it("find gives the ground under the middle of a dip", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			-- A block 2 studs high over one corner only (x and z 0.9 and more): the middle and the other corners stay
+			-- on the floor, and a body turned 45 degrees still fits beside it.
+			solid(world, "Rim", Vector3.new(2.1, 2, 2.1), CFrame.new(1.95, 1, 1.95))
+			local result = StartCheck.find(Vector3.new(0, 3, 0), world)
+			expect(result.open).toBe(true)
+			expect(result.ground).never.toBeNil()
+			expect((result.ground :: Vector3).Y).toBeCloseTo(0, 2)
+			local position = result.position :: Vector3
+			expect(position.Y - (result.ground :: Vector3).Y).toBeCloseTo(2.1, 2)
+		end)
+	end)
+
 	it("leaves no probe behind", function()
 		inFakeWorld(function(world)
 			flatFloor(world)
