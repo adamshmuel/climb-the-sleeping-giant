@@ -106,3 +106,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 28 step 1b's handoff would have reused the walk map saved in `shared.T45`, built before Tasks 46-50 changed the world (2026-10-28). code_lead caught it while checking the handoff's world names.
 - **Do instead:** a job builds a fresh walk map, unless the saved map was built after the last world change and the handoff says so.
 - **Who checks:** `code_lead` (in the handoff), builder.
+
+## Lesson 63: A big job is pasted by a builder with room to spare
+- **What happened:** Task 28 step 1b's builder was resumed at 110k to write and paste an 801-line job. Writing it took it to 143k of 150k, so it stopped before the paste (2026-10-28).
+- **Do instead:** a job over about 300 lines is split (for example, a starts job and a separate check job), or a fresh builder does only the paste and the fetch. The main chat never resumes a builder above 100k for a step that writes a big job.
+- **Who checks:** `code_lead` (sizing the step), the main chat (choosing to resume or start fresh).
