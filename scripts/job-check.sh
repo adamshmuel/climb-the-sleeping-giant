@@ -7,6 +7,17 @@
 # A job split into parts (Lesson 63) is checked with --joined part-a part-b:
 # each part's size, then every other check on the parts joined in paste order.
 set -uo pipefail
+# Paths are made absolute before the cd, so a file name given from any
+# folder works (Task 8c: "server.luau" from scripts/bot-walk failed).
+args=()
+for a in "$@"; do
+	if [ -e "$a" ]; then
+		args+=("$(cd "$(dirname "$a")" && pwd)/$(basename "$a")")
+	else
+		args+=("$a")
+	fi
+done
+set -- "${args[@]}"
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.rokit/bin:$PATH"
 if [ "${1:-}" = "--handoff" ]; then
