@@ -12,7 +12,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 38 of 51 | ◐ Task 28 done: the finished surface in Play is closed; full run 2684 passed, only the accepted red; the stuck scan has the same 117 planned spots. Next: Task 53 (one shared start check), then Task 28w (the computer walks again). |
+| 2. Stuck safety | `v2/stuck-safety.md` | 39 of 51 | ◐ Task 53 done: every start now comes from the walk map through one shared start check (`StartCheck.nearSpot`). Next: Task 28w (the climb's walks and proofs again, from checked starts), then Task 33b. |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |

@@ -17,6 +17,11 @@
 -- map's own test, `PathCheck.roomToStand`, standing on the centre ray's hit with the ground's normal (its box tilts with
 -- the ground, and may turn). And the start needs a floor (lesson 47): the centre ray must hit ground within MAX_FLOOR
 -- studs under the spot, else "no floor". A corner ray landing on a thin plate never counts as the floor for the body.
+--
+-- Stuck safety Task 53: every start comes from the walk map. `nearSpot(near, maxStuds, root, standsOn)` builds the walk
+-- map around `near`, takes the nearest spots (on `standsOn`, if given), checks each one has the floor the map says
+-- (the first thing a ray hits under it is that part, and flat enough to stand on), and runs `find` on it. The first
+-- open one wins. With no spot at all it says what is at `near`, or "no walk-map spot".
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -38,6 +43,11 @@ local MAX_FLOOR = 8 -- studs: the floor under the centre of the start is at most
 local NO_FLOOR = "no floor"
 local TINY = 0.1 -- studs: the size of the probe that asks whether a ray's start point is inside a part
 local PROBE_NAME = "StartCheckProbe"
+local SPOT_SPACING = 1 -- studs: the walk map nearSpot builds around its point
+local MAX_TRIES = 5 -- the nearest this many walk-map spots are tried
+local FLOOR_RAY_UP = 3 -- studs: the floor check's ray starts this far over a spot
+local FLOOR_RAY_LENGTH = 10 -- studs: and looks this far down
+local NO_SPOT = "no walk-map spot"
 
 export type Result = { open: boolean, position: Vector3?, moves: number, blockers: { string } }
 
@@ -176,12 +186,7 @@ local function search(spot: Vector3, world: WorldRoot, probe: Part, options: Pat
 	end
 end
 
--- `spot` is the place to start from; `root` is the world to look in (default: the Workspace). `position` is the
--- middle of the body's bottom: the place to stand. The probe is destroyed on every path, an error included.
-function StartCheck.find(spot: Vector3, root: Instance?): Result
-	local world = (root or Workspace) :: Instance
-	assert(world:IsA("WorldRoot"), "StartCheck.find needs a Workspace or a WorldModel")
-
+local function newProbe(world: WorldRoot): Part
 	local probe = Instance.new("Part")
 	probe.Name = PROBE_NAME
 	probe.Anchored = true
@@ -190,9 +195,100 @@ function StartCheck.find(spot: Vector3, root: Instance?): Result
 	probe.CanTouch = false
 	probe.Transparency = 1
 	probe.Parent = world
+	return probe
+end
+
+-- `spot` is the place to start from; `root` is the world to look in (default: the Workspace). `position` is the
+-- middle of the body's bottom: the place to stand. The probe is destroyed on every path, an error included.
+function StartCheck.find(spot: Vector3, root: Instance?): Result
+	local world = (root or Workspace) :: Instance
+	assert(world:IsA("WorldRoot"), "StartCheck.find needs a Workspace or a WorldModel")
+
+	local probe = newProbe(world)
 
 	local options = PathCheck.defaults(world)
 	local ok, outcome = pcall(search, spot, world, probe, options)
+	probe:Destroy()
+	pcall(PathCheck.cleanup, options)
+	if not ok then
+		error(outcome, 0)
+	end
+	return outcome :: Result
+end
+
+local function notOpen(blockers: { string }): Result
+	return { open = false, position = nil, moves = 0, blockers = blockers }
+end
+
+-- Does a ray from over the spot, straight down, first hit the part the walk map says the spot stands on, on ground a
+-- player can stand on (lesson 59)?
+local function hasFloor(spot: PathCheck.Spot, world: WorldRoot, rays: RaycastParams): boolean
+	local from = spot.position + Vector3.new(0, FLOOR_RAY_UP, 0)
+	local hit = world:Raycast(from, Vector3.new(0, -FLOOR_RAY_LENGTH, 0), rays)
+	if hit == nil or hit.Instance ~= spot.standsOn then
+		return false
+	end
+	return hit.Normal.Y >= math.cos(math.rad(StarterPlayer.CharacterMaxSlopeAngle))
+end
+
+local function searchNear(
+	near: Vector3,
+	maxStuds: number,
+	world: WorldRoot,
+	standsOn: BasePart?,
+	options: PathCheck.Options,
+	probe: Part
+): Result
+	local reach = Vector3.one * maxStuds
+	local map = PathCheck.buildMap(options, { min = near - reach, max = near + reach })
+	PathCheck.cleanup(options) -- the map is plain data: its probes are not needed any more
+
+	local candidates: { PathCheck.Spot } = {}
+	for _, spot in map.spots do
+		if (spot.position - near).Magnitude <= maxStuds and (standsOn == nil or spot.standsOn == standsOn) then
+			table.insert(candidates, spot)
+		end
+	end
+	table.sort(candidates, function(a, b)
+		return (a.position - near).Magnitude < (b.position - near).Magnitude
+	end)
+
+	if #candidates == 0 then
+		probe.Size = Vector3.one * TINY
+		probe.CFrame = CFrame.new(near)
+		local touching = namesOf(world:GetPartsInPart(probe, newOverlapParams()))
+		return notOpen(if #touching > 0 then touching else { NO_SPOT })
+	end
+
+	local rays = newRayParams()
+	local nearest: Result? = nil
+	for index = 1, math.min(#candidates, MAX_TRIES) do
+		local spot = candidates[index]
+		local result: Result
+		if hasFloor(spot, world, rays) then
+			result = StartCheck.find(spot.position, world)
+			if result.open then
+				return result
+			end
+		else
+			result = notOpen({ "not on " .. spot.standsOn.Name })
+		end
+		nearest = nearest or result
+	end
+	return nearest :: Result
+end
+
+-- The nearest walk-map spot within `maxStuds` of `near` (on `standsOn`, when given) that is open to start from, found
+-- by `find`. `root` is the world to look in (default: the Workspace). Not open: the nearest spot's reason, or what
+-- sits at `near`. The probe and the walk map's probes are destroyed on every path, an error included.
+function StartCheck.nearSpot(near: Vector3, maxStuds: number, root: Instance?, standsOn: BasePart?): Result
+	local world = (root or Workspace) :: Instance
+	assert(world:IsA("WorldRoot"), "StartCheck.nearSpot needs a Workspace or a WorldModel")
+
+	local probe = newProbe(world)
+	local options = PathCheck.defaults(world)
+	options.spacing = SPOT_SPACING
+	local ok, outcome = pcall(searchNear, near, maxStuds, world, standsOn, options, probe)
 	probe:Destroy()
 	pcall(PathCheck.cleanup, options)
 	if not ok then

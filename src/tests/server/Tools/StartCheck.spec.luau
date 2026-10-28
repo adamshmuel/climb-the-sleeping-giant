@@ -7,26 +7,37 @@ local Helpers = require(ServerStorage.Tests.server.World.RealWorld.Helpers)
 local StartCheck = require(ServerStorage.Tools.checks.StartCheck)
 local inFakeWorld = Helpers.inFakeWorld
 
+local function solid(world: WorldModel, name: string, size: Vector3, frame: CFrame): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Anchored = true
+	part.Size = size
+	part.CFrame = frame
+	part.Parent = world
+	return part
+end
+
+-- A level floor whose top is y 0.
+local function flatFloor(world: WorldModel)
+	solid(world, "Floor", Vector3.new(200, 1, 200), CFrame.new(0, -0.5, 0))
+end
+
+-- A floor tilted `degrees` whose top passes through the origin, uphill toward the direction `yaw` turns +X to.
+local function tiltedFloor(world: WorldModel, degrees: number, yawDegrees: number?)
+	local turn = CFrame.Angles(0, math.rad(yawDegrees or 0), 0)
+	solid(
+		world,
+		"Floor",
+		Vector3.new(200, 1, 200),
+		turn * CFrame.Angles(0, 0, math.rad(degrees)) * CFrame.new(0, -0.5, 0)
+	)
+end
+
 -- Stuck safety Task 27, step 1 (lesson 21): the shared start check, tested on made-up worlds. Since step 1b the rays
 -- start 0.5 studs over the spot (RAY_ABOVE), not 10. The thick roofs here are kept so the old cases still run: a ray
 -- from 0.5 up still starts inside a thick slab, so (like a ray in the giant) it never hits the roof and finds the floor.
 describe("StartCheck.find", function()
 	local SLOPE = math.rad(20) -- the floor's tilt in the slope tests: +X is uphill, so downhill is -X
-
-	local function solid(world: WorldModel, name: string, size: Vector3, frame: CFrame): Part
-		local part = Instance.new("Part")
-		part.Name = name
-		part.Anchored = true
-		part.Size = size
-		part.CFrame = frame
-		part.Parent = world
-		return part
-	end
-
-	-- A level floor whose top is y 0.
-	local function flatFloor(world: WorldModel)
-		solid(world, "Floor", Vector3.new(200, 1, 200), CFrame.new(0, -0.5, 0))
-	end
 
 	-- A floor tilted 20 degrees whose top passes through the origin (height = tan(20) * x).
 	local function slopedFloor(world: WorldModel)
@@ -97,17 +108,6 @@ describe("StartCheck.find", function()
 			expect(result.blockers).toContain("ThinRoof")
 		end)
 	end)
-
-	-- A floor tilted `degrees` whose top passes through the origin, uphill toward the direction `yaw` turns +X to.
-	local function tiltedFloor(world: WorldModel, degrees: number, yawDegrees: number?)
-		local turn = CFrame.Angles(0, math.rad(yawDegrees or 0), 0)
-		solid(
-			world,
-			"Floor",
-			Vector3.new(200, 1, 200),
-			turn * CFrame.Angles(0, 0, math.rad(degrees)) * CFrame.new(0, -0.5, 0)
-		)
-	end
 
 	-- Stuck safety Task 27, step 1c (lesson 38): steep ground. The uphill corner rays start inside the slope.
 	it("is open on a 45 degree slope, standing above its uphill corners", function()
@@ -207,6 +207,45 @@ describe("StartCheck.find", function()
 			StartCheck.find(Vector3.new(0, 0, 0), world) -- open, on steep ground
 			expect(#world:GetChildren()).toBe(4)
 			expect(world:FindFirstChild("StartCheckProbe")).toBeNil()
+		end)
+	end)
+end)
+
+-- Stuck safety Task 53: every start comes from the walk map, through the shared start check.
+describe("StartCheck.nearSpot", function()
+	it("a start on a tilted plank next to a round boulder is open, though the boulder's outer box covers it", function()
+		inFakeWorld(function(world)
+			-- The ball's radius is 4. The walk map's tilted, lifted body box (PathCheck.roomToStand) comes no closer
+			-- than 5.47 to its centre (clear by 1.47). Its outer box (x and z 0.6 to 8.6) covers the upright box
+			-- (x and z -1 to 1), so a check on outer boxes would call the start blocked.
+			solid(world, "Plank", Vector3.new(12, 1, 6), CFrame.Angles(0, 0, math.rad(30)) * CFrame.new(0, -0.5, 0))
+			local boulder = solid(world, "Boulder", Vector3.new(8, 8, 8), CFrame.new(4.6, 2, 4.6))
+			boulder.Shape = Enum.PartType.Ball
+			expect(table.find(world:GetPartBoundsInBox(CFrame.new(0, 2.65, 0), Vector3.new(2, 4.3, 2)), boulder)).never.toBeNil()
+			local result = StartCheck.nearSpot(Vector3.zero, 4, world)
+			expect(result.open).toBe(true)
+			expect(result.moves).toBe(0)
+			expect((result.position :: Vector3).X).toBeCloseTo(0, 2)
+			expect((result.position :: Vector3).Z).toBeCloseTo(0, 2)
+		end)
+	end)
+
+	it("a start inside a solid block is not open and names it", function()
+		inFakeWorld(function(world)
+			solid(world, "Block", Vector3.new(60, 60, 60), CFrame.new(0, 5, 0))
+			local result = StartCheck.nearSpot(Vector3.new(0, 5, 0), 4, world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("Block")
+		end)
+	end)
+
+	it("a thin upright plate has no walk-map spot", function()
+		inFakeWorld(function(world)
+			flatFloor(world)
+			local plate = solid(world, "Plate", Vector3.new(0.2, 12, 6), CFrame.new(0, 6, 0))
+			local result = StartCheck.nearSpot(Vector3.new(0.5, 4, 0), 4, world, plate)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("no walk-map spot")
 		end)
 	end)
 end)
