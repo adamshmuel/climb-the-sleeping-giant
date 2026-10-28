@@ -58,6 +58,15 @@
 				]
 			},
 			{
+				"matcher": "mcp__Roblox_Studio__execute_luau",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/luau-paren-line.py"
+					}
+				]
+			},
+			{
 				"hooks": [
 					{
 						"type": "command",

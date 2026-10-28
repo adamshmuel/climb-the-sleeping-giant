@@ -14,8 +14,9 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 
 ## Lesson 7: A Luau line can't start with "("
 - **What happened:** pasted trial scripts failed to parse because a statement started with `(`, which Luau reads as part of the line before (Tasks 32 and 37). Each failure wasted a Studio call.
-- **Do instead:** put the value in a local first, for example `local parts = (...)`.
-- **Who checks:** `builder`.
+- **Do instead:** put the value in a local first, for example `local parts = (...)`, or `local sh: any = shared` before `sh.x = ...`.
+- **Came back:** Task 47 step 1 (2026-10-28) lost a Studio call to `(shared :: any).x = ...`. A hook (`.claude/hooks/luau-paren-line.py`) now blocks any Studio script with a line starting with `(` before it is sent.
+- **Who checks:** `builder`, and the hook.
 
 ## Lesson 22: Long Play work runs in the background
 - **What happened:** in Task 37's last Play check, code_lead's two client calls each waited inside the call and came back "Request timeout", so nothing was measured (2026-10-27). The builder's earlier scripts also depended on a helper module it removed before the next check.
