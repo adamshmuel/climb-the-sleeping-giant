@@ -93,6 +93,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 81 | A look check measures where the client draws, with the client's own ray | `studio-and-scripts.md` |
 | 82 | Set the phone in Edit, and take a "keeps X" shot before another rule can remove X | `studio-and-scripts.md` |
 | 83 | Spacing points out by flat distance merges edges stacked at different heights | `world-scenery.md` |
+| 84 | A job stops only on a lost or broken input, never on a cross-check count | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

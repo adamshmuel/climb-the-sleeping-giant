@@ -190,3 +190,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 7c turned the phone on during Play, in the same call that placed the player, and the phone shot showed no grab pill; the shot couldn't tell a device-switch problem from a real bug. Its landing shot came about 9 s after the wake, after a hand slam had caught the player, so the empty back couldn't prove "players keep their egg" (2026-10-28).
 - **Do instead:** set the device in Edit before Play starts. A shot that proves something is kept (an egg, a pill, a sign) is taken right after the event, before any later rule (a slam, a timer, a refill) can take it away, and the job prints the state at the moment of the shot.
 - **Who checks:** `code_lead` (in the handoff), the paster.
+
+## Lesson 84: A job stops only on a lost or broken input, never on a cross-check count
+- **What happened:** Task 7c call 1 stopped on a worked-back ground height, and Task 8b slot 3 (Play server) stopped on `onHim 259, slot N 260`: all 350 legs had arrived, and the on/off-him split only sets the walk order, so nothing depended on it. Each stop cost Studio calls and a product ruling (2026-10-28). Lesson 80 had covered names checks only.
+- **Do instead:** a job prints cross-check counts next to the number it expected and keeps going. It stops only when an input is lost or broken (a missing part, a lost leg, a total that is short), and the handoff marks each such stop "(lost input)". `scripts/job-check.sh --handoff` fails a stop rule that rests on matching a measured count.
+- **Who checks:** `code_lead` (in the handoff and the read before the paste), `scripts/job-check.sh --handoff`.

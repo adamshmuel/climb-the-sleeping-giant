@@ -25,7 +25,18 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Run the pick in the names-check call and name the part (Lesson 80)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part."
+	# A stop on a cross-check count that nothing reads (Task 7c call 1, Task 8b
+	# slot 3) cost calls twice (Lesson 84). A job stops only when an input is
+	# lost or broken; such a line is marked "(lost input)".
+	match='(must|don.t|do not|doesn.t|not) match|match(es)? slot|differ(s)? from slot'
+	stops=$(grep -nEi "$match" "$@" | grep -Ei 'FIRED|stop' | grep -v '(lost input)')
+	if [ -n "$stops" ]; then
+		echo "$stops"
+		echo "Handoff check FAILED: each line above stops a job on a measured count."
+		echo "Print cross-check counts; stop only on a lost or broken input, marked \"(lost input)\" (Lesson 84)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, and no stop rests on a measured count."
 	exit 0
 fi
 joined=0
