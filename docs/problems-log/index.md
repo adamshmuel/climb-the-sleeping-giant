@@ -14,13 +14,13 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
-| Check started inside a mesh, or a start check that's wrong | 9 | 2026-10-28 | `world-scenery.md` |
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 
 ## Fixed kinds
 
 | Kind | Fixed by | Date |
 |---|---|---|
+| Check started inside a mesh, or a start check that's wrong | 9 times; product ruled it "stuck on one problem": Task 53 (`StartCheck.nearSpot`, starts only from the walk map's open spots) and Lesson 21 extended | 2026-10-28 |
 | Rojo crash | Lesson 3 (Removing a synced folder crashes Rojo) | 2026-10-27 |
 | Studio out of date | Lesson 3, and after it came back Lesson 44 (Check the sync with a free search before the first runner call) | 2026-10-27 |
 | Idle turn | Lesson 4 (Never end a turn on a promise) | 2026-10-27 |
