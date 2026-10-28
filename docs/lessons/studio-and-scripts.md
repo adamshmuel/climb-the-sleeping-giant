@@ -27,6 +27,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 ## Lesson 28: Each object's recorded places live in one module
 - **What happened:** Task 41's flat pillow had its size, place and turn check written twice, in two world-script sections, because the second section copied the first one's numbers (2026-10-27). Changing one would silently break the other.
 - **Do instead:** an object's recorded sizes and places go in one shared module that every section and test reads, never copied into a second file.
+- **Also (Task 33b step 4, 2026-10-28):** the handoff called job-p's 1.0 s "HangRule's number", but `HangRule.HANG_SECONDS` is 0.5, so the new Play job would have missed hangs between 0.5 and 1.0 s. A handoff or job copies a rule's number from the rule's own file and line, and names that file and line in a comment, never from an older job.
 - **Who checks:** `code_lead` (in the review), `builder`.
 
 ## Lesson 29: Fetch background work once, when it's done
@@ -113,6 +114,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **Do instead:** a job over about 300 lines is split (for example, a starts job and a separate check job), or a fresh builder does only the paste and the fetch. The main chat never resumes a builder above 100k for a step that writes a big job.
 - **Also (Task 28 step 1c, 2026-10-28):** a fresh builder writing a 944-line job from pieces of an older one still reached 127k before the paste. Writing and pasting a job over about 300 lines are always two builders: one writes and checks the file, a fresh one only reads it once, pastes it and writes up. The main chat starts them that way even if the handoff names one step.
 - **Came back (Task 54 Play, 2026-10-28):** the handoff asked one writer for a whole Play job with no size limit; it grew to 1106 lines and the writer ran out of memory at 162k before it was clean. **Now:** every handoff that asks for a job file gives it a line budget of at most 300 lines. A job that needs more is split into separate files (for example setup, walks, re-test), each pasted in its own call or loaded by the first. A writer that passes the budget stops and reports for a split.
+- **Came back (Task 33b step 4, 2026-10-28):** one writer got three job files. Each had a 300-line budget, but together they came to about 950 lines, and the writer stopped at 136k of 150k with two files over budget. **Now:** one writer writes one job file (at most 300 lines). A step with several job files starts one writer per file, in parallel, each with its own state note. A job split into parts is pasted joined in one Studio call, so a split never adds a call. Check it with `scripts/job-check.sh --joined <part-a> <part-b>` (each part's size, then everything else on the parts joined).
 - **Who checks:** `code_lead` (sizing the step), the main chat (choosing to resume or start fresh).
 
 ## Lesson 64: A job's walk map holds every place it measures
@@ -163,3 +165,9 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 54 lost 3 Studio calls (calls 3, 4 and 10) to measure and setup scripts that stopped before they judged anything: a rewritten check, a wrong expected count, and a module loaded as an unparented clone. Each was the script's first run anywhere (2026-10-28).
 - **Do instead:** before a new or changed job script's first Studio paste, the writer runs `scripts/job-check.sh <files>` (size, "(" lines, clones of modules that use `script.Parent`, format, lint, types) until it passes. Then `code_lead` reads the script against the lessons the handoff names. The script stops early with a clear message if anything it needs fails to load or comes up short, so a broken setup never lets the long job run.
 - **Who checks:** the writer builder (the check script), `code_lead` (the read before the paste), the main chat (no paster starts before both).
+
+## Lesson 79: Every stop prints the check that fired and its own failure
+- **What happened:** Task 33b's measure stopped at its baseline gate because the hang-place test came back false, but the stop message always printed the sides line. The hang test's own words were never printed, so the cause couldn't be told without another Studio call. The same run also judged "within limits" with a 1e-6 margin, while Studio stores 101.4 as 101.4000015, so every shape would have failed (2026-10-28).
+- **Do instead:** every stop names the check that fired and prints that check's own first failure line. A check that compares a stored position or size uses a margin of 0.01, never 1e-6. `code_lead`'s read before the paste (Lesson 76) looks at each stop message and each margin.
+- **Also (Task 33b call 2, 2026-10-28):** a `say(text, ...)` wrapper passed a boolean to `%s`; the type check couldn't see it through `...`, and the crash lost the last 4 lines. Call `string.format` directly at each site; `scripts/job-check.sh` now fails on the wrapper.
+- **Who checks:** the writer, `code_lead` (the read before the paste).

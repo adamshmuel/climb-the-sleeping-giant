@@ -127,3 +127,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 54's two crease starts were placed at "highest ray hit + 0.1", which put their feet at y 116.3, above the cap's underside there (114.6). Both push-in tries started on top of the brim and walked across the cap, so Play never pushed into the crease it was meant to test (2026-10-28). The open crease point went to the build review by hand.
 - **Do instead:** a start meant to be inside a gap or under an overhang prints the height of the roof above it and is dropped if it isn't under that roof. Every push try logs its highest point, so a try that rode over the top shows it.
 - **Who checks:** `code_lead` (in the handoff's starts table), whoever writes the job.
+
+## Lesson 78: A measure's shapes come from saved measurements, and every dependent test is scored
+- **What happened:** Task 33b's writer picked three trial shapes for the forehead box without the plate measurements Task 33 had already saved. Two of them moved the box the wrong way (the plate leans, so it ended higher above the face), and one pushed a hang root outside the box. The script also scored only the red test, not "every known Climbing hang place has its fix", which needs that root inside the box. code_lead caught both in the read before the paste (2026-10-28).
+- **Do instead:** a handoff that asks for trial shapes names the saved measurements they come from, and the shapes are worked out from them. A measure scores every test that depends on the part being changed, not only the red one.
+- **Who checks:** `code_lead` (in the handoff and the read before the paste), the writer.

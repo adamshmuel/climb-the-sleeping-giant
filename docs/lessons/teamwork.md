@@ -78,6 +78,7 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 28's plan counted only shots (up to 15). Once checks from earlier tasks moved in and its Studio calls were counted, it came to 58 calls plus 4 spares, about 4 times the size, and product cut it to 36 plus 3 (2026-10-28).
 - **Do instead:** every plan step writes its Studio-call count from the start, even a step that only takes shots. A phone check re-runs only what the phone screen changes (shots and the on-screen buttons and text), never walks, which drive the character the same way on both screens.
 - **Also (Task 28 close, 2026-10-28):** Task 28 ended at 42 builder Studio calls against 36 + 3, and nobody saw the overrun until the close. After every step, the main chat reports the task's running Studio-call total against its plan, and a step that would pass the plan goes to product first.
+- **Also (Task 33b, 2026-10-28):** code_lead's names-check, confirm and cleanup calls were left out of the totals, so Tasks 54 and 33b looked smaller than they were. Every Studio call counts toward the task's cap, whoever makes it (builder, code_lead, designer). A plan lists code_lead's calls as their own lines (product ruling).
 - **Who checks:** `code_lead` (in the plan); `product` when it sizes a task.
 
 ## Lesson 61: A handoff's world names are checked before the builder starts

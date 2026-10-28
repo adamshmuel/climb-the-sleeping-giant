@@ -31,13 +31,13 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | A new part fails an existing test (first time) | Lesson 37 (A trial part must also pass the tests for its kind) | 2026-10-27 |
 | A fill makes its own stuck spots | Lesson 35 (A fill's top is a new floor) | 2026-10-27 |
 | Fix planned on an unconfirmed cause | Lesson 26 (Try 5 examples before choosing a fix), extended after Task 33, and the cause line in `agent-workflow.md`, "Decision table first" | 2026-10-27 |
-| Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess), extended after a fourth (code_lead) to every agent; came back 2026-10-28 (Task 54 Play job, 1106 lines in one file): Lesson 63 extended with a line budget per job file | 2026-10-27 |
-| A job stopped before judging anything | Lesson 71 (baseline first), Lesson 61 (fresh counts), and after the third time (Task 54 call 10) Lesson 76 and `scripts/job-check.sh` | 2026-10-28 |
+| Over memory limit | 30-tool-call cap per builder step (`agent-workflow.md`, "Size steps by tool calls"), Lesson 23 (A Studio script returns a short summary, never a list), and after a third time Lesson 25 (A hook enforces the memory limit, not a guess), extended after a fourth (code_lead) to every agent; came back 2026-10-28 (Task 54 Play job, 1106 lines in one file): Lesson 63 extended with a line budget per job file; again (Task 33b step 4, three files for one writer): one writer per job file | 2026-10-27 |
+| A job stopped before judging anything | Lesson 71 (baseline first), Lesson 61 (fresh counts), and after the third time (Task 54 call 10) Lesson 76 and `scripts/job-check.sh`; fourth (Task 33b step 2): Lesson 79 | 2026-10-28 |
 
 ## Area files
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 18 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 19 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 11 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 18 |

@@ -3,11 +3,18 @@
 # Three Task 54 Studio calls were lost to job scripts that stopped before
 # judging anything (Lesson 76). This catches the mistakes a shell can see.
 # Usage: scripts/job-check.sh work/t54/server-p.luau [more files]
+# A job split into parts (Lesson 63) is checked with --joined part-a part-b:
+# each part's size, then every other check on the parts joined in paste order.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.rokit/bin:$PATH"
+joined=0
+if [ "${1:-}" = "--joined" ]; then
+	joined=1
+	shift
+fi
 if [ $# -eq 0 ]; then
-	echo "usage: scripts/job-check.sh <job.luau> [more]"
+	echo "usage: scripts/job-check.sh [--joined] <job.luau> [more]"
 	exit 2
 fi
 fail=0
@@ -20,6 +27,14 @@ for f in "$@"; do
 		fail=1
 	fi
 done
+
+if [ "$joined" -eq 1 ]; then
+	mkdir -p work
+	joinedFile="work/.job-check-joined.luau"
+	cat "$@" >"$joinedFile"
+	echo "  checking the rest on the ${#} parts joined: $joinedFile"
+	set -- "$joinedFile"
+fi
 
 echo "== Lines starting with \"(\" (Lesson 7)"
 if grep -nE '^\s*\(' "$@"; then
