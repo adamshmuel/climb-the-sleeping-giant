@@ -99,5 +99,5 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 
 ## Lesson 54: A check that finds nothing shows its closest case
 - **What happened:** Task 47's replay reported "0 hangs" without showing how close any spot came, so nobody could check the zero, and it didn't record where the 2 stuck walk-outs stopped. Task 48 now needs an extra Studio call to measure those points (2026-10-28).
-- **Do instead:** a Play job that finds 0 problems also prints its closest case (for hangs: the longest pressed run under 1 stud, and where it was), and records where each failure happened.
+- **Do instead:** a Play job that finds 0 problems also prints its closest case (for hangs: the longest pressed run under 1 stud, and where it was), and records where each failure happened: the point where it stopped and where each push ended, never only distances. A push that starts after the body settles measures from the settle point, not from the trap (Task 48's re-plan).
 - **Who checks:** `code_lead` (in the handoff), `builder`.
