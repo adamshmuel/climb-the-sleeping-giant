@@ -10,7 +10,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 4: World prep: boot ladders, side ladders, side pads and thigh planks | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 5: World prep: lap planks, lap landing, front apron and rail guards | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 5: World prep: lap planks, lap landing, front apron and rail guards (closes with the Rule 82 re-check: the jump check with lap planks, thigh planks, side pads and the lap landing as gateways; 2 Studio calls plus 1 spare, added 2026-10-28) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 6: World prep: the two belly ramps, their edge guards and his skin | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 7: World prep: ladder boxes and zone boxes | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 8: World prep: the footprint route and 12 landing spots | ☐ not started | |
