@@ -57,23 +57,66 @@ local function buildReport(results: any): string
 	return table.concat(lines, "\n")
 end
 
-return function(nameFilter: string?): string
+local FILES_STARTED = "FilesStarted" -- the attribute PauseBetweenFiles counts on ServerStorage.Tests
+
+-- Runs Jest and gives back either an error text or the raw results. `progress` (if given) is called with the number
+-- of spec files finished, each time PauseBetweenFiles reports that another file has started.
+local function runJest(nameFilter: string?, progress: ((number) -> ())?): (string?, any)
 	local loaded, Jest = pcall(function(): any
 		return require(ServerStorage.DevPackages.Jest)
 	end)
 	if not loaded then
-		return `TESTS FAILED\nJest could not run: {describeError(Jest)}`
+		return `Jest could not run: {describeError(Jest)}`, nil
+	end
+
+	local tests = ServerStorage.Tests
+	tests:SetAttribute(FILES_STARTED, 0)
+	local connection: RBXScriptConnection? = nil
+	if progress ~= nil then
+		connection = tests:GetAttributeChangedSignal(FILES_STARTED):Connect(function()
+			local started = (tests:GetAttribute(FILES_STARTED) :: number?) or 0
+			progress(math.max(started - 1, 0))
+		end)
 	end
 
 	local started, succeeded, outcome = pcall(function(): (boolean, any)
-		return Jest.runCLI(ServerStorage.Tests, { ci = true, testPathPattern = nameFilter }, { ServerStorage.Tests })
-			:await()
+		return Jest.runCLI(tests, {
+			ci = true,
+			testPathPattern = nameFilter,
+			setupFilesAfterEnv = { tests.PauseBetweenFiles },
+		}, { tests }):await()
 	end)
+	if connection ~= nil then
+		connection:Disconnect()
+	end
 	if not started then
-		return `TESTS FAILED\nJest could not run: {describeError(succeeded)}`
+		return `Jest could not run: {describeError(succeeded)}`, nil
 	end
 	if not succeeded then
-		return `TESTS FAILED\nJest could not run: {describeError(outcome)}\n(If you passed a name filter, check that it matches a spec file.)`
+		return `Jest could not run: {describeError(outcome)}\n(If you passed a name filter, check that it matches a spec file.)`,
+			nil
 	end
-	return buildReport(outcome.results)
+	return nil, outcome.results
 end
+
+local TestRunner = {}
+
+-- The raw Jest results, for BackgroundRun. Raises an error when Jest could not run.
+function TestRunner.runRaw(nameFilter: string?, progress: ((number) -> ())?): any
+	local problem, results = runJest(nameFilter, progress)
+	if problem ~= nil then
+		error(problem, 0)
+	end
+	return results
+end
+
+-- Calling the module as a function still gives the plain-text report.
+return setmetatable(TestRunner, {
+	__call = function(_self: any, nameFilter: string?): string
+		local problem, results = runJest(nameFilter, nil)
+		if problem ~= nil then
+			return `TESTS FAILED\n{problem}`
+		end
+		return buildReport(results)
+	end,
+})
