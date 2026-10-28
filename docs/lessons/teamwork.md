@@ -68,6 +68,7 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 48's handoff said the Play job walks onto the boot ramp, but the saved job file had no ramp leg, so the builder wrote about 70 lines of it mid-step (2026-10-28).
 - **Do instead:** when a handoff names a walk or check a saved job must do, its author reads that job file first and names the lines that do it.
 - **Also (Task 28, 2026-10-28):** Task 28 step 1's seed list was never checked against the world: 14 seeds had no floor, because the job went 3 studs along each part's own "up" and the forehead plates are turned -80°. Seeds come from positions really measured (where characters settled, a part's top found from its real turn), never from a part's own axes unread, and the handoff names where each one came from.
+- **Also (Task 28 step 5, 2026-10-28):** a guard's "own top" found by a down ray can hit a near-upright side face and still look like a top: 4 of 5 open Sock guards failed this way. Before a hit becomes a start, check its normal points up and that the guard is the first floor under the start (ON GUARD).
 - **Who checks:** `code_lead` (in the handoff).
 
 ## Lesson 60: A plan counts Studio calls for every step
