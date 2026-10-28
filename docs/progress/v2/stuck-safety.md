@@ -59,7 +59,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Stuck safety (V2 spec 2) | Task 8: The bot's legs, worked out and tested in Edit (split 2026-10-28; 9 Studio calls: 6 + 3 for the round-1 fix, none in Play) | ☑ done (approved at review round 2 on 2026-10-28: 339 legs, 13 up, 13 down, 313 step-offs, none missing; 4 of 4 BotLegs tests; full run 2701 passed, 0 failed, scan 117 of 7482) | builder, code_lead |
 | Stuck safety (V2 spec 2) | Task 8b: The bot walks the legs in Play (16 Studio calls against product's first 10 + 1; each extension approved by product) | ☑ done (approved 2026-10-28: 350 of 350 legs walked, 19 fails. Ways up 17 of 17, ways down 15 of 15, drops 1 of 5 (3 were a job fault and passed on the fixed re-run; #347 goes to Task 8c), step-offs 298 of 313 (2 "no start", 13 go to Task 8c). BotWalk tests: red 7 of 7, green 7 of 7) | builder, code_lead |
 | Stuck safety (V2 spec 2) | Task 8c: The step-off fails, and Rule 24's passing proof (sized by product 2026-10-28: 20 Studio calls + 1 spare, then 3 more approved inside the 20) | ☑ done (approved 2026-10-28, 19 of 20 + 1 calls, spare unused): #144, #147 and #178 pass with the press stopping at touchdown; #279 passes by step 2's walk-out (24.7 studs) after its press fix; #347 closes as "drop from halfway not walked: the job can't grab from its start spot" (nothing blocks the ladder, checked). Carried to plan 3's full walk: #347's start, and re-checking #144, #147 and #178. New must-show: climb the cap ladder from its foot, 3 tries, computer and phone. BotWalk tests green 17 of 17 | builder, code_lead, product |
-| Stuck safety (V2 spec 2) | Task 9: Safe spots | ☐ not started | |
+| Stuck safety (V2 spec 2) | Task 9: Safe spots | ☑ done (approved 2026-10-28 at the first review: `Players/SafeSpots`, pure, saves a spot at most every 0.5 s only while walking or standing on ground up to 70° with room for the body, at least 1 stud apart, the newest 40 kept; `pick` gives the newest spot at least 4 studs away. 18 SafeSpots tests and 2 Config tests, red then green; full run 2739 passed, 0 failed; 6 of 7 Studio calls. No Play: nothing on screen until Task 10 wires it) | builder, code_lead |
 | Stuck safety (V2 spec 2) | Task 10: Moving a player back, silently | ☐ not started | |
 | Stuck safety (V2 spec 2) | Task 11: Reset on the giant | ☐ not started | |
 | Stuck safety (V2 spec 2) | Task 12: Stuck players are rescued | ☐ not started | |
@@ -69,6 +69,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Stuck safety (V2 spec 2) | Task 16: A whole session, and the Play proof | ☐ not started | |
 
 ## Notes for the next V2 review
+
+- **Full-run baseline (after Task 9, 2026-10-28): 2739 passed, 0 failed.** How it adds up: Task 55's measured 2698, plus BotLegs 4 (Task 8), BotWalk 7 (Task 8b) and 10 (Task 8c), plus Task 9's 20. The next handoff's full run expects 2739 plus its own new tests.
 
 Short notes the next code_lead needs. Delete each one once it is done.
 

@@ -93,6 +93,8 @@ export type Config = {
 		ScanSpacing: number,
 		ScanMargin: number,
 		ScanSeconds: number,
+		SafeSaveSeconds: number,
+		RescueDistance: number,
 	},
 	Tick: {
 		Seconds: number,
@@ -174,7 +176,17 @@ local config: Config = {
 	-- over the 2-minute limit, product's trigger is 3.
 	-- ScanMargin: studs of meadow the stuck scan covers around the giant's box.
 	-- ScanSeconds: the scan's time limit, build plus search (spec section 5, "Scan grid spacing").
-	Stuck = { BodyWidth = 2, BodyHeight = 4.3, ScanSpacing = 2, ScanMargin = 10, ScanSeconds = 120 },
+	-- SafeSaveSeconds (spec section 5, "Safe spot saved every"): seconds between a player's safe-spot checks.
+	-- RescueDistance (spec section 5, "Rescue distance"): studs a rescue spot must be from where the player is stuck.
+	Stuck = {
+		BodyWidth = 2,
+		BodyHeight = 4.3,
+		ScanSpacing = 2,
+		ScanMargin = 10,
+		ScanSeconds = 120,
+		SafeSaveSeconds = 0.5,
+		RescueDistance = 4,
+	},
 	Tick = { Seconds = 0.1 },
 }
 

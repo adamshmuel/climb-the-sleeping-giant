@@ -188,6 +188,14 @@ describe("Config", function()
 		expect(Config.Stuck.ScanSpacing).toBe(2)
 	end)
 
+	it("a safe spot is checked every 0.5 s", function()
+		expect(Config.Stuck.SafeSaveSeconds).toBe(0.5)
+	end)
+
+	it("the rescue distance is 4 studs", function()
+		expect(Config.Stuck.RescueDistance).toBe(4)
+	end)
+
 	it("the stuck scan covers 10 studs of meadow around the giant", function()
 		expect(Config.Stuck.ScanMargin).toBe(10)
 	end)
