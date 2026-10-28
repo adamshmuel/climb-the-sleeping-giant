@@ -12,13 +12,29 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 
 ### Part 3: The bot walk
 
-**Task 8: A bot walks every way** (split by code_lead on 2026-10-28, before any build: this block had no size or Studio-call count (Lesson 60) and its legs list is reused by plans 3 and 5, so it lives in a tested module (Lesson 40). **Task 8 now builds and tests the legs in Edit only; the walk in Play is Task 8b below.** The text under "What it does" stays the whole tool's description.)
+**Task 8: A bot walks every way** (☑ done, approved by code_lead at review round 2 on 2026-10-28; 9 Studio calls: 6 planned + 3 for the round-1 fix, product's ruling `work/t28/product-ruling.md` lines 274 to 280) (split by code_lead on 2026-10-28, before any build: this block had no size or Studio-call count (Lesson 60) and its legs list is reused by plans 3 and 5, so it lives in a tested module (Lesson 40). **Task 8 now builds and tests the legs in Edit only; the walk in Play is Task 8b below.** The text under "What it does" stays the whole tool's description.)
 - **What it's for:** core gameplay. It proves every way up and every step-off on him works (Rule 24), so no climb or fall strands a player. Players never see the tool.
 - **Size (Task 8):** 2 steps, **6 Studio calls, none in Play**: (1) code_lead's names check, (2) red run, filter "BotLegs", (3) green run, (4) the legs run in Edit, (5) full run in the background, (6) its one fetch. At most 30 tool calls per step (Lesson 73).
 - **Files (Task 8):** `tools/checks/BotLegs.luau` (new, tested: the legs from `Workspace.World.Route` and the walk map's Slide links, a step-off every 10 studs along each edge, plus the two cuff step-offs by name), `src/tests/server/Tools/BotLegs.spec.luau` (new), and the kept wrapper `work/t8/legs.luau` (Lesson 40, "Also").
 - **Failing tests first (Task 8):** in a made-up world, "gives an up leg and a down leg for each way up", "gives a step-off every 10 studs along an edge", "adds the two cuff step-offs by name". Red because `BotLegs` doesn't exist.
 - **Lessons (Task 8):** 40, 41, 44, 51, 60, 61, 63, 73, 74, 76, 80.
 - Handoff: `work/handoff-t8.md`.
+- **Measured in Task 8 call 4 (Edit, 2026-10-28, `work/t8/run.md`):** 21 of 21 names found, 140 legs (13 up, 13 down, 114 step-offs) in 3.1 s, no missing names. After the round-1 fix (call 9): **339 legs (13 up, 13 down, 313 step-offs)** in 3.1 s, no missing names; the ends and cuff legs below didn't change. These ramp and ladder ends are stand-in numbers (Lesson 36): Task 8b replaces them with walk-map spots.
+  | Way | Foot | Top |
+  |---|---|---|
+  | Left boot ramp | (-24.0, 1.6, -103.0) | (-24.0, 32.0, -66.0) |
+  | Right boot ramp | (24.0, 1.6, -103.0) | (24.0, 32.0, -66.0) |
+  | Cap ladder | (0.0, 93.9, -4.3) | (0.0, 109.1, 0.8) |
+  | Beard ladder | (0.0, 63.3, -25.3) | (0.0, 92.7, -12.8) |
+
+  | Cuff step-off | Starts at | Lands at |
+  |---|---|---|
+  | Left 4 | (-51.2, 39.2, -0.6) | (-54.8, 27.7, -1.0) |
+  | Left 5 | (-49.5, 39.2, 4.0) | (-52.8, 11.5, 3.0) |
+  | Right 4 | (51.2, 39.2, -0.6) | (53.2, 10.4, 1.0) |
+  | Right 5 | (49.5, 39.2, 4.0) | (53.2, 11.2, 3.0) |
+- **Review round 1 (code_lead, 2026-10-28): changes.** The step-off thinning compares flat distance only, so an edge on a lower ledge within 10 studs (flat) of a higher edge loses all its step-offs. Rule 24 (A bot walks every way, `docs/specs/v2/stuck-safety.md` line 118) asks for every edge, and section 5 (line 155) for one step-off every 10 studs along each edge. Fix, test first: a new test "keeps a step-off on a lower ledge beside a higher edge" (a 3-stud ledge with its top at y 4 beside the 30-stud top); then a kept start crowds a new one only when it is also within 2 studs in height. 3 more Studio calls (red, green, legs run again), past the 6 planned, so product rules on them first. No full run: nothing else requires `BotLegs`.
+- **Review round 2 (code_lead, 2026-10-28): approve.** The new test "keeps a step-off on a lower ledge beside a higher edge" failed first for the right reason (call 7: 3 passed, 1 failed on `onLedge > 0`). Now two starts crowd each other only when they are also within 2 studs in height (`SAME_HEIGHT`), and the filtered run passes (call 8: 4 of 4). Task 8's full run (call 6: 2701 passed, 0 failed, scan 117 of 7482) still stands, because only the BotLegs tests use the module.
 - Spec rules: Rule 24 (A bot walks every way).
 - Files: `tools/play/bot-walk-legs.luau` (new, run in Edit mode: works out the legs and prints them), `tools/play/bot-walk.luau` (new, run on the Client in Play: walks them). Test tools, not game code.
 - What it does:
@@ -28,11 +44,17 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Failing test first: none (a Play tool). It is proven by one leg made to fail on purpose (a test wall across a ramp, made at runtime in Play only).
 - Done when: the whole walk runs in under about 10 minutes, every leg passes, and the table goes into this spec's build proof. Plans 3 and 5 run it again before their build reviews.
 
-**Task 8b: The bot walks the legs in Play** (proposed by code_lead on 2026-10-28; **waiting for product's size ruling**: a second task on the bot walk, and the biggest Play job left in this plan)
+**Task 8b: The bot walks the legs in Play** (proposed by code_lead on 2026-10-28; sized by product on 2026-10-28, `work/t28/product-ruling.md` lines 262 to 272; starts after Task 8 is approved)
 - **What it's for:** core gameplay, as Task 8. It runs Task 8's legs with the player's own character.
-- **Size (proposed): 14 Studio calls + 1 spare, all in Play, in at most 4 steps:** (1) Play start, (2) server setup, (3) client setup and the test-wall leg made to fail on purpose, (4) to (8) five walk chunks of about 2 minutes, each call fetching the last chunk and starting the next (Lesson 29), (9) to (13) at most 5 fail shots, (14) stop; spare: one more fetch. If every leg passes, calls 9 to 13 are not used.
+- **Size: 10 Studio calls + 1 spare fetch, all in Play, no phone (a walk drives the body the same way on both screens):** (1) `list_roblox_studios`, (2) Play start, (3) server setup (it folds into the client paste if a client-made test wall and the bot's own move-back both work), (4) client job: "found N of M" for every name, a 1-second input self-check that stops with "INPUT DEAD" if the body moves less than 8 studs (Lesson 65), the test-wall leg first, then the walk starts in the background (Lessons 29 and 31), (5) the test-wall shot, inside its printed hold, (6) fetch 1 at about halfway, (7) fetch 2 at the end, (8) and (9) shots of fails 1 and 2, replayed and held by the job, (10) stop Play. If every leg passes, calls 8 and 9 aren't used. A names check that needs Studio is its own line (Lesson 60). A stop before fetch 1 prints is not pasted again. The job is kept as a wrapper in `work/t8b/` (Lesson 40), so plans 3 and 5 pay only the calls.
 - **Files:** `tools/checks/BotWalk.luau` (new, tested: the pass and fail rules: 8 s per leg; a step-off passes on the meadow, or when the walk-out gets the player 3 studs away, Lesson 69, feet logged), its spec, and Play job files in `work/t8b/` (one writer per file, at most 300 lines each).
 - **Failing tests first:** the pass and fail rules on made-up walk logs. The test-wall leg proves a fail in Play.
+- **From Task 8's review (code_lead, 2026-10-28):**
+  - **Stand-in ends.** The ramp and ladder ends in Task 8's table are worked out from the parts' shapes. The names check moves each ramp end to its nearest walk-map spot, and each ladder end to the walk map's ladder end spots (`WalkFacts.ladderEndSpots`, the test's own helper, Lesson 71), because a point on a Climb part's centre line sits inside it (Lesson 21). It prints how far each end moved (Lesson 75).
+  - **The Rare-egg points.** The leg "Belly BandTop to 4" skips the 3 Rare-egg route points, which no names check has measured yet. The names check measures them (Lesson 61), and the leg is split through them wherever the straight walk leaves the route.
+  - **Ladders going down.** Rule 24 (A bot walks every way) asks the bot to let go of each leaning ladder once from its top and once from halfway, and to walk off the top of the cap ladder. Those drops are walked as extra down legs, and each must land on ground with a way out.
+  - **Walk time, from 313 step-offs (code_lead, 2026-10-28, shell only): about 20 to 65 minutes, far past the 12-minute line, so this goes to product before any handoff (product's ruling, line 278).** Each step-off takes at least about 3 s (place the bot, walk off, land and settle). One that lands on him, not in the meadow, also needs the walk-out (Rule 22: four 2-second pushes plus a jump, about 9 s more). 313 x 3 s is about 16 minutes if every step-off lands in the meadow, and 313 x 12 s is about 63 minutes if none do. The 26 way legs add up to about 3.5 minutes (8 s each at most). Fetch 1 would come at about half of the walk time, and fetch 2 at the end, once product rules.
+- **Step-offs off him.** The legs' walk map uses the stuck scan's area, so some step-offs start on meadow scenery, not on him. The job prints the count on him and off him (by each spot's `standsOn` part), and walks the ones off him last, so the 10-minute walk spends its time on him first.
 
 ### Part 4: Getting a player out
 
