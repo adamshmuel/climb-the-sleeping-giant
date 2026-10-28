@@ -129,3 +129,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** in Task 28 step 5, luau-lsp rejected `require(<Instance variable>)` in a work/ job ("Unknown require: unsupported path"), and a macOS `sed -i 's|..|..|' file` took the script as a backup suffix and broke the edit (2026-10-28).
 - **Do instead:** in a job script, cast once: `local requireModule: (ModuleScript) -> any = require :: any`, and call that. On macOS, edit with the Edit tool or `sed -i ''`, never a bare `sed -i`.
 - **Who checks:** the writer builder.
+
+## Lesson 68: A task's close clears its own shared keys
+- **What happened:** at Task 28's close, 14 run guards and walk maps from finished jobs were still sitting in `shared` in Edit mode (2026-10-28). A stale guard can make a new job think it already ran, or read an old map.
+- **Do instead:** each task's last Studio call clears the `shared` keys its jobs made, unless a named later task still needs one (then the handoff says which and why).
+- **Who checks:** `code_lead` (in the close handoff), the builder.
