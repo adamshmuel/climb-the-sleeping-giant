@@ -95,3 +95,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **Also (Task 54 spare call, 2026-10-28):** a names check expected 1 `ForeheadGuard.SideRail`, copied from an earlier table that looked up only the first match, but the world has 4. The job stopped before it measured anything, and the task's last spare call was lost. Expected counts come from one fresh count of every child with that name. A surplus of a part that is only "left alone" is reported, never a stop; only a missing part, or a surplus of a part the job changes or measures, stops the job.
 - **Also (Task 33b names check, 2026-10-28):** a stored start line was parsed with a pattern that expected commas, but it was stored with spaces, so the re-check printed nothing. A names check prints the raw stored line first, and parses it only after seeing its format.
 - **Who checks:** `code_lead`; the main chat does not start a builder on a handoff without the checked table.
+
+## Lesson 89: A step's reading fits inside its cap
+- **What happened:** Task 10 step 5 (the Play check) stopped at its 30-tool-call cap with no shots taken: the fresh builder spent about 25 calls reading the handoff, the lessons index, the lesson files and the workflow rules, and the step's 12 Studio calls left out the device-simulator skill read and a console read (2026-10-28).
+- **Do instead:** the main chat's prompt names at most 5 files to read. code_lead's handoff step quotes the lesson lines it needs, so the builder opens no lessons index or rules for it. A Play step's cap counts its reads, setting and resetting the device, and one console read.
+- **Who checks:** the main chat (prompt), `code_lead` (handoff step).

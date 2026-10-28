@@ -98,6 +98,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 86 | A walk job measures what the body really did, never what the plan expected | `studio-and-scripts.md` |
 | 87 | Prove a check ran, and fetch only what is saved | `studio-and-scripts.md` |
 | 88 | A test helper can't pass nil through a loop | `studio-and-scripts.md` |
+| 89 | A step's reading fits inside its cap | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
