@@ -12,7 +12,6 @@ local Workspace = game:GetService("Workspace")
 local ROOT_OFFSET = 3.225
 local PUSH_SECONDS = 2 -- one walk-out push or jump (Rule 22)
 local SETTLE_SECONDS = 0.3 -- after a placement and after a push, before anything is measured
-local REACH_FLAT, REACH_HEIGHT = 2, 3 -- a walk has reached its end: studs flat, studs in height
 local CALM_SPEED, CALM_SECONDS = 1, 0.5 -- landed: floor under the feet and speed under 1 stud/s for 0.5 s
 local MIN_PRESS_SECONDS = 1 -- landing can't count before this much pressing (the placed body is calm at the start)
 local TOP_GRAB_SECONDS = 1 -- a drop from the top presses towards the ladder this long
@@ -46,7 +45,8 @@ local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
 local moveDir = ZERO
 local jumpRequest = false
-local lastLine, note = "", ""
+-- selene: allow(unused_variable)
+local lastLine, note, ended = "", "", { speed = 0, climbed = false, floor = "?" } -- ended: a leg's end
 
 local function bot(): (Humanoid, BasePart)
 	local waited = 0
@@ -123,19 +123,6 @@ local function press(direction: Vector3, seconds: number, jump: boolean?): ()
 	end, seconds)
 end
 
-local function flat(v: Vector3): Vector3
-	return Vector3.new(v.X, 0, v.Z)
-end
-
-local function steer(feet: Vector3, target: Vector3): Vector3
-	local delta = flat(target - feet)
-	return if delta.Magnitude < 0.3 then ZERO else delta.Unit
-end
-
-local function reachedEnd(feet: Vector3, target: Vector3): boolean
-	return flat(target - feet).Magnitude <= REACH_FLAT and math.abs(target.Y - feet.Y) <= REACH_HEIGHT
-end
-
 local function settle(humanoid: Humanoid)
 	task.wait(SETTLE_SECONDS)
 	local waited = 0
@@ -186,21 +173,34 @@ local function walkOut(endFeet: Vector3): { number }
 	return distances
 end
 
--- Presses towards `direction` (or steers to `target`) until landed or the time limit. Returns landed, seconds.
+-- One press rule for drops and step-offs (Lesson 85): BotWalk.keepPressing says when a fallen body stops pressing.
+-- Presses towards `direction` (a drop) or steers to `target` (a step-off). Returns landed, seconds.
 local function pushUntilLanded(direction: Vector3?, target: Vector3?): (boolean, number)
 	local humanoid, root = bot()
 	local watch = landingWatch(humanoid, root)
-	local landed, fell = false, false
+	local landed, stopped = false, false
+	local fallStartY: number? = nil
 	local seconds = drive(function(elapsed: number)
 		if watch(elapsed) then
 			landed = true
 			return nil, nil
 		end
-		fell = fell or humanoid:GetState() == ST.Freefall
-		if direction then -- a drop lets go and stops pressing once it touches down, so the landing can settle
-			return if fell and humanoid.FloorMaterial ~= Enum.Material.Air then ZERO else direction, false
+		local feet = feetOf(root)
+		if fallStartY == nil and humanoid:GetState() == ST.Freefall then
+			fallStartY = feet.Y
 		end
-		return steer(feetOf(root), target or feetOf(root)), false
+		local onFloor = humanoid.FloorMaterial ~= Enum.Material.Air
+		if not BotWalk.keepPressing(fallStartY, feet.Y, onFloor, target ~= nil) then
+			if not stopped then
+				stopped = true
+				note ..= string.format(" stop %.1f", elapsed)
+			end
+			return ZERO, false
+		end
+		if onFloor and target ~= nil then
+			fallStartY = nil -- a bump on a floor, not the real fall: the next fall counts from its own start
+		end
+		return direction or BotWalk.steer(feet, target or feet), false
 	end, BotWalk.LIMIT)
 	return landed, seconds
 end
@@ -210,11 +210,11 @@ local function walkWay(leg: Leg, root: BasePart): (boolean, string, number)
 	local done = false
 	local seconds = drive(function()
 		local feet = feetOf(root)
-		if reachedEnd(feet, leg.to) then
+		if BotWalk.reachedEnd(feet, leg.to) then
 			done = true
 			return nil, nil
 		end
-		return steer(feet, leg.to), false
+		return BotWalk.steer(feet, leg.to), false
 	end, BotWalk.LIMIT + 1)
 	local pass, reason = BotWalk.judgeWalk(seconds, done)
 	return pass, reason, seconds
@@ -238,6 +238,7 @@ local function letGo(leg: Leg, humanoid: Humanoid, root: BasePart): (boolean?, n
 		end
 		return toward, false
 	end, if leg.how == "half" then BotWalk.LIMIT else TOP_GRAB_SECONDS)
+	ended.climbed = climbed
 	note ..= " climbed " .. tostring(climbed)
 	if leg.how == "half" and feetOf(root).Y < half then
 		return nil, gripSeconds
@@ -256,6 +257,7 @@ local function doLeg(leg: Leg): (boolean, string, Vector3, number)
 	settle(humanoid)
 	if leg.kind == "up" or leg.kind == "down" then
 		local pass, reason, seconds = walkWay(leg, root)
+		ended.speed, ended.floor = root.AssemblyLinearVelocity.Magnitude, humanoid.FloorMaterial.Name
 		return pass, reason, feetOf(root), seconds
 	end
 	local landed: boolean?, seconds: number
@@ -265,6 +267,7 @@ local function doLeg(leg: Leg): (boolean, string, Vector3, number)
 		landed, seconds = pushUntilLanded(nil, leg.to)
 	end
 	local endFeet = feetOf(root)
+	ended.speed, ended.floor = root.AssemblyLinearVelocity.Magnitude, humanoid.FloorMaterial.Name
 	if landed == nil then
 		return false, "NO_GRAB", endFeet, seconds
 	end
@@ -279,7 +282,7 @@ end
 
 -- selene: allow(unused_variable)
 local function runLeg(leg: Leg): (boolean, string, Vector3, number)
-	note = ""
+	note, ended.speed, ended.climbed, ended.floor = "", 0, false, "?"
 	local began = os.clock()
 	local ok, pass, reason, endFeet, seconds = pcall(doLeg, leg)
 	if not ok then

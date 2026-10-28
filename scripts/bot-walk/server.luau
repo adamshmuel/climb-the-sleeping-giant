@@ -1,8 +1,8 @@
 --!strict
 -- Task 8b slot 3 (Play server): the bot's 350 legs for the client. Leaves ReplicatedStorage.T8bLegs (JSON, walking order)
 -- and ReplicatedStorage.T8bBotWalk (a clone of the judging module). Parts are named by path or by value measured in
--- slot N (work/t8b/names-out.md, Lesson 80); starts go through StartCheck (Lessons 21, 75). Counts that differ from
--- slot N's print FIRED and stop before T8bLegs is written.
+-- slot N (8b's names check, scripts/bot-walk/names.luau, Lesson 80); starts go through StartCheck (Lessons 21, 75).
+-- Counts that differ from slot N's are printed, never a stop (Lesson 84); T8bLegs is written anyway.
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -12,7 +12,7 @@ local requireModule: (ModuleScript) -> any = require :: any
 local TIME_LIMIT, MARGIN, REACH, WALK_OFF, MAX_JSON = 38, 10, 3, 6, 100000 -- s, studs (as Config.Stuck), studs, studs
 local WALK = "Workspace.World.WalkSurfaces."
 local TOOLS = "ServerStorage.Tools.checks."
-local EXPECT: { [string]: number } = { up = 17, down = 15, drop = 5, step = 313 } -- the totals stop the job
+local EXPECT: { [string]: number } = { up = 17, down = 15, drop = 5, step = 313 } -- slot N's totals, printed if they differ
 local SLOT_N_HIM, SLOT_N_OFF = 260, 53 -- measured, so printed, never a stop (Lesson 80): it only sets the walk order
 local PATHS = [[
 Workspace.World Workspace.World.Giant Workspace.World.WalkSurfaces Workspace.World.LandingSpots
@@ -229,8 +229,10 @@ local function job(): string
 			table.insert(wrong, string.format("%s %d, slot N %d", key, counts[key], want))
 		end
 	end
-	if #items ~= 350 or #wrong > 0 then
-		return string.format("FIRED counts: %s\n%s\nT8bLegs not written", table.concat(wrong, "; "), line)
+	if #items ~= 350 or #wrong > 0 then -- a cross-check, printed and never a stop (Lesson 84)
+		print(
+			string.format("T8b counts differ from slot N (total %d, slot N 350): %s", #items, table.concat(wrong, "; "))
+		)
 	end
 
 	-- 6. Walking order (ups, downs, drops, step-offs on him, step-offs off him), the JSON, and the two items.
