@@ -48,12 +48,19 @@ NOTE_ENDINGS = (".md", ".txt")
 
 def is_work_note(data):
     raw = (data.get("tool_input") or {}).get("file_path") or ""
-    if not raw or not raw.lower().endswith(NOTE_ENDINGS):
+    if not raw:
         return False
-    project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
-    work_root = os.path.realpath(os.path.join(project, "work"))
-    full = os.path.realpath(os.path.join(data.get("cwd") or project, os.path.expanduser(raw)))
-    return full.startswith(work_root + os.sep)
+    # One base for both halves, and the checks run on the real target,
+    # so a symlink named like a note can't point at a script.
+    base = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
+    work_root = os.path.realpath(os.path.join(base, "work"))
+    given = os.path.join(base, os.path.expanduser(raw))
+    if os.path.islink(given):
+        return False
+    full = os.path.realpath(given)
+    if not full.startswith(work_root + os.sep):
+        return False
+    return os.path.splitext(full)[1].lower() in NOTE_ENDINGS
 
 
 def main():
