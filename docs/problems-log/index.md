@@ -14,7 +14,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
-| Check started inside a mesh, or a start check that's wrong | 7 | 2026-10-27 | `world-scenery.md` |
+| Check started inside a mesh, or a start check that's wrong | 8 | 2026-10-28 | `world-scenery.md` |
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 
 ## Fixed kinds
@@ -22,7 +22,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Kind | Fixed by | Date |
 |---|---|---|
 | Rojo crash | Lesson 3 (Removing a synced folder crashes Rojo) | 2026-10-27 |
-| Studio out of date | Lesson 3 | 2026-10-27 |
+| Studio out of date | Lesson 3, and after it came back Lesson 44 (Check the sync with a free search before the first runner call) | 2026-10-27 |
 | Idle turn | Lesson 4 (Never end a turn on a promise) | 2026-10-27 |
 | Scenery overrun | Lesson 1 (Scenery gets the cheap fix), and after a planned fix broke Lesson 19, Lesson 30 (A new lesson rechecks the open tasks) | 2026-10-27 |
 | Studio busy ("not reachable") | Lesson 22, extended to test runs | 2026-10-27 |
@@ -37,6 +37,6 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 10 |
-| `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 7 |
-| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 12 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 11 |
+| `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 9 |
+| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 13 |

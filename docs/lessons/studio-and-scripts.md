@@ -59,3 +59,13 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 45 step 2's wrapper passed the gardens raw from `WorldIndex.loadGardens`, but `Zones.locate` wants the boxes the server makes with `PlayerTracker.gardenBoxes`. The job failed after building the walk map, and the map was in a local variable, so the last allowed Studio call had to rebuild it (2026-10-27).
 - **Do instead:** a job that builds something slow (a walk map, a list) stores it in `shared` before using it, so a later bug costs a fetch, not a rebuild. When a wrapper calls game modules, copy how the server calls them (the init script), not the loader's return type.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 44: Check the sync with a free search before the first runner call
+- **What happened:** Task 43 step 1: Studio restarted mid-step with a new id and the Rojo plugin disconnected. The builder's red run ran the old code (12 pass), so one of three Studio calls was wasted (2026-10-27).
+- **Do instead:** every handoff starts with `list_roblox_studios`, then `script_grep` for a name the step just added or removed (a free call). If Studio doesn't show the change, stop and report before any runner call. Only the user can click Connect.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 46: A Play job counts climbable parts and play time up front
+- **What happened:** Task 43 step 2 counted any 3 `Climbing` frames as a hang, so pushes into the real BeardLadder counted. It also ran about 20 s per spot, so one step played only 100 of 203 starts, and 35 hang records were lost when Play stopped (2026-10-28).
+- **Do instead:** a Play job's handoff names the real climbable parts it leaves out (ladders), the time per spot and how many spots fit a step, and sends every record to the server before Play stops (Lesson 42). The step that fetches the records writes the whole list to a file in `work/` and checks it holds every label; a handoff never points at labels it hasn't checked are in the file (step 3 lost 16 labels and about 25 minutes this way).
+- **Who checks:** `code_lead` (in the handoff), `builder`.

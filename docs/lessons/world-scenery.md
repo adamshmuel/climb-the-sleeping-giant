@@ -72,3 +72,13 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** the walk map and the shared start check each decide whether a body fits. They disagreed at 21 spots, and 12 known places had no walk-map spot near them, because their start tries were moved to the nearest walk-map spot. Task 45 failed its 95% line at its last allowed call: the second failed task on finding open starts (2026-10-27).
 - **Do instead:** one shared fit check decides both, or a check tests its own candidate points directly with `StartCheck.find`, never moved to another check's spots.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 45: A place a fix has filled is replayed from its own start
+- **What happened:** Task 43 step 1 looked for walk-in starts beside 16 known places. Most were old hang spots (Task 23's notches) now filled by patches, so no open start could exist beside them, and 7 came back with none (2026-10-28).
+- **Do instead:** before walking into a known place, check whether a fix has filled it. A filled place is replayed from its original walk's recorded start, never walked into from beside it.
+- **Who checks:** `code_lead` (in the handoff), `product`.
+
+## Lesson 47: A start point has a floor under it
+- **What happened:** Task 43's walk-in start for V1F stood in open air, with no floor for 40 studs below, so its "hang" was a falling body, not a trap. A whole Play run and a measuring slot were spent on it (2026-10-28).
+- **Do instead:** before recording a start, cast a ray down and check there is a floor within 8 studs. The start-check fix task adds this to the shared start check, test first.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
