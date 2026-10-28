@@ -74,3 +74,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 28's plan counted only shots (up to 15). Once checks from earlier tasks moved in and its Studio calls were counted, it came to 58 calls plus 4 spares, about 4 times the size, and product cut it to 36 plus 3 (2026-10-28).
 - **Do instead:** every plan step writes its Studio-call count from the start, even a step that only takes shots. A phone check re-runs only what the phone screen changes (shots and the on-screen buttons and text), never walks, which drive the character the same way on both screens.
 - **Who checks:** `code_lead` (in the plan); `product` when it sizes a task.
+
+## Lesson 61: A handoff's world names are checked before the builder starts
+- **What happened:** three handoffs in a row relied on world things that weren't there: Task 48's job had no ramp leg; Task 28 step 1's seeds had no floor; step 1b's gateway sources (lap planks, side pads, the lap landing) are not built yet, so the builder stopped with 0 Studio calls (2026-10-28). Lessons 59 and its extension didn't stop the third one.
+- **Do instead:** the handoff lists every world name, position and part kind it relies on in one table. `code_lead` checks the table in one read-only Studio call (or against the build scripts and progress rows for parts not built yet) and marks each row "exists" or "built by <plan and task>" before the builder starts. Now a rule in `agent-workflow.md` ("World names checked before the builder starts").
+- **Who checks:** `code_lead`; the main chat does not start a builder on a handoff without the checked table.
