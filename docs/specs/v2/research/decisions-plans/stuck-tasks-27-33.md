@@ -269,3 +269,23 @@ LESSON: Step 2's list job was pasted into Studio and never kept, so step 2b coul
 
 ### code_lead's answer on direct walk-in starts (2026-10-27)
 Yes, 2 calls (red run; fetch only if the job isn't done in 30 s). `PlayedList.backPoints` makes points 2 to 8 studs back, each raised by its distance; `PlayedList.firstOpen` checks each with `StartCheck.find` and again 3 studs over the feet found, and skips a start more than its distance + 1 stud above or below the place (a roof or a drop is not a walk-in). The old `candidates` (moved tries to the nearest walk-map spot, Lesson 43) goes. Task 43: 5 steps, 17 Studio calls.
+
+## Task 43: product's ruling on the 10 places with no walk-in start (2026-10-28)
+- **Who checks the cause:** code_lead runs one read-only Edit call for all 10 (Lesson 26: Try 5 examples before choosing a fix). It runs in Task 43, whose budget goes from 17 to 18. Starts aren't tried again (my stop rule). For each place it reports:
+  - a ray straight up and 8 rays around, each naming the part it hits;
+  - whether the walk map's own fit test passes at the nearest spot;
+  - how far `body_and_cushion`'s collision hit is from his drawn skin.
+  Step 2 doesn't wait for it.
+- **Notch walks N03, N04, N08, N09, N14 and HUMP.** These are Task 23's hang places, and `Patch_Notch_*` now fills them. `ClimbingHangs.spec` already checks that a patch covers each one. So a blocked walk-in next to them is expected, and it isn't a new problem.
+  - Task 43 replays each original notch walk from its own recorded start, if the measuring call prints that start open.
+  - Any notch walk without an open start is covered elsewhere: the patch test, Task 28 step 5's phone walk W04, and Task 12's notch rescue proof. It is listed in `causes.md`, and there are no more tries.
+- **Ff (the ladder slot block on the band).** It moves to Task 28 (h): the y 102.5 +x band walk starts west of x 1.9, from a start Task 28's Edit call has printed open. The band has no walk-map spots (Lesson 32), so a walk-in here can't work.
+- **Far samples F-161, F-174 and F-179:** these are scenery, and the rescue reaches them (Lesson 1: Scenery gets the cheap fix). They are dropped and listed in `causes.md`, with no replacement samples.
+- **If the call shows the start check is wrong** (the walk map and his drawn skin leave room for a body, but the probe hits `body_and_cushion`): that is the 8th time for this kind of problem, so it gets a fix for the cause, not a workaround. code_lead plans a small start-check fix task after Task 43, test first. Task 43 doesn't wait for it. Neither designer reshaping nor a wider rescue is chosen until a place is measured as a real pocket.
+- **Viral test:** yes. The notch and the forehead are still played or guarded by a test, and only scenery that the rescue covers is dropped.
+
+## Task 43: code_lead's answers after step 5 (2026-10-28)
+- K2 (beard ladder): a measuring problem. Roblox grabs a truss up to about 1.9 studs from the body's side; the ladder rule only looked 0.3 out. Task 47 fixes the rule.
+- K10 (V1F): a bad start point. One down-ray corner landed on the top edge of `Face_R14`, over 40 studs of air. Task 46 measures it first, and adds a floor check (Lesson 47).
+- K4: a test reading (0.1 s pushes into the foot on flat meadow). K11: not decided; Task 47 tests each wedge for a way out. Neither is row C.
+- K9: the new box touches `Patch_Slot_24/25` or sits at least 2.5 studs from them; all three tops walk, climb or slide off (Lesson 35).

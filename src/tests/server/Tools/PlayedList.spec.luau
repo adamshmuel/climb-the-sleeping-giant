@@ -5,7 +5,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local PlayedList = require(ServerStorage.Tools.checks.PlayedList)
 
 -- Stuck safety Task 45, step 1 (lessons 38 and 40): the played list's groups, far sample, labels and known-place
--- candidates, tested on made-up lists. The function parts are plain functions here, so nothing needs a world.
+-- walk-in points, tested on made-up lists. The function parts are plain functions here, so nothing needs a world.
 describe("PlayedList.group", function()
 	local FAR = 1000 -- studs: a distance to needs that puts a spot in no core group
 
@@ -157,42 +157,29 @@ describe("PlayedList.group", function()
 	end)
 end)
 
-describe("PlayedList.candidates", function()
+describe("PlayedList.backPoints", function()
 	local PLACE = Vector3.new(10, 50, 20)
 	local PLUS_X = Vector3.new(1, 0, 0)
 
-	local function same(point: Vector3): Vector3?
-		return point
-	end
-
-	local function tags(found: { PlayedList.Candidate }): { string }
+	local function tags(found: { PlayedList.Point }): { string }
 		local list: { string } = {}
-		for _, candidate in found do
-			table.insert(list, candidate.tag)
+		for _, point in found do
+			table.insert(list, point.tag)
 		end
 		return list
 	end
 
-	it("walking +x gives -x2 first, then 3, 4, 6 and 8 studs back from the place", function()
-		local found = PlayedList.candidates(PLACE, PLUS_X, same)
+	it("walking +x gives -x2 first, then 3, 4, 6 and 8 studs back, each raised by its distance", function()
+		local found = PlayedList.backPoints(PLACE, PLUS_X)
 		expect(tags(found)).toEqual({ "-x2", "-x3", "-x4", "-x6", "-x8" })
-		expect(found[1].position).toBe(Vector3.new(8, 50, 20))
-		expect(found[5].position).toBe(Vector3.new(2, 50, 20))
+		expect(found[1].position).toBe(Vector3.new(8, 52, 20))
+		expect(found[5].position).toBe(Vector3.new(2, 58, 20))
+		expect(found[1].distance).toBe(2)
+		expect(found[5].distance).toBe(8)
 	end)
 
-	it("skips a candidate more than 1.5 studs sideways from its point", function()
-		local function sideways(point: Vector3): Vector3?
-			if math.abs(point.X - 8) < 0.01 then
-				return point + Vector3.new(0, 0, 2) -- the d 2 point
-			end
-			return point + Vector3.new(0, 0, 1) -- 1 stud sideways is fine
-		end
-		local found = PlayedList.candidates(PLACE, PLUS_X, sideways)
-		expect(tags(found)).toEqual({ "-x3", "-x4", "-x6", "-x8" })
-	end)
-
-	it("without a walk tries +x 2 to 8 studs, then -x", function()
-		local found = PlayedList.candidates(PLACE, nil, same)
+	it("without a walk gives 20 points: +x 2 to 8 studs, then -x, +z and -z", function()
+		local found = PlayedList.backPoints(PLACE, nil)
 		local all = tags(found)
 		expect(#all).toBe(20)
 		expect(all[1]).toBe("+x2")
@@ -200,16 +187,79 @@ describe("PlayedList.candidates", function()
 		expect(all[6]).toBe("-x2")
 		expect(all[11]).toBe("+z2")
 		expect(all[16]).toBe("-z2")
-		expect(found[1].position).toBe(Vector3.new(12, 50, 20))
+		expect(found[1].position).toBe(Vector3.new(12, 52, 20))
+	end)
+end)
+
+describe("PlayedList.firstOpen", function()
+	local PLACE_Y = 50
+
+	local function closed(): PlayedList.Check
+		return { open = false, blockers = { "body" } }
+	end
+
+	-- A fake start check: a point is open when `isOpen` says so; its feet are 1 stud under it.
+	local function finder(isOpen: (Vector3) -> boolean, calls: { Vector3 }?): (Vector3) -> PlayedList.Check
+		return function(point: Vector3): PlayedList.Check
+			if calls then
+				table.insert(calls, point)
+			end
+			if isOpen(point) then
+				return { open = true, position = point - Vector3.new(0, 1, 0), blockers = {} }
+			end
+			return { open = false, blockers = { "body" } }
+		end
+	end
+
+	local function point(tag: string, x: number, y: number, distance: number?): PlayedList.Point
+		return { tag = tag, position = Vector3.new(x, y, 0), distance = distance }
+	end
+
+	it("takes the first point open twice, and starts 3 studs over its feet", function()
+		local calls: { Vector3 } = {}
+		local find = finder(function(at: Vector3): boolean
+			return at.X ~= 1 -- the first point is closed
+		end, calls)
+		local points = { point("-x2", 1, 51, 2), point("-x3", 2, 51, 3), point("-x4", 3, 51, 4) }
+		local found, reason = PlayedList.firstOpen(points, PLACE_Y, find)
+		expect(reason).toBeNil()
+		expect((found :: PlayedList.Point).tag).toBe("-x3")
+		-- feet at (2, 50, 0), so the start is (2, 53, 0)
+		expect((found :: PlayedList.Point).position).toBe(Vector3.new(2, 53, 0))
+		expect(calls).toEqual({ Vector3.new(1, 51, 0), Vector3.new(2, 51, 0), Vector3.new(2, 53, 0) })
 	end)
 
-	it("skips a candidate that has no walk-map spot", function()
-		local function noneAtTwo(point: Vector3): Vector3?
-			if math.abs(point.X - 8) < 0.01 then
-				return nil
-			end
-			return point
-		end
-		expect(tags(PlayedList.candidates(PLACE, PLUS_X, noneAtTwo))).toEqual({ "-x3", "-x4", "-x6", "-x8" })
+	it("skips a point whose second check, 3 studs over the feet, is not open", function()
+		local find = finder(function(at: Vector3): boolean
+			return not (at.X == 1 and at.Y == 53) -- the first point's raised start is closed
+		end)
+		local points = { point("-x2", 1, 51, 2), point("-x3", 2, 51, 3) }
+		local found = PlayedList.firstOpen(points, PLACE_Y, find)
+		expect((found :: PlayedList.Point).tag).toBe("-x3")
+	end)
+
+	it("skips a start whose feet are over the distance plus 1 stud above or below the place", function()
+		local find = finder(function(): boolean
+			return true
+		end)
+		-- feet are 1 under the point: the first at y 55 (5 above the place, limit 3), the second at y 40 (10 below)
+		local points = { point("-x2", 1, 56, 2), point("-x3", 2, 41, 3), point("-x4", 3, 53, 4) }
+		local found = PlayedList.firstOpen(points, PLACE_Y, find)
+		expect((found :: PlayedList.Point).tag).toBe("-x4")
+	end)
+
+	it("puts no height limit on a point with no distance (a played spot)", function()
+		local find = finder(function(): boolean
+			return true
+		end)
+		local found = PlayedList.firstOpen({ point("", 1, 91, nil) }, PLACE_Y, find)
+		expect((found :: PlayedList.Point).position).toBe(Vector3.new(1, 93, 0))
+	end)
+
+	it("returns nil, with the first point's tag and first blocker, when nothing is open", function()
+		local points = PlayedList.backPoints(Vector3.new(10, 50, 20), Vector3.new(1, 0, 0))
+		local found, reason = PlayedList.firstOpen(points, PLACE_Y, closed)
+		expect(found).toBeNil()
+		expect(reason).toBe("-x2 body")
 	end)
 end)

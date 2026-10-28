@@ -12,14 +12,11 @@ export type Options = {
 export type Played = { label: string, position: Vector3 }
 export type Counts = { core: number, reach: number, far: number, sampled: number, square: number, played: number }
 export type Group = { played: { Played }, counts: Counts, stop: string? }
-export type Candidate = { tag: string, position: Vector3 }
 
 local DEFAULT_MUST_FIX = 12 -- studs from a need
 local DEFAULT_SQUARE = 4
 local SQUARES = { 4, 8, 12, 16 } -- the far sample grows through these until it fits the room left
 local DEFAULT_CAP = 200
-local SIDEWAYS_LIMIT = 1.5
-local DISTANCES = { 2, 3, 4, 6, 8 }
 local SLOPE_STEP = 1e-3 -- degrees: slopes this close count as tied
 
 local PlayedList = {}
@@ -125,45 +122,77 @@ function PlayedList.group(list: { Item }, options: Options): Group
 	return { played = played, counts = counts }
 end
 
--- The side name of a flat direction: its larger part, as "+x", "-x", "+z" or "-z".
-local function sideOf(direction: Vector3): string
-	if math.abs(direction.X) >= math.abs(direction.Z) then
-		return if direction.X >= 0 then "+x" else "-x"
+export type Point = { tag: string, position: Vector3, distance: number? }
+export type Check = { open: boolean, position: Vector3?, blockers: { string } }
+
+local BACK_DISTANCES = { 2, 3, 4, 6, 8 } -- studs behind a place (or beside it, with no walk)
+local START_LIFT = 3 -- studs: a start is this far over the open feet
+local HEIGHT_SLACK = 1 -- studs: a walk-in start's feet may differ from the place by its distance plus this
+
+-- The side a flat direction mostly points to: "+x", "-x", "+z" or "-z".
+local function sideOf(flat: Vector3): string
+	if math.abs(flat.X) >= math.abs(flat.Z) then
+		return if flat.X >= 0 then "+x" else "-x"
 	end
-	return if direction.Z >= 0 then "+z" else "-z"
+	return if flat.Z >= 0 then "+z" else "-z"
 end
 
-function PlayedList.candidates(place: Vector3, walk: Vector3?, nearest: (Vector3) -> Vector3?): { Candidate }
-	local found: { Candidate } = {}
-	local function try(tag: string, point: Vector3, flatWalk: Vector3?)
-		local spot = nearest(point)
-		if not spot then
-			return
-		end
-		local off = Vector3.new(spot.X - point.X, 0, spot.Z - point.Z)
-		-- With a walk only the sideways part counts (a step along the walk is fine); without one, the whole flat gap.
-		local gap = if flatWalk then math.abs(off.X * flatWalk.Z - off.Z * flatWalk.X) else off.Magnitude
-		if gap > SIDEWAYS_LIMIT then
-			return
-		end
-		table.insert(found, { tag = tag, position = spot })
-	end
+local function pointAt(place: Vector3, flat: Vector3, tag: string, distance: number): Point
+	local offset = flat * distance + Vector3.new(0, distance, 0)
+	return { tag = tag .. tostring(distance), position = place + offset, distance = distance }
+end
 
-	if walk and (walk.X ~= 0 or walk.Z ~= 0) then
-		local flat = Vector3.new(walk.X, 0, walk.Z).Unit
-		local side = sideOf(-flat)
-		for _, distance in DISTANCES do
-			try(`{side}{distance}`, place - flat * distance, flat)
+-- Tries to start a walk into `place`, nearest first. With a walk direction: only behind it, raised by their distance
+-- so ground that rises toward the place is still under the start check's rays. With no walk: all four sides.
+function PlayedList.backPoints(place: Vector3, walk: Vector3?): { Point }
+	local points: { Point } = {}
+	local flat = if walk then Vector3.new(walk.X, 0, walk.Z) else nil
+	if flat and flat.Magnitude > 1e-6 then
+		local back = -flat.Unit
+		for _, distance in BACK_DISTANCES do
+			table.insert(points, pointAt(place, back, sideOf(back), distance))
 		end
-	else
-		local sides = { Vector3.new(1, 0, 0), Vector3.new(-1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(0, 0, -1) }
-		for _, direction in sides do
-			for _, distance in DISTANCES do
-				try(`{sideOf(direction)}{distance}`, place + direction * distance, nil)
-			end
+		return points
+	end
+	local sides: { { name: string, flat: Vector3 } } = {
+		{ name = "+x", flat = Vector3.new(1, 0, 0) },
+		{ name = "-x", flat = Vector3.new(-1, 0, 0) },
+		{ name = "+z", flat = Vector3.new(0, 0, 1) },
+		{ name = "-z", flat = Vector3.new(0, 0, -1) },
+	}
+	for _, side in sides do
+		for _, distance in BACK_DISTANCES do
+			table.insert(points, pointAt(place, side.flat, side.name, distance))
 		end
 	end
-	return found
+	return points
+end
+
+-- The first point the start check finds open twice (at the point, then START_LIFT over the found feet). The returned
+-- point's `position` is the start. A walk-in point (one with a distance) must have its feet near the place's height.
+function PlayedList.firstOpen(points: { Point }, placeY: number, find: (Vector3) -> Check): (Point?, string?)
+	local firstReason: string? = nil
+	for _, point in points do
+		local reason: string? = nil
+		local first = find(point.position)
+		local feet = first.position
+		if not first.open or not feet then
+			reason = first.blockers[1] or "none"
+		elseif point.distance and math.abs(feet.Y - placeY) > point.distance + HEIGHT_SLACK then
+			reason = "height"
+		else
+			local start = feet + Vector3.new(0, START_LIFT, 0)
+			local second = find(start)
+			if second.open then
+				return { tag = point.tag, position = start, distance = point.distance }, nil
+			end
+			reason = second.blockers[1] or "none"
+		end
+		if not firstReason then
+			firstReason = if point.tag == "" then reason else `{point.tag} {reason}`
+		end
+	end
+	return nil, firstReason or "no points"
 end
 
 return PlayedList
