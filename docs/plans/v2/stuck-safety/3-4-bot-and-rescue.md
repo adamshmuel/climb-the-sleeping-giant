@@ -65,31 +65,20 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
   - **13 step-off fails go to Task 8c:** #43, #83, #114, #144, #147, #150, #178, #198, #214, #233, #246, #268, #279. Their short lines give only the start, so Task 8c re-walks them for their reason and shot.
   - **The kept walk job** (product, line 305): `scripts/bot-walk/` (`server.luau`, `client-a.luau`, `client-b.luau`, `fetch.luau`, `drops-run.luau`, `names.luau`), copied from `work/t8b/` in this task's commit. It is in git so plans 3 and 5 can rerun it, and Rojo doesn't sync `scripts/`, so it can't crash a sync. The pass and fail rules stay in the tested `tools/checks/BotWalk.luau` (Lesson 40).
 
-**Task 8c: The step-off fails, and Rule 24's passing walk** (planned by code_lead on 2026-10-28; product's "one fix task after 8b", `work/t28/product-ruling.md` lines 312 and 318. This is the third task on the bot walk, so product checks its size before the handoff.)
-- **What it's for:** core gameplay. Rule 24 (A bot walks every way), `docs/specs/v2/stuck-safety.md` line 120, must pass in Play before product's build review (ruling line 312). Also the "Bot walk time limit" row (line 158) and Rule 22 (What counts as stuck, line 112) for "a way out".
-- **Covers:** the 13 step-off fails above, with their shots; the #347 escape test from (-1.7, 88.4, -6.0) (press up, down and away, then the 4 pushes and the jump, Lesson 69); a check that the drops' landings at z -55.0 (#346, #348, #349) stand on the meadow (the part under the feet is logged); then one full walk of all 350 legs that passes.
-- **Size: 6 steps, 34 Studio calls + 1 spare, no phone** (a walk drives the body the same way on both screens, Lesson 60). 13 of the 34 are fail shots; a leg that passes on its re-walk gets no shot. At most 30 tool calls per step (Lesson 73).
-  1. **Job update, shell only (0 calls).** In `scripts/bot-walk/`: a re-walk mode for a list of legs; a full line for every fail (reason, end feet, part under the feet, walk-out distances); the #347 escape test; path comments updated from `work/t8b/`. `scripts/job-check.sh --joined` and `--handoff` pass (Lesson 76).
-  2. **Re-walk in Play (11 calls):** list, Play start, server setup, client job (13 step-offs, #347 and its escape test, and drops #346 to #349, about 3 minutes, in the background), fetch, shots of repeat fails 1 to 6 inside their holds.
-  3. **Shots and causes (8 calls):** shots of repeat fails 7 to 13, the #347 shot if it stays trapped, stop Play. Then, in the shell, each repeat fail gets its kind from the table below, measured on real examples (Lesson 26).
-  4. **Fixes, test first (6 calls):** red and green BotWalk runs for any judge change (a drop that ends holding a ladder counts as landed, if the escape test gets out: product line 318), and up to 4 world-script runs for fixes the owners approved.
-  5. **The passing walk, part 1 (7 calls):** names check in Edit (it clears its own `shared` keys, Lesson 68), list, Play start, server setup, client job (all 350 legs, about 38 minutes), test-wall shot inside its hold, fetch 1 at about 10 minutes.
-  6. **The passing walk, part 2 (2 calls + 1 spare):** fetch 2 at the printed end (the spare only if it's still running), stop Play. The table goes into `work/t8c/table.md` in the same shape as 8b's.
-- **Decision table (owners check it once, before the builder starts):**
-
-  | What the re-walk shows | What happens | Who checks |
-  |---|---|---|
-  | The leg passes this time | One-off: written in the proof, no fix, no shot. The passing walk decides. | nobody |
-  | Ends holding a ladder, and the escape gets 3 studs away | The job counts holding a ladder as landed: a BotWalk test first, then the fix | product (ruled, line 318) |
-  | Ends holding a ladder, and the escape fails | A real trap: a look change (Lesson 2, change the scenery, not the giant), with code_lead's cost | product, designer |
-  | Lands on him, still moving when the 8 s ran out, and ends with a way out | Job fix: the landing watch waits for the body to settle. No world change | code_lead |
-  | Lands on him, and no walk-out try gets 3 studs away (WEDGED) | A stuck spot the scan missed: 5 real examples first (Lesson 26), then a scenery fix (Lessons 1 and 2) | product, designer |
-  | No body fits at the start | "No start", like #56 and #295 | nobody |
-
-- **Stop rules:** a kind not in the table, more than 4 world-script runs in step 4, or any change to the giant's own parts goes to product in one `QUESTIONS:` list. Any fail in the passing walk (steps 5 and 6) stops the task and goes to product with its lines: a fourth task on the bot walk is a product decision. A stop before fetch 1 prints is not pasted again.
-- **Files:** `scripts/bot-walk/*.luau` (the job, at most 300 lines each), `tools/checks/BotWalk.luau` and `src/tests/server/Tools/BotWalk.spec.luau` (only for a judge change; also fix the source note on `AWAY` at line 7, which cites Rule 22, but the 3-stud value comes from product's ruling, line 284), and world scripts only as the decision table allows.
-- **Failing test first:** only for a judge change, in BotWalk, red before the fix. The re-walk and the passing walk are the Play proof.
-- **Lessons:** 1, 2, 21, 23, 26, 29, 31, 40, 60, 61, 65, 68, 69, 73, 74, 76, 79, 80, 84.
+**Task 8c: The step-off fails, and Rule 24's passing proof** (planned by code_lead on 2026-10-28; sized by product on 2026-10-28, `work/t28/product-ruling.md` lines 320 to 338: **20 Studio calls + 1 spare, with no world change**. Handoff: `work/handoff-t8c.md`.)
+- **What it's for:** core gameplay. Rule 24 (A bot walks every way), `docs/specs/v2/stuck-safety.md` line 120, must pass before product's build review. Also the "Bot walk time limit" row (line 158) and Rule 22 (What counts as stuck, line 112) for "a way out".
+- **Covers:** the 13 step-off fails from Task 8b (#43, #83, #114, #144, #147, #150, #178, #198, #214, #233, #246, #268, #279); #347 and its escape test; drops #346 to #349 again, logging whether they grab (Lesson 85). **Rule 24's proof is 8b's table plus 8c's re-walk of the fixed legs, all passing, in one table.** A judge fix can only turn a fail into a pass, so 8b's 336 passes stand. The full 350-leg walk runs again in plans 3 and 5, and whenever the giant or the scenery changes.
+- **Size: 5 steps, 20 Studio calls + 1 spare, no phone** (Lesson 60). At most 30 tool calls per step (Lesson 73).
+  1. **Names check (code_lead, 1 call, done 2026-10-28).** All world names in the handoff exist. The 3 drops landed on `Workspace.Terrain` at y 2.0: real meadow.
+  2. **Job update, shell only (0 calls).** A new re-walk job, `scripts/bot-walk/rewalk.luau`; the count stop in `server.luau` becomes a printed line (Lesson 84); the `work/t8b` mentions and BotWalk's line-7 note are fixed. code_lead reads the jobs before the first paste (Lesson 76).
+  3. **Re-walk in Play (at most 11 calls):** list, Play start, server setup, client job, one fetch, **at most 5 shots** (only for a WEDGED end, a failed ladder escape, or a kind not in the table), stop. Then each fail gets its kind from the decision table, in the shell.
+  4. **Judge fixes, test first (at most 2 calls):** BotWalk red, then green, for "holding a ladder counts as landed" and "wait for the body to settle". Job faults are fixed in the shell (0 calls).
+  5. **The passing proof (at most 6 calls + 1 spare):** list, Play start, server setup, client job (the fixed legs only), fetch (the spare only if it is still running), stop.
+- **Decision table:** in the handoff. It includes product's two rows: #178 ending in the beard wedge is the known exception; the nightcap group WEDGED on the pillow or under the cap goes to designer (sink the pillow, spec line 22), never to code.
+- **Stop rules (product):** a sixth shot, a fail in step 5's re-walk, or any world change stops the task and goes to product, with designer's fix and code_lead's size (a world change also needs the full test run and the full 350-leg walk, about 10 calls). A fourth task on the bot walk is product's decision with game_creator.
+- **Files:** `scripts/bot-walk/rewalk.luau` (new, at most 150 lines), `scripts/bot-walk/server.luau`, `scripts/bot-walk/drops-run.luau` (one comment), `tools/checks/BotWalk.luau` and `src/tests/server/Tools/BotWalk.spec.luau` (only for the judge rows), and `scripts/bot-walk/client-a.luau` only for a job-fault row (it is at 297 lines, so new code goes in `rewalk.luau`).
+- **Failing test first:** one BotWalk test per judge row, red before its fix. The re-walk is the Play proof.
+- **Lessons:** 2, 21, 23, 26, 29, 31, 40, 60, 61, 63, 65, 68, 69, 73, 74, 76, 79, 80, 84, 85.
 
 ### Part 4: Getting a player out
 
