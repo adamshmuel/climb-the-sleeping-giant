@@ -11,6 +11,13 @@ import re
 import sys
 
 LONG_OPEN = re.compile(r"\[(=*)\[")
+SHORT_STRING = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'")
+LINE_COMMENT = re.compile(r"--(?!\[=*\[).*")
+
+
+def code_part(line):
+    """The line without short strings and plain -- comments."""
+    return LINE_COMMENT.sub("", SHORT_STRING.sub('""', line))
 
 
 def paren_lines(code):
@@ -23,10 +30,12 @@ def paren_lines(code):
                 continue
             line = line[end + len(closer) :]
             closer = None
+            if line.lstrip().startswith("("):
+                found.append(number)
         elif line.lstrip().startswith("("):
             found.append(number)
         # Look for a long string or block comment that stays open past this line.
-        rest = line
+        rest = code_part(line)
         while True:
             match = LONG_OPEN.search(rest)
             if not match:
