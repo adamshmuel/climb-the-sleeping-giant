@@ -96,3 +96,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 47 step 2's first list missed 9 of 52 spots, because played starts carry extra words in their labels ("F-165 sq -48,-32"). Patching the list, plus a label query and a server call and a client call that the plan had counted as one, took 7 Studio calls against 4 and 37 tool calls against 30 (2026-10-28). Its fetch printed ok spots without their push distances, so the "backs out" result for the wedges has no numbers.
 - **Do instead:** a job that finds starts by label matches the label's first word, and its first call prints the labels with no start before the long run begins. A plan counts the server setup, the client launch, start Play, stop Play and each fetch as separate Studio calls. A fetch prints the numbers each result is judged by, for ok spots too.
 - **Who checks:** `code_lead` (in the plan and handoff), `builder`.
+
+## Lesson 54: A check that finds nothing shows its closest case
+- **What happened:** Task 47's replay reported "0 hangs" without showing how close any spot came, so nobody could check the zero, and it didn't record where the 2 stuck walk-outs stopped. Task 48 now needs an extra Studio call to measure those points (2026-10-28).
+- **Do instead:** a Play job that finds 0 problems also prints its closest case (for hangs: the longest pressed run under 1 stud, and where it was), and records where each failure happened.
+- **Who checks:** `code_lead` (in the handoff), `builder`.
