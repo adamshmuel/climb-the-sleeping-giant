@@ -64,7 +64,9 @@ fi
 echo "== Clones of modules that use script.Parent (Lesson 74)"
 # A module that loads its neighbours through script.Parent fails as an
 # unparented clone, so a job must require it the plain way.
-parent_users=$(grep -rlE 'script\.Parent' src tools --include='*.luau' |
+# Comment lines don't count: BotLegs says "It uses no script.Parent" (Task 8).
+parent_users=$(grep -rE 'script\.Parent' src tools --include='*.luau' |
+	grep -vE '^[^:]+:[[:space:]]*--' | cut -d: -f1 | sort -u |
 	xargs -n1 basename | sed -E 's/\.luau$//; s/^init\.(server|client)$//' | grep -v '^$' | sort -u)
 for name in $parent_users; do
 	if grep -nE "\b${name}\b[^-]*:Clone\(\)" "$@"; then
