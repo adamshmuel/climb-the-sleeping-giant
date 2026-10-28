@@ -37,6 +37,6 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | File | What it covers | Rows |
 |---|---|---|
-| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 15 |
+| `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 16 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 11 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 18 |
