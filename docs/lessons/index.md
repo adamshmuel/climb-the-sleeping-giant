@@ -91,6 +91,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 79 | Every stop prints the check that fired and its own failure | `studio-and-scripts.md` |
 | 80 | A job never picks a part by a search; the handoff names it | `studio-and-scripts.md` |
 | 81 | A look check measures where the client draws, with the client's own ray | `studio-and-scripts.md` |
+| 82 | Set the phone in Edit, and take a "keeps X" shot before another rule can remove X | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
