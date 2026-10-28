@@ -50,6 +50,7 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** in Task 33 product's ruling chose the forehead fix by what the roof was made of ("an added part → move or shorten it"). It missed that the plate is also a wall of the walking band, the only way to the Legendary eggs. So the measurement needed another ruling before anything could be built (2026-10-27).
 - **Do instead:** a ruling that offers fix paths also says what each fix must leave untouched (the core path, a route, a ladder end). Then a measurement can pick the path without another round trip.
 - **Also:** a ruling that asks for a check ("no shortcut by a jump") writes down the rule to check by: how high, how far, and from which spots. Otherwise the check invents its own rule, and its result needs another round trip (Task 33's beard shortcut check). In the same call, the check follows every spot it finds: where it leads by walking, and whether players can already reach it today.
+- **Also (Task 28, 2026-10-28):** Rule 82's jump check said "at least 12 studs above" but never said what it guards, so 12 of 15 guards failed on spots below them. Every reach limit names its purpose (for example, "a new way in from outside") and which spots count, above and below, before the job is written. `code_lead` checks an older ruling for this when it writes a handoff from it.
 - **Who checks:** `product`; `code_lead` when it turns a ruling into a handoff.
 
 ## Lesson 36: Stand-in numbers name what replaces them
@@ -66,6 +67,7 @@ About handing work between agents and asking owners. The map of all lessons is `
 ## Lesson 59: A handoff that names a job's walk points to the lines that do it
 - **What happened:** Task 48's handoff said the Play job walks onto the boot ramp, but the saved job file had no ramp leg, so the builder wrote about 70 lines of it mid-step (2026-10-28).
 - **Do instead:** when a handoff names a walk or check a saved job must do, its author reads that job file first and names the lines that do it.
+- **Also (Task 28, 2026-10-28):** Task 28 step 1's seed list was never checked against the world: 14 seeds had no floor, because the job went 3 studs along each part's own "up" and the forehead plates are turned -80°. Seeds come from positions really measured (where characters settled, a part's top found from its real turn), never from a part's own axes unread, and the handoff names where each one came from.
 - **Who checks:** `code_lead` (in the handoff).
 
 ## Lesson 60: A plan counts Studio calls for every step

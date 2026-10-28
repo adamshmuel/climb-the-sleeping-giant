@@ -68,7 +68,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 56 | A fill next to a slanted wall turns to follow it | `world-scenery.md` |
 | 57 | Size a prop from its visible mesh, not the model's outer box | `look-and-art.md` |
 | 58 | A world script says how many parts it will add before it adds them | `world-scenery.md` |
-| 59 | A handoff that names a job's walk points to the lines that do it | `teamwork.md` |
+| 59 | A handoff that names a job's walk points to the lines that do it (extended: seeds come from measured positions) | `teamwork.md` |
 | 60 | A plan counts Studio calls for every step | `teamwork.md` |
 
 | File | What it covers |
