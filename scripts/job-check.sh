@@ -38,6 +38,12 @@ for name in $parent_users; do
 	fi
 done
 
+echo "== string.format behind a ... wrapper (Lesson 79: the type check can't see its arguments)"
+if grep -nE 'string\.format\([A-Za-z_]+, *\.\.\.\)' "$@"; then
+	echo "  ^ call string.format at each site with a literal format; wrap booleans in tostring"
+	fail=1
+fi
+
 echo "== Format"
 stylua --check "$@" || fail=1
 
