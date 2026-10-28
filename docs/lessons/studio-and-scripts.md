@@ -91,3 +91,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 51 step 1's green run had 2 failures that were bugs in the tests: `expect(string.find(...))` passed several values, and Jest said "Expect takes at most one argument". It cost a Studio call over the cap (2026-10-28).
 - **Do instead:** wrap any function that returns several values in parentheses inside `expect`, for example `expect((string.find(text, "x")))`.
 - **Who checks:** `builder`, `code_lead` (in review).
+
+## Lesson 53: A Play job matches labels by their first word, and counts every call
+- **What happened:** Task 47 step 2's first list missed 9 of 52 spots, because played starts carry extra words in their labels ("F-165 sq -48,-32"). Patching the list, plus a label query and a server call and a client call that the plan had counted as one, took 7 Studio calls against 4 and 37 tool calls against 30 (2026-10-28). Its fetch printed ok spots without their push distances, so the "backs out" result for the wedges has no numbers.
+- **Do instead:** a job that finds starts by label matches the label's first word, and its first call prints the labels with no start before the long run begins. A plan counts the server setup, the client launch, start Play, stop Play and each fetch as separate Studio calls. A fetch prints the numbers each result is judged by, for ok spots too.
+- **Who checks:** `code_lead` (in the plan and handoff), `builder`.

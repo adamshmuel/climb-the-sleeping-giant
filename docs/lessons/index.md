@@ -62,6 +62,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 50 | When a real-world test turns red, read the part it checks first | `studio-and-scripts.md` |
 | 51 | A full test run is fetched again, never started again | `studio-and-scripts.md` |
 | 52 | `expect` takes one value | `studio-and-scripts.md` |
+| 53 | A Play job matches labels by their first word, and counts every call | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
