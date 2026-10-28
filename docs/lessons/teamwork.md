@@ -67,3 +67,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 48's handoff said the Play job walks onto the boot ramp, but the saved job file had no ramp leg, so the builder wrote about 70 lines of it mid-step (2026-10-28).
 - **Do instead:** when a handoff names a walk or check a saved job must do, its author reads that job file first and names the lines that do it.
 - **Who checks:** `code_lead` (in the handoff).
+
+## Lesson 60: A plan counts Studio calls for every step
+- **What happened:** Task 28's plan counted only shots (up to 15). Once checks from earlier tasks moved in and its Studio calls were counted, it came to 58 calls plus 4 spares, about 4 times the size, and product cut it to 36 plus 3 (2026-10-28).
+- **Do instead:** every plan step writes its Studio-call count from the start, even a step that only takes shots. A phone check re-runs only what the phone screen changes (shots and the on-screen buttons and text), never walks, which drive the character the same way on both screens.
+- **Who checks:** `code_lead` (in the plan); `product` when it sizes a task.
