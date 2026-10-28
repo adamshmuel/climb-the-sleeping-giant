@@ -74,6 +74,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 62 | A saved walk map goes stale when the world changes | `studio-and-scripts.md` |
 | 63 | A big job is pasted by a builder with room to spare | `studio-and-scripts.md` |
 | 64 | A job's walk map holds every place it measures | `studio-and-scripts.md` |
+| 65 | A dry check call comes before the long Play run | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

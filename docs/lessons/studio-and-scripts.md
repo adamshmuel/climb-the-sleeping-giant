@@ -117,3 +117,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 28 step 1b's jump check used a walk map that covered only the giant's box, the landings and 10 more studs. The egg by the Sock, the Sock's west half and the gardens were outside it, so 5 guards "failed" the egg limit and the gardens showed no spots (2026-10-28).
 - **Do instead:** a job widens the map to hold every place it measures (eggs, guard tops, gardens, with 20 studs around each) and prints the map's edges before the long part.
 - **Who checks:** `code_lead` (in the handoff), builder.
+
+## Lesson 65: A dry check call comes before the long Play run
+- **What happened:** Task 28 step 4c spent 8 of 10 Studio calls and got almost nothing. The walks job ran, but the body never moved in 10 of 16 walks (its Move input didn't take). The proofs job stopped at once: it asked for a remote called "T28Route", and the server job, written by another writer, made "T28Rf". Nobody had checked the jobs against each other or tried the walk input (2026-10-28). It was the fourth handoff in a row that broke on a world or name it hadn't checked (Lesson 61).
+- **Do instead:** when a step pastes more than one job, `code_lead` lists every name one job expects from another (remotes, folders, attributes) and checks the files match before the handoff. The first Play call of the step is a short dry check: every lookup across all the jobs prints "found N of M", and each walk input runs for one second and prints how far the body moved. The step stops there if anything is 0.
+- **Who checks:** `code_lead` (in the handoff), the builder (the dry check call).
