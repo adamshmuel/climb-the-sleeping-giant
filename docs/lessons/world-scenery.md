@@ -61,6 +61,7 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **Also (code_lead):** a fill under an overhang always has an open mouth, so the measuring call runs the patch "Sides" check on each candidate box. Then the exception or the reshape is decided before the last Studio calls.
 - **Also (Task 33 step e):** the roof exception freed only 1 of the 23 failing rays, because the plate isn't straight above the box's -z face. Before choosing a roof exception, measure the roof distance on every open side.
 - **Also (code_lead review):** a job that places a part and then runs the full tests never shows the new real-world test red. Run that test once before placing, in the same job.
+- **Also (Task 48):** the trial ran the patch tests but not the `SmallPatches` folder's name test, so the new `Block_R141_1` name went red only in the full run. A part placed in a folder must also pass every test that reads that folder, including its name test, and the handoff lists them.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
 
 ## Lesson 38: A shared check is tested on the spots it will be used on
