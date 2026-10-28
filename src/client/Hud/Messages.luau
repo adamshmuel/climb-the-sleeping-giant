@@ -24,7 +24,8 @@
 -- The cream "Caught!" card is the fifth. When the server fires Caught for this player (a hand slam sent them home, spec
 -- Rule 13 and the "Caught" row of section 6), it shows for 3 seconds at the bottom of the Hud screen, left of centre on a
 -- computer and in the middle on a phone: the 💫, "Caught!" and the second line "The egg went back. You lost nothing
--- else." It is its own frame, not the pill's or the tips' place, because a caught player carries nothing. Another
+-- else." It is its own frame, not the pill's or the tips' place, because a caught player carries nothing. On a phone
+-- the tip plate hides while the card shows and comes back after it. Another
 -- player's catch shows nothing here (everyone sees the star puff, which lives in Fx/Celebrations).
 -- It only shows what the server says: it reads the player's Carrying attribute and GiantState, and listens for
 -- GrabMissed and EggHome.
@@ -647,12 +648,16 @@ function Messages.start(deps: Deps): Handle
 	end
 
 	local cancelCaught: (() -> ())? = nil
+	-- True while the Caught! card shows. On a phone the tip plate hides then, so only one message shows.
+	local caughtShowing = false
+	local phone = false
 
 	local function hideCaught()
 		if cancelCaught then
 			cancelCaught()
 			cancelCaught = nil
 		end
+		caughtShowing = false
 		parts.caughtCard.Visible = false
 	end
 	trove:Add(hideCaught)
@@ -693,7 +698,7 @@ function Messages.start(deps: Deps): Handle
 		if words ~= nil then
 			parts.tipText.Text = words
 		end
-		parts.tip.Visible = words ~= nil
+		parts.tip.Visible = words ~= nil and not (caughtShowing and phone)
 	end
 
 	local function renderCarry()
@@ -774,10 +779,14 @@ function Messages.start(deps: Deps): Handle
 			return
 		end
 		hideCaught()
+		caughtShowing = true
 		parts.caughtCard.Visible = true
+		renderTip()
 		cancelCaught = after(Messages.caughtSeconds, function()
 			cancelCaught = nil
+			caughtShowing = false
 			parts.caughtCard.Visible = false
+			renderTip()
 		end)
 	end
 
@@ -808,6 +817,7 @@ function Messages.start(deps: Deps): Handle
 
 	local function relayout()
 		local layout = Layout.forScreen(deps.viewport.get())
+		phone = layout.phone
 		applyLayout(parts, layout.pill, layout.tip, layout.card)
 		applyBanner(parts, layout.banner)
 		applyCaught(parts, layout.caught)
