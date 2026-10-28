@@ -38,6 +38,7 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **Sixth time (Task 33 step b, 2026-10-27):** the Play job's 19 forehead and band starts were picked by hand and were all "not open" (V1's plate and the SideRail), so the job ran and proved nothing. **Now:** a walk or Play handoff lists only starts that an Edit-mode call has already printed as open, with their final positions as fixed numbers (Lesson 34). The Play job never searches for starts by itself. The start check itself should be one shared, tested helper instead of being rewritten in every script: `code_lead` plans it as the first step of the next task that walks the giant.
 - **Also (Task 28 step 5, 2026-10-28):** a pose job wrote its own "is it open" probe with outer boxes (`GetPartBoundsInBox`), so a tilted ramp and the beard's whole-head box looked solid, and two shots were lost. This was the ninth wrong start check. No job writes its own open check: every start comes from the walk map's open spots through the shared `StartCheck` (`nearSpot`, Task 53), and the handoff's world-name check prints each start as "open" or "dropped".
 - **Also (Task 28w, 2026-10-28):** the old start list held root points, 3 studs above the feet, but `nearSpot` returns feet points, so a job moved to the new starts would sink the body 3 studs. Every start list says whether its points are feet or root, and the job adds the lift in one named line.
+- **Also (Task 28w, 2026-10-28):** the capUp run started where capDown had ended, in mid-air, so its result meant nothing. Every Play run starts from its own `nearSpot` start, never from the previous run's end.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
 
 ## Lesson 26: Try 5 examples before choosing a fix
@@ -110,3 +111,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** two posed shots of the Sock's gap (Task 28 steps 3 and 5) didn't prove it. The paster blamed a fern, but a zoom showed the camera looked past the player into the Sock, so the Sock's near edge hid the body and its bottom edge ran off the screen (2026-10-28).
 - **Do instead:** for a gap proof, aim the camera at a right angle to the line between the two edges (about 10 studs away, 3 up), with both edges and the gap inside the frame. Zoom the shot before naming what blocks it.
 - **Who checks:** `designer` (the camera rule in the handoff), the builder (zoom before reporting).
+
+## Lesson 69: Only a walk-out decides "got out"
+- **What happened:** after Task 28w's walks, game_creator read W2's and W6's END points as "the player got out", because each was lower than its wedge. Both were only 3.2 studs lower: the wedge is logged at the body centre and the END at the feet (2026-10-28). Without product's check, two real wedges would have been accepted as escapes.
+- **Do instead:** walk logs print the feet height for both the END and the wedge. A wedge counts as "got out" only when a walk-out check (4 directions plus a jump, Rule 22) moves the player away.
+- **Who checks:** `code_lead` (in the job), `product` (when it reads the results).

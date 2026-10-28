@@ -78,6 +78,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 66 | Job scripts in work/ pass the type check with a require cast | `studio-and-scripts.md` |
 | 67 | A gap proof aims the camera across the gap | `world-scenery.md` |
 | 68 | A task's close clears its own shared keys | `studio-and-scripts.md` |
+| 69 | Only a walk-out decides "got out" | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

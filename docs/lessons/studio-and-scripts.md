@@ -16,6 +16,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** pasted trial scripts failed to parse because a statement started with `(`, which Luau reads as part of the line before (Tasks 32 and 37). Each failure wasted a Studio call.
 - **Do instead:** put the value in a local first, for example `local parts = (...)`, or `local sh: any = shared` before `sh.x = ...`.
 - **Came back:** Task 47 step 1 (2026-10-28) lost a Studio call to `(shared :: any).x = ...`. A hook (`.claude/hooks/luau-paren-line.py`) now blocks any Studio script with a line starting with `(` before it is sent.
+- **Also (Task 28w, 2026-10-28):** a small fix that removed `tonumber(` from the front of an expression left a line starting with `(` in a job file. Only a grep caught it. After every edit pass on a job file, the writer runs `grep -n "^[[:space:]]*(" <file>`, and a replacement starts with a non-`(` token (for example `0 + (...)`).
 - **Who checks:** `builder`, and the hook.
 
 ## Lesson 22: Long Play work runs in the background
