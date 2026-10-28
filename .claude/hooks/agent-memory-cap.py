@@ -5,7 +5,9 @@ Runs before every tool call. Inside a project agent it reads that agent's
 own transcript, takes the size of its last request (its memory), and:
 - near the limit: lets the call through with a warning to wrap up;
 - any project agent over its limit: blocks every tool except Write/Edit
-  into work/, so it can only write its state note or answer and report.
+  of a note (.md or .txt) in work/, so it can only write its state note or
+  answer and report. Job scripts in work/ are blocked too: two builders kept
+  writing .luau jobs there past the limit (Task 28 step 4).
 Call caps alone kept missing this (tool calls of very different sizes).
 """
 
@@ -41,9 +43,12 @@ def memory_size(path):
     return None
 
 
-def in_work_folder(data):
+NOTE_ENDINGS = (".md", ".txt")
+
+
+def is_work_note(data):
     raw = (data.get("tool_input") or {}).get("file_path") or ""
-    if not raw:
+    if not raw or not raw.lower().endswith(NOTE_ENDINGS):
         return False
     project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
     work_root = os.path.realpath(os.path.join(project, "work"))
@@ -72,7 +77,7 @@ def main():
     limit = LIMITS.get(agent_type, DEFAULT_LIMIT)
     k = f"{size // 1000}k of your {limit // 1000}k limit"
 
-    note_write = data.get("tool_name") in ("Write", "Edit") and in_work_folder(data)
+    note_write = data.get("tool_name") in ("Write", "Edit") and is_work_note(data)
 
     if size >= limit and not note_write:
         out = {
@@ -81,7 +86,7 @@ def main():
                 "permissionDecision": "deny",
                 "permissionDecisionReason": (
                     f"Memory at {k} (agent-workflow.md, 'Agent memory size'). "
-                    "Stop now: write your state note or answer in work/ (Write/Edit there still works), "
+                    "Stop now: write your state note or answer as a .md or .txt file in work/ (only that still works), "
                     "then end with your report. A fresh agent carries on."
                 ),
             }
