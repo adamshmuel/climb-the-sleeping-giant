@@ -133,6 +133,7 @@ local sectionLitLikeBefore = require(script.Parent.S3a2LitLikeBefore)
 local sectionPillowFlat = require(script.Parent.S3dPillowFlat)
 local sectionFolderRecords = require(script.Parent.S3bcCave)
 local sectionSlideGuards = require(script.Parent.S4SlideGuards)
+local sectionBrimFill = require(script.Parent.S4bBrimFill)
 
 return function(): string
 	local ok, message = pcall(sectionHisRealShape)
@@ -527,6 +528,47 @@ return function(): string
 			.. "\nSTOPPED WITH AN ERROR in section 4: "
 			.. tostring(guardsMessage)
 	end
+	local okBrim, brimMessage = pcall(sectionBrimFill)
+	if not okBrim then
+		return "SECTION 1: "
+			.. message
+			.. "\nSECTION 2: "
+			.. walkMessage
+			.. "\nSECTION 2b: "
+			.. headMessage
+			.. "\nSECTION 2c: "
+			.. zoneMessage
+			.. "\nSECTION 2d: "
+			.. railsMessage
+			.. "\nSECTION 2e: "
+			.. footMessage
+			.. "\nSECTION 2f: "
+			.. bodyMessage
+			.. "\nSECTION 2f2: "
+			.. closerMessage
+			.. "\nSECTION 2f3: "
+			.. slotMessage
+			.. "\nSECTION 2f4: "
+			.. trussMessage
+			.. "\nSECTION 2f5: "
+			.. legsMessage
+			.. "\nSECTION 2f6: "
+			.. swingMessage
+			.. "\nSECTION 2g: "
+			.. bellyMessage
+			.. "\nSECTION 3a: "
+			.. pillowMessage
+			.. "\nSECTION 3a2: "
+			.. litMessage
+			.. "\nSECTION 3d: "
+			.. flatMessage
+			.. "\nSECTIONS 3b and 3c: "
+			.. caveMessage
+			.. "\nSECTION 4: "
+			.. guardsMessage
+			.. "\nSTOPPED WITH AN ERROR in section 4b: "
+			.. tostring(brimMessage)
+	end
 	return "SECTION 1 (his real shape): "
 		.. message
 		.. "\n\nSECTION 2 (walk pieces): "
@@ -563,4 +605,6 @@ return function(): string
 		.. caveMessage
 		.. "\n\nSECTION 4 (slide guards and small patches): "
 		.. guardsMessage
+		.. "\n\nSECTION 4b (the hidden brim blocks): "
+		.. brimMessage
 end
