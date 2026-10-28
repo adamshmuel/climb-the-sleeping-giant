@@ -94,4 +94,9 @@ Tasks 30 and 31 cover no spec rule. They follow the project rule "No big files" 
 | A new player's first climb with the phone thumbstick: no hops, no snagging, feet on his cloth | Rule 20, Task 28 | builder, code_lead, game_creator |
 | Rare egg 2 is still easy to reach after its route point moves | Rule 20, Task 19 | builder, code_lead, game_creator |
 | His new shapes are kept with the place (rays in Play match Edit) | Rule 20, Task 19 | builder, code_lead |
+| Pushing by hand into both ends of the cap-brim crease on each side (the open low point is (11.6, 113.9, 10.0) and (-11.6, 113.9, 10.0)): no wedge and no hang, on computer and phone. A wedge fails the review, and the one-number fix (6 calls) follows | Rule 20 (One collision source), Rule 22 (What counts as stuck), Task 54 | product (build review) |
+| Walking past the right arm's stop at (45, 35.5, 7.3): no snag a player would feel | Rule 22 (What counts as stuck), Task 54 | product (build review) |
+| W2: walk from the pillow onto the cushion at (-39.3, 30.7, 33.9), then push 4 ways and jump: the player gets out. If not, designer blocks it with scenery and the cost goes to product | Rule 22 (What counts as stuck), Task 54 (from Task 28x) | product (build review) |
+| On the way to W2, walking past the meadow stop at (-57.5, 2.0, 36.6): no stuck | Rule 22 (What counts as stuck), Task 54 | product (build review) |
+| The hidden brim blocks never show: the brim seen from the player's camera at the cap ladder's top and by both brim nests, on computer and phone; the cap and the Legendary eggs look as approved | Rule 20 (One collision source), Task 54 | designer (build review) |
 | Real phones and live servers | — | Spec 10 (Launch polish) |
