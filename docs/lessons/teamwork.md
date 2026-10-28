@@ -62,3 +62,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **Do instead:** when a task works through a list (spots, parts, places), its first step counts the list in one read-only call, and `code_lead` sizes the task from that count. Product picks a sample rule before Play starts if the count is large.
 - **Also (product):** before a check lists spots, split them by the idea's "What matters most" tiers: play every core spot (near places players need, or out of the rescue's reach) and sample the rest, for example the steepest spot per 4-stud square.
 - **Who checks:** `code_lead` (in the plan and the handoff), main chat.
+
+## Lesson 59: A handoff that names a job's walk points to the lines that do it
+- **What happened:** Task 48's handoff said the Play job walks onto the boot ramp, but the saved job file had no ramp leg, so the builder wrote about 70 lines of it mid-step (2026-10-28).
+- **Do instead:** when a handoff names a walk or check a saved job must do, its author reads that job file first and names the lines that do it.
+- **Who checks:** `code_lead` (in the handoff).
