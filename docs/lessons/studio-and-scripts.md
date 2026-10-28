@@ -85,3 +85,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** a full test run holds Studio for about 56 seconds, past the tool's limit of about 45. Calls made during it came back "not reachable", the retries started second runs, and Task 46 lost about 10 Studio calls (2026-10-28; second time after Lesson 22).
 - **Do instead:** start the full run in the background, with errors caught and a guard that refuses a second start. Wait 60 seconds in Bash, then make one fetch that waits up to 30 seconds and also returns the scan line. After "not reachable", fetch again; never start the run again. The cause fix: the test runner pauses with `task.wait()` after each spec file, so Studio stays reachable (a small task, planned by code_lead).
 - **Who checks:** `code_lead` (in every handoff with a full run), `builder`.
+
+## Lesson 52: `expect` takes one value
+- **What happened:** Task 51 step 1's green run had 2 failures that were bugs in the tests: `expect(string.find(...))` passed several values, and Jest said "Expect takes at most one argument". It cost a Studio call over the cap (2026-10-28).
+- **Do instead:** wrap any function that returns several values in parentheses inside `expect`, for example `expect((string.find(text, "x")))`.
+- **Who checks:** `builder`, `code_lead` (in review).
