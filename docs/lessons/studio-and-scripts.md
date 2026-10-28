@@ -110,6 +110,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 ## Lesson 63: A big job is pasted by a builder with room to spare
 - **What happened:** Task 28 step 1b's builder was resumed at 110k to write and paste an 801-line job. Writing it took it to 143k of 150k, so it stopped before the paste (2026-10-28).
 - **Do instead:** a job over about 300 lines is split (for example, a starts job and a separate check job), or a fresh builder does only the paste and the fetch. The main chat never resumes a builder above 100k for a step that writes a big job.
+- **Also (Task 28 step 1c, 2026-10-28):** a fresh builder writing a 944-line job from pieces of an older one still reached 127k before the paste. Writing and pasting a job over about 300 lines are always two builders: one writes and checks the file, a fresh one only reads it once, pastes it and writes up. The main chat starts them that way even if the handoff names one step.
 - **Who checks:** `code_lead` (sizing the step), the main chat (choosing to resume or start fresh).
 
 ## Lesson 64: A job's walk map holds every place it measures
