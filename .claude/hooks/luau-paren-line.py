@@ -10,42 +10,58 @@ import json
 import re
 import sys
 
-LONG_OPEN = re.compile(r"\[(=*)\[")
-SHORT_STRING = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'")
-LINE_COMMENT = re.compile(r"--(?!\[=*\[).*")
+TOKEN = re.compile(r"\[(=*)\[|--|\"|'")
 
 
-def code_part(line):
-    """The line without short strings and plain -- comments."""
-    return LINE_COMMENT.sub("", SHORT_STRING.sub('""', line))
+def skip_short_string(line, at, quote):
+    """Index just past the string that opens at `at`, or the line's end."""
+    index = at + 1
+    while index < len(line):
+        if line[index] == "\\":
+            index += 2
+        elif line[index] == quote:
+            return index + 1
+        else:
+            index += 1
+    return len(line)
+
+
+def open_closer(line, at, closer):
+    """Scan one line left to right; return the long-bracket closer still open at its end."""
+    while True:
+        if closer:
+            end = line.find(closer, at)
+            if end < 0:
+                return closer
+            at, closer = end + len(closer), None
+        match = TOKEN.search(line, at)
+        if not match:
+            return None
+        token = match.group(0)
+        if token == "--":
+            block = re.match(r"\[(=*)\[", line[match.end() :])
+            if not block:
+                return None
+            at, closer = match.end() + block.end(), "]" + block.group(1) + "]"
+        elif token in ('"', "'"):
+            at = skip_short_string(line, match.start(), token)
+        else:
+            at, closer = match.end(), "]" + match.group(1) + "]"
 
 
 def paren_lines(code):
     found = []
     closer = None
     for number, line in enumerate(code.splitlines(), start=1):
+        at = 0
         if closer:
             end = line.find(closer)
             if end < 0:
                 continue
-            line = line[end + len(closer) :]
-            closer = None
-            if line.lstrip().startswith("("):
-                found.append(number)
-        elif line.lstrip().startswith("("):
+            at, closer = end + len(closer), None
+        if line[at:].lstrip().startswith("("):
             found.append(number)
-        # Look for a long string or block comment that stays open past this line.
-        rest = code_part(line)
-        while True:
-            match = LONG_OPEN.search(rest)
-            if not match:
-                break
-            close = "]" + match.group(1) + "]"
-            end = rest.find(close, match.end())
-            if end < 0:
-                closer = close
-                break
-            rest = rest[end + len(close) :]
+        closer = open_closer(line, at, None)
     return found
 
 
