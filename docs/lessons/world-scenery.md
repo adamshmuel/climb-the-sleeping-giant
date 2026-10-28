@@ -97,3 +97,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 48's trial gap rays started inside the giant's skin, so they called a 25° wedge slot between the plain box and the skin "open". code_lead's measurement found a V-shaped slot 0.3 to 2.5 studs wide: the same trap the box was meant to close. Widening the box buried the slot but made new standing spots with no way down (2026-10-28).
 - **Do instead:** a fill next to a slanted wall measures the wall's distance from inside the fill at several heights, and turns the fill to follow the wall instead of widening it. A high hit counts as a new reach only if a body has room to stand there and it has no routed spot.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 58: A world script says how many parts it will add before it adds them
+- **What happened:** Task 48 added a new world kind to `S4SlideGuards.luau`, and the old final world (task33) turned into a "before" world. Its list of missing parts had never been checked, so run 1 added the R-141 box plus 26 copies of parts already there. Run 2 then saw a world it didn't know and stopped (2026-10-28).
+- **Do instead:** before placing anything, a world script prints how many parts it will add. The job stops unless that matches the plan (for Task 48: 1).
+- **Who checks:** `code_lead` (in the plan and handoff), `builder`.
