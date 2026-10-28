@@ -71,6 +71,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 59 | A handoff that names a job's walk points to the lines that do it (extended: seeds come from measured positions) | `teamwork.md` |
 | 60 | A plan counts Studio calls for every step | `teamwork.md` |
 | 61 | A handoff's world names are checked before the builder starts | `teamwork.md` |
+| 62 | A saved walk map goes stale when the world changes | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

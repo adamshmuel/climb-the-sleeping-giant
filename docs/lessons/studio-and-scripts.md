@@ -101,3 +101,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 47's replay reported "0 hangs" without showing how close any spot came, so nobody could check the zero, and it didn't record where the 2 stuck walk-outs stopped. Task 48 now needs an extra Studio call to measure those points (2026-10-28).
 - **Do instead:** a Play job that finds 0 problems also prints its closest case (for hangs: the longest pressed run under 1 stud, and where it was), and records where each failure happened: the point where it stopped and where each push ended, never only distances. A push that starts after the body settles measures from the settle point, not from the trap (Task 48's re-plan).
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 62: A saved walk map goes stale when the world changes
+- **What happened:** Task 28 step 1b's handoff would have reused the walk map saved in `shared.T45`, built before Tasks 46-50 changed the world (2026-10-28). code_lead caught it while checking the handoff's world names.
+- **Do instead:** a job builds a fresh walk map, unless the saved map was built after the last world change and the handoff says so.
+- **Who checks:** `code_lead` (in the handoff), builder.
