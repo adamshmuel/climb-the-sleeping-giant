@@ -23,6 +23,7 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **Also (Task 33 step d):** when a script's output is cut short, keep its end, not its start. The world script's result lines come last, and a cut at the first 700 characters lost the line for the one part that was placed.
 - **Also (Task 45 step 1):** never call `get_console_output` after a test run. It returns the whole log of earlier runs (about 10k tokens). Read only the run's own short return value.
 - **Also (Task 54 call 5, 2026-10-28):** the crease check reported only "4 of 5" per side, so the failing call couldn't name the open point for the next owner. A check that can fail names each failing point (its label and which test missed), not only the count.
+- **Also (Task 8 call 4, 2026-10-28):** Studio cuts a call's returned text at 1024 characters, and the legs job's summary came to about 1500, so the cut would have lost the cuff lines that mattered most. code_lead caught it in the read before the paste. The writer estimates the length, prints the most important lines first, and ends with `string.sub(text, 1, 1000)`.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
 
 ## Lesson 24: The handoff names the exact files and lines
