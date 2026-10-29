@@ -41,11 +41,8 @@ def blocked(command, depth=0):
     try:
         words = words_of(command)
     except ValueError:
-        # The whole command must parse; a quoted part that doesn't (a commit
-        # message with "can't") can't run as a command either, and the raw
-        # check above has already scanned it.
-        if depth == 0:
-            raise
+        # Heredoc bodies and prose ("isn't") don't split like shell words. The
+        # raw check above has already scanned the whole text, so that decides.
         return False
     for word in words:
         # X=osascript, or a quoted command run by bash -c / eval.
