@@ -36,7 +36,9 @@ def words_of(command):
 
 
 def blocked(command, depth=0):
-    if "system events" in command.lower() or RAW.search(command):
+    # Also scan with quotes and backslashes removed, so osa"script" or o\sascript can't hide.
+    plain = re.sub(r"[\\'\"]", "", command)
+    if "system events" in plain.lower() or RAW.search(command) or RAW.search(plain):
         return True
     try:
         words = words_of(command)

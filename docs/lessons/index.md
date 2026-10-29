@@ -139,6 +139,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 127 | Check every start again after a start-check change | `studio-and-scripts.md` |
 | 128 | Measure "home" against the spawn spot, not a box near it | `studio-and-scripts.md` |
 | 129 | Fakes must spawn bodies in the engine's order | `studio-and-scripts.md` |
+| 130 | Re-prove only what failed | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

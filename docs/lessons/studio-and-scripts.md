@@ -363,3 +363,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 13's unit tests were green, but in Play the new body after a fall stayed on the home spawn. The fakes fire CharacterAdded with the body already in the world; the engine fires it before the body is put in the Workspace, so a deferred move can run too early.
 - **Do instead:** a test of anything placed on respawn puts the fake body into the world after CharacterAdded, and checks the move happens after that.
 - **Who checks:** `code_lead` when reviewing respawn tests.
+
+## Lesson 130: Re-prove only what failed
+- **What happened:** after Task 13's 5d Play, the planned re-proof would have run all three deaths again, though deaths B and C were already measured correctly and only the job's check was wrong.
+- **Do instead:** a re-proof Play covers only the rules that failed on the feature. The rest are accepted from the failed run's measured lines.
+- **Who checks:** `product` when ruling on a re-proof, and `code_lead` when sizing it.
