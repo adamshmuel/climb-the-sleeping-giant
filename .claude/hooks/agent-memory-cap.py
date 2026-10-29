@@ -140,6 +140,10 @@ def main():
     limit = LIMITS.get(agent_type, DEFAULT_LIMIT)
     note_write = data.get("tool_name") in ("Write", "Edit") and is_work_note(data)
     studio_call = data.get("tool_name") == "mcp__Roblox_Studio__execute_luau"
+    # The report itself always goes through: two builders over the cap ended
+    # with no report because this hook blocked the hand-back (Task 11 and 12, step 4).
+    if data.get("tool_name") == "SubagentHandback":
+        return
 
     deny = []
     context = []
@@ -148,7 +152,7 @@ def main():
         if size >= limit:
             deny.append(
                 f"Memory at {k} (agent-workflow.md, 'Agent memory size'). "
-                "Stop now: write your state note or answer as a .md or .txt file in work/ (only that still works), "
+                "Stop now: write your state note or answer as a .md or .txt file in work/ (only that and your report still work), "
                 "then end with your report. A fresh agent carries on."
             )
         elif size >= limit * WARN_AT:
@@ -167,7 +171,7 @@ def main():
         n = f"This is about tool call {calls + 1}; the cap is {CALL_CAP} per job (agent-workflow.md, 'Size steps by tool calls')."
         if calls >= CALL_CAP + CALL_GRACE or (calls >= CALL_CAP and not studio_call):
             deny.append(
-                f"{n} Over the cap: only a .md or .txt note in work/ still works"
+                f"{n} Over the cap: only a .md or .txt note in work/ and your report still work"
                 + (f", and up to {CALL_GRACE} Studio calls to finish a world change or fetch a running job" if calls < CALL_CAP + CALL_GRACE else "")
                 + ". Write your state note and report the real count."
             )
