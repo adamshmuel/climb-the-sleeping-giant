@@ -109,6 +109,20 @@ What this project learned the hard way, so it doesn't happen again.
 | 97 | The task that builds a look checks it in Play | `teamwork.md` |
 | 98 | Each shared place word is defined once | `teamwork.md` |
 | 99 | Writing a Play job is a step of its own | `teamwork.md` |
+| 100 | Set a proof's tries by how much the spot matters | `teamwork.md` |
+| 101 | Tests run red before any code is written | `studio-and-scripts.md` |
+| 102 | Pass in the lookup when a property is read-only | `studio-and-scripts.md` |
+| 103 | The memory hook always lets the report through | `teamwork.md` |
+| 104 | Write job text with backtick strings | `studio-and-scripts.md` |
+| 105 | Measure the place, or quote the newest ruling | `teamwork.md` |
+| 106 | A grab step checks the prompt is really shown | `studio-and-scripts.md` |
+| 107 | Every whole-session proof grabs after a real respawn | `teamwork.md` |
+| 108 | A silent-meter check runs with and without an egg | `studio-and-scripts.md` |
+| 109 | A Play job reads the game's own signal and stops input when it fires | `studio-and-scripts.md` |
+| 110 | Compare feet with feet | `studio-and-scripts.md` |
+| 111 | Listen to changes with times, don't poll afterwards | `studio-and-scripts.md` |
+| 112 | Decide from the numbers when the timing makes the result certain | `teamwork.md` |
+| 113 | Every size counts the Studio calls of its test runs | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

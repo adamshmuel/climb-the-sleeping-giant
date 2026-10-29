@@ -250,3 +250,43 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 11's Play check pressed Roblox's real Reset button in the garden, where the old Reset and the new one do the same thing, so it couldn't prove the new path (code_lead's review, 2026-10-29).
 - **Do instead:** a Play check presses the button where the new behaviour gives a different result (on the giant). If it can't, the report names that check as not proven, and the plan names the task that proves it.
 - **Who checks:** `code_lead` (plan's "Done when"), `product` (approves the check).
+
+## Lesson 101: Tests run red before any code is written
+- **What happened:** In Task 12 step 1 a builder wrote the code and its tests together, then stubbed the code out to see a red.
+- **Do instead:** write the tests first, run them and watch them fail, and only then write the code (`tdd.md`). Every step prompt says so in one line.
+- **Who checks:** `builder`, `code_lead` (review), the main chat (prompt).
+
+## Lesson 102: Pass in the lookup when a property is read-only
+- **What happened:** A Humanoid's `MoveDirection` can't be set by a script, so a client test couldn't drive a real one (Task 12 step 3).
+- **Do instead:** the module takes the Humanoid lookup as a dependency, and the test passes a stand-in with `MoveDirection` and `GetPropertyChangedSignal`.
+- **Who checks:** `builder`, `code_lead` (review).
+
+## Lesson 104: Write job text with backtick strings
+- **What happened:** StyLua spread long `..` and `string.format` lines over many lines, so a 280-line job became 425, over the 300-line limit (Task 12 step 4).
+- **Do instead:** write job text with backtick interpolation, and plan a two-part split from the start when a job is near the limit.
+- **Who checks:** `builder`, `scripts/job-check.sh` (size).
+
+## Lesson 106: A grab step checks the prompt is really shown
+- **What happened:** A grab reused from an earlier task did nothing in a new session (Task 12 step 5): the hold fired nothing.
+- **Do instead:** before the hold, the job prints whether the prompt is enabled and shown, the distance, and where the camera faces. It never assumes the hold works.
+- **Who checks:** `builder`, `code_lead` (reads the job).
+
+## Lesson 108: A silent-meter check runs with and without an egg
+- **What happened:** A "the meter never rose" check ran with no egg, so it said nothing about the rule for carriers (Task 12 step 5b).
+- **Do instead:** a silent-meter check runs with and without an egg, each with its own control.
+- **Who checks:** `code_lead` (handoff), `builder`.
+
+## Lesson 109: A Play job reads the game's own signal and stops input when it fires
+- **What happened:** Two Play reruns failed on the job's own checks: it measured the move from where the try began and kept pressing after the rescue (Task 12 step 5b).
+- **Do instead:** the job reads pass or fail from the game's own event (for example the Rescued remote's from and to) and stops the player's input the moment it fires.
+- **Who checks:** `code_lead` (reads the job), `builder`.
+
+## Lesson 110: Compare feet with feet
+- **What happened:** The rescue compared a safe spot's feet with the body's middle, about 3 studs higher, so "at least 4 studs" let 2.65 through (Task 12 step 5b).
+- **Do instead:** a distance between two places measures the same point on both, and its test uses a real body height.
+- **Who checks:** `builder` (tests), `code_lead` (review).
+
+## Lesson 111: Listen to changes with times, don't poll afterwards
+- **What happened:** A check that read `Carrying` from 1.3 s after the grab could miss an egg taken and lost in between (Task 12 step 5).
+- **Do instead:** the job listens to the change event from the start and keeps every change with its time.
+- **Who checks:** `builder`, `code_lead` (reads the job).

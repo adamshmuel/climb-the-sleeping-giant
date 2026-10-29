@@ -115,3 +115,33 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 11 step 4 held three jobs (the client button, the full test run and writing the Play job), and the builder used 37 tool calls against a cap of 30, ending without a hand-back.
 - **Do instead:** writing a Play job is its own step in the handoff, with its own cap, separate from the code and from running the job.
 - **Who checks:** `code_lead` (handoff steps), the main chat (prompt cap).
+
+## Lesson 100: Set a proof's tries by how much the spot matters
+- **What happened:** Task 12's Play proof copied "3 of 3 tries" onto every spot, low-value ones too, and grew to about 80 tries that couldn't fit 6 steps (code_lead and product, 2026-10-29).
+- **Do instead:** the plan sets how many tries each spot needs by how much it matters: one try where players can't normally go, 3 of 3 where they can. A proof too big for one task is split into its own tasks when the plan is written, not at handoff.
+- **Who checks:** `code_lead` (plan), `product` (approves the proof).
+
+## Lesson 103: The memory hook always lets the report through
+- **What happened:** Once an agent was over its memory cap, the hook blocked every tool, the hand-back too, so two builders ended with no report (Task 11 and 12, step 4).
+- **Do instead:** the hook lets the report through every time. A blocked report is a tool problem to fix, not the agent's fault.
+- **Who checks:** the main chat (hooks).
+
+## Lesson 105: Measure the place, or quote the newest ruling
+- **What happened:** Task 12's plan called the pillow Meadow ground from the spec's old wording, and a later ruling had already called it Belly ground (Task 41). Both came from old text, not a check.
+- **Do instead:** a handoff names a spot's zone only from a `Zones.zoneAt` reading in the names-check call. Before quoting an owner's decision, search `work/` and `docs/` for later rulings on the same thing and quote the newest.
+- **Who checks:** `code_lead` (handoff), `product` (rulings).
+
+## Lesson 107: Every whole-session proof grabs after a real respawn
+- **What happened:** Only a real-key Reset before a grab showed that a player may get no egg after a respawn. No earlier Play log covered it (Task 12 step 5).
+- **Do instead:** every whole-session Play proof includes at least one grab after a real respawn.
+- **Who checks:** `code_lead` (plan), `product` (build review).
+
+## Lesson 112: Decide from the numbers when the timing makes the result certain
+- **What happened:** A Play test already showed a rescue loop that the timing made certain (0.3 s to walk back, 3 s to be rescued again), yet the first ruling waited for another Play run to show it.
+- **Do instead:** when the timing makes the result certain, the owner decides the fix from the numbers now and doesn't spend a Play run on it.
+- **Who checks:** `product`, `game_creator`.
+
+## Lesson 113: Every size counts the Studio calls of its test runs
+- **What happened:** A ruling counted Task 12e's test runs as 0 Studio calls, but the red run, the full run and its fetch need 3, which left the task no spare call.
+- **Do instead:** every size in a ruling or plan counts the Studio calls of its test runs.
+- **Who checks:** `product` (rulings), `code_lead` (plan).
