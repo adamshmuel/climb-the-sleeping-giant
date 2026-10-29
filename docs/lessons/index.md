@@ -127,6 +127,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 115 | Don't start a test name with "picks the" | `teamwork.md` |
 | 116 | Start a timed action from a signal inside the key call | `studio-and-scripts.md` |
 | 117 | Measure "stands still" along the ground | `studio-and-scripts.md` |
+| 118 | A job prints its own proof of a fail | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

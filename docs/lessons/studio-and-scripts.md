@@ -305,3 +305,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12e's Play check said "the root moves less than 0.5 studs in the held second", measured in 3D. A rescue lands the feet 0.5 studs above the spot, so the body settled 0.6 studs down while the player was held, and a good try failed by 0.026 studs. The rerun cost 4 Studio calls over the task's cap.
 - **Do instead:** measure "stands still" along the ground (X and Z), and check separately that the body doesn't rise. Before writing a distance limit, look up any lift or drop the game itself makes (here `LIFT` in `Recovery.luau`).
 - **Who checks:** `code_lead` (pass list), `builder` (job).
+
+## Lesson 118: A job prints its own proof of a fail
+- **What happened:** Task 12e's phone check failed "meter never rose" (0.8). The job kept the meter's ticks under the key `B1#1`, but the builder read `B1`. Play was stopped, so the only proof of when the meter rose was lost, and finding the cause needs a rerun over the task's cap.
+- **Do instead:** when a check fails, the job itself prints the moment it failed (the tick, the value and what the body was doing) in its result lines. It never relies on a second read by key. Each table a job keeps prints its exact key next to it.
+- **Who checks:** `code_lead` (reads the job), `builder` (job).
