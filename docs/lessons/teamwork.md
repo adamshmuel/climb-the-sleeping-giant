@@ -145,3 +145,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** A ruling counted Task 12e's test runs as 0 Studio calls, but the red run, the full run and its fetch need 3, which left the task no spare call.
 - **Do instead:** every size in a ruling or plan counts the Studio calls of its test runs.
 - **Who checks:** `product` (rulings), `code_lead` (plan).
+
+## Lesson 115: Don't start a test name with "picks the"
+- **What happened:** In the Task 12e handoff, a test named "picks the safe spot" failed `scripts/job-check.sh --handoff`. The check reads "picks the" as a job picking a world part by name, and wants that part in the world-names table.
+- **Do instead:** name tests by where the player ends up, for example "lands on the safe spot" or "ends at the safe spot", never "picks the ...".
+- **Who checks:** `code_lead` (handoff), `builder` (test names).
