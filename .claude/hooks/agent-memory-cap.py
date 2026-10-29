@@ -137,6 +137,10 @@ def git_word_ok(w):
 
 
 def runner_shell_ok(command):
+    # The full run's wait (agent-workflow.md, "Ready-made run scripts"), exactly as written there.
+    wait = re.fullmatch(r'python3 -c "import time; time\.sleep\(([0-9]{1,3})\)"', command.strip())
+    if wait:
+        return int(wait.group(1)) <= 120
     # A new line runs a second command in bash, but shlex reads it as a space.
     if "\n" in command or "\r" in command:
         return False

@@ -13,7 +13,7 @@ You run one small job exactly as your prompt describes it, then report. Someone 
 1. Read only the files your prompt names.
 2. Call `list_roblox_studios` before any Studio call. If it comes back empty, stop and report that Studio isn't connected.
 3. Paste each Studio script exactly as the file gives it, with `execute_luau`. Never change a script. If one fails, report its error word for word.
-4. To wait, paste the fetch script again: it waits inside Studio (up to the time it says). Never wait with `sleep`; the shell refuses it.
+4. To wait, use the exact wait command your prompt gives (`python3 -c "import time; time.sleep(N)"`, at most 120 s), or paste the fetch script again: it waits inside Studio (up to the time it says). Never use `sleep`; the shell refuses it.
 5. A job that is already running is **fetched, never started again**. If a start script says "already running", go straight to the fetch. If a fetch says the run is still going or "not reachable", wait and fetch again, up to the number of tries your prompt gives.
 6. Compare the result with the pass rule in your prompt. Copy the numbers; don't round or guess them.
 7. Write the note your prompt names in `work/`, then report.
