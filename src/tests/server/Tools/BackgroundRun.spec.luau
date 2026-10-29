@@ -23,15 +23,20 @@ describe("BackgroundRun", function()
 		folder:Destroy()
 	end)
 
-	local function failedTest(name: string): any
-		return { status = "failed", fullName = name, failureMessages = { string.rep("x", 300) } }
+	local function failedTest(name: string, message: string?): any
+		return { status = "failed", fullName = name, failureMessages = { message or string.rep("x", 300) } }
 	end
 
 	-- A Jest-shaped result: `failedNames` become failed tests, the rest of the passed count are passed ones.
-	local function fakeResults(passed: number, failedNames: { string }, brokenSuites: number?): any
+	local function fakeResults(
+		passed: number,
+		failedNames: { string },
+		brokenSuites: number?,
+		messages: { [string]: string }?
+	): any
 		local tests: { any } = {}
 		for _, name in failedNames do
-			table.insert(tests, failedTest(name))
+			table.insert(tests, failedTest(name, if messages ~= nil then messages[name] else nil))
 		end
 		return {
 			numPassedTests = passed,
@@ -95,7 +100,7 @@ describe("BackgroundRun", function()
 		local run = newRun(finishedRunner(fakeResults(10, names)))
 		run.start(nil)
 		local parts = lines(run.fetch(0))
-		expect(parts[3]).toBe("FAILED: " .. string.rep("n", 100))
+		expect(parts[3]).toBe("FAILED: " .. string.rep("n", 100) .. " | " .. string.rep("x", 150))
 		local last = parts[#parts]
 		local more = string.match(last, "^and (%d+) more$")
 		expect(more).never.toBeNil()
@@ -110,9 +115,25 @@ describe("BackgroundRun", function()
 		expect(parts).toEqual({
 			"TESTS FAILED",
 			"5 passed, 2 failed, 0 suites could not run",
-			"FAILED: Alpha one",
-			"FAILED: Beta two",
+			"FAILED: Alpha one | " .. string.rep("x", 150),
+			"FAILED: Beta two | " .. string.rep("x", 150),
 		})
+	end)
+
+	it("a failed test's line carries its first failure message, cut short", function()
+		local run = newRun(finishedRunner(fakeResults(5, { "Alpha one" })))
+		run.start(nil)
+		expect(lines(run.fetch(0))[3]).toBe("FAILED: Alpha one | " .. string.rep("x", 150))
+	end)
+
+	it("a message with many lines is joined on one line, with blank lines and colours removed", function()
+		local message =
+			"\27[2mexpect(received).toBe(expected)\27[0m\n\nExpected: \27[32m0\27[0m\nReceived: \27[31m2\27[0m"
+		local run = newRun(finishedRunner(fakeResults(5, { "Beta two" }, nil, { ["Beta two"] = message })))
+		run.start(nil)
+		expect(lines(run.fetch(0))[3]).toBe(
+			"FAILED: Beta two | expect(received).toBe(expected) / Expected: 0 / Received: 2"
+		)
 	end)
 
 	it("starts with TESTS PASSED and has no failed-test lines when everything passes", function()

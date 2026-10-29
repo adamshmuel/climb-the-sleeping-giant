@@ -6,12 +6,7 @@
 -- After that come every suite that could not run and every failed test with its messages.
 
 local ServerStorage = game:GetService("ServerStorage")
-
--- Jest colours its messages with ANSI codes, which only look like junk in plain text.
-local function stripColors(text: string): string
-	local plain = string.gsub(text, "\27%[[%d;]*m", "")
-	return plain
-end
+local stripColors = require(ServerStorage.Tests.PlainText).stripColors
 
 local function describeError(value: any): string
 	if type(value) == "table" then

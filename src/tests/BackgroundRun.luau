@@ -8,8 +8,11 @@ export type Runner = (filter: string?, progress: (number) -> ()) -> any
 export type Deps = { runner: Runner, folder: Instance, extra: (() -> string)? }
 export type Run = { start: (filter: string?) -> string, fetch: (maxWait: number) -> string }
 
+local PlainText = require(game:GetService("ServerStorage").Tests.PlainText)
+
 local REPORT_LIMIT = 880 -- characters: a safe margin under the 900 the report must stay below
 local NAME_LIMIT = 100 -- characters kept of each failed test's name
+local WHY_LIMIT = 150 -- characters kept of each failed test's first failure message
 local EXTRA_LIMIT = 200 -- characters kept of the extra line
 local ERROR_LIMIT = 300 -- characters kept of an error message
 local MORE_LINE_RESERVE = 24 -- room kept free for the closing "and N more" line
@@ -21,12 +24,33 @@ local function cut(text: string, limit: number): string
 	return string.sub(text, 1, limit)
 end
 
+-- The test's first failure message on one line: colours removed, blank lines dropped, lines joined with " / ".
+local function whyText(test: any): string?
+	local first = (test.failureMessages or {})[1]
+	if first == nil then
+		return nil
+	end
+	local kept: { string } = {}
+	for _, line in string.split(PlainText.stripColors(tostring(first)), "\n") do
+		if string.find(line, "%S") ~= nil then
+			table.insert(kept, line)
+		end
+	end
+	if #kept == 0 then
+		return nil
+	end
+	return cut(table.concat(kept, " / "), WHY_LIMIT)
+end
+
+-- One entry per failed test: its cut name, then " | " and its cut message when it has one.
 local function failedNames(results: any): { string }
 	local names: { string } = {}
 	for _, suite in results.testResults or {} do
 		for _, test in suite.testResults or {} do
 			if test.status == "failed" then
-				table.insert(names, cut(tostring(test.fullName), NAME_LIMIT))
+				local name = cut(tostring(test.fullName), NAME_LIMIT)
+				local why = whyText(test)
+				table.insert(names, if why ~= nil then `{name} | {why}` else name)
 			end
 		end
 	end
