@@ -290,3 +290,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** A check that read `Carrying` from 1.3 s after the grab could miss an egg taken and lost in between (Task 12 step 5).
 - **Do instead:** the job listens to the change event from the start and keeps every change with its time.
 - **Who checks:** `builder`, `code_lead` (reads the job).
+
+## Lesson 114: Carry an egg home into the garden box, not onto the spawn spot
+- **What happened:** Task 12d's job "carried the egg home" by moving onto the plot's SpawnSpot, but that spot is 18 studs outside the garden, so nothing was banked and it looked like a game bug.
+- **Do instead:** a job that carries an egg home moves to the plot's `GardenVolume` pivot, inside the fence. Its writer checks the bank zone in `src/` (`Eggs/Banking.luau`) before writing the job.
+- **Who checks:** `builder` (job), `code_lead` (reads the job).

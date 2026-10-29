@@ -123,6 +123,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 111 | Listen to changes with times, don't poll afterwards | `studio-and-scripts.md` |
 | 112 | Decide from the numbers when the timing makes the result certain | `teamwork.md` |
 | 113 | Every size counts the Studio calls of its test runs | `teamwork.md` |
+| 114 | Carry an egg home into the garden box, not onto the spawn spot | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
