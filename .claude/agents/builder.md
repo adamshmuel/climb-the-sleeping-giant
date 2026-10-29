@@ -66,6 +66,8 @@ Use the `superpowers:verification-before-completion` skill. Prove it, don't clai
 3. Rojo synced your changed files into Studio. Check with `script_read`. If they're stale, make sure `rojo serve` is running (start it in the background if not). If the Rojo plugin is disconnected, say so.
 4. You played it yourself ("Everyone uses the game" in `agent-workflow.md`). Start Play, walk the character through what the task changed, and check `get_console_output` for errors. If the player can see the change, take `screen_capture` screenshots of every state it touches, on the computer screen and a phone screen. Compare them with the spec and the mockups, and look at the whole screen, not just your part. Stop play afterwards.
 
+**When all four checks pass, stop and report.** Every check above is required, and so are the tests and screenshots the handoff names. Don't add rounds the handoff didn't ask for: no second review of your own code, no extra tests for cases the spec doesn't name, no polish. `code_lead` reviews next and asks for anything missing.
+
 Then reply:
 ```
 DONE Task N: <name>
