@@ -144,6 +144,21 @@ The main chat's own memory grows too, and it follows two rules:
 - **Relay by file, not by pasting.** When an agent's report has to go to another agent, the main chat saves it once in the `work/` folder and sends the path with a short summary. It never pastes a long report into a message. Reports to Adam stay short.
 - **Let the app compact it.** The chat can't compact itself, and Adam isn't asked to. The app compacts the chat automatically at about 200k tokens (`autoCompactWindow` in `.claude/settings.local.json`), which can happen at any moment. So the main chat updates the "Now" section of `docs/handoff.md` after every agent step, not only after every approved task, and a compacted chat picks up from that file with nothing lost.
 
+## Model per job
+
+A cheaper model costs less for every word it reads, so each job uses the cheapest model that can do it well (decided 2026-10-29).
+
+| Kind of job | Model |
+|---|---|
+| **Thinking:** ideas, looks, specs, plans, reviews, rulings, finding why something failed | Opus (the default of `game_creator`, `designer`, `product` and `code_lead`) |
+| **Building:** writing tests, code and Play jobs; running Play and judging it against a pass list | Sonnet (the default of `builder`) |
+| **Running only:** a full test run and its fetch, fetching a job that's already running, copying files, filling a table from given numbers | Haiku |
+
+- **Each handoff step names its model** in its heading, for example "## Step 3: The full run (2 Studio calls, Haiku)". `code_lead` picks it from the table. `scripts/job-check.sh --handoff` fails a step heading with no model.
+- **The main chat starts each step with that model** (the Agent tool's `model`). A resumed agent keeps its model, so a step on a different model gets a fresh agent, given the handoff and the last state note.
+- **Jobs outside a handoff** (a question, a check, a progress update) get their model from the same table, written by the main chat when it starts the job.
+- **If a cheaper model fails a step** (wrong calls, a misread result), the step goes back up one model, and that kind of job moves up in this table. It's logged in the problems log like any other unplanned stop.
+
 ## Fewer round trips
 
 Most of an agent's cost is rereading its memory before every step, so every extra step, stop and question costs a full reread. The work stays the same; the trips get fewer.

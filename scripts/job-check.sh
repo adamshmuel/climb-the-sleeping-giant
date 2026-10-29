@@ -51,7 +51,16 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Print cross-check counts; stop only on a lost or broken input, marked \"(lost input)\" (Lesson 84)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, and no stop rests on a measured count."
+	# Each step runs on the cheapest model that can do it (agent-workflow.md,
+	# "Model per job"), so every step heading names one.
+	nomodel=$(grep -nE '^## Step [0-9]' "$@" | grep -viE '\b(haiku|sonnet|opus)\b')
+	if [ -n "$nomodel" ]; then
+		echo "$nomodel"
+		echo "Handoff check FAILED: each step heading above names no model (Haiku, Sonnet or Opus)."
+		echo "Pick it from agent-workflow.md, \"Model per job\"."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, and every step names its model."
 	exit 0
 fi
 joined=0
