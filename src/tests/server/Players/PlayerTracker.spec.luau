@@ -8,30 +8,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
+local TrackerRig = require(script.Parent.TrackerRig)
+
+local makeCharacter = TrackerRig.makeCharacter
+local rootOf = TrackerRig.rootOf
+local groundSpeedRig = TrackerRig.groundSpeedRig
+local noZones = TrackerRig.noZones
+local noGardens = TrackerRig.noGardens
 
 -- Under strict typing a plain local widens "Belly" to `string`, so each zone is declared with its type.
 local BELLY: Config.ZoneName = "Belly"
 
--- A character with no parent, so the test never changes the place. Destroy it when the test is done.
-local function makeCharacter(position: Vector3, health: number?): Model
-	local character = Instance.new("Model")
-	local humanoid = Instance.new("Humanoid")
-	humanoid.Health = health or 100
-	humanoid.Parent = character
-	local root = Instance.new("Part")
-	root.Name = "HumanoidRootPart"
-	root.Anchored = true
-	root.Position = position
-	root.Parent = character
-	return character
-end
-
-local function rootOf(character: Model): BasePart
-	return character:FindFirstChild("HumanoidRootPart") :: BasePart
-end
-
-local noZones: { Zones.ZoneBox } = {}
-local noGardens: { Zones.GardenBox } = {}
 local neverGrounded = function(_character: Model): boolean
 	return false
 end
@@ -290,42 +277,6 @@ describe("PlayerTracker tick", function()
 		character:Destroy()
 	end)
 end)
-
--- A tracker for one character, with a clock and a "standing on the ground" switch the test sets by hand.
-type Rig = {
-	tracker: PlayerTracker.Tracker,
-	setTime: (seconds: number) -> (),
-	setGrounded: (grounded: boolean) -> (),
-}
-
-local function groundSpeedRig(character: Model): Rig
-	local players: { PlayerTracker.PlayerLike } = { { UserId = 1, Character = character } }
-	local time = 0
-	local grounded = false
-	local tracker = PlayerTracker.new({
-		getPlayers = function()
-			return players
-		end,
-		zoneBoxes = noZones,
-		gardens = noGardens,
-		isGrounded = function(_character: Model): boolean
-			return grounded
-		end,
-		takeoffs = neverTookOff,
-		now = function()
-			return time
-		end,
-	})
-	return {
-		tracker = tracker,
-		setTime = function(seconds: number)
-			time = seconds
-		end,
-		setGrounded = function(value: boolean)
-			grounded = value
-		end,
-	}
-end
 
 describe("PlayerTracker groundSpeed", function()
 	it("a character that moved 4.8 studs across the ground in 0.5 s goes 9.6 studs a second", function()
@@ -742,153 +693,6 @@ describe("PlayerTracker jumps", function()
 		end
 
 		expect(thuds).toEqual({ 3, 5, 8 }) -- the first two at the next take-offs, the last at rest
-
-		character:Destroy()
-	end)
-end)
-
--- Puts the character at `x` across and `y` up, then reads the tracker once at `seconds`.
-local function readAt(rig: Rig, character: Model, seconds: number, x: number, y: number): PlayerTracker.Sample
-	rig.setTime(seconds)
-	rootOf(character).Position = Vector3.new(x, y, 0)
-	return rig.tracker:tick()[1]
-end
-
-describe("PlayerTracker moved and shaking", function()
-	it("a moved player adds no walking noise on the next tick", function()
-		local character = makeCharacter(Vector3.new(0, 5, 0))
-		local rig = groundSpeedRig(character)
-		rig.setGrounded(true)
-		for step = 0, 3 do
-			readAt(rig, character, step * 0.1, step * 1, 5) -- a walk, a stud a tick
-		end
-
-		rig.tracker:moved(1)
-		local sample = readAt(rig, character, 0.4, 4 + 1.5, 5) -- the move put them 1.5 studs on
-
-		expect(sample.moving).toBe(false)
-		expect(sample.groundSpeed).toBe(0)
-
-		character:Destroy()
-	end)
-
-	it("a player moved during a fall makes no thud when they land", function()
-		local character = makeCharacter(Vector3.new(0, 50, 0))
-		local rig = groundSpeedRig(character)
-		local root = rootOf(character)
-		root.AssemblyLinearVelocity = Vector3.new(0, -40, 0)
-		for step = 1, 3 do
-			expect(readAt(rig, character, step * 0.1, 0, 50).thudFrom).toBeNil() -- a fast fall has started
-		end
-
-		rig.tracker:moved(1) -- the move also stops all speed, as Recovery does
-		root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-		rig.setGrounded(true)
-		local thuds = 0
-		for step = 4, 12 do
-			if readAt(rig, character, step * 0.1, 8, 30).thudFrom ~= nil then
-				thuds += 1
-			end
-		end
-
-		expect(thuds).toBe(0)
-
-		character:Destroy()
-	end)
-
-	it("a player shaking 0.6 studs back and forth every tick makes no walking noise", function()
-		local character = makeCharacter(Vector3.new(0, 5, 0))
-		local rig = groundSpeedRig(character)
-		rig.setGrounded(true)
-
-		local noisyTicks = 0
-		for step = 1, 20 do
-			local sample = readAt(rig, character, step * 0.1, if step % 2 == 1 then 0.6 else 0, 5)
-			if sample.moving then
-				noisyTicks += 1
-			end
-		end
-
-		expect(noisyTicks).toBe(0)
-
-		character:Destroy()
-	end)
-
-	it("a tiptoer still counts as moving from the second step", function()
-		local character = makeCharacter(Vector3.new(0, 5, 0))
-		local rig = groundSpeedRig(character)
-		rig.setGrounded(true)
-
-		local moving: { boolean } = {}
-		for step = 0, 14 do
-			table.insert(moving, readAt(rig, character, step * 0.1, step * 0.96, 5).moving)
-		end
-
-		expect(moving[1]).toBe(false) -- the first sample has no step before it
-		expect(moving[2]).toBe(false) -- 0.96 studs is under the 1 stud trip
-		for index = 3, 15 do
-			expect(moving[index]).toBe(true)
-		end
-
-		character:Destroy()
-	end)
-
-	it("a body shaking in a 1.6-stud gap while pressing makes no walking noise", function()
-		local character = makeCharacter(Vector3.new(0, 5, 0))
-		local rig = groundSpeedRig(character)
-		rig.setGrounded(true)
-
-		for step = 0, 19 do
-			readAt(rig, character, step * 0.1, 0, 5) -- stands still for 2 seconds
-		end
-		local line = { 0.8, 1.6, 0.8, 0 } -- one point a tick, through the whole gap and back
-		local noisyTicks = 0
-		for shake = 1, 30 do
-			local sample = readAt(rig, character, (19 + shake) * 0.1, line[(shake - 1) % 4 + 1], 5)
-			if sample.moving then
-				noisyTicks += 1
-			end
-		end
-
-		expect(noisyTicks).toBe(0)
-
-		character:Destroy()
-	end)
-
-	it("after standing still, a tiptoer counts as moving once 1.8 studs from where they stood", function()
-		local character = makeCharacter(Vector3.new(0, 5, 0))
-		local rig = groundSpeedRig(character)
-		rig.setGrounded(true)
-
-		for step = 0, 19 do
-			readAt(rig, character, step * 0.1, 0, 5) -- stands still for 2 seconds
-		end
-		local moving: { boolean } = {}
-		for walk = 1, 10 do
-			table.insert(moving, readAt(rig, character, (19 + walk) * 0.1, walk * 0.96, 5).moving)
-		end
-
-		expect(moving[1]).toBe(false) -- 0.96 studs from where they stood
-		for index = 2, 10 do
-			expect(moving[index]).toBe(true) -- 1.92 studs and on
-		end
-
-		character:Destroy()
-	end)
-
-	it("a ladder climber still counts as moving", function()
-		local character = makeCharacter(Vector3.new(0, 5, 0))
-		local rig = groundSpeedRig(character)
-
-		local moving: { boolean } = {}
-		for step = 0, 14 do
-			table.insert(moving, readAt(rig, character, step * 0.1, 0, 5 + step * 1.12).moving)
-		end
-
-		expect(moving[1]).toBe(false)
-		for index = 2, 15 do
-			expect(moving[index]).toBe(true)
-		end
 
 		character:Destroy()
 	end)

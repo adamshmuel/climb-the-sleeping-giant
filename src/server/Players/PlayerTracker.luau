@@ -19,6 +19,12 @@ local MIN_TRIP = 1
 -- 0.2. Measured in 3D, so a ladder climber still counts. Players can't see this number (Lesson 5).
 local POCKET_SIZE = 1.8
 local MIN_COVERED_SECONDS = 0.9
+-- After the server moves a player (a rescue), the move and the drop that follows it are neither walking nor a fall.
+-- That grace ends once the body has been on the ground and still for this many ticks in a row (0.3 s)...
+local MOVE_SETTLE_TICKS = 3
+-- ...or once this many seconds have passed since the move: the server may see the device 0.4 s late, then the drop,
+-- then the settle ticks. A body still falling after that is a real fall. Players can't see this number (Lesson 5).
+local MOVE_GRACE_SECONDS = 1.5
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -58,13 +64,17 @@ export type Deps = {
 
 export type Tracker = {
 	tick: (self: Tracker) -> { Sample },
-	-- Tells the tracker the server moved this player (a rescue): on their next tick the move counts as neither
-	-- walking nor a fall.
+	-- Tells the tracker the server moved this player (a rescue): the move and the drop after it count as neither
+	-- walking nor a fall. The grace lasts until the body is on the ground and still, 1.5 s at most.
 	moved: (self: Tracker, userId: number) -> (),
 }
 
 -- Where a character was at one moment, for measuring its speed.
 type Reading = { time: number, position: Vector3, grounded: boolean }
+
+-- A move the server made, still being waited out: when it happened, and how many ticks in a row the body has been
+-- on the ground and still since.
+type Grace = { since: number, stillTicks: number }
 
 -- What the tracker remembers about one player between ticks. A new character starts a new memory.
 type Memory = {
@@ -201,7 +211,7 @@ end
 
 function PlayerTracker.new(deps: Deps): Tracker
 	local memories: { [number]: Memory } = {}
-	local movedUsers: { [number]: boolean } = {} -- players the server moved since their last tick
+	local graces: { [number]: Grace } = {} -- players the server moved, whose grace has not ended yet
 
 	local function tick(_self: Tracker): { Sample }
 		local samples: { Sample } = {}
@@ -215,9 +225,9 @@ function PlayerTracker.new(deps: Deps): Tracker
 				memories[userId] = nil -- they left, so forget them
 			end
 		end
-		for userId in movedUsers do
+		for userId in graces do
 			if not present[userId] then
-				movedUsers[userId] = nil
+				graces[userId] = nil
 			end
 		end
 		for _, player in players do
@@ -235,32 +245,43 @@ function PlayerTracker.new(deps: Deps): Tracker
 					}
 					memories[player.UserId] = memory
 				end
-				if movedUsers[player.UserId] then
-					-- The server moved them: the move is neither walking nor a fall. A thud owed from before it stays.
-					movedUsers[player.UserId] = nil
+				local grounded = deps.isGrounded(character)
+				local verticalSpeed = root.AssemblyLinearVelocity.Y
+				local moving = false
+				local thudFrom: Config.ZoneName?
+				local takeoffZones: { Config.ZoneName } = {}
+				local grace = graces[player.UserId]
+				if grace ~= nil then
+					-- The server moved them: the move and the drop after it are neither walking nor a fall. A thud owed
+					-- from before the move stays. The take-offs are still asked for, so the list is emptied now and
+					-- never comes back late.
+					deps.takeoffs(character)
+					local last = memory.lastPosition
+					local still = LandingDetector.isAtRest(grounded, verticalSpeed)
+						and last ~= nil
+						and (root.Position - last).Magnitude < MOVING_DISTANCE
+					grace.stillTicks = if still then grace.stillTicks + 1 else 0
+					if grace.stillTicks >= MOVE_SETTLE_TICKS or deps.now() - grace.since >= MOVE_GRACE_SECONDS then
+						graces[player.UserId] = nil -- this tick is still a grace tick
+					end
 					local fresh = LandingDetector.new(place.zone)
 					fresh.owed = memory.landing.owed
-					memory.landing = fresh
+					thudFrom, memory.landing = LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {})
 					memory.lastPosition = nil
 					table.clear(memory.readings)
+					recordReading(memory, deps.now(), root.Position, grounded)
+					memory.lastPosition = root.Position
+				else
+					local stepped = PlayerTracker.isMoving(memory.lastPosition, root.Position)
+					recordReading(memory, deps.now(), root.Position, grounded)
+					moving = stepped and tripOf(memory.readings) >= MIN_TRIP and not inPocket(memory.readings)
+					memory.lastPosition = root.Position
+					for _, position in deps.takeoffs(character) do
+						table.insert(takeoffZones, Zones.locate(position, deps.zoneBoxes, deps.gardens).zone)
+					end
+					thudFrom, memory.landing =
+						LandingDetector.step(memory.landing, grounded, verticalSpeed, place.zone, takeoffZones)
 				end
-				local stepped = PlayerTracker.isMoving(memory.lastPosition, root.Position)
-				local grounded = deps.isGrounded(character)
-				recordReading(memory, deps.now(), root.Position, grounded)
-				local moving = stepped and tripOf(memory.readings) >= MIN_TRIP and not inPocket(memory.readings)
-				memory.lastPosition = root.Position
-				local takeoffZones: { Config.ZoneName } = {}
-				for _, position in deps.takeoffs(character) do
-					table.insert(takeoffZones, Zones.locate(position, deps.zoneBoxes, deps.gardens).zone)
-				end
-				local thudFrom: Config.ZoneName?
-				thudFrom, memory.landing = LandingDetector.step(
-					memory.landing,
-					grounded,
-					root.AssemblyLinearVelocity.Y,
-					place.zone,
-					takeoffZones
-				)
 				table.insert(samples, {
 					userId = player.UserId,
 					position = root.Position,
@@ -275,7 +296,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 		return samples
 	end
 	local function moved(_self: Tracker, userId: number)
-		movedUsers[userId] = true
+		graces[userId] = { since = deps.now(), stillTicks = 0 }
 	end
 	return { tick = tick, moved = moved }
 end

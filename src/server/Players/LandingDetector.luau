@@ -50,6 +50,11 @@ function LandingDetector.new(zone: Config.ZoneName): State
 	return { airTicks = 0, falling = false, fellFast = false, jumped = false, highest = zone, restTicks = 0, owed = {} }
 end
 
+-- Is the player on standable ground and going up or down by no more than REST_SPEED? The one place this rule lives.
+function LandingDetector.isAtRest(grounded: boolean, verticalSpeed: number): boolean
+	return grounded and math.abs(verticalSpeed) <= REST_SPEED
+end
+
 -- Hands out the first thud that is due, and keeps the rest in the state to come one a tick on the next ticks.
 local function oneThud(due: { Config.ZoneName }, state: State): (Config.ZoneName?, State)
 	local thud: Config.ZoneName? = due[1]
@@ -73,7 +78,7 @@ function LandingDetector.step(
 	takeoffs: { Config.ZoneName }
 ): (Config.ZoneName?, State)
 	local fellFast = state.fellFast or verticalSpeed < -FAST_FALL
-	local atRest = grounded and math.abs(verticalSpeed) <= REST_SPEED
+	local atRest = LandingDetector.isAtRest(grounded, verticalSpeed)
 	local restTicks = if atRest then state.restTicks + 1 else 0
 	local due = table.clone(state.owed)
 

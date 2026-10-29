@@ -12,7 +12,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 56 of 62 | ◐ Task 12f closed: a stuck player shaking in a gap makes no walking noise (silent on the phone, 2844 tests pass). Task 12e closed: a rescue lands at least 4 studs away and holds a pressing player still until they let go. Next: Task 12b (the hard wedges), then 12c. |
+| 2. Stuck safety | `v2/stuck-safety.md` | 57 of 63 | ◐ Task 12g closed: a rescue's drop onto the safe spot makes no noise (2849 tests pass). Task 12f closed: a stuck player shaking in a gap makes no walking noise (silent on the phone, 2844 tests pass). Task 12e closed: a rescue lands at least 4 studs away and holds a pressing player still until they let go. Next: Task 12b-2 (the beard wedge, with its clock step first), then 12c. |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |
