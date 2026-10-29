@@ -77,6 +77,7 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 ## Lesson 43: One "does a body fit here" check, or test the points directly
 - **What happened:** the walk map and the shared start check each decide whether a body fits. They disagreed at 21 spots, and 12 known places had no walk-map spot near them, because their start tries were moved to the nearest walk-map spot. Task 45 failed its 95% line at its last allowed call: the second failed task on finding open starts (2026-10-27).
 - **Do instead:** one shared fit check decides both, or a check tests its own candidate points directly with `StartCheck.find`, never moved to another check's spots.
+- **Also (Task 12c step 1, 2026-10-29):** a handoff invented its own 2x5x2 overlap-box room check. It hit the giant's own mesh, so 18 of 18 spots found no stand spot, and the step lost both of its calls (the tenth wrong start check). Every stand spot or start in a handoff or job comes from `StartCheck.find` or `StartCheck.nearSpot`. `scripts/job-check.sh` now fails any fit test that doesn't use `StartCheck`, in a handoff line or in a job file, unless the line is marked "(not a fit check)".
 - **Who checks:** `code_lead` (in the handoff), `builder`.
 
 ## Lesson 45: A place a fix has filled is replayed from its own start

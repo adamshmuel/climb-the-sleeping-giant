@@ -75,7 +75,18 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Begin it with one: put the body on each start, settle 2 s, press 1 s, print the drift and the floor under the feet, and stop \"(lost input)\" if a start drifts over 1 stud (Lesson 120)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, and every Play step starts with a dry start."
+	# A handoff that invented its own "does a body fit" box check hit the
+	# giant's mesh and found no start at 18 of 18 spots (Task 12c step 1, the
+	# tenth wrong start check). Starts come only from StartCheck (Lesson 43).
+	fitwords='overlap box|GetPartBoundsInBox|GetPartsInPart|GetPartsInBox|GetPartsInRegion|room for the body|body fits|room check|raycast room'
+	fits=$(grep -nEi "$fitwords" "$@" | grep -v 'StartCheck' | grep -v '(not a fit check)')
+	if [ -n "$fits" ]; then
+		echo "$fits"
+		echo "Handoff check FAILED: each line above tests whether a body fits without StartCheck."
+		echo "Take every start and stand spot from StartCheck.find or StartCheck.nearSpot, and name it on the line (Lesson 43)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, and every fit test uses StartCheck."
 	exit 0
 fi
 joined=0
@@ -105,6 +116,18 @@ if [ "$joined" -eq 1 ]; then
 	echo "  checking the rest on the ${#} parts joined: $joinedFile"
 	set -- "$joinedFile"
 fi
+
+echo "== Fit tests outside StartCheck (Lesson 43: Task 12c step 1's own box check hit the giant's mesh)"
+# An overlap query in a job that doesn't load StartCheck is a home-made fit
+# test. One used for something else is marked "(not a fit check)" on its line.
+for f in "$@"; do
+	if ! grep -q 'StartCheck' "$f"; then
+		if grep -nE 'GetPartBoundsInBox|GetPartsInPart|GetPartBoundsInRadius|GetPartsInBox' "$f" | grep -v '(not a fit check)'; then
+			echo "  ^ $f tests a fit without StartCheck; use StartCheck.find or nearSpot"
+			fail=1
+		fi
+	fi
+done
 
 echo "== Lines starting with \"(\" (Lesson 7)"
 if grep -nE '^\s*\(' "$@"; then

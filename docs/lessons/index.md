@@ -52,7 +52,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 40 | A job a later step reuses lives in a tested module | `studio-and-scripts.md` |
 | 41 | One test filter per runner call, and check the suite count | `studio-and-scripts.md` |
 | 42 | A job keeps slow results in `shared`, and takes data shapes from the server's own calls | `studio-and-scripts.md` |
-| 43 | One "does a body fit here" check, or test the points directly | `world-scenery.md` |
+| 43 | One "does a body fit here" check, or test the points directly (extended: job-check blocks any other fit test) | `world-scenery.md` |
 | 44 | Check the sync with a free search before the first runner call | `studio-and-scripts.md` |
 | 45 | A place a fix has filled is replayed from its own start | `world-scenery.md` |
 | 46 | A Play job counts climbable parts and play time up front | `studio-and-scripts.md` |
