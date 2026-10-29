@@ -104,6 +104,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 92 | Set the phone device before its orientation | `studio-and-scripts.md` |
 | 93 | Look up every property a job sets | `studio-and-scripts.md` |
 | 94 | A "nothing happened" check also proves something was tried | `studio-and-scripts.md` |
+| 95 | A job finds what the game makes through the game's own lookup | `studio-and-scripts.md` |
+| 96 | Press a button where the new and old results differ | `studio-and-scripts.md` |
+| 97 | The task that builds a look checks it in Play | `teamwork.md` |
+| 98 | Each shared place word is defined once | `teamwork.md` |
+| 99 | Writing a Play job is a step of its own | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

@@ -100,3 +100,18 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 10 step 5 (the Play check) stopped at its 30-tool-call cap with no shots taken: the fresh builder spent about 25 calls reading the handoff, the lessons index, the lesson files and the workflow rules, and the step's 12 Studio calls left out the device-simulator skill read and a console read (2026-10-28).
 - **Do instead:** the main chat's prompt names at most 5 files to read. code_lead's handoff step quotes the lesson lines it needs, so the builder opens no lessons index or rules for it. A Play step's cap counts its reads, setting and resetting the device, and one console read.
 - **Who checks:** the main chat (prompt), `code_lead` (handoff step).
+
+## Lesson 97: The task that builds a look checks it in Play
+- **What happened:** Task 11's Play check marked Rule 33's lavender puffs "not checked", because no puff exists until Task 14 builds it (code_lead's review, 2026-10-29).
+- **Do instead:** the plan names the task that builds a look as the one that checks it in Play, with shots timed to catch it. An earlier task doesn't list that look among its checks.
+- **Who checks:** `code_lead` (plan).
+
+## Lesson 98: Each shared place word is defined once
+- **What happened:** in Task 11, "on the giant" meant more in one rule than in the rules next to it, so the code had to stop and ask product which meaning was right (whether the pillow counts).
+- **Do instead:** a spec defines each shared place word once, under "Words used here", and every rule points to that definition.
+- **Who checks:** `product` (spec), `designer` and `game_creator` (spec review).
+
+## Lesson 99: Writing a Play job is a step of its own
+- **What happened:** Task 11 step 4 held three jobs (the client button, the full test run and writing the Play job), and the builder used 37 tool calls against a cap of 30, ending without a hand-back.
+- **Do instead:** writing a Play job is its own step in the handoff, with its own cap, separate from the code and from running the job.
+- **Who checks:** `code_lead` (handoff steps), the main chat (prompt cap).

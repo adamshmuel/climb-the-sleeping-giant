@@ -240,3 +240,13 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 10's Play check passed "no noise while shaking" because the meter read 0 before and after, but the body never moved, so the check proved nothing (code_lead's review, 2026-10-29).
 - **Do instead:** a Play check that something stays quiet also prints how much the cause really happened (for example the body's biggest move in one tick). A try where the cause didn't happen doesn't count and is made again.
 - **Who checks:** `code_lead` (plan's "Done when"), `product` (approves the check).
+
+## Lesson 95: A job finds what the game makes through the game's own lookup
+- **What happened:** Task 11 step 5's Play job looked for GiantState inside Remotes, where the handoff said it was. The game's `Net.setup` puts it next to Remotes, so the job stopped on its first call, before judging anything (the eighth stop of that kind, 2026-10-29).
+- **Do instead:** a job finds objects the game makes at runtime (remotes, state folders) through the same code the game uses, such as `Net.waitForClient`. It never spells their names itself. `scripts/job-check.sh` now fails a job that does.
+- **Who checks:** `code_lead` (reads the job before its first paste), `scripts/job-check.sh`.
+
+## Lesson 96: Press a button where the new and old results differ
+- **What happened:** Task 11's Play check pressed Roblox's real Reset button in the garden, where the old Reset and the new one do the same thing, so it couldn't prove the new path (code_lead's review, 2026-10-29).
+- **Do instead:** a Play check presses the button where the new behaviour gives a different result (on the giant). If it can't, the report names that check as not proven, and the plan names the task that proves it.
+- **Who checks:** `code_lead` (plan's "Done when"), `product` (approves the check).
