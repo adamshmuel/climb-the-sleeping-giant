@@ -7,7 +7,7 @@ local folder = SS:FindFirstChild("FullRunFolder")
 if folder == nil then
 	return "no run: nothing was started (paste full-run-start.luau first)"
 end
-local BackgroundRun: any = requireModule(SS.Tests.BackgroundRun)
+local BackgroundRun: any = requireModule(SS.Tests.BackgroundRun:Clone())
 local bg: any = BackgroundRun.new({ folder = folder, runner = function() end })
 local report: string = bg.fetch(30)
 if folder:GetAttribute("Status") == nil then

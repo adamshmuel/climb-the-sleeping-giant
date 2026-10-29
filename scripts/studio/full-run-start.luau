@@ -23,7 +23,7 @@ for _, d in tests:GetDescendants() do
 		specs += 1
 	end
 end
-local BackgroundRun: any = requireModule(tests.BackgroundRun)
+local BackgroundRun: any = requireModule(tests.BackgroundRun:Clone())
 local runner: any = requireModule(tests.TestRunner:Clone()).runRaw
 local bg: any = BackgroundRun.new({ folder = folder, runner = runner })
 return "full run: " .. tostring(bg.start(nil)) .. "; spec files " .. specs

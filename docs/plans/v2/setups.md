@@ -19,3 +19,10 @@ Added by code_lead on 2026-10-29, at the Task 12g review. Built right after stuc
 - **Done when:** the full run passes with 2851 tests (2849 plus the 2 new ones), and `scripts/check.sh` passes. No Play check: nothing in the game changes.
 - Lessons: 51 (A full test run is fetched again, never started again), 52 (`expect` takes one value), 101 (Tests run red before any code is written).
 - **Status: not started.**
+
+## V2 setup 7b: The full-run report really shows why
+
+- **Why:** in its first real use (Task 12h's red run) the report still listed only names. The start script loads the report code with a plain `require`, and Studio keeps a module's first loaded copy for the whole session, even after Rojo syncs new code. So the report came from the old code. Setup 7's own tests passed, because the test runner loads each module fresh.
+- **Files:** `scripts/studio/full-run-start.luau` and `scripts/studio/full-run-fetch.luau` load `BackgroundRun` from a clone, as the start script already does for `TestRunner`. No change in `src/`.
+- **Proof:** no unit test can see Studio's cache. A read-only probe (`work/setup7b/confirm.luau`) builds one report from a real-shaped failed result, with the cached copy and with a fresh clone. Pass: the cached copy shows no reason, and the fresh one does.
+- **Size:** 1 step, 1 Studio call (cap 2), Sonnet. Handoff: `work/handoff-setup7b.md`.
