@@ -83,6 +83,14 @@ describe("Net.setup", function()
 		expect((rescued :: Instance):IsA("RemoteEvent")).toBe(true)
 	end)
 
+	it("has a RequestReset remote", function()
+		local parent = newParent()
+		Net.setup(parent)
+		local request = (parent:FindFirstChild("Remotes") :: Instance):FindFirstChild("RequestReset")
+		expect(request).never.toBeNil()
+		expect((request :: Instance):IsA("RemoteEvent")).toBe(true)
+	end)
+
 	it("creates GiantState with Meter 0 and Phase Asleep", function()
 		local parent = newParent()
 		Net.setup(parent)
@@ -118,7 +126,7 @@ describe("Net.setup", function()
 		local first = Net.setup(parent)
 		first.GiantState:SetAttribute("Meter", 42)
 		local second = Net.setup(parent)
-		expect(#parent:GetDescendants()).toBe(11) -- the Remotes folder, 9 remotes and GiantState
+		expect(#parent:GetDescendants()).toBe(12) -- the Remotes folder, 10 remotes and GiantState
 		expect(second.GiantState).toBe(first.GiantState)
 		expect(second.Warning).toBe(first.Warning)
 		expect(second.SetTiptoe).toBe(first.SetTiptoe)
@@ -173,6 +181,8 @@ describe("Net.waitForClient", function()
 			expect(made.SlamLanded).toBe(remotes:FindFirstChild("SlamLanded"))
 			expect(made.Caught).never.toBeNil()
 			expect(made.Caught).toBe(remotes:FindFirstChild("Caught"))
+			expect(made.RequestReset).never.toBeNil()
+			expect(made.RequestReset).toBe(remotes:FindFirstChild("RequestReset"))
 		end
 	)
 

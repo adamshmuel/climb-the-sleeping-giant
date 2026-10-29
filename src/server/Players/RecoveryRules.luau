@@ -1,0 +1,39 @@
+--!strict
+-- What a Reset does (Rules 25 to 33), as pure rules: no services, no clock. On the giant while he sleeps, a Reset moves
+-- the player back to a safe spot. Awake, off the giant, or after too many recent moves, it sends the player home.
+-- "On the giant" is any noise zone but the Meadow, or standing on the pillow (which lies in the Meadow zone). The Reset
+-- and the rescue both ask `onGiant`, so they never disagree about where a player is.
+
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+
+export type Choice = "MoveBack" | "Home"
+
+local RecoveryRules = {}
+
+function RecoveryRules.onGiant(zone: Config.ZoneName, onPillow: boolean): boolean
+	return zone ~= "Meadow" or onPillow
+end
+
+-- Only the moves of the last `LoopSeconds` (a move exactly that old still counts).
+function RecoveryRules.recent(moves: { number }, now: number): { number }
+	local kept = {}
+	for _, at in moves do
+		if now - at <= Config.Stuck.LoopSeconds then
+			table.insert(kept, at)
+		end
+	end
+	return kept
+end
+
+function RecoveryRules.resetChoice(onGiant: boolean, phase: Config.Phase, recentMoves: { number }, now: number): Choice
+	if not onGiant or phase == "Awake" then
+		return "Home"
+	end
+	-- This move would be the next one: with `LoopMoves - 1` recent moves already, it is the third.
+	if #RecoveryRules.recent(recentMoves, now) >= Config.Stuck.LoopMoves - 1 then
+		return "Home"
+	end
+	return "MoveBack"
+end
+
+return RecoveryRules

@@ -95,6 +95,9 @@ export type Config = {
 		ScanSeconds: number,
 		SafeSaveSeconds: number,
 		RescueDistance: number,
+		ResetCooldownSeconds: number,
+		LoopMoves: number,
+		LoopSeconds: number,
 	},
 	Tick: {
 		Seconds: number,
@@ -178,6 +181,8 @@ local config: Config = {
 	-- ScanSeconds: the scan's time limit, build plus search (spec section 5, "Scan grid spacing").
 	-- SafeSaveSeconds (spec section 5, "Safe spot saved every"): seconds between a player's safe-spot checks.
 	-- RescueDistance (spec section 5, "Rescue distance"): studs a rescue spot must be from where the player is stuck.
+	-- ResetCooldownSeconds (Rule 25): the shortest time between two Reset requests from one player.
+	-- LoopMoves and LoopSeconds (Rule 29): this many moves back within this many seconds send the player home instead.
 	Stuck = {
 		BodyWidth = 2,
 		BodyHeight = 4.3,
@@ -186,6 +191,9 @@ local config: Config = {
 		ScanSeconds = 120,
 		SafeSaveSeconds = 0.5,
 		RescueDistance = 4,
+		ResetCooldownSeconds = 2,
+		LoopMoves = 3,
+		LoopSeconds = 30,
 	},
 	Tick = { Seconds = 0.1 },
 }

@@ -27,8 +27,10 @@ local JumpWatcher = require(script.Players.JumpWatcher)
 local PlayerInfo = require(script.Players.PlayerInfo)
 local PlayerTracker = require(script.Players.PlayerTracker)
 local Recovery = require(script.Players.Recovery)
+local Zones = require(script.Giant.Zones)
 local SafeSpots = require(script.Players.SafeSpots)
 local Spawning = require(script.Players.Spawning)
+local ResetHandler = require(script.Remotes.ResetHandler)
 local TiptoeHandler = require(script.Remotes.TiptoeHandler)
 local WorldIndex = require(script.World.WorldIndex)
 
@@ -45,6 +47,12 @@ end
 -- If the world does not match what the code needs, this stops the server with a clear message.
 local gardens = WorldIndex.loadGardens(world)
 local zoneBoxes = WorldIndex.loadZones(world)
+-- The pillow counts as on the giant for a Reset (Rule 28), though it lies in the Meadow zone.
+local giantsThings = world:FindFirstChild("GiantsThings")
+local pillow = if giantsThings ~= nil then giantsThings:FindFirstChild("Pillow") else nil
+if pillow == nil then
+	error("Workspace.World.GiantsThings.Pillow is missing: the place file doesn't match the code")
+end
 
 -- The egg spots and the egg models are part of the world contract too.
 local eggSpots = WorldIndex.loadEggSpots(world)
@@ -156,6 +164,39 @@ local recovery = Recovery.start({
 	end,
 	fireRescued = function(player, from, to)
 		net.Rescued:FireAllClients(player, from, to)
+	end,
+	now = os.clock,
+	whereIs = function(player)
+		local character = player.Character
+		local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+		if root == nil or not root:IsA("BasePart") then
+			return nil
+		end
+		local ground = Recovery.groundOf(player)
+		return {
+			zone = Zones.zoneAt(root.Position, zoneBoxes),
+			onPillow = ground ~= nil and ground:IsDescendantOf(pillow),
+		}
+	end,
+	phase = function()
+		local phase = net.GiantState:GetAttribute("Phase")
+		-- Anything unexpected counts as Awake, the safe way: a Reset then sends the player home.
+		return if phase == "Asleep" or phase == "HeavySleep" then phase else "Awake"
+	end,
+	sendHome = function(player)
+		local character = player.Character
+		local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+		if humanoid ~= nil then
+			humanoid.Health = 0
+		end
+	end,
+})
+-- A Reset: the client only asks; Recovery decides between moving back and going home.
+ResetHandler.start({
+	remote = { OnServerEvent = net.RequestReset.OnServerEvent },
+	players = Players,
+	reset = function(player)
+		recovery:reset(player)
 	end,
 	now = os.clock,
 })

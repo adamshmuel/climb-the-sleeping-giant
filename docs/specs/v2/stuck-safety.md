@@ -30,6 +30,8 @@ Status: `approved` by Adam (2026-10-18). Rules 20 to 33.
 
 **Changed on 2026-10-28** (stuck safety Task 8, product ruling in `work/t28/product-ruling.md`): the bot walk's step-off spacing (section 5) is still one every 10 studs, but each edge now counts at its own height, so the walk has 339 legs instead of 140 and takes about 20 to 35 minutes, not 10. Rule 24 (A bot walks every way) keeps its wording: every edge is still walked. Nothing the player sees or does changes.
 
+**Changed on 2026-10-29** (stuck safety Task 11, code_lead's question): "On the giant" (section 3, "Words used here") now names the pillow behind his head, as Rule 28 (Stuck players are rescued) already did. So Reset on the pillow takes a player back a few steps with their egg (Rules 25 and 30), like a rescue there, instead of sending them home. Nothing else changes.
+
 ## 1. Goal and why
 
 In Adam's first playtest, a player got stuck on the giant's forehead and could only get out by resetting, which sent them all the way home (`docs/specs/core-heist-playtest/04-stuck-on-his-forehead.jpg`). Getting stuck makes a kid think the game is broken, and V1 named it the top risk (`core-heist.md`, section 9, "Physics on the giant goes wrong"). This spec stops it in four layers, so the next V2 specs (more ways up, a belly you can walk anywhere on) can grow the climb safely:
@@ -45,7 +47,7 @@ All the research is in `research/stuck.md` and `research/tech.md` (section 2, "C
 
 **Words used here**
 - **Collision:** the invisible shape that a player bumps into and stands on. It can differ from how the giant looks.
-- **On the giant:** in any noise zone except the Meadow (Boots, Belly, Beard or Nightcap, Rule 8: Steps make noise), including his ladders and ramps.
+- **On the giant:** in any noise zone except the Meadow (Boots, Belly, Beard or Nightcap, Rule 8: Steps make noise), including his ladders and ramps, and the pillow behind his head. Every rule that says "on the giant" (Rules 25, 28, 29, 30 and 32) uses this one meaning, so a rescue and a Reset never disagree about where a player is.
 - **Meadow exit:** any of the 8 landing spots around his feet, where players float down after he wakes (Rule 12: Waking bounces everyone off), and any open meadow ground on the outer edge of the scanned area. That edge is always at least 10 studs from the giant, and the meadow goes on past it, so a player who reaches it is out.
 - **Walk map:** the game's own map of every spot a player can stand on, and how they can move from one to the next without jumping. A spot is ground no steeper than 70° (the steepest a player can walk) with room for a player's body. Between spots a player can:
   - **walk**, in both directions, if each step passes the same step check V1's footprint route test uses (no steeper than 70°, room for the body, nothing in the way);

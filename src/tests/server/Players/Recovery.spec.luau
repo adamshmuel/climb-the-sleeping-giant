@@ -5,6 +5,7 @@ local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, Je
 
 local Recovery = require(ServerScriptService.Server.Players.Recovery)
 local SafeSpots = require(ServerScriptService.Server.Players.SafeSpots)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 
 local MAX_SLOPE = 70 -- the same number as StarterPlayer.CharacterMaxSlopeAngle
 local HIP_HEIGHT = 2
@@ -52,7 +53,14 @@ local function rootOf(character: Model): BasePart
 	return character:FindFirstChild("HumanoidRootPart") :: BasePart
 end
 
-type FakePlayer = { UserId: number, Character: Model?, CharacterAdded: any }
+type FakePlayer = {
+	UserId: number,
+	Character: Model?,
+	CharacterAdded: any,
+	attributes: { [string]: any },
+	GetAttribute: (self: any, name: string) -> any,
+	SetAttribute: (self: any, name: string, value: any) -> (),
+}
 
 type Rig = {
 	recovery: Recovery.Recovery,
@@ -64,6 +72,9 @@ type Rig = {
 	rescues: { { player: FakePlayer, from: Vector3, to: CFrame } },
 	samples: { [number]: SafeSpots.Sample }, -- what each player's sample is right now
 	clock: number,
+	where: { zone: Config.ZoneName, onPillow: boolean }?, -- what whereIs answers (nil: no living character)
+	phase: Config.Phase, -- what the giant's phase is right now
+	home: { number }, -- the user ids sent home, in order
 	die: (character: Model) -> (), -- what the character's Humanoid.Died does in the real game
 }
 
@@ -74,7 +85,19 @@ local made: { Instance } = {}
 local function newPlayer(userId: number, rootPosition: Vector3): FakePlayer
 	local character = makeCharacter(rootPosition)
 	table.insert(made, character)
-	return { UserId = userId, Character = character, CharacterAdded = newSignal() }
+	local attributes: { [string]: any } = {}
+	return {
+		UserId = userId,
+		Character = character,
+		CharacterAdded = newSignal(),
+		attributes = attributes,
+		GetAttribute = function(_self: any, name: string): any
+			return attributes[name]
+		end,
+		SetAttribute = function(_self: any, name: string, value: any)
+			attributes[name] = value
+		end,
+	}
 end
 
 -- A sample of a player standing on flat ground at `feet`, facing `facing`.
@@ -103,6 +126,9 @@ local function newRig(players: { FakePlayer }): Rig
 		rescues = {},
 		samples = {},
 		clock = 100,
+		where = { zone = "Belly", onPillow = false },
+		phase = "Asleep",
+		home = {},
 		die = nil :: any,
 	}
 	-- A Humanoid only dies inside the world, and tests never change the place, so a death is injected.
@@ -137,6 +163,15 @@ local function newRig(players: { FakePlayer }): Rig
 		end,
 		now = function()
 			return rig.clock
+		end,
+		whereIs = function(_player: any)
+			return rig.where
+		end,
+		phase = function()
+			return rig.phase
+		end,
+		sendHome = function(player: any)
+			table.insert(rig.home, player.UserId)
 		end,
 		died = function(character: Model, callback: () -> ())
 			deaths[character] = callback
@@ -276,5 +311,127 @@ describe("Recovery", function()
 		expect(rootOf(character).Position).toEqual(Vector3.new(10, 6, 0))
 		expect(#rig.moved).toBe(0)
 		expect(#rig.rescues).toBe(0)
+	end)
+
+	-- A player on the giant with one safe spot 10 studs away, ready for a Reset.
+	local function onGiantWithSpot(userId: number): (FakePlayer, Rig)
+		local player = newPlayer(userId, Vector3.new(0, 30, 0))
+		local rig = newRig({ player })
+		rig.samples[userId] = sampleAt(Vector3.new(10, 5, 0), Vector3.xAxis, rig.clock)
+		rig.recovery:step()
+		return player, rig
+	end
+
+	-- Puts the player back far from the spot, so the next Reset has a spot to move them to.
+	local function putFar(player: FakePlayer)
+		rootOf(player.Character :: Model).Position = Vector3.new(0, 30, 0)
+	end
+
+	it("a Reset on the giant while he sleeps moves the player back and keeps their egg", function()
+		local player, rig = onGiantWithSpot(1)
+		player:SetAttribute("Carrying", "Rare")
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(1)
+		expect(#rig.home).toBe(0)
+		expect(player:GetAttribute("Carrying")).toBe("Rare")
+	end)
+
+	it("a Reset with no safe spot far enough sends the player home", function()
+		local player = newPlayer(1, Vector3.new(10, 6, 0))
+		local rig = newRig({ player })
+		rig.samples[1] = sampleAt(Vector3.new(11, 5, 0), Vector3.xAxis, rig.clock) -- about 1.4 studs away
+		rig.recovery:step()
+
+		rig.recovery:reset(player :: any)
+
+		expect(rig.home).toEqual({ 1 })
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a third move within 30 seconds sends the player home", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.recovery:reset(player :: any)
+		putFar(player)
+		rig.clock += 10
+		rig.recovery:reset(player :: any)
+		putFar(player)
+		rig.clock += 10
+		expect(#rig.rescues).toBe(2)
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(2)
+		expect(rig.home).toEqual({ 1 })
+	end)
+
+	it("a Reset off the giant sends the player home", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.where = { zone = "Meadow", onPillow = false }
+
+		rig.recovery:reset(player :: any)
+
+		expect(rig.home).toEqual({ 1 })
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a Reset on the pillow moves the player back", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.where = { zone = "Meadow", onPillow = true }
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(1)
+		expect(#rig.home).toBe(0)
+	end)
+
+	it("a Reset while the giant is awake sends the player home", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.phase = "Awake"
+
+		rig.recovery:reset(player :: any)
+
+		expect(rig.home).toEqual({ 1 })
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a Reset does nothing when the player has no living character", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.where = nil
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.home).toBe(0)
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("forgets a player's moves when they leave", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.recovery:reset(player :: any)
+		putFar(player)
+		rig.recovery:reset(player :: any)
+		putFar(player)
+		rig.playerRemoving:Fire(player)
+		rig.recovery:step() -- the spot is saved again, as for a player who joined again
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(3)
+		expect(#rig.home).toBe(0)
+	end)
+
+	it("finds the part under a player's feet", function()
+		local floor = Instance.new("Part")
+		floor.Anchored = true
+		floor.Size = Vector3.new(20, 1, 20)
+		floor.Position = Vector3.new(5000, 1000, 5000)
+		floor.Parent = game:GetService("Workspace")
+		table.insert(made, floor)
+		local player = newPlayer(1, Vector3.new(5000, 1002, 5000))
+		local character = player.Character :: Model
+		character.Parent = game:GetService("Workspace")
+
+		expect(Recovery.groundOf(player :: any)).toBe(floor)
 	end)
 end)

@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
@@ -71,7 +72,18 @@ if server then
 	-- them. The server decides what is sent, and the watcher checks it anyway.
 	local bouncedConnection = server.Bounced.OnClientEvent:Connect(cameraWatcher.bounce)
 	-- When the server moves this player back to a safe spot, this device moves its own character there too.
-	local recovery = Recovery.start({ rescued = server.Rescued.OnClientEvent, localPlayer = Players.LocalPlayer })
+	-- It also takes over Roblox's Reset button: a Reset asks the server, which decides what happens.
+	local recovery = Recovery.start({
+		rescued = server.Rescued.OnClientEvent,
+		localPlayer = Players.LocalPlayer,
+		setCore = function(name: string, value: any)
+			StarterGui:SetCore(name :: any, value)
+		end,
+		requestReset = function()
+			server.RequestReset:FireServer()
+		end,
+		wait = task.wait,
+	})
 	script.Destroying:Once(function()
 		recovery:destroy()
 	end)

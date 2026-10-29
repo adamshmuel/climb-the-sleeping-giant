@@ -110,6 +110,13 @@ fi
 echo "== Service members (Task 10: the type check let SoundService.Volume through)"
 python3 scripts/job-props.py "$@" || fail=1
 
+echo "== Objects the game makes at runtime (Task 11: the job looked for GiantState inside Remotes)"
+net_names=$(grep -oE '^Net\.[A-Za-z]+Name = "[A-Za-z]+"' src/shared/Net.luau | sed -E 's/.*"(.*)"/\1/' | paste -sd'|' -)
+if [ -n "$net_names" ] && grep -nE "(FindFirstChild|WaitForChild)\(\"($net_names)\"" "$@"; then
+	echo "  ^ find these through Net.waitForClient (or Net.setup), so the job looks where the game puts them"
+	fail=1
+fi
+
 echo "== Format"
 stylua --check "$@" || fail=1
 

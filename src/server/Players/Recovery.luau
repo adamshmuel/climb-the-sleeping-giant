@@ -7,8 +7,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local PathCheck = require(script.Parent.Parent.World.PathCheck)
+local RecoveryRules = require(script.Parent.RecoveryRules)
 local SafeSpots = require(script.Parent.SafeSpots)
 
 -- A Roblox event, as far as Recovery uses it. (The connection is typed `any`: Trove only needs to disconnect it.)
@@ -22,6 +24,9 @@ export type PlayersLike = {
 	PlayerRemoving: SignalLike,
 }
 
+-- Where a player stands: the giant's noise zone, and whether the ground under them is part of the pillow.
+export type Where = { zone: Config.ZoneName, onPillow: boolean }
+
 export type Deps = {
 	players: PlayersLike, -- each player has UserId, Character and CharacterAdded
 	safeSpots: SafeSpots.SafeSpots, -- made with StarterPlayer.CharacterMaxSlopeAngle
@@ -29,6 +34,9 @@ export type Deps = {
 	sampleOf: (player: any, now: number) -> SafeSpots.Sample?, -- nil without a living character
 	fireRescued: (player: any, from: Vector3, to: CFrame) -> (),
 	now: () -> number,
+	whereIs: (player: any) -> Where?, -- nil without a living character
+	phase: () -> Config.Phase,
+	sendHome: (player: any) -> (), -- ends the player's character; Spawning puts them back in their garden
 	-- Calls `callback` when the character dies, and returns the connection (or nil). The real one wraps Humanoid.Died.
 	died: ((character: Model, callback: () -> ()) -> any)?,
 }
@@ -36,6 +44,7 @@ export type Deps = {
 export type Recovery = {
 	step: (self: Recovery) -> (),
 	moveBack: (self: Recovery, player: any) -> CFrame?,
+	reset: (self: Recovery, player: any) -> (),
 	keptSpot: (self: Recovery, player: any) -> SafeSpots.Spot?,
 	destroy: (self: Recovery) -> (),
 }
@@ -46,8 +55,6 @@ local Recovery = {}
 local LIFT = 0.5
 -- How far below the root the ground ray looks. The body hangs about 3 studs under the root; this leaves some spare.
 local GROUND_RAY = 4
-
-local latest: Recovery? = nil
 
 local function realDied(character: Model, callback: () -> ()): any
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
@@ -84,6 +91,7 @@ function Recovery.start(deps: Deps): Recovery
 	local destroyed = false
 	local watched: { [number]: Watched } = {}
 	local kept: { [number]: SafeSpots.Spot? } = {}
+	local moves: { [number]: { number } } = {} -- when each player was last moved back (the last LoopSeconds only)
 
 	-- On a death, pick the spot first: the new character's arrival clears the list.
 	local function watchCharacter(player: any, record: Watched, character: Model)
@@ -118,6 +126,7 @@ function Recovery.start(deps: Deps): Recovery
 		local userId: number = player.UserId
 		safeSpots:forget(userId)
 		kept[userId] = nil
+		moves[userId] = nil
 		local record = watched[userId]
 		if record ~= nil then
 			watched[userId] = nil
@@ -131,7 +140,6 @@ function Recovery.start(deps: Deps): Recovery
 	trove:Add(deps.players.PlayerAdded:Connect(watchPlayer))
 	trove:Add(deps.players.PlayerRemoving:Connect(forgetPlayer))
 
-	local self: Recovery
 	local function step(_self: Recovery)
 		local now = deps.now()
 		for _, player in deps.players:GetPlayers() do
@@ -161,7 +169,27 @@ function Recovery.start(deps: Deps): Recovery
 		root.AssemblyAngularVelocity = Vector3.zero
 		deps.tracker:moved(player.UserId) -- first: the jump must not be read as a fall or as walking
 		deps.fireRescued(player, oldPosition, target)
+		local now = deps.now()
+		local recent = RecoveryRules.recent(moves[player.UserId] or {}, now)
+		table.insert(recent, now)
+		moves[player.UserId] = recent
 		return target
+	end
+
+	-- A player's Reset (Rules 25 to 33): back to a safe spot while the giant sleeps and the move is not a loop, home
+	-- otherwise. The egg is never touched here: a move keeps it, and a send home puts it back (Banking).
+	local function reset(_self: Recovery, player: any)
+		local _, humanoid = bodyOf(player.Character)
+		local where = deps.whereIs(player)
+		if humanoid == nil or humanoid.Health <= 0 or where == nil then
+			return
+		end
+		local onGiant = RecoveryRules.onGiant(where.zone, where.onPillow)
+		local choice = RecoveryRules.resetChoice(onGiant, deps.phase(), moves[player.UserId] or {}, deps.now())
+		if choice == "MoveBack" and moveBack(nil :: any, player) ~= nil then
+			return
+		end
+		deps.sendHome(player) -- "Home", or no spot far enough (Rule 27)
 	end
 
 	local function keptSpot(_self: Recovery, player: any): SafeSpots.Spot?
@@ -182,19 +210,10 @@ function Recovery.start(deps: Deps): Recovery
 			end
 		end
 		table.clear(kept)
-		if latest == self then
-			latest = nil
-		end
+		table.clear(moves)
 	end
 
-	self = { step = step, moveBack = moveBack, keptSpot = keptSpot, destroy = destroy }
-	latest = self
-	return self
-end
-
--- The last Recovery started, for Play jobs only (nothing in the game reads it).
-function Recovery.current(): Recovery?
-	return latest
+	return { step = step, moveBack = moveBack, reset = reset, keptSpot = keptSpot, destroy = destroy }
 end
 
 -- The real reader of a player's place for the safe spots: feet, the way they move, the ground under them and whether
@@ -214,6 +233,22 @@ local function paramsFor(player: Player, character: Model): RaycastParams
 	return entry.params
 end
 
+-- The ray down from the root that finds the ground under the feet (the safe spots and the pillow check both use it).
+local function groundUnder(player: Player, character: Model, root: BasePart): RaycastResult?
+	return Workspace:Raycast(root.Position, Vector3.new(0, -GROUND_RAY, 0), paramsFor(player, character))
+end
+
+-- The part under the player's feet, or nil in the air or without a living character.
+function Recovery.groundOf(player: Player): Instance?
+	local character = player.Character
+	local root, humanoid = bodyOf(character)
+	if character == nil or root == nil or humanoid == nil or humanoid.Health <= 0 then
+		return nil
+	end
+	local hit = groundUnder(player, character, root)
+	return if hit ~= nil then hit.Instance else nil
+end
+
 function Recovery.sampleOf(player: Player, now: number, floating: (userId: number) -> boolean): SafeSpots.Sample?
 	local character = player.Character
 	local root, humanoid = bodyOf(character)
@@ -222,7 +257,7 @@ function Recovery.sampleOf(player: Player, now: number, floating: (userId: numbe
 	end
 	local feet = root.Position - Vector3.new(0, humanoid.HipHeight + root.Size.Y / 2, 0)
 	local velocity = root.AssemblyLinearVelocity
-	local hit = Workspace:Raycast(root.Position, Vector3.new(0, -GROUND_RAY, 0), paramsFor(player, character))
+	local hit = groundUnder(player, character, root)
 	local normal = if hit ~= nil then hit.Normal else nil
 	if roomOptions == nil then
 		roomOptions = PathCheck.defaults(Workspace)

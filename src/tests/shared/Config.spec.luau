@@ -204,6 +204,12 @@ describe("Config", function()
 		expect(Config.Stuck.ScanSeconds).toBe(120)
 	end)
 
+	it("has the Reset and loop limits", function()
+		expect(Config.Stuck.ResetCooldownSeconds).toBe(2)
+		expect(Config.Stuck.LoopMoves).toBe(3)
+		expect(Config.Stuck.LoopSeconds).toBe(30)
+	end)
+
 	it("Config can't be changed while the game runs", function()
 		expect(function()
 			(Config.Meter :: any).Max = 5
