@@ -248,6 +248,7 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Every start is a fixed number printed open by one Edit call with the start check (Lesson 21).
 - Size: 4 steps. 1: the 19 starts, in one Edit call (1 Studio call, cap 2). 2: write the Play job and pass `scripts/job-check.sh` (0 Studio calls; code_lead reads it). 3: the background Play run on computer (8 Studio calls, cap 10). 4: the read-only failure-path check, only if a spot failed (1 Studio call, cap 2). **About 10 Studio calls, caps 14.** No phone pass: nothing new is on screen, and the rescue on the phone is shown in Tasks 12 and 12b.
 - If 12c fails twice, it goes back to product with game_creator before any third try. No more follow-up tasks after 12b and 12c.
+- **Carry-over cleanup for its handoff (from the Task 12g review, 2026-10-29):** in `src/server/Players/PlayerTracker.luau`, the grace branch sets `memory.lastPosition = nil` and then sets it again a few lines later, so the first one does nothing. Delete it in step 2 (no behaviour change, no new test). It needs `scripts/check.sh` and one green full run before the commit, so 12c's handoff adds that run (2 Studio calls, a `runner` job on Haiku): about 12 Studio calls, caps 16.
 
 **Task 13: A death on the giant counts as a Reset**
 - Spec rules: Rule 25 (Reset on the giant takes you back): "Any death on the giant, except being caught, counts as a Reset". Rule 29 (No rescue loops), Rule 30 (You keep your egg).
