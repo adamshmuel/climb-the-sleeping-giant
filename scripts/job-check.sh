@@ -112,6 +112,7 @@ done
 if [ "$joined" -eq 1 ]; then
 	mkdir -p work
 	joinedFile="work/.job-check-joined.luau"
+	parts=("$@")
 	cat "$@" >"$joinedFile"
 	echo "  checking the rest on the ${#} parts joined: $joinedFile"
 	set -- "$joinedFile"
@@ -168,7 +169,13 @@ echo "== Format"
 stylua --check "$@" || fail=1
 
 echo "== Lint"
-selene "$@" || fail=1
+# Each paste runs as its own chunk, so the joined file always warns that the
+# next part re-declares the last one's names (Task 12c step 2). Lint the parts.
+if [ "$joined" -eq 1 ]; then
+	selene "${parts[@]}" || fail=1
+else
+	selene "$@" || fail=1
+fi
 
 echo "== Types"
 mkdir -p build
@@ -177,8 +184,21 @@ if [ ! -f build/globalTypes.d.luau ]; then
 		https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau
 fi
 rojo sourcemap default.project.json -o sourcemap.json
-luau-lsp analyze --platform=roblox --sourcemap=sourcemap.json \
-	--definitions=@roblox=build/globalTypes.d.luau "$@" || fail=1
+if [ "$joined" -eq 1 ]; then
+	# Joining puts each later part's --!strict line, and the code after a part's
+	# last return, in the middle of one file, and re-declares names; those three are
+	# ignored here (selene lints each part for real shadowing).
+	types=$(luau-lsp analyze --platform=roblox --sourcemap=sourcemap.json \
+		--definitions=@roblox=build/globalTypes.d.luau "$@" 2>&1 |
+		grep -vE '^\[(INFO|WARN)\]' | grep -vE ': (CommentDirective|UnreachableCode|LocalShadow): ')
+	if [ -n "$types" ]; then
+		echo "$types"
+		fail=1
+	fi
+else
+	luau-lsp analyze --platform=roblox --sourcemap=sourcemap.json \
+		--definitions=@roblox=build/globalTypes.d.luau "$@" || fail=1
+fi
 
 if [ "$fail" -ne 0 ]; then
 	echo "Job check FAILED: fix the lines above before any Studio paste."

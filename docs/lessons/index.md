@@ -72,7 +72,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 60 | A plan counts Studio calls for every step | `teamwork.md` |
 | 61 | A handoff's world names are checked before the builder starts (extended: a part not built yet gets its spec position) | `teamwork.md` |
 | 62 | A saved walk map goes stale when the world changes | `studio-and-scripts.md` |
-| 63 | A big job is pasted by a builder with room to spare | `studio-and-scripts.md` |
+| 63 | A big job is pasted by a builder with room to spare (extended: the joined check ignores join-only warnings) | `studio-and-scripts.md` |
 | 64 | A job's walk map holds every place it measures | `studio-and-scripts.md` |
 | 65 | A dry check call comes before the long Play run | `studio-and-scripts.md` |
 | 66 | Job scripts in work/ pass the type check with a require cast | `studio-and-scripts.md` |
