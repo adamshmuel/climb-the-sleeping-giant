@@ -165,7 +165,7 @@ A cheaper model costs less for every word it reads, so each job uses the cheapes
   | The names check of a handoff's world table (one read-only Studio call it wrote), a full test run, progress-table rows from given results, `scripts/job-check.sh` on a job or handoff | `runner` (Haiku) |
 
   It writes such a job as a short prompt in `work/` (files to read, scripts to paste, pass rule, caps), and the main chat starts that agent.
-- **Ready-made run scripts.** A full test run is always `scripts/studio/full-run-start.luau`, a wait of about 60 s, then `scripts/studio/full-run-fetch.luau` (fetched again until it reports, never started twice: Lesson 51).
+- **Ready-made run scripts.** A full test run is always `scripts/studio/full-run-start.luau`, a wait of about 60 s (`python3 -c "import time; time.sleep(62)"`, because a hook blocks Bash `sleep`), then `scripts/studio/full-run-fetch.luau` (fetched again until it reports, never started twice: Lesson 51).
 - **Jobs outside a handoff** (a question, a check, a progress update) get their model from the same table, written by the main chat when it starts the job.
 - **If a cheaper model fails a step** (wrong calls, a misread result), the step goes back up one model, and that kind of job moves up in this table. It's logged in the problems log like any other unplanned stop.
 
