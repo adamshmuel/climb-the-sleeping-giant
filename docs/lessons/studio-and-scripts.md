@@ -300,3 +300,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12e's Play job started pressing in one Studio call and sent the Reset keys in the next. The agent's own pause between the two calls could pass the 3.7 s before the stuck rescue fires, so the rescue could move the player instead of the Reset.
 - **Do instead:** start any timed action from a signal that fires inside the key call itself (here, `GuiService.MenuIsOpen` turning true when Escape opens the menu), never from a call before it.
 - **Who checks:** `builder` (job), `code_lead` (reads the job).
+
+## Lesson 117: Measure "stands still" along the ground
+- **What happened:** Task 12e's Play check said "the root moves less than 0.5 studs in the held second", measured in 3D. A rescue lands the feet 0.5 studs above the spot, so the body settled 0.6 studs down while the player was held, and a good try failed by 0.026 studs. The rerun cost 4 Studio calls over the task's cap.
+- **Do instead:** measure "stands still" along the ground (X and Z), and check separately that the body doesn't rise. Before writing a distance limit, look up any lift or drop the game itself makes (here `LIFT` in `Recovery.luau`).
+- **Who checks:** `code_lead` (pass list), `builder` (job).
