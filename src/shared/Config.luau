@@ -100,6 +100,7 @@ export type Config = {
 		LoopSeconds: number,
 		StuckSeconds: number,
 		StuckDistance: number,
+		FallGraceSeconds: number,
 		PressChangesPerSecond: number,
 	},
 	Tick: {
@@ -188,6 +189,7 @@ local config: Config = {
 	-- LoopMoves and LoopSeconds (Rule 29): this many moves back within this many seconds send the player home instead.
 	-- StuckSeconds (spec section 5, "Stuck time"): seconds of pressing to move without getting anywhere before a rescue.
 	-- StuckDistance (spec section 5, "Stuck distance"): the body moving less than this many studs in that time is stuck.
+	-- FallGraceSeconds (spec section 5, "Fall grace"): a fall shorter than this doesn't start the stuck time over.
 	-- PressChangesPerSecond (spec section 5, "Pressing changes"): how many times a second one player may tell the
 	-- server they started or stopped pressing to move.
 	Stuck = {
@@ -203,6 +205,7 @@ local config: Config = {
 		LoopSeconds = 30,
 		StuckSeconds = 3,
 		StuckDistance = 1,
+		FallGraceSeconds = 0.25,
 		PressChangesPerSecond = 10,
 	},
 	Tick = { Seconds = 0.1 },

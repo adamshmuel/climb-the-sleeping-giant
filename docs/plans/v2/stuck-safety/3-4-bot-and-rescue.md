@@ -245,6 +245,7 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - **If the first test passes the moment it is written,** the cause is disproved: stop, and it goes back to product before any Play.
 - Done when: `scripts/check.sh` passes, and one green full run passes with 0 failed (the count is setup 7's count plus 2). The stuck-scan test that lists the beard wedge by name stays green (Rule 21: The stuck scan runs on every test run). No Play: the proof is the 3 beard walks in Task 12c.
 - Size: **1 step, 4 Studio calls (cap 5), Sonnet**: a red full run, then a green one (each a start and a fetch, Lesson 51). The red run can't be skipped: it is how the "disproved" check above is seen. Handoff: `work/handoff-t12h.md`.
+- **Status: done** (2026-10-29): approved by code_lead, full run 2853 passed, 0 failed. 4 of 4 planned Studio calls. Test A failed in the red run, so the cause stands. Play proof: Task 12c's 3 beard walks.
 
 **Task 12c: The rescue reaches the rare spots** (split from Task 12 on 2026-10-29, product's ruling; built after Task 12h)
 - Spec rules: Rule 28 (Stuck players are rescued), Rule 30 (You keep your egg), Rule 22 (What counts as stuck: condition 4, every spot on the rare-spot list is reached by the rescue; spec line 117, changed 2026-10-29).

@@ -261,7 +261,8 @@ function Recovery.start(deps: Deps): Recovery
 				pressing = pressing[userId] == true,
 				position = position,
 				onGiant = RecoveryRules.onGiant(where.zone, where.onPillow),
-				blocked = deps.falling(player) or deps.floating(userId) or deps.inRedCircle(position),
+				falling = deps.falling(player),
+				blocked = deps.floating(userId) or deps.inRedCircle(position),
 				held = holding[userId] ~= nil,
 			}, now)
 			if stuck then

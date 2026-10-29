@@ -10,7 +10,7 @@ local HERE = Vector3.new(10, 50, 10)
 
 -- A player who is pressing to move, on the giant, free to move, standing still. Fields are set directly to override.
 local function input(): StuckWatch.Input
-	return { pressing = true, position = HERE, onGiant = true, blocked = false, held = false }
+	return { pressing = true, position = HERE, onGiant = true, blocked = false, falling = false, held = false }
 end
 
 describe("StuckWatch.update", function()
@@ -68,13 +68,41 @@ describe("StuckWatch.update", function()
 	it("falling blocks the rescue", function()
 		local watch = StuckWatch.new()
 		local falling = input()
-		falling.blocked = true
+		falling.falling = true
 		watch:update(USER, falling, 0)
 		expect(watch:update(USER, falling, 10)).toBe(false)
 		-- The watch starts when the block ends, not before.
 		expect(watch:update(USER, input(), 11)).toBe(false)
 		expect(watch:update(USER, input(), 13.9)).toBe(false)
 		expect(watch:update(USER, input(), 14)).toBe(true)
+	end)
+
+	it("a pressing body that flips to falling for under 0.25 s is still rescued at 3 s", function()
+		local watch = StuckWatch.new()
+		local falling = input()
+		falling.falling = true
+		expect(watch:update(USER, input(), 0)).toBe(false)
+		expect(watch:update(USER, falling, 1.0)).toBe(false)
+		expect(watch:update(USER, falling, 1.1)).toBe(false)
+		expect(watch:update(USER, input(), 1.2)).toBe(false)
+		expect(watch:update(USER, input(), 2.95)).toBe(false)
+		-- Never rescues while falling, even past 3 seconds.
+		expect(watch:update(USER, falling, 3.0)).toBe(false)
+		expect(watch:update(USER, input(), 3.1)).toBe(true)
+	end)
+
+	it("a fall of 0.25 s or longer starts the stuck time over", function()
+		local watch = StuckWatch.new()
+		local falling = input()
+		falling.falling = true
+		watch:update(USER, input(), 0)
+		for _, at in { 1.0, 1.1, 1.2, 1.3 } do
+			expect(watch:update(USER, falling, at)).toBe(false)
+		end
+		expect(watch:update(USER, input(), 1.4)).toBe(false)
+		expect(watch:update(USER, input(), 3.0)).toBe(false)
+		expect(watch:update(USER, input(), 4.3)).toBe(false)
+		expect(watch:update(USER, input(), 4.4)).toBe(true)
 	end)
 
 	it("floating down blocks the rescue", function()
