@@ -19,13 +19,18 @@ or fetch a running job) or a note still works; past 35 only a note.
 
 import json
 import os
+import shlex
 import sys
 
 LIMITS = {"builder": 150_000, "runner": 100_000}
 DEFAULT_LIMIT = 200_000
 PROJECT_AGENTS = {"builder", "code_lead", "product", "designer", "game_creator", "qa", "runner"}
-# The runner runs jobs others wrote and never changes the game's code.
-RUNNER_BLOCKED = ("src", "tools")
+# The runner runs jobs others wrote and never changes the game's code, the
+# tools or the rules that hold it (runner.md). Its shell only waits, reads and
+# runs the job check; it writes notes with Write/Edit, so no redirections.
+RUNNER_BLOCKED = ("src", "tools", "scripts", ".claude")
+RUNNER_SHELL = {"sleep", "cd", "ls", "cat", "head", "tail", "grep", "wc", "date", "pwd", "echo", "scripts/job-check.sh", "./scripts/job-check.sh"}
+RUNNER_GIT = {"status", "diff", "log", "show"}
 WARN_AT = 0.85
 CALL_CAP = 30
 CALL_WARN = 25
@@ -122,15 +127,63 @@ def is_work_note(data):
     return os.path.splitext(full)[1].lower() in NOTE_ENDINGS
 
 
-def runner_code_write(data):
-    if data.get("tool_name") not in ("Write", "Edit", "NotebookEdit"):
+def runner_blocked_path(raw, base):
+    # Lower case on both sides: the Mac's disk ignores case, so SRC/ is src/.
+    full = os.path.realpath(os.path.join(base, os.path.expanduser(raw))).lower()
+    for d in RUNNER_BLOCKED:
+        root = os.path.realpath(os.path.join(base, d)).lower()
+        if full == root or full.startswith(root + os.sep):
+            return True
+    return False
+
+
+def runner_shell_ok(command):
+    # Merging error output into the normal output writes no file.
+    command = command.replace("2>&1", " ")
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        words = list(lexer)
+    except ValueError:
         return False
-    raw = (data.get("tool_input") or {}).get("file_path") or ""
-    if not raw:
-        return False
+    first = True
+    git = False
+    for w in words:
+        if w in ("&&", ";", "|", "||"):
+            first, git = True, False
+            continue
+        if set(w) <= set("<>&|;()"):
+            return False
+        if "$(" in w or "`" in w:
+            return False
+        if first:
+            if w == "git":
+                git = True
+            elif w not in RUNNER_SHELL:
+                return False
+            first = False
+        elif git:
+            if w not in RUNNER_GIT:
+                return False
+            git = False
+    return True
+
+
+def runner_refusal(data):
+    tool = data.get("tool_name")
+    inp = data.get("tool_input") or {}
     base = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
-    full = os.path.realpath(os.path.join(base, os.path.expanduser(raw)))
-    return any(full.startswith(os.path.realpath(os.path.join(base, d)) + os.sep) for d in RUNNER_BLOCKED)
+    if tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
+        raw = inp.get("file_path") or inp.get("notebook_path") or ""
+        if raw and runner_blocked_path(raw, base):
+            return "The runner never changes src/, tools/, scripts/ or .claude/ (runner.md). Report it as a question instead."
+    if tool == "Bash" and not runner_shell_ok(inp.get("command") or ""):
+        return (
+            "The runner's shell only waits, reads and runs scripts/job-check.sh "
+            "(sleep, cd, ls, cat, head, tail, grep, wc, date, pwd, echo, git status/diff/log/show), "
+            "with no redirections. Write notes with Write. Report anything else as a question."
+        )
+    return None
 
 
 def main():
@@ -160,12 +213,13 @@ def main():
 
     deny = []
     context = []
-    if agent_type == "runner" and runner_code_write(data):
+    refusal = runner_refusal(data) if agent_type == "runner" else None
+    if refusal:
         out = {
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",
-                "permissionDecisionReason": "The runner never changes src/ or tools/ (runner.md). Report it as a question instead.",
+                "permissionDecisionReason": refusal,
             }
         }
         print(json.dumps(out))

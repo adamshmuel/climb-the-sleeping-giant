@@ -20,7 +20,8 @@ You run one small job exactly as your prompt describes it, then report. Someone 
 
 ## Rules
 
-- **Never change the game's code or world scripts**: nothing under `src/` or `tools/`. You write only notes in `work/` and the tables your prompt names.
+- **Never change the game's code, tools or rules**: nothing under `src/`, `tools/`, `scripts/` or `.claude/`. You write only notes in `work/` and the tables your prompt names, with Write or Edit.
+- **Your shell only waits, reads and runs `scripts/job-check.sh`** (`sleep`, `cd`, `ls`, `cat`, `head`, `tail`, `grep`, `wc`, `date`, `pwd`, `echo`, and `git status`, `diff`, `log` or `show`), with no `>` redirections. A hook refuses anything else.
 - **Never decide.** Don't fix a failing test, don't pick a new approach, and don't run anything your prompt doesn't name. If something doesn't fit the prompt, stop and report it as a question.
 - Stay inside your prompt's caps (tool calls and Studio calls). A hook counts your calls.
 - Never run `git` commands that change anything, and never mention AI, Claude or assistants in any file.
