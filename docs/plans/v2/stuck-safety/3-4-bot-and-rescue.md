@@ -264,6 +264,16 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - If 12c fails twice, it goes back to product with game_creator before any third try. No more follow-up tasks after 12b and 12c.
 - The dead `memory.lastPosition = nil` line found in the Task 12g review moved to Task 13, which already has its own green full run, so it costs no extra calls there.
 
+**Task 12i: A picked start holds still** (added 2026-10-29 by product's ruling at the end of `work/t12b/product-ruling.md`; built after Task 12c, before Task 13)
+- Spec rules: none of its own. It is test tooling: it protects every Play check of Rule 28 (Stuck players are rescued) and Rule 30 (You keep your egg) that needs a new start.
+- What it's for: scenery-safety tooling, not gameplay. `StartCheck.nearSpot` accepted floors up to 70° (the walk-up limit) and checked one point only, so its grab start slid 2.45 studs in Task 12c's beard run: the thirteenth wrong start check (Lesson 125).
+- Files: `tools/checks/StartCheck.luau`, `src/tests/server/Tools/StartCheck.spec.luau`.
+- What changes: `nearSpot` returns a start only where all 5 footprint rays, at the spot where `find` ends up (after its downhill moves), hit floor with normal Y 0.65 or more (about 49°, the stand-still limit), and the 5 hits are within 1 stud of each other in height. Otherwise its blocker is "too steep to hold still", and the next candidate is tried. `find` is unchanged (it stays the room check).
+- Failing tests first: "a 60 degree slope is too steep to hold still", "every corner of the start is checked", "the start is checked where it ends up". A 40° slope stays open (a guard test).
+- Size: 2 steps, cap 7 Studio calls (6 plus 1 spare). 1: the tests red, then the code (Sonnet, 3 Studio calls). 2: the full run (Haiku runner, 3 Studio calls).
+- Play proof: none of its own (product's ruling). The first job that uses a start 12i picks is the proof, through its dry start. If that start drifts more than 1 stud, 12i comes back to code_lead with that drift as the next failing test.
+- Lessons: 43, 75, 101, 125 (quoted in `work/handoff-t12i.md`).
+
 **Task 13: A death on the giant counts as a Reset**
 - Spec rules: Rule 25 (Reset on the giant takes you back): "Any death on the giant, except being caught, counts as a Reset". Rule 29 (No rescue loops), Rule 30 (You keep your egg).
 - Files: `src/server/Players/Recovery.luau`, `src/server/Eggs/Banking.luau`, `src/server/Eggs/Carry.luau`, tests.
