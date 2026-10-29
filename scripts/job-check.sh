@@ -86,7 +86,16 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Take every start and stand spot from StartCheck.find or StartCheck.nearSpot, and name it on the line (Lesson 43)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, and every fit test uses StartCheck."
+	# StartCheck.find checks room, not a floor you can stand on, so 13 of 15
+	# stand spots it called open slid off steep floors (Task 12c step 3).
+	finds=$(grep -nE 'StartCheck\.find' "$@" | grep -v '(not a start)')
+	if [ -n "$finds" ]; then
+		echo "$finds"
+		echo "Handoff check FAILED: each line above takes a start from StartCheck.find, which doesn't check the floor's slope."
+		echo "Take it from StartCheck.nearSpot, or name a start that held in an earlier dry start (Lesson 43)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, every fit test uses StartCheck, and no start comes from StartCheck.find."
 	exit 0
 fi
 joined=0
@@ -129,6 +138,12 @@ for f in "$@"; do
 		fi
 	fi
 done
+
+echo "== Starts from StartCheck.find (Lesson 43: Task 12c step 3's stand spots slid off steep floors)"
+if grep -nE 'StartCheck\.find' "$@" | grep -v '(not a start)'; then
+	echo "  ^ take starts from StartCheck.nearSpot, which checks the floor's slope"
+	fail=1
+fi
 
 echo "== Lines starting with \"(\" (Lesson 7)"
 if grep -nE '^\s*\(' "$@"; then
