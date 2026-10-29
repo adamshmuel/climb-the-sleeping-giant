@@ -14,7 +14,7 @@ A plan is not permission to code. Adam said on 2026-10-18 that V2 coding starts 
 | 6 | `wake-up.md` | Spec 6: he hunts everyone outside a garden (carriers first), the harmless bonk, show slams in view, faster slams, his face waking, birds, dust and shaking flowers, the bigger shake, "RUN HOME!", the red screen edges, and its analytics | 23 | Task 1: The new slam times and the wake-up numbers, after plan 5 | `written` |
 | 7 | `audio.md` | Spec 7: every sound from Roblox's free library on Roblox's newer audio objects (at twice the spec's loudness numbers), calm music that follows the meter, the chase tune, the snore, snorts and mumble, every wake-up, slam, egg and player sound, the music-note button with its small-phone move, its analytics, and the Gate 4 sound check. No team session ever plays a sound out loud | 20 | Task 1: The sound list and the loudness scale, after plan 6. Tasks 5, 6 and 7 wait for answers from product and designer (its "Questions") | `written` |
 
-**In all: 158 tasks (the rows above added up, 2026-10-27), plus V2 setups 1 to 6 (below; all 6 are built).** Plans are built one after another, in this order. A plan's first task starts when the plan before it is built.
+**In all: 158 tasks (the rows above added up, 2026-10-27), plus V2 setups 1 to 6 (below; all 6 are built) and setup 7 on (`docs/plans/v2/setups.md`).** Plans are built one after another, in this order. A plan's first task starts when the plan before it is built.
 
 Status words: `to write`, `written`, `building`, `built`.
 
