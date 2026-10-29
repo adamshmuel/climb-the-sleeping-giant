@@ -116,6 +116,32 @@ function Recovery.start(deps: Deps): Recovery
 		end
 	end
 
+	-- Puts a character on a spot, lifted so the feet can't start inside the ground. The tracker is told first, so the jump
+	-- is not read as a fall or as walking. Returns where the character now stands.
+	local function placeOn(
+		character: Model,
+		root: BasePart,
+		humanoid: Humanoid,
+		spot: SafeSpots.Spot,
+		userId: number
+	): CFrame
+		local standing = spot.feet + Vector3.new(0, LIFT + humanoid.HipHeight + root.Size.Y / 2, 0)
+		local target = CFrame.lookAt(standing, standing + spot.facing)
+		-- Moves the whole character, not only the root: whatever hangs on the character keeps its place.
+		character:PivotTo(target * root.CFrame:Inverse() * character:GetPivot())
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.AssemblyAngularVelocity = Vector3.zero
+		deps.tracker:moved(userId)
+		return target
+	end
+
+	-- Writes a move into the player's recent moves, so the loop limit (Rule 29) counts it.
+	local function recordMove(userId: number, now: number)
+		local recent = RecoveryRules.recent(moves[userId] or {}, now)
+		table.insert(recent, now)
+		moves[userId] = recent
+	end
+
 	-- On a death, pick the spot first: the new character's arrival clears the list.
 	local function watchCharacter(player: any, record: Watched, character: Model)
 		record.characterTrove:Clean()
@@ -185,18 +211,9 @@ function Recovery.start(deps: Deps): Recovery
 			return nil
 		end
 		local oldPosition = root.Position
-		local standing = spot.feet + Vector3.new(0, LIFT + humanoid.HipHeight + root.Size.Y / 2, 0)
-		local target = CFrame.lookAt(standing, standing + spot.facing)
-		-- Moves the whole character, not only the root: whatever hangs on the character keeps its place.
-		character:PivotTo(target * root.CFrame:Inverse() * character:GetPivot())
-		root.AssemblyLinearVelocity = Vector3.zero
-		root.AssemblyAngularVelocity = Vector3.zero
-		deps.tracker:moved(player.UserId) -- first: the jump must not be read as a fall or as walking
+		local target = placeOn(character, root, humanoid, spot, player.UserId)
 		deps.fireRescued(player, oldPosition, target)
-		local now = deps.now()
-		local recent = RecoveryRules.recent(moves[player.UserId] or {}, now)
-		table.insert(recent, now)
-		moves[player.UserId] = recent
+		recordMove(player.UserId, deps.now())
 		if pressing[player.UserId] == true then
 			holding[player.UserId] = player
 			player:SetAttribute("Held", true)

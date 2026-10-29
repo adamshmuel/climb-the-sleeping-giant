@@ -368,3 +368,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** after Task 13's 5d Play, the planned re-proof would have run all three deaths again, though deaths B and C were already measured correctly and only the job's check was wrong.
 - **Do instead:** a re-proof Play covers only the rules that failed on the feature. The rest are accepted from the failed run's measured lines.
 - **Who checks:** `product` when ruling on a re-proof, and `code_lead` when sizing it.
+
+## Lesson 131: Measure a move right after a spawn before the first fix
+- **What happened:** Task 13's move of a new body after a death failed three Plays (49 Studio calls, about 25 planned). Each fix was a guess about engine timing, and the tests' stand-in bodies couldn't show the real order.
+- **Do instead:** for any move right after the engine spawns a body, measure it in Play first (position and who runs its physics, every frame for 1 s), then fix. If the task's size can't hold that, move the feature to a later spec.
+- **Who checks:** `code_lead` when planning the task, `product` when ruling on an overrun.

@@ -140,6 +140,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 128 | Measure "home" against the spawn spot, not a box near it | `studio-and-scripts.md` |
 | 129 | Fakes must spawn bodies in the engine's order | `studio-and-scripts.md` |
 | 130 | Re-prove only what failed | `studio-and-scripts.md` |
+| 131 | Measure a move right after a spawn before the first fix | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

@@ -267,7 +267,6 @@ function PlayerTracker.new(deps: Deps): Tracker
 					local fresh = LandingDetector.new(place.zone)
 					fresh.owed = memory.landing.owed
 					thudFrom, memory.landing = LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {})
-					memory.lastPosition = nil
 					table.clear(memory.readings)
 					recordReading(memory, deps.now(), root.Position, grounded)
 					memory.lastPosition = root.Position

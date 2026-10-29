@@ -115,6 +115,16 @@ function SafeSpots.pick(self: SafeSpots, userId: number, from: Vector3): Spot?
 	return nil
 end
 
+-- The last saved spot, as a copy, whatever its distance from the feet, or nil when there is none.
+function SafeSpots.newest(self: SafeSpots, userId: number): Spot?
+	local player = self.players[userId]
+	local spot = if player then player.spots[#player.spots] else nil
+	if spot == nil then
+		return nil
+	end
+	return { feet = spot.feet, facing = spot.facing }
+end
+
 function SafeSpots.count(self: SafeSpots, userId: number): number
 	local player = self.players[userId]
 	return if player then #player.spots else 0

@@ -158,6 +158,22 @@ describe("SafeSpots", function()
 		expect(spots:pick(USER, Vector3.new(50, 5, 0))).toBe(nil)
 	end)
 
+	it("newest gives nothing for a brand-new player", function()
+		local spots = SafeSpots.new(70)
+		expect(spots:newest(USER)).toBe(nil)
+	end)
+
+	it("newest gives the last saved spot as a copy, however close it is", function()
+		local spots = SafeSpots.new(70)
+		spots:sample(USER, sample({ now = 0, feet = Vector3.new(0, 5, 0) }))
+		spots:sample(USER, sample({ now = 1, feet = Vector3.new(10, 5, 0), facing = Vector3.xAxis }))
+		local newest = spots:newest(USER) :: SafeSpots.Spot
+		expect(newest.feet.X).toBeCloseTo(10, 3)
+		expect(newest.facing.X).toBeCloseTo(1, 3)
+		newest.feet = Vector3.zero
+		expect((spots:newest(USER) :: SafeSpots.Spot).feet.X).toBeCloseTo(10, 3)
+	end)
+
 	it("forget removes a player's spots", function()
 		local spots = SafeSpots.new(70)
 		spots:sample(USER, sample())

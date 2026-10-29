@@ -274,14 +274,24 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Play proof: none of its own (product's ruling). The first job that uses a start 12i picks is the proof, through its dry start. If that start drifts more than 1 stud, 12i comes back to code_lead with that drift as the next failing test.
 - Lessons: 43, 75, 101, 125 (quoted in `work/handoff-t12i.md`).
 
-**Task 13: A death on the giant counts as a Reset**
-- Spec rules: Rule 25 (Reset on the giant takes you back): "Any death on the giant, except being caught, counts as a Reset". Rule 29 (No rescue loops), Rule 30 (You keep your egg).
-- Files: `src/server/Players/Recovery.luau`, `src/server/Eggs/Banking.luau`, `src/server/Eggs/Carry.luau`, tests.
-- What it does: when a character's health reaches 0 on the giant while he sleeps, it counts like a Reset (the same 2-second and loop limits). If it would take them back, the egg stays theirs, and the new character appears on the safe spot with the egg on its back. Otherwise, V1: the garden, and the egg back to its spot.
-- Failing tests first: a death on the belly while he sleeps keeps the egg and puts the new character on the safe spot; a third death within 30 seconds goes home without the egg; a death while he's awake is V1.
-- Done when: the tests pass, and in Play a character whose health is set to 0 on the belly comes back on the belly with the egg.
+**Task 13: A death on the giant works as in V1** (changed 2026-10-29 after Step 6c: product lowered the bar and game_creator approved it, `work/t13/product-6c-ruling.md`. It was "A death on the giant counts as a Reset".)
+- Spec rules: Rule 25 (Reset on the giant takes you back): only Roblox's Reset button moves a player back on the giant, and any other death on the giant works as in V1. Rule 30 (You keep your egg): a death always puts the egg back on its spot.
+- What it's for: core gameplay. It guards the heist: a death must never become a free trip home with the egg.
+- Why it changed: three Play runs showed the new body after a death on the giant stays on the home spawn. The likely cause is the player's own computer undoing a big move right after a spawn, but that was never measured (`work/t13/codelead-6c.md`). "A death keeps the egg" moved to spec 10 (Launch polish), and it gets measured before it is built (Lesson 131). A copy of the built code is kept in `work/t13/spec10-death-keep/`.
+- Files: `src/server/Players/Recovery.luau`, `src/server/Eggs/Banking.luau`, `src/server/init.server.luau`, `src/server/Players/SafeSpots.luau` (`newest` stays for Task 13b), the tests.
+- Failing tests first: "a death on the giant while he sleeps leaves the new body where it spawned" (0 moves, with the fake body put in the world in the engine's order: Lesson 129), and "Recovery gives Banking no way to keep an egg through a death".
+- Done when: both tests were red, then green; `scripts/check.sh` and the full run pass. No Play: Step 5d's deaths B and C showed the V1 path in Play (home, egg back on its spot), and product plays a death in the build review. Handoff: `work/t13/step7-prompt.md`.
 - Note from Task 11: Task 11's send-home is a server-made death (the humanoid's health set to 0). It must not count as a Reset here, or a third move would loop. Mark it before the health is set, and skip marked deaths.
 - Carry-over cleanup (from the Task 12g review, 2026-10-29): in `src/server/Players/PlayerTracker.luau`, the grace branch sets `memory.lastPosition = nil` and then sets it again a few lines later, so the first one does nothing. Delete it in the step that writes the code, with no behaviour change and no new test. The step's own `scripts/check.sh` and green full run cover it (0 extra Studio calls). Add `PlayerTracker.luau` to that step's files.
+
+**Task 13b: The Reset button keeps the spot you stand on** (added 2026-10-29 at the Task 13 Step 6b review; built right after Task 13, before Task 14)
+- Spec rules: Rule 27 (Safe spots are really safe), its Reset part, as product changed it: a Reset uses the newest safe spot 4 or more studs away, or else the newest spot even if it's close.
+- What it's for: core gameplay. A sleeping-giant Reset while standing still on the newest safe spot must keep the player and the egg there, not send them home. `SafeSpots.newest` was built in Task 13; the Reset path (`moveBackTo`, around line 260) still uses `pick` alone.
+- Files: `src/server/Players/Recovery.luau` (`moveBackTo` only), the Reset tests in `src/tests/server/Players/`.
+- Failing test first: "a Reset while standing on the newest safe spot moves the player back to that spot" (and one for "an older spot 4 or more studs away comes first"). The test stands the body on its newest spot, never 25 studs away, because that hid the bug in Task 13 (Step 6a probe). It fails today because `pick` returns nothing.
+- What makes it pass: `pick(...) or safeSpots:newest(userId)` in `moveBackTo`. Reuse `SafeSpots.newest`; no second copy.
+- Done when: both tests were red, then green; `scripts/check.sh` and the full run pass. No Play run (product's ruling, `work/t13/product-5d-ruling.md`): product plays a Reset in the build review.
+- Size: 2 steps, at most 25 tool calls each. Step 1: red (no Studio calls, Sonnet). Step 2: green, sync check and full run (3 Studio calls, cap 4, Sonnet; the full run itself may go to `runner`, Haiku).
 
 **Task 14: The rescue puff**
 - Spec rules: Rule 33 (What a rescue looks like).
