@@ -129,7 +129,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 117 | Measure "stands still" along the ground | `studio-and-scripts.md` |
 | 118 | A job prints its own proof of a fail | `studio-and-scripts.md` |
 | 119 | A handoff writes each Studio call with its service | `studio-and-scripts.md` |
-| 120 | Every Play step starts with a dry start | `studio-and-scripts.md` |
+| 120 | Every Play step starts with a dry start (extended: "proven" means it held in one, and only the main proof's starts stop it) | `studio-and-scripts.md` |
 | 121 | Judge "held still" and "silent" only once the body has settled | `studio-and-scripts.md` |
 | 122 | A move's grace lasts until the body is on the ground and still | `studio-and-scripts.md` |
 | 123 | A Play job always judges a rescue that happens | `studio-and-scripts.md` |

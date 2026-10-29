@@ -95,7 +95,17 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Take it from StartCheck.nearSpot, or name a start that held in an earlier dry start (Lesson 43)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, every fit test uses StartCheck, and no start comes from StartCheck.find."
+	# A grab start that had only ever begun a walk was called "proven" and slid
+	# 7.2 studs as a still stand, which stopped the beard proof too (Task 12c step 3
+	# rerun, the twelfth wrong start). "Proven" means it held still in a dry start.
+	proven=$(grep -nEi '\bproven\b' "$@" | grep -viE 'held( still)? [0-9]*\.?[0-9]+|\(not a start\)')
+	if [ -n "$proven" ]; then
+		echo "$proven"
+		echo "Handoff check FAILED: each line above calls a start proven without the dry start it held in."
+		echo "Write \"held 0.19 in <task> dry start\" on the line, or mark it \"(not a start)\" (Lesson 120)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven start names the dry start it held in."
 	exit 0
 fi
 joined=0
