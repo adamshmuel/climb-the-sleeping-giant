@@ -1,6 +1,6 @@
 # Agent workflow
 
-How the project agents work together. Today: `game_creator`, `designer`, `product`, `code_lead` and `builder` (`qa` comes later). New agents get a row in each table below.
+How the project agents work together. Today: `game_creator`, `designer`, `product`, `code_lead`, `builder` and `runner` (`qa` comes later). New agents get a row in each table below.
 
 ## The goal comes first
 
@@ -130,6 +130,7 @@ The main chat checks the count after every report:
 | Agent | Rule |
 |---|---|
 | `builder` | A fresh agent for every task, and never over 150k tokens. An agent can't see its own token count, so the main chat enforces it with checkpoints: each handoff splits the task into steps, and the builder stops and reports after each step (after a green test run, never in the middle of a world change), with a short note of where it stands in the `work/` folder. The main chat reads the count from the report: under 150k it resumes the same builder for the next step; above that a fresh builder carries on from the note and the handoff |
+| `runner` | A fresh agent for every job, and never over 100k tokens. Its jobs are short, so it is never resumed for a second job |
 | Every other agent | Keep resuming it while under 200k tokens. Above that, start a fresh one at the next natural break: after a review or an answer, never in the middle of a task. Every step rereads the whole memory, so a big memory makes even a short check costly |
 
 A fresh agent gets the file paths it needs (idea, design, spec, plan, progress) and a short note of where the work stands. The files are the shared memory.
@@ -152,10 +153,19 @@ A cheaper model costs less for every word it reads, so each job uses the cheapes
 |---|---|
 | **Thinking:** ideas, looks, specs, plans, reviews, rulings, finding why something failed | Opus (the default of `game_creator`, `designer`, `product` and `code_lead`) |
 | **Building:** writing tests, code and Play jobs; running Play and judging it against a pass list | Sonnet (the default of `builder`) |
-| **Running only:** a full test run and its fetch, fetching a job that's already running, copying files, filling a table from given numbers | Haiku |
+| **Running only:** a full test run and its fetch, fetching a job that's already running, a read-only names check, copying files, filling a table from given numbers, running `scripts/job-check.sh` | Haiku (the `runner` agent) |
 
 - **Each handoff step names its model** in its heading, for example "## Step 3: The full run (2 Studio calls, Haiku)". `code_lead` picks it from the table. `scripts/job-check.sh --handoff` fails a step heading with no model.
 - **The main chat starts each step with that model** (the Agent tool's `model`). A resumed agent keeps its model, so a step on a different model gets a fresh agent, given the handoff and the last state note.
+- **`code_lead` hands on its simple jobs.** It keeps the thinking: plans, handoffs, reviews, rulings, finding why something failed, and reading every job before its first paste (Lesson 76). It hands on the rest:
+
+  | `code_lead` job | Goes to |
+  |---|---|
+  | A small Play pre-check with a pass list it wrote | `builder` (Sonnet) |
+  | The names check of a handoff's world table (one read-only Studio call it wrote), a full test run, progress-table rows from given results, `scripts/job-check.sh` on a job or handoff | `runner` (Haiku) |
+
+  It writes such a job as a short prompt in `work/` (files to read, scripts to paste, pass rule, caps), and the main chat starts that agent.
+- **Ready-made run scripts.** A full test run is always `scripts/studio/full-run-start.luau`, a wait of about 60 s, then `scripts/studio/full-run-fetch.luau` (fetched again until it reports, never started twice: Lesson 51).
 - **Jobs outside a handoff** (a question, a check, a progress update) get their model from the same table, written by the main chat when it starts the job.
 - **If a cheaper model fails a step** (wrong calls, a misread result), the step goes back up one model, and that kind of job moves up in this table. It's logged in the problems log like any other unplanned stop.
 
@@ -182,6 +192,7 @@ After every approved task, it updates the "Now" section of `docs/handoff.md` (un
 | Specs, and reviewing what was built against them | `product` |
 | Code architecture, plans, task breakdown, code review, progress table | `code_lead` |
 | Writing the code and its tests | `builder` |
+| Running jobs others wrote and decided: test runs, fetches, names checks, progress rows | `runner` |
 | Testing finished features and fixes (later) | `qa` |
 | Tools, setup, agent configuration | main chat |
 

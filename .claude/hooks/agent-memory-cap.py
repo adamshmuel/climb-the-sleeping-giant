@@ -21,9 +21,11 @@ import json
 import os
 import sys
 
-LIMITS = {"builder": 150_000}
+LIMITS = {"builder": 150_000, "runner": 100_000}
 DEFAULT_LIMIT = 200_000
-PROJECT_AGENTS = {"builder", "code_lead", "product", "designer", "game_creator", "qa"}
+PROJECT_AGENTS = {"builder", "code_lead", "product", "designer", "game_creator", "qa", "runner"}
+# The runner runs jobs others wrote and never changes the game's code.
+RUNNER_BLOCKED = ("src", "tools")
 WARN_AT = 0.85
 CALL_CAP = 30
 CALL_WARN = 25
@@ -120,6 +122,17 @@ def is_work_note(data):
     return os.path.splitext(full)[1].lower() in NOTE_ENDINGS
 
 
+def runner_code_write(data):
+    if data.get("tool_name") not in ("Write", "Edit", "NotebookEdit"):
+        return False
+    raw = (data.get("tool_input") or {}).get("file_path") or ""
+    if not raw:
+        return False
+    base = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
+    full = os.path.realpath(os.path.join(base, os.path.expanduser(raw)))
+    return any(full.startswith(os.path.realpath(os.path.join(base, d)) + os.sep) for d in RUNNER_BLOCKED)
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -147,6 +160,16 @@ def main():
 
     deny = []
     context = []
+    if agent_type == "runner" and runner_code_write(data):
+        out = {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": "The runner never changes src/ or tools/ (runner.md). Report it as a question instead.",
+            }
+        }
+        print(json.dumps(out))
+        return
     if size is not None:
         k = f"{size // 1000}k of your {limit // 1000}k limit"
         if size >= limit:
