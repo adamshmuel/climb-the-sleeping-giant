@@ -215,3 +215,28 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** in Task 9 the test "saves nothing with no ground under the feet" failed although the module was right. Its `sample(overrides)` helper copied the overrides with a `for` loop, and a Luau table loop never visits a key set to `nil`, so `groundNormal = nil` never reached the module (2026-10-28).
 - **Do instead:** a test that needs a missing value builds the sample first and then sets that field to `nil` on it directly. A helper with overrides is only for values that exist.
 - **Who checks:** the builder, and `code_lead` in review.
+
+## Lesson 90: Edit mode never fires Died
+- **What happened:** in Task 10 step 3 the death test waited for `Humanoid.Died`, but a Humanoid in a WorldModel or an Edit-mode Workspace never fires it, so the test could not pass (2026-10-28).
+- **Do instead:** a module that listens for a death takes a `died(character, callback)` dependency from the start. The game passes the real `Humanoid.Died`; tests call the callback themselves.
+- **Who checks:** `code_lead` (handoff), the builder.
+
+## Lesson 91: A Studio job gets its own copy of a module
+- **What happened:** Task 10 step 5 planned to read the live rescue module's state from a job (`Recovery.current()`). A `require` from `execute_luau` gives the job a separate copy of the module, so it read nil, and the helper became dead code (2026-10-28).
+- **Do instead:** a Play job never reads live module state. It starts its own instance from the module, or checks by effect (where the body is, what the remote sent). No code is added only so a job can reach it.
+- **Who checks:** `code_lead` (plan and handoff).
+
+## Lesson 92: Set the phone device before its orientation
+- **What happened:** in Task 10 step 5 `SetOrientationAsync` errored on the default device and ended the job before the phone check (2026-10-28).
+- **Do instead:** a job sets the device with `SetDeviceAsync` first, then sets the orientation in its own `pcall`.
+- **Who checks:** the job's writer, and `code_lead` before the paste (Lesson 76).
+
+## Lesson 93: Look up every property a job sets
+- **What happened:** a Task 10 job set `SoundService.Volume = 0`. SoundService has no such property, the type check let it through, and the job died in Play before judging anything (2026-10-28).
+- **Do instead:** every property or method a job uses is looked up in the docs (`roblox-docs`) before the first paste. `scripts/job-check.sh` now checks each service's sets and calls against the class list, but only for locals made with `game:GetService`.
+- **Who checks:** the job's writer, and `code_lead` before the paste.
+
+## Lesson 94: A "nothing happened" check also proves something was tried
+- **What happened:** Task 10's Play check passed "no noise while shaking" because the meter read 0 before and after, but the body never moved, so the check proved nothing (code_lead's review, 2026-10-29).
+- **Do instead:** a Play check that something stays quiet also prints how much the cause really happened (for example the body's biggest move in one tick). A try where the cause didn't happen doesn't count and is made again.
+- **Who checks:** `code_lead` (plan's "Done when"), `product` (approves the check).

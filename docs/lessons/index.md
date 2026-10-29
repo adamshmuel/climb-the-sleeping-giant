@@ -99,6 +99,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 87 | Prove a check ran, and fetch only what is saved | `studio-and-scripts.md` |
 | 88 | A test helper can't pass nil through a loop | `studio-and-scripts.md` |
 | 89 | A step's reading fits inside its cap | `teamwork.md` |
+| 90 | Edit mode never fires Died | `studio-and-scripts.md` |
+| 91 | A Studio job gets its own copy of a module | `studio-and-scripts.md` |
+| 92 | Set the phone device before its orientation | `studio-and-scripts.md` |
+| 93 | Look up every property a job sets | `studio-and-scripts.md` |
+| 94 | A "nothing happened" check also proves something was tried | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
