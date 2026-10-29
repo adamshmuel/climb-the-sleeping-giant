@@ -141,3 +141,8 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **What happened:** Task 8's `BotLegs` kept one step-off start every 10 studs by flat distance only. A lower ledge whose edge sat within 10 studs of a higher edge lost every step-off, so Rule 24 (A bot walks every way) would have passed while skipping the edges where a kid steps off into a slot. code_lead's review caught it; the fix (also within 2 studs in height) took 3 more Studio calls and the step-offs went from 114 to 313 (2026-10-28).
 - **Do instead:** a rule that thins out points on the giant counts height too, or spaces them along each edge. Its tests include a stacked ledge: a lower edge right beside a higher one. A thinned count that changes the next task's size (here the bot's walk time) is re-measured before that task is sized.
 - **Who checks:** `code_lead` (in the plan and the review), `builder`.
+
+## Lesson 125: A start's slope limit is the stand-still limit, not the walk-up limit
+- **What happened:** `StartCheck.nearSpot` accepted floors up to 70°, the steepest a character can walk up, and checked only one point. Its grab start in Task 12c's beard run slid 2.45 studs in the dry start, the thirteenth wrong start check. Starts that held were on 44°; the ones that slid were on 55-69°.
+- **Do instead:** a start is accepted only if every corner under where the body ends up hits a floor no steeper than the steepest slope a body has stood still on in a dry start, and the corners are close in height. A dry start measures the drift from the ground under the middle (Lesson 75) and prints the floor's angle.
+- **Who checks:** `code_lead` (the StartCheck tests and the job review).

@@ -134,6 +134,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 122 | A move's grace lasts until the body is on the ground and still | `studio-and-scripts.md` |
 | 123 | A Play job always judges a rescue that happens | `studio-and-scripts.md` |
 | 124 | A job that carries an egg grabs from a held start and prints why the egg left | `studio-and-scripts.md` |
+| 125 | A start's slope limit is the stand-still limit, not the walk-up limit | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
