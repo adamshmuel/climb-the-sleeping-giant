@@ -54,6 +54,10 @@
 					{
 						"type": "command",
 						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rojo-safe-delete.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-osascript.py"
 					}
 				]
 			},

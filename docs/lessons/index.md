@@ -135,6 +135,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 123 | A Play job always judges a rescue that happens | `studio-and-scripts.md` |
 | 124 | A job that carries an egg grabs from a held start and prints why the egg left | `studio-and-scripts.md` |
 | 125 | A start's slope limit is the stand-still limit, not the walk-up limit | `world-scenery.md` |
+| 126 | Mute in the game, never the Mac | `studio-and-scripts.md` |
+| 127 | Check every start again after a start-check change | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

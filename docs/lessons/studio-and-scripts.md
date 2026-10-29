@@ -343,3 +343,13 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12c's last run grabbed the Rare from a start marked "(not a start)", which had slid 7.2 studs in the dry start before. The body fell, a second grab took the Rare, and 2.4 s later the egg was gone before any beard try. Nothing printed which of the 5 ways to drop an egg fired, so nobody could say if it was the job or the game.
 - **Do instead:** a grab's start is a start: it held still in an earlier dry start, and the handoff line says "held N in <task> dry start". Every Play job that carries an egg adds one Server watcher that prints the time, the reason and the garden whenever `Carrying` changes.
 - **Who checks:** `scripts/job-check.sh --handoff` fails a grab with a position and no "held N"; `code_lead` checks the watcher (job review, Lesson 76).
+
+## Lesson 126: Mute in the game, never the Mac
+- **What happened:** Task 13 step 5b's handoff said "Sound muted" and didn't say how, so the Play builder ran the Mac's AppleScript mute command. That can pop up macOS prompts Adam would have to answer.
+- **Do instead:** a Play job mutes only the game's own sounds, from its Client paste (the "Muting the sound in Play" steps in `docs/progress/index.md`: a SessionMute SoundGroup at Volume 0). Every handoff that says "muted" points to those steps.
+- **Who checks:** `.claude/hooks/no-osascript.py` refuses the command for every agent; `code_lead` checks the handoff wording.
+
+## Lesson 127: Check every start again after a start-check change
+- **What happened:** Task 13 step 5b's grab start was marked "(runtime pick)". The names check only proved the name existed. Task 12i had made `StartCheck.nearSpot` stricter since that start was last tried, so the job found no start and stopped before testing anything (6 Studio calls).
+- **Do instead:** every Play handoff's names check runs `nearSpot` on each start row in Edit (one read-only call), and the row says "open in Edit" or "held N in <task> dry start".
+- **Who checks:** `scripts/job-check.sh --handoff` refuses a start row with neither (setup change, with a fixture test).
