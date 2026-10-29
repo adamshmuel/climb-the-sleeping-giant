@@ -310,3 +310,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12e's phone check failed "meter never rose" (0.8). The job kept the meter's ticks under the key `B1#1`, but the builder read `B1`. Play was stopped, so the only proof of when the meter rose was lost, and finding the cause needs a rerun over the task's cap.
 - **Do instead:** when a check fails, the job itself prints the moment it failed (the tick, the value and what the body was doing) in its result lines. It never relies on a second read by key. Each table a job keeps prints its exact key next to it.
 - **Who checks:** `code_lead` (reads the job), `builder` (job).
+
+## Lesson 119: A handoff writes each Studio call with its service
+- **What happened:** Task 12f's handoff said only "`SetDeviceAsync`". The builder guessed the service and wrote `DeviceSimulatorService` instead of `StudioDeviceSimulatorService`. The call failed and used the step's spare Studio call.
+- **Do instead:** every Studio call in a handoff names its full path, for example `StudioDeviceSimulatorService:SetDeviceAsync("iphone_14")`, so nobody has to guess a name.
+- **Who checks:** `code_lead` (handoff).
