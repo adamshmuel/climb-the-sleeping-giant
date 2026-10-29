@@ -10,7 +10,7 @@ local HERE = Vector3.new(10, 50, 10)
 
 -- A player who is pressing to move, on the giant, free to move, standing still. Fields are set directly to override.
 local function input(): StuckWatch.Input
-	return { pressing = true, position = HERE, onGiant = true, blocked = false }
+	return { pressing = true, position = HERE, onGiant = true, blocked = false, held = false }
 end
 
 describe("StuckWatch.update", function()
@@ -51,6 +51,18 @@ describe("StuckWatch.update", function()
 		idle.pressing = false
 		watch:update(USER, idle, 0)
 		expect(watch:update(USER, idle, 10)).toBe(false)
+	end)
+
+	it("a held player who keeps pressing isn't rescued again", function()
+		local watch = StuckWatch.new()
+		local held = input()
+		held.held = true
+		watch:update(USER, held, 0)
+		expect(watch:update(USER, held, 10)).toBe(false)
+		-- The watch starts when the hold ends, not before.
+		expect(watch:update(USER, input(), 11)).toBe(false)
+		expect(watch:update(USER, input(), 13.9)).toBe(false)
+		expect(watch:update(USER, input(), 14)).toBe(true)
 	end)
 
 	it("falling blocks the rescue", function()

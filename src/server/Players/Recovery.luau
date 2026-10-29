@@ -82,6 +82,12 @@ local function bodyOf(character: Model?): (BasePart?, Humanoid?)
 	return root, humanoid
 end
 
+-- Where the feet are: the root is a Humanoid's HipHeight plus half the root's height above them. Spots are feet, so a
+-- distance to a spot measures feet to feet (Lesson 110).
+local function feetOf(root: BasePart, humanoid: Humanoid): Vector3
+	return root.Position - Vector3.new(0, humanoid.HipHeight + root.Size.Y / 2, 0)
+end
+
 -- Everything made for one player: a trove for the player and one for the current character, which is cleaned on every
 -- new character and destroyed with the player's trove.
 local function newWatched()
@@ -98,14 +104,27 @@ function Recovery.start(deps: Deps): Recovery
 	local kept: { [number]: SafeSpots.Spot? } = {}
 	local moves: { [number]: { number } } = {} -- when each player was last moved back (the last LoopSeconds only)
 	local pressing: { [number]: boolean } = {} -- who is pressing to move right now, as the client says
+	local holding: { [number]: any } = {} -- the players held still after a move back, until they let go (attribute Held)
 	local stuckWatch = StuckWatch.new()
+
+	-- Ends a player's hold: the attribute goes, and Carry gives the walking speed back.
+	local function release(userId: number)
+		local player = holding[userId]
+		if player ~= nil then
+			holding[userId] = nil
+			player:SetAttribute("Held", nil)
+		end
+	end
 
 	-- On a death, pick the spot first: the new character's arrival clears the list.
 	local function watchCharacter(player: any, record: Watched, character: Model)
 		record.characterTrove:Clean()
 		local connection = diedFn(character, function()
-			local root = bodyOf(character)
-			kept[player.UserId] = if root ~= nil then safeSpots:pick(player.UserId, root.Position) else nil
+			local root, humanoid = bodyOf(character)
+			kept[player.UserId] = if root ~= nil and humanoid ~= nil
+				then safeSpots:pick(player.UserId, feetOf(root, humanoid))
+				else nil
+			release(player.UserId)
 		end)
 		if connection ~= nil then
 			record.characterTrove:Add(connection)
@@ -123,6 +142,7 @@ function Recovery.start(deps: Deps): Recovery
 		record.trove:Add(player.CharacterAdded:Connect(function(character: Model)
 			safeSpots:forget(userId)
 			pressing[userId] = nil
+			release(userId)
 			stuckWatch:forget(userId)
 			watchCharacter(player, record, character)
 		end))
@@ -137,6 +157,7 @@ function Recovery.start(deps: Deps): Recovery
 		kept[userId] = nil
 		moves[userId] = nil
 		pressing[userId] = nil
+		release(userId)
 		stuckWatch:forget(userId)
 		local record = watched[userId]
 		if record ~= nil then
@@ -151,13 +172,15 @@ function Recovery.start(deps: Deps): Recovery
 	trove:Add(deps.players.PlayerAdded:Connect(watchPlayer))
 	trove:Add(deps.players.PlayerRemoving:Connect(forgetPlayer))
 
-	local function moveBack(_self: Recovery, player: any): CFrame?
+	-- Moves a player back to the newest safe spot at least RescueDistance studs from their feet. A player who is still
+	-- pressing is held still there until they let go (Rule 28). Nil when no spot is far enough.
+	local function moveBackTo(player: any): CFrame?
 		local character: Model? = player.Character
 		local root, humanoid = bodyOf(character)
 		if character == nil or root == nil or humanoid == nil then
 			return nil
 		end
-		local spot = safeSpots:pick(player.UserId, root.Position)
+		local spot = safeSpots:pick(player.UserId, feetOf(root, humanoid))
 		if spot == nil then
 			return nil
 		end
@@ -174,7 +197,15 @@ function Recovery.start(deps: Deps): Recovery
 		local recent = RecoveryRules.recent(moves[player.UserId] or {}, now)
 		table.insert(recent, now)
 		moves[player.UserId] = recent
+		if pressing[player.UserId] == true then
+			holding[player.UserId] = player
+			player:SetAttribute("Held", true)
+		end
 		return target
+	end
+
+	local function moveBack(_self: Recovery, player: any): CFrame?
+		return moveBackTo(player)
 	end
 
 	-- A player's Reset (Rules 25 to 33): back to a safe spot while the giant sleeps and the move is not a loop, home
@@ -187,7 +218,7 @@ function Recovery.start(deps: Deps): Recovery
 		end
 		local onGiant = RecoveryRules.onGiant(where.zone, where.onPillow)
 		local choice = RecoveryRules.resetChoice(onGiant, deps.phase(), moves[player.UserId] or {}, deps.now())
-		if choice == "MoveBack" and moveBack(nil :: any, player) ~= nil then
+		if choice == "MoveBack" and moveBackTo(player) ~= nil then
 			return
 		end
 		deps.sendHome(player) -- "Home", or no spot far enough (Rule 27)
@@ -195,13 +226,16 @@ function Recovery.start(deps: Deps): Recovery
 
 	local function setPressing(_self: Recovery, player: any, on: boolean)
 		pressing[player.UserId] = on
+		if not on then
+			release(player.UserId)
+		end
 	end
 
 	-- Moves a stuck player (Rule 28): back to a safe spot, or home when that would be a loop (Rule 29) or no spot is
 	-- far enough. A move back keeps the egg.
 	local function rescue(player: any, now: number)
 		local choice = RecoveryRules.rescueChoice(moves[player.UserId] or {}, now)
-		if choice == "MoveBack" and moveBack(nil :: any, player) ~= nil then
+		if choice == "MoveBack" and moveBackTo(player) ~= nil then
 			return
 		end
 		deps.sendHome(player)
@@ -228,6 +262,7 @@ function Recovery.start(deps: Deps): Recovery
 				position = position,
 				onGiant = RecoveryRules.onGiant(where.zone, where.onPillow),
 				blocked = deps.falling(player) or deps.floating(userId) or deps.inRedCircle(position),
+				held = holding[userId] ~= nil,
 			}, now)
 			if stuck then
 				rescue(player, now)
@@ -255,6 +290,9 @@ function Recovery.start(deps: Deps): Recovery
 		table.clear(kept)
 		table.clear(moves)
 		table.clear(pressing)
+		for userId in table.clone(holding) do
+			release(userId)
+		end
 	end
 
 	return {

@@ -229,6 +229,7 @@ local function addPlayer(
 		eggsHome = 0, -- the director doesn't read it; PlayerInfo still has the field
 		rareHome = extra ~= nil and extra.veteran == true,
 		freeSaveUsed = extra ~= nil and extra.saveUsed == true,
+		held = false,
 	})
 end
 

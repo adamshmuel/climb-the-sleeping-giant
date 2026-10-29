@@ -153,7 +153,7 @@ local tracker = PlayerTracker.new({
 	now = os.clock,
 })
 
--- The red circles shown and not landed yet: a rescue never moves a player into one (Rule 28).
+-- The red circles shown and not landed yet: a rescue waits while the player stands in one (Rule 28).
 local redCircles = RedCircles.new()
 
 -- Moving back: it remembers each player's safe spots and puts a player back on the last one when they fall off the

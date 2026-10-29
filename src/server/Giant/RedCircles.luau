@@ -1,5 +1,5 @@
 --!strict
--- The red circles that have been shown and haven't landed yet (Rule 28). A rescue must not move a player into one.
+-- The red circles that have been shown and haven't landed yet (Rule 28). A rescue waits while the player stands in one.
 -- Pure: no services and no clock. `landsAt` and `now` are in the same clock (the server time the giant's warnings use).
 
 local Slams = require(script.Parent.Slams)
@@ -25,17 +25,22 @@ end
 
 -- True when the position is inside a circle that hasn't landed yet. Landed circles are dropped on the way.
 function methods.covers(self: Circles, position: Vector3, now: number): boolean
-	local kept: { Circle } = {}
+	local circles = self._circles
 	local covered = false
-	for _, circle in self._circles do
+	local keep = 0
+	for i = 1, #circles do
+		local circle = circles[i]
 		if circle.landsAt > now then
-			table.insert(kept, circle)
+			keep += 1
+			circles[keep] = circle
 			if Slams.inCircle(position, circle.centre) then
 				covered = true
 			end
 		end
 	end
-	self._circles = kept
+	for i = #circles, keep + 1, -1 do
+		circles[i] = nil
+	end
 	return covered
 end
 

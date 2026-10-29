@@ -566,6 +566,104 @@ describe("Recovery", function()
 		expect(#rig.rescues).toBe(0)
 	end)
 
+	it("a rescue lands on the safe spot 5 studs away, not the one 3 studs away", function()
+		-- The body's root is 3 studs above its feet. Measured root to feet, the 3-stud spot looks 4.24 away.
+		local player = newPlayer(1, Vector3.new(0, 8, 0))
+		local rig = newRig({ player })
+		rig.samples[1] = sampleAt(Vector3.new(5, 5, 0), Vector3.xAxis, rig.clock)
+		rig.recovery:step()
+		rig.clock += 1
+		rig.samples[1] = sampleAt(Vector3.new(3, 5, 0), Vector3.xAxis, rig.clock)
+		rig.recovery:step()
+		expect(rig.safeSpots:count(1)).toBe(2)
+
+		local target = rig.recovery:moveBack(player :: any)
+
+		expect(target).never.toBeNil()
+		expect(math.abs((target :: CFrame).Position.X - 5) < 0.01).toBe(true)
+	end)
+
+	it("a rescued player who keeps pressing doesn't move", function()
+		local player, rig = onGiantWithSpot(1)
+
+		pressAndWait(player, rig, 3)
+
+		expect(#rig.rescues).toBe(1)
+		expect(player:GetAttribute("Held")).toBe(true)
+	end)
+
+	it("after 'stopped' they walk again", function()
+		local player, rig = onGiantWithSpot(1)
+		pressAndWait(player, rig, 3)
+		expect(player:GetAttribute("Held")).toBe(true)
+
+		rig.recovery:setPressing(player :: any, false)
+
+		expect(player:GetAttribute("Held")).toBeNil()
+	end)
+
+	it("a Reset that moves them back holds them the same way", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.recovery:setPressing(player :: any, true)
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(1)
+		expect(player:GetAttribute("Held")).toBe(true)
+	end)
+
+	it("a rescued player who isn't pressing isn't held", function()
+		local player, rig = onGiantWithSpot(1)
+
+		rig.recovery:reset(player :: any) -- moved back, with nobody pressing
+
+		expect(#rig.rescues).toBe(1)
+		expect(player:GetAttribute("Held")).toBeNil()
+	end)
+
+	it("a new character ends the hold", function()
+		local player, rig = onGiantWithSpot(1)
+		pressAndWait(player, rig, 3)
+		expect(player:GetAttribute("Held")).toBe(true)
+
+		local newCharacter = makeCharacter(Vector3.new(500, 5, 0))
+		table.insert(made, newCharacter)
+		player.Character = newCharacter
+		player.CharacterAdded:Fire(newCharacter)
+
+		expect(player:GetAttribute("Held")).toBeNil()
+	end)
+
+	it(
+		"stuck, rescued and held, keeps pressing 10 s with no second rescue, lets go, then can be rescued again",
+		function()
+			local player, rig = onGiantWithSpot(1)
+			pressAndWait(player, rig, 3)
+			expect(#rig.rescues).toBe(1)
+
+			for _ = 1, 10 do
+				rig.clock += 1
+				rig.recovery:step()
+			end
+			expect(#rig.rescues).toBe(1)
+			expect(#rig.home).toBe(0)
+			expect(player:GetAttribute("Held")).toBe(true)
+
+			rig.recovery:setPressing(player :: any, false)
+			expect(player:GetAttribute("Held")).toBeNil()
+
+			-- A second safe spot, far from where they stand now.
+			rig.clock += 1
+			rig.samples[1] = sampleAt(Vector3.new(-10, 5, 0), Vector3.xAxis, rig.clock)
+			rig.recovery:step()
+			pressAndWait(player, rig, 3)
+
+			expect(#rig.rescues).toBe(2)
+			expect(#rig.home).toBe(0) -- moved back again, not sent home
+			expect(player:GetAttribute("Held")).toBe(true)
+		end
+	)
+
 	it("finds the part under a player's feet", function()
 		local floor = Instance.new("Part")
 		floor.Anchored = true
