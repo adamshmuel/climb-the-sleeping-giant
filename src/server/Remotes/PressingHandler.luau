@@ -37,7 +37,9 @@ function PressingHandler.start(deps: Deps): () -> ()
 		if type(on) ~= "boolean" then
 			return
 		end
-		if not limiter:allow(sender.UserId) then
+		-- A "stopped" always gets through, even past the limit: it can only stop things, so spam can't hurt, and the
+		-- player's last "stopped pressing" must arrive (Rule 28). A "started" past the limit is dropped.
+		if not limiter:allow(sender.UserId) and on then
 			return
 		end
 		deps.setPressing(sender, on)

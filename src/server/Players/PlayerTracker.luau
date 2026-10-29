@@ -14,6 +14,11 @@ local SPEED_WINDOW_SECONDS = 1
 -- second (Rule 31: being stuck is silent). A body shaking in a gap goes nowhere, so it makes no walking noise.
 -- Players can't see this number (Lesson 5).
 local MIN_TRIP = 1
+-- A body whose kept readings (at least MIN_COVERED_SECONDS of them) all lie within this many studs of the newest one
+-- is shaking in a pocket, not walking: no walking noise (Rule 31: being stuck is silent). It is the 1.6-stud gap plus
+-- 0.2. Measured in 3D, so a ladder climber still counts. Players can't see this number (Lesson 5).
+local POCKET_SIZE = 1.8
+local MIN_COVERED_SECONDS = 0.9
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -167,6 +172,20 @@ local function tripOf(readings: { Reading }): number
 	return (readings[#readings].position - readings[1].position).Magnitude
 end
 
+-- True when the kept readings cover at least MIN_COVERED_SECONDS and every one lies within POCKET_SIZE of the newest.
+local function inPocket(readings: { Reading }): boolean
+	local newest = readings[#readings]
+	if newest.time - readings[1].time < MIN_COVERED_SECONDS then
+		return false
+	end
+	for _, reading in readings do
+		if (reading.position - newest.position).Magnitude > POCKET_SIZE then
+			return false
+		end
+	end
+	return true
+end
+
 -- The root part of a character that is alive and complete, or nil.
 local function livingRoot(character: Model?): BasePart?
 	if character == nil then
@@ -228,7 +247,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 				local stepped = PlayerTracker.isMoving(memory.lastPosition, root.Position)
 				local grounded = deps.isGrounded(character)
 				recordReading(memory, deps.now(), root.Position, grounded)
-				local moving = stepped and tripOf(memory.readings) >= MIN_TRIP
+				local moving = stepped and tripOf(memory.readings) >= MIN_TRIP and not inPocket(memory.readings)
 				memory.lastPosition = root.Position
 				local takeoffZones: { Config.ZoneName } = {}
 				for _, position in deps.takeoffs(character) do

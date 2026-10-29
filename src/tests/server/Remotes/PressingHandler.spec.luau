@@ -106,6 +106,16 @@ describe("PressingHandler", function()
 		expect(#rig.changes).toBe(10)
 	end)
 
+	it("a 'stopped pressing' message gets through even after 10 changes in a second", function()
+		local rig = newRig()
+		for i = 1, 10 do
+			rig.send({ UserId = 7 }, i % 2 == 1)
+		end
+		rig.send({ UserId = 7 }, false)
+		expect(#rig.changes).toBe(11)
+		expect(rig.changes[11]).toEqual({ userId = 7, on = false })
+	end)
+
 	it("changes are accepted again after a second", function()
 		local rig = newRig()
 		for i = 1, 11 do

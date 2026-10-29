@@ -833,6 +833,49 @@ describe("PlayerTracker moved and shaking", function()
 		character:Destroy()
 	end)
 
+	it("a body shaking in a 1.6-stud gap while pressing makes no walking noise", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local rig = groundSpeedRig(character)
+		rig.setGrounded(true)
+
+		for step = 0, 19 do
+			readAt(rig, character, step * 0.1, 0, 5) -- stands still for 2 seconds
+		end
+		local line = { 0.8, 1.6, 0.8, 0 } -- one point a tick, through the whole gap and back
+		local noisyTicks = 0
+		for shake = 1, 30 do
+			local sample = readAt(rig, character, (19 + shake) * 0.1, line[(shake - 1) % 4 + 1], 5)
+			if sample.moving then
+				noisyTicks += 1
+			end
+		end
+
+		expect(noisyTicks).toBe(0)
+
+		character:Destroy()
+	end)
+
+	it("after standing still, a tiptoer counts as moving once 1.8 studs from where they stood", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local rig = groundSpeedRig(character)
+		rig.setGrounded(true)
+
+		for step = 0, 19 do
+			readAt(rig, character, step * 0.1, 0, 5) -- stands still for 2 seconds
+		end
+		local moving: { boolean } = {}
+		for walk = 1, 10 do
+			table.insert(moving, readAt(rig, character, (19 + walk) * 0.1, walk * 0.96, 5).moving)
+		end
+
+		expect(moving[1]).toBe(false) -- 0.96 studs from where they stood
+		for index = 2, 10 do
+			expect(moving[index]).toBe(true) -- 1.92 studs and on
+		end
+
+		character:Destroy()
+	end)
+
 	it("a ladder climber still counts as moving", function()
 		local character = makeCharacter(Vector3.new(0, 5, 0))
 		local rig = groundSpeedRig(character)
