@@ -34,7 +34,15 @@ local made: { Instance } = {}
 -- The deps for the Reset button, with plain-Luau stand-ins. `setCoreResults` says, call by call, whether setCore works
 -- (false: it errors, like Roblox's own scripts not being ready yet). Everything it was asked is written down.
 local function resetDeps(me: any, setCoreResults: { boolean }?)
-	local log = { setCoreCalls = {} :: { { name: string, value: any } }, requests = 0, waits = {} :: { number } }
+	if me.CharacterAdded == nil then
+		me.CharacterAdded = newSignal() -- the real player has this event
+	end
+	local log = {
+		setCoreCalls = {} :: { { name: string, value: any } },
+		requests = 0,
+		waits = {} :: { number },
+		pressing = {} :: { boolean },
+	}
 	local deps = {
 		rescued = newSignal() :: any,
 		localPlayer = me :: any,
@@ -50,6 +58,12 @@ local function resetDeps(me: any, setCoreResults: { boolean }?)
 		end,
 		wait = function(seconds: number)
 			table.insert(log.waits, seconds)
+		end,
+		setPressing = function(on: boolean)
+			table.insert(log.pressing, on)
+		end,
+		humanoidOf = function(_character: Model): any?
+			return nil -- the pressing tests below say which stand-in Humanoid a character has
 		end,
 	}
 	return deps, log
@@ -68,6 +82,22 @@ local function makeCharacter(position: Vector3): Model
 	character.PrimaryPart = root
 	table.insert(made, character)
 	return character
+end
+
+-- A stand-in Humanoid: a real one only changes MoveDirection from the player's input.
+local function makeHumanoid()
+	local changed = newSignal()
+	local humanoid = {
+		MoveDirection = Vector3.zero,
+		GetPropertyChangedSignal = function(_self: any, _name: string)
+			return changed
+		end,
+	}
+	local function steer(direction: Vector3)
+		humanoid.MoveDirection = direction
+		changed:Fire()
+	end
+	return humanoid, steer
 end
 
 local function rootOf(character: Model): BasePart
@@ -149,5 +179,90 @@ describe("client Recovery", function()
 		expect(log.setCoreCalls[2].name).toBe("ResetButtonCallback")
 		expect(log.setCoreCalls[2].value).toBe(true)
 		expect(log.requests).toBe(0)
+	end)
+
+	describe("pressing to move", function()
+		it("sends true when the player starts pressing to move", function()
+			local me = { Character = makeCharacter(Vector3.zero) }
+			local humanoid, steer = makeHumanoid()
+			local deps, log = resetDeps(me)
+			deps.humanoidOf = function(_character: Model): any?
+				return humanoid
+			end
+			table.insert(started, Recovery.start(deps))
+
+			steer(Vector3.xAxis)
+
+			expect(log.pressing).toEqual({ true })
+		end)
+
+		it("sends nothing while the direction changes but stays non-zero", function()
+			local me = { Character = makeCharacter(Vector3.zero) }
+			local humanoid, steer = makeHumanoid()
+			local deps, log = resetDeps(me)
+			deps.humanoidOf = function(_character: Model): any?
+				return humanoid
+			end
+			table.insert(started, Recovery.start(deps))
+
+			steer(Vector3.xAxis)
+			steer(Vector3.new(1, 0, 1).Unit)
+			steer(Vector3.zAxis)
+
+			expect(log.pressing).toEqual({ true })
+		end)
+
+		it("sends false when the player stops", function()
+			local me = { Character = makeCharacter(Vector3.zero) }
+			local humanoid, steer = makeHumanoid()
+			local deps, log = resetDeps(me)
+			deps.humanoidOf = function(_character: Model): any?
+				return humanoid
+			end
+			table.insert(started, Recovery.start(deps))
+
+			steer(Vector3.xAxis)
+			steer(Vector3.zero)
+
+			expect(log.pressing).toEqual({ true, false })
+		end)
+
+		it("follows a new character and forgets the old one", function()
+			local first = makeCharacter(Vector3.zero)
+			local second = makeCharacter(Vector3.new(50, 0, 0))
+			local me: any = { Character = first }
+			local oldHumanoid, steerOld = makeHumanoid()
+			local newHumanoid, steerNew = makeHumanoid()
+			local deps, log = resetDeps(me)
+			deps.humanoidOf = function(character: Model): any?
+				return if character == first then oldHumanoid else newHumanoid
+			end
+			table.insert(started, Recovery.start(deps))
+			steerOld(Vector3.xAxis)
+
+			me.Character = second
+			me.CharacterAdded:Fire(second)
+			steerOld(Vector3.zero) -- the old character is gone: nothing from it
+			steerNew(Vector3.zAxis)
+
+			expect(log.pressing).toEqual({ true, true })
+		end)
+
+		it("stops watching when destroyed", function()
+			local me: any = { Character = makeCharacter(Vector3.zero) }
+			local humanoid, steer = makeHumanoid()
+			local deps, log = resetDeps(me)
+			deps.humanoidOf = function(_character: Model): any?
+				return humanoid
+			end
+			local recovery = Recovery.start(deps)
+			steer(Vector3.xAxis)
+
+			recovery:destroy()
+			steer(Vector3.zero)
+			me.CharacterAdded:Fire(makeCharacter(Vector3.zero))
+
+			expect(log.pressing).toEqual({ true })
+		end)
 	end)
 end)

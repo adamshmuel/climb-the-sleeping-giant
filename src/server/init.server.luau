@@ -27,9 +27,11 @@ local JumpWatcher = require(script.Players.JumpWatcher)
 local PlayerInfo = require(script.Players.PlayerInfo)
 local PlayerTracker = require(script.Players.PlayerTracker)
 local Recovery = require(script.Players.Recovery)
+local RedCircles = require(script.Giant.RedCircles)
 local Zones = require(script.Giant.Zones)
 local SafeSpots = require(script.Players.SafeSpots)
 local Spawning = require(script.Players.Spawning)
+local PressingHandler = require(script.Remotes.PressingHandler)
 local ResetHandler = require(script.Remotes.ResetHandler)
 local TiptoeHandler = require(script.Remotes.TiptoeHandler)
 local WorldIndex = require(script.World.WorldIndex)
@@ -151,6 +153,9 @@ local tracker = PlayerTracker.new({
 	now = os.clock,
 })
 
+-- The red circles shown and not landed yet: a rescue never moves a player into one (Rule 28).
+local redCircles = RedCircles.new()
+
 -- Moving back: it remembers each player's safe spots and puts a player back on the last one when they fall off the
 -- giant, are stuck or die. It reads each player's place on the giant's tick, below, right after the tracker.
 local recovery = Recovery.start({
@@ -190,6 +195,26 @@ local recovery = Recovery.start({
 			humanoid.Health = 0
 		end
 	end,
+	falling = function(player)
+		local character = player.Character
+		local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+		return humanoid ~= nil and humanoid:GetState() == Enum.HumanoidStateType.Freefall
+	end,
+	floating = function(userId)
+		return floater:isFloating(userId)
+	end,
+	inRedCircle = function(position)
+		return redCircles:covers(position, Workspace:GetServerTimeNow())
+	end,
+})
+-- Pressing to move: the client only says it started or stopped; Recovery does the watching.
+PressingHandler.start({
+	remote = { OnServerEvent = net.SetPressing.OnServerEvent },
+	players = Players,
+	setPressing = function(player, on)
+		recovery:setPressing(player, on)
+	end,
+	now = os.clock,
 })
 -- A Reset: the client only asks; Recovery decides between moving back and going home.
 ResetHandler.start({
@@ -279,6 +304,7 @@ local director = GiantDirector.new({
 		return SlamSurface.below(Workspace, centre, characters)
 	end,
 	fireSlamWarning = function(slam: number, point: Vector3, landsAt: number)
+		redCircles:add(point, landsAt)
 		net.SlamWarning:FireAllClients(slam, point, landsAt)
 	end,
 	fireSlamLanded = function(slam: number, point: Vector3)

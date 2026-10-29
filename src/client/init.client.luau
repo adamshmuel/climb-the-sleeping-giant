@@ -83,6 +83,14 @@ if server then
 			server.RequestReset:FireServer()
 		end,
 		wait = task.wait,
+		setPressing = function(on: boolean)
+			server.SetPressing:FireServer(on)
+		end,
+		humanoidOf = function(character: Model)
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+				or character:WaitForChild("Humanoid", NET_WAIT_SECONDS)
+			return humanoid :: any -- a real Humanoid has both members that HumanoidLike names
+		end,
 	})
 	script.Destroying:Once(function()
 		recovery:destroy()

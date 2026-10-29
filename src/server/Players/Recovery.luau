@@ -12,6 +12,7 @@ local Trove = require(ReplicatedStorage.Packages.Trove)
 local PathCheck = require(script.Parent.Parent.World.PathCheck)
 local RecoveryRules = require(script.Parent.RecoveryRules)
 local SafeSpots = require(script.Parent.SafeSpots)
+local StuckWatch = require(script.Parent.StuckWatch)
 
 -- A Roblox event, as far as Recovery uses it. (The connection is typed `any`: Trove only needs to disconnect it.)
 export type SignalLike = {
@@ -37,12 +38,16 @@ export type Deps = {
 	whereIs: (player: any) -> Where?, -- nil without a living character
 	phase: () -> Config.Phase,
 	sendHome: (player: any) -> (), -- ends the player's character; Spawning puts them back in their garden
+	falling: (player: any) -> boolean, -- the Humanoid is in free fall (a rescue waits)
+	floating: (userId: number) -> boolean, -- still floating down after a wake-up (a rescue waits)
+	inRedCircle: (position: Vector3) -> boolean, -- inside a red circle that hasn't landed (a rescue waits)
 	-- Calls `callback` when the character dies, and returns the connection (or nil). The real one wraps Humanoid.Died.
 	died: ((character: Model, callback: () -> ()) -> any)?,
 }
 
 export type Recovery = {
 	step: (self: Recovery) -> (),
+	setPressing: (self: Recovery, player: any, on: boolean) -> (),
 	moveBack: (self: Recovery, player: any) -> CFrame?,
 	reset: (self: Recovery, player: any) -> (),
 	keptSpot: (self: Recovery, player: any) -> SafeSpots.Spot?,
@@ -92,6 +97,8 @@ function Recovery.start(deps: Deps): Recovery
 	local watched: { [number]: Watched } = {}
 	local kept: { [number]: SafeSpots.Spot? } = {}
 	local moves: { [number]: { number } } = {} -- when each player was last moved back (the last LoopSeconds only)
+	local pressing: { [number]: boolean } = {} -- who is pressing to move right now, as the client says
+	local stuckWatch = StuckWatch.new()
 
 	-- On a death, pick the spot first: the new character's arrival clears the list.
 	local function watchCharacter(player: any, record: Watched, character: Model)
@@ -115,6 +122,8 @@ function Recovery.start(deps: Deps): Recovery
 		watched[userId] = record
 		record.trove:Add(player.CharacterAdded:Connect(function(character: Model)
 			safeSpots:forget(userId)
+			pressing[userId] = nil
+			stuckWatch:forget(userId)
 			watchCharacter(player, record, character)
 		end))
 		if player.Character ~= nil then
@@ -127,6 +136,8 @@ function Recovery.start(deps: Deps): Recovery
 		safeSpots:forget(userId)
 		kept[userId] = nil
 		moves[userId] = nil
+		pressing[userId] = nil
+		stuckWatch:forget(userId)
 		local record = watched[userId]
 		if record ~= nil then
 			watched[userId] = nil
@@ -139,16 +150,6 @@ function Recovery.start(deps: Deps): Recovery
 	end
 	trove:Add(deps.players.PlayerAdded:Connect(watchPlayer))
 	trove:Add(deps.players.PlayerRemoving:Connect(forgetPlayer))
-
-	local function step(_self: Recovery)
-		local now = deps.now()
-		for _, player in deps.players:GetPlayers() do
-			local sample = deps.sampleOf(player, now)
-			if sample ~= nil then
-				safeSpots:sample(player.UserId, sample)
-			end
-		end
-	end
 
 	local function moveBack(_self: Recovery, player: any): CFrame?
 		local character: Model? = player.Character
@@ -192,6 +193,48 @@ function Recovery.start(deps: Deps): Recovery
 		deps.sendHome(player) -- "Home", or no spot far enough (Rule 27)
 	end
 
+	local function setPressing(_self: Recovery, player: any, on: boolean)
+		pressing[player.UserId] = on
+	end
+
+	-- Moves a stuck player (Rule 28): back to a safe spot, or home when that would be a loop (Rule 29) or no spot is
+	-- far enough. A move back keeps the egg.
+	local function rescue(player: any, now: number)
+		local choice = RecoveryRules.rescueChoice(moves[player.UserId] or {}, now)
+		if choice == "MoveBack" and moveBack(nil :: any, player) ~= nil then
+			return
+		end
+		deps.sendHome(player)
+	end
+
+	-- Each tick: saves the safe spots, then watches every living player who is pressing to move.
+	local function step(_self: Recovery)
+		local now = deps.now()
+		for _, player in deps.players:GetPlayers() do
+			local userId: number = player.UserId
+			local sample = deps.sampleOf(player, now)
+			if sample ~= nil then
+				safeSpots:sample(userId, sample)
+			end
+			local where = deps.whereIs(player)
+			local root = bodyOf(player.Character)
+			if where == nil or root == nil then
+				stuckWatch:forget(userId)
+				continue
+			end
+			local position = root.Position
+			local stuck = stuckWatch:update(userId, {
+				pressing = pressing[userId] == true,
+				position = position,
+				onGiant = RecoveryRules.onGiant(where.zone, where.onPillow),
+				blocked = deps.falling(player) or deps.floating(userId) or deps.inRedCircle(position),
+			}, now)
+			if stuck then
+				rescue(player, now)
+			end
+		end
+	end
+
 	local function keptSpot(_self: Recovery, player: any): SafeSpots.Spot?
 		return kept[player.UserId]
 	end
@@ -211,9 +254,17 @@ function Recovery.start(deps: Deps): Recovery
 		end
 		table.clear(kept)
 		table.clear(moves)
+		table.clear(pressing)
 	end
 
-	return { step = step, moveBack = moveBack, reset = reset, keptSpot = keptSpot, destroy = destroy }
+	return {
+		step = step,
+		setPressing = setPressing,
+		moveBack = moveBack,
+		reset = reset,
+		keptSpot = keptSpot,
+		destroy = destroy,
+	}
 end
 
 -- The real reader of a player's place for the safe spots: feet, the way they move, the ground under them and whether

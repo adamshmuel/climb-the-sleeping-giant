@@ -11,12 +11,19 @@ export type SignalLike = {
 	Connect: (self: any, callback: (...any) -> ()) -> any,
 }
 
+export type HumanoidLike = {
+	MoveDirection: Vector3,
+	GetPropertyChangedSignal: (self: any, name: string) -> SignalLike,
+}
+
 export type Deps = {
 	rescued: SignalLike, -- the Rescued remote's OnClientEvent: (player, from, to)
-	localPlayer: { Character: Model? }, -- the player on this device
+	localPlayer: { Character: Model?, CharacterAdded: SignalLike }, -- the player on this device
 	setCore: (name: string, value: any) -> (), -- the real one is StarterGui:SetCore, which errors until Roblox is ready
 	requestReset: () -> (), -- the real one is RequestReset:FireServer()
 	wait: (seconds: number) -> (), -- the real one is task.wait
+	setPressing: (on: boolean) -> (), -- the real one is SetPressing:FireServer(on): the player started or stopped pressing to move
+	humanoidOf: (character: Model) -> HumanoidLike?, -- the real one waits a moment for the Humanoid to arrive
 }
 
 export type Recovery = {
@@ -53,6 +60,40 @@ function Recovery.start(deps: Deps): Recovery
 		deps.requestReset()
 	end)
 	local destroyed = false
+	-- The server watches for a player who presses to move but stays put (Rule 28). It only needs to hear when pressing
+	-- starts and stops, so this sends on a change between "not moving" and "moving", not on every turn of the stick.
+	local watchedCharacter: Model? = nil
+	local moveConnection: any = nil
+	local pressing = false
+	local function stopWatching()
+		if moveConnection ~= nil then
+			moveConnection:Disconnect()
+			moveConnection = nil
+		end
+		watchedCharacter = nil
+		pressing = false -- the server forgets pressing when a character is made
+	end
+	local function watch(character: Model)
+		stopWatching()
+		watchedCharacter = character
+		task.spawn(function()
+			local humanoid = deps.humanoidOf(character)
+			if destroyed or watchedCharacter ~= character or humanoid == nil then
+				return
+			end
+			moveConnection = humanoid:GetPropertyChangedSignal("MoveDirection"):Connect(function()
+				local nowPressing = humanoid.MoveDirection.Magnitude > 0
+				if nowPressing ~= pressing then
+					pressing = nowPressing
+					deps.setPressing(nowPressing)
+				end
+			end)
+		end)
+	end
+	local characterConnection = deps.localPlayer.CharacterAdded:Connect(watch)
+	if deps.localPlayer.Character ~= nil then
+		watch(deps.localPlayer.Character)
+	end
 	task.spawn(function()
 		for attempt = 1, RESET_TRIES do
 			if destroyed then
@@ -73,6 +114,8 @@ function Recovery.start(deps: Deps): Recovery
 		destroyed = true
 		connection:Disconnect()
 		resetConnection:Disconnect()
+		characterConnection:Disconnect()
+		stopWatching()
 		pcall(deps.setCore, "ResetButtonCallback", true) -- Roblox's own Reset comes back
 		resetEvent:Destroy()
 	end

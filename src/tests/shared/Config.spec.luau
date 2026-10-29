@@ -210,6 +210,12 @@ describe("Config", function()
 		expect(Config.Stuck.LoopSeconds).toBe(30)
 	end)
 
+	it("has the stuck limits", function()
+		expect(Config.Stuck.StuckSeconds).toBe(3)
+		expect(Config.Stuck.StuckDistance).toBe(1)
+		expect(Config.Stuck.PressChangesPerSecond).toBe(10)
+	end)
+
 	it("Config can't be changed while the game runs", function()
 		expect(function()
 			(Config.Meter :: any).Max = 5

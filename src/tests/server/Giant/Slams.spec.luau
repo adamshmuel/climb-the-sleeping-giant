@@ -1,8 +1,10 @@
 --!strict
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Slams = require(ServerScriptService.Server.Giant.Slams)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 
@@ -502,5 +504,19 @@ describe("Slams.caught", function()
 		local players =
 			{ player(1, -50, 20, { landedAgo = 0.3 }), player(2, -48, 20), player(3, -52, 20, { landedAgo = 0 }) }
 		expect(Slams.caught(players, centre)).toEqual({ 2 })
+	end)
+end)
+
+describe("Slams.inCircle", function()
+	local centre = Vector3.new(0, 40, 0)
+
+	it("is true on the circle's edge, across the ground", function()
+		local radius = Config.Wake.SlamCircleDiameter / 2
+		expect(Slams.inCircle(Vector3.new(radius, 40, 0), centre)).toBe(true)
+		expect(Slams.inCircle(Vector3.new(radius + 0.5, 40, 0), centre)).toBe(false)
+	end)
+
+	it("is false for someone far above the circle", function()
+		expect(Slams.inCircle(Vector3.new(0, 70, 0), centre)).toBe(false)
 	end)
 end)

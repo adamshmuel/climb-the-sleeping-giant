@@ -98,6 +98,9 @@ export type Config = {
 		ResetCooldownSeconds: number,
 		LoopMoves: number,
 		LoopSeconds: number,
+		StuckSeconds: number,
+		StuckDistance: number,
+		PressChangesPerSecond: number,
 	},
 	Tick: {
 		Seconds: number,
@@ -183,6 +186,10 @@ local config: Config = {
 	-- RescueDistance (spec section 5, "Rescue distance"): studs a rescue spot must be from where the player is stuck.
 	-- ResetCooldownSeconds (Rule 25): the shortest time between two Reset requests from one player.
 	-- LoopMoves and LoopSeconds (Rule 29): this many moves back within this many seconds send the player home instead.
+	-- StuckSeconds (spec section 5, "Stuck time"): seconds of pressing to move without getting anywhere before a rescue.
+	-- StuckDistance (spec section 5, "Stuck distance"): the body moving less than this many studs in that time is stuck.
+	-- PressChangesPerSecond (spec section 5, "Pressing changes"): how many times a second one player may tell the
+	-- server they started or stopped pressing to move.
 	Stuck = {
 		BodyWidth = 2,
 		BodyHeight = 4.3,
@@ -194,6 +201,9 @@ local config: Config = {
 		ResetCooldownSeconds = 2,
 		LoopMoves = 3,
 		LoopSeconds = 30,
+		StuckSeconds = 3,
+		StuckDistance = 1,
+		PressChangesPerSecond = 10,
 	},
 	Tick = { Seconds = 0.1 },
 }

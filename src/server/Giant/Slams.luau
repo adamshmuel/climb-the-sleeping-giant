@@ -36,6 +36,12 @@ local function flatDistance(a: Vector3, b: Vector3): number
 	return math.sqrt((a.X - b.X) ^ 2 + (a.Z - b.Z) ^ 2)
 end
 
+-- Whether a point is inside a slam's circle: within its radius across the ground, and not high above or below it.
+-- The catch and the rescue's red-circle guard both use this one test.
+function Slams.inCircle(point: Vector3, centre: Vector3): boolean
+	return flatDistance(point, centre) <= circleRadius() and math.abs(point.Y - centre.Y) <= HEIGHT_LIMIT
+end
+
 -- The distance across the ground from a point to the nearest point of a garden's flat rectangle, worked out in the
 -- garden's own space (gardens are level, turned about the vertical only). Inside the rectangle it is 0.
 local function gapToGarden(point: Vector3, garden: Zones.GardenBox): number
@@ -204,7 +210,6 @@ end
 -- carrier who touched down from the bounce-off float less than SlamWarningSeconds ago is not caught: they could not
 -- steer the fall, so they get the same warning as everyone.
 function Slams.caught(players: { Player }, centre: Vector3): { number }
-	local radius = circleRadius()
 	local caught: { number } = {}
 	for _, player in players do
 		if not canBeTargeted(player) then
@@ -214,10 +219,7 @@ function Slams.caught(players: { Player }, centre: Vector3): { number }
 		if landedAgo ~= nil and landedAgo < Config.Wake.SlamWarningSeconds then
 			continue
 		end
-		if
-			flatDistance(player.position, centre) <= radius
-			and math.abs(player.position.Y - centre.Y) <= HEIGHT_LIMIT
-		then
+		if Slams.inCircle(player.position, centre) then
 			table.insert(caught, player.userId)
 		end
 	end

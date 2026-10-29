@@ -75,6 +75,9 @@ type Rig = {
 	where: { zone: Config.ZoneName, onPillow: boolean }?, -- what whereIs answers (nil: no living character)
 	phase: Config.Phase, -- what the giant's phase is right now
 	home: { number }, -- the user ids sent home, in order
+	falling: boolean, -- what the falling check answers for every player
+	floating: boolean, -- what the floating-down check answers for every user id
+	inRedCircle: boolean, -- what the red-circle check answers for every position
 	die: (character: Model) -> (), -- what the character's Humanoid.Died does in the real game
 }
 
@@ -129,6 +132,9 @@ local function newRig(players: { FakePlayer }): Rig
 		where = { zone = "Belly", onPillow = false },
 		phase = "Asleep",
 		home = {},
+		falling = false,
+		floating = false,
+		inRedCircle = false,
 		die = nil :: any,
 	}
 	-- A Humanoid only dies inside the world, and tests never change the place, so a death is injected.
@@ -172,6 +178,15 @@ local function newRig(players: { FakePlayer }): Rig
 		end,
 		sendHome = function(player: any)
 			table.insert(rig.home, player.UserId)
+		end,
+		falling = function(_player: any)
+			return rig.falling
+		end,
+		floating = function(_userId: number)
+			return rig.floating
+		end,
+		inRedCircle = function(_position: Vector3)
+			return rig.inRedCircle
 		end,
 		died = function(character: Model, callback: () -> ())
 			deaths[character] = callback
@@ -419,6 +434,136 @@ describe("Recovery", function()
 
 		expect(#rig.rescues).toBe(3)
 		expect(#rig.home).toBe(0)
+	end)
+
+	-- Presses to move at the start, then watches for `seconds` more without the body moving.
+	local function pressAndWait(player: FakePlayer, rig: Rig, seconds: number)
+		rig.recovery:setPressing(player :: any, true)
+		rig.recovery:step()
+		rig.clock += seconds
+		rig.recovery:step()
+	end
+
+	it("a player pressing without moving for 3 seconds is moved back with their egg", function()
+		local player, rig = onGiantWithSpot(1)
+		player:SetAttribute("Carrying", "Rare")
+
+		pressAndWait(player, rig, 3)
+
+		expect(#rig.rescues).toBe(1)
+		expect(#rig.home).toBe(0)
+		expect(player:GetAttribute("Carrying")).toBe("Rare")
+	end)
+
+	it("a player pressing without moving for 2.9 seconds is not rescued yet", function()
+		local player, rig = onGiantWithSpot(1)
+		pressAndWait(player, rig, 2.9)
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a player standing on the pillow who presses and doesn't move for 3 seconds is rescued", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.where = { zone = "Meadow", onPillow = true }
+
+		pressAndWait(player, rig, 3)
+
+		expect(#rig.rescues).toBe(1)
+		expect(#rig.home).toBe(0)
+	end)
+
+	it("a player in the Meadow off the pillow is never rescued", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.where = { zone = "Meadow", onPillow = false }
+		pressAndWait(player, rig, 10)
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("the giant being awake doesn't stop the rescue, and the egg stays", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.phase = "Awake"
+		player:SetAttribute("Carrying", "Epic")
+
+		pressAndWait(player, rig, 3)
+
+		expect(#rig.rescues).toBe(1)
+		expect(player:GetAttribute("Carrying")).toBe("Epic")
+	end)
+
+	it("a rescue after two Resets within 30 seconds sends the player home", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.recovery:reset(player :: any)
+		putFar(player)
+		rig.clock += 10
+		rig.recovery:reset(player :: any)
+		putFar(player)
+		rig.clock += 10
+		expect(#rig.rescues).toBe(2)
+
+		pressAndWait(player, rig, 3)
+
+		expect(#rig.rescues).toBe(2)
+		expect(rig.home).toEqual({ 1 })
+	end)
+
+	it("a rescue with no safe spot far enough sends the player home", function()
+		local player = newPlayer(1, Vector3.new(10, 6, 0))
+		local rig = newRig({ player })
+		rig.samples[1] = sampleAt(Vector3.new(11, 5, 0), Vector3.xAxis, rig.clock) -- about 1.4 studs away
+
+		pressAndWait(player, rig, 3)
+
+		expect(rig.home).toEqual({ 1 })
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a player in a red circle is not rescued", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.inRedCircle = true
+		pressAndWait(player, rig, 10)
+		expect(#rig.rescues).toBe(0)
+		expect(#rig.home).toBe(0)
+	end)
+
+	it("a player who is falling is not rescued", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.falling = true
+		pressAndWait(player, rig, 10)
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a player floating down is not rescued", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.floating = true
+		pressAndWait(player, rig, 10)
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("a player without a living character is not rescued", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.where = nil
+		pressAndWait(player, rig, 10)
+		expect(#rig.rescues).toBe(0)
+		expect(#rig.home).toBe(0)
+	end)
+
+	it("pressing is forgotten when the character respawns", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.recovery:setPressing(player :: any, true)
+		rig.recovery:step()
+		player.CharacterAdded:Fire(player.Character)
+		rig.clock += 3
+		rig.recovery:step()
+		expect(#rig.rescues).toBe(0)
+	end)
+
+	it("pressing is forgotten when the player leaves", function()
+		local player, rig = onGiantWithSpot(1)
+		rig.recovery:setPressing(player :: any, true)
+		rig.recovery:step()
+		rig.playerRemoving:Fire(player)
+		rig.clock += 3
+		rig.recovery:step()
+		expect(#rig.rescues).toBe(0)
 	end)
 
 	it("finds the part under a player's feet", function()

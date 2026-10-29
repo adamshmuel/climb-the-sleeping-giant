@@ -58,3 +58,18 @@ describe("RecoveryRules.onGiant", function()
 		expect(RecoveryRules.onGiant("Meadow", true)).toBe(true)
 	end)
 end)
+
+describe("RecoveryRules.rescueChoice", function()
+	it("a rescue moves the player back", function()
+		expect(RecoveryRules.rescueChoice({}, NOW)).toBe("MoveBack")
+		expect(RecoveryRules.rescueChoice({ NOW - 10 }, NOW)).toBe("MoveBack")
+	end)
+
+	it("the third move within 30 seconds sends a rescue home", function()
+		expect(RecoveryRules.rescueChoice({ NOW - 20, NOW - 10 }, NOW)).toBe("Home")
+	end)
+
+	it("moves older than 30 seconds don't count", function()
+		expect(RecoveryRules.rescueChoice({ NOW - 40, NOW - 31, NOW - 5 }, NOW)).toBe("MoveBack")
+	end)
+end)
