@@ -295,3 +295,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12d's job "carried the egg home" by moving onto the plot's SpawnSpot, but that spot is 18 studs outside the garden, so nothing was banked and it looked like a game bug.
 - **Do instead:** a job that carries an egg home moves to the plot's `GardenVolume` pivot, inside the fence. Its writer checks the bank zone in `src/` (`Eggs/Banking.luau`) before writing the job.
 - **Who checks:** `builder` (job), `code_lead` (reads the job).
+
+## Lesson 116: Start a timed action from a signal inside the key call
+- **What happened:** Task 12e's Play job started pressing in one Studio call and sent the Reset keys in the next. The agent's own pause between the two calls could pass the 3.7 s before the stuck rescue fires, so the rescue could move the player instead of the Reset.
+- **Do instead:** start any timed action from a signal that fires inside the key call itself (here, `GuiService.MenuIsOpen` turning true when Escape opens the menu), never from a call before it.
+- **Who checks:** `builder` (job), `code_lead` (reads the job).

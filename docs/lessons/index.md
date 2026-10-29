@@ -125,6 +125,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 113 | Every size counts the Studio calls of its test runs | `teamwork.md` |
 | 114 | Carry an egg home into the garden box, not onto the spawn spot | `studio-and-scripts.md` |
 | 115 | Don't start a test name with "picks the" | `teamwork.md` |
+| 116 | Start a timed action from a signal inside the key call | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
