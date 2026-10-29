@@ -60,7 +60,22 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Pick it from agent-workflow.md, \"Model per job\"."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, and every step names its model."
+	# A start taken from an Edit-time probe can float in the air or sit on a
+	# slope (Task 12b step 2, the ninth job stopped before judging). So every
+	# Play step that uses Studio begins with a dry-start call (Lesson 120).
+	nodry=$(awk '
+		FNR == 1 || /^## / { if (play && !dry) print head; play = 0; dry = 0 }
+		/^## Step [0-9]/ { head = FILENAME ":" FNR ": " $0; play = ($0 ~ /Play/ && $0 !~ /\(0 Studio calls/) }
+		tolower($0) ~ /dry.start/ { dry = 1 }
+		END { if (play && !dry) print head }
+	' "$@")
+	if [ -n "$nodry" ]; then
+		echo "$nodry"
+		echo "Handoff check FAILED: each Play step above has no \"dry start\" call."
+		echo "Begin it with one: put the body on each start, settle 2 s, press 1 s, print the drift and the floor under the feet, and stop \"(lost input)\" if a start drifts over 1 stud (Lesson 120)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, and every Play step starts with a dry start."
 	exit 0
 fi
 joined=0

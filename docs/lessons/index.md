@@ -129,6 +129,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 117 | Measure "stands still" along the ground | `studio-and-scripts.md` |
 | 118 | A job prints its own proof of a fail | `studio-and-scripts.md` |
 | 119 | A handoff writes each Studio call with its service | `studio-and-scripts.md` |
+| 120 | Every Play step starts with a dry start | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

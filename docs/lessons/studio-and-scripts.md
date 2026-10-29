@@ -315,3 +315,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12f's handoff said only "`SetDeviceAsync`". The builder guessed the service and wrote `DeviceSimulatorService` instead of `StudioDeviceSimulatorService`. The call failed and used the step's spare Studio call.
 - **Do instead:** every Studio call in a handoff names its full path, for example `StudioDeviceSimulatorService:SetDeviceAsync("iphone_14")`, so nobody has to guess a name.
 - **Who checks:** `code_lead` (handoff).
+
+## Lesson 120: Every Play step starts with a dry start
+- **What happened:** Task 12b's beard start came from an Edit-time probe. In Play it was 5.9 studs in the air above a 44° slope, so the body fell, walked past the wedge and woke the giant. The wedge itself had been measured next to a trial box that was later removed. This was the ninth job that stopped before judging anything, and Lesson 65 (a dry check call comes before the long Play run) was there but nothing enforced it.
+- **Do instead:** every Play step that uses Studio begins with a dry-start call. It puts the body on each start, settles it for 2 s, presses for 1 s, and prints the drift and the floor height under the feet. It stops with "(lost input)" if any start drifts more than 1 stud. A start's feet go on the ground straight below it, with the root 3.25 studs above. A spot measured beside a trial part is proven again in Play once that part is gone. `scripts/job-check.sh --handoff` fails a Play step with no "dry start".
+- **Who checks:** `code_lead` (handoff), `scripts/job-check.sh --handoff`.
