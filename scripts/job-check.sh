@@ -105,7 +105,16 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Write \"held 0.19 in <task> dry start\" on the line, or mark it \"(not a start)\" (Lesson 120)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven start names the dry start it held in."
+	# A grab start marked "(not a start)" dodged the rule above, slid, and the
+	# egg was lost before any beard try (Task 12c last run). A grab's start holds too.
+	grabs=$(grep -nEi '\bgrab' "$@" | grep -E '\(-?[0-9.]+, *-?[0-9.]+, *-?[0-9.]+\)' | grep -viE 'held( still)? [0-9]*\.?[0-9]+')
+	if [ -n "$grabs" ]; then
+		echo "$grabs"
+		echo "Handoff check FAILED: each line above grabs from a position with no dry start it held in."
+		echo "Write \"held 0.19 in <task> dry start\" on the line; a grab start is a start (Lesson 124)."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in."
 	exit 0
 fi
 joined=0

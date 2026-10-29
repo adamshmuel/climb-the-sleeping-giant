@@ -338,3 +338,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 12b-2's beard job returned "NOT REACHED" when the body stalled 5 studs from the planned wedge point, even though the server rescued all 5 walks. Moved, Held, Egg and landing were never judged, and the beats were lost when Play stopped. The planned point had been measured beside a trial box that was later removed.
 - **Do instead:** once a rescue (or any game signal the step proves) fires, the job judges every check on it, whatever the place. The planned point is a separate printed check, never a gate in front of the judging. Results a later ruling may need are printed in the job's summary before Play stops, not kept only in `shared`.
 - **Who checks:** `code_lead` (job review, Lesson 76).
+
+## Lesson 124: A job that carries an egg grabs from a held start and prints why the egg left
+- **What happened:** Task 12c's last run grabbed the Rare from a start marked "(not a start)", which had slid 7.2 studs in the dry start before. The body fell, a second grab took the Rare, and 2.4 s later the egg was gone before any beard try. Nothing printed which of the 5 ways to drop an egg fired, so nobody could say if it was the job or the game.
+- **Do instead:** a grab's start is a start: it held still in an earlier dry start, and the handoff line says "held N in <task> dry start". Every Play job that carries an egg adds one Server watcher that prints the time, the reason and the garden whenever `Carrying` changes.
+- **Who checks:** `scripts/job-check.sh --handoff` fails a grab with a position and no "held N"; `code_lead` checks the watcher (job review, Lesson 76).
