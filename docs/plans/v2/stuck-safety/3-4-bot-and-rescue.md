@@ -248,7 +248,7 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Every start is a fixed number printed open by one Edit call with the start check (Lesson 21).
 - Size: 4 steps. 1: the 19 starts, in one Edit call (1 Studio call, cap 2). 2: write the Play job and pass `scripts/job-check.sh` (0 Studio calls; code_lead reads it). 3: the background Play run on computer (8 Studio calls, cap 10). 4: the read-only failure-path check, only if a spot failed (1 Studio call, cap 2). **About 10 Studio calls, caps 14.** No phone pass: nothing new is on screen, and the rescue on the phone is shown in Tasks 12 and 12b.
 - If 12c fails twice, it goes back to product with game_creator before any third try. No more follow-up tasks after 12b and 12c.
-- **Carry-over cleanup for its handoff (from the Task 12g review, 2026-10-29):** in `src/server/Players/PlayerTracker.luau`, the grace branch sets `memory.lastPosition = nil` and then sets it again a few lines later, so the first one does nothing. Delete it in step 2 (no behaviour change, no new test). It needs `scripts/check.sh` and one green full run before the commit, so 12c's handoff adds that run (2 Studio calls, a `runner` job on Haiku): about 12 Studio calls, caps 16.
+- Size stays about 10 Studio calls, caps 14. The dead `memory.lastPosition = nil` line found in the Task 12g review moved to Task 13, which already has its own green full run, so it costs no extra calls there.
 
 **Task 13: A death on the giant counts as a Reset**
 - Spec rules: Rule 25 (Reset on the giant takes you back): "Any death on the giant, except being caught, counts as a Reset". Rule 29 (No rescue loops), Rule 30 (You keep your egg).
@@ -257,6 +257,7 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Failing tests first: a death on the belly while he sleeps keeps the egg and puts the new character on the safe spot; a third death within 30 seconds goes home without the egg; a death while he's awake is V1.
 - Done when: the tests pass, and in Play a character whose health is set to 0 on the belly comes back on the belly with the egg.
 - Note from Task 11: Task 11's send-home is a server-made death (the humanoid's health set to 0). It must not count as a Reset here, or a third move would loop. Mark it before the health is set, and skip marked deaths.
+- Carry-over cleanup (from the Task 12g review, 2026-10-29): in `src/server/Players/PlayerTracker.luau`, the grace branch sets `memory.lastPosition = nil` and then sets it again a few lines later, so the first one does nothing. Delete it in the step that writes the code, with no behaviour change and no new test. The step's own `scripts/check.sh` and green full run cover it (0 extra Studio calls). Add `PlayerTracker.luau` to that step's files.
 
 **Task 14: The rescue puff**
 - Spec rules: Rule 33 (What a rescue looks like).
