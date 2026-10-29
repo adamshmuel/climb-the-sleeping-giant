@@ -75,6 +75,14 @@ describe("Net.setup", function()
 		end
 	end)
 
+	it("has a Rescued remote", function()
+		local parent = newParent()
+		Net.setup(parent)
+		local rescued = (parent:FindFirstChild("Remotes") :: Instance):FindFirstChild("Rescued")
+		expect(rescued).never.toBeNil()
+		expect((rescued :: Instance):IsA("RemoteEvent")).toBe(true)
+	end)
+
 	it("creates GiantState with Meter 0 and Phase Asleep", function()
 		local parent = newParent()
 		Net.setup(parent)
@@ -110,7 +118,7 @@ describe("Net.setup", function()
 		local first = Net.setup(parent)
 		first.GiantState:SetAttribute("Meter", 42)
 		local second = Net.setup(parent)
-		expect(#parent:GetDescendants()).toBe(10)
+		expect(#parent:GetDescendants()).toBe(11) -- the Remotes folder, 9 remotes and GiantState
 		expect(second.GiantState).toBe(first.GiantState)
 		expect(second.Warning).toBe(first.Warning)
 		expect(second.SetTiptoe).toBe(first.SetTiptoe)

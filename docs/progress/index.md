@@ -12,7 +12,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 50 of 57 | ◐ Task 9 approved: safe spots are saved and picked (pure module, 20 new tests, 2739 pass). Next: Task 10 (Moving a player back, silently). |
+| 2. Stuck safety | `v2/stuck-safety.md` | 51 of 57 | ◐ Task 10 approved: a player can be moved back to their last safe spot, silently (27 + 1 Studio calls, 15 new tests, 2754 pass). Next: Task 11 (Reset on the giant). |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |

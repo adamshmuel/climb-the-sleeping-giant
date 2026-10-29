@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local StarterPlayer = game:GetService("StarterPlayer")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -25,6 +26,8 @@ local Floater = require(script.Players.Floater)
 local JumpWatcher = require(script.Players.JumpWatcher)
 local PlayerInfo = require(script.Players.PlayerInfo)
 local PlayerTracker = require(script.Players.PlayerTracker)
+local Recovery = require(script.Players.Recovery)
+local SafeSpots = require(script.Players.SafeSpots)
 local Spawning = require(script.Players.Spawning)
 local TiptoeHandler = require(script.Remotes.TiptoeHandler)
 local WorldIndex = require(script.World.WorldIndex)
@@ -140,6 +143,23 @@ local tracker = PlayerTracker.new({
 	now = os.clock,
 })
 
+-- Moving back: it remembers each player's safe spots and puts a player back on the last one when they fall off the
+-- giant, are stuck or die. It reads each player's place on the giant's tick, below, right after the tracker.
+local recovery = Recovery.start({
+	players = Players,
+	safeSpots = SafeSpots.new(StarterPlayer.CharacterMaxSlopeAngle),
+	tracker = tracker,
+	sampleOf = function(player, now)
+		return Recovery.sampleOf(player, now, function(userId: number)
+			return floater:isFloating(userId)
+		end)
+	end,
+	fireRescued = function(player, from, to)
+		net.Rescued:FireAllClients(player, from, to)
+	end,
+	now = os.clock,
+})
+
 -- A caught carrier's egg goes back, and they are put on their own spawn spot facing him.
 local catcher = Catcher.new({
 	players = Players,
@@ -158,6 +178,7 @@ local slamRandom = Random.new()
 local director = GiantDirector.new({
 	tick = function()
 		local samples = tracker:tick()
+		recovery:step()
 		banking:check(samples)
 		if analytics ~= nil then
 			analytics:check(samples)

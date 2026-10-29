@@ -746,3 +746,107 @@ describe("PlayerTracker jumps", function()
 		character:Destroy()
 	end)
 end)
+
+-- Puts the character at `x` across and `y` up, then reads the tracker once at `seconds`.
+local function readAt(rig: Rig, character: Model, seconds: number, x: number, y: number): PlayerTracker.Sample
+	rig.setTime(seconds)
+	rootOf(character).Position = Vector3.new(x, y, 0)
+	return rig.tracker:tick()[1]
+end
+
+describe("PlayerTracker moved and shaking", function()
+	it("a moved player adds no walking noise on the next tick", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local rig = groundSpeedRig(character)
+		rig.setGrounded(true)
+		for step = 0, 3 do
+			readAt(rig, character, step * 0.1, step * 1, 5) -- a walk, a stud a tick
+		end
+
+		rig.tracker:moved(1)
+		local sample = readAt(rig, character, 0.4, 4 + 1.5, 5) -- the move put them 1.5 studs on
+
+		expect(sample.moving).toBe(false)
+		expect(sample.groundSpeed).toBe(0)
+
+		character:Destroy()
+	end)
+
+	it("a player moved during a fall makes no thud when they land", function()
+		local character = makeCharacter(Vector3.new(0, 50, 0))
+		local rig = groundSpeedRig(character)
+		local root = rootOf(character)
+		root.AssemblyLinearVelocity = Vector3.new(0, -40, 0)
+		for step = 1, 3 do
+			expect(readAt(rig, character, step * 0.1, 0, 50).thudFrom).toBeNil() -- a fast fall has started
+		end
+
+		rig.tracker:moved(1) -- the move also stops all speed, as Recovery does
+		root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+		rig.setGrounded(true)
+		local thuds = 0
+		for step = 4, 12 do
+			if readAt(rig, character, step * 0.1, 8, 30).thudFrom ~= nil then
+				thuds += 1
+			end
+		end
+
+		expect(thuds).toBe(0)
+
+		character:Destroy()
+	end)
+
+	it("a player shaking 0.6 studs back and forth every tick makes no walking noise", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local rig = groundSpeedRig(character)
+		rig.setGrounded(true)
+
+		local noisyTicks = 0
+		for step = 1, 20 do
+			local sample = readAt(rig, character, step * 0.1, if step % 2 == 1 then 0.6 else 0, 5)
+			if sample.moving then
+				noisyTicks += 1
+			end
+		end
+
+		expect(noisyTicks).toBe(0)
+
+		character:Destroy()
+	end)
+
+	it("a tiptoer still counts as moving from the second step", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local rig = groundSpeedRig(character)
+		rig.setGrounded(true)
+
+		local moving: { boolean } = {}
+		for step = 0, 14 do
+			table.insert(moving, readAt(rig, character, step * 0.1, step * 0.96, 5).moving)
+		end
+
+		expect(moving[1]).toBe(false) -- the first sample has no step before it
+		expect(moving[2]).toBe(false) -- 0.96 studs is under the 1 stud trip
+		for index = 3, 15 do
+			expect(moving[index]).toBe(true)
+		end
+
+		character:Destroy()
+	end)
+
+	it("a ladder climber still counts as moving", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local rig = groundSpeedRig(character)
+
+		local moving: { boolean } = {}
+		for step = 0, 14 do
+			table.insert(moving, readAt(rig, character, step * 0.1, 0, 5 + step * 1.12).moving)
+		end
+
+		expect(moving[1]).toBe(false)
+		for index = 2, 15 do
+			expect(moving[index]).toBe(true)
+		end
+
+		character:Destroy()
+	end)
+end)

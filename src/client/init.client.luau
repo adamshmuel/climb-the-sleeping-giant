@@ -17,6 +17,7 @@ local Celebrations = require(script.Fx.Celebrations)
 local GiantFx = require(script.Fx.GiantFx)
 local SlamFx = require(script.Fx.SlamFx)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
+local Recovery = require(script.Player.Recovery)
 local GrabPrompt = require(script.Hud.GrabPrompt)
 local Messages = require(script.Hud.Messages)
 local Layout = require(script.Hud.Layout)
@@ -69,6 +70,11 @@ if server then
 	-- When the server bounces this player off the giant, it sends the way they now face, and the camera snaps behind
 	-- them. The server decides what is sent, and the watcher checks it anyway.
 	local bouncedConnection = server.Bounced.OnClientEvent:Connect(cameraWatcher.bounce)
+	-- When the server moves this player back to a safe spot, this device moves its own character there too.
+	local recovery = Recovery.start({ rescued = server.Rescued.OnClientEvent, localPlayer = Players.LocalPlayer })
+	script.Destroying:Once(function()
+		recovery:destroy()
+	end)
 	-- When he wakes, the screen shakes a little (the camera's point moves by at most 0.5 studs for 0.5 seconds).
 	local shaker = CameraFx.shakeOnWake({
 		giantState = server.GiantState,

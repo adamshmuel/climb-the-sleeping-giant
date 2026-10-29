@@ -10,6 +10,10 @@ local TELEPORT_DISTANCE = 20
 -- The speed is measured over this many seconds of real time. A whole second smooths out the bursts in which
 -- positions arrive.
 local SPEED_WINDOW_SECONDS = 1
+-- A player counts as moving only if their body went at least this many studs in a straight line over the last
+-- second (Rule 31: being stuck is silent). A body shaking in a gap goes nowhere, so it makes no walking noise.
+-- Players can't see this number (Lesson 5).
+local MIN_TRIP = 1
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -47,7 +51,12 @@ export type Deps = {
 	now: () -> number, -- the clock in seconds (os.clock), injected so tests can set the time by hand
 }
 
-export type Tracker = { tick: (self: Tracker) -> { Sample } }
+export type Tracker = {
+	tick: (self: Tracker) -> { Sample },
+	-- Tells the tracker the server moved this player (a rescue): on their next tick the move counts as neither
+	-- walking nor a fall.
+	moved: (self: Tracker, userId: number) -> (),
+}
 
 -- Where a character was at one moment, for measuring its speed.
 type Reading = { time: number, position: Vector3, grounded: boolean }
@@ -153,6 +162,11 @@ local function groundSpeedOf(readings: { Reading }): number
 	return moved.Magnitude / seconds
 end
 
+-- The straight line, in studs, from the oldest kept reading to the newest.
+local function tripOf(readings: { Reading }): number
+	return (readings[#readings].position - readings[1].position).Magnitude
+end
+
 -- The root part of a character that is alive and complete, or nil.
 local function livingRoot(character: Model?): BasePart?
 	if character == nil then
@@ -168,6 +182,7 @@ end
 
 function PlayerTracker.new(deps: Deps): Tracker
 	local memories: { [number]: Memory } = {}
+	local movedUsers: { [number]: boolean } = {} -- players the server moved since their last tick
 
 	local function tick(_self: Tracker): { Sample }
 		local samples: { Sample } = {}
@@ -179,6 +194,11 @@ function PlayerTracker.new(deps: Deps): Tracker
 		for userId in memories do
 			if not present[userId] then
 				memories[userId] = nil -- they left, so forget them
+			end
+		end
+		for userId in movedUsers do
+			if not present[userId] then
+				movedUsers[userId] = nil
 			end
 		end
 		for _, player in players do
@@ -196,9 +216,19 @@ function PlayerTracker.new(deps: Deps): Tracker
 					}
 					memories[player.UserId] = memory
 				end
-				local moving = PlayerTracker.isMoving(memory.lastPosition, root.Position)
+				if movedUsers[player.UserId] then
+					-- The server moved them: the move is neither walking nor a fall. A thud owed from before it stays.
+					movedUsers[player.UserId] = nil
+					local fresh = LandingDetector.new(place.zone)
+					fresh.owed = memory.landing.owed
+					memory.landing = fresh
+					memory.lastPosition = nil
+					table.clear(memory.readings)
+				end
+				local stepped = PlayerTracker.isMoving(memory.lastPosition, root.Position)
 				local grounded = deps.isGrounded(character)
 				recordReading(memory, deps.now(), root.Position, grounded)
+				local moving = stepped and tripOf(memory.readings) >= MIN_TRIP
 				memory.lastPosition = root.Position
 				local takeoffZones: { Config.ZoneName } = {}
 				for _, position in deps.takeoffs(character) do
@@ -225,7 +255,10 @@ function PlayerTracker.new(deps: Deps): Tracker
 		end
 		return samples
 	end
-	return { tick = tick }
+	local function moved(_self: Tracker, userId: number)
+		movedUsers[userId] = true
+	end
+	return { tick = tick, moved = moved }
 end
 
 return PlayerTracker

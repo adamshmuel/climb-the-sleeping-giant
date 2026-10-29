@@ -12,6 +12,7 @@ export type Made = {
 	SlamWarning: RemoteEvent, -- the server tells everyone a red circle starts: (slam number, point on the surface, landsAt on the shared server clock)
 	SlamLanded: RemoteEvent, -- the server tells everyone the hand landed: (slam number, the same point)
 	Caught: RemoteEvent, -- the server tells everyone a carrier was caught: (the caught Player)
+	Rescued: RemoteEvent, -- the server tells everyone a player was moved back to a safe spot: (the Player, where they were (Vector3), where they go (CFrame))
 	GiantState: Folder, -- attributes: Meter, Phase, ... (docs/architecture.md, section 2)
 }
 
@@ -27,6 +28,7 @@ Net.BouncedName = "Bounced"
 Net.SlamWarningName = "SlamWarning"
 Net.SlamLandedName = "SlamLanded"
 Net.CaughtName = "Caught"
+Net.RescuedName = "Rescued"
 
 -- The second value of the Warning remote at a free save (Rule 17): (85, Net.FreeSaveKind) replays the 85% warning. A plain
 -- warning has no second value. The server and every client use this name, so nobody spells the word themselves.
@@ -56,6 +58,7 @@ function Net.setup(parent: Instance): Made
 	local slamWarning = (findOrMake(remotes, Net.SlamWarningName, "RemoteEvent"))
 	local slamLanded = (findOrMake(remotes, Net.SlamLandedName, "RemoteEvent"))
 	local caught = (findOrMake(remotes, Net.CaughtName, "RemoteEvent"))
+	local rescued = (findOrMake(remotes, Net.RescuedName, "RemoteEvent"))
 	local state, isNew = findOrMake(parent, Net.GiantStateName, "Folder")
 	if isNew then
 		state:SetAttribute("Meter", 0)
@@ -71,6 +74,7 @@ function Net.setup(parent: Instance): Made
 		SlamWarning = slamWarning :: RemoteEvent,
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
+		Rescued = rescued :: RemoteEvent,
 		GiantState = state :: Folder,
 	}
 end
@@ -116,6 +120,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		then waitForChildOfClass(remotes, Net.SlamLandedName, "RemoteEvent", remaining())
 		else nil
 	local caught = if remotes then waitForChildOfClass(remotes, Net.CaughtName, "RemoteEvent", remaining()) else nil
+	local rescued = if remotes then waitForChildOfClass(remotes, Net.RescuedName, "RemoteEvent", remaining()) else nil
 	local state = waitForChildOfClass(parent, Net.GiantStateName, "Folder", remaining())
 	if
 		remotes == nil
@@ -127,6 +132,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		or slamWarning == nil
 		or slamLanded == nil
 		or caught == nil
+		or rescued == nil
 		or state == nil
 	then
 		local missing: { string } = {}
@@ -157,6 +163,9 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		if caught == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.CaughtName}`)
 		end
+		if rescued == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.RescuedName}`)
+		end
 		if state == nil then
 			table.insert(missing, Net.GiantStateName)
 		end
@@ -173,6 +182,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		SlamWarning = slamWarning :: RemoteEvent,
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
+		Rescued = rescued :: RemoteEvent,
 		GiantState = state :: Folder,
 	}
 end
