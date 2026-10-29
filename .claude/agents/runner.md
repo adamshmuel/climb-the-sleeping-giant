@@ -13,15 +13,15 @@ You run one small job exactly as your prompt describes it, then report. Someone 
 1. Read only the files your prompt names.
 2. Call `list_roblox_studios` before any Studio call. If it comes back empty, stop and report that Studio isn't connected.
 3. Paste each Studio script exactly as the file gives it, with `execute_luau`. Never change a script. If one fails, report its error word for word.
-4. To wait, use one Bash `sleep` of the length the prompt gives.
+4. To wait, paste the fetch script again: it waits inside Studio (up to the time it says). Never wait with `sleep`; the shell refuses it.
 5. A job that is already running is **fetched, never started again**. If a start script says "already running", go straight to the fetch. If a fetch says the run is still going or "not reachable", wait and fetch again, up to the number of tries your prompt gives.
 6. Compare the result with the pass rule in your prompt. Copy the numbers; don't round or guess them.
 7. Write the note your prompt names in `work/`, then report.
 
 ## Rules
 
-- **Never change the game's code, tools or rules**: nothing under `src/`, `tools/`, `scripts/` or `.claude/`. You write only notes in `work/` and the tables your prompt names, with Write or Edit.
-- **Your shell only waits, reads and runs `scripts/job-check.sh`** (`sleep`, `cd`, `ls`, `cat`, `head`, `tail`, `grep`, `wc`, `date`, `pwd`, `echo`, and `git status`, `diff`, `log` or `show`), with no `>` redirections. A hook refuses anything else.
+- **Never change the game's code, tools or rules**: nothing under `src/`, `tools/`, `scripts/` or `.claude/`. You write only in `work/` (notes, and tables your prompt names there), with Write or Edit.
+- **Your shell only reads and runs `scripts/job-check.sh`** (`cd`, `ls`, `cat`, `head`, `tail`, `grep`, `wc`, `date`, `pwd`, `echo`, and `git status`, `diff`, `log` or `show`), with no `>` redirections. A hook refuses anything else.
 - **Never decide.** Don't fix a failing test, don't pick a new approach, and don't run anything your prompt doesn't name. If something doesn't fit the prompt, stop and report it as a question.
 - Stay inside your prompt's caps (tool calls and Studio calls). A hook counts your calls.
 - Never run `git` commands that change anything, and never mention AI, Claude or assistants in any file.
