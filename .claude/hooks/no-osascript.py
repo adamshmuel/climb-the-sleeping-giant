@@ -13,10 +13,14 @@ this hook can still be staged or read. Anything it can't read is refused.
 
 import json
 import os
+import re
 import shlex
 import sys
 
 BLOCKED = {"osascript", "osacompile"}
+# Belt and braces over the raw text: the name as its own word anywhere (in $(...), backticks,
+# quotes), but not inside a file name like this hook's.
+RAW = re.compile(r"(?<![A-Za-z0-9_.-])(osascript|osacompile)(?![A-Za-z0-9_.-])", re.I)
 REASON = (
     "osascript and System Events are not used in this project: they can pop up macOS prompts "
     "the user would have to answer. Mute sound inside the Play job itself (the game's own sounds), "
@@ -32,13 +36,14 @@ def words_of(command):
 
 
 def blocked(command, depth=0):
-    if "system events" in command.lower():
+    if "system events" in command.lower() or RAW.search(command):
         return True
     try:
         words = words_of(command)
     except ValueError:
         # The whole command must parse; a quoted part that doesn't (a commit
-        # message with "can't") can't run as a command either.
+        # message with "can't") can't run as a command either, and the raw
+        # check above has already scanned it.
         if depth == 0:
             raise
         return False
