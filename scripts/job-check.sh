@@ -202,10 +202,11 @@ rojo sourcemap default.project.json -o sourcemap.json
 if [ "$joined" -eq 1 ]; then
 	# Joining puts each later part's --!strict line, and the code after a part's
 	# last return, in the middle of one file, and re-declares names; those three are
-	# ignored here (selene lints each part for real shadowing).
+	# ignored here (selene lints each part for real shadowing). The filter matches
+	# only the kind field after "file(line,col): ", so a message can't hide itself.
 	types=$(luau-lsp analyze --platform=roblox --sourcemap=sourcemap.json \
 		--definitions=@roblox=build/globalTypes.d.luau "$@" 2>&1 |
-		grep -vE '^\[(INFO|WARN)\]' | grep -vE ': (CommentDirective|UnreachableCode|LocalShadow): ')
+		grep -vE '^\[(INFO|WARN)\]' | grep -vE '^[^ ]+\([0-9]+,[0-9]+\): (CommentDirective|UnreachableCode|LocalShadow): ')
 	if [ -n "$types" ]; then
 		echo "$types"
 		fail=1
