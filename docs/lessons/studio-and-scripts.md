@@ -330,3 +330,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** The notch rerun (Task 12b-1) held and landed every rescued player correctly, but the meter rose after every rescue, once by a whole thud (+35). The server places the body 0.5 studs up, and `PlayerTracker.moved` ignored the move for one tick only. The drop lasted several ticks, so the landing detector saw "in the air, then on the ground" and paid a thud, which Rule 31 (Being stuck is silent) forbids.
 - **Do instead:** when the server moves a player, keep the "this was a move, not a step" grace until the body is on the ground and still (with a time limit), never for a fixed single tick. Test it with a body that falls over several ticks.
 - **Who checks:** `code_lead` (plan and review), `builder` (tests).
+
+## Lesson 123: A Play job always judges a rescue that happens
+- **What happened:** Task 12b-2's beard job returned "NOT REACHED" when the body stalled 5 studs from the planned wedge point, even though the server rescued all 5 walks. Moved, Held, Egg and landing were never judged, and the beats were lost when Play stopped. The planned point had been measured beside a trial box that was later removed.
+- **Do instead:** once a rescue (or any game signal the step proves) fires, the job judges every check on it, whatever the place. The planned point is a separate printed check, never a gate in front of the judging. Results a later ruling may need are printed in the job's summary before Play stops, not kept only in `shared`.
+- **Who checks:** `code_lead` (job review, Lesson 76).

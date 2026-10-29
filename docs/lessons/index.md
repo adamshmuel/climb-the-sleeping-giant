@@ -132,6 +132,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 120 | Every Play step starts with a dry start | `studio-and-scripts.md` |
 | 121 | Judge "held still" and "silent" only once the body has settled | `studio-and-scripts.md` |
 | 122 | A move's grace lasts until the body is on the ground and still | `studio-and-scripts.md` |
+| 123 | A Play job always judges a rescue that happens | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
