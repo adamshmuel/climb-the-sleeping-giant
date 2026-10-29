@@ -265,4 +265,60 @@ describe("StartCheck.nearSpot", function()
 			expect(result.blockers).toContain("no walk-map spot")
 		end)
 	end)
+
+	-- Task 12i (Lesson 125): a start is accepted only on ground a body has stood still on (normal Y 0.65, about 49
+	-- degrees), not on any ground it can walk up (70 degrees).
+	it("a 60 degree slope is too steep to hold still", function()
+		inFakeWorld(function(world)
+			tiltedFloor(world, 60)
+			local result = StartCheck.nearSpot(Vector3.zero, 4, world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("too steep to hold still")
+		end)
+	end)
+
+	it("a 50 degree slope is too steep to hold still", function()
+		inFakeWorld(function(world)
+			tiltedFloor(world, 50)
+			local result = StartCheck.nearSpot(Vector3.zero, 4, world)
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("too steep to hold still")
+		end)
+	end)
+
+	it("the start is checked where it ends up, not where the walk-map spot was", function()
+		inFakeWorld(function(world)
+			-- The spot is on a flat floor. A 60 degree face stands 20 studs away, and `find` (stubbed) ends over it, as
+			-- the downhill moves would.
+			flatFloor(world)
+			local faceFrame = CFrame.new(20, 3, 0) * CFrame.Angles(0, 0, math.rad(60)) * CFrame.new(0, -0.5, 0)
+			solid(world, "Face", Vector3.new(10, 1, 10), faceFrame)
+			local realFind = StartCheck.find
+			StartCheck.find = function(_spot: Vector3, _root: Instance?): StartCheck.Result
+				return {
+					open = true,
+					position = Vector3.new(20, 3.1, 0),
+					ground = Vector3.new(20, 3, 0),
+					moves = 2,
+					blockers = {},
+				}
+			end
+			local ok, outcome = pcall(StartCheck.nearSpot, Vector3.zero, 4, world)
+			StartCheck.find = realFind
+			if not ok then
+				error(outcome, 0)
+			end
+			local result = outcome :: StartCheck.Result
+			expect(result.open).toBe(false)
+			expect(result.blockers).toContain("too steep to hold still")
+		end)
+	end)
+
+	it("a 40 degree slope still holds a start", function()
+		inFakeWorld(function(world)
+			tiltedFloor(world, 40)
+			local result = StartCheck.nearSpot(Vector3.zero, 4, world)
+			expect(result.open).toBe(true)
+		end)
+	end)
 end)

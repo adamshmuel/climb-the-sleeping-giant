@@ -22,6 +22,9 @@
 -- map around `near`, takes the nearest spots (on `standsOn`, if given), checks each one has the floor the map says
 -- (the first thing a ray hits under it is that part, and flat enough to stand on), and runs `find` on it. The first
 -- open one wins. With no spot at all it says what is at `near`, or "no walk-map spot".
+--
+-- Task 12i (lesson 125): a start must also hold still. The floor under the centre of where `find` ended up (its `ground`,
+-- after the downhill moves) must have a normal Y of HOLD_MIN_NORMAL_Y or more, else "too steep to hold still".
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -48,6 +51,8 @@ local MAX_TRIES = 5 -- the nearest this many walk-map spots are tried
 local FLOOR_RAY_UP = 3 -- studs: the floor check's ray starts this far over a spot
 local FLOOR_RAY_LENGTH = 10 -- studs: and looks this far down
 local NO_SPOT = "no walk-map spot"
+local HOLD_MIN_NORMAL_Y = 0.65 -- about 49 degrees: the floor under a start is no steeper than a body has stood still on
+local TOO_STEEP = "too steep to hold still"
 
 -- `position` is the highest ray's hit + 0.1 (so no start digs into a slope); `ground` is the centre ray's hit, the
 -- ground under the body's middle (Lesson 75). In a dip they are far apart: measure a settle from `ground`.
@@ -233,6 +238,18 @@ local function hasFloor(spot: PathCheck.Spot, world: WorldRoot, rays: RaycastPar
 	return hit.Normal.Y >= math.cos(math.rad(StarterPlayer.CharacterMaxSlopeAngle))
 end
 
+-- Is the floor under the centre of where `find` ended up (its `ground`, after the downhill moves) flat enough for a body
+-- to stand still on (Task 12i, lesson 125)? That limit is lower than the walk-up limit hasFloor reads.
+local function holdsStill(found: Result, world: WorldRoot, rays: RaycastParams): boolean
+	local ground = found.ground
+	if ground == nil then
+		return false
+	end
+	local from = ground + Vector3.new(0, FLOOR_RAY_UP, 0)
+	local hit = world:Raycast(from, Vector3.new(0, -FLOOR_RAY_LENGTH, 0), rays)
+	return hit ~= nil and hit.Normal.Y >= HOLD_MIN_NORMAL_Y
+end
+
 local function searchNear(
 	near: Vector3,
 	maxStuds: number,
@@ -269,6 +286,9 @@ local function searchNear(
 		local result: Result
 		if hasFloor(spot, world, rays) then
 			result = StartCheck.find(spot.position, world)
+			if result.open and not holdsStill(result, world, rays) then
+				result = notOpen({ TOO_STEEP })
+			end
 			if result.open then
 				return result
 			end

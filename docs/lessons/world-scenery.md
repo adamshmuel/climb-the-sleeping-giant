@@ -144,5 +144,6 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 
 ## Lesson 125: A start's slope limit is the stand-still limit, not the walk-up limit
 - **What happened:** `StartCheck.nearSpot` accepted floors up to 70°, the steepest a character can walk up, and checked only one point. Its grab start in Task 12c's beard run slid 2.45 studs in the dry start, the thirteenth wrong start check. Starts that held were on 44°; the ones that slid were on 55-69°.
-- **Do instead:** a start is accepted only if every corner under where the body ends up hits a floor no steeper than the steepest slope a body has stood still on in a dry start, and the corners are close in height. A dry start measures the drift from the ground under the middle (Lesson 75) and prints the floor's angle.
+- **Do instead:** a start is accepted only if the floor under the body's centre, at the spot where it ends up, is no steeper than the steepest floor a body has stood still on in a dry start: normal Y 0.65 or more (Task 12i). A dry start measures the drift from the ground under the middle (Lesson 75) and prints the floor's angle.
+- **Also (Task 12i floor print):** a corner rule was planned before anyone printed the corners. Both starts that held failed it: one corner hit nothing, and another read 0.507, below a start that slid. Only the centre told them apart (held 0.725 and 0.860, slid 0.57 or less). So print the floor under the starts that held before choosing what a check measures.
 - **Who checks:** `code_lead` (the StartCheck tests and the job review).
