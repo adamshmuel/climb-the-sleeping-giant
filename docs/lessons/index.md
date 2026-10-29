@@ -137,6 +137,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 125 | A start's slope limit is the stand-still limit, not the walk-up limit | `world-scenery.md` |
 | 126 | Mute in the game, never the Mac | `studio-and-scripts.md` |
 | 127 | Check every start again after a start-check change | `studio-and-scripts.md` |
+| 128 | Measure "home" against the spawn spot, not a box near it | `studio-and-scripts.md` |
+| 129 | Fakes must spawn bodies in the engine's order | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

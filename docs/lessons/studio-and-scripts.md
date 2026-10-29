@@ -353,3 +353,13 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 13 step 5b's grab start was marked "(runtime pick)". The names check only proved the name existed. Task 12i had made `StartCheck.nearSpot` stricter since that start was last tried, so the job found no start and stopped before testing anything (6 Studio calls).
 - **Do instead:** every Play handoff's names check runs `nearSpot` on each start row in Edit (one read-only call), and the row says "open in Edit" or "held N in <task> dry start".
 - **Who checks:** `scripts/job-check.sh --handoff` refuses a start row with neither (setup change, with a fixture test).
+
+## Lesson 128: Measure "home" against the spawn spot, not a box near it
+- **What happened:** Task 13's Play job judged "went home" by the plot's GardenVolume box. The home spawn sits 44 studs along the box's Z, outside its 29.9 reach, so two deaths that did go home were marked fail.
+- **Do instead:** "home" is within 4 studs (flat) of the own plot's SpawnSpot. Before a job relies on a box, check the spot it expects is inside it.
+- **Who checks:** `code_lead` in the job review (Lesson 76).
+
+## Lesson 129: Fakes must spawn bodies in the engine's order
+- **What happened:** Task 13's unit tests were green, but in Play the new body after a fall stayed on the home spawn. The fakes fire CharacterAdded with the body already in the world; the engine fires it before the body is put in the Workspace, so a deferred move can run too early.
+- **Do instead:** a test of anything placed on respawn puts the fake body into the world after CharacterAdded, and checks the move happens after that.
+- **Who checks:** `code_lead` when reviewing respawn tests.
