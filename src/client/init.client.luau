@@ -19,6 +19,7 @@ local GiantFx = require(script.Fx.GiantFx)
 local SlamFx = require(script.Fx.SlamFx)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local Recovery = require(script.Player.Recovery)
+local RescueFx = require(script.Fx.RescueFx)
 local GrabPrompt = require(script.Hud.GrabPrompt)
 local Messages = require(script.Hud.Messages)
 local Layout = require(script.Hud.Layout)
@@ -94,6 +95,20 @@ if server then
 	})
 	script.Destroying:Once(function()
 		recovery:destroy()
+	end)
+	-- A lavender puff with gold sparkles hides each rescue, for every player, where they were and where they are now.
+	local rescueFx = RescueFx.start({
+		rescued = server.Rescued.OnClientEvent,
+		parent = Workspace,
+		after = function(seconds: number, fn: () -> ())
+			task.delay(seconds, fn)
+		end,
+		emit = function(emitter: ParticleEmitter, count: number)
+			emitter:Emit(count)
+		end,
+	})
+	script.Destroying:Once(function()
+		rescueFx.destroy()
 	end)
 	-- When he wakes, the screen shakes a little (the camera's point moves by at most 0.5 studs for 0.5 seconds).
 	local shaker = CameraFx.shakeOnWake({

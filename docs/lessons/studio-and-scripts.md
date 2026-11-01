@@ -373,3 +373,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 13's move of a new body after a death failed three Plays (49 Studio calls, about 25 planned). Each fix was a guess about engine timing, and the tests' stand-in bodies couldn't show the real order.
 - **Do instead:** for any move right after the engine spawns a body, measure it in Play first (position and who runs its physics, every frame for 1 s), then fix. If the task's size can't hold that, move the feature to a later spec.
 - **Who checks:** `code_lead` when planning the task, `product` when ruling on an overrun.
+
+## Lesson 133: Compare decimal settings as "close", never "exactly"
+- **What happened:** Task 14's look test checked a puff's light setting with `toBe(0.6)`. Roblox stores that setting as a less exact number (a 32-bit float) and read it back as 0.6000000238, so a correct puff failed the green run and cost one more full run.
+- **Do instead:** any setting that isn't a whole number is compared with the spec's `close` helper or `toBeCloseTo`, never `toBe`.
+- **Who checks:** `builder` when writing the test, `code_lead` when reviewing the tests before the red run.
