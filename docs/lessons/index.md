@@ -143,6 +143,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 131 | Measure a move right after a spawn before the first fix | `studio-and-scripts.md` |
 | 132 | A red step needs Studio, and a full run goes to the runner | `teamwork.md` |
 | 133 | Compare decimal settings as "close", never "exactly" | `studio-and-scripts.md` |
+| 134 | Studio's console never shows an analytics event's name or values | `studio-and-scripts.md` |
+| 135 | A red pass rule quotes the real error and counts the failures | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

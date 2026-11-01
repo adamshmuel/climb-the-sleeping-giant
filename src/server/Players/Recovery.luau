@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Signal = require(ReplicatedStorage.Packages.Signal)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local PathCheck = require(script.Parent.Parent.World.PathCheck)
 local RecoveryRules = require(script.Parent.RecoveryRules)
@@ -45,7 +46,13 @@ export type Deps = {
 	died: ((character: Model, callback: () -> ()) -> any)?,
 }
 
+-- Why a player was moved or sent home, for the "Unstuck" analytics event (spec section 10).
+export type How = "Rescue" | "Reset on giant" | "Loop home"
+
 export type Recovery = {
+	-- Fires (player, how, zone) for every rescue, every Reset on the giant and every send home by the loop limit, just
+	-- before the move or the send home, so a listener still sees the egg the player carries.
+	unstuck: Signal.Signal<any, How, Config.ZoneName>,
 	step: (self: Recovery) -> (),
 	setPressing: (self: Recovery, player: any, on: boolean) -> (),
 	moveBack: (self: Recovery, player: any) -> CFrame?,
@@ -106,6 +113,8 @@ function Recovery.start(deps: Deps): Recovery
 	local pressing: { [number]: boolean } = {} -- who is pressing to move right now, as the client says
 	local holding: { [number]: any } = {} -- the players held still after a move back, until they let go (attribute Held)
 	local stuckWatch = StuckWatch.new()
+	local unstuck = Signal.new() :: Signal.Signal<any, How, Config.ZoneName>
+	trove:Add(unstuck)
 
 	-- Ends a player's hold: the attribute goes, and Carry gives the walking speed back.
 	local function release(userId: number)
@@ -239,6 +248,11 @@ function Recovery.start(deps: Deps): Recovery
 		end
 		local onGiant = RecoveryRules.onGiant(where.zone, where.onPillow)
 		local choice = RecoveryRules.resetChoice(onGiant, deps.phase(), moves[player.UserId] or {}, deps.now())
+		if onGiant then
+			-- Awake or asleep, a Reset on the giant is told; one that is the loop's third move counts as a loop.
+			local loop = deps.phase() ~= "Awake" and choice == "Home"
+			unstuck:Fire(player, if loop then "Loop home" else "Reset on giant", where.zone)
+		end
 		if choice == "MoveBack" and moveBackTo(player, true) ~= nil then
 			return
 		end
@@ -256,6 +270,10 @@ function Recovery.start(deps: Deps): Recovery
 	-- far enough. A move back keeps the egg.
 	local function rescue(player: any, now: number)
 		local choice = RecoveryRules.rescueChoice(moves[player.UserId] or {}, now)
+		local where = deps.whereIs(player)
+		if where ~= nil then
+			unstuck:Fire(player, if choice == "Home" then "Loop home" else "Rescue", where.zone)
+		end
 		if choice == "MoveBack" and moveBackTo(player, false) ~= nil then
 			return
 		end
@@ -318,6 +336,7 @@ function Recovery.start(deps: Deps): Recovery
 	end
 
 	return {
+		unstuck = unstuck,
 		step = step,
 		setPressing = setPressing,
 		moveBack = moveBack,

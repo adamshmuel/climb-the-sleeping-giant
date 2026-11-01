@@ -339,6 +339,7 @@ analytics = Analytics.start({
 	slammed = director.slammed,
 	saved = director.saved,
 	returned = grab.returned,
+	unstuck = recovery.unstuck,
 	gardens = gardenSpots,
 	now = os.clock,
 	newId = function()

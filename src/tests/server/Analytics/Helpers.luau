@@ -50,6 +50,7 @@ export type Harness = {
 	slammed: Signal.Signal<number?, { number }>,
 	saved: Signal.Signal<number, Config.ZoneName>,
 	returned: Signal.Signal<any, any, string>,
+	unstuck: Signal.Signal<any, string, string>, -- (player, how, zone)
 	idsMade: number,
 }
 
@@ -71,6 +72,7 @@ local function cleanUp()
 		harness.slammed:Destroy()
 		harness.saved:Destroy()
 		harness.returned:Destroy()
+		harness.unstuck:Destroy()
 	end
 	table.clear(made)
 	for _, player in players do
@@ -113,6 +115,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		slammed = Signal.new(),
 		saved = Signal.new(),
 		returned = Signal.new(),
+		unstuck = Signal.new(),
 		idsMade = 0,
 	}
 	local function record(method: string, call: Call)
@@ -183,6 +186,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		slammed = harness.slammed,
 		saved = harness.saved,
 		returned = harness.returned,
+		unstuck = harness.unstuck,
 		gardens = gardens,
 		now = function()
 			return harness.clock

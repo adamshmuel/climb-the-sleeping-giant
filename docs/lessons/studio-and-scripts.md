@@ -378,3 +378,13 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 14's look test checked a puff's light setting with `toBe(0.6)`. Roblox stores that setting as a less exact number (a 32-bit float) and read it back as 0.6000000238, so a correct puff failed the green run and cost one more full run.
 - **Do instead:** any setting that isn't a whole number is compared with the spec's `close` helper or `toBeCloseTo`, never `toBe`.
 - **Who checks:** `builder` when writing the test, `code_lead` when reviewing the tests before the red run.
+
+## Lesson 134: Studio's console never shows an analytics event's name or values
+- **What happened:** Task 15's Play step was meant to read three "Unstuck" lines in the console. Studio printed each custom event only as "AnalyticsService: LogCustomEvent event fired.", with no name and no fields, so the values could not be seen in Play.
+- **Do instead:** a Play step that proves an analytics event checks only how many of those lines appear and when (next to the job's own lines). The event's name and values are proven by unit tests.
+- **Who checks:** `code_lead` when writing the Play step's pass list.
+
+## Lesson 135: A red pass rule quotes the real error and counts the failures
+- **What happened:** Task 15's red run failed exactly the 13 new tests, but the Haiku runner called it "not a pass". The handoff said the tests fail "on the missing `unstuck`", while Roblox printed "attempt to index nil with 'Connect'". The run report also lists only about 4 failed names, then "and N more", because Studio cuts a result at 1024 characters.
+- **Do instead:** a red step's pass rule gives the exact error text Roblox will print, and the expected number of failures (the new tests) with the old passed total. The runner checks the count first, then the names it can see.
+- **Who checks:** `code_lead` when writing the handoff, `scripts/job-check.sh --handoff` cannot see this.

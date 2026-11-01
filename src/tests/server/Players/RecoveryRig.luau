@@ -68,7 +68,7 @@ export type Rig = {
 	playerAdded: any,
 	playerRemoving: any,
 	moved: { number }, -- the user ids the tracker was told about, in order
-	log: { string }, -- "moved" and "rescued", in the order they happened
+	log: { string }, -- "moved", "rescued" and "home", in the order they happened
 	rescues: { { player: FakePlayer, from: Vector3, to: CFrame } },
 	samples: { [number]: SafeSpots.Sample }, -- what each player's sample is right now
 	clock: number,
@@ -178,6 +178,7 @@ local function newRig(players: { FakePlayer }): Rig
 		end,
 		sendHome = function(player: any)
 			table.insert(rig.home, player.UserId)
+			table.insert(rig.log, "home")
 		end,
 		falling = function(_player: any)
 			return rig.falling

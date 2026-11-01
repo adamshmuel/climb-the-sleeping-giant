@@ -75,6 +75,7 @@ export type Deps = {
 	slammed: SignalLike, -- the director's signal: (UserId the slam was aimed at or nil, UserIds it caught) as the hand lands
 	saved: SignalLike, -- the director's signal: (UserId, zone) when a player's free save is spent
 	returned: SignalLike, -- Grab's signal: (player, rarity, "Caught" or "Lost") when a carried egg goes back
+	unstuck: SignalLike, -- Recovery's signal: (player, how, zone) just before a rescue, a Reset on the giant or a loop send home
 	gardens: { GardenSpot },
 	now: () -> number, -- os.clock; it tells who has been in the server longest
 	newId: () -> string, -- makes the session id of one heist (HttpService:GenerateGUID(false))
@@ -127,6 +128,8 @@ local LEFT_GARDEN_STUDS = 10
 --                     player's eggs home ("0", "1" or "2+"), CustomField03 = the egg they carried ("None" or its rarity).
 --   "FreeSaveResult": CustomField01 = how that egg's heist ended ("Home", "Woke him", "Caught" or "Lost"), valued at the
 --                     seconds since the save (no other slot).
+--   "Unstuck":        CustomField01 = how ("Rescue", "Reset on giant" or "Loop home"), CustomField02 = the zone the player
+--                     was in, CustomField03 = "Carrying" or "Empty".
 -- So never read one chart's slot as another's.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
@@ -137,6 +140,9 @@ local EVENT_PLAYER_CAUGHT = "PlayerCaught"
 local EVENT_SLAM = "Slam" -- one per hand slam, valued at the number of players it caught
 local EVENT_FREE_SAVE_USED = "FreeSaveUsed" -- one per free save
 local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, valued at the seconds since the save
+local EVENT_UNSTUCK = "Unstuck" -- one per rescue, Reset on the giant or loop send home
+local CARRYING = "Carrying"
+local EMPTY = "Empty"
 -- Every event of these counts once, so the value is 1 (except "GiantWoke", valued at the number of players, "Slam",
 -- valued at the number of players it caught, and "FreeSaveResult", valued at the seconds since the save).
 local EVENT_VALUE = 1
@@ -407,6 +413,19 @@ function Analytics.start(deps: Deps): Analytics
 			return
 		end
 		closeFreeSave(record, if why == "Caught" then RESULT_CAUGHT else RESULT_LOST)
+	end))
+
+	-- A player was moved or sent home to get unstuck. It is told before the move, so the egg is still carried. It never
+	-- touches a free save's result: a move keeps the egg, and a send home closes it through `returned`.
+	trove:Add(deps.unstuck:Connect(function(player: PlayerLike, how: string, zone: string)
+		if stopped then
+			return
+		end
+		logCustom(player, EVENT_UNSTUCK, EVENT_VALUE, {
+			[FIELD_ONE] = how,
+			[FIELD_TWO] = zone,
+			[FIELD_THREE] = if carries(player) then CARRYING else EMPTY,
+		})
 	end))
 
 	-- A free save was spent. Everything is read now, from the server's own attributes: where they were, their eggs home
