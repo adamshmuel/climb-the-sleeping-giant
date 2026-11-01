@@ -153,6 +153,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 141 | A shot camera looks at the prompt from the side | `studio-and-scripts.md` |
 | 142 | A review's first-minute play and its must-shows get separate budgets | `teamwork.md` |
 | 143 | Screenshots don't draw always-on-top billboards | `studio-and-scripts.md` |
+| 144 | A job that reuses a shared check prints why it refused | `studio-and-scripts.md` |
+| 145 | A phone review part holds at most 3 checks | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

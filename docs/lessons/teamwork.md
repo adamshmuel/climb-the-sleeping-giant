@@ -162,3 +162,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Part 1 of the stuck-safety build review (the computer whole session, played blind) spent most of its 22 Studio calls turning the camera with the keyboard. It never reached the giant, so the Reset puff live, the landing within 1 s, the rescue and the loop home all moved to Part 3 (2026-11-01).
 - **Do instead:** a review plan gives the first-minute play (what a new player sees and does first) its own small budget. The climb and the must-shows on the giant get their own part and budget, starting from a placed spot, never from a blind walk.
 - **Who checks:** `product` when writing a review plan; the main chat when it reads the plan.
+
+## Lesson 145: A phone review part holds at most 3 checks
+- **What happened:** Build review Part 2 packed a whole phone session, 4 pill checks and a computer redo into one 30-tool-call job. The shots, and the copies to save them, used up the calls, and the job stopped at 18 of 24 Studio calls with most checks not reached (2026-11-01).
+- **Do instead:** a phone part of a review holds at most about 3 checks, and saves all its shots with one copy command at the end.
+- **Who checks:** `product` when writing a review plan; the main chat when it reads the plan.
