@@ -413,3 +413,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 16's phone probe cleared its "shown" record between stages. The prompt stayed shown from stage 1, so no new `PromptShown` arrived, and stage 2 read "shown false" while the prompt was really on (it triggered in stage 3). code_lead had to rule on a misleading line (2026-11-01).
 - **Do instead:** a probe tracks whether a prompt is shown now (shown, and not hidden since), never "a new shown since the last stage".
 - **Who checks:** `code_lead` when writing a probe, and when reading a Play job before its first paste (Lesson 76).
+
+## Lesson 141: A shot camera looks at the prompt from the side
+- **What happened:** In the Task 16b phone probe, the game drew the grab pill: 44 px tall, on, with its egg's point in the middle of the view. But the shot showed no pill (2026-11-01). The probe's camera sat behind the player and aimed at an egg near the player's feet, so the player's body covered that spot. A billboard's `AbsolutePosition` reads 0,0, so where it sits on screen can't be read from it. Task 16b closed on a hand check instead of a proof.
+- **Do instead:** a shot job aims its camera at the prompt's part from the side, with nothing between the camera and the part. It finds where a billboard sits on screen from its adornee's screen point, never from the billboard's `AbsolutePosition`, and checks that point against the shot.
+- **Who checks:** `code_lead` when writing a probe, and when reading a Play job before its first paste (Lesson 76).
