@@ -433,3 +433,18 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 56 Step 1 measured the phone grab pill with the default camera and found it 74-80 px clear of the footprints chip, so the cause wasn't confirmed. The bug shot (build review p2-05) came from a low, close camera turned up at the sky. The step's pass assumed the default camera would put the pill where the bug shot showed it (2026-11-01).
 - **Do instead:** before writing a Play pass, check that the step's camera and spot really recreate the bug shot, and hold that camera on purpose (for example, a camera bind on RenderStepped). Count the device set and reset in the step's calls (Lesson 89).
 - **Who checks:** `code_lead` when writing a Play step; `scripts/job-check.sh --handoff` for the device calls when it can.
+
+## Lesson 147: A test on a pixel line works its numbers out from the line
+- **What happened:** Task 56 Step 4's test "follows again past the 84 px line" put the pill's point at y 290 by eye. The box bottom was 312, but the line was at 388 - 84 = 304, so the code was right and the test failed. The step was at its tool-call cap and couldn't fix it (2026-11-01).
+- **Do instead:** in a test that puts something on or past a pixel line, compute the position from the line in the test itself (for example `viewportHeight - Layout.pin.unpin - halfHeight`), never a typed-in number. Size a step with a red, a green and more than 5 files as two steps.
+- **Who checks:** `builder` when writing the test; `code_lead` when sizing a step.
+
+## Lesson 148: A Play step's camera is worked out from the screen point it must give
+- **What happened:** Task 56 Step 6's camera (5 studs behind, 1 below, 25° up) was copied from the words describing shot p2-05 and never checked against the phone's view. It put the egg's point about 68° below the view centre, but a phone sees only about 35° below centre, so the point was off the screen and no prompt showed. The start on the egg's round top also slid 5.8 studs, as Step 1's start had slid 3.3 (2026-11-01).
+- **Do instead:** aim the camera at the target, then tilt it by the angle that puts the target at the wanted screen y, and print that y before any shot. Never start a Play proof on a round or sloped top: start from `StartCheck.nearSpot` (Lesson 120).
+- **Who checks:** `code_lead` when writing a Play step; the builder's dry-start call prints the y.
+
+## Lesson 149: A phone press is aimed from the game point, and its landing is checked
+- **What happened:** two phone holds on the pinned "Hold to Grab" pill (Task 56 Step 6 and product's Part 2) did nothing, and the first looked like a game bug. product put a listener on the input (it only records, it changes nothing) and found the tool's presses arrive as touch, but 58 px too low: the aim added Roblox's top bar (58 px), which the tool already allows for. The right aim is the button's game point plus (47, 0). Aiming from the shot is wrong too, because the shot is scaled about 1.44 times (2026-11-01).
+- **Do instead:** in any phone press test, aim at the button's game point (its AbsolutePosition and half its AbsoluteSize) plus (47, 0), never from the shot's picture and never with the top bar added. Before judging a press that "did nothing", log where the first press landed with a listener that only records.
+- **Who checks:** `code_lead` when writing a Play step with a phone press; the builder prints where the press landed.

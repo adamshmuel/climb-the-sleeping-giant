@@ -164,6 +164,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   7. A bounce float, a rescue and a catch move aren't slides, even below the seam.
   8. Below the seam line: a point 2 studs past a seam point downhill is below; one 0.5 past isn't (inside the seam match); one 6 studs across from every seam point isn't.
   9. Only the first slide sends the tip; a carrier's pill comes back after 3 s; a tip that arrives during the 85% tip waits for it.
+  10. A slide tip that comes due while the phone grab pill is pinned waits, then shows for its full 3 s once the pill follows the egg again (Rule 4: Hold to grab; the same wait as Task 56's missed-grab and 85% tips, `Messages` `setPillPinned`).
 - Done when: the tests pass, and in Play screenshots of the tip with and without an egg match `slide-tip-*` and `slide-tip-carry-*` (computer and the iPhone 14).
 
 **Task 11: Analytics for refills and slides**

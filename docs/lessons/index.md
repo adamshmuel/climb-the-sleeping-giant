@@ -156,6 +156,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 144 | A job that reuses a shared check prints why it refused | `studio-and-scripts.md` |
 | 145 | A phone review part holds at most 3 checks | `teamwork.md` |
 | 146 | A Play proof recreates the bug shot's camera | `studio-and-scripts.md` |
+| 147 | A test on a pixel line works its numbers out from the line | `studio-and-scripts.md` |
+| 148 | A Play step's camera is worked out from the screen point it must give | `studio-and-scripts.md` |
+| 149 | A phone press is aimed from the game point, and its landing is checked | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

@@ -7,6 +7,15 @@ local Layout = {}
 -- A screen whose short side is under this many pixels is a phone (Studio's iPhone 14 simulator gives 390).
 local PHONE_SHORT_SIDE = 500
 
+-- Where the phone grab pill leaves the egg and sits at a fixed spot (Task 56). The two lines are pixels above the
+-- safe area's bottom: the pill pins when its box is lower than the first, and follows the egg again only above the
+-- second. The 20 px between them stops it flickering. A pinned pill's bottom edge sits `bottomGap` above the bottom.
+Layout.pin = table.freeze({
+	pinLine = 64,
+	unpinLine = 84,
+	bottomGap = 12,
+})
+
 export type Meter = {
 	width: number,
 	height: number,

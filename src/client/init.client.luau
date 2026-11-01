@@ -147,7 +147,7 @@ if server then
 		now = os.clock,
 		viewport = SleepMeterUi.workspaceViewport(Workspace),
 	})
-	Messages.start({
+	local messagesHandle = Messages.start({
 		parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
 		player = Players.LocalPlayer,
 		grabMissed = { OnClientEvent = server.GrabMissed.OnClientEvent },
@@ -245,6 +245,20 @@ if server then
 			step = RunService.RenderStepped,
 			now = os.clock,
 			viewport = SleepMeterUi.workspaceViewport(Workspace),
+			-- On a phone the pill pins to the bottom centre when the egg's point is low or off the screen, and the
+			-- bottom tips hide while it is pinned (Task 56).
+			project = function(adornee: Instance): Vector2?
+				local camera = Workspace.CurrentCamera
+				if camera == nil or not adornee:IsA("Attachment") then
+					return nil
+				end
+				local point = camera:WorldToViewportPoint(adornee.WorldPosition)
+				if point.Z <= 0 then
+					return nil
+				end
+				return Vector2.new(point.X, point.Y)
+			end,
+			onPinned = messagesHandle.setPillPinned,
 		})
 		-- The rarity names over waiting eggs and the refill countdowns over empty spots. A rarity name fades while it
 		-- overlaps a nearer one, touches the sleep meter or reaches past the top of the screen. The meter's box is read

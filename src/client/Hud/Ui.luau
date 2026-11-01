@@ -9,6 +9,9 @@ local Ui = {}
 local HUD_NAME = "Hud"
 local HUD_TOP_NAME = "HudTop"
 local WORLD_LAYER_NAME = "WorldPrompts"
+local PINNED_LAYER_NAME = "PinnedPrompt"
+-- Above the Hud and the red danger edges, so nothing covers a button that is pinned to the screen.
+local PINNED_LAYER_ORDER = 10
 
 -- Gives back the screen with this name, making it the first time. It stays when the character respawns.
 local function screenNamed(parent: Instance, name: string, insets: Enum.ScreenInsets): ScreenGui
@@ -42,6 +45,14 @@ end
 -- pieces on it follow the world and not the edge of the screen.
 function Ui.worldLayer(parent: Instance): ScreenGui
 	return screenNamed(parent, WORLD_LAYER_NAME, Enum.ScreenInsets.None)
+end
+
+-- The screen for a button that is pinned to a fixed spot, such as the grab pill when the egg is low on a phone. It
+-- keeps clear of the notch and Roblox's buttons like the Hud, and is drawn above everything else.
+function Ui.pinnedLayer(parent: Instance): ScreenGui
+	local gui = screenNamed(parent, PINNED_LAYER_NAME, Enum.ScreenInsets.CoreUISafeInsets)
+	gui.DisplayOrder = PINNED_LAYER_ORDER
+	return gui
 end
 
 -- A frame with no background, to place and group other pieces.

@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Layout = require(script.Parent.Layout)
+local PillPin = require(script.Parent.PillPin)
 local Theme = require(script.Parent.Theme)
 local Ui = require(script.Parent.Ui)
 
@@ -72,6 +73,11 @@ export type Deps = {
 	step: SignalLike, -- once per frame, for the fill (RunService.RenderStepped)
 	now: () -> number, -- the clock in seconds, for the fill
 	viewport: ViewportLike,
+	-- Phone pin (Task 56): the egg's point on the screen in pixels, or nil when it is behind the camera. Left out, the
+	-- pill always follows the egg.
+	project: ((adornee: Instance) -> Vector2?)?,
+	-- Called with true when the pill gets pinned to its fixed spot, and false when it is let go or goes away.
+	onPinned: ((pinned: boolean) -> ())?,
 }
 
 -- What start gives back: `stop` takes the prompt off and cleans up. `press` and `release` do what pressing and
@@ -105,6 +111,9 @@ type Shown = {
 	pressed: boolean,
 	holdStart: number?,
 	stepConnection: ConnectionLike?,
+	touch: boolean, -- a touch prompt: only these pin
+	placed: PillPin.State,
+	pinConnection: ConnectionLike?,
 }
 
 -- Builds the prompt's pieces for one egg spot (sizes come later, from the layout).
@@ -249,12 +258,20 @@ function GrabPrompt.start(deps: Deps): Handle
 		end
 		shown = nil
 		stopFollowingFrames(current)
+		if current.pinConnection then
+			current.pinConnection:Disconnect()
+			current.pinConnection = nil
+		end
 		-- A finger still down when the prompt goes away would leave the hold stuck, so let go for it.
 		if current.pressed then
 			current.pressed = false
 			current.prompt:InputHoldEnd()
 		end
+		current.parts.pill:Destroy() -- it may be on the pinned layer, outside the billboard
 		current.parts.gui:Destroy()
+		if current.placed == "pinned" and deps.onPinned then
+			deps.onPinned(false)
+		end
 	end
 	trove:Add(remove)
 
@@ -263,6 +280,63 @@ function GrabPrompt.start(deps: Deps): Handle
 		if current then
 			applyLayout(current.parts, Layout.forScreen(deps.viewport.get()).prompt)
 		end
+	end
+
+	-- Moves the pill between next to the egg and its fixed spot on the screen, and tells onPinned.
+	local function place(current: Shown, state: PillPin.State)
+		if current.placed == state then
+			return
+		end
+		current.placed = state
+		local pill = current.parts.pill
+		if state == "pinned" then
+			pill.AnchorPoint = Vector2.new(0, 1)
+			pill.Position = UDim2.new(0.5, 0, 1, -Layout.pin.bottomGap)
+			pill.Parent = Ui.pinnedLayer(deps.parent)
+		else
+			pill.AnchorPoint = Vector2.new(0.5, 0.5)
+			pill.Position = UDim2.fromScale(0.5, 0.5)
+			pill.Parent = current.parts.gui
+		end
+		if deps.onPinned then
+			deps.onPinned(state == "pinned")
+		end
+	end
+
+	-- Works out the box the pill would have next to the egg and lets PillPin say where the pill goes.
+	local function evaluate(current: Shown)
+		local project = deps.project
+		if project == nil then
+			return
+		end
+		local viewport = deps.viewport.get()
+		local size = Layout.forScreen(viewport).prompt
+		local width = current.parts.pill.AbsoluteSize.X
+		if width <= 0 then
+			width = size.billboardWidth -- not drawn yet: the room it floats in is the biggest it can be
+		end
+		local height = size.keyDiameter + 2 * size.paddingY
+		local point = project(current.prompt.Parent :: Instance)
+		local box: PillPin.Box? = nil
+		if point ~= nil then
+			local centerX = point.X + SIZE_OFFSET.X * size.billboardWidth
+			box = {
+				left = centerX - width / 2,
+				top = point.Y - height / 2,
+				right = centerX + width / 2,
+				bottom = point.Y + height / 2,
+			}
+		end
+		place(
+			current,
+			PillPin.decide({
+				touch = current.touch,
+				pressed = current.pressed,
+				current = current.placed,
+				box = box,
+				safe = { left = 0, top = 0, right = viewport.X, bottom = viewport.Y },
+			})
+		)
 	end
 
 	local press: () -> () = function() end
@@ -280,7 +354,17 @@ function GrabPrompt.start(deps: Deps): Handle
 		end
 		remove() -- one prompt at a time: the one Roblox showed last
 		local parts = build(layer, prompt, inputType)
-		shown = { prompt = prompt, parts = parts, pressed = false, holdStart = nil, stepConnection = nil }
+		local current: Shown = {
+			prompt = prompt,
+			parts = parts,
+			pressed = false,
+			holdStart = nil,
+			stepConnection = nil,
+			touch = inputType == Enum.ProximityPromptInputType.Touch,
+			placed = "following",
+			pinConnection = nil,
+		}
+		shown = current
 		-- These connections end when the pill is destroyed in remove().
 		parts.pill.InputBegan:Connect(function(input: InputObject)
 			if isPress(input) and input.UserInputState ~= Enum.UserInputState.Change then
@@ -293,6 +377,12 @@ function GrabPrompt.start(deps: Deps): Handle
 			end
 		end)
 		relayout()
+		if deps.project ~= nil and current.touch then
+			current.pinConnection = deps.step:Connect(function()
+				evaluate(current)
+			end)
+			evaluate(current)
+		end
 	end
 
 	local function onHidden(prompt: PromptLike)

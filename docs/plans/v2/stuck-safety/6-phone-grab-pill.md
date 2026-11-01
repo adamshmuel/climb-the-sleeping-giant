@@ -15,7 +15,7 @@ Words used here:
 
 - **What it's for:** core gameplay. On a phone, the pill is the only way to grab an egg. Standing on the egg, the pill drops off the bottom of the screen under the chip (shot `work/review/shots/p2-05-on-uncommon-pill-cut-off.jpg`).
 - **Spec rules:** V1 Rule 4 (Hold to grab) and the "Near an egg" row of V1 section 6 (`docs/specs/core-heist.md`: on a phone, a 44 px pill with a hand that you hold to grab). Rule 4's new line (product, 2026-11-01): on a touch screen, the grab button is fully on screen and uncovered whenever the player can grab, including when the camera is turned away from the egg. A pinned pill takes the bottom-middle place, and the tips hide while it does. A show-once tip (for example the first-slide tip "Too steep! Slipping is loud.") waits until the pill unpins, so it isn't used up while hidden.
-- **How big:** 6 steps, about 25 Studio calls (raised from 16 on 2026-11-01, `work/t56/step1-ruling.md`: the device set and reset were missing from both Play steps, Lesson 89). The first plan's cap was 20, so the new size goes to product before Step 2.
+- **How big:** 6 steps, about 31 Studio calls: about 23 used through the first Step 6 try, then 8 for the Step 6 rerun (`work/t56/step6-ruling.md`). Product's hard stop is 28 (`work/t56/step4-product.md`), so the rerun goes to product first. Past the size product sets, or a step failing twice, goes back to product.
 - **Files:**
   - a new pure module `src/client/Hud/PillPin.luau` that decides pin or unpin;
   - `src/client/Hud/GrabPrompt.luau` (437 lines): moves the pill between following and pinned;
@@ -77,7 +77,7 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 - Run the same spec file again (start and fetch).
 - Tool calls: at most 15.
 
-## Step 4: Red then green, the pill moves and the tips hide (Sonnet, 4 Studio calls)
+## Step 4: Red then green, the pill moves and the tips hide (Sonnet, 4 Studio calls; used 5, `work/t56/step4.md`)
 
 - `GrabPromptPin.spec.luau`, from a brand-new player (nothing carried), with stand-in prompts, a stand-in camera point and the step signal:
   - a point low on a touch screen draws the pill on the pinned layer, fully on screen;
@@ -90,25 +90,34 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 - The red counts as seen only if every new test failed for the right reason.
 - Tool calls: at most 25.
 
+- **Step 4 finish (Sonnet builder, 0 Studio calls, at most 6 tool calls):** the one failing test had wrong numbers, not wrong code. Apply the exact change in `work/t56/step4-ruling.md`, point 1: the test's points are computed from `Layout.pin` (Lesson 147: A test on a pixel line works its numbers out from the line), and the "follows again" point sits exactly on the 84 px line. Step 5's full run is its green.
+- Task 56 adds no more lines to `Messages.luau` (891 lines). Task 57 splits it next.
+
 ## Step 5: The full run (Haiku runner, 2 Studio calls)
 
 - `scripts/studio/full-run-start.luau`, a 62 s wait, then `scripts/studio/full-run-fetch.luau`, fetched again until it reports.
 - Plus the quality checks: `rojo build`, StyLua, selene, `luau-lsp analyze`.
 - Pass: 0 failed, and the stuck scan's line unchanged.
 
-## Step 6: Phone Play proof (Play, 8 Studio calls, Sonnet)
+## Step 6: Phone Play proof, rerun (Play, 8 Studio calls, Sonnet)
 
-Step 1 found the cause: a low, close camera (`work/t56/step1-ruling.md`). With the default camera the pill doesn't pin on the egg, so this step holds the camera the way p2-05 had it.
+The first try failed at call 3 (`work/t56/step6.md`): the start on the egg's dome slid 5.78 studs, and my camera numbers put the anchor off the bottom of the screen, so Roblox never showed the prompt. The rerun starts on flat ground and works the camera out from the screen point it must give (`work/t56/step6-ruling.md`). It proves product's two things (`work/t56/step4-product.md`): the pinned pill shows whole and uncovered, and holding it grabs.
 
-- Call 1 (Edit): set the iPhone 14 in landscape.
+- Call 1 (Edit), in one paste: set the iPhone 14 in landscape. Then require a copy of `ServerStorage.Tools.checks.StartCheck` and print `StartCheck.nearSpot(anchor, 4)`, where `anchor` is `Workspace.World.EggSpots.EggSpot_Common_1.Base.PromptAnchor.WorldPosition`. This is the meadow egg a new player's footprints lead to, on flat ground. If no spot is open, stop and report.
 - Call 2: start Play.
-- Call 3 (Client): dry start at the step 1 point on `Workspace.World.EggSpots.EggSpot_Uncommon_1`, as in step 1. Then hold the camera about 5 studs behind the head, 1 stud below it, pitched up 25°, with a RenderStepped connection (not BindToRenderStep under "CameraFxEaseBack"). Print the anchor's screen y and whether the pill is pinned. Pass: the anchor's y is below the chip's top minus 22 px (the cause measured), and the pill is pinned.
-- Call 4: shot. Pass: the whole pinned pill shows with the hand and "Hold to Grab", in the chip's place, and no chip.
-- Call 5: hold the pinned pill with `user_mouse_input` for 2.5 s (aim about 47 px right and 58 px below the target, the simulator's known offset). Pass: `Carrying` is set, and the carry pill shows.
-- Call 6 (Client): in one paste, drop the camera hold and set the camera back to Custom. Turn the camera 180° away from a waiting egg within grab range, and print the pill's layer and box. Pass: pinned, fully on screen. Then turn the camera back and step back to 2 studs from a waiting egg. Set the following pill's `AlwaysOnTop` to false while Play runs (Lesson 143). Shuffle 1 stud back and forth across the line 5 times, and print each pin switch. Pass: the pill follows next to the egg, the chip is back, and there is at most 1 switch per crossing.
+- Call 3 (Client), in one paste:
+  1. Dry start on the spot call 1 printed: settle 2 s, press 1 s, and print the drift and the floor height. Stop with "(lost input)" if it drifts more than 1 stud (Lesson 120).
+  2. Turn the body to face the egg, and wait until `PlayerGui.WorldPrompts.GrabPrompt` exists (5 s at most; stop if it doesn't).
+  3. Keep the camera's position, set `CameraType` to Scriptable, and hold the camera with a RenderStepped connection at `CFrame.lookAt(position, anchor) * CFrame.Angles(tilt, 0, 0)`. Here `tilt = math.atan((345 - h / 2) / (h / 2) * math.tan(math.rad(FieldOfView / 2)))`, h is `ViewportSize.Y`, and `anchor` is `EggSpot_Common_1.Base.PromptAnchor.WorldPosition`.
+  4. Wait 1 s, then print the anchor's viewport y, whether it is on screen, and whether the pill is pinned.
+  5. Pass: y within 5 px of 345, on screen, `PlayerGui.PinnedPrompt.Pill` exists, and the GrabPrompt billboard is empty.
+- Call 4: shot before. Pass: the whole pinned pill shows with the hand and "Hold to Grab", in the chip's place, with nothing covering it and no chip. The pinned pill sits on a ScreenGui, so no AlwaysOnTop switch is needed (Lesson 143).
+- Call 5: hold the pinned pill with `user_mouse_input` for 2.5 s. Aim at the pill's game point plus (47, 0) (Lesson 149). The rerun added 58 on y too and missed, so product ruled it a tool limit.
+- Call 6: shot after. Pass: the carry pill shows. It shows only once the server has set `Carrying`.
 - Call 7: stop Play.
 - Call 8 (Edit): reset the device.
-- Tool calls: at most 22.
+- Tool calls: at most 18.
+- If call 3 fails, stop and report. A second try goes to product (its own rule).
 
 ### Spec rules checked only by playing
 
@@ -119,4 +128,4 @@ Step 1 found the cause: a low, close camera (`work/t56/step1-ruling.md`). With t
 
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
-| Stuck safety | Task 56: Keep the phone grab pill on screen | ☐ not started | code_lead / product |
+| Stuck safety | Task 56: Keep the phone grab pill on screen | ☑ done (2905 tests pass; the pinned pill shown whole on the iPhone 14; a touch hold grabs) | builder / code_lead / product. Still open: one real pinned hold in product's Part 2c, and a real phone before launch |

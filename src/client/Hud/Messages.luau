@@ -130,6 +130,9 @@ export type Deps = {
 -- What start gives back: `stop` takes the messages off again and cleans everything up.
 export type Handle = {
 	stop: () -> (),
+	-- True while the phone grab pill is pinned to the bottom centre: the tips hide, and a timed tip that comes due
+	-- then waits (starts its clock) until the pill is let go.
+	setPillPinned: (pinned: boolean) -> (),
 }
 
 type Parts = {
@@ -586,6 +589,10 @@ function Messages.start(deps: Deps): Handle
 	local after = deps.after or Messages.realAfter
 
 	local cancelMissed: (() -> ())? = nil
+	local pillPinned = false
+	-- A timed tip that came due while the pill was pinned starts its clock from these when the pill is let go.
+	local startMissed: (() -> ())? = nil
+	local startWarning: (() -> ())? = nil
 	local stopped = false
 	-- Set for good at the first grab of the session. Until then, the tip tells the player to follow the footprints.
 	local grabbedOnce = false
@@ -594,6 +601,7 @@ function Messages.start(deps: Deps): Handle
 
 	-- Stops the 2-second timer of the missed tip, if one is running.
 	local function stopMissedTimer()
+		startMissed = nil
 		if cancelMissed then
 			cancelMissed()
 			cancelMissed = nil
@@ -607,6 +615,7 @@ function Messages.start(deps: Deps): Handle
 	local cancelWarning: (() -> ())? = nil
 
 	local function stopWarningTimer()
+		startWarning = nil
 		if cancelWarning then
 			cancelWarning()
 			cancelWarning = nil
@@ -698,7 +707,7 @@ function Messages.start(deps: Deps): Handle
 		if words ~= nil then
 			parts.tipText.Text = words
 		end
-		parts.tip.Visible = words ~= nil and not (caughtShowing and phone)
+		parts.tip.Visible = words ~= nil and not (caughtShowing and phone) and not pillPinned
 	end
 
 	local function renderCarry()
@@ -732,11 +741,19 @@ function Messages.start(deps: Deps): Handle
 		stopWarningTimer()
 		warningShowing = true
 		renderCarry()
-		cancelWarning = after(Messages.standStillSeconds, function()
-			cancelWarning = nil
-			warningShowing = false
-			renderCarry()
-		end)
+		local function begin()
+			startWarning = nil
+			cancelWarning = after(Messages.standStillSeconds, function()
+				cancelWarning = nil
+				warningShowing = false
+				renderCarry()
+			end)
+		end
+		if pillPinned then
+			startWarning = begin
+		else
+			begin()
+		end
 	end
 
 	local function onGrabMissed()
@@ -746,11 +763,36 @@ function Messages.start(deps: Deps): Handle
 		stopMissedTimer() -- a second miss starts the 2 seconds again
 		missedShowing = true
 		renderTip()
-		cancelMissed = after(Messages.missedSeconds, function()
-			cancelMissed = nil
-			missedShowing = false
-			renderTip()
-		end)
+		local function begin()
+			startMissed = nil
+			cancelMissed = after(Messages.missedSeconds, function()
+				cancelMissed = nil
+				missedShowing = false
+				renderTip()
+			end)
+		end
+		if pillPinned then
+			startMissed = begin
+		else
+			begin()
+		end
+	end
+
+	local function setPillPinned(pinned: boolean)
+		if stopped or pinned == pillPinned then
+			return
+		end
+		pillPinned = pinned
+		if not pinned then
+			local missed, warning = startMissed, startWarning
+			if missed then
+				missed()
+			end
+			if warning then
+				warning()
+			end
+		end
+		renderTip()
 	end
 
 	-- An egg came home. Only this player's own egg shows the card; a second one while it shows replaces the words and
@@ -842,6 +884,7 @@ function Messages.start(deps: Deps): Handle
 			stopped = true
 			trove:Destroy()
 		end,
+		setPillPinned = setPillPinned,
 	}
 end
 
