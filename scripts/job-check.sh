@@ -86,6 +86,23 @@ if [ "${1:-}" = "--handoff" ]; then
 		/^## Step [0-9]/ { full = (tolower($0) ~ /full run/) }
 		full && /Pass/ && tolower($0) ~ /(line|scan|print|")/ { print FILENAME ":" FNR ": " $0 }
 	' "$@")
+	# A pass line that names world parts ("for CapLadder and BeardLadder")
+	# can't be judged either: the fetch cuts each failure's text short (Task 58
+	# Step 2). So every CamelCase name on a full-run pass line must be a spec.
+	specs=" $(find src/tests -name '*.spec.luau' -exec basename {} .spec.luau \; | tr '\n' ' ') "
+	partpass=$(awk -v specs="$specs" '
+		FNR == 1 || /^## / { full = 0 }
+		/^## Step [0-9]/ { full = (tolower($0) ~ /full run/) }
+		full && /Pass/ {
+			line = $0
+			while (match(line, /[A-Z][a-z0-9]+[A-Z][A-Za-z0-9]*/)) {
+				word = substr(line, RSTART, RLENGTH)
+				if (index(specs, " " word " ") == 0) { print FILENAME ":" FNR ": " $0; break }
+				line = substr(line, RSTART + RLENGTH)
+			}
+		}
+	' "$@")
+	badpass="$badpass$partpass"
 	if [ -n "$badpass" ]; then
 		echo "$badpass"
 		echo "Handoff check FAILED: each full-run pass line above names output the fetch doesn't print."

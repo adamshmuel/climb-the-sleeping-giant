@@ -456,7 +456,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 
 ## Lesson 151: A full-run pass line names only what the fetch prints
 - **What happened:** Task 57 Step 2's pass line asked for "the stuck scan's line unchanged". It was copied from Task 56's plan, but the full run's fetch prints only counts, so the runner had nothing to match. It was the second pass rule worded differently from what the run really prints (the first was Task 15 Step 2's red error) (2026-11-01).
-- **Do instead:** word a full-run pass line only from what `scripts/studio/full-run-fetch.luau` prints: "N passed, 0 failed", "could not run", the spec-file count and the failing test names. Check it against the script, never against an older step. `scripts/job-check.sh --handoff` now fails a full-run pass line that names a line, a scan, a print or a quote.
+- **Do instead:** word a full-run pass line only from what `scripts/studio/full-run-fetch.luau` prints: "N passed, 0 failed", "could not run", the spec-file count and the failing test names. Check it against the script, never against an older step. `scripts/job-check.sh --handoff` now fails a full-run pass line that names a line, a scan, a print or a quote. Never name world parts either: the fetch cuts each failure's text short, so Task 58 Step 2's "for CapLadder and BeardLadder" couldn't be checked (third time, 2026-11-01). The check now also fails a full-run pass line with a CamelCase name that isn't a spec file.
 - **Who checks:** `code_lead` when writing a full-run step; `job-check.sh --handoff` before the runner starts.
 
 ## Lesson 152: The always-on-top flip is for shots only, never before a touch hold
