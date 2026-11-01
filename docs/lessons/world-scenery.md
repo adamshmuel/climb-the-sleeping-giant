@@ -147,3 +147,9 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **Do instead:** a start is accepted only if the floor under the body's centre, at the spot where it ends up, is no steeper than the steepest floor a body has stood still on in a dry start: normal Y 0.65 or more (Task 12i). A dry start measures the drift from the ground under the middle (Lesson 75) and prints the floor's angle.
 - **Also (Task 12i floor print):** a corner rule was planned before anyone printed the corners. Both starts that held failed it: one corner hit nothing, and another read 0.507, below a start that slid. Only the centre told them apart (held 0.725 and 0.860, slid 0.57 or less). So print the floor under the starts that held before choosing what a check measures.
 - **Who checks:** `code_lead` (the StartCheck tests and the job review).
+
+## Lesson 153: A ladder's climbable part is as wide as the ladder the player sees
+- **What happened:** in product's review Part 4, the phone player fell off the beard ladder twice. A bot job showed why: the only climbable part was an invisible truss 2 studs wide under a visible ladder 5.2 studs wide, whose rungs and rails don't collide. A push 13° off the truss's line let go 3 of 3 times, while a straight push reached the top. A phone stick that turns with the camera gives exactly that slightly-off push (2026-11-01).
+- **Do instead:** make the climbable parts cover the whole visible ladder. Test every climb with a bot push a little off the line (about 13°), not only straight along it.
+- **Who checks:** `code_lead` when planning a climb; `designer` when a ladder's look is wider than its climb part.
+

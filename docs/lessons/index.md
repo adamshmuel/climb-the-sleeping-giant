@@ -162,6 +162,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 150 | A pill beside the egg is aimed from the egg, or pinned first | `studio-and-scripts.md` |
 | 151 | A full-run pass line names only what the fetch prints | `studio-and-scripts.md` |
 | 152 | The always-on-top flip is for shots only, never before a touch hold | `studio-and-scripts.md` |
+| 153 | A ladder's climbable part is as wide as the ladder the player sees | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
