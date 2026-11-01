@@ -113,6 +113,7 @@ The idea's first minute also has a hatch and coins at 15–40 s. Those come with
 - A player who isn't carrying must be able to take an egg by holding the grab button for 1 second within reach of it.
 - The first player to finish the hold gets the egg.
 - A player carries one egg at a time, on their back, and nobody can take it from them.
+- On a touch screen, the grab button must be fully on screen, with nothing covering it, whenever the player can grab. When it can't sit beside the egg, it sits at the bottom centre, and any bottom tip waits until it moves back or goes away. A tip that shows only once is shown in full afterwards, never used up while hidden.
 
 **Rule 5: Bring it home.**
 - Walking through your **own** Safe Gate while carrying an egg must bank it. The egg then stays visible in your garden.
