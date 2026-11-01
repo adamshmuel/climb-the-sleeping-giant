@@ -97,7 +97,8 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 
 - `scripts/studio/full-run-start.luau`, a 62 s wait, then `scripts/studio/full-run-fetch.luau`, fetched again until it reports.
 - Plus the quality checks: `rojo build`, StyLua, selene, `luau-lsp analyze`.
-- Pass: 0 failed. (Fixed 2026-11-01: this said "the stuck scan's line unchanged", but the full run prints no such line. Lesson 27's stuck scan is the StuckScan specs, so 0 failed already covers it.)
+- Pass: 0 failed.
+- Note (fixed 2026-11-01): this step first asked for an unchanged stuck-scan result the full run never prints. Lesson 27's stuck scan is the StuckScan specs, so 0 failed already covers it (Lesson 151).
 
 ## Step 6: Phone Play proof, rerun (Play, 8 Studio calls, Sonnet)
 

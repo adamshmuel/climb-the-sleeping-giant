@@ -78,6 +78,20 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Give the full run its own step on Haiku (the runner)."
 		exit 1
 	fi
+	# A full run's fetch reports only its counts (passed, failed, could not run,
+	# spec files) and the failing test names. A pass line copied from an older
+	# step asked for a "stuck scan line" no run prints (Task 57 step 2, Lesson 151).
+	badpass=$(awk '
+		FNR == 1 || /^## / { full = 0 }
+		/^## Step [0-9]/ { full = (tolower($0) ~ /full run/) }
+		full && /Pass/ && tolower($0) ~ /(line|scan|print|")/ { print FILENAME ":" FNR ": " $0 }
+	' "$@")
+	if [ -n "$badpass" ]; then
+		echo "$badpass"
+		echo "Handoff check FAILED: each full-run pass line above names output the fetch doesn't print."
+		echo "Word it only from the fetch's report: \"N passed, 0 failed\", \"could not run\", spec files, failing test names (Lesson 151)."
+		exit 1
+	fi
 	# A start taken from an Edit-time probe can float in the air or sit on a
 	# slope (Task 12b step 2, the ninth job stopped before judging). So every
 	# Play step that uses Studio begins with a dry-start call (Lesson 120).
@@ -132,7 +146,7 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Write \"held 0.19 in <task> dry start\" on the line; a grab start is a start (Lesson 124)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in."
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in."
 	exit 0
 fi
 joined=0

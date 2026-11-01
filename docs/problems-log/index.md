@@ -15,13 +15,13 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | Kind | Times | Last seen | Area file |
 |---|---|---|---|
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
-| A pass rule worded differently from the real error | 1 | 2026-11-01 | `teamwork.md` |
 | A new test hidden by the red break | 1 | 2026-11-01 | `teamwork.md` |
 
 ## Fixed kinds
 
 | Kind | Fixed by | Date |
 |---|---|---|
+| A pass rule worded differently from the real error | 2 times (Task 15 Step 2 red error; Task 57 Step 2 full run): Lesson 151 and a `job-check.sh --handoff` rule that fails a full-run pass line naming output the fetch doesn't print | 2026-11-01 |
 | Check started inside a mesh, or a start check that's wrong | 13 times (thirteenth: Task 12c beard run, a grab start `StartCheck.nearSpot` picked slid 2.45 in the dry start: cause with code_lead; tenth: Task 12c step 1, a handoff's own box check; eleventh: Task 12c step 3, StartCheck-open stand spots slid off in the dry start; twelfth: the step 3 rerun, the Rare 1 grab start slid as a still stand); product ruled it "stuck on one problem": Task 53 (`StartCheck.nearSpot`, starts only from the walk map's open spots) and Lesson 21 extended | 2026-10-28 |
 | Rojo crash | Lesson 3 (Removing a synced folder crashes Rojo) | 2026-10-27 |
 | Studio out of date | Lesson 3, and after it came back Lesson 44 (Check the sync with a free search before the first runner call) | 2026-10-27 |
@@ -42,4 +42,4 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 |---|---|---|
 | `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 19 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 12 |
-| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 20 |
+| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 21 |
