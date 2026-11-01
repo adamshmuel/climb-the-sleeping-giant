@@ -446,5 +446,10 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 
 ## Lesson 149: A phone press is aimed from the game point, and its landing is checked
 - **What happened:** two phone holds on the pinned "Hold to Grab" pill (Task 56 Step 6 and product's Part 2) did nothing, and the first looked like a game bug. product put a listener on the input (it only records, it changes nothing) and found the tool's presses arrive as touch, but 58 px too low: the aim added Roblox's top bar (58 px), which the tool already allows for. The right aim is the button's game point plus (47, 0). Aiming from the shot is wrong too, because the shot is scaled about 1.44 times (2026-11-01).
-- **Do instead:** in any phone press test, aim at the button's game point (its AbsolutePosition and half its AbsoluteSize) plus (47, 0), never from the shot's picture and never with the top bar added. Before judging a press that "did nothing", log where the first press landed with a listener that only records.
+- **Do instead:** in any phone press or thumbstick test, aim at the button's or thumbstick's game point (its AbsolutePosition and half its AbsoluteSize) plus (47, 0), never from the shot's picture and never with the top bar added. Before judging a press that "did nothing", log where the first press landed with a listener that only records.
 - **Who checks:** `code_lead` when writing a Play step with a phone press; the builder prints where the press landed.
+
+## Lesson 150: A pill beside the egg is aimed from the egg, or pinned first
+- **What happened:** in product's review Part 2f, the "Hold to Grab" pill showed whole beside the egg, but a 2.6 s hold missed. The pill sits on a billboard, so its position (30, 8) is its place inside the billboard, not on the screen. The aim came from the shot instead, and the camera turned between shots. No egg was carried, so the wedge-and-rescue check couldn't run (2026-11-01).
+- **Do instead:** to hold a pill that follows the egg, aim at the egg's anchor point on screen (`Camera:WorldToViewportPoint`) plus the pill's offset, with the camera held still. Or pin the pill first (camera low) and hold its known point. Print the carry state ("Get it home" chip) before any step that needs the egg carried.
+- **Who checks:** whoever writes a Play job with a grab; `code_lead` for a builder's handoff.
