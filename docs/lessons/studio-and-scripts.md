@@ -458,3 +458,9 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 57 Step 2's pass line asked for "the stuck scan's line unchanged". It was copied from Task 56's plan, but the full run's fetch prints only counts, so the runner had nothing to match. It was the second pass rule worded differently from what the run really prints (the first was Task 15 Step 2's red error) (2026-11-01).
 - **Do instead:** word a full-run pass line only from what `scripts/studio/full-run-fetch.luau` prints: "N passed, 0 failed", "could not run", the spec-file count and the failing test names. Check it against the script, never against an older step. `scripts/job-check.sh --handoff` now fails a full-run pass line that names a line, a scan, a print or a quote.
 - **Who checks:** `code_lead` when writing a full-run step; `job-check.sh --handoff` before the runner starts.
+
+## Lesson 152: The always-on-top flip is for shots only, never before a touch hold
+- **What happened:** in product's review Part 2d, a phone hold on the pill beside the egg was aimed right, but an input listener showed the touch landing on the world. The shot setting from Lesson 143 (the pill's `AlwaysOnTop` set to false) was on. With it off, the same hold grabbed at once. This also explains the Part 2f miss (2026-11-01).
+- **Do instead:** use the Lesson 143 flip only in shot jobs with no input. Before any touch hold or press on a billboard, set it back to the built value, and say so in the job.
+- **Who checks:** whoever writes a Play job with a press; `code_lead` for a builder's handoff.
+
