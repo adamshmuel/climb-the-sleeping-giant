@@ -199,14 +199,18 @@ function Recovery.start(deps: Deps): Recovery
 	trove:Add(deps.players.PlayerRemoving:Connect(forgetPlayer))
 
 	-- Moves a player back to the newest safe spot at least RescueDistance studs from their feet. A player who is still
-	-- pressing is held still there until they let go (Rule 28). Nil when no spot is far enough.
-	local function moveBackTo(player: any): CFrame?
+	-- pressing is held still there until they let go (Rule 28). With closeOk (a Reset, Rule 27) a player with no spot
+	-- that far gets their newest spot even if it is close. Nil when there is no spot to use.
+	local function moveBackTo(player: any, closeOk: boolean): CFrame?
 		local character: Model? = player.Character
 		local root, humanoid = bodyOf(character)
 		if character == nil or root == nil or humanoid == nil then
 			return nil
 		end
 		local spot = safeSpots:pick(player.UserId, feetOf(root, humanoid))
+		if spot == nil and closeOk then
+			spot = safeSpots:newest(player.UserId)
+		end
 		if spot == nil then
 			return nil
 		end
@@ -222,7 +226,7 @@ function Recovery.start(deps: Deps): Recovery
 	end
 
 	local function moveBack(_self: Recovery, player: any): CFrame?
-		return moveBackTo(player)
+		return moveBackTo(player, false)
 	end
 
 	-- A player's Reset (Rules 25 to 33): back to a safe spot while the giant sleeps and the move is not a loop, home
@@ -235,10 +239,10 @@ function Recovery.start(deps: Deps): Recovery
 		end
 		local onGiant = RecoveryRules.onGiant(where.zone, where.onPillow)
 		local choice = RecoveryRules.resetChoice(onGiant, deps.phase(), moves[player.UserId] or {}, deps.now())
-		if choice == "MoveBack" and moveBackTo(player) ~= nil then
+		if choice == "MoveBack" and moveBackTo(player, true) ~= nil then
 			return
 		end
-		deps.sendHome(player) -- "Home", or no spot far enough (Rule 27)
+		deps.sendHome(player) -- "Home", or no saved spot at all (Rule 27)
 	end
 
 	local function setPressing(_self: Recovery, player: any, on: boolean)
@@ -252,7 +256,7 @@ function Recovery.start(deps: Deps): Recovery
 	-- far enough. A move back keeps the egg.
 	local function rescue(player: any, now: number)
 		local choice = RecoveryRules.rescueChoice(moves[player.UserId] or {}, now)
-		if choice == "MoveBack" and moveBackTo(player) ~= nil then
+		if choice == "MoveBack" and moveBackTo(player, false) ~= nil then
 			return
 		end
 		deps.sendHome(player)

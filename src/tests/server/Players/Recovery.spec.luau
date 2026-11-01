@@ -160,11 +160,43 @@ describe("Recovery", function()
 		expect(player:GetAttribute("Carrying")).toBe("Rare")
 	end)
 
-	it("a Reset with no safe spot far enough sends the player home", function()
+	it("a Reset while standing on the newest safe spot moves the player back to that spot", function()
 		local player = newPlayer(1, Vector3.new(10, 6, 0))
 		local rig = newRig({ player })
 		rig.samples[1] = sampleAt(Vector3.new(11, 5, 0), Vector3.xAxis, rig.clock) -- about 1.4 studs away
 		rig.recovery:step()
+		player:SetAttribute("Carrying", "Rare")
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(1)
+		expect(#rig.home).toBe(0)
+		expect(math.abs((rig.rescues[1].to :: CFrame).Position.X - 11) < 0.01).toBe(true)
+		expect(player:GetAttribute("Carrying")).toBe("Rare")
+	end)
+
+	it("a Reset with an older spot 4 or more studs away uses that spot first", function()
+		local player = newPlayer(1, Vector3.new(10, 6, 0))
+		local rig = newRig({ player })
+		rig.samples[1] = sampleAt(Vector3.new(20, 5, 0), Vector3.xAxis, rig.clock)
+		rig.recovery:step()
+		rig.clock += 1
+		rig.samples[1] = sampleAt(Vector3.new(11, 5, 0), Vector3.xAxis, rig.clock)
+		rig.recovery:step()
+		expect(rig.safeSpots:count(1)).toBe(2)
+
+		rig.recovery:reset(player :: any)
+
+		expect(#rig.rescues).toBe(1)
+		expect(#rig.home).toBe(0)
+		expect(math.abs((rig.rescues[1].to :: CFrame).Position.X - 20) < 0.01).toBe(true)
+	end)
+
+	it("a Reset with no saved spot at all sends the player home", function()
+		local player = newPlayer(1, Vector3.new(10, 6, 0))
+		local rig = newRig({ player })
+		rig.recovery:step()
+		expect(rig.safeSpots:count(1)).toBe(0)
 
 		rig.recovery:reset(player :: any)
 
