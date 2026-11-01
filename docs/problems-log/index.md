@@ -16,6 +16,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 |---|---|---|---|
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 | A pass rule worded differently from the real error | 1 | 2026-11-01 | `teamwork.md` |
+| A new test hidden by the red break | 1 | 2026-11-01 | `teamwork.md` |
 
 ## Fixed kinds
 
@@ -41,4 +42,4 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 |---|---|---|
 | `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 19 |
 | `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 12 |
-| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 19 |
+| `teamwork.md` | Handing work between agents, agent memory, and task sizes | 20 |

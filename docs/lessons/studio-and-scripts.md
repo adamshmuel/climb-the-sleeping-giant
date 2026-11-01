@@ -388,3 +388,28 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Task 15's red run failed exactly the 13 new tests, but the Haiku runner called it "not a pass". The handoff said the tests fail "on the missing `unstuck`", while Roblox printed "attempt to index nil with 'Connect'". The run report also lists only about 4 failed names, then "and N more", because Studio cuts a result at 1024 characters.
 - **Do instead:** a red step's pass rule gives the exact error text Roblox will print, and the expected number of failures (the new tests) with the old passed total. The runner checks the count first, then the names it can see.
 - **Who checks:** `code_lead` when writing the handoff, `scripts/job-check.sh --handoff` cannot see this.
+
+## Lesson 136: A Play job with a pause for every shot is planned in two parts
+- **What happened:** Task 16's handoff planned one Client paste for a Play job with five moves and four shots. Each shot needs a pause and a "go on" step, so the script reached 464 lines, over the 300-line limit (Lesson 63). The builder split it into helpers and the flow, which added one Studio call to each Play step (2026-11-01).
+- **Do instead:** a client Play job with more than two shots is planned from the start as two pastes: the helpers (which return "LIB READY"), then the flow. The handoff counts both pastes in the step's Studio calls.
+- **Who checks:** `code_lead` when writing the handoff.
+
+## Lesson 137: A rounded number is checked over a span, never tick against tick
+- **What happened:** Task 16's session test compared the stuck meter between two ticks in a row, within 0.001. The meter drains 0.15 a tick but is shown rounded to 0.1, so the change seen each tick goes 0.1, 0.2, 0.1, and the test failed with nothing wrong (2026-11-01). The red run hid it, because the test failed earlier on the planned break.
+- **Do instead:** check a rounded number over a whole span against the expected change (start value minus rate × ticks), with the rounding at both ends as the margin. Keep the margin smaller than the smallest change the rule forbids.
+- **Who checks:** `code_lead` when writing a test's pass rule in the handoff.
+
+## Lesson 138: A Play job holds a prompt only after the game shows it
+- **What happened:** Task 16's Play job held the Rare egg's prompt after a fixed 1 s wait. It passed on the computer but got "Carrying = nil" on the iPhone 14. It recorded nothing about why, so code_lead couldn't find the cause from the code, and the rerun went to product past the plan (2026-11-01).
+- **Do instead:** a Play job waits for the game's own `PromptShown` for that prompt before it holds. It prints when the prompt was shown, its input type, the distance, when the hold began and when it triggered, with times, so one failed run is enough to tell a late prompt from a missing one.
+- **Who checks:** `code_lead` when reading a Play job before its first paste (Lesson 76).
+
+## Lesson 139: A grab job faces the prompt before it holds
+- **What happened:** Task 16's Play job teleported the player next to the Rare egg without turning the player or the camera. On the narrower iPhone 14 view the egg was off screen, and Roblox never showed its prompt ("NEVER SHOWN", 3.26 studs away). On the wider computer screen it passed (2026-11-01). Roblox uses the camera direction to choose which prompt to show.
+- **Do instead:** every Play job that holds a prompt first faces the player and the camera toward its part. It prints whether the part is on screen before it holds.
+- **Who checks:** `code_lead` when reading a Play job before its first paste (Lesson 76).
+
+## Lesson 140: A probe records whether a prompt is shown right now
+- **What happened:** Task 16's phone probe cleared its "shown" record between stages. The prompt stayed shown from stage 1, so no new `PromptShown` arrived, and stage 2 read "shown false" while the prompt was really on (it triggered in stage 3). code_lead had to rule on a misleading line (2026-11-01).
+- **Do instead:** a probe tracks whether a prompt is shown now (shown, and not hidden since), never "a new shown since the last stage".
+- **Who checks:** `code_lead` when writing a probe, and when reading a Play job before its first paste (Lesson 76).

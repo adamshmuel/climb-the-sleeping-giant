@@ -218,6 +218,7 @@ return {
 	HIP_HEIGHT = HIP_HEIGHT,
 	ROOT_HEIGHT = ROOT_HEIGHT,
 	made = made,
+	newSignal = newSignal,
 	makeCharacter = makeCharacter,
 	rootOf = rootOf,
 	newPlayer = newPlayer,

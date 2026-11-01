@@ -308,7 +308,7 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Failing tests first: one test per kind, with a fake AnalyticsService.
 - Done when: the tests pass, and in Play the console shows one "Unstuck" line per rescue and Reset on the giant.
 
-**Task 16: A whole session, and the Play proof**
+**Task 16: A whole session, and the Play proof** (☑ done, approved by code_lead on 2026-11-01. About 54 Studio calls against 38 planned: the green run first failed on a Rule 31 check of a rounded meter, and the phone grab job twice left the camera facing away from the egg, a test-tool fault by product's ruling, `work/t16/product-ruling.md`. The phone probe then proved the grab: shown on a touch screen, grabbed after 1.02 s, Rare carried. The missing grab pill in its shot is Task 16b.)
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests"); Rule 24's results in the build proof.
 - Files: `src/tests/server/Sessions/StuckSession.spec.luau` (new).
 - The test plays one brand-new player with the real `Recovery`, `RecoveryRules`, `SafeSpots`, `StuckWatch` and `GiantDirector`, with stand-ins for the tracker: they climb with a Rare, get wedged and keep pushing (rescued after 3 s, egg kept, meter unchanged), press Reset (back a few steps), press Reset twice more within 30 s (sent home, egg back), climb again, he wakes, and a Reset now sends them home.
@@ -316,3 +316,15 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Done when the test passes, and the build proof is in the report: the bot walk table (Task 8), and in Play on a computer and the iPhone 14 (sound muted) screenshots of a rescue, a Reset on the giant, a loop-limit send home, and a Reset while he's awake.
 - Known console noise, not an error: "ContentId rbxassetid://203785492 failed due to: Asset type does not match requested type" (3 lines at every Play start since new-player safety, `docs/reviews/v2/new-player-safety.md` line 119; not in `src/`, `tools/` or any object in the game, so most likely a Studio plugin). The console check counts it as expected. If it ever shows in a published server, it becomes a bug for code_lead.
 
+**Task 16b: The grab pill shows on a phone** (added on 2026-11-01 by product's ruling, `work/t16/product-ruling.md`, "Ruling on the probe". Built right after Task 16, before product's build review. Caps: step 1 at 8 Studio calls, the whole task at 16; going past either goes back to product.)
+- **What it's for:** core gameplay. A phone player grabs an egg by touching the pill (the small "hold to grab" button next to the egg). In Task 16's phone probe the grab worked, but no pill was drawn. It is the second phone shot with no pill (Task 7c was the first), so the cause gets found and fixed.
+- **Spec rules:** the grab pill rules (V1 Task 47 checked "the phone pill is at least 44 pixels tall and still grabs"). The handoff names them by number from the spec.
+- **Files:** `src/client/Hud/GrabPrompt.luau` (only if step 1 finds a fault), and a new test in `src/tests/client/Hud/`.
+- **Steps:**
+  1. **Probe (Sonnet, 8 Studio calls):** on the iPhone 14, walk up to Rare 1 facing it, with the camera on the egg. After the prompt shows, print whether the pill's billboard exists, whether it is on, what it is attached to, and its size and place on the screen. Take one shot. **If the pill is drawn, Task 16b closes here with nothing to fix** (the missing pill was a leftover of the probe moving the player).
+  2. **Failing test (Sonnet, 2 Studio calls for the run):** a test built on the cause measured in step 1.
+  3. **Fix (Sonnet):** the smallest change in `GrabPrompt.luau`.
+  4. **Full test run (Haiku runner, 2 Studio calls).**
+  5. **Phone Play (Sonnet, about 4 Studio calls):** the pill shows next to the egg, and pressing it grabs. Then the computer pill is checked again.
+- **If step 1 is unclear:** product's build review checks the pill by hand on the phone, and Gate 4 waits for it.
+- **Lessons:** Lesson 26 (name the cause as measured); the new probe lesson from Task 16 (record whether a prompt is shown right now, never "a new shown since the last stage"); a grab job turns the body and the camera to the egg first.

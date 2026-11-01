@@ -145,6 +145,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 133 | Compare decimal settings as "close", never "exactly" | `studio-and-scripts.md` |
 | 134 | Studio's console never shows an analytics event's name or values | `studio-and-scripts.md` |
 | 135 | A red pass rule quotes the real error and counts the failures | `studio-and-scripts.md` |
+| 136 | A Play job with a pause for every shot is planned in two parts | `studio-and-scripts.md` |
+| 137 | A rounded number is checked over a span, never tick against tick | `studio-and-scripts.md` |
+| 138 | A Play job holds a prompt only after the game shows it | `studio-and-scripts.md` |
+| 139 | A grab job faces the prompt before it holds | `studio-and-scripts.md` |
+| 140 | A probe records whether a prompt is shown right now | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
