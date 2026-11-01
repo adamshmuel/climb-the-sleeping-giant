@@ -155,6 +155,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 143 | Screenshots don't draw always-on-top billboards | `studio-and-scripts.md` |
 | 144 | A job that reuses a shared check prints why it refused | `studio-and-scripts.md` |
 | 145 | A phone review part holds at most 3 checks | `teamwork.md` |
+| 146 | A Play proof recreates the bug shot's camera | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

@@ -428,3 +428,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **What happened:** Build review Part 5 re-walked 9 step-off legs with the bot-walk job from Task 8b. Task 12i (Lesson 125) had since made `StartCheck` refuse starts on floors steeper than about 49 degrees, so 139 starts came back "not open" (2 in Task 8b), and 4 of the 9 legs never walked. The server printed only the count, so the cause had to be worked out afterwards. The same job also called every failed leg with no rescue "stuck", though #150 was still falling at 8 studs a second (2026-11-01).
 - **Do instead:** a job that reuses a shared check prints the reason for each start it refuses. A re-walk starts from the start the earlier run walked from. A leg is called "stuck" only by Rule 22 (What counts as stuck), never because it failed.
 - **Who checks:** `code_lead` when writing or reusing a job; `scripts/job-check.sh` when it can.
+
+## Lesson 146: A Play proof recreates the bug shot's camera
+- **What happened:** Task 56 Step 1 measured the phone grab pill with the default camera and found it 74-80 px clear of the footprints chip, so the cause wasn't confirmed. The bug shot (build review p2-05) came from a low, close camera turned up at the sky. The step's pass assumed the default camera would put the pill where the bug shot showed it (2026-11-01).
+- **Do instead:** before writing a Play pass, check that the step's camera and spot really recreate the bug shot, and hold that camera on purpose (for example, a camera bind on RenderStepped). Count the device set and reset in the step's calls (Lesson 89).
+- **Who checks:** `code_lead` when writing a Play step; `scripts/job-check.sh --handoff` for the device calls when it can.
