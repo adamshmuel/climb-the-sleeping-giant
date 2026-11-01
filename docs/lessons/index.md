@@ -151,6 +151,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 139 | A grab job faces the prompt before it holds | `studio-and-scripts.md` |
 | 140 | A probe records whether a prompt is shown right now | `studio-and-scripts.md` |
 | 141 | A shot camera looks at the prompt from the side | `studio-and-scripts.md` |
+| 142 | A review's first-minute play and its must-shows get separate budgets | `teamwork.md` |
+| 143 | Screenshots don't draw always-on-top billboards | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

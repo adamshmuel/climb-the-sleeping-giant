@@ -157,3 +157,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Task 13b's handoff gave its red step 0 Studio calls, but tests run only in Studio, so the builder couldn't see red (the same mistake as Task 13 step 6b). Then three full runs ran inside the builder's Sonnet step, re-reading about 75k words each call at Sonnet's price, though the runner (Haiku) was built for them.
 - **Do instead:** every red step budgets a full run (start and one fetch, cap 3). Every full run is its own step on Haiku (the `runner`); the builder and `code_lead` keep the code and the judging.
 - **Who checks:** `code_lead` when writing a handoff; `scripts/job-check.sh --handoff` fails both.
+
+## Lesson 142: A review's first-minute play and its must-shows get separate budgets
+- **What happened:** Part 1 of the stuck-safety build review (the computer whole session, played blind) spent most of its 22 Studio calls turning the camera with the keyboard. It never reached the giant, so the Reset puff live, the landing within 1 s, the rescue and the loop home all moved to Part 3 (2026-11-01).
+- **Do instead:** a review plan gives the first-minute play (what a new player sees and does first) its own small budget. The climb and the must-shows on the giant get their own part and budget, starting from a placed spot, never from a blind walk.
+- **Who checks:** `product` when writing a review plan; the main chat when it reads the plan.
