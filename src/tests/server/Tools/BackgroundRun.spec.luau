@@ -100,12 +100,47 @@ describe("BackgroundRun", function()
 		local run = newRun(finishedRunner(fakeResults(10, names)))
 		run.start(nil)
 		local parts = lines(run.fetch(0))
-		expect(parts[3]).toBe("FAILED: " .. string.rep("n", 100) .. " | " .. string.rep("x", 150))
+		expect(parts[3]).toBe("FAILED: " .. string.rep("n", 100))
 		local last = parts[#parts]
 		local more = string.match(last, "^and (%d+) more$")
 		expect(more).never.toBeNil()
 		local shown = #parts - 3 -- the first line, the counts, and this "and N more" line are not names
 		expect(shown + (tonumber(more :: string) :: number)).toBe(50)
+	end)
+
+	-- The shape of the real red run in work/t58b/step2-result.md: 5 failures with long names and long messages.
+	local function longFailures(): { string }
+		local names: { string } = {}
+		for index = 1, 5 do
+			table.insert(names, string.rep("n", 99) .. index)
+		end
+		return names
+	end
+
+	it(
+		"names all 5 failed tests, each with a long name and a 150-character message, with no 'and N more' line",
+		function()
+			local run = newRun(finishedRunner(fakeResults(10, longFailures())))
+			run.start(nil)
+			local report = run.fetch(0)
+			local count = 0
+			for _, line in lines(report) do
+				if string.find(line, "FAILED: ", 1, true) == 1 then
+					count += 1
+				end
+				expect(string.find(line, "and %d+ more")).toBeNil()
+			end
+			expect(count).toBe(5)
+			expect(#report < 900).toBe(true)
+		end
+	)
+
+	it("gives messages to the earliest failures while room is left", function()
+		local run = newRun(finishedRunner(fakeResults(10, longFailures())))
+		run.start(nil)
+		local parts = lines(run.fetch(0))
+		expect(parts[3]).toBe("FAILED: " .. string.rep("n", 99) .. "1 | " .. string.rep("x", 150))
+		expect(string.find(parts[7], " | ", 1, true)).toBeNil()
 	end)
 
 	it("lists every failed test by name and has no 'and N more' line when they all fit", function()

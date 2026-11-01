@@ -42,22 +42,23 @@ local function whyText(test: any): string?
 	return cut(table.concat(kept, " / "), WHY_LIMIT)
 end
 
--- One entry per failed test: its cut name, then " | " and its cut message when it has one.
-local function failedNames(results: any): { string }
-	local names: { string } = {}
+type Failure = { name: string, why: string? }
+
+-- One entry per failed test: its cut name, and its cut message when it has one.
+local function failures(results: any): { Failure }
+	local found: { Failure } = {}
 	for _, suite in results.testResults or {} do
 		for _, test in suite.testResults or {} do
 			if test.status == "failed" then
-				local name = cut(tostring(test.fullName), NAME_LIMIT)
-				local why = whyText(test)
-				table.insert(names, if why ~= nil then `{name} | {why}` else name)
+				table.insert(found, { name = cut(tostring(test.fullName), NAME_LIMIT), why = whyText(test) })
 			end
 		end
 	end
-	return names
+	return found
 end
 
--- The first line, the counts, the extra line, then as many failed test names as fit, then "and N more".
+-- The first line, the counts, the extra line, then every failed test's name that fits (names first), then the
+-- messages for the earliest names while room is left, then "and N more" only when even the names did not fit.
 local function buildReport(results: any, extraLine: string?): string
 	local passed: number = results.numPassedTests or 0
 	local failed: number = results.numFailedTests or 0
@@ -73,11 +74,12 @@ local function buildReport(results: any, extraLine: string?): string
 		table.insert(lines, cut(extraLine, EXTRA_LIMIT))
 	end
 	local length = #table.concat(lines, "\n")
-	local names = failedNames(results)
+	local found = failures(results)
+	local firstName = #lines + 1
 	local shown = 0
-	for index, name in names do
-		local line = `FAILED: {name}`
-		local isLast = index == #names
+	for index, failure in found do
+		local line = `FAILED: {failure.name}`
+		local isLast = index == #found
 		local room = REPORT_LIMIT - length - 1 - (if isLast then 0 else MORE_LINE_RESERVE)
 		if #line > room then
 			break
@@ -86,8 +88,21 @@ local function buildReport(results: any, extraLine: string?): string
 		length += #line + 1
 		shown += 1
 	end
-	if shown < #names then
-		table.insert(lines, `and {#names - shown} more`)
+	local reserve = if shown < #found then MORE_LINE_RESERVE else 0
+	for index = 1, shown do
+		local why = found[index].why
+		if why == nil then
+			continue
+		end
+		local extra = 3 + #why -- the " | " and the message
+		if length + extra > REPORT_LIMIT - reserve then
+			break
+		end
+		lines[firstName + index - 1] ..= ` | {why}`
+		length += extra
+	end
+	if shown < #found then
+		table.insert(lines, `and {#found - shown} more`)
 	end
 	return table.concat(lines, "\n")
 end
