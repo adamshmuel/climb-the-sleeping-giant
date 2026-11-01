@@ -97,7 +97,7 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 
 - `scripts/studio/full-run-start.luau`, a 62 s wait, then `scripts/studio/full-run-fetch.luau`, fetched again until it reports.
 - Plus the quality checks: `rojo build`, StyLua, selene, `luau-lsp analyze`.
-- Pass: 0 failed, and the stuck scan's line unchanged.
+- Pass: 0 failed. (Fixed 2026-11-01: this said "the stuck scan's line unchanged", but the full run prints no such line. Lesson 27's stuck scan is the StuckScan specs, so 0 failed already covers it.)
 
 ## Step 6: Phone Play proof, rerun (Play, 8 Studio calls, Sonnet)
 
@@ -124,8 +124,39 @@ The first try failed at call 3 (`work/t56/step6.md`): the start on the egg's dom
 - On the iPhone 14 in landscape: standing on the egg, next to it, and at the edge of grab range, the whole pill shows and nothing covers it (product's ruling 1). Step 6 checks "on", "next to" and the camera turned away. Product's build review checks "edge of grab range" and a smaller 667x375 phone.
 - The grey box (step 1, call 2): if it is ours, it goes to designer as a new task. If it isn't, product marks it "not testable in Studio".
 
+## Task 57: Split the HUD messages file and share the grab-prompt test rig
+
+Added by code_lead on 2026-11-01, after the Task 56 review (`work/t56/review.md`). product accepted it on its terms: nothing the player sees changes, and it doesn't block Gate 4.
+
+- **What it's for:** a tidy-up. It protects no new rule. It keeps two files from growing past the 1000-line limit and removes two small wastes Task 56 left. Nothing the player sees or feels changes.
+- **Spec rules:** none new. Rule 4 (Hold to grab) and the messages rules of V1 section 6 (`docs/specs/core-heist.md`) must behave exactly as before. The existing tests guard them.
+- **How big:** 2 steps, 2 Studio calls. Step 1 is the code (Sonnet, no Studio). Step 2 is the full run (Haiku runner). If Step 1 needs more than 30 tool calls, the builder stops at a green point and the rig sharing becomes its own step.
+- **Files:**
+  - `src/client/Hud/Messages.luau` (891 lines) is split by topic. A new sibling file `src/client/Hud/MessageParts.luau` takes "how the messages look": the `Parts` type, `outlinedText`, `bottomPlate`, `eggColors`, `build`, `applyLayout`, `applyCaught` and `applyBanner` (about 350 lines). `Messages.luau` keeps "what the messages say and when they show": the words, the types, `realAfter` and `start` (about 540 lines).
+  - `src/tests/client/Hud/GrabPromptRig.luau` (new, not a spec): the fake-prompt test rig that `GrabPrompt.spec.luau` and `GrabPromptPin.spec.luau` both copy today.
+  - `src/client/Hud/PillPin.luau` and `src/tests/client/Hud/PillPin.spec.luau`: delete `PillPin.pinnedBox` and its one test. Only that test used it.
+  - `src/client/Hud/GrabPrompt.luau`: the pill's height and billboard width are worked out once (when the pill shows, and in `relayout` when the screen changes), not every frame.
+- **Lessons:** Lesson 3 (never delete or move a synced folder). `Messages.luau` stays a file; it does not become a folder. Adding new files and deleting one function is safe.
+
+### Decisions
+
+| Question | Answer |
+|---|---|
+| A require loop between the two message files | Not allowed. `MessageParts` never requires `Messages`. The words `build` needs (the footprints, run-home and caught texts) are passed into `build` as one table from `Messages` |
+| A value both files use (an emoji or colour constant) | It lives in `MessageParts`, and `Messages` reads it from there. A value only one file uses moves with that code |
+| What the `Messages` module shows to other files | Exactly what it shows today. `init.client.luau` and the tests don't change, except a test that read a moved helper |
+| The shared rig's shape | `GrabPromptRig.newRig(viewport?, options?)`, with `options.onPinned` for the pin tests. It also gives `made`, `newSignal`, `newFakePrompt(name?)` and a `cleanup()` that each spec calls in `afterEach` |
+| Where a test lives | Each test stays in the file it is in today. Only the rig moves |
+| The sizes kept for each frame | Two numbers on the shown pill: the height (`keyDiameter + 2 * paddingY`) and the billboard width from `Layout.forScreen(...).prompt`. The per-frame check reads them and still prefers the pill's real `AbsoluteSize.X` when it is above 0 |
+
+### Pass
+
+- Step 1: `rojo build`, StyLua and selene clean. No file it touches over 900 lines. `git diff --stat` shows no change outside the files above.
+- Step 2: the full run prints **2904 passed, 0 failed** (2905 minus the deleted `pinnedBox` test). The StuckScan specs are part of that run, so 0 failed covers Lesson 27's stuck scan. (Fixed 2026-11-01: this asked for a "stuck scan's line" the run never prints.)
+
 ## Progress row
 
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
 | Stuck safety | Task 56: Keep the phone grab pill on screen | ☑ done (2905 tests pass; the pinned pill shown whole on the iPhone 14; a touch hold grabs) | builder / code_lead / product. Still open: one real pinned hold in product's Part 2c, and a real phone before launch |
+| Stuck safety | Task 57: Split the HUD messages file and share the grab-prompt test rig | ☑ done (2904 tests pass; Messages 891 to 478 lines plus MessageParts 439; nothing on screen changed) | builder / runner / code_lead |

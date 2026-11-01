@@ -17,7 +17,6 @@ local Layout = require(script.Parent.Layout)
 
 local PIN_LINE = Layout.pin.pinLine
 local UNPIN_LINE = Layout.pin.unpinLine
-local PINNED_BOTTOM_GAP = Layout.pin.bottomGap
 
 local PillPin = {}
 
@@ -26,7 +25,7 @@ local function isInside(box: Box, safe: Box): boolean
 end
 
 function PillPin.decide(input: Input): State
-	local current = input.current
+	local current: State = input.current
 	-- A computer keeps the following pill, and a held pill never moves under the finger.
 	if not input.touch then
 		return "following"
@@ -46,12 +45,6 @@ function PillPin.decide(input: Input): State
 		return "following"
 	end
 	return current
-end
-
-function PillPin.pinnedBox(safe: Box, width: number, height: number): Box
-	local left = (safe.left + safe.right) / 2
-	local bottom = safe.bottom - PINNED_BOTTOM_GAP
-	return { left = left, top = bottom - height, right = left + width, bottom = bottom }
 end
 
 return PillPin

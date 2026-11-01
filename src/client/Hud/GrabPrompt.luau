@@ -114,6 +114,9 @@ type Shown = {
 	touch: boolean, -- a touch prompt: only these pin
 	placed: PillPin.State,
 	pinConnection: ConnectionLike?,
+	-- Worked out when the pill shows and when the screen changes, so the frame check doesn't ask the layout each frame.
+	pillHeight: number, -- keyDiameter + 2 * paddingY
+	billboardWidth: number, -- the room the pill floats in
 }
 
 -- Builds the prompt's pieces for one egg spot (sizes come later, from the layout).
@@ -278,7 +281,10 @@ function GrabPrompt.start(deps: Deps): Handle
 	local function relayout()
 		local current = shown
 		if current then
-			applyLayout(current.parts, Layout.forScreen(deps.viewport.get()).prompt)
+			local size = Layout.forScreen(deps.viewport.get()).prompt
+			applyLayout(current.parts, size)
+			current.pillHeight = size.keyDiameter + 2 * size.paddingY
+			current.billboardWidth = size.billboardWidth
 		end
 	end
 
@@ -310,16 +316,15 @@ function GrabPrompt.start(deps: Deps): Handle
 			return
 		end
 		local viewport = deps.viewport.get()
-		local size = Layout.forScreen(viewport).prompt
 		local width = current.parts.pill.AbsoluteSize.X
 		if width <= 0 then
-			width = size.billboardWidth -- not drawn yet: the room it floats in is the biggest it can be
+			width = current.billboardWidth -- not drawn yet: the room it floats in is the biggest it can be
 		end
-		local height = size.keyDiameter + 2 * size.paddingY
+		local height = current.pillHeight
 		local point = project(current.prompt.Parent :: Instance)
 		local box: PillPin.Box? = nil
 		if point ~= nil then
-			local centerX = point.X + SIZE_OFFSET.X * size.billboardWidth
+			local centerX = point.X + SIZE_OFFSET.X * current.billboardWidth
 			box = {
 				left = centerX - width / 2,
 				top = point.Y - height / 2,
@@ -363,6 +368,8 @@ function GrabPrompt.start(deps: Deps): Handle
 			touch = inputType == Enum.ProximityPromptInputType.Touch,
 			placed = "following",
 			pinConnection = nil,
+			pillHeight = 0,
+			billboardWidth = 0,
 		}
 		shown = current
 		-- These connections end when the pill is destroyed in remove().

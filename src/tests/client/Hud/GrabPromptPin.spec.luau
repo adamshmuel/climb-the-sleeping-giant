@@ -6,7 +6,6 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
 
 local Hud = StarterPlayer.StarterPlayerScripts.Client.Hud
-local GrabPrompt = require(Hud.GrabPrompt)
 local Messages = require(Hud.Messages)
 local MessagesHelpers = require(script.Parent.Messages.Helpers)
 local Layout = require(Hud.Layout)
@@ -24,166 +23,36 @@ local BETWEEN = Vector2.new(300, (UNPIN_LINE_Y + PIN_LINE_Y) / 2 - HALF_PILL) --
 local ON_UNPIN_LINE = Vector2.new(300, UNPIN_LINE_Y - HALF_PILL) -- bottom 304: exactly on the 84 px line
 local PINNED_LAYER = "PinnedPrompt"
 
-local madeInstances: { Instance } = {}
-local stops: { () -> () } = {}
+local GrabPromptRig = require(script.Parent.GrabPromptRig)
 
-local function made<T>(instance: T): T
-	table.insert(madeInstances, instance :: any)
-	return instance
-end
+type Rig = GrabPromptRig.Rig
+local TOUCH = Enum.ProximityPromptInputType.Touch
+local KEYBOARD = Enum.ProximityPromptInputType.Keyboard
+local newFakePrompt = GrabPromptRig.newFakePrompt
 
 afterEach(function()
-	for _, stop in stops do
-		stop()
-	end
-	table.clear(stops)
-	for _, instance in madeInstances do
-		instance:Destroy()
-	end
-	table.clear(madeInstances)
+	GrabPromptRig.cleanup()
 	MessagesHelpers.cleanUp()
 end)
 
-local newSignal = MessagesHelpers.newSignal
-
-type FakePrompt = {
-	Parent: Attachment,
-	Style: Enum.ProximityPromptStyle,
-	HoldDuration: number,
-	KeyboardKeyCode: Enum.KeyCode,
-	Enabled: boolean,
-	holdBegins: number,
-	holdEnds: number,
-	InputHoldBegin: (self: FakePrompt) -> (),
-	InputHoldEnd: (self: FakePrompt) -> (),
-}
-
-local function newFakePrompt(): FakePrompt
-	return {
-		Parent = made(Instance.new("Attachment")),
-		Style = Enum.ProximityPromptStyle.Custom,
-		HoldDuration = 1,
-		KeyboardKeyCode = Enum.KeyCode.E,
-		Enabled = true,
-		holdBegins = 0,
-		holdEnds = 0,
-		InputHoldBegin = function(self: FakePrompt)
-			self.holdBegins += 1
-		end,
-		InputHoldEnd = function(self: FakePrompt)
-			self.holdEnds += 1
-		end,
-	}
-end
-
-type Rig = {
-	parent: Folder,
-	attributes: Folder,
-	service: any,
-	step: any,
-	handle: GrabPrompt.Handle,
-	point: { value: Vector2? },
-	pinnedCalls: { boolean },
-	show: (prompt: FakePrompt, touch: boolean) -> (),
-	frame: (point: Vector2?) -> (),
-	pill: () -> TextButton?,
-}
-
--- Starts the grab prompt on stand-ins for the player's screen, the prompt events, the frame signal and the egg's
--- point on the screen. `onPinned` is called with true or false each time the pill is pinned or let go.
+-- Starts the grab prompt in pin mode. `onPinned` is called with true or false each time the pill is pinned or let go.
 local function newRig(viewport: Vector2, onPinned: ((pinned: boolean) -> ())?): Rig
-	local parent = made(Instance.new("Folder"))
-	local root = made(Instance.new("Folder"))
-	local attributes = made(Instance.new("Folder"))
-	local service = {
-		PromptShown = newSignal(),
-		PromptHidden = newSignal(),
-		PromptButtonHoldBegan = newSignal(),
-		PromptButtonHoldEnded = newSignal(),
-	}
-	local step = newSignal()
-	local point: { value: Vector2? } = { value = HIGH }
-	local pinnedCalls: { boolean } = {}
-	local handle = GrabPrompt.start({
-		parent = parent,
-		service = service,
-		player = {
-			GetAttribute = function(_self: any, name: string): any
-				return attributes:GetAttribute(name)
-			end,
-			GetAttributeChangedSignal = function(_self: any, name: string): RBXScriptSignal
-				return attributes:GetAttributeChangedSignal(name)
-			end,
-		},
-		root = root,
-		step = step,
-		now = function()
-			return 100
-		end,
-		viewport = {
-			get = function()
-				return viewport
-			end,
-			connect = function(_callback: () -> ())
-				return function() end
-			end,
-		},
-		project = function(_adornee: Instance): Vector2?
-			return point.value
-		end,
-		onPinned = function(pinned: boolean)
-			table.insert(pinnedCalls, pinned)
-			if onPinned then
-				onPinned(pinned)
-			end
-		end,
-	})
-	table.insert(stops, handle.stop)
-	local function pill(): TextButton?
-		local layers = { parent:FindFirstChild("WorldPrompts"), parent:FindFirstChild(PINNED_LAYER) }
-		for _, layer in layers do
-			local found = layer:FindFirstChild("Pill", true)
-			if found then
-				return found :: TextButton
-			end
-		end
-		return nil
-	end
-	return {
-		parent = parent,
-		attributes = attributes,
-		service = service,
-		step = step,
-		handle = handle,
-		point = point,
-		pinnedCalls = pinnedCalls,
-		show = function(prompt: FakePrompt, touch: boolean)
-			local inputType = if touch
-				then Enum.ProximityPromptInputType.Touch
-				else Enum.ProximityPromptInputType.Keyboard
-			service.PromptShown:Fire(prompt, inputType)
-		end,
-		frame = function(newPoint: Vector2?)
-			point.value = newPoint
-			step:Fire()
-		end,
-		pill = pill,
-	}
+	return GrabPromptRig.newRig(viewport, { pin = true, onPinned = onPinned })
 end
 
 local function isPinned(rig: Rig): boolean
-	local pill = rig.pill()
+	local pill = rig.pinnedPill()
 	return pill ~= nil and pill.Parent ~= nil and pill.Parent.Name == PINNED_LAYER
 end
 
 describe("GrabPrompt: the pinned phone pill", function()
 	it("draws the pill on the pinned layer, fully on screen, when the egg's point is low on a touch screen", function()
 		local rig = newRig(PHONE)
-		rig.show(newFakePrompt(), true)
+		rig.show(newFakePrompt(), TOUCH)
 		expect(isPinned(rig)).toBe(false)
 		rig.frame(LOW)
 		expect(isPinned(rig)).toBe(true)
-		local pill = rig.pill() :: TextButton
+		local pill = rig.pinnedPill() :: TextButton
 		expect(pill.AnchorPoint).toBe(Vector2.new(0, 1))
 		expect(pill.Position).toBe(UDim2.new(0.5, 0, 1, -12))
 		expect(rig.pinnedCalls).toEqual({ true })
@@ -191,20 +60,20 @@ describe("GrabPrompt: the pinned phone pill", function()
 
 	it("pins when the egg's point is behind the camera", function()
 		local rig = newRig(PHONE)
-		rig.show(newFakePrompt(), true)
+		rig.show(newFakePrompt(), TOUCH)
 		rig.frame(nil)
 		expect(isPinned(rig)).toBe(true)
 	end)
 
 	it("follows the egg again once the point rises past the 84 px line", function()
 		local rig = newRig(PHONE)
-		rig.show(newFakePrompt(), true)
+		rig.show(newFakePrompt(), TOUCH)
 		rig.frame(LOW)
 		rig.frame(BETWEEN)
 		expect(isPinned(rig)).toBe(true) -- between the lines it stays put, so it does not flicker
 		rig.frame(ON_UNPIN_LINE)
 		expect(isPinned(rig)).toBe(false)
-		local pill = rig.pill() :: TextButton
+		local pill = rig.pinnedPill() :: TextButton
 		expect(pill.AnchorPoint).toBe(Vector2.new(0.5, 0.5))
 		expect(pill.Position).toBe(UDim2.fromScale(0.5, 0.5))
 		expect(rig.pinnedCalls).toEqual({ true, false })
@@ -212,7 +81,7 @@ describe("GrabPrompt: the pinned phone pill", function()
 
 	it("never pins on a computer, however low the point is", function()
 		local rig = newRig(COMPUTER)
-		rig.show(newFakePrompt(), false)
+		rig.show(newFakePrompt(), KEYBOARD)
 		rig.frame(Vector2.new(640, 700))
 		expect(isPinned(rig)).toBe(false)
 		expect(#rig.pinnedCalls).toBe(0)
@@ -223,7 +92,7 @@ describe("GrabPrompt: the pinned phone pill", function()
 		function()
 			local rig = newRig(PHONE)
 			local prompt = newFakePrompt()
-			rig.show(prompt, true)
+			rig.show(prompt, TOUCH)
 			rig.frame(LOW)
 			rig.handle.press()
 			expect(prompt.holdBegins).toBe(1)
@@ -240,10 +109,10 @@ describe("GrabPrompt: the pinned phone pill", function()
 	it("lets go of the pin when the prompt goes away", function()
 		local rig = newRig(PHONE)
 		local prompt = newFakePrompt()
-		rig.show(prompt, true)
+		rig.show(prompt, TOUCH)
 		rig.frame(LOW)
 		rig.service.PromptHidden:Fire(prompt)
-		expect(rig.pill()).toBe(nil)
+		expect(rig.pinnedPill()).toBe(nil)
 		expect(rig.pinnedCalls).toEqual({ true, false })
 	end)
 end)
@@ -259,7 +128,7 @@ describe("GrabPrompt and the messages: a whole short session on a phone", functi
 		expect(messages.tipText().Text).toBe(Messages.footprintsText)
 
 		-- Walks up to the egg: the pill follows it, the tip stays.
-		rig.show(prompt, true)
+		rig.show(prompt, TOUCH)
 		rig.frame(HIGH)
 		expect(isPinned(rig)).toBe(false)
 		expect(messages.tip().Visible).toBe(true)
@@ -274,7 +143,7 @@ describe("GrabPrompt and the messages: a whole short session on a phone", functi
 		expect(prompt.holdBegins).toBe(1)
 		rig.attributes:SetAttribute("Carrying", "Common")
 		messages.setCarrying("Common")
-		expect(rig.pill()).toBe(nil)
+		expect(rig.pinnedPill()).toBe(nil)
 		expect(messages.pill().Visible).toBe(true)
 		-- The carry pill wins the bottom centre, and the footprints tip is over for good after the first grab.
 		expect(messages.tip().Visible).toBe(false)
