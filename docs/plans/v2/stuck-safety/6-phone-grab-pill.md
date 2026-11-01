@@ -15,7 +15,7 @@ Words used here:
 
 - **What it's for:** core gameplay. On a phone, the pill is the only way to grab an egg. Standing on the egg, the pill drops off the bottom of the screen under the chip (shot `work/review/shots/p2-05-on-uncommon-pill-cut-off.jpg`).
 - **Spec rules:** V1 Rule 4 (Hold to grab) and the "Near an egg" row of V1 section 6 (`docs/specs/core-heist.md`: on a phone, a 44 px pill with a hand that you hold to grab). Rule 4's new line (product, 2026-11-01): on a touch screen, the grab button is fully on screen and uncovered whenever the player can grab, including when the camera is turned away from the egg. A pinned pill takes the bottom-middle place, and the tips hide while it does. A show-once tip (for example the first-slide tip "Too steep! Slipping is loud.") waits until the pill unpins, so it isn't used up while hidden.
-- **How big:** 6 steps, about 16 Studio calls. Going past 20 Studio calls goes back to product.
+- **How big:** 6 steps, about 25 Studio calls (raised from 16 on 2026-11-01, `work/t56/step1-ruling.md`: the device set and reset were missing from both Play steps, Lesson 89). The first plan's cap was 20, so the new size goes to product before Step 2.
 - **Files:**
   - a new pure module `src/client/Hud/PillPin.luau` that decides pin or unpin;
   - `src/client/Hud/GrabPrompt.luau` (437 lines): moves the pill between following and pinned;
@@ -46,7 +46,7 @@ Words used here:
 
 The 64 and 84 px lines are starting values. Step 1's numbers can move them only if the pill would still cover the chip next to the egg. Moving them is code_lead's call, because players can't see the line itself.
 
-## Step 1: Measure the cause on the phone (Play, 4 Studio calls, Sonnet)
+## Step 1: Measure the cause on the phone (Play, 4 Studio calls, Sonnet; done: 7 calls, `work/t56/step1.md`)
 
 - Call 1: start Play. Set the iPhone 14 in landscape (StudioDeviceSimulatorService).
 - Call 2 (Client): dry start. Put the body at `Workspace.World.EggSpots.EggSpot_Uncommon_1` on the route point product used, let it settle for 2 s, press for 1 s, and print the drift and the floor under the feet. Before any touch, list every visible GuiObject under `PlayerGui` that starts at the left edge in the lower half: full name, size, `BackgroundTransparency` (the grey box, part2-causes section 2).
@@ -96,15 +96,19 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 - Plus the quality checks: `rojo build`, StyLua, selene, `luau-lsp analyze`.
 - Pass: 0 failed, and the stuck scan's line unchanged.
 
-## Step 6: Phone Play proof (Play, 6 Studio calls, Sonnet; call 5 does two checks in one paste)
+## Step 6: Phone Play proof (Play, 8 Studio calls, Sonnet)
 
-- Call 1: start Play, iPhone 14 landscape.
-- Call 2 (Client): dry start at the step 1 point on `EggSpot_Uncommon_1`, as in step 1. Turn the body and the camera to the egg.
-- Call 3: shot standing on the egg. Pass: the whole pinned pill shows with the hand and "Hold to Grab", in the chip's place, and no chip.
-- Call 4: hold the pinned pill with `user_mouse_input` for 2.5 s (aim about 47 px right and 58 px below the target, the simulator's known offset). Pass: `Carrying` is set, and the carry pill shows.
-- Call 5 (Client): in one call, turn the camera 180° away from a waiting egg within grab range and print the pill's layer and its box. Pass: pinned, fully on screen. Then turn the camera back, step back to 2 studs from a waiting egg, set the following pill's `AlwaysOnTop` to false while Play runs (Lesson 143), then shuffle 1 stud back and forth across the line 5 times. Print each pin switch. Pass: the pill follows next to the egg, the chip is back, and at most 1 switch per crossing, no flicker.
-- Call 6: stop Play.
-- Tool calls: at most 20.
+Step 1 found the cause: a low, close camera (`work/t56/step1-ruling.md`). With the default camera the pill doesn't pin on the egg, so this step holds the camera the way p2-05 had it.
+
+- Call 1 (Edit): set the iPhone 14 in landscape.
+- Call 2: start Play.
+- Call 3 (Client): dry start at the step 1 point on `Workspace.World.EggSpots.EggSpot_Uncommon_1`, as in step 1. Then hold the camera about 5 studs behind the head, 1 stud below it, pitched up 25°, with a RenderStepped connection (not BindToRenderStep under "CameraFxEaseBack"). Print the anchor's screen y and whether the pill is pinned. Pass: the anchor's y is below the chip's top minus 22 px (the cause measured), and the pill is pinned.
+- Call 4: shot. Pass: the whole pinned pill shows with the hand and "Hold to Grab", in the chip's place, and no chip.
+- Call 5: hold the pinned pill with `user_mouse_input` for 2.5 s (aim about 47 px right and 58 px below the target, the simulator's known offset). Pass: `Carrying` is set, and the carry pill shows.
+- Call 6 (Client): in one paste, drop the camera hold and set the camera back to Custom. Turn the camera 180° away from a waiting egg within grab range, and print the pill's layer and box. Pass: pinned, fully on screen. Then turn the camera back and step back to 2 studs from a waiting egg. Set the following pill's `AlwaysOnTop` to false while Play runs (Lesson 143). Shuffle 1 stud back and forth across the line 5 times, and print each pin switch. Pass: the pill follows next to the egg, the chip is back, and there is at most 1 switch per crossing.
+- Call 7: stop Play.
+- Call 8 (Edit): reset the device.
+- Tool calls: at most 22.
 
 ### Spec rules checked only by playing
 
