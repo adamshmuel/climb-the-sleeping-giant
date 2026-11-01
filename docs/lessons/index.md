@@ -141,6 +141,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 129 | Fakes must spawn bodies in the engine's order | `studio-and-scripts.md` |
 | 130 | Re-prove only what failed | `studio-and-scripts.md` |
 | 131 | Measure a move right after a spawn before the first fix | `studio-and-scripts.md` |
+| 132 | A red step needs Studio, and a full run goes to the runner | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

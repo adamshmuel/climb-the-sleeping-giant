@@ -152,3 +152,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** In the Task 12e handoff, a test named "picks the safe spot" failed `scripts/job-check.sh --handoff`. The check reads "picks the" as a job picking a world part by name, and wants that part in the world-names table.
 - **Do instead:** name tests by where the player ends up, for example "lands on the safe spot" or "ends at the safe spot", never "picks the ...".
 - **Who checks:** `code_lead` (handoff), `builder` (test names).
+
+## Lesson 132: A red step needs Studio, and a full run goes to the runner
+- **What happened:** Task 13b's handoff gave its red step 0 Studio calls, but tests run only in Studio, so the builder couldn't see red (the same mistake as Task 13 step 6b). Then three full runs ran inside the builder's Sonnet step, re-reading about 75k words each call at Sonnet's price, though the runner (Haiku) was built for them.
+- **Do instead:** every red step budgets a full run (start and one fetch, cap 3). Every full run is its own step on Haiku (the `runner`); the builder and `code_lead` keep the code and the judging.
+- **Who checks:** `code_lead` when writing a handoff; `scripts/job-check.sh --handoff` fails both.

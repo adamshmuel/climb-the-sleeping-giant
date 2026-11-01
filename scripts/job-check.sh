@@ -60,6 +60,24 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Pick it from agent-workflow.md, \"Model per job\"."
 		exit 1
 	fi
+	# Tests run only in Studio, so a red step with no Studio calls can't see
+	# its red (Task 13 step 6b and Task 13b step 1, Lesson 132).
+	nostudiored=$(grep -nE '^## Step [0-9]' "$@" | grep -iE '\b(red|failing test)' | grep -iE '\(0 Studio calls|\(no Studio calls')
+	if [ -n "$nostudiored" ]; then
+		echo "$nostudiored"
+		echo "Handoff check FAILED: each red step above has no Studio calls, but tests run only in Studio."
+		echo "Budget the full run: start and one fetch (2 Studio calls, cap 3)."
+		exit 1
+	fi
+	# A full run is a runner job on Haiku, never part of a Sonnet or Opus step
+	# (agent-workflow.md, "Model per job"; Task 13b ran three on Sonnet, Lesson 132).
+	fullrun=$(grep -nE '^## Step [0-9]' "$@" | grep -iE 'full run' | grep -iE '\b(sonnet|opus)\b')
+	if [ -n "$fullrun" ]; then
+		echo "$fullrun"
+		echo "Handoff check FAILED: each step above puts a full run on Sonnet or Opus."
+		echo "Give the full run its own step on Haiku (the runner)."
+		exit 1
+	fi
 	# A start taken from an Edit-time probe can float in the air or sit on a
 	# slope (Task 12b step 2, the ninth job stopped before judging). So every
 	# Play step that uses Studio begins with a dry-start call (Lesson 120).
@@ -114,7 +132,7 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Write \"held 0.19 in <task> dry start\" on the line; a grab start is a start (Lesson 124)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in."
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in."
 	exit 0
 fi
 joined=0

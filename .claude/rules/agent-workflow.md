@@ -167,6 +167,11 @@ A cheaper model costs less for every word it reads, so each job uses the cheapes
   It writes such a job as a short prompt in `work/` (files to read, scripts to paste, pass rule, caps), and the main chat starts that agent.
 - **Ready-made run scripts.** A full test run is always `scripts/studio/full-run-start.luau`, a wait of about 60 s (`python3 -c "import time; time.sleep(62)"`, because a hook blocks Bash `sleep`), then `scripts/studio/full-run-fetch.luau` (fetched again until it reports, never started twice: Lesson 51).
 - **Jobs outside a handoff** (a question, a check, a progress update) get their model from the same table, written by the main chat when it starts the job.
+- **Every full test run goes to the `runner` (Haiku), never inside a Sonnet or Opus step** (Adam, 2026-11-01). A full run only pastes two ready-made scripts and copies the pass line, so a cheaper model gives the same result, and quality is kept because the thinking stays with the stronger models:
+  - the `builder` writes the code and sees its red; the `runner` only runs and reports the exact pass or fail lines;
+  - `code_lead` judges the result in its review, never the `runner`;
+  - a red step still budgets its own run (start and one fetch), because tests run only in Studio.
+  `scripts/job-check.sh --handoff` fails a step heading that puts a full run on Sonnet or Opus, and a red step with 0 Studio calls (Lesson 132).
 - **If a cheaper model fails a step** (wrong calls, a misread result), the step goes back up one model, and that kind of job moves up in this table. It's logged in the problems log like any other unplanned stop.
 
 ## Fewer round trips
