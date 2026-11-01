@@ -10,6 +10,8 @@
 -- A new jump while a fall is under way means that fall has landed (a Humanoid only jumps from the ground, a ladder
 -- or water), so it thuds then, even with Jump held down and under 0.3 s on the ground between hops. A jump's zone
 -- is the zone it took off from (docs/architecture.md, section 3: "How is a jump or fall's noise found?").
+-- Climbing a ladder never thuds: a fall that a ladder catches is cancelled, and the count starts again from the
+-- zone the player is in (the ground check finds nothing below a ladder, so it can't tell a climb from a drop).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -70,12 +72,14 @@ end
 -- are they in, and the zones they took off from in jumps since the last tick (oldest first, usually none or one).
 -- Returns the zone to thud from (the highest zone the fall left) when a fall that began with a jump, or went fast,
 -- ends, otherwise nil, and the new state. At most one thud a tick: more are kept to come on the next ticks.
+-- `climbing` is true while the Humanoid is in its Climbing state.
 function LandingDetector.step(
 	state: State,
 	grounded: boolean,
 	verticalSpeed: number,
 	zone: Config.ZoneName,
-	takeoffs: { Config.ZoneName }
+	takeoffs: { Config.ZoneName },
+	climbing: boolean
 ): (Config.ZoneName?, State)
 	local fellFast = state.fellFast or verticalSpeed < -FAST_FALL
 	local atRest = LandingDetector.isAtRest(grounded, verticalSpeed)
@@ -107,6 +111,19 @@ function LandingDetector.step(
 			fellFast = wentFast,
 			jumped = true,
 			highest = highest,
+			restTicks = 0,
+			owed = due,
+		})
+	end
+
+	if climbing then
+		-- A ladder caught them: no fall, no air count, and no zones from before the climb.
+		return oneThud(due, {
+			airTicks = 0,
+			falling = false,
+			fellFast = false,
+			jumped = false,
+			highest = zone,
 			restTicks = 0,
 			owed = due,
 		})

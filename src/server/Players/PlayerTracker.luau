@@ -247,6 +247,8 @@ function PlayerTracker.new(deps: Deps): Tracker
 				end
 				local grounded = deps.isGrounded(character)
 				local verticalSpeed = root.AssemblyLinearVelocity.Y
+				local humanoid = character:FindFirstChildOfClass("Humanoid")
+				local climbing = humanoid ~= nil and humanoid:GetState() == Enum.HumanoidStateType.Climbing
 				local moving = false
 				local thudFrom: Config.ZoneName?
 				local takeoffZones: { Config.ZoneName } = {}
@@ -266,7 +268,8 @@ function PlayerTracker.new(deps: Deps): Tracker
 					end
 					local fresh = LandingDetector.new(place.zone)
 					fresh.owed = memory.landing.owed
-					thudFrom, memory.landing = LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {})
+					thudFrom, memory.landing =
+						LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {}, climbing)
 					table.clear(memory.readings)
 					recordReading(memory, deps.now(), root.Position, grounded)
 					memory.lastPosition = root.Position
@@ -278,8 +281,14 @@ function PlayerTracker.new(deps: Deps): Tracker
 					for _, position in deps.takeoffs(character) do
 						table.insert(takeoffZones, Zones.locate(position, deps.zoneBoxes, deps.gardens).zone)
 					end
-					thudFrom, memory.landing =
-						LandingDetector.step(memory.landing, grounded, verticalSpeed, place.zone, takeoffZones)
+					thudFrom, memory.landing = LandingDetector.step(
+						memory.landing,
+						grounded,
+						verticalSpeed,
+						place.zone,
+						takeoffZones,
+						climbing
+					)
 				end
 				table.insert(samples, {
 					userId = player.UserId,

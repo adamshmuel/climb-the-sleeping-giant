@@ -48,7 +48,7 @@ This file is the plan's map. Each task lives in one part file in `docs/plans/v2/
 | `3-4-bot-and-rescue.md` | 8 to 16 (with 12b to 12i, and 13b) | Part 3: the bot walk. Part 4: getting a player out |
 | `5-big-files.md` | 30, 31 | Splitting every file over 1000 lines, and a check that keeps them under it |
 | `6-phone-grab-pill.md` | 56 | Part 6: the phone grab pill stays on screen (pinned in the tip's place when its egg point is too low or off screen), added 2026-11-01 from the build review; built before Gate 4 |
-| `7-ladder-width.md` | 58, 58b, 59 | Part 7: every ladder can be climbed across its whole visible width, its side walls leave the ladder ends open, and its drops still land safely, added 2026-11-01 from the build review; built before Gate 4 |
+| `7-ladder-width.md` | 58, 58b, 58c, 59 | Part 7: every ladder can be climbed across its whole visible width, its side walls leave the ladder ends open, and its drops still land safely, added 2026-11-01 from the build review; built before Gate 4 |
 
 **Build order** (unchanged, plus Tasks 30 and 31): 1 to 4, 17, 18, 5, 6, 19, 20, 21, 24, 25 (to step 6b-1e), 26, the rest of 25, 22, 23, **29, 30, 31, 34, 32, 35, 36, 38, 39, 37, 41, 42, 33**, 27, 45, 43, 46, 51, 47, 48, 28, 53, 28w, 54 (step 1 call 1), 28x, the rest of 54, 33b, 7, 7c, 55, then 8 to 12, 12b to 12h, 12c, 12i (added 2026-10-29: a picked start holds still), 13 to 16 (Tasks 49 and 50 dropped on 2026-10-28: Task 47's replay found 0 spots still hanging, so neither task's condition is met) (Task 44 was not needed: the core spots fit 4 batches). (Task 43, the steep spots played, was split from Task 27 on 2026-10-27 by the 6-step limit; product's scope ruling plays every core spot and samples the far ones, so the old Task 44 merged into it.) (Task 32, the Sock, was moved out of Task 29 on 2026-10-26. Task 35, the Sock's lips, was added after it the same day. Tasks 36 to 39 were added on 2026-10-27 to finish it. Task 40, the pillow moved back so the nightcap doesn't poke through, was added the same day. Later that day product's decision removed Tasks 40 and 23b and added Task 41: the pillow is redesigned, laid flat and sunk, never fitted.)
 
@@ -62,7 +62,7 @@ Old notes and handoffs in `work/` and in `docs/specs/v2/research/decisions-plans
 | Rule 21 (The stuck scan runs on every test run) | 4, 23 |
 | Rule 22 (What counts as stuck) | 2, 3, 4, 17, 18, 6, 19, 20, 24, 25, 26, 22, 23, 29, 32, 35, 36, 38, 39, 37, 41, 42, 33, 27, 43 |
 | Rule 23 (One walk check for everything) | 1, 2, 3, 19 |
-| Rule 24 (A bot walks every way) | 8, 16, 58, 58b, 59 |
+| Rule 24 (A bot walks every way) | 8, 16, 58, 58b, 58c, 59 |
 | Rule 25 (Reset on the giant takes you back) | 11, 13 |
 | Rule 26 (Reset off the giant is unchanged) | 11 |
 | Rule 27 (Safe spots are really safe) | 2, 9, 10, 11 |
