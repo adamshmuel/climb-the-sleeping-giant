@@ -230,6 +230,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 218 | Check a placement mockup against the idea's own words | `look-and-art.md` |
 | 219 | Measure a body part's edges before placing next to it | `look-and-art.md` |
 | 220 | Measure a disputed fact before weighing two rulings | `teamwork.md` |
+| 221 | A placement list gives measured spots, or says "measure first" | `look-and-art.md` |
 
 | File | What it covers |
 |---|---|

@@ -80,3 +80,7 @@ About how the game looks, the art and models, and approving a design. The map of
 ## Lesson 219: Measure a body part's edges before placing next to it
 - **What happened:** the judges asked to move the cap ties "about 6 studs back" behind the giant's ear. The real ear runs from z 19 to z 30, so 6 studs put the tie right over it. It took 18 studs (2026-11-02).
 - **Do instead:** before placing anything near a body part, measure its edges with raycasts, and give placement asks as measured spots, not guesses.
+
+## Lesson 221: A placement list gives measured spots, or says "measure first"
+- **What happened:** the designer's list put the tie's top landing at "about y 104". The cap there is 3.7 studs higher, so the fold would have sat inside a dip. The designer measured and raised it. It was the second guessed spot in one day, after Lesson 219 (2026-11-02).
+- **Do instead:** whoever writes a placement list measures each spot first, or writes "measure first". The rule is now in `agent-workflow.md`, "Fewer round trips".
