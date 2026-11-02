@@ -195,3 +195,63 @@ Task 58b Step 3 asked one builder to rewrite about 10 test files that read the o
 - Before sizing a step, search for every file that reads the thing being changed, and count them.
 - A code step edits at most 5 files. More are split into steps of 5 or fewer (`docs/plans/handoff-template.md`).
 - **Who checks:** `code_lead` (when writing a handoff), main chat (before starting a step).
+
+## Lesson 192: Write "checked in Task N" for a later task's proof
+
+In Task 58e code_lead wrote "proven in Task 58d" in a handoff. The handoff check reads "proven" as a claim about a Play step's starts (Lesson 120), so it failed the handoff.
+
+- In a handoff, a proof that comes in a later task is written "checked in Task N", never "proven in".
+- **Who checks:** `code_lead` (writing handoffs).
+
+## Lesson 193: Name the later spec that reshapes each part, and give the plan a time budget
+- **What happened:** stuck safety aimed at zero stuck spots on the whole giant, with no check for parts a later spec reshapes. Every scan hit became a task, even on the belly and nest areas that specs 3 and 5 rebuild, and each world change broke older tests, which were patched in place. The plan grew to 76 tasks in 12 days; the ladder task alone took about 12.7 h against 2 h. The red alert review on 2026-11-02 cut or moved what was left and saved about 12 to 15 h.
+- **Do instead:** every plan task names the later spec that reshapes its area, if any, and does only the cheapest safe fix there ("Don't build what a later plan replaces"). Every plan has a time budget, and the main chat checks the "Red alert: a plan is eating too much time" triggers at each task close.
+- **Who checks:** `code_lead` (writing and splitting tasks), `product` (rulings that add tasks), the main chat (the triggers).
+
+## Lesson 196: "Go back" is an idea to test, not a safe default
+- **What happened:** the face ladders' red alert (2026-11-02) asked "Do we need a ladder at all?" and "Where would it serve the game best?". The decision was to go back to the old leaning ladders instead. Nobody priced it: the old ladders were built by hand in Studio, and the script that removed them was never committed, so going back needed a rebuild and a new tool (Lune). The old ladders had known stuck problems, and spec 5 removes them anyway. The main chat passed the decision on and kept going when the cost jumped. Adam caught it.
+- **Do instead:** in a red alert, "go back" answers the same questions as every other idea, says how it fixes the old design's problems, and is priced (a commit or script brings it back, or it's a rebuild). No idea rebuilds a part a later spec replaces; when a later spec has already chosen the end shape, prefer building that now. The main chat checks the decision against the brief's questions before acting, and stops when the cost jumps.
+- **Who checks:** `product` and `game_creator` (the decision), every owner (their answers), the main chat (the check before acting).
+
+## Lesson 198: Start a placement ruling with what sits at the top and who needs it
+- **What happened:** two red alert rounds on the giant's face picked where the way up goes before listing what the player needs up there. The answer turned out to be only the cap's Legendary nests (round 3, 2026-11-02).
+- **Do instead:** start every ruling on where a way up goes with a short table: what sits at the top, and which players need it. Then pick the route.
+- **Who checks:** `product` and `game_creator` (rulings), `designer` (placing ways up).
+
+## Lesson 199: When a part on a main character is questioned, question what pulls players there too
+- **What happened:** round 1 of the face red alert kept the nose and forehead stops (the Dream Egg on his nose) without asking whether the gameplay needed them on the face. Moving the Dream Egg to his cap removed the whole face route (round 3, 2026-11-02).
+- **Do instead:** when a part on a main character is questioned, also question the gameplay spots that pull players there. Moving one spot can remove the whole path.
+- **Who checks:** `game_creator` (gameplay spots), `product` (rulings).
+
+## Lesson 200: Four agents agreeing is not a check; ask what nobody tried
+- **What happened:** in round 3 of the face red alert, all four owners picked one ladder by his left ear. The brief had hinted "a later spec already plans this", and everyone took that plan. designer noted that one left-side ladder favours the gardens on that side, but game_creator and product never judged that fairness. Nobody tried moving the top eggs down to the beard, or giving every player their own ladder to place. Adam came up with the ladder idea himself (2026-11-02).
+- **Do instead:** follow "Think critically and creatively, in every job" (`agent-workflow.md`). Briefs never hint at an answer. Owners judge fairness for players on every side. When everyone agrees, ask what nobody tried. A new feature is weighed against the real cost of the fixes it replaces.
+- **Who checks:** every owner (their answers), `product` and `game_creator` (the decision), the main chat (briefs and the check before acting).
+
+## Lesson 201: A fairness check names where the ways up join
+- **What happened:** Rule 73 (Every rank is fair from every way up) compared ways up that all meet at the lap landing, before the belly. So it could never see that one ladder above the belly favours one side (code_lead, red alert round 4, 2026-11-02).
+- **Do instead:** every fairness check says where the routes join, and anything past that point gets its own left-against-right check.
+
+## Lesson 202: Judge a one-sided route on the trip there and the trip home
+- **What happened:** round 3 read "the brim pair at x −14" as all four cap nests being on his left, and nobody checked the way home. With one left ladder, the gardens on that side jump off and are home fast; the far gardens walk round his boots (game_creator, red alert round 4, 2026-11-02).
+- **Do instead:** when judging a one-sided route, check both the trip there and the trip home. Read "pair" in a nest table as a mirror twin (Rule 72), and when a table lists one side of a mirrored giant, count both sides before judging fairness (product, same round).
+
+## Lesson 204: Show both options as mockups before choosing between them
+- **What happened:** in red alert round 4 the team weighed "two fixed ear ladders" against "raise your own ladder" from words only. The brief said "thinking only, no Studio", so designer made no mockups and game_creator and product never saw the options. product and the main chat also answered "the second one later", which is not in or out (Adam, 2026-11-02).
+- **Do instead:** for a choice between looks or ways to play, designer mocks up each option from the fixed cameras, and the owners judge them side by side. Every option is decided in or out now.
+
+## Lesson 207: Putting back is placing
+- **What happened:** in the ordering test 6, a fresh product agent put Rare eggs 3 and 4 back before the ear ladders were chosen, because "it restores git's own spots; it chooses nothing new" (2026-11-02). Whether an old spot still works depends on the open change around it.
+- **Do instead:** putting back, restoring or undoing to an earlier spot is placing, even when the spot is saved in git. It waits for every open change to the layer it sits on (`order-the-work` skill, "Placing").
+
+## Lesson 208: Split a world-script step by layer before ordering it
+- **What happened:** Task 60's handoff put scripts 04 (eggs) and 08 (route points) in the same step as the face-ladder removal, so the egg put-back rode along early with it (ordering test 7, 2026-11-02).
+- **Do instead:** split every world-script step by the layer each script changes before ordering it. Putting eggs or route points back is its own piece, after every change to the ways up.
+
+## Lesson 209: A task ends at its own goal
+- **What happened:** Task 60's handoff put its own checks (walk test, after shots, full run) after the mockups, though they check parts of the world the ear-ladder build would change (ordering test 6, 2026-11-02).
+- **Do instead:** a task ends when its own goal is done. A check of an area that is still changing moves into the task that finishes that area.
+
+## Lesson 210: Agents ordered work by excuses until one checklist banned them
+- **What happened:** ordering tests 4 and 5 put work before an open decision with "it's far from the change", "under every option it will look like this" and "the test reruns, so it will catch it". Rules spread over several agent files didn't stop it (2026-11-02).
+- **Do instead:** every agent that orders work follows the `order-the-work` skill step by step and shows its answers, including the table of reasons that never count. A new excuse found in a test becomes a new row in that table.

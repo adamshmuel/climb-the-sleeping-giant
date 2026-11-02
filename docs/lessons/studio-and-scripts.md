@@ -621,3 +621,30 @@ Twice on 2026-11-02 a builder's red step went over its Studio cap. In Task 58e S
 - A handoff step's Studio cap counts one fetch per report page it expects.
 - The rule is in `.claude/rules/agent-workflow.md`, "Ready-made run scripts".
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 189: A cut failure message hides the next offender
+
+In Task 58e Step 4 (2026-11-02), the egg-spot test "no egg stands inside a prop" still failed after Rare egg 3 was moved. Rare egg 4 had been inside the FootLedge since Task 58b, but the failure message was cut at 150 characters. The test runner's fixed header used about 100 of them, so only the first egg's name ever showed. Rare egg 4 stayed hidden behind Rare egg 3 for a whole task.
+
+- When a test lists every part that breaks it, the report must show the whole list. Drop the test runner's fixed header before cutting the message.
+- After fixing the first part on the list, measure all of them again before calling the fix done.
+- **Who checks:** `code_lead` (in the handoff and review), `builder`.
+
+## Lesson 190: Run a world script by requiring its synced copy, never by pasting it
+
+In Task 58e Step 4b (2026-11-02), a builder read tools/world/08-route.luau (986 lines) whole only to paste it into Studio. Reading it and pasting it cost about 30k tokens, and the builder ran out of memory before its test runs.
+
+- To run a world script, use one execute_luau call: `require(ServerStorage.Tools.world["<name>"]:Clone())`. First check the sync with a short script_read.
+- Read a world script only to edit it, and then only the lines you need.
+- Handoffs say "require a clone of its synced copy", never "paste script NN".
+- **Who checks:** `code_lead` (in the handoff), `builder`.
+
+## Lesson 195: A world script that removes parts saves a copy of them first
+- **What happened:** world script 18 removed the side trusses, side walls and old ladder parts with no undo. When the red alert sent the face ladders back (2026-11-02), the revert had to rebuild them from older build scripts and the last commit.
+- **Do instead:** every world script that removes or replaces parts first saves a copy of what it removes in `work/<task>/` (or keeps it in ServerStorage), so going back is one step.
+- **Who checks:** `code_lead` (handoffs with a world change), `builder` (writing the script).
+
+## Lesson 205: Write test names in a Pass line without quote marks
+- **What happened:** a full-run pass line that named a test in quote marks failed `scripts/job-check.sh`, which rejects any `"` in a Pass line (2026-11-02).
+- **Do instead:** write failing test names in Pass lines without quote marks.
+- **Who checks:** `code_lead` (handoffs and runner jobs).

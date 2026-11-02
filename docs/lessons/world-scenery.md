@@ -219,3 +219,11 @@ In Task 58e the upright ladders left 12 stuck spots: air rooms 6-10 studs deep b
 - Give it the look of the giant around it (beard white, cap cream), so the face doesn't change.
 - Check its side walls: where a fill meets a sloping surface, the stuck scan runs again for new grooves.
 - **Who checks:** `designer` (shape and look), `code_lead` (what the scan counts as sealing).
+
+## Lesson 191: Scan the skin under a wide object before naming its spot
+
+In Task 58e the designer named a 0.5-stud sink for Rare egg 4 at (2.5, -32.0). A scan then showed the nest's rim floating 1.3 to 3.8 studs off a bumpy 65-degree skin, so no sink or lean could fix it. The spot had been picked from one height at the center.
+
+- Before naming a spot or lean for a wide object on a curved slope, ray-scan the skin under its whole base (the rim and the middle).
+- Pick a spot where every point is within the limit, and give the measured numbers with it.
+- **Who checks:** `designer` (before naming the spot), `code_lead` (the handoff asks for the scan numbers).

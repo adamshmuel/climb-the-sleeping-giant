@@ -41,3 +41,22 @@ About how the game looks, the art and models, and approving a design. The map of
 - **What happened:** in Task 58b Step 5b, the look check put a Rare egg in the nose nest as a stand-in for the Dream Egg, which doesn't spawn until a later version. The egg hid the cap ladder's lowest rungs, and two builds failed on it before anyone noticed no egg spawns there in V2. The library nest was also stored hidden (Transparency 1), so the copy was invisible (2026-11-02).
 - **Do instead:** judge a shot only with what the version really spawns. If a stand-in is needed, name the version it belongs to and judge it as that version's check. Check a copied library model's Transparency before the shot.
 - **Who checks:** `designer` (when it writes the look check), `code_lead` (in the handoff).
+
+## Lesson 194: Before adding anything to the main character, ask if it must be there, and judge it from the wide view
+- **What happened:** in Tasks 58b and 58e the face ladders were made upright, then a foot ledge, brace and white fill blocks were added, each fixing the last. Every step was judged from close cameras and safety numbers. Nobody shot old against new from the spawn or on a phone, and nobody asked whether a ladder belonged on the face at all. The giant's face, the game's hook, ended up hidden behind a ladder and white walls, and Adam saw it first (2026-11-02).
+- **Do instead:** before ruling on or adding any part on a main character, first ask whether it can go somewhere else or be left out. Then judge it old against new from the fixed wide and phone cameras (`agent-workflow.md`, "Before and after"), and never stack another fix on a change that hasn't passed that check.
+- **Who checks:** `designer` (the look), `game_creator` and `product` (rulings that place things on a main character).
+
+## Lesson 197: Judge a way up to a main character's head as one line, foot to top
+- **What happened:** the face route was judged in halves (the beard climb, the forehead strip). Each half looked fixable on its own, but the whole route still crossed the giant's face (red alert round 3, 2026-11-02).
+- **Do instead:** draw the whole way up to a main character's head as one line from its foot to its top, on the fixed wide and phone shots, before pricing any part of it.
+- **Who checks:** `designer` (placing ways up), `product` and `game_creator` (choosing a route).
+
+## Lesson 203: Judge every way up from every garden camera and the way home
+- **What happened:** round 3 judged the way up only from the front cameras, so nobody saw that half the gardens couldn't see the single ear ladder (designer, red alert round 4, 2026-11-02).
+- **Do instead:** judge every way up from all 8 garden gate cameras and along the way home, not only from the first view.
+
+## Lesson 206: The shot steps say how to hold the camera in Play
+- **What happened:** Task 60 Step 1 (phone before shots, 2026-11-02) went 6 calls over its cap. A one-time `CameraType = Scriptable` and CFrame set doesn't hold in Play, because the game's camera script puts it back, and `SetOrientationAsync` errors when no device is set. The builder found the fix by trial.
+- **Do instead:** every shot step quotes the method: set the phone device in Edit before Play, then the orientation; in Play, hold the camera with a RenderStepped loop run from `execute_luau` (it ends when Play stops). Shots are 1210x558 from the built-in iPhone 14, landscape, FOV 70.
+- **Who checks:** `code_lead` (shot steps in handoffs), `designer` (`look-cameras.md`).
