@@ -402,9 +402,9 @@ Premortem: imagine V2 shipped, this feature failed, and work back to why.
 |---|---|---|
 | "EggRefill" (new) | A new egg appeared. Breakdowns: its rank, how long it waited past its countdown ("0 s", "1–30 s", "over 30 s"), and server size ("1", "2-4" or "5-8") | Every refill |
 | "SlideOff" (new) | A player slid off below the seam. Breakdowns: whether they carried an egg, and whether this was their first, second or later slide this session | Every slide that ends |
-| "EggGrab" (spec 4) | A grab, by rank and server size | Every grab |
+| "EggGrab" (spec 4) | A grab, by rank and server size. A grab on his cap also gets the trip number used by "CapToCapFall" | Every grab |
 | "CapDrop" (new) | A player dropped from his cap onto the pillow. Breakdowns: walked off or jumped, where the fall ends (pillow, face, shoulders or belly), whether it woke him, and whether they carried an egg | Every fall that starts on his cap, a cap tie or a tie's landing and ends on the pillow, his face, his shoulders or his belly |
-| "CapToCapFall" (new) | A fall with no jump that started on his cap, a cap tie or a tie's landing and ended on his cap. Breakdowns: drop height, and whether they carried an egg | Every such fall. It is never logged as "CapDrop", so the front-exit trigger in section 5 counts only falls that end on his face or belly |
+| "CapToCapFall" (new) | A fall with no jump that started on his cap, a cap tie or a tie's landing and ended on his cap. Breakdowns: drop height, the egg carried (none, or its rank), and a trip number (it counts up each time that player climbs onto the cap by a tie in a session, so every fall belongs to one trip) | Every such fall. It is never logged as "CapDrop", so the front-exit trigger in section 5 counts only falls that end on his face or belly. The section 5 trigger counts trips, not falls: the trips on which a Legendary egg was carried (an "EggGrab" of a Legendary, with its trip number) that have at least one fall over 4 studs, divided by all trips on which a Legendary egg was carried |
 | "ShortDropThud" (new) | A fall with no jump that dropped less than 2.5 studs still thudded (a step off a ledge or edge). Breakdowns: the noise zone it happened in, and whether it woke him | Every such thud, at most once per player per minute so one ledge can't flood the log |
 
 **Numbers that show it works:**
