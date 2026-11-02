@@ -21,6 +21,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | A bot never entered Climbing on a tie | 2 | 2026-11-02 | `world-scenery.md` |
 | A picked fix failed its confirm run | 1 | 2026-11-02 | `world-scenery.md` |
 | A full-run report hid failed names (fix queued: the fetch lists every failed name first) | 3 | 2026-11-02 | `studio-and-scripts.md` |
+| The sleep-meter holder stopped between Play runs (cause fix due) | 2 | 2026-11-02 | `studio-and-scripts.md` |
 
 ## Fixed kinds
 
