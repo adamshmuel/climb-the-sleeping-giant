@@ -199,6 +199,25 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Begin it with one: put the body on each start, settle 2 s, press 1 s, print the drift and the floor under the feet, and stop \"(lost input)\" if a start drifts over 1 stud (Lesson 120)."
 		exit 1
 	fi
+	# A climb trace that gave up after two turns, with no step back and no shot
+	# from the player's camera, called a stall it couldn't show (Task 61a Step 2;
+	# the same kind as the 2026-11-02 ladder wedge, Lesson 297). So a Play step
+	# that can report STUCK retries like a player and shoots the stall.
+	nostall=$(awk '
+		function check() { if (play && stuck && (!back || !shot)) print head }
+		FNR == 1 || /^## / { check(); play = 0; stuck = 0; back = 0; shot = 0 }
+		/^## Step [0-9]/ { head = FILENAME ":" FNR ": " $0; play = ($0 ~ /Play/ && $0 !~ /\(0 Studio calls/) }
+		/STUCK/ { stuck = 1 }
+		tolower($0) ~ /step(s|ping)? back/ { back = 1 }
+		tolower($0) ~ /stall shot|shot (at|of) the stall|screen_capture/ { shot = 1 }
+		END { check() }
+	' "$@")
+	if [ -n "$nostall" ]; then
+		echo "$nostall"
+		echo "Handoff check FAILED: each Play step above can report STUCK, but has no \"step back\" retry or no stall shot."
+		echo "Before a STUCK, retry like a player (turn, step back, turn again) and take a screen_capture at the stall (Lesson 297)."
+		exit 1
+	fi
 	# A handoff that invented its own "does a body fit" box check hit the
 	# giant's mesh and found no start at 18 of 18 spots (Task 12c step 1, the
 	# tenth wrong start check). Starts come only from StartCheck (Lesson 43).

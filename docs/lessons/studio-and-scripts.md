@@ -811,3 +811,21 @@ Two script bugs (a function that doesn't exist and a broken compare) were pasted
 A handoff said an Edit dry run "must find GiantState". The server makes that folder only when Play starts, so the builder spent 2 Studio calls finding out, and the step went over its caps.
 
 **Do instead:** the handoff's world table marks each name "exists in Edit" or "made at Play by <script>". A dry run in Edit reports a Play-only name as "not found (made at Play)" and doesn't fail.
+
+## Lesson 295: A stall with no measured cause gets a trace step first
+
+Task 61a changed a world script before its stall had a measured cause. The fix didn't help, and the task ran about 4 hours before its first red flag.
+
+**Do instead:** a stall with no logged x, z and touching parts gets a read-only trace step before any fix step. After its restart, 61a's trace found the cause and the task closed in 43 minutes.
+
+## Lesson 296: Keep job scripts short from the start
+
+One trace job grew past the 300-line job-file limit once StyLua spread its long format calls over many lines.
+
+**Do instead:** write job scripts with short format helpers, and put the dry start and the read in their own file from the start.
+
+## Lesson 297: A Play trace retries like a player and shows the stall
+
+Task 61a's Step 2 trace gave up after two turns, with no step back and no shot from the player's camera, so its -20° stop couldn't be judged. This is the same kind of problem as the 2026-11-02 wedge between a ladder and the giant's head.
+
+**Do instead:** every Play trace includes a player's full retries (turn, step back, turn again) and a shot at any stall it reports. Because it happened twice, `scripts/job-check.sh` gets a rule that fails a Play job that can report STUCK without a step back and a stall shot.

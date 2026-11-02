@@ -27,6 +27,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | Kind | Fixed by | Date |
 |---|---|---|
+| A Play trace didn't retry like a player (2 times: the 2026-11-02 ladder wedge, Task 61a Step 2) | Lesson 297 (`job-check.sh --handoff` fails a Play step that can report STUCK with no "step back" retry or no stall shot) | 2026-11-03 |
 | A Play job's script never run before failed (1 time, Task 61a Step 3: script X first ran at case 5) | Lesson 254 (the smoke run runs every script of the job once; every spot a script waits for is measured) | 2026-11-02 |
 | A world script's guess about an existing part didn't match the world (2 times, Task 58b Step 2) | Lesson 166 (CHECK_ONLY switch, read-only run in Edit first; job-check fails a new world script without it) | 2026-11-01 |
 | A runner mistyped a file path | 2 times (Task 58b cause job, Task 58b names check): `runner.md` step 1 (copy paths letter by letter; on "File does not exist" compare with the working directory and retry once) and Lesson 163 | 2026-11-01 |

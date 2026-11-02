@@ -304,6 +304,12 @@ What this project learned the hard way, so it doesn't happen again.
 | 292 | Check a case's last safe spot matches a real player's | `teamwork.md` |
 | 293 | Count only real rules before flagging a spec split | `teamwork.md` |
 | 294 | A names check marks which names exist only in Play | `studio-and-scripts.md` |
+| 295 | A stall with no measured cause gets a trace step first | `studio-and-scripts.md` |
+| 296 | Keep job scripts short from the start | `studio-and-scripts.md` |
+| 297 | A Play trace retries like a player and shows the stall | `studio-and-scripts.md` |
+| 298 | A task review checks git for the files it depends on | `teamwork.md` |
+| 299 | When a design pick replaces what a plan fixes, re-plan it | `teamwork.md` |
+| 300 | Check the spec's proof list before planning a proof task | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

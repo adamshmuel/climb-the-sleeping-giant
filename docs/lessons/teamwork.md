@@ -341,3 +341,21 @@ A rescue result used as decision evidence ("the rescue lands him on top") came f
 A spec was reported as over the 15-rule limit. The count included retired numbers ("Rule 81: not used") and changes to rules that belong to other specs. It really had 14.
 
 **Do instead:** count only real rules, not "not used" lines or changes to older rules, before flagging a split.
+
+## Lesson 298: A task review checks git for the files it depends on
+
+The CapTies test and world script 20, which Task 61a depended on, had never been committed. code_lead found it only at the 61a review.
+
+**Do instead:** every task review runs `git status` and checks that each file the task depends on is already in git, or is part of this task's commit.
+
+## Lesson 299: When a design pick replaces what a plan fixes, re-plan it
+
+Plan 7 was meant to fix one way up. The thing it fixed was replaced three times mid-plan (face ladders, ear ladders, cap ties, then the walkways). Each new design came in as more tasks with no fresh budget, so the plan grew from its first size to about 25 hours.
+
+**Do instead:** when a design pick replaces what a plan is fixing, stop and re-plan and re-price it as a new plan at that moment, before any task of the new design starts.
+
+## Lesson 300: Check the spec's proof list before planning a proof task
+
+Plan 7 planned a whole real-controls play (Task 63b, computer and phone) that the spec's proof list (Rule 101) had already given to the build review. product found it at the 10-task check.
+
+**Do instead:** before planning a proof task, check whether the spec's proof list already gives that proof to another step. If it does, plan only what that step doesn't cover.
