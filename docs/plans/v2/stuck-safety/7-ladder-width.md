@@ -163,19 +163,19 @@ What the angle trial found: the tie's outer face climbs on the first try only fr
 
 **Every task is planned at 1 hour or less,** because the main chat stops any task at 1 hour (`CLAUDE.md`, "Red flag"). So four old tasks are split in two, by goal: the right tie (61b builds, 61j proves), the walkways (61w builds, 61x walks and judges the look), and the whole-play check (63 runs the tests and the bot, 63b plays it). No work is added by the split.
 
-**Hours: about 25 in all** (about 14.4 used, about 10.7 left), under the 26-hour limit with about 1 hour spare. "Used" is code_lead's estimate (9.4 before red flag 61a, about 0.75 for Step 61v, about 4 for Task 61a's red flag and trial, 0.2 for Task 61m Step 1); the main chat's start-time log is the real number. The decision saved about 2 hours (the trial, the gap table, the go-back cases moved into Task 61r's proof).
+**Hours: about 25.3 in all** (about 14.4 used, about 11.0 left), under the 26-hour limit with about 0.7 hours spare (Task 61h grew by 0.3 h, product 2026-11-03). "Used" is code_lead's estimate (9.4 before red flag 61a, about 0.75 for Step 61v, about 4 for Task 61a's red flag and trial, 0.2 for Task 61m Step 1); the main chat's start-time log is the real number. The decision saved about 2 hours (the trial, the gap table, the go-back cases moved into Task 61r's proof).
 
 | Order | Piece | Hours left | Stands on |
 |---|---|---|---|
 | 1 | Task 61m: the giant can't wake unseen in a scripted Play job | 0.25 (Step 1 done) | nothing |
 | 2 | Task 61a: the left tie's seam, wedge and flat fold are built, and the seam climbs | 0.9 | Task 61m, the Rule 101 spec change, Task 61d, Task 61e, Task 61g, Adam's decision |
-| 3 | Task 61i: the left tie climbs in the whole band, and its way home is quiet | 1.0 | Task 61a, Task 61m |
-| 4 | Task 61b: the right tie is built, mirrored, with the tie tests | 0.9 | Task 61i, the reach walk |
-| 5 | Task 61j: the right tie climbs in the whole band | 1.0 | Task 61b, Task 61m |
-| 6 | Task 61w: the walkways with their chutes are built | 0.9 | designer's chute shape, Task 61j, the reach walk |
-| 7 | Task 61x: the walk to each chute, and the walkway look check | 0.7 | Task 61w, Task 61m |
-| 8 | Task 61r: a rescue from a tie lands at the chute's end, lined up | 0.9 | Task 61a, Task 61j, Task 61x, Task 61m |
-| 9 | Task 61h: any fall from a cap tie is quiet | 0.4 | Task 61d, Task 61j, Task 61r, game_creator's closing answer |
+| 3 | Task 61h: any fall from the left cap tie, and any no-jump fall onto the cap, is quiet | 0.7 | Task 61a, Task 61d, the Rule 8 and Rule 101 spec change (product, 2026-11-03) |
+| 4 | Task 61i: the left tie climbs in the whole band, and its way home is quiet | 1.0 | Task 61a, Task 61h |
+| 5 | Task 61b: the right tie is built, mirrored, with the tie tests | 0.9 | Task 61i, Task 61h |
+| 6 | Task 61j: the right tie climbs in the whole band | 1.0 | Task 61b, Task 61m |
+| 7 | Task 61w: the walkways with their chutes are built | 0.9 | designer's chute shape, Task 61j, the reach walk |
+| 8 | Task 61x: the walk to each chute, and the walkway look check | 0.7 | Task 61w, Task 61m |
+| 9 | Task 61r: a rescue from a tie lands at the chute's end, lined up | 0.9 | Task 61a, Task 61j, Task 61x, Task 61m |
 | 10 | Task 62a: the footprints run straight down each chute | 0.7 | Task 61j, Task 61x |
 | 11 | Task 62b: Rare eggs 3 and 4 go back, and walk both ways | 1.0 | Task 61j, Task 62a, the reach walk |
 | 12 | Task 63: the full run, the bot walk and the home times | 1.0 | Task 61d, Task 61j, Task 61h, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m |
@@ -285,6 +285,7 @@ Stands on: nothing.
 
 Stands on: Task 61m (the session hold, for Step 4's Play), the Rule 101 spec change (written by product 2026-11-02), Task 61d (committed), Task 61e (done), Task 61g (committed), Adam's decision (2026-11-02, final: the tie stays as built, and the player turns a bit), the reach walk (`work/red-flag-61a/option2-reach-walk-result.md`, passed).
 
+- **Changed 2026-11-03 (code_lead):** the steps, failing tests and sizes below are replaced by the handoff `work/red-flag-61a/t61a-seam-handoff.md`: 5 steps, about 1.0 h. Before shots (18 Studio calls, not 4: 10 shots), then a read-only seam trace in Play, because the -15° stall has no measured cause (Lesson 26). The red test and the fix are written from that trace. The fold's side-edge step goes to product: it was ruled away in `work/ear-ladders/t61a-stuck-decision-2.md`, but the spec still says 0.5.
 - **The clock restarts at zero** when Step 1 starts (`CLAUDE.md`, "Red flag"). The main chat writes the new start time.
 - **What it's for:** core gameplay. It is the only way up to the Legendary eggs on the left.
 - **Already built:** script 20 built `CapTieLeft` (60 parts), and `CapTies.spec` has 12 green tests.
@@ -306,9 +307,25 @@ Stands on: Task 61m (the session hold, for Step 4's Play), the Rule 101 spec cha
 - **After shots and designer's check:** in Task 61i, after the band is proven. **Commit:** Tasks 61a and 61i together.
 - **Lessons:** 41, 76, 166, 187, 188, 190, 225, 236, 253, 255.
 
+## Task 61h: Any fall from a cap tie is quiet
+
+Stands on: Task 61a, Task 61d, the Rule 8 (Steps make noise) and Rule 101 (Ladders hold you) spec change (product, 2026-11-03, `docs/specs/v2/egg-nests-and-climbing.md` and `docs/specs/v2/stuck-safety.md`).
+
+**Changed 2026-11-03 (code_lead, from product's fold answer):** this task now comes before Task 61i, because 61i's sweep grades walks off the fold for thuds. It covers the cap and the left tie: a fall from a cap tie is quiet, and so is a no-jump fall from the cap, a cap tie or a landing that ends on the cap (no height limit, no puff, no "CapDrop"; the new analytics event "CapToCapFall" records it). About 0.7 h. Task 61b adds the right tie's falls.
+
+- **Spec rule:** spec 5's Rule 8 (Steps make noise): a fall that starts on a cap tie, at any height, and ends on the pillow, his shoulders or his belly is quiet. No camera turn after it.
+- **What it's for:** core gameplay (the way home and the way up). Today a climber who lets go low thuds, which wakes the giant for everyone.
+- **Files:** `LandingDetector.luau` (`climbing` also tells whether it is on a cap tie), `PlayerTracker.luau` (a new dep `onCapTie(position)`), `init.server.luau` (the real dep reuses `CapTieSpots.sideAt`), `LandingDetectorHeadDrop.spec.luau`.
+- **Failing test first:** "climbing a cap tie from its foot, letting go low and ending on the pillow makes no thud, with a drop report". The 61d test "a fast let-go from a climb that stayed in the Boots and Belly zones ... thuds once" stays green.
+- **How big:** 3 steps, about 6 Studio calls, 0.4 h:
+  1. measure the ray from 3 climbing spots on each tie, then the red run (Sonnet, 2 Studio calls, 18 tool calls);
+  2. the change, then a narrow run (Sonnet, 2 Studio calls, 15 tool calls);
+  3. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls).
+- **Lessons:** 41, 219 and 221 (measured spots).
+
 ## Task 61i: The left tie climbs in the whole band, and its way home is quiet
 
-Stands on: Task 61a (seam, wedge and fold built, seam climbs passed), Task 61m.
+Stands on: Task 61a, Task 61h.
 
 Task 61f is folded in here: the real drop and the close shots.
 
@@ -339,7 +356,7 @@ Task 61f is folded in here: the real drop and the close shots.
 
 ## Task 61b: The right tie is built, mirrored, with the tie tests
 
-Stands on: Task 61i (the left tie final and committed), the reach walk (`work/red-flag-61a/option2-reach-walk-result.md`, passed).
+Stands on: Task 61i, Task 61h, the reach walk (`work/red-flag-61a/option2-reach-walk-result.md`, passed) (Task 61b mirrors the tie and adds one quiet fall from the right tie and one cap-to-cap fall on the right fold).
 
 - **What it's for:** core gameplay and fairness. The right side gets the same tie as the left.
 - **Spec rules:** Rule 101 (Ladders hold you): fair mirror twins; Rule 20 (One collision source); Rule 24 (A bot walks every way), for the ladder tests; section 5's tie rows. Product's ruling: `CapSideRight_28` is removed whole.
@@ -435,20 +452,6 @@ Stands on: Task 61a (the left tie final), Task 61j (the right tie final), Task 6
   4. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls);
   5. Play: on each tie, the press at the foot, and pushes at +25°, -25°, +30° and -30°: each climbs, or stalls silently, is rescued within the stuck time to within 1 stud of the chute's end, facing the face with the camera behind him (a player-camera screenshot), and then climbs with one straight push (Sonnet, 3 Studio calls, 25 tool calls).
 - **Lessons:** 41 (one filter per run), 182 and 188 (narrow runs), 225, 253.
-
-## Task 61h: Any fall from a cap tie is quiet
-
-Stands on: Task 61d (committed), Task 61j (both ties final), Task 61r (its `CapTieSpots.sideAt` helper, so there is one "on a cap tie" check, not two), game_creator's closing answer (no camera turn after a fall).
-
-- **Spec rule:** spec 5's Rule 8 (Steps make noise): a fall that starts on a cap tie, at any height, and ends on the pillow, his shoulders or his belly is quiet. No camera turn after it.
-- **What it's for:** core gameplay (the way home and the way up). Today a climber who lets go low thuds, which wakes the giant for everyone.
-- **Files:** `LandingDetector.luau` (`climbing` also tells whether it is on a cap tie), `PlayerTracker.luau` (a new dep `onCapTie(position)`), `init.server.luau` (the real dep reuses `CapTieSpots.sideAt`), `LandingDetectorHeadDrop.spec.luau`.
-- **Failing test first:** "climbing a cap tie from its foot, letting go low and ending on the pillow makes no thud, with a drop report". The 61d test "a fast let-go from a climb that stayed in the Boots and Belly zones ... thuds once" stays green.
-- **How big:** 3 steps, about 6 Studio calls, 0.4 h:
-  1. measure the ray from 3 climbing spots on each tie, then the red run (Sonnet, 2 Studio calls, 18 tool calls);
-  2. the change, then a narrow run (Sonnet, 2 Studio calls, 15 tool calls);
-  3. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls).
-- **Lessons:** 41, 219 and 221 (measured spots).
 
 ## Task 62a: The footprints run straight down each chute
 
