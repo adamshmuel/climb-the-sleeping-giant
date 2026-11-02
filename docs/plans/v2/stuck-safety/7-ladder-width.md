@@ -304,6 +304,20 @@ Stands on: Task 61f (the left tie closed), and any section 5 number Task 61a cha
   6. designer judges (Opus).
 - **Lessons:** the same as Task 61a.
 
+## Task 61h: Letting go low on a cap tie is quiet too
+
+Stands on: Task 61d (committed), Task 61b (both ties built, final).
+
+- **Spec rule:** spec 5's Rule 8 (Steps make noise): a fall that starts on a cap tie and stops on the pillow, his shoulders or his belly is quiet, whichever way the player was climbing. After 61d, a fall from a climb that never reached the Nightcap or Beard zone still thuds as before. 61d only quiets a let-go after the climber has been up there. So a player who climbs up from the tie's foot and lets go low still thuds.
+- **What it's for:** core gameplay (the way home and the way up). **How big:** 3 steps, about 6 Studio calls, 1 h.
+- **Files:** `LandingDetector.luau` (`climbing` also tells whether it is on a cap tie), `PlayerTracker.luau` (a new dep `onCapTie(position)`), `init.server.luau` (the real dep: a short ray from the root toward the tie strap, measured first, with only `CapTie*` models included), and `LandingDetectorHeadDrop.spec.luau`.
+- **Failing test first:** "climbing up a cap tie from its foot, letting go in the Belly zone and ending on the pillow makes no thud, with a drop report". The 61d test "a fast let-go from a climb that stayed in the Boots and Belly zones ... thuds once" stays green.
+- **Steps:**
+  1. Measure the ray from 3 climbing spots on each tie, then the red run (Sonnet).
+  2. The change, then a narrow run (Sonnet).
+  3. The full run (Haiku).
+- **Lessons:** 41 (one filter per run), 219 and 221 (measured spots, never guessed).
+
 ## Task 62a: `RoutePoint_Belly_4` goes back
 
 Stands on: Task 61b (both ties final).

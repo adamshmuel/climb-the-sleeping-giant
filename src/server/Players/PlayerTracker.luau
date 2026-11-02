@@ -47,6 +47,8 @@ export type Sample = {
 	zone: Config.ZoneName,
 	garden: number?,
 	thudFrom: Config.ZoneName?, -- set on the tick a thud is due: the highest zone the fall (or hop) left
+	drop: LandingDetector.Drop?, -- set on the tick a fall from the cap, a cap tie or a tie's landing ends (Task 61d)
+	onPillow: boolean?, -- set with `drop`: did it end on the pillow?
 }
 
 -- What the tracker needs from a player. A real Player fits, and tests pass simple stand-ins.
@@ -59,6 +61,8 @@ export type Deps = {
 	isGrounded: (character: Model) -> boolean, -- injected, so tests can fake it
 	-- Where this character's jumps took off since the last time it was asked, oldest first (JumpWatcher).
 	takeoffs: (character: Model) -> { Vector3 },
+	-- Is this landing spot on the pillow? Asked only on the tick a drop ends. Without it, nothing is on the pillow.
+	onPillow: ((position: Vector3) -> boolean)?,
 	now: () -> number, -- the clock in seconds (os.clock), injected so tests can set the time by hand
 }
 
@@ -251,6 +255,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 				local climbing = humanoid ~= nil and humanoid:GetState() == Enum.HumanoidStateType.Climbing
 				local moving = false
 				local thudFrom: Config.ZoneName?
+				local drop: LandingDetector.Drop?
 				local takeoffZones: { Config.ZoneName } = {}
 				local grace = graces[player.UserId]
 				if grace ~= nil then
@@ -281,7 +286,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 					for _, position in deps.takeoffs(character) do
 						table.insert(takeoffZones, Zones.locate(position, deps.zoneBoxes, deps.gardens).zone)
 					end
-					thudFrom, memory.landing = LandingDetector.step(
+					thudFrom, memory.landing, drop = LandingDetector.step(
 						memory.landing,
 						grounded,
 						verticalSpeed,
@@ -298,6 +303,8 @@ function PlayerTracker.new(deps: Deps): Tracker
 					zone = place.zone,
 					garden = place.garden,
 					thudFrom = thudFrom,
+					drop = drop,
+					onPillow = if drop ~= nil and deps.onPillow ~= nil then deps.onPillow(root.Position) else nil,
 				})
 			end
 		end

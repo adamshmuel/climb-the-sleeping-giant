@@ -220,6 +220,7 @@ Nothing else comes from clients (V2 adds `RequestReset`, `SetPressing` and `SetM
 |---|---|---|
 | `Warning` | everyone | `60` or `85`. V2: at a free save, `85` and a second value `"FreeSave"` (the replayed warning) |
 | `Rescued` (V2) | everyone | the player, where they were, and the CFrame they are moved to (the puffs for all; the player's own device also places its character there) |
+| `LandingPuff` (V2, Task 61d) | everyone | where a quiet drop from his cap landed, a Vector3 (the landing puff only). Server to client only, so the server checks nothing; each device ignores anything that isn't a Vector3 |
 | `SlamWarning` | everyone (V2 spec 6: for any target, carrier or not) | slam number, the point on the surface under the circle's centre, the landing time on the shared server clock, and (V2) the name of the ladder the target is on, or nil (that ladder glows red). The server never listens to it. |
 | `SlamLanded` | everyone | slam number, the same surface point. The server never listens to it. |
 | `EggHome` | everyone | the player, the rarity, and where the new egg sits (confetti at their gate for all; "+1 egg" over the new egg; the card only for them) |

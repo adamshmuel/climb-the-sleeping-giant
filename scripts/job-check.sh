@@ -217,7 +217,17 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Write \"held 0.19 in <task> dry start\" on the line; a grab start is a start (Lesson 124)."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in."
+	# A red run over "the five spec names" ran only the first name, and three
+	# specs never ran (Task 61d step 1, the second break of Lesson 41). The runner
+	# takes one name per filter, so a filter over several names, or with "|", fails.
+	multifilter=$(grep -nEi 'filter' "$@" | grep -Ei '[A-Za-z]\|[A-Za-z]|spec names|test names' | grep -viE 'one (spec )?name per run|Lesson 41')
+	if [ -n "$multifilter" ]; then
+		echo "$multifilter"
+		echo "Handoff check FAILED: each line above runs several spec names in one filter."
+		echo "Give each spec name its own run, and write \"one spec name per run (Lesson 41)\" on the line."
+		exit 1
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in, and every run filter names one spec."
 	exit 0
 fi
 joined=0

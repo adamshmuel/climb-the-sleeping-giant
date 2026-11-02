@@ -23,12 +23,17 @@ export type State = {
 	falling: boolean, -- a fall is under way
 	fellFast: boolean, -- the fall (or the air time before it) went faster than FAST_FALL downward
 	jumped: boolean, -- the fall began with a jump, which always thuds, however slowly it fell
+	fromClimb: boolean, -- the fall began straight from a climb; set while climbing, cleared by a grounded tick
 	-- the highest zone they were in on the ground since they were last at rest; frozen once the fall starts
 	highest: Config.ZoneName,
 	restTicks: number, -- ticks in a row at rest on standable ground; 3 reset `highest` (and end a fall)
 	-- thuds that were due on one tick with another, oldest first. One is returned per tick, before any new thud.
 	owed: { Config.ZoneName },
 }
+
+-- A fall that started on the cap, a cap tie or a tie's landing and ended on the giant (Task 61d). `thudded` is
+-- false for a head drop (no thud), true for a jump or a drop that ended elsewhere.
+export type Drop = { from: Config.ZoneName, to: Config.ZoneName, jumped: boolean, thudded: boolean }
 
 -- A fall starts after this many ticks in a row in the air (0.3 s). One missed ground check while walking down
 -- a slope is not a fall.
@@ -49,7 +54,16 @@ local LandingDetector = {}
 
 -- A player standing in `zone`.
 function LandingDetector.new(zone: Config.ZoneName): State
-	return { airTicks = 0, falling = false, fellFast = false, jumped = false, highest = zone, restTicks = 0, owed = {} }
+	return {
+		airTicks = 0,
+		falling = false,
+		fellFast = false,
+		jumped = false,
+		fromClimb = false,
+		highest = zone,
+		restTicks = 0,
+		owed = {},
+	}
 end
 
 -- Is the player on standable ground and going up or down by no more than REST_SPEED? The one place this rule lives.
@@ -57,21 +71,27 @@ function LandingDetector.isAtRest(grounded: boolean, verticalSpeed: number): boo
 	return grounded and math.abs(verticalSpeed) <= REST_SPEED
 end
 
+local function listHas(list: { Config.ZoneName }, zone: Config.ZoneName): boolean
+	return table.find(list, zone) ~= nil
+end
+
 -- Hands out the first thud that is due, and keeps the rest in the state to come one a tick on the next ticks.
-local function oneThud(due: { Config.ZoneName }, state: State): (Config.ZoneName?, State)
+local function oneThud(due: { Config.ZoneName }, state: State, drop: Drop?): (Config.ZoneName?, State, Drop?)
 	local thud: Config.ZoneName? = due[1]
 	table.remove(due, 1)
 	while #due > MAX_OWED do
 		table.remove(due) -- keep the oldest, drop the newest
 	end
 	state.owed = due
-	return thud, state
+	return thud, state, drop
 end
 
 -- Takes one 0.1 s tick: is the player on standable ground, how fast are they going up (+) or down (-), which zone
 -- are they in, and the zones they took off from in jumps since the last tick (oldest first, usually none or one).
 -- Returns the zone to thud from (the highest zone the fall left) when a fall that began with a jump, or went fast,
--- ends, otherwise nil, and the new state. At most one thud a tick: more are kept to come on the next ticks.
+-- ends, otherwise nil, and the new state. A third value is the drop report when a fall from the cap, a cap tie or a
+-- tie's landing (or a let-go straight from a climb) ends on the giant or his head: a fast fall without a jump in
+-- those zones adds no thud when it ends on the giant (HeadDropTo), a jump from them still thuds. At most one thud a tick: more are kept to come on the next ticks.
 -- `climbing` is true while the Humanoid is in its Climbing state.
 function LandingDetector.step(
 	state: State,
@@ -80,7 +100,7 @@ function LandingDetector.step(
 	zone: Config.ZoneName,
 	takeoffs: { Config.ZoneName },
 	climbing: boolean
-): (Config.ZoneName?, State)
+): (Config.ZoneName?, State, Drop?)
 	local fellFast = state.fellFast or verticalSpeed < -FAST_FALL
 	local atRest = LandingDetector.isAtRest(grounded, verticalSpeed)
 	local restTicks = if atRest then state.restTicks + 1 else 0
@@ -110,6 +130,7 @@ function LandingDetector.step(
 			falling = true,
 			fellFast = wentFast,
 			jumped = true,
+			fromClimb = false,
 			highest = highest,
 			restTicks = 0,
 			owed = due,
@@ -123,6 +144,7 @@ function LandingDetector.step(
 			falling = false,
 			fellFast = false,
 			jumped = false,
+			fromClimb = state.fromClimb or listHas(Config.Noise.HeadDropFrom, zone),
 			highest = zone,
 			restTicks = 0,
 			owed = due,
@@ -131,16 +153,27 @@ function LandingDetector.step(
 
 	if state.falling then
 		if restTicks >= REST_TICKS then
-			if fellFast or state.jumped then
+			local fromHead = state.fromClimb or listHas(Config.Noise.HeadDropFrom, state.highest)
+			local toGiant = listHas(Config.Noise.HeadDropTo, zone)
+			local quiet = fellFast and not state.jumped and fromHead and toGiant
+			local thuds = (fellFast or state.jumped) and not quiet
+			if thuds then
 				table.insert(due, state.highest)
 			end
-			return oneThud(due, LandingDetector.new(zone))
+			local drop: Drop? = nil
+			if fellFast and fromHead and not state.jumped then
+				drop = { from = state.highest, to = zone, jumped = false, thudded = thuds }
+			elseif state.jumped and listHas(Config.Noise.HeadDropFrom, state.highest) and toGiant then
+				drop = { from = state.highest, to = zone, jumped = true, thudded = true }
+			end
+			return oneThud(due, LandingDetector.new(zone), drop)
 		end
 		return oneThud(due, {
 			airTicks = state.airTicks,
 			falling = true,
 			fellFast = fellFast,
 			jumped = state.jumped,
+			fromClimb = state.fromClimb,
 			highest = state.highest,
 			restTicks = restTicks,
 			owed = due,
@@ -158,6 +191,7 @@ function LandingDetector.step(
 			falling = false,
 			fellFast = false,
 			jumped = false,
+			fromClimb = false,
 			highest = groundedHighest,
 			restTicks = restTicks,
 			owed = due,
@@ -170,6 +204,7 @@ function LandingDetector.step(
 		falling = airTicks >= AIR_TICKS,
 		fellFast = fellFast,
 		jumped = false,
+		fromClimb = state.fromClimb,
 		highest = state.highest,
 		restTicks = 0,
 		owed = due,

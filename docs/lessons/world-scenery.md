@@ -315,3 +315,15 @@ In the Task 61a gate, the "Rails hold" line judged a hidden safety part, not the
 In the Task 61a gate, "walking down facing out drops to the pillow" was graded as a fail. But spec 5 already makes letting go of a tie and dropping onto the pillow, with no thud, the way down from his cap. A decided way down was treated as a bug, and hours of fixes were priced for it.
 
 **Do instead:** before the first probe on any way up, game_creator writes the player journey list from the idea and the specs already approved. Only the player's results can fail a gate (reaches the top, stands, no thud, keeps the egg). Inside numbers are notes.
+
+## Lesson 245: Measure one surface with rays filtered to that part
+
+In Task 61d the builder measured his shoulders with rays at z 0. The rays hit his head and its forehead guard, which lie over the shoulders, so the shoulders looked like part of his face (the Beard zone). The step stopped, and code_lead had to measure again.
+
+**Do instead:** a measure of one surface filters its rays to that one part (for example only `body_and_cushion`), and also reports which parts lie over it.
+
+## Lesson 246: A quiet fall judged by where it ends can become a shortcut
+
+In Task 61d a fall from his cap that ends on his belly became quiet, with the rescue puff. A fall off the brim's front can slide down his beard onto the belly, so it would count as quiet too: a quick way home that nobody planned.
+
+**Do instead:** when a rule makes a fall quiet because of where it ends, also log where falls end, and set a playtest trigger for players using it as a shortcut.

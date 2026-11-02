@@ -254,6 +254,10 @@ What this project learned the hard way, so it doesn't happen again.
 | 242 | Say what each pass line judges, before the run | `world-scenery.md` |
 | 243 | Gate a way up against the player journey the specs already decided | `world-scenery.md` |
 | 244 | Test the bare shape of a way up against every player move before dressing it | `look-and-art.md` |
+| 245 | Measure one surface with rays filtered to that part | `world-scenery.md` |
+| 246 | A quiet fall judged by where it ends can become a shortcut | `world-scenery.md` |
+| 247 | A task that changes the world ends with a full run before its accepted reds are final | `studio-and-scripts.md` |
+| 248 | A rule that quiets some climbs names the parts it covers, not only the zones | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

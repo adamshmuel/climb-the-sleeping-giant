@@ -20,6 +20,7 @@ local RescueFx = {}
 
 export type Deps = {
 	rescued: Recovery.SignalLike, -- the Rescued remote's OnClientEvent: (player, from, to)
+	landed: Recovery.SignalLike?, -- the LandingPuff remote's OnClientEvent: (spot). Shows only the landing puff
 	parent: Instance, -- where the puffs go (the Workspace in the game)
 	after: (seconds: number, fn: () -> ()) -> (), -- the real one is task.delay
 	emit: (emitter: ParticleEmitter, count: number) -> (), -- the real one is emitter:Emit(count)
@@ -113,18 +114,13 @@ function RescueFx.start(deps: Deps): Handle
 		table.clear(showing)
 	end
 
-	trove:Add(deps.rescued:Connect(function(_player: any, from: any, to: any)
-		if typeof(from) ~= "Vector3" or typeof(to) ~= "CFrame" then
-			return
+	-- Shows the given puffs for a second, each already emitting, then removes them.
+	local function show(puffs: { Part })
+		for _, part in puffs do
+			table.insert(showing, part)
 		end
-		local old = makePuff(OLD_NAME, OLD_SIZE, from, false, deps.parent)
-		local new = makePuff(NEW_NAME, NEW_SIZE, to.Position, true, deps.parent)
-		table.insert(showing, old)
-		table.insert(showing, new)
-		fire(old, 22, 14, deps.emit)
-		fire(new, 30, 18, deps.emit)
 		deps.after(SHOW_SECONDS, function()
-			for _, part in { old, new } do
+			for _, part in puffs do
 				local at = table.find(showing, part)
 				if at then
 					table.remove(showing, at)
@@ -132,7 +128,31 @@ function RescueFx.start(deps: Deps): Handle
 				part:Destroy()
 			end
 		end)
+	end
+
+	local function landingPuff(spot: Vector3): Part
+		local new = makePuff(NEW_NAME, NEW_SIZE, spot, true, deps.parent)
+		fire(new, 30, 18, deps.emit)
+		return new
+	end
+
+	trove:Add(deps.rescued:Connect(function(_player: any, from: any, to: any)
+		if typeof(from) ~= "Vector3" or typeof(to) ~= "CFrame" then
+			return
+		end
+		local old = makePuff(OLD_NAME, OLD_SIZE, from, false, deps.parent)
+		fire(old, 22, 14, deps.emit)
+		show({ old, landingPuff(to.Position) })
 	end))
+
+	if deps.landed ~= nil then
+		trove:Add(deps.landed:Connect(function(spot: any)
+			if typeof(spot) ~= "Vector3" then
+				return
+			end
+			show({ landingPuff(spot) })
+		end))
+	end
 
 	return {
 		destroy = function()

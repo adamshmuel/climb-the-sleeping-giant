@@ -64,11 +64,11 @@ describe("Net.setup", function()
 		expect((bounced :: Instance):IsA("RemoteEvent")).toBe(true)
 	end)
 
-	it("creates the SlamWarning, SlamLanded and Caught remotes inside the Remotes folder", function()
+	it("creates the SlamWarning, SlamLanded, Caught and LandingPuff remotes inside the Remotes folder", function()
 		local parent = newParent()
 		Net.setup(parent)
 		local remotes = parent:FindFirstChild("Remotes") :: Instance
-		for _, name in { "SlamWarning", "SlamLanded", "Caught" } do
+		for _, name in { "SlamWarning", "SlamLanded", "Caught", "LandingPuff" } do
 			local remote = remotes:FindFirstChild(name)
 			expect(remote).never.toBeNil()
 			expect((remote :: Instance):IsA("RemoteEvent")).toBe(true)
@@ -134,7 +134,7 @@ describe("Net.setup", function()
 		local first = Net.setup(parent)
 		first.GiantState:SetAttribute("Meter", 42)
 		local second = Net.setup(parent)
-		expect(#parent:GetDescendants()).toBe(13) -- the Remotes folder, 11 remotes and GiantState
+		expect(#parent:GetDescendants()).toBe(14) -- the Remotes folder, 12 remotes and GiantState
 		expect(second.GiantState).toBe(first.GiantState)
 		expect(second.Warning).toBe(first.Warning)
 		expect(second.SetTiptoe).toBe(first.SetTiptoe)
@@ -189,6 +189,8 @@ describe("Net.waitForClient", function()
 			expect(made.SlamLanded).toBe(remotes:FindFirstChild("SlamLanded"))
 			expect(made.Caught).never.toBeNil()
 			expect(made.Caught).toBe(remotes:FindFirstChild("Caught"))
+			expect(made.LandingPuff).never.toBeNil()
+			expect(made.LandingPuff).toBe(remotes:FindFirstChild("LandingPuff"))
 			expect(made.RequestReset).never.toBeNil()
 			expect(made.RequestReset).toBe(remotes:FindFirstChild("RequestReset"))
 			expect(made.SetPressing).never.toBeNil()

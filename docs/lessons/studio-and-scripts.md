@@ -57,6 +57,7 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **Do instead:** run each name in its own runner call (several calls fit inside one `execute_luau`), and check that each one ran: the runner's report has no suite count, so count the matching spec files in the same call.
 - **Also:** Vector3 maths is 32-bit, so a 45° angle reads as about 44.99999°. A "45 or more" test needs a tolerance of about 1e-3 degrees.
 - **Who checks:** `code_lead` (in the handoff), `builder`.
+- **Broken again (Task 61d step 1, 2026-11-02):** a handoff asked for one red run over "the five spec names", so three specs never ran. Now `scripts/job-check.sh --handoff` fails a filter line with several names or a `|`.
 
 ## Lesson 42: A job keeps slow results in `shared`, and takes data shapes from the server's own calls
 - **What happened:** Task 45 step 2's wrapper passed the gardens raw from `WorldIndex.loadGardens`, but `Zones.locate` wants the boxes the server makes with `PlayerTracker.gardenBoxes`. The job failed after building the walk map, and the map was in a local variable, so the last allowed Studio call had to rebuild it (2026-10-27).
@@ -678,3 +679,15 @@ In Task 58e Step 4b (2026-11-02), a builder read tools/world/08-route.luau (986 
 In the Task 61a gate, the "Rails hold" line was about the railed strip (y 100 to 110). But the job kept one running maximum up to y 111, past the rails' top, and logged no height. So nobody could tell where the 6.17-stud drift happened, and the gate's result was unclear.
 
 **Do instead:** a job measures each limit only over the zone its pass line names. It also logs the height where the limit is first crossed.
+
+## Lesson 247: A task that changes the world ends with a full run before its accepted reds are final
+
+Task 60 moved the face ladders and listed its accepted reds (tests expected to fail until a later task) from narrow runs only. Five world reds it missed first showed up in Task 61d's full run, so 61d's review had to sort them out.
+
+**Do instead:** a task that changes the world runs the full test suite before it closes. Its accepted-red list is written from that full run, with each red's later task named.
+
+## Lesson 248: A rule that quiets some climbs names the parts it covers, not only the zones
+
+Task 61d's handoff said a fall "straight from a climb" is quiet, without saying which ladders. So any climb counted, including a boot ladder. The fix then keyed on zones only (Nightcap or Beard), which left a player who climbs a cap tie from its foot and lets go low still thudding. That needed a new task (61h).
+
+**Do instead:** a rule that changes what happens after a climb names the parts it covers (for example "the two cap ties"), and the code checks those parts, not only the body zones.
