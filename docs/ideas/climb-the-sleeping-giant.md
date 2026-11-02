@@ -12,7 +12,7 @@ The heart of the game stays: sneak up to a sleeping giant, grab an egg, get home
 | The twist | "You steal from a monster, not from players" | **One colossal giant that you climb on.** The rarest eggs are tucked into his boots, belly, cuffs and nightcap. The whole server shares his sleep. | The old twist already exists. Steal An Egg guards its eggs with big animals. "Don't Steal the Bobo" (468 million visits) has you sneak past sleeping guards. "Dont Wake Up for Eggs" (2026-09-16) and "Dont Wake the Kitty" do it too. No game lets you climb onto one giant sleeper. |
 | Where the eggs are | In a nest bowl around the giant | On and around the giant's body: 5 zones, from the meadow at his feet up to his pillow | Climbing higher on him is the progression (getting better over time), and it is a picture no other game's icon shows. |
 | Waking up | He gets up and chases you | He sits up, roars, **bounces everyone off his body**, then slams his huge hands at egg carriers. After that he can't wake again for 45 seconds. | Bouncing 8 players off a giant is a clip players share. Sitting and slamming needs no walking animation, which is untested. The 45-second rest stops one player from waking him on purpose over and over. |
-| Server events | None | **Deep Sleep** every 10 minutes: a 60-second window when noise counts half and a special Dream Egg appears on his nose | Steal An Egg and Don't Steal the Bobo show countdowns such as "Guaranteed Legendary in 23:04". They pull the whole server together at one moment. |
+| Server events | None | **Deep Sleep** every 10 minutes: a 60-second window when noise counts half and a special Dream Egg appears on top of his nightcap | Steal An Egg and Don't Steal the Bobo show countdowns such as "Guaranteed Legendary in 23:04". They pull the whole server together at one moment. |
 | Sharing and friends | Shared giant, Twin Eggs, Lookout | Kept the shared giant and Twin Eggs (now **Team Eggs**). Added the **"Adam woke the Giant!"** banner, an invite reward and a Friend Boost. Cut the Lookout job. | Roblox now ranks games partly on "co-play days" (days people play with friends). Steal An Egg shows "Friend Boost +20%". The Lookout added a role without adding fun. |
 | Collecting | 5 rarities | 6 rarities, plus **sizes** (Big, Huge) and a **Golden** version of every pet | Every top egg game has sizes and special versions. "For the HUGE" is the only badge in Steal Animal Egg (1,992,732 owners). |
 | Prices | Set from 3 games | Reset from what 12 games sell. The **Lullaby** (put the giant to sleep) drops from 49 to 19 Robux. | Don't Steal the Bobo and Dont Wake the Kitty sell "Make guards sleep for 60s" for 9 Robux. Ours helps the whole server, so it starts a little higher. |
@@ -167,10 +167,9 @@ This list sorts every real thing in the world by how much it matters to the play
 | The six ways up: two boot ramps, two boot ladders, two side ladders with their side pads and thigh planks, the two lap planks, the lap landing with its front apron, the two belly ramps and the belly path | The only roads onto him. Every heist uses one, and each garden has its own close by |
 | His belly top and upper sides down to the stitched seam, with the lower belly nests and the 2 belly pockets | Belly zone, Rare eggs, walk anywhere |
 | His arms out to his white cuffs, the 4 cuff pockets and the 2 cuff straps | Epic eggs |
-| His beard: the beard ladder, the path up its front to his nose, and the beard–belly fold nests at its foot | The way up to his head, and Rare eggs |
-| The top of his nose | The Dream Egg during Deep Sleep, and the step from the beard ladder to the cap ladder |
-| The middle strip of his forehead: the one walkable slab from his nose to the cap ladder | The only way from his nose to his nightcap |
-| His nightcap: the cap ladder, the brim and the side stripe | Legendary eggs, the top of the climb |
+| The beard–belly fold nests at the foot of his beard | Rare eggs |
+| The two ear ladders: one behind each ear, a matching pair, from each shoulder to the cap's side stripe | The only way to his nightcap. One per side keeps the climb, the way home and the Deep Sleep race level for every garden |
+| His nightcap: the ear ladder tops, the brim, the side stripe and the top of the cap | Legendary eggs, the top of the climb, and the Dream Egg during Deep Sleep |
 | Every egg and its straw nest: 16 in the meadow, 22 on him | What players come for |
 | Each garden: the Safe Gate, the incubators, the pet pads, the cash chest, and the plank bridge over the stream | Home: carry the egg in, hatch it, earn and upgrade. Every heist starts and ends here |
 
@@ -205,9 +204,9 @@ This list sorts every real thing in the world by how much it matters to the play
 |---|---|---|---|
 | **The Sock** | Scenery | No. No egg, no path, no noise. Players only bump into it in the meadow by his left side, near the ladders gardens 1 to 3 use | No, if it still reads as a giant sock from the gardens. Smaller, with no overhanging edge, or moved a few studs off the walk: nobody would notice |
 | **The pillow** | Scenery | No. No egg and no path. A player only lands on it by stepping or jumping off the back of his nightcap, so it only has to let them slide off safely. (Zone 5 is called "Beard, Pillow and Nightcap", but nothing is played on the pillow) | Half as big, with his head still clearly leaning on it: no. Moved away from his head: yes, because his head would float |
-| **The nightcap** | Core gameplay (the brim, the side stripe and the cap ladder) | Yes. The 4 Legendary nests, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
-| **The beard** | Core gameplay (the ladder, the path up its front and the fold at its foot) | Yes. It is the way up to his head, with Rare nests at its foot | Yes, if the ladder moved or the path narrowed. Its outer edges and underside are scenery: block them, never reshape them |
-| **The forehead** | Core gameplay for the middle strip only; the sides are scenery | The middle strip, yes: it is the only way from his nose to the cap ladder. The sides, no: nothing is there, and that is where a player got stuck in the first playtest | Middle strip: yes. Sides: no. A smooth guard that slides players off is enough |
+| **The nightcap** | Core gameplay (the brim, the side stripe, the top of the cap and the ear ladder tops) | Yes. The 4 Legendary nests, the Dream Egg in Deep Sleep, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
+| **The beard** | Core gameplay for the fold at its foot only; the rest is scenery | Only the fold, with its Rare nests. Nothing climbs his face: the way to his cap goes behind his ears (red alert, 2026-11-02) | The fold: yes. The rest: block it, never reshape it |
+| **The forehead and nose** | Scenery | No. No egg and no path: the way up goes behind his ears, and the Dream Egg sits on his cap. A player got stuck on the forehead sides in the first playtest | No. A smooth guard that slides players off is enough |
 
 ## Twist
 
@@ -236,7 +235,7 @@ It keeps the tension of a steal game with no griefing (players bullying or robbi
 | 3. The Belly | The wide, soft middle of his body | Rare | Higher (x1.5) |
 | 4. His arms and cuffs | Out along his sleeves to pockets on his white cuffs | Epic | Higher (x1.5): it counts as the Belly |
 | 5. The Beard, Pillow and Nightcap | Up his beard onto his cap, next to his ear | Legendary | High (x2) on the beard, highest (x3) on the cap |
-| Event: his nose | Only during Deep Sleep | Secret (the Dream Egg) | Half noise during Deep Sleep |
+| Event: the top of his nightcap | Only during Deep Sleep | Secret (the Dream Egg) | Half noise during Deep Sleep |
 
 Players walk on invisible walking surfaces shaped to his body, hidden under the giant model. This is decided now, because it is the reliable Roblox way to make a big model walkable. It also lets the builder choose exactly where players can stand.
 
@@ -294,8 +293,8 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
 - **For 60 seconds:**
   - he snores deeper;
   - noise counts half;
-  - a glowing **Dream Egg** (Secret rarity) appears on the tip of his nose.
-- **The race:** the whole server tries for the nose at once, so this is where the funniest wake-ups happen.
+  - a glowing **Dream Egg** (Secret rarity) appears on the top of his nightcap, between the two ear ladder tops.
+- **The race:** the whole server tries for the cap at once, up one ladder on each side, so this is where the funniest wake-ups happen.
 - **Team Egg:** a giant **Team Egg** also appears on his belly. It needs 2 players holding it to move it, and both carriers get a pet from it, rolled at Epic odds or better.
 
 ### Hatching and pets
@@ -396,7 +395,7 @@ Virality means why players invite friends and share the game.
 2. **Clip moments are built in:** the bounce-off, the blame banner, a near miss under a giant hand, his face waking up a few steps from you.
 3. **The stakes are shared.** One player's noise affects everyone, so chat fills with "SHHH!". This turns strangers into a team and gives them a reason to bring friends.
 4. **Friends pay off:** the Friend Boost, Team Eggs and the invite egg.
-5. **YouTube moments:** Dream Egg races, Huge Golden pets, "I climbed onto the giant's face".
+5. **YouTube moments:** Dream Egg races, Huge Golden pets, "I climbed onto the giant's nightcap".
 6. **A countdown everyone shares:** Deep Sleep every 10 minutes keeps players around and gives the whole server one moment.
 
 ## Look
@@ -501,6 +500,7 @@ These were decided while the design, the core heist spec (`docs/specs/core-heist
 | A busy server must tiptoe on him (8 players walking on his belly wake him in about 2.5 seconds) | That is the shared "SHHH!" moment the twist is built on | An 8-player server wakes him more than about once every 2 minutes: drain 1.5 per player |
 | Slam warning 1.5 seconds. One slam every 2.5 seconds, at the nearest carrier who wasn't the last target. | A child needs about 1 second to run out of a 30-stud circle, plus half a second to react | Fewer than 1 in 3 slams catch anyone: 1.2 s. More than 2 in 3 catch someone: 2 s. |
 | Sound waits for spec 10 (Launch polish). The heist must read without sound. | Many kids play muted on phones | Nothing planned |
+| Nothing climbs his face. The way to his cap is two ear ladders, a matching pair (one behind each ear), and the Dream Egg moves from his nose to the top of his nightcap (red alert, 2026-11-02) | The ladder up his face hid the main character in the first view. One ladder on one side would give that side's gardens a faster way home and the only view of the way up, and would leave two of the four cap nests a loud walk across the cap. A pair keeps the climb, the way home and the Deep Sleep race level for every garden. A glowing egg on top of his cap stands out against the sky on a phone and keeps "rarer is higher" | One ladder gets more than 65% of cap climbs in a 6–8-player test: check how well the other is seen from its gardens. Legendaries banked per player differ by more than 1.5 times between gardens 1–4 and 5–8: look at the weaker side's way home |
 
 ### Prices
 

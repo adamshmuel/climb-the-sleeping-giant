@@ -1,6 +1,6 @@
 # Spec: Stuck safety (V2, spec 2)
 
-Status: `approved` by Adam (2026-10-18). Rules 20 to 33.
+Status: `approved` by Adam (2026-10-18). Rules 20 to 33, plus Rule 101 (added 2026-11-01).
 
 **Changed on 2026-10-19** (code_lead's Studio test while writing the build plan, in `research/decisions-plans.md`): Roblox's pathfinder (its built-in route finder), with jumping off, finds no route on any slope of about 48° or steeper. Players walk slopes up to 70°, so it would have called every Rare egg unreachable and the upper belly stuck. The walk check is now the game's own **walk map** (see "Words used here"). Rule 22 (What counts as stuck) uses it, Rule 23 (One walk check for everything) names it, and the scan body size (section 5) is now a standard player's solid body, measured in Play. Later the same day (code_lead's plan questions, "code_lead #2"): the walk map's words now say which moves each check counts. After code_lead's first real scan (Task 4): a meadow exit now also includes the open meadow on the scanned area's outer edge, and ground under water isn't a spot, because a player there swims out. Both were false stuck reports, checked in Play. After Task 5's trial: Rule 20 (One collision source) now lets the camera still stop at his look-only model, because Roblox's camera stops only at solid, non-see-through parts, so without this it would slide inside him on the belly path. Nothing the player sees or does changes.
 
@@ -46,6 +46,27 @@ Status: `approved` by Adam (2026-10-18). Rules 20 to 33.
 
 **Changed on 2026-10-29** (stuck safety Task 12c, product's ruling in `work/t12b/product-ruling.md`, "the lost egg"): in Play, 11 of the 18 rare spots passed Rule 22's (What counts as stuck) condition 4 because a body slides out of them on its own. Three Play runs stopped on the job's start spots before the other 7 got a try. Their try now moves to spec 10 (Launch polish), and they no longer block Gate 4. The rescue and Reset cover a player there until then. The beard wedge's proof still blocks Gate 4.
 
+**Changed on 2026-11-01** (stuck safety Task 58b, product's review in `work/review/product-upright.md`, game_creator's rulings in `work/review/gc-ladder-fix.md` and `gc-upright.md`, designer's design in `work/t58b/upright-design.md`): three fixes for the leaning beard and cap ladders failed, and in a phone play with the real thumbstick one miss fell all the way to the meadow. The two ladders become upright wooden ladders, 8 studs wide, each standing on a wide foot ledge and ending level with a flat top landing. New Rule 101 (Ladders hold you) and Story 4 (I climb the ladder I see) say what a player must get. The walk map and Rule 24 (A bot walks every way) now climb down these two ladders, and section 10 logs two new events, "LadderFoot" and "LadderTop". `RoutePoint_Belly_4` moves to x -7.5, z -26.0, because the foot ledge covers its old spot.
+
+**Changed again on 2026-11-01** (Task 58b's upright Play trial, code_lead's ruling in `work/t58b/step2-ruling.md`, product's ruling in `work/review/product-upright.md`): all 26 real climbs reached the top landing. Rule 101 (Ladders hold you) now lets a slip land anywhere on the giant the player can walk back from, because a beard slip that holds back lands on the belly 11 studs lower, standing. It also sets the noise of getting off at the top: at most a quarter of one normal landing, because the trial measured 5.2 and 7.4 against 32.8.
+
+**Settled on 2026-11-01** (game_creator's answer in `work/t58b/gc-slip-ruling.md`): the slip rule in Rule 101 (Ladders hold you) is final. A slip may land anywhere on the giant the player can walk back from, and the foot ledge stays 11 studs wide. game_creator also accepts the ladder-top noise bar. New starting value: the walk back after a beard slip takes 8 seconds or less.
+
+**Changed again on 2026-11-01** (Task 58b rerun, `work/t58b/step2-rerun-result.md`): a slip's noise limit is now one jump thud of the zone where it starts, plus 8.2. The old limit of 32.8 was lower than any jump on the Beard (40) or the Nightcap (60), so no slip there could meet it. Rerun: beard slip 6.2, cap slip 66.1, walk backs 1.1 s and 0.5 s.
+
+**Settled on 2026-11-01** (game_creator): game_creator accepts the jump-based slip limit and drops its older one-normal-landing limit. A slip over the limit gets its sound fixed, never a higher limit. Slips get their own smaller thud only if cap slips wake the giant more than twice as often as cap jumps.
+
+**Note, 2026-11-01** (code_lead's cap trace, `work/t58b/next-session-plan.md`): one cap climb in four stumbled off the top, grabbed the ladder again and was charged a 40-point fall thud. Climbing never thuds, so this was a bug, not a new rule. Rule 101 (Ladders hold you) now says plainly that a stumble the ladder catches is climbing. The proof is a whole cap climb from a calm meter: at most 30.2, which is the climb's own 22 plus 8.2 for getting off at the top.
+
+**Note, 2026-11-01** (Task 58c, `work/t58b/step4-result.md`): a slip's noise is counted from the moment the player lets go, not from a calm meter. The climb up to that point is ordinary climbing noise, which the player already chose. This is what the bot slip check already measures. The beard slip rose 56.5 from the let-go, against a limit of 48.2, and a rerun finds where that comes from.
+
+**Changed on 2026-11-02** (the beard slip ran 3 times, `work/t58b/step5b-result.md`): 2 of the slips landed on flat ground at 42.5 and 42.7, under the limit. The third landed on the steep body 17 studs down and slid. The slide made about 15 of walking noise, and then one Beard thud of 40, for 56 in all. A jump from the beard landing on that spot would slide the same way. So a slip still costs what a jump from that spot costs, and the sliding noise of the ground it lands on no longer counts against the slip. No code or world change.
+
+**Changed on 2026-11-02** (the stuck safety red alert, product's decision with game_creator's confirm in `work/red-alert-stuck-safety/decision.md`): the upright ladders, their foot ledges, the top landings and the white fill blocks hid the giant's face in the first view a new player sees, and Adam judged the old look better. So the old leaning beard and cap ladders come back. Rule 101 (Ladders hold you) now asks only what keeps players safe until spec 5 (Egg nests and climbing) decides the final way to his cap: a miss lands where the player can walk away or be rescued. The slip-noise, top-noise and walk-back limits, the 2-tries limit and the "replay 4b on the upright ladders" condition are dropped. Route points and egg spots moved only because of the foot ledge go back. `RoutePoint_Belly_4` must be walkable both ways from the belly crest after the revert. If it is still red, it comes back to product before Gate 4. Old Task 58d's belly ramp isn't built here; any belly ramp belongs to spec 3 (Gardens and ways up), which builds two anyway. Story 4 (I climb the ladder I see) and sections 5, 10 and 11 change to match.
+**Changed on 2026-11-02** (Task 60, game_creator's rulings in `work/remove-face-ladders/gc-rulings.md`): the beard and cap ladders on his face are removed, so his face stays clear in the first view. Two ladders by his ears replace them, in the ear-ladder task (designer is mocking up the two options). Until then, no player can reach his cap. game_creator accepts this gap with two conditions: no egg or nest goes up on his cap until a way up is built, and no build goes to a playtest or to Gate 4 while his cap can't be reached. Rule 101 (Ladders hold you) and Story 4 (I climb the ladder I see) change to match.
+
+**Changed on 2026-11-02** (code_lead's question on which plan builds the ear ladders): the chosen ear-ladder pair (option A or B, Adam's pick) is built in this spec's plan, in the ear-ladder task, not in spec 5. This spec's Gate 4 needs a way to his cap (Rule 101: Ladders hold you), and the Rare egg return and the whole-play check stand on it. Spec 5 places the Legendary cap nests against the pair, and reworks the pair only on the playtest results in section 11.
+
 ## 1. Goal and why
 
 In Adam's first playtest, a player got stuck on the giant's forehead and could only get out by resetting, which sent them all the way home (`docs/specs/core-heist-playtest/04-stuck-on-his-forehead.jpg`). Getting stuck makes a kid think the game is broken, and V1 named it the top risk (`core-heist.md`, section 9, "Physics on the giant goes wrong"). This spec stops it in four layers, so the next V2 specs (more ways up, a belly you can walk anywhere on) can grow the climb safely:
@@ -65,8 +86,8 @@ All the research is in `research/stuck.md` and `research/tech.md` (section 2, "C
 - **Meadow exit:** any of the 8 landing spots around his feet, where players float down after he wakes (Rule 12: Waking bounces everyone off), and any open meadow ground on the outer edge of the scanned area. That edge is always at least 10 studs from the giant, and the meadow goes on past it, so a player who reaches it is out.
 - **Walk map:** the game's own map of every spot a player can stand on, and how they can move from one to the next without jumping. A spot is ground no steeper than 70° (the steepest a player can walk) with room for a player's body. Between spots a player can:
   - **walk**, in both directions, if each step passes the same step check V1's footprint route test uses (no steeper than 70°, room for the body, nothing in the way);
-  - **climb** up any ladder, and down an upright one;
-  - **take a leaning ladder's way down**, in one direction only (down). Roblox lets a player climb down a leaning ladder only about 2 studs: then they let go and drop. So the way down a leaning ladder is to let go of it, or to walk off its top, and land wherever that drop lands. Every V2 ladder leans today;
+  - **climb** up any ladder;
+  - **take a leaning ladder's way down**, in one direction only (down). Roblox lets a player climb down a leaning ladder only about 2 studs: then they let go and drop. So the way down a leaning ladder is to let go of it, or to walk off its top, and land wherever that drop lands. Every ladder leans, the beard and cap ladders included (Rule 101: Ladders hold you);
   - **slide or drop** down off an edge, in one direction only (down).
 
   Ground under water, such as the riverbed, is not a spot: a player there swims, and swimming out needs no jump.
@@ -99,6 +120,9 @@ A new player never notices this spec unless something goes wrong. That's the goa
 
 **Story 3: The team finds stuck spots before players do.**
 - **Situation:** a builder adds or moves any part of the giant. **Player does:** (the team) runs the tests. **Result:** the run fails and lists every stuck spot, with where it is, until none are left except listed rare spots (Rule 22: What counts as stuck).
+
+**Story 4: I climb the ladder I see.**
+- **Situation:** a player on a phone or a computer stands near the foot of a ladder by his ears. **Player does:** pushes toward the ladder, straight on or a little to one side, and keeps pushing up. **Result:** they climb the ladder. A miss or slip drops them where they can walk away (on the giant or in the meadow), or the rescue gets them out (Rule 28: Stuck players are rescued). They are never left stuck.
 
 ## 4. Rules
 
@@ -134,7 +158,7 @@ The footprints, noise zones, red circles, egg spots and landing spots must still
 ### Layer 3: the bot walk
 
 **Rule 24: A bot walks every way.** Before every build review of a spec that changes the giant, a test character must walk, in Play, without jumping:
-- up and down every way up (each ramp, the belly path, each ladder). A leaning ladder is gone down by its way down (see "Walk map" in "Words used here"): the bot lets go once from its top and once from halfway, and where walking off the top is the way down (the cap ladder), it walks off. Each drop must land on ground with a way out, never wedged or in a slot;
+- up and down every way up (each ramp, the belly path, each ladder). A leaning ladder is gone down by its way down (see "Walk map" in "Words used here"): the bot lets go once from its top and once from halfway, and where walking off the top is the way down, it walks off. Each drop must land on ground with a way out, never wedged or in a slot;
 - off every edge of every walkable area on him, at the spacing in section 5.
 
 It passes only if every walk reaches its end within the time limit in section 5, and every step-off ends in the meadow or on a walkable part of him with a way out. The results (each walk, pass or fail, with a screenshot of any fail) go in the build proof. This replaces walking every edge by hand.
@@ -163,6 +187,12 @@ It passes only if every walk reaches its end within the time limit in section 5,
 
 **Rule 33: What a rescue looks like.** When a player is rescued or reset back on the giant, one sleepy lavender puff with gold sparkles must play where they vanish and one where they appear, both at the moment of the move, each lasting under 1 second. Both puffs are in the world, and every player nearby sees them, so others understand why someone suddenly moved. Nothing else changes on screen: no text, no card, no screen flash. The puff's exact colours and sizes are in `docs/design/v2/style-guide.md`. Lavender matches the sleep colour of the meter and Tiptoe, so it reads as his sleep magic tucking you back, not a punishment. White was tested and disappeared on his white beard. One soft "poof" sound comes with V2 spec 7 (Audio).
 
+**Rule 101: Ladders hold you.** There must be no ladder on his face (Task 60, 2026-11-02). The two ladders by his ears, built in the ear-ladder task, are the way to his cap, and a player who misses or slips off either one must land where they can walk away, on the giant or in the meadow, or be rescued (Rule 28: Stuck players are rescued), never left stuck. Until the ear ladders are built, no player can reach his cap, so no egg or nest goes up there, and no build goes to a playtest or to Gate 4. It is proven by:
+- a bot slip on each ladder, letting go at half height and from the top: it lands where a way out exists, never wedged or in a slot (the same check as every leaning ladder in Rule 24: A bot walks every way);
+- a play with real controls, on a phone and on a computer, on each ladder: every miss ends where the player walks away or is rescued (the build review).
+
+A slip makes the normal noise of its landing (Rule 8: Steps make noise), like any drop. No separate slip-noise, top-noise or walk-back limit applies to these two ladders until spec 5.
+
 ## 5. Numbers
 
 | Value | Starting value | Evidence | Playtest result that changes it |
@@ -187,6 +217,8 @@ It passes only if every walk reaches its end within the time limit in section 5,
 | "Pressing to move" changes accepted | About 10 a second per player | code_lead: more than any real thumb or key changes, so only spam is ignored | None expected |
 | Egg kept on a Reset on the giant | Yes, while he's asleep (Rule 30: You keep your egg) | game_creator: getting stuck is the game's fault, and one Reset moves a player only about 4 studs | The "Unstuck" logs (section 10) show carriers pressing Reset on the giant more than once per heist on average: a Reset on the giant sends the egg back to its spot too. The automatic rescue still keeps the egg |
 | Lift when placed | 0.5 studs above the safe spot | Moving a player with a small lift avoids sinking (`research/stuck.md`). Small enough to land without a fall | A rescue ever makes a thud: lower it |
+| Failed first tries on the beard ladder before rework (Rule 101: Ladders hold you) | Under 25% | game_creator: a failed first climb is where a new player gives up. The red alert decision (2026-11-02) keeps it as the only ladder measure until spec 5 | 25% or more of first beard tries fail (section 10): spec 5 reworks the way to his cap |
+| Climb rework triggers | More than 25% of first beard tries fail, or the typical player needs 3 or more tries ("LadderFoot" and "LadderTop", section 10) | game_creator's ruling | Either one: rework the ladder before the next content update |
 
 ## 6. Screens and states
 
@@ -263,11 +295,14 @@ Logged with Roblox's custom events (`AnalyticsService:LogCustomEvent`, checked i
 | Event | What it is | When |
 |---|---|---|
 | "Unstuck" | One custom event for every way a player got out, with three breakdowns: how ("Rescue", "Reset on giant" or "Loop home"), the zone they were in (Boots, Belly, Beard or Nightcap), and whether they carried an egg ("Carrying" or "Empty") | Every rescue, every Reset on the giant, and every send home by the loop limit (Rule 29) |
+| "LadderFoot" (reached a ladder's foot) | Its value is the try number: 1 for the first arrival since joining or since last reaching that ladder's top. Three breakdowns: the ladder ("Beard" or "Cap"), the input ("Touch", "Keyboard" or "Gamepad", from the player's last input) and the egg ("Carrying" or "Empty") | The player arrives at that ladder's foot (the bottom of the beard ladder or the cap ladder) from anywhere else, walking on or landing from a slip. At most once every 2 seconds. Not logged when they've just climbed down that ladder from its top |
+| "LadderTop" (reached its top) | Its value is how many tries it took. Same breakdowns | The player steps off the top of the ladder onto the giant |
 
 One event name with breakdowns, not one per kind, because Roblox allows only 100 custom event names per game.
 
 The numbers that show it works:
 - "Unstuck" with "Rescue" or "Loop home" happens less than once per 20 eggs banked from the Belly or higher ("EggHome", `core-heist.md`).
+- Fewer than 25% of first beard tries fail ("LadderTop" with value 1 on the Beard, compared with "LadderFoot" with value 1), and the typical "LadderTop" value is under 3. Otherwise spec 5 (Egg nests and climbing) reworks the way to his cap (section 5).
 - "Loop home" is close to zero. Every one is a world bug to fix.
 - Any zone with a sudden rise in rescues gets a hand check and new named scan points (Rule 22).
 - Day-1 return (players coming back the next day) and session time don't drop compared with V1.
@@ -283,3 +318,7 @@ The numbers that show it works:
 | New ways up and the walk-anywhere belly | Specs 3 and 5. They must pass this spec's scan and bot walk |
 | The beard wedge, left to the rescue for now (Rule 22: What counts as stuck, "Accepted for now") | Spec 10, Launch polish: "Beard wedge" |
 | Real-phone testing | Spec 10, Launch polish |
+| A climb helper that holds players on a leaning ladder | Not built: it failed its trial on 2026-11-01 |
+| Upright face ladders, foot ledges, top landings and fill blocks | Removed by the red alert decision (2026-11-02): they hid his face from the first view |
+| Reworking the ear-ladder pair if a playtest shows one ladder gets more than 65% of cap climbs, or Legendary eggs banked per player differ by more than 1.5 times between gardens 1–4 and 5–8 | Spec 5, `egg-nests-and-climbing.md`. The pair itself is built in this spec (Rule 101: Ladders hold you), because this spec's Gate 4 can't pass while his cap can't be reached |
+| A belly ramp for `RoutePoint_Belly_4` (old Task 58d) | Spec 3, `gardens-and-ways-up.md`, with its two belly ramps |
