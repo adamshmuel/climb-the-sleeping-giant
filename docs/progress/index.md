@@ -12,7 +12,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 69 of 81 | ◐ Plan 7 trimmed 2026-11-03 by product's 10-task check (about 7.8 h left, landing at about 23.2 h of the 26 h limit; 0.3 h more if the joint filler is needed). Tasks 61m and 61a committed (61a: b68e071). Order: 61i (rail joint, 0.2 h) → 61k (hidden joint filler, only if 61i ends STUCK) → 61h → 61b → 61j → 61w → 61x → 61r → 62a → 62b → 63 → 63b. Next: Task 61i |
+| 2. Stuck safety | `v2/stuck-safety.md` | 70 of 81 | ◐ Plan 7 trimmed 2026-11-03 by product's 10-task check (about 8.1 h left, landing at about 23.7 h of the 26 h limit). Tasks 61m and 61a committed (61a: b68e071). Task 61i done: 3 of 3 climbs reached the top, so Task 61k (the joint filler) is not needed. Order: 61h → 61b → 61j → 61n → 61w → 61x → 61r → 62a → 62b → 63 → 63b. Next: Task 61h |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |
