@@ -106,3 +106,9 @@ In Task 61a the mockup's fold on his cap was judged only from the camera. It til
 A scriptable camera set once in Play was reset by the game's camera before the shot was taken.
 
 **Do instead:** hold the camera with BindToRenderStep at a priority after Enum.RenderPriority.Last until the shot is taken, then unbind it.
+
+## Lesson 289: A path that ends at a climb shows its arrival heading
+
+The walkway's mockup showed where it ends, but not which way a player faces when he gets to the tie.
+
+**Do instead:** a path that ends at a climb shows its measured arrival heading inside the climb's clear angles in the mockup. Movement is tested only on the built piece, with player-like steering.

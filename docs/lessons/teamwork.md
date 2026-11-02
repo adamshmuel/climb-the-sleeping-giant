@@ -317,3 +317,21 @@ Night-log times written from guesses ran about 35 minutes ahead of the clock, so
 A way up was priced from the plan file while the progress file had a bigger size (Task 63: 2.5 h against 3.5 h).
 
 **Do instead:** every price check reads both files and uses the larger number.
+
+## Lesson 290: List each result and the pick it leads to before a trial
+
+A trial measured angle limits, but every result led to the same pick, so the time bought nothing.
+
+**Do instead:** before a trial, list each possible result and the pick it leads to. Cut any case that can't change the pick.
+
+## Lesson 291: Price the safety net before chasing "every try works"
+
+Trials chased "every climb works", while the stuck rescue already made every failed climb harmless.
+
+**Do instead:** before a trial, name what the player needs when the thing fails, and price that safety net first.
+
+## Lesson 292: Check a case's last safe spot matches a real player's
+
+A rescue result used as decision evidence ("the rescue lands him on top") came from a safe spot left by an earlier test case. A real kid is rescued at the tie's foot.
+
+**Do instead:** before deciding on where the rescue puts a player, read the safe-spot rule in the code and check the case's last safe spot is where a real player's would be.

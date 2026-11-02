@@ -769,3 +769,39 @@ A walk script mirrored its spots with a sign `s` inside its own table. A copy gi
 A reach probe called `Humanoid:Move` once. The control script reset it, so the probe stopped before any walk ran (Lesson 65 was known, but nothing enforced it).
 
 **Do instead:** a job's press uses `MoveTo`, or `Move` from `BindToRenderStep`, never a single `Move` call.
+
+## Lesson 283: A server watcher gets its case marks through a RemoteEvent
+
+A Play script set player attributes on the client. The server never saw them, so the meter and thud checks never ran.
+
+**Do instead:** a server watcher gets its case marks through a RemoteEvent, and the smoke run proves it ("seen <case>").
+
+## Lesson 284: Measure gaps to meshes with raycasts
+
+`GetPartBoundsInBox` reports a mesh's whole bounding box, so every face of the tie looked blocked.
+
+**Do instead:** measure the gap from a climb line to a mesh with raycasts.
+
+## Lesson 285: Stall steering turns toward the open face
+
+The test bot's stall steering aimed at the tie's middle and pushed him back into the hat's brim.
+
+**Do instead:** when a scripted climb stalls, it turns toward the open face, the way a player would.
+
+## Lesson 286: Mark "between" and settle before each teleport
+
+A job named the next case only after teleporting the character, so a landing still settling was filed under the wrong case.
+
+**Do instead:** mark "between" and let him settle before each teleport, then name the new case.
+
+## Lesson 287: One sleep-meter hold per Play session, with a heartbeat
+
+The script that holds the giant's sleep meter lived inside each run and stopped between runs. Twice the giant woke mid-trial and bounced the character, and the results looked real (a bounce looked like a bad rescue).
+
+**Do instead:** paste one hold per Play session (`scripts/studio/session-hold.luau`) that writes a heartbeat. Every run marks itself VOID when the heartbeat is missing. Check a strange landing against the game's own landing spots before calling it a bug.
+
+## Lesson 288: Run luau-lsp and a dry run in Edit before a trial script's first paste
+
+Two script bugs (a function that doesn't exist and a broken compare) were pasted into Play untested, and each cost a run.
+
+**Do instead:** run luau-lsp and a dry run in Edit on every trial script before its first paste. `scripts/job-check.sh --handoff` checks this.

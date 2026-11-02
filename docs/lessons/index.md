@@ -290,6 +290,18 @@ What this project learned the hard way, so it doesn't happen again.
 | 278 | Price a task from the plan and the progress file, and use the larger | `teamwork.md` |
 | 279 | Measure the surface under a handed-over spot | `world-scenery.md` |
 | 280 | A scripted press uses the walk's own input | `studio-and-scripts.md` |
+| 281 | Test a climb at the angles players really arrive from | `world-scenery.md` |
+| 282 | Keys push in 45° steps, so test climbs at ±20° and ±25° | `world-scenery.md` |
+| 283 | A server watcher gets its case marks through a RemoteEvent | `studio-and-scripts.md` |
+| 284 | Measure gaps to meshes with raycasts | `studio-and-scripts.md` |
+| 285 | Stall steering turns toward the open face | `studio-and-scripts.md` |
+| 286 | Mark "between" and settle before each teleport | `studio-and-scripts.md` |
+| 287 | One sleep-meter hold per Play session, with a heartbeat | `studio-and-scripts.md` |
+| 288 | Run luau-lsp and a dry run in Edit before a trial script's first paste | `studio-and-scripts.md` |
+| 289 | A path that ends at a climb shows its arrival heading | `look-and-art.md` |
+| 290 | List each result and the pick it leads to before a trial | `teamwork.md` |
+| 291 | Price the safety net before chasing "every try works" | `teamwork.md` |
+| 292 | Check a case's last safe spot matches a real player's | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

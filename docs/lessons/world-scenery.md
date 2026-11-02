@@ -389,3 +389,15 @@ A sloped walkway was checked with down-rays from high above. They hit the pom-po
 The "arm-end stop spot" handed to the designer was the floor of the gap, not the top of the arm.
 
 **Do instead:** before building on any spot someone hands over, measure the surface there with a down-ray.
+
+## Lesson 281: Test a climb at the angles players really arrive from
+
+A straight-on gap scan called the cap tie's outer face "clear all the way up". Kids reach it at an angle and slide round the corner onto faces that are blocked. A climb clear only straight on was nearly approved as "clear".
+
+**Do instead:** scan every face a climber can slide onto, and test the climb at the angles players really arrive from. Also check where the rescue puts him and which way he faces.
+
+## Lesson 282: Keys push in 45° steps, so test climbs at ±20° and ±25°
+
+On a computer the camera is Classic and doesn't turn by itself. With keys, a push moves in 45° steps, so a kid can be up to 22.5° off his aim.
+
+**Do instead:** before trusting a straight lane, test the climb at ±20° and ±25°.
