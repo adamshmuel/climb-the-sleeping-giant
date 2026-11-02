@@ -271,3 +271,7 @@ In Task 58e code_lead wrote "proven in Task 58d" in a handoff. The handoff check
 ## Lesson 215: A red world test can come from an old drift, not the newest change
 - **What happened:** after Task 60 took the face ladders off, a Zones test missed 12 standing spots. The ladders weren't the cause: the zone box `Beard_Head` had moved away from where `tools/world/02-zones.luau` puts it, some time after Task 58e (2026-11-02).
 - **Do instead:** when a world test turns red, first compare the live parts it reads with their build script's values, before blaming the newest change.
+
+## Lesson 220: Measure a disputed fact before weighing two rulings
+- **What happened:** game_creator and product split over whether players could reach the pillow from the meadow. That is a fact, not a design choice. One read-only Studio call settled it: every pillow edge is 9+ studs above what's next to it, and a jump reaches 7.2 (2026-11-02).
+- **Do instead:** when judges disagree about something the world can answer, measure it in one read-only call first, then weigh the rulings.

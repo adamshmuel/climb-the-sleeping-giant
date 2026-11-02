@@ -225,6 +225,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 213 | Routes laid across a main character's face hide his charm | `look-and-art.md` |
 | 214 | Job-script checks don't fit spec files | `teamwork.md` |
 | 215 | A red world test can come from an old drift, not the newest change | `teamwork.md` |
+| 216 | Check the front view first when placing near a main character's head | `look-and-art.md` |
+| 217 | Every option in a side-by-side gets the same cameras | `look-and-art.md` |
+| 218 | Check a placement mockup against the idea's own words | `look-and-art.md` |
+| 219 | Measure a body part's edges before placing next to it | `look-and-art.md` |
+| 220 | Measure a disputed fact before weighing two rulings | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

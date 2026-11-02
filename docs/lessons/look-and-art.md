@@ -64,3 +64,19 @@ About how the game looks, the art and models, and approving a design. The map of
 ## Lesson 213: Routes laid across a main character's face hide his charm
 - **What happened:** the beard and cap ladders crossed the giant's face and stuck up above his cap in the first view. When they came off, the designer judged all 10 before-and-after pairs "better": his nose, eyes, moustache and beard tuft show again (Task 60, 2026-11-02).
 - **Do instead:** put routes beside a main character's face, never across it, and check the first view from the front before building.
+
+## Lesson 216: Check the front view first when placing near a main character's head
+- **What happened:** in the ear-ladder mockups, a ladder only 5 studs in front of the ear looked like lines on the giant's face from the meadow camera. The designer moved it back and took the shots again (2026-11-02).
+- **Do instead:** right after placing anything near a main character's head, take one meadow-front shot before any other shot.
+
+## Lesson 217: Every option in a side-by-side gets the same cameras
+- **What happened:** in the ear-ladder mockups, options A and B were shot from the side gardens and the face camera, but the new option C only from the first view and close up. game_creator could not judge C against the others and asked for the missing shots (2026-11-02).
+- **Do instead:** shoot every option, including one added late, from the same fixed cameras on computer and phone before anyone judges them.
+
+## Lesson 218: Check a placement mockup against the idea's own words
+- **What happened:** the ear-ladder mockups put the climbing line between the giant's cheek and his ear, but the idea file says "behind each ear". Nobody checked the two against each other before judging (2026-11-02).
+- **Do instead:** before judging a placement mockup, check its line against the idea's "What matters most" row for that part.
+
+## Lesson 219: Measure a body part's edges before placing next to it
+- **What happened:** the judges asked to move the cap ties "about 6 studs back" behind the giant's ear. The real ear runs from z 19 to z 30, so 6 studs put the tie right over it. It took 18 studs (2026-11-02).
+- **Do instead:** before placing anything near a body part, measure its edges with raycasts, and give placement asks as measured spots, not guesses.
