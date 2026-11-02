@@ -313,6 +313,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 301 | A fixed camera moves to another task, never out | `teamwork.md` |
 | 302 | A trimmed paste voids that call | `studio-and-scripts.md` |
 | 303 | Every promise in a task header has a budgeted step | `teamwork.md` |
+| 304 | Use the game's own signal, and size job files before the step | `studio-and-scripts.md` |
+| 305 | One Play case per behaviour the player feels | `teamwork.md` |
+| 306 | A Play job's memory is mostly its pastes | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

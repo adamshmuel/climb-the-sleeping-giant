@@ -835,3 +835,15 @@ Task 61a's Step 2 trace gave up after two turns, with no step back and no shot f
 In Task 61i's Step 1 the builder trimmed the dry run and the read scripts, although the handoff said to paste each script whole. code_lead accepted the result only because the climb script itself was pasted whole.
 
 **Do instead:** a handoff's stop rules say that a trimmed or edited paste voids that call's result. The builder pastes the script exactly as written, or stops and asks.
+
+## Lesson 304: Use the game's own signal, and size job files before the step
+
+In Task 61h's Step 4 the builder wrote a 649-line drop script, because it rebuilt the game's own landing check as a "shadow" copy to read the result. Reading that script cost two builders most of their memory, and it pushed the task past its planned time.
+
+**Do instead:** before a job copies one of the game's own checks, look for a signal the game already gives (here, the console's "event fired" line). The handoff sizes every job file under 300 lines before the step starts.
+
+## Lesson 306: A Play job's memory is mostly its pastes
+
+In Task 61h the drop script was pasted many times, and each paste put the whole file back into the builder's memory. Two builders ran out of memory before the job ran (code_lead, 2026-11-03).
+
+**Do instead:** a Play step's caps give paste lines (file lines times pastes). A step over about 2000 paste lines is split before it starts. Each pass item names the game signal it reads, and code_lead checks the signal with a grep before the builder writes the script.

@@ -371,3 +371,9 @@ code_lead's plan 7 rewrite dropped the `tie-top-side` shot. It is on designer's 
 Task 61h's header promised a quiet fall from the cap onto the cap and the "CapToCapFall" analytics event, but its steps never budgeted either. code_lead found the gap only while writing the handoff, so a new task (61n) was added.
 
 **Do instead:** when a plan is written or rewritten, match each promise in a task header to a budgeted step, and match each analytics event in the spec to a named task.
+
+## Lesson 305: One Play case per behaviour the player feels
+
+Task 61h's Play job listed one case per spot: both mirror sides of the same fold, which run the same code. It also asked for two shots of a 1-second puff, taken after a script that runs over 2 seconds, so the shots could never catch it. Both added time to a task already near its line, and the red-flag meeting cut them (product, game_creator, designer and code_lead, 2026-11-03).
+
+**Do instead:** each Play case names the behaviour the player feels that it proves. A mirror side or a second spot gets a case only when the measured spots or the code differ. Before asking for a shot of an effect, check how long the effect lasts. If it ends before the capture, prove it with the game's own signal.

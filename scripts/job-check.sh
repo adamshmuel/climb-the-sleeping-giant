@@ -218,6 +218,29 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Before a STUCK, retry like a player (turn, step back, turn again) and take a screen_capture at the stall (Lesson 297)."
 		exit 1
 	fi
+	# Task 61h's drop job rebuilt the game's own landing check and was pasted
+	# many times, so two builders ran out of memory (Lessons 304 to 306). So
+	# every step gives its planned minutes, and every Play step gives its paste
+	# lines and names the game signal each pass item reads.
+	nosize=$(awk '
+		function check() {
+			if (head == "") return
+			if (!mins) print head " (no planned minutes)"
+			if (play && !paste) print head " (no paste lines)"
+			if (play && !signal) print head " (no game signal named)"
+		}
+		FNR == 1 || /^## / { check(); head = ""; play = 0; mins = 0; paste = 0; signal = 0 }
+		/^## Step [0-9]/ { head = FILENAME ":" FNR ": " $0; play = ($0 ~ /Play/ && $0 !~ /\(0 Studio calls/) }
+		tolower($0) ~ /[0-9]+ ?min/ { mins = 1 }
+		tolower($0) ~ /paste lines/ { paste = 1 }
+		tolower($0) ~ /signal/ { signal = 1 }
+		END { check() }
+	' "$@")
+	if [ -n "$nosize" ]; then
+		echo "$nosize"
+		echo "Handoff check FAILED: each step above needs its planned minutes, and each Play step its paste lines (file lines times pastes, split over about 2000) and the game signal each pass item reads (Lessons 304 to 306)."
+		exit 1
+	fi
 	# A handoff that invented its own "does a body fit" box check hit the
 	# giant's mesh and found no start at 18 of 18 spots (Task 12c step 1, the
 	# tenth wrong start check). Starts come only from StartCheck (Lesson 43).
@@ -336,7 +359,7 @@ if [ "${1:-}" = "--handoff" ]; then
 			fi
 		done
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in, every run filter names one spec, and every Play handoff names the session hold, checks the beat, passes the script checks and has a dry run in Edit."
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in, every run filter names one spec, and every Play handoff names the session hold, checks the beat, passes the script checks and has a dry run in Edit, and every step gives its minutes and every Play step its paste lines and game signals."
 	exit 0
 fi
 joined=0
