@@ -691,3 +691,21 @@ Task 60 moved the face ladders and listed its accepted reds (tests expected to f
 Task 61d's handoff said a fall "straight from a climb" is quiet, without saying which ladders. So any climb counted, including a boot ladder. The fix then keyed on zones only (Nightcap or Beard), which left a player who climbs a cap tie from its foot and lets go low still thudding. That needed a new task (61h).
 
 **Do instead:** a rule that changes what happens after a climb names the parts it covers (for example "the two cap ties"), and the code checks those parts, not only the body zones.
+
+## Lesson 249: A look-only part can't be found by rays, so tests measure it from its shape
+
+In Task 61a the tie's straps were made look-only (CanQuery off, so rays pass through them). A test that found the strap's face with a ray then hit nothing, and failed for a reason that had nothing to do with the climb.
+
+**Do instead:** when a task makes a part look-only, check every test and script that measures it with rays first. Measure such a part from its position and size (`CFrame` and `Size`), not with a ray.
+
+## Lesson 250: Before naming a world script as a fix, match what the test reads with what the script writes
+
+Task 61g was planned to run script 11a, picked because it works on every `Mockup_` folder. But the failing mockup test reads `MockupTransparency` (the saved look), and 11a only saves the collision values. 11a said "already done", the test stayed red, and code_lead had to find the cause.
+
+**Do instead:** before a plan or review names a world script as the fix for a red test, list the attribute or property names the test checks, and check that the script writes those exact names.
+
+## Lesson 251: A fix for a red test covers every kind of object the test checks
+
+Task 61g's first copy script fixed only the mockup's parts, the kind the cut-off failure line listed. The test also checks effects (lights, sparkles, labels) and avatars, and 10 egg effects still had no saved value. The test stayed red for a second run.
+
+**Do instead:** before writing a fix, read the test and count every kind of object it checks, in one read-only call. A runner's report copies a failing test's whole message, never only its first line.

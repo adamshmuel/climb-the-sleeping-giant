@@ -258,6 +258,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 246 | A quiet fall judged by where it ends can become a shortcut | `world-scenery.md` |
 | 247 | A task that changes the world ends with a full run before its accepted reds are final | `studio-and-scripts.md` |
 | 248 | A rule that quiets some climbs names the parts it covers, not only the zones | `studio-and-scripts.md` |
+| 249 | A look-only part can't be found by rays, so tests measure it from its shape | `studio-and-scripts.md` |
+| 250 | Before naming a world script as a fix, match what the test reads with what the script writes | `studio-and-scripts.md` |
+| 251 | A fix for a red test covers every kind of object the test checks | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

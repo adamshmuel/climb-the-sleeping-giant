@@ -159,12 +159,16 @@ Product's decision: `work/red-alert-plan7/decision.md`. The way up stays the hid
 | 1 | Step 61s: the spec lines (product) | product's own | the decision |
 | 2 | Task 61d: a drop from the cap onto the pillow is quiet, with a puff | 1.5 | Step 61s |
 | 3 | Task 61e: the rails rerun | 0.4 | the decision |
-| 4 | Task 61a: the left tie built with the hidden climb, plus the trimmed climb checks | 5.75 | Step 61s, Task 61e |
-| 5 | Task 61f: the left tie is closed: the real drop and the close shots | 0.75 | Task 61d, Task 61a |
-| 6 | Task 61b: the right tie mirrors the left, with the tie tests | 3.5 | Task 61f |
-| 7 | Task 62a: `RoutePoint_Belly_4` goes back | 1 | Task 61b |
-| 8 | Task 62b: Rare eggs 3 and 4 go back | 2 | Task 61b, Task 62a |
-| 9 | Task 63: the whole play is checked once | 3.5 | Task 61d, Task 61b, Task 62a, Task 62b |
+| 4 | Task 61g: the ear-ladder mockups are handed over | 0.3 | the decision |
+| 5 | Task 61a: the left tie built with the hidden climb, plus the trimmed climb checks | 5.75 | Step 61s, Task 61e, Task 61g |
+| 6 | Task 61f: the left tie is closed: the real drop and the close shots | 0.75 | Task 61d, Task 61a |
+| 7 | Task 61b: the right tie mirrors the left, with the tie tests | 3.5 | Task 61f |
+| 8 | Task 61h: letting go low on a cap tie is quiet too | 1 | Task 61d, Task 61b |
+| 9 | Task 62a: `RoutePoint_Belly_4` goes back | 1 | Task 61b |
+| 10 | Task 62b: Rare eggs 3 and 4 go back | 2 | Task 61b, Task 62a |
+| 11 | Task 63: the whole play is checked once | 3.5 | Task 61d, Task 61b, Task 61h, Task 62a, Task 62b |
+
+Added after the rewrite, from code_lead's Task 61d review (`work/quiet-drop/t61d-review.md`): Task 61g (0.3 h) and Task 61h (1 h). Tasks 61d and 61e are done.
 
 ## Step 61s: The spec lines (product)
 
@@ -217,9 +221,24 @@ Stands on: product's red alert decision (`work/red-alert-plan7/decision.md`, fin
 - **How big:** 1 step, about 8 Studio calls, about 14 tool calls, 0.4 h. Smoke run first (Lesson 225). Sonnet.
 - **Lessons:** 225, 231, 232, 233, 241.
 
+## Task 61g: The ear-ladder mockups are handed over
+
+Stands on: product's red alert decision (`work/red-alert-plan7/decision.md`, final: the ear-ladder mockups are no longer judged). Nothing else in the plan changes `Workspace.Mockup_EarLadders` or reads it, so nothing under it can still change.
+
+- **What it's for:** scenery safety. A mockup piece must never show, block or catch a player in Play. **How big:** 2 steps, 4 Studio calls, about 0.3 h.
+- **Why it goes before Task 61a's climb checks:** it changes `Mockup_EarLadders`, which sits next to the left tie. If it switches a piece off, a climb check run before it could be wrong. It also turns the `SignsAndMockups` red green, which Task 61a's full run counts.
+- **Never at the same time as a Task 61a world step.** Both change Workspace. It runs whole, and is committed, before Task 61a's Step 1.
+- **Spec rule:** none of its own. It covers the mockup check ("nothing in a mockup folder shows in Play").
+- **Files:** none in `src/` or `tools/`. 11a stopped at "already done" (the parts already had their collision values saved; the test wants the look value). The fix script `work/ear-ladders/t61g-fix-script.luau` copies designer's saved look value `T0` into `MockupTransparency`, so every piece stays restorable (designer's ask). Cause: `work/ear-ladders/t61g-cause.md`.
+- **Steps:**
+  1. Paste the fix script once, in Edit mode (Haiku). Pass: "MockupTransparency saved on 460 parts (406 shown again by a show, 54 stay hidden)". Any other line: stop and report it whole.
+  2. Narrow run, filter `SignsAndMockups` (one spec name per run, Lesson 41): green (Haiku).
+- **No before and after shots:** the pieces are already see-through.
+- **Lessons:** 41, 166, 190.
+
 ## Task 61a: The left cap tie is built and climbs
 
-Stands on: Step 61s (the spec lines, done), Task 61e (rails in or out), Step 61-0 (designer's measured route table, `work/ear-ladders/tie-route-table.md`, final), product's ruling (`work/ear-ladders/climb-test/product-ruling-2a.md`, final).
+Stands on: Step 61s (the spec lines, done), Task 61e (rails in or out: they stay, `work/ear-ladders/t61e-result.md`), Task 61g (the ear-ladder mockups handed over), Step 61-0 (designer's measured route table, `work/ear-ladders/tie-route-table.md`, final), product's ruling (`work/ear-ladders/climb-test/product-ruling-2a.md`, final).
 
 - **Status:** Steps 1 and 2 are done. `CapTieLeft` is built by script 20 as a solid strap with knots, and `CapTies.spec` has 7 tests, all green. The gate (`work/ear-ladders/t61a-gate-result.md`) proved the hidden climb on the sky copy. What is left builds that climb into the real tie.
 - **What it's for:** core gameplay. The ties are the only way up to his cap (the Legendary eggs and the Dream Egg). One side is built first, so a finding reworks one tie, not two (Lesson 226).
@@ -244,12 +263,15 @@ Stands on: Step 61s (the spec lines, done), Task 61e (rails in or out), Step 61-
   
   The 10-second stand is not repeated: the gate proved it.
 - **Before and after shots:** the gate 1 fixed cameras, computer and phone. The before shots taken in Step 2 still stand. The after shots come after the rebuild, and designer judges each pair before the commit.
-- **How big:** 5 steps, about 5.75 h:
-  1. red tests (Sonnet);
-  2. script 20 rerun with the hidden climb, then a narrow run (Sonnet);
+- **How big:** what is left is 6 steps, about 5.75 h (handoff: `work/ear-ladders/t61a-handoff.md`):
+  1. red tests, and script 20 changed and run in check mode (Sonnet);
+  2. script 20 rerun with the hidden climb and the rails, then a narrow run (Sonnet);
   3. the trimmed climb checks, smoke run first (Sonnet);
   4. the full run (Haiku);
-  5. after shots, then designer judges them (Sonnet, then Opus).
+  5. after shots (Sonnet);
+  6. designer judges them (Opus).
+
+  Step 5 of the rewrite was split in two only because it needs two models.
 - **Accepted reds until Task 61b:** the general ladder tests listed under Task 61b. They read both ties, so they are pointed at the ties once, when both are final.
 - **A finding that changes a number** stops the task. Product writes it into section 5 first, then script 20 reruns, in a new numbered task.
 - **Lessons:** 76, 120, 153, 166, 190, 222, 223, 224, 225, 226, 227, 234, 241.
