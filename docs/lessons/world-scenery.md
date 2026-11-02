@@ -227,3 +227,91 @@ In Task 58e the designer named a 0.5-stud sink for Rare egg 4 at (2.5, -32.0). A
 - Before naming a spot or lean for a wide object on a curved slope, ray-scan the skin under its whole base (the rim and the middle).
 - Pick a spot where every point is within the limit, and give the measured numbers with it.
 - **Who checks:** `designer` (before naming the spot), `code_lead` (the handoff asks for the scan numbers).
+
+## Lesson 229: Test a climb that isn't a truss in the sky first
+
+In Task 61a two climb jobs failed on the cap tie: the bot ran into it and never started climbing. A measurement next to a truss showed why. The strap with knots sticking out only 0.1 studs reads to the character's climb check as a flat wall. Bare knots, thick knots and a truss all climbed; the real tie rose 0.2 studs.
+
+- Before building any climb that isn't a TrussPart, walk into a sky copy of it next to a TrussPart copy in one Play call.
+- Copy the real foot height too: start the walk from where the player really stands (here, the pillow), never from a floor laid under the climb part.
+- Build it only when the copy climbs as far as the truss does.
+- **Who checks:** `code_lead` (the plan has the sky test before the build), `builder` (runs it).
+
+## Lesson 230: Every climb that isn't one truss needs a PathCheck change
+
+PathCheck (the check that every nest can be reached) links only single TrussParts with a walk spot at each end. In Task 61a every fix for the cap tie (knots, rungs, or several tilted trusses) turned out to need a PathCheck change too, found only when the costs were added up.
+
+- Put a PathCheck line in every climb option's cost from the start.
+- **Who checks:** `code_lead` (costs and plans).
+
+## Lesson 231: A sky copy covers the whole path, and the push stops at the goal
+
+In Task 61a's first sky probe, the copy held only a box around the climb's foot, and the push kept going after the climber reached the top. So the cases that climbed past the landing walked off the copy and read as falls.
+
+**Do instead:** copy every part up to where a case can end (the landing and the plates next to it), and stop the push the moment the goal is met. Count any part at the goal height as the goal, not one named part.
+
+## Lesson 232: A sky copy is in the meadow zone, so its meter hears nothing
+
+In Task 61a's confirm run, the copies built high in the sky sat outside every giant zone. The game counts them as the meadow, where noise is ×0, so the live sleep meter would read 0 whatever the climber did.
+
+**Do instead:** in a sky copy, run a shadow meter: the game's own landing check and noise sums, fed the real zone of the spot being copied (for example the cap, noise ×3). Never read the live meter from a sky copy.
+
+## Lesson 233: A shadow meter names each case, not each teleport
+
+In Task 61a's confirm run, the shadow meter started a new case only when the body jumped more than 20 studs (a teleport to the next start). A fall that ended near the next case's start didn't count as a jump, so two cases ran together in the log and nobody could say which case a noise belonged to.
+
+**Do instead:** at the start of each case, the job writes the case name into the sky copy's attribute, and the shadow meter logs every noise under that name. Never split cases by guessing from how far the body moved.
+
+## Lesson 234: Compare where every case lets go before judging the ends
+
+In Task 61a's confirm run, every case let go of the climb between y 96 and y 101, straight ones included. The run judged only where each case ended, so it looked like a drift problem on one side. The real cause was a shared let-go point; the drift only decided who got carried onto the cap and who fell.
+
+**Do instead:** a climb job logs where every case lets go and compares them across cases first. A let-go point shared by all cases is the cause to fix; the side or push only decides who survives it.
+
+## Lesson 235: A climb probe includes a player who freezes
+
+In Task 61a, every climb probe tested only climbers who kept pushing. The straight climbs reached the top only because the push carried them on after they let go. But this game teaches kids to freeze when the giant stirs, so a player who stops mid-climb is a normal player, and no probe had tried one.
+
+**Do instead:** every climb or top-out probe includes a player who stops mid-climb (for example 3 s at the height where others let go) and then goes on. Pass: no drop over 2 studs and no thud.
+
+## Lesson 236: Put a landing under where climbers really stand at the top
+
+In Task 61a, the fold (the landing at the top of the cap tie) was placed by the tie's top edge. In the climb runs, the climbers who reached the top stood 0.6 to 1.0 studs outside it, so they stood on the sloping cap and crept.
+
+**Do instead:** in the first climb run, measure where each climber stands when they reach the top. Then place the landing under that spot, not under the top of the climb.
+
+## Lesson 237: Check every stretch of a bent climb against both limits
+
+In Task 61a, the hidden climb (option C) bent away from the player near the top. From y 95 to 100 it leaned too far back for the climb to hold, and at 78.7° it was too steep to stand on (Roblox lets a character stand on slopes up to about 70°). That stretch is a dead band, and every test climber let go of the climb there.
+
+**Do instead:** before any probe of a climb that bends, list each stretch's lean and slope, and check it against both limits: can the climb hold it, and can a player stand on it? A stretch that fails both is a dead band, and it is fixed before anything is tested.
+
+## Lesson 238: Shape a hidden climb to the engine's limits, not to the look
+
+In Task 61a, the hidden climb (option C) copied the visible strap's bend. So it took on a stretch that was too leaned to climb and too steep to stand on (Lesson 237).
+
+**Do instead:** shape a hidden climb so that every stretch can either be climbed or stood on, never neither. Keep it close enough to the visible part that the look still holds. The hidden part follows the engine's limits; it only needs to stay near the look.
+
+## Lesson 239: Every climb probe includes a climb down
+
+In Task 61a, every climb probe only tested going up. But getting back onto a climb from its top depends on which way the character faces. A Roblox character only grabs a climb that is in front of it, and a phone player walking down usually faces away from the tie.
+
+**Do instead:** every climb probe includes a climb down from the top, facing the way a phone player really walks.
+
+## Lesson 240: A hidden climb catches nobody walking off facing out
+
+In the Task 61a gate, a player who walked off the top of the tie facing in grabbed the hidden climb and climbed down safely. A player facing out never started climbing and fell 32 studs to the pillow. A hidden climb part has no edge the player can see, so nothing turns them to face it.
+
+**Do instead:** judge a hidden climb by the facing-out walk down. If it fails, the climb needs something that turns or catches the player (or a different kind of way up), not a better-shaped hidden part.
+
+## Lesson 242: Say what each pass line judges, before the run
+
+In the Task 61a gate, the "Rails hold" line judged a hidden safety part, not the player. The player passed (reached the cap, no drop, no thud), but the rail's margin was unknown, and the line read as a fail.
+
+**Do instead:** for each pass line, name whether it judges what the player gets or a safety margin, and say before the run what each result means.
+
+## Lesson 243: Gate a way up against the player journey the specs already decided
+
+In the Task 61a gate, "walking down facing out drops to the pillow" was graded as a fail. But spec 5 already makes letting go of a tie and dropping onto the pillow, with no thud, the way down from his cap. A decided way down was treated as a bug, and hours of fixes were priced for it.
+
+**Do instead:** before the first probe on any way up, game_creator writes the player journey list from the idea and the specs already approved. Only the player's results can fail a gate (reaches the top, stands, no thud, keeps the egg). Inside numbers are notes.

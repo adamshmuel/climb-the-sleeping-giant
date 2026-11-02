@@ -237,6 +237,23 @@ What this project learned the hard way, so it doesn't happen again.
 | 225 | Smoke-run the first case of a Play job before the job runs | `studio-and-scripts.md` |
 | 226 | Test movement only on the real build, and build one side first | `studio-and-scripts.md` |
 | 227 | Route a look along the visible surface, not an invisible guard part | `look-and-art.md` |
+| 228 | In scripts, put a type cast in a local variable, never at the start of a line | `studio-and-scripts.md` |
+| 229 | Test a climb that isn't a truss in the sky first, next to a truss | `world-scenery.md` |
+| 230 | Every climb that isn't one truss needs a PathCheck change | `world-scenery.md` |
+| 231 | A sky copy covers the whole path, and the push stops at the goal | `world-scenery.md` |
+| 232 | A sky copy is in the meadow zone, so its meter hears nothing | `world-scenery.md` |
+| 233 | A shadow meter names each case, not each teleport | `world-scenery.md` |
+| 234 | Compare where every case lets go before judging the ends | `world-scenery.md` |
+| 235 | A climb probe includes a player who freezes | `world-scenery.md` |
+| 236 | Put a landing under where climbers really stand at the top | `world-scenery.md` |
+| 237 | Check every stretch of a bent climb against both limits | `world-scenery.md` |
+| 238 | Shape a hidden climb to the engine's limits, not to the look | `world-scenery.md` |
+| 239 | Every climb probe includes a climb down | `world-scenery.md` |
+| 240 | A hidden climb catches nobody walking off facing out | `world-scenery.md` |
+| 241 | Measure each limit only over the zone its pass line names | `studio-and-scripts.md` |
+| 242 | Say what each pass line judges, before the run | `world-scenery.md` |
+| 243 | Gate a way up against the player journey the specs already decided | `world-scenery.md` |
+| 244 | Test the bare shape of a way up against every player move before dressing it | `look-and-art.md` |
 
 | File | What it covers |
 |---|---|

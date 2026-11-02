@@ -88,3 +88,9 @@ About how the game looks, the art and models, and approving a design. The map of
 ## Lesson 227: Route a look along the visible surface, not an invisible guard part
 - **What happened:** the cap-tie climb test read "the cap's side" from a ray hit, but the part hit was `CapSideLeft_28`, an invisible guard plate up to 7 studs outside the visible cap. A tie routed along the plates framed his face with striped poles from the front, which looked worse (2026-11-02).
 - **Do instead:** before routing anything along a character, check whether each hit part is visible. Leave guard and collision-only parts out of the look route, and list the ones the new part must replace.
+
+## Lesson 244: Test the bare shape of a way up against every player move before dressing it
+
+In Task 61a, the cap tie's look was designed first. Then each gate found a player move it failed: a freeze, a push off the line, a climb down facing out. Each one cost a new round.
+
+**Do instead:** before mocking up any way up, list every player move on it (up, freeze, off the line, down facing in and facing out, jump off). Test the bare shape against all of them in one sky test, then dress it.

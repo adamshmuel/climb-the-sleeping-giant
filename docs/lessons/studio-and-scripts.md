@@ -668,3 +668,13 @@ In Task 58e Step 4b (2026-11-02), a builder read tools/world/08-route.luau (986 
 ## Lesson 226: Test movement only on the real build, and build one side first
 - **What happened:** the cap ties' mockup was built for looks and then used as a climb test. It could not be climbed, and a pass on it would not have proved the real build anyway. Fixing the mockup first would have cost about 100 tool calls before the real build (product ruling, 2026-11-02).
 - **Do instead:** a mockup is for looks only. Climbing, walking and slipping are tested on the real build. When a pair is built (left and right), build one side, climb-check it, then mirror it, so a finding reworks one side, not two.
+
+## Lesson 228: In scripts, put a type cast in a local variable, never at the start of a line
+- **What happened:** StyLua joined a line that started with `(x :: Instance)` onto the call on the line above. The script broke with no lint error, and the builder had to find it by hand (Task 61a step 1, 2026-11-02).
+- **Do instead:** write the cast as `local x = y :: Instance` and use `x`. Never start a line with `(`.
+
+## Lesson 241: Measure each limit only over the zone its pass line names
+
+In the Task 61a gate, the "Rails hold" line was about the railed strip (y 100 to 110). But the job kept one running maximum up to y 111, past the rails' top, and logged no height. So nobody could tell where the 6.17-stud drift happened, and the gate's result was unclear.
+
+**Do instead:** a job measures each limit only over the zone its pass line names. It also logs the height where the limit is first crossed.
