@@ -255,3 +255,19 @@ In Task 58e code_lead wrote "proven in Task 58d" in a handoff. The handoff check
 ## Lesson 210: Agents ordered work by excuses until one checklist banned them
 - **What happened:** ordering tests 4 and 5 put work before an open decision with "it's far from the change", "under every option it will look like this" and "the test reruns, so it will catch it". Rules spread over several agent files didn't stop it (2026-11-02).
 - **Do instead:** every agent that orders work follows the `order-the-work` skill step by step and shows its answers, including the table of reasons that never count. A new excuse found in a test becomes a new row in that table.
+
+## Lesson 211: A "Stands on:" line can't name a decision that is still open
+- **What happened:** the plan check fails any "Stands on:" line that contains the word "open", so code_lead could not write "Adam's open pick between A and B" on Task 61 (2026-11-02).
+- **Do instead:** the "Stands on:" line names the decision ("Adam's pick between option A and option B"), and a "Status: can't start" line right under it says it is still open. The main chat reads that line before starting the task.
+
+## Lesson 212: A Studio step with no spare call can't absorb one failed call
+- **What happened:** Task 60 Step 5 planned exactly 20 Studio calls against a cap of 20. One device call failed (orientation set before the device) and one did nothing, so the last phone shot was left for a resume (2026-11-02).
+- **Do instead:** a Studio step plans at least one spare call per Play session under its cap. The handoff spells out the setup order where one call fails without the other (set the device, then the orientation).
+
+## Lesson 214: Job-script checks don't fit spec files
+- **What happened:** Task 60 Step 7's handoff told the builder to run `scripts/job-check.sh` on three spec files. Its job-script rules (300 lines, no line starting with "(") failed on code already in those files, and the step stopped for a ruling (2026-11-02).
+- **Do instead:** a handoff names `job-check.sh` only for job and world scripts. Spec files pass on StyLua, selene and `luau-lsp analyze`, then their narrow run.
+
+## Lesson 215: A red world test can come from an old drift, not the newest change
+- **What happened:** after Task 60 took the face ladders off, a Zones test missed 12 standing spots. The ladders weren't the cause: the zone box `Beard_Head` had moved away from where `tools/world/02-zones.luau` puts it, some time after Task 58e (2026-11-02).
+- **Do instead:** when a world test turns red, first compare the live parts it reads with their build script's values, before blaming the newest change.

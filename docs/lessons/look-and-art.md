@@ -60,3 +60,7 @@ About how the game looks, the art and models, and approving a design. The map of
 - **What happened:** Task 60 Step 1 (phone before shots, 2026-11-02) went 6 calls over its cap. A one-time `CameraType = Scriptable` and CFrame set doesn't hold in Play, because the game's camera script puts it back, and `SetOrientationAsync` errors when no device is set. The builder found the fix by trial.
 - **Do instead:** every shot step quotes the method: set the phone device in Edit before Play, then the orientation; in Play, hold the camera with a RenderStepped loop run from `execute_luau` (it ends when Play stops). Shots are 1210x558 from the built-in iPhone 14, landscape, FOV 70.
 - **Who checks:** `code_lead` (shot steps in handoffs), `designer` (`look-cameras.md`).
+
+## Lesson 213: Routes laid across a main character's face hide his charm
+- **What happened:** the beard and cap ladders crossed the giant's face and stuck up above his cap in the first view. When they came off, the designer judged all 10 before-and-after pairs "better": his nose, eyes, moustache and beard tuft show again (Task 60, 2026-11-02).
+- **Do instead:** put routes beside a main character's face, never across it, and check the first view from the front before building.

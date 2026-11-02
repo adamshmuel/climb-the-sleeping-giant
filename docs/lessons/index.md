@@ -220,6 +220,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 208 | Split a world-script step by layer before ordering it | `teamwork.md` |
 | 209 | A task ends at its own goal | `teamwork.md` |
 | 210 | Agents ordered work by excuses until one checklist banned them | `teamwork.md` |
+| 211 | A "Stands on:" line can't name a decision that is still open | `teamwork.md` |
+| 212 | A Studio step with no spare call can't absorb one failed call | `teamwork.md` |
+| 213 | Routes laid across a main character's face hide his charm | `look-and-art.md` |
+| 214 | Job-script checks don't fit spec files | `teamwork.md` |
+| 215 | A red world test can come from an old drift, not the newest change | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
