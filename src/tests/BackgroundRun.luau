@@ -1,21 +1,25 @@
 --!strict
 -- Starts a test run in the background and fetches a short report later (Lessons 22, 29 and 51).
 -- A full run holds Studio for about a minute, so the caller starts it, waits, then fetches once. The state lives in
--- attributes (named values) on `folder`: Status ("running" or "done"), Done (spec files finished) and Report.
--- The report always stays under 900 characters, because Studio cuts a result at 1024 and the counts and the extra
--- line (for example a scan result) must never be cut off.
+-- attributes (named values) on `folder`: Status ("running" or "done"), Done (spec files finished), Page1, Page2 ...
+-- (the report, one page per fetch), PageCount and PageNext. Every page stays under 900 characters, because Studio
+-- cuts a result at 1024 and the counts and the extra line (for example a scan result) must never be cut off. The
+-- attributes are cleared only when the last page is fetched.
 export type Runner = (filter: string?, progress: (number) -> ()) -> any
 export type Deps = { runner: Runner, folder: Instance, extra: (() -> string)? }
 export type Run = { start: (filter: string?) -> string, fetch: (maxWait: number) -> string }
 
 local PlainText = require(game:GetService("ServerStorage").Tests.PlainText)
 
-local REPORT_LIMIT = 880 -- characters: a safe margin under the 900 the report must stay below
+local REPORT_LIMIT = 899 -- characters per page: the most that stays under 900
 local NAME_LIMIT = 100 -- characters kept of each failed test's name
 local WHY_LIMIT = 150 -- characters kept of each failed test's first failure message
 local EXTRA_LIMIT = 200 -- characters kept of the extra line
 local ERROR_LIMIT = 300 -- characters kept of an error message
-local MORE_LINE_RESERVE = 24 -- room kept free for the closing "and N more" line
+local MESSAGE_NAME_LIMIT = 40 -- characters kept of a failed test's name on its message line
+local POINTER_RESERVE = 51 -- room kept free on a page for its "more on the next page" line (and its line break)
+local MESSAGE_PAGES = 2 -- most pages that failure messages may add after the last page of names
+local LEFT_OUT_RESERVE = 31 -- room kept free for the "messages left out for N tests" line (and its line break)
 local POLL_SECONDS = 0.1
 
 local BackgroundRun = {}
@@ -57,54 +61,74 @@ local function failures(results: any): { Failure }
 	return found
 end
 
--- The first line, the counts, the extra line, then every failed test's name that fits (names first), then the
--- messages for the earliest names while room is left, then "and N more" only when even the names did not fit.
-local function buildReport(results: any, extraLine: string?): string
+-- The report as a list of pages, each under the limit. Page 1 starts with the first line, the counts and the extra
+-- line. Then come every failed test's name (never dropped: a full page ends with a pointer to the next one), then,
+-- the messages of the earliest failures while room is left (at most MESSAGE_PAGES more pages). The last page ends with "end of report".
+local function buildPages(results: any, extraLine: string?): { string }
 	local passed: number = results.numPassedTests or 0
 	local failed: number = results.numFailedTests or 0
 	local broken: number = results.numRuntimeErrorTestSuites or 0
 	local failedSuites: number = results.numFailedTestSuites or 0
 	local total: number = results.numTotalTests or 0
 	local ok = failed == 0 and broken == 0 and failedSuites == 0 and total > 0
-	local lines: { string } = {
+	local head: { string } = {
 		if ok then "TESTS PASSED" else "TESTS FAILED",
 		`{passed} passed, {failed} failed, {broken} suites could not run`,
 	}
 	if extraLine ~= nil and extraLine ~= "" then
-		table.insert(lines, cut(extraLine, EXTRA_LIMIT))
+		table.insert(head, cut(extraLine, EXTRA_LIMIT))
 	end
-	local length = #table.concat(lines, "\n")
+	local pages: { { string } } = { head }
+	local budget = REPORT_LIMIT - POINTER_RESERVE -- every page keeps room for its closing line
+	local length = #table.concat(head, "\n")
+	local function place(line: string, room: number): boolean
+		if length + 1 + #line <= room then
+			table.insert(pages[#pages], line)
+			length += 1 + #line
+			return true
+		end
+		return false
+	end
 	local found = failures(results)
-	local firstName = #lines + 1
-	local shown = 0
-	for index, failure in found do
+	for _, failure in found do
 		local line = `FAILED: {failure.name}`
-		local isLast = index == #found
-		local room = REPORT_LIMIT - length - 1 - (if isLast then 0 else MORE_LINE_RESERVE)
-		if #line > room then
-			break
+		if not place(line, budget) then
+			table.insert(pages, { line })
+			length = #line
 		end
-		table.insert(lines, line)
-		length += #line + 1
-		shown += 1
 	end
-	local reserve = if shown < #found then MORE_LINE_RESERVE else 0
-	for index = 1, shown do
-		local why = found[index].why
-		if why == nil then
-			continue
+	local messages: { string } = {}
+	for _, failure in found do
+		if failure.why ~= nil then
+			table.insert(messages, `{cut(failure.name, MESSAGE_NAME_LIMIT)} | {failure.why}`)
 		end
-		local extra = 3 + #why -- the " | " and the message
-		if length + extra > REPORT_LIMIT - reserve then
-			break
+	end
+	local lastNamePage = #pages
+	local added = 0
+	for index, message in messages do
+		local onLastPage = #pages - lastNamePage >= MESSAGE_PAGES
+		local room = if onLastPage and index < #messages then budget - LEFT_OUT_RESERVE else budget
+		if not place(message, room) then
+			if onLastPage then
+				break
+			end
+			table.insert(pages, { message })
+			length = #message
 		end
-		lines[firstName + index - 1] ..= ` | {why}`
-		length += extra
+		added += 1
 	end
-	if shown < #found then
-		table.insert(lines, `and {#found - shown} more`)
+	if added < #messages then
+		table.insert(pages[#pages], `messages left out for {#messages - added} tests`)
 	end
-	return table.concat(lines, "\n")
+	local texts: { string } = {}
+	for index, page in pages do
+		table.insert(
+			page,
+			if index < #pages then `more on the next page: fetch again (page {index} of {#pages})` else "end of report"
+		)
+		table.insert(texts, table.concat(page, "\n"))
+	end
+	return texts
 end
 
 function BackgroundRun.new(deps: Deps): Run
@@ -117,7 +141,7 @@ function BackgroundRun.new(deps: Deps): Run
 	end
 
 	local function runAndStore(filter: string?)
-		local ok, outcome = pcall(function(): string
+		local ok, outcome = pcall(function(): { string }
 			local results = deps.runner(filter, function(done: number)
 				folder:SetAttribute("Done", done)
 			end)
@@ -126,10 +150,16 @@ function BackgroundRun.new(deps: Deps): Run
 				local extraOk, extraResult = pcall(deps.extra)
 				extraLine = if extraOk then tostring(extraResult) else `extra line failed: {tostring(extraResult)}`
 			end
-			return buildReport(results, extraLine)
+			return buildPages(results, extraLine)
 		end)
-		local report = if ok then outcome else `TESTS FAILED\n{cut(tostring(outcome), ERROR_LIMIT)}`
-		folder:SetAttribute("Report", report)
+		local pages: { string } = if ok
+			then outcome
+			else { `TESTS FAILED\n{cut(tostring(outcome), ERROR_LIMIT)}\nend of report` }
+		for index, page in pages do
+			folder:SetAttribute(`Page{index}`, page)
+		end
+		folder:SetAttribute("PageCount", #pages)
+		folder:SetAttribute("PageNext", 1)
 		folder:SetAttribute("Status", "done")
 	end
 
@@ -156,9 +186,15 @@ function BackgroundRun.new(deps: Deps): Run
 		if folder:GetAttribute("Status") ~= "done" then
 			return `running, {folder:GetAttribute("Done") or 0} spec files done`
 		end
-		local report = tostring(folder:GetAttribute("Report"))
-		clear()
-		return report
+		local pageIndex: number = folder:GetAttribute("PageNext") or 1
+		local count: number = folder:GetAttribute("PageCount") or 1
+		local page = tostring(folder:GetAttribute(`Page{pageIndex}`))
+		if pageIndex >= count then
+			clear()
+		else
+			folder:SetAttribute("PageNext", pageIndex + 1)
+		end
+		return page
 	end
 
 	return { start = start, fetch = fetch }
