@@ -146,40 +146,210 @@ These come from product's order (its Steps 6 to 9). No code is written for them.
 3. Adam picks A or B.
 4. product updates the specs for the pick (Rule 101 and spec 5's way to the cap), and says which plan builds the ear ladders.
 
-## Task 61: The chosen ear ladders are built
+## The rest of Part 7 after the second red alert (rewritten 2026-11-02)
 
-Stands on: Task 60, Adam's pick between option A and option B, product's spec update for that pick.
+Product's decision: `work/red-alert-plan7/decision.md`. The way up stays the hidden climb, which passed every climb-up case at the gate (`work/ear-ladders/t61a-gate-result.md`). The way home is **the quiet drop onto the pillow**, which spec 5 already chose. Climbing down facing the tie still works, but no test grades it.
 
-- **Status: can't start.** Adam's pick is still open (2026-11-02), and so is the spec update after it. The main chat checks this line before starting (`agent-workflow.md`, "Order work by what it stands on").
-- **Which plan holds it** is product's question: the spec index gives the ear ladder build to spec 5 (Egg nests and climbing). If product rules spec 5, this task moves to that plan with the same "Stands on:" line.
-- **What it's for:** core gameplay. It brings back the only way up to his cap (the Legendary eggs and the Dream Egg), and it touches the first view.
-- **Spec rules:** Rule 101 (Ladders hold you), Rule 20 (One collision source), Rule 24 (A bot walks every way), as product rewrites them for the pick.
-- **How big:** starting size 6 steps, about 40 Studio calls, 4 h. code_lead sets the real size when the spec update is written; a seventh step means a new task.
-- **Files:** a new world script for the chosen ladders, their tests, and the tests about ladders in general pointed at them (never deleted before): `LadderWidth.spec`'s real-world describe, `WalkPieces.spec`'s two ladder tests, `Zones.spec`'s two eye tests, `BrimFill.spec`, `SlideGuardsReal.spec`, `OnTheGiant.spec`'s "each ladder joins its two ends", and the ladder legs in `scripts/bot-walk/`.
-- **Failing test first:** the tests above, pointed at the new ladders, fail before the ladders are built and pass after.
-- **Look check (product's Step 12, the last steps of this task):** Task 60's after shots are the "before" shots. The same cameras after the build, any `Workspace.Mockup_*` folder hidden; designer judges each pair before the commit.
-- **Lessons:** Lesson 153 (a ladder's climbable part is as wide as the ladder the player sees), Lesson 190, Lesson 193.
+**Cut:** the turn helper and its re-gate; the guided climb (the game moving the climber up and down the tie); grading a climb down each tie; Task 61c as its own task (its tie tests go into Task 61b, its computer and phone Play into Task 63); the 10-second stand in the climb checks (the gate proved it); pushing each side twice; 12 of designer's 16 close shots.
 
-## Task 62: Belly_4 and Rare eggs 3 and 4 go back, and walk both ways
+**Hours left: about 18.5** (time so far plus this is about 23 h, under the 26 h limit). Each task's hours are below.
 
-Stands on: Task 61.
+| Order | Piece | Hours | Stands on |
+|---|---|---|---|
+| 1 | Step 61s: the spec lines (product) | product's own | the decision |
+| 2 | Task 61d: a drop from the cap onto the pillow is quiet, with a puff | 1.5 | Step 61s |
+| 3 | Task 61e: the rails rerun | 0.4 | the decision |
+| 4 | Task 61a: the left tie built with the hidden climb, plus the trimmed climb checks | 5.75 | Step 61s, Task 61e |
+| 5 | Task 61f: the left tie is closed: the real drop and the close shots | 0.75 | Task 61d, Task 61a |
+| 6 | Task 61b: the right tie mirrors the left, with the tie tests | 3.5 | Task 61f |
+| 7 | Task 62a: `RoutePoint_Belly_4` goes back | 1 | Task 61b |
+| 8 | Task 62b: Rare eggs 3 and 4 go back | 2 | Task 61b, Task 62a |
+| 9 | Task 63: the whole play is checked once | 3.5 | Task 61d, Task 61b, Task 62a, Task 62b |
+
+## Step 61s: The spec lines (product)
+
+Stands on: product's red alert decision (`work/red-alert-plan7/decision.md`, final).
+
+- **Status:** done by product on 2026-11-02, so the tasks below are checked against it.
+  - `stuck-safety.md`, Rule 101 (Ladders hold you), at line 209: a climber going home reaches the pillow from each tie's landing by walking off it or letting go, with no thud and the carried egg kept.
+  - `stuck-safety.md`, line 78: the rails' drift is judged in designer's close shots, not by a number.
+  - `egg-nests-and-climbing.md`, Rule 8 (Steps make noise), at line 118: the quiet drop onto the pillow, with the soft-landing puff (Rule 33: What a rescue looks like). The jump row, at line 239, says a jump off the cap still thuds. The "CapDrop" event is at line 399.
+
+## Task 61d: A drop from the cap onto the pillow is quiet, with a puff
+
+Stands on: Step 61s (the spec lines, done).
+
+- **What it's for:** core gameplay. It is the way home from the Legendary eggs. Today the landing check thuds any fast fall from the cap, which can wake him on the run that carries the best egg in the game.
+- **Spec rules:**
+  - Spec 5's Rule 8 (Steps make noise), the piece about his head: a fall with no jump that starts on his cap, a cap tie or a tie's landing and stops on the pillow, his shoulders or his belly adds no thud, only the step noise for its length. A jump still thuds (spec 5's jump row). A fall that ends in the meadow still thuds.
+  - Rule 33 (What a rescue looks like): the same puff shows where such a drop lands on the pillow.
+  - Spec 5's analytics event "CapDrop" (spec 5, line 399): logged on every drop from the cap onto the pillow. It records whether the player walked off or jumped, whether the drop woke him, and whether they carried an egg.
+- **Moved here from spec 5's plan** (`docs/plans/v2/egg-nests-and-climbing.md`, Task 26, way down 1 "His head"), so it is built once. Plan 5's Task 26 keeps the boot and side ladders and the belly's raised strip.
+- **Files:** `src/server/Players/LandingDetector.luau` (a finished fall says whether it is the quiet drop from the head), `src/server/Players/PlayerTracker.luau` (where the fall began and ended), `src/shared/Config.luau`, the server's analytics module for "CapDrop", the puff through `src/client/Fx/RescueFx.luau`, and their tests. The step 1 handoff names the exact functions, after reading them.
+- **Failing tests first** (pure, fake falls, each red before the change):
+  1. Walking off a tie's landing onto the pillow: no thud.
+  2. Letting go of a tie halfway up, landing on the pillow: no thud.
+  3. The same drop ending in the meadow: one Nightcap thud.
+  4. A jump off the cap: one thud, wherever it lands.
+  5. A quiet drop adds the step noise for its length, plus the carried egg's extra, and no more.
+  6. "CapDrop" is logged once per drop with its three fields.
+  7. A quiet drop asks for the puff at the landing spot. A thudding drop doesn't.
+- **Whole-session test** (`tdd.md`): a new player climbs a tie, takes a Legendary egg, drops off the landing onto the pillow, and walks home over his shoulder. There is no thud on the way, the egg is kept, and the meter at home is what the walking alone adds.
+- **What the player sees:** the puff on the pillow. Its look is checked on the real tie in Task 61f, with before and after shots.
+- **How big:** 4 steps, about 1.5 h:
+  1. red tests (Sonnet);
+  2. the change, then a narrow run (Sonnet);
+  3. the full run (Haiku, the runner);
+  4. code_lead's review.
+- **Lessons:** 232 (a sky copy's meter hears nothing, so the real drop is checked on the real tie), 240, 241.
+
+## Task 61e: The rails rerun
+
+Stands on: product's red alert decision (`work/red-alert-plan7/decision.md`, final). The trial climb's shape is final in the trial scripts.
+
+- **What it's for:** core gameplay. It decides whether Task 61a builds the rails.
+- **What it does:** on the sky copy, run the gate's case 5 (pushing 25° toward his ear) twice:
+  - **With the rails**, judged only from feet y 100 to 110 (Lesson 241). The job also logs the z when the feet pass y 110 and the height where the drift first passes 1.85.
+  - **With no rails.**
+
+  If the no-rails case also ends on the cap with no drop over 2, the rails come out.
+- **Files:** none in `src/` or `tools/`. A trial job in `work/ear-ladders/`, made from the gate job.
+- **How big:** 1 step, about 8 Studio calls, about 14 tool calls, 0.4 h. Smoke run first (Lesson 225). Sonnet.
+- **Lessons:** 225, 231, 232, 233, 241.
+
+## Task 61a: The left cap tie is built and climbs
+
+Stands on: Step 61s (the spec lines, done), Task 61e (rails in or out), Step 61-0 (designer's measured route table, `work/ear-ladders/tie-route-table.md`, final), product's ruling (`work/ear-ladders/climb-test/product-ruling-2a.md`, final).
+
+- **Status:** Steps 1 and 2 are done. `CapTieLeft` is built by script 20 as a solid strap with knots, and `CapTies.spec` has 7 tests, all green. The gate (`work/ear-ladders/t61a-gate-result.md`) proved the hidden climb on the sky copy. What is left builds that climb into the real tie.
+- **What it's for:** core gameplay. The ties are the only way up to his cap (the Legendary eggs and the Dream Egg). One side is built first, so a finding reworks one tie, not two (Lesson 226).
+- **Spec rules:**
+  - Rule 101 (Ladders hold you): starts on his body, climbable where it shows, ends on a landing, catches a miss;
+  - Rule 20 (One collision source);
+  - section 5's tie rows, and the top-out creep row.
+- **What changes in script 20:**
+  - the strap, knots and stripes become look-only;
+  - the hidden upright truss pair goes to y 84.4, then the 4.6° stretch to y 100;
+  - the hidden walk strip, made of copies of `Strap_04` to `Strap_06`;
+  - the rails, only if Task 61e keeps them.
+  
+  The numbers are those of the gate job's script A (`work/ear-ladders/t61a-gate-job.md`).
+- **Files:** `tools/world/20-cap-ties.luau`, `src/tests/server/World/RealWorld/CapTies.spec.luau`.
+- **Failing test first:** `CapTies.spec` tests for the hidden climb: the strap and knots don't collide, the trusses follow the measured faces within the stretch limits, and the strip lies within 0.2 of the knots. They are red before script 20 reruns, and green after.
+- **Trimmed climb checks** (on the real tie):
+  - 13° and 25° off the line, once each side;
+  - the camera log;
+  - a second climber on the tie at the same time;
+  - a walk across the rail tops from the cap side, only if the rails stay.
+  
+  The 10-second stand is not repeated: the gate proved it.
+- **Before and after shots:** the gate 1 fixed cameras, computer and phone. The before shots taken in Step 2 still stand. The after shots come after the rebuild, and designer judges each pair before the commit.
+- **How big:** 5 steps, about 5.75 h:
+  1. red tests (Sonnet);
+  2. script 20 rerun with the hidden climb, then a narrow run (Sonnet);
+  3. the trimmed climb checks, smoke run first (Sonnet);
+  4. the full run (Haiku);
+  5. after shots, then designer judges them (Sonnet, then Opus).
+- **Accepted reds until Task 61b:** the general ladder tests listed under Task 61b. They read both ties, so they are pointed at the ties once, when both are final.
+- **A finding that changes a number** stops the task. Product writes it into section 5 first, then script 20 reruns, in a new numbered task.
+- **Lessons:** 76, 120, 153, 166, 190, 222, 223, 224, 225, 226, 227, 234, 241.
+
+## Task 61f: The left tie is closed: the real drop and the close shots
+
+Stands on: Task 61d (the quiet drop and puff), Task 61a (the left tie built).
+
+- **What it's for:** core gameplay. It checks the way home on the real tie, with the real landing check. The gate's sky copy couldn't hear the drop (Lesson 232).
+- **What it does:** Play, sound muted, the real sleep meter. On the real left tie:
+  - walking off the landing with an egg: quiet, the puff shows, the egg is kept, and "CapDrop" is logged;
+  - letting go halfway: quiet;
+  - a jump off the cap: one thud.
+
+  Then designer's 4 close shots (`tie-top-side` and `tie-top-front`, computer and phone), which also show whether a climber drifts off the strap.
+- **Before and after shots:** the pillow from the fixed cameras that show it (`docs/design/v2/look-cameras.md`), computer and phone, with the puff showing in the after shots. designer judges the puff and the 4 close shots before the commit.
+- **How big:** 2 steps, about 12 Studio calls, 0.75 h:
+  1. the Play drops and shots (Sonnet);
+  2. designer judges them (Opus).
+- **Lessons:** 225, 232, 240.
+
+## Task 61b: The right cap tie mirrors the left, with the tie tests
+
+Stands on: Task 61f (the left tie closed), and any section 5 number Task 61a changed.
+
+- **What it's for:** core gameplay and fairness. The right side gets the same climb and the same way home as the left.
+- **Spec rules:**
+  - Rule 101 (Ladders hold you): fair mirror twins;
+  - Rule 20 (One collision source);
+  - Rule 24 (A bot walks every way), for the ladder tests;
+  - section 5's tie rows and the "Path from each landing to the cap nests" row.
+
+  Product's ruling: `CapSideRight_28` is removed whole.
+- **Files:**
+  - `tools/world/20-cap-ties.luau`, run with `Side` = "Right", the same script mirrored;
+  - `CapTies.spec.luau`, the same tests for the right tie;
+  - the general ladder tests, moved here from Task 61c and pointed at both ties (never deleted): `PlayerNeeds.luau` (`LADDER_NAMES`), `WalkFacts.ladderEndSpots`, `LadderWidth.spec`'s real-world describe, `WalkPieces.spec`'s two ladder tests, `Zones.spec`'s two eye tests, `BrimFill.spec`, `SlideGuardsReal.spec`, and `OnTheGiant.spec`'s "each ladder joins its two ends".
+- **Failing test first:** the right-tie tests and the general ladder tests, red before script 20 runs on the right.
+- **Climb checks on the right:**
+  - straight;
+  - a stop of 10 s at y 102;
+  - 25° off the line, each side;
+  - the drop off the landing (quiet, with the puff).
+- **The `_20` and `_36` plates stay.** If a check finds a hang or wedge next to one, it gets the normal fix (Rule 20).
+- **Before and after shots:** gate 8's fixed cameras, computer and phone. designer judges each pair before the commit.
+- **How big:** 6 steps, about 3.5 h:
+  1. red tests (Sonnet);
+  2. before shots, then the right tie built (Sonnet);
+  3. the climb checks, smoke run first (Sonnet);
+  4. the full run (Haiku);
+  5. after shots (Sonnet);
+  6. designer judges (Opus).
+- **Lessons:** the same as Task 61a.
+
+## Task 62a: `RoutePoint_Belly_4` goes back
+
+Stands on: Task 61b (both ties final).
+
+- **What it's for:** core gameplay. The footprint line from the belly crest leads to the tie.
+- **How big:** 2 steps, about 5 Studio calls, 1 h:
+  1. put it back with `tools/world/08-route.luau` at its last commit, run from a clone (Haiku);
+  2. a narrow run of `OnTheGiant` (Haiku).
+
+  The names check (2026-11-02) found a `RoutePoint_Belly_4` already in Workspace, so the first call reads where it is before anything moves.
+
+## Task 62b: Rare eggs 3 and 4 go back, and walk both ways
+
+Stands on: Task 61b, Task 62a.
 
 - **What it's for:** core gameplay. Rare eggs 3 and 4 must be reachable both ways with no jump (game_creator, 2026-11-02: no accepted red).
 - **Spec rules:** Rule 24 (A bot walks every way), with game_creator's Rare egg condition.
-- **How big:** 5 steps, about 16 Studio calls, 2 h.
-- **Steps, in this order** (product's Steps 13 to 16; putting back is placing, so each waits for the ear ladders):
-  1. `RoutePoint_Belly_4` back: `tools/world/08-route.luau` at its last commit, run from a clone (Haiku, 1 Studio call).
-  2. Rare eggs 3 and 4 back to (-8.1, -30.7) and (2.5, -30.5): `tools/world/04-egg-spots.luau` at its last commit (Haiku, 1 Studio call).
-  3. The Rare egg walk test goes back into `OnTheGiant.spec.luau` from `work/remove-face-ladders/rare-egg-walk-test.luau` (if that file is lost: `work/t60/old-58b-58e.diff` lines 1734 to 1790, with Step 2's wording), then a narrow run of `OnTheGiant` (Sonnet, 3 Studio calls). If a spot fails, the Rare spot table: try points on the flat line toward `RoutePoint_Belly_4`, every 0.5 studs, up to 4 studs; the closest that passes is written into `EggSpots.spec.luau` first (red), then into `RARE_SPOTS` in script 04. None within 4 studs: stop for a ruling. If `RoutePoint_Belly_4` itself is red, it goes to product before Gate 4.
-  4. A narrow run of `EggSpots.spec` (Haiku, 3 Studio calls): it reads the Rare spots' final places, so it runs after the last move.
-  5. If an egg moved: before shots (Task 61's after shots) and after shots of that egg, computer and phone, and designer judges them before the commit (Sonnet, about 6 Studio calls).
-- **Changed from product's order:** product put the after shots of a moved egg in its Step 17 (the whole-play check). They move here, because a look change is judged before its own commit (`agent-workflow.md`, "Before and after"). They stand on the same thing: the egg's last move.
+- **How big:** 4 steps, about 13 Studio calls, 2 h:
+  1. the eggs back to (-8.1, -30.7) and (2.5, -30.5) with `tools/world/04-egg-spots.luau` at its last commit (Haiku);
+  2. the Rare egg walk test back into `OnTheGiant.spec.luau` from `work/remove-face-ladders/rare-egg-walk-test.luau`, then a narrow run (Sonnet). If a spot fails, use the Rare spot table: try points every 0.5 studs toward `RoutePoint_Belly_4`, up to 4 studs, red test first. If none works within 4 studs, stop for a ruling;
+  3. a narrow run of `EggSpots.spec` (Haiku);
+  4. if an egg moved, before and after shots of it on computer and phone, judged by designer before the commit (Sonnet).
 
 ## Task 63: The whole play is checked once
 
-Stands on: Task 62, Task 61.
+Stands on: Task 61d, Task 61b, Task 62a, Task 62b.
 
-- **What it's for:** core gameplay safety. A check of the whole play (stuck scan, bot walk, full test run) reads the ways up, the eggs and the gardens together, so it runs once, after every change to them.
-- **Spec rules:** Rule 21 (The stuck scan runs on every test run), Rule 24 (A bot walks every way).
-- **How big:** 2 steps, about 14 Studio calls, 2 h: the full run (Haiku, the runner, 4 Studio calls), then the bot walk with its new ladder legs (Sonnet, about 10 Studio calls, with a dry start).
-- **Pass:** the full run has 0 failed: no accepted red is left. The bot walks every way, including both ear ladders. Only after this do the eggs on his cap, a player playtest and Gate 4 follow.
+- **What it's for:** core gameplay safety. A whole-play check (stuck scan, bot walk, full test run, Play on computer and phone) reads the ways up, the way home, the eggs and the gardens together, so it runs once, after every change to them.
+- **Spec rules:**
+  - Rule 21 (The stuck scan runs on every test run);
+  - Rule 24 (A bot walks every way);
+  - Rule 101 (Ladders hold you): its proof list (the reach tries from the meadow and the pillow's outer edge must fail; a slip at half height and from the top; real controls on each tie);
+  - section 5's "Left and right home times from the cap" row (within 2 seconds).
+- **How big:** 4 steps, about 26 Studio calls, 3.5 h:
+  1. the full run (Haiku, the runner);
+  2. the bot walk with its new tie legs in `scripts/bot-walk/`: up each tie, home by the drop (Sonnet, with a dry start);
+  3. the left and right carry-home times (Sonnet);
+  4. Play on computer and phone on both ties, moved here from Task 61c: up to the landing, on to the eggs, home by the drop, and the reach tries (Sonnet).
+- **Pass:**
+  - the full run has 0 failed, so no accepted red is left;
+  - the bot climbs up both ties and comes home by the drop;
+  - the home times are within 2 seconds.
+
+  Only then do the eggs go on his cap, followed by a player playtest and Gate 4.
+
+### Checked only by playtesting
+- Section 5's "Knot shape" trigger: fewer than half of the new players who reach the belly crest climb a tie within 2 minutes.
+- Section 5's fold trigger: a player using real controls slips off the fold in the build review.
+- Spec 5's jump row: if more than 1 in 4 of the drops from the cap to the pillow are jumps that wake him, game_creator rules on making that jump quiet ("CapDrop" counts them).
