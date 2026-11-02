@@ -1,6 +1,6 @@
 # V2 plans: Heist update
 
-How the V2 specs (`docs/specs/v2/index.md`) get built. One plan file per spec, each a list of small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`.
+How the V2 specs (`docs/specs/v2/index.md`) get built. One plan file per spec, each a list of small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`. Every builder handoff follows `docs/plans/handoff-template.md`.
 
 A plan is not permission to code. Adam said on 2026-10-18 that V2 coding starts once this build plan is done.
 
