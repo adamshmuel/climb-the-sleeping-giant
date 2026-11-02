@@ -186,3 +186,36 @@ The upright ladder design gave its climb trusses (TrussPart) lengths of 33.1 and
 - Before a size goes into a design table, check it against that part class's size rules in the docs (`roblox-docs` skill).
 - If a build script has to round a size, it says so in its report, and the design table and the tests change to the built size.
 - **Who checks:** `designer` (design tables), `code_lead` (handoffs), `builder` (build scripts).
+
+## Lesson 179: A design names a prop by its art-list entry and asset id, checked in a shot
+
+In Task 58b, the ladder design pointed to a part named `nest` without anyone looking at it. Built, it turned out to be a brown plate of waffle cones, so the Dream Egg's nest had to be redone.
+
+- A design names each prop by its art-list entry and its asset id, not by a part's name in the world.
+- Before the design goes out, the designer looks at that prop in a screenshot.
+- **Who checks:** `designer` (in every design table), `code_lead` (in the names check, Lesson 61).
+
+## Lesson 180: Moving a route point checks every link from it
+
+In Task 58b, the rule for moving Belly_4 checked only its clearance and slope. The new foot ledge then cut its walking link to the Belly Crest, and no other spot could fix it.
+
+- Any rule that moves a route point, or puts a new part near one, also runs the walk check (`PathCheck.linkProblem`) on every link from that point.
+- That happens before the plan relies on it, in the names check (Lesson 61).
+- **Who checks:** `code_lead` (in plans and names checks), `designer` (when placing a part beside the route).
+
+## Lesson 184: A shape change looks for the old shape's directions too, not only its part names
+
+In Task 58b the ladders changed from leaning to upright. Step 3 looked for old tests by part name (Climb, Rung) and missed tests that used the leaning shape's directions: the length on `Size.Z`, the rung's own "up", and a truss found above the player. 5 of 13 reds in the full run came from those tests.
+
+- A task that changes a part's shape searches the tests for the part's names **and** for the old shape's directions and axes (`Size.Z`, `LookVector`, `UpVector`, "along the ladder").
+- The handoff lists every test found, with the old direction it uses and the new one.
+- **Who checks:** `code_lead` (in the shape-change handoff), `builder`.
+
+## Lesson 187: Fill a stuck pocket with a solid block, never a thin board
+
+In Task 58e the upright ladders left 12 stuck spots: air rooms 6-10 studs deep behind the trusses, open at the sides. A thin board behind the trusses was the first idea. It could never work: the stuck scan only counts a pocket as sealed by the giant or the Sock, so a board made of ladder parts closes nothing, and the rooms were open at the sides anyway.
+
+- Fill the air with one solid block that meets the parts above and below it, so it leaves no room and no new top face.
+- Give it the look of the giant around it (beard white, cap cream), so the face doesn't change.
+- Check its side walls: where a fill meets a sloping surface, the stuck scan runs again for new grooves.
+- **Who checks:** `designer` (shape and look), `code_lead` (what the scan counts as sealing).

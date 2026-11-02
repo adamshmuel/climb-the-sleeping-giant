@@ -36,3 +36,8 @@ About how the game looks, the art and models, and approving a design. The map of
 - **What happened:** in Task 58b's upright-ladder mockup, designer copied the nest and the Dream Egg and placed them by their pivot point. They landed in the wrong spot, so no shot showed them and their place was given by numbers only (2026-11-01).
 - **Do instead:** place a copied model by its bounding box (`GetBoundingBox`), and print its real position before taking the screenshot.
 - **Who checks:** `designer`.
+
+## Lesson 181: Judge a shot only with what this version spawns
+- **What happened:** in Task 58b Step 5b, the look check put a Rare egg in the nose nest as a stand-in for the Dream Egg, which doesn't spawn until a later version. The egg hid the cap ladder's lowest rungs, and two builds failed on it before anyone noticed no egg spawns there in V2. The library nest was also stored hidden (Transparency 1), so the copy was invisible (2026-11-02).
+- **Do instead:** judge a shot only with what the version really spawns. If a stand-in is needed, name the version it belongs to and judge it as that version's check. Check a copied library model's Transparency before the shot.
+- **Who checks:** `designer` (when it writes the look check), `code_lead` (in the handoff).

@@ -186,6 +186,18 @@ What this project learned the hard way, so it doesn't happen again.
 | 174 | A job script is pasted as written, comment lines aside | `studio-and-scripts.md` |
 | 175 | Count the files a step edits before sizing it | `teamwork.md` |
 | 176 | A design table's sizes follow the part's own size rules | `world-scenery.md` |
+| 177 | A run report lists every failed name before any message | `studio-and-scripts.md` |
+| 178 | A script is pasted as the text of one Studio call, never loaded from elsewhere | `studio-and-scripts.md` |
+| 179 | A design names a prop by its art-list entry and asset id, checked in a shot | `world-scenery.md` |
+| 180 | Moving a route point checks every link from it | `world-scenery.md` |
+| 181 | Judge a shot only with what this version spawns | `look-and-art.md` |
+| 182 | A run report pages every failed name and keeps its results until the end | `studio-and-scripts.md` |
+| 183 | Check the sync of a script whose name has a dot with script_grep | `studio-and-scripts.md` |
+| 184 | A shape change looks for the old shape's directions too, not only its part names | `world-scenery.md` |
+| 185 | The runner reads a script before its Studio call, and never sends a placeholder | `studio-and-scripts.md` |
+| 186 | A measure job keeps the whole message of the one test it needs | `studio-and-scripts.md` |
+| 187 | Fill a stuck pocket with a solid block, never a thin board | `world-scenery.md` |
+| 188 | A red run filters to the step's own tests, and its cap counts every page | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

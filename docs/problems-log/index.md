@@ -18,6 +18,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | A new test hidden by the red break | 1 | 2026-11-01 | `teamwork.md` |
 | A job given to an agent without its tools | 1 | 2026-11-01 | `teamwork.md` |
 | A second task on the same object (ladder width) | 4 | 2026-11-01 | `world-scenery.md` |
+| A full-run report hid failed names (fix queued: the fetch lists every failed name first) | 3 | 2026-11-02 | `studio-and-scripts.md` |
 
 ## Fixed kinds
 

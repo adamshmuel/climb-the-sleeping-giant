@@ -557,3 +557,67 @@ In Task 58b's beard slip rerun, a builder retyped the job scripts without their 
 - Never change, move or drop a code line.
 - The report says when comment lines were left out.
 - **Who checks:** `builder`, `runner`, `code_lead` (in every Play prompt).
+
+## Lesson 177: A run report lists every failed name before any message
+
+In Task 58b's red run, the fetch showed 7 of 11 failed tests, then "and 4 more". So 4 new tests were never seen red. That was the second time the report's size cap hid names.
+
+- The fetch prints every failed test's name, uncut, before any error message text.
+- The size cap applies only to the message text after the names.
+- A red step that can't see every new test's name is not a red. The run is fixed first.
+- **Who checks:** `code_lead` (when judging a red run), `runner` (reports a cut list as a question).
+
+## Lesson 178: A script is pasted as the text of one Studio call, never loaded from elsewhere
+
+In Task 58b Step 5, the main chat's prompt said "paste a big script with the shell". No tool can do that. So the builder ran a local web server, turned on the place's HttpEnabled and loaded the scripts from it: 2 extra Studio calls and a place setting changed for a moment.
+
+- A pasted script goes into `execute_luau` as its own text. Only whole comment lines may be left out (Lesson 174).
+- Never load a script over HTTP, or turn on HttpEnabled or a similar setting, to paste it.
+- If a script is too big for one call, the handoff splits it into parts (Lesson 154). The agent never invents a way round it.
+- A prompt only names ways of working that a tool really has.
+- **Who checks:** the main chat (in every prompt), `code_lead` (in handoffs), `builder`.
+
+## Lesson 182: A run report pages every failed name and keeps its results until the end
+
+In Task 58b's Step 6 run, 5 of 13 failed names were hidden again: the third time. The report's size cap dropped names ("and N more"), and the fetch that saw "done" removed the results folder, so nothing was left to fetch. Studio also cuts any result at 1024 characters.
+
+- The report pages: every failed name comes before any message, and no page says "and N more".
+- A page that isn't the last ends with "fetch again". The runner fetches again until a page ends with "end of report".
+- The results folder is removed only after the "end of report" page.
+- Lesson 177 said what to show. This lesson is how: the same kind three times means the cause gets fixed in the fetch script and its tests, not worked round.
+- **Who checks:** `code_lead` (when judging a run), `runner` (fetches until "end of report").
+
+## Lesson 183: Check the sync of a script whose name has a dot with script_grep
+
+In the fetch-names fix Step 1, `script_read` couldn't find `BackgroundRun.spec`, because its name has a dot. The builder tried other ways and went over its Studio cap (8 calls against 3).
+
+- A sync check of a script whose name has a dot (every `.spec` file) uses `script_grep` for a line that was just changed.
+- Handoffs and prompts name `script_grep` for such checks.
+- A red step budgets one re-run, in case a new test passes by accident the first time.
+- **Who checks:** `code_lead` (in handoffs), the main chat (in prompts), `builder`.
+
+## Lesson 185: The runner reads a script before its Studio call, and never sends a placeholder
+
+Twice in Task 58b a runner (Haiku) made a Studio call that did nothing: in Step 4 a comment-only script, and in Step 7 the word "placeholder" sent before it had read the fetch script. Each one is a wasted call, and a cheap model is more likely to do it.
+
+- The runner reads each script file in its own call first, then pastes that text into `execute_luau`.
+- Every Studio call carries a whole script the prompt names, never a placeholder, a comment-only or an empty one.
+- The rule is in `.claude/agents/runner.md`, step 3.
+- **Who checks:** `runner`, the main chat (counts the runner's Studio calls in each report).
+
+## Lesson 186: A measure job keeps the whole message of the one test it needs
+
+In Task 58b the stuck scan's test message listed its stuck spots after the first 150 characters. The full-run fetch cuts each message short, so the spots were cut off, and a second job had to measure them again.
+
+- A job that needs a test's details (positions, names, counts) runs that one test and keeps its whole message, not the run report's short form.
+- The short form is for pass and fail lines only.
+- **Who checks:** `code_lead` (when it writes a measure job).
+
+## Lesson 188: A red run filters to the step's own tests, and its cap counts every page
+
+Twice on 2026-11-02 a builder's red step went over its Studio cap. In Task 58e Step 2 the builder ran the wide "RealWorld" filter, so the report came in 3 pages, each one a fetch the cap didn't count. The failure messages were still cut short, so it ended with 3 questions instead of fixes.
+
+- A builder's red run uses the narrowest filter: the step's own spec names, so the report fits on one page and keeps each failure message whole.
+- A handoff step's Studio cap counts one fetch per report page it expects.
+- The rule is in `.claude/rules/agent-workflow.md`, "Ready-made run scripts".
+- **Who checks:** `code_lead` (in the handoff), `builder`.
