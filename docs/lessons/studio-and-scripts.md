@@ -648,3 +648,23 @@ In Task 58e Step 4b (2026-11-02), a builder read tools/world/08-route.luau (986 
 - **What happened:** a full-run pass line that named a test in quote marks failed `scripts/job-check.sh`, which rejects any `"` in a Pass line (2026-11-02).
 - **Do instead:** write failing test names in Pass lines without quote marks.
 - **Who checks:** `code_lead` (handoffs and runner jobs).
+
+## Lesson 222: Give a walk bot measured waypoints, and start spots that have a floor
+- **What happened:** climb test job 1 sent the walk bot from the belly to the pillow with no waypoints. Pathfinding took it over the outer shoulder and down the arm, so it looked like the route was blocked. code_lead measured a height map and found a walk with no step over 1.4 studs. Two start spots were guessed: one over a steep plate, one under the cap (2026-11-02).
+- **Do instead:** before any walk test, measure the route (height map plus route search) and give the bot those waypoints. Every start spot comes from a measured floor hit, and the job loads the area first, because the place streams parts in only near the player.
+
+## Lesson 223: A job script's background loop stops on a flag, and a walk script sets the real walk speed
+- **What happened:** climb test job 1c started a 30-second background loop that set the walk speed to 0 at its end. The left walk didn't finish, so the loop kept running into the right side, froze the right walks, and the stuck safety then moved the player. It looked like a route fail (2026-11-02).
+- **Do instead:** every background loop in a job script stops on a flag that the clean-up script sets. A walk script sets the real walk speed from `Config` itself, never a value it saved earlier.
+
+## Lesson 224: Walk tests on the giant hold the sleep meter at 0 and log any move the game makes
+- **What happened:** job 1c's walks ran with the wake rule live. Three bot walks filled the meter, the giant woke and bounced the player to the ground, and it looked like a fall off the cap (2026-11-02).
+- **Do instead:** a walk test that isn't testing noise holds the sleep meter at 0 for that Play session only, and logs any jump over 10 studs in one frame as "moved by the game".
+
+## Lesson 225: Smoke-run the first case of a Play job before the job runs
+- **What happened:** three climb-test jobs in one day failed before testing anything. Each was written from facts nobody had run in the game: guessed start spots (job 1), a loop left running and a wake (job 1c), and a mockup built for looks that no player could climb (job 2a: the bottom rungs lean over the head, and the cap's side sits outside the upper rungs). About 65 tool calls were spent with nothing tested (2026-11-02).
+- **Do instead:** before a Play job runs, a builder runs its first case once, on one side, using the job's own scripts in order (about 6-8 tool calls). Pass: the player climbs 5 studs or reaches the first waypoint, the giant stays asleep, and no loop is left running. The job starts only after this smoke run passes.
+
+## Lesson 226: Test movement only on the real build, and build one side first
+- **What happened:** the cap ties' mockup was built for looks and then used as a climb test. It could not be climbed, and a pass on it would not have proved the real build anyway. Fixing the mockup first would have cost about 100 tool calls before the real build (product ruling, 2026-11-02).
+- **Do instead:** a mockup is for looks only. Climbing, walking and slipping are tested on the real build. When a pair is built (left and right), build one side, climb-check it, then mirror it, so a finding reworks one side, not two.

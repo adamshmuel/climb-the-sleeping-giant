@@ -231,6 +231,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 219 | Measure a body part's edges before placing next to it | `look-and-art.md` |
 | 220 | Measure a disputed fact before weighing two rulings | `teamwork.md` |
 | 221 | A placement list gives measured spots, or says "measure first" | `look-and-art.md` |
+| 222 | Give a walk bot measured waypoints, and start spots that have a floor | `studio-and-scripts.md` |
+| 223 | A job script's background loop stops on a flag, and a walk script sets the real walk speed | `studio-and-scripts.md` |
+| 224 | Walk tests on the giant hold the sleep meter at 0 and log any move the game makes | `studio-and-scripts.md` |
+| 225 | Smoke-run the first case of a Play job before the job runs | `studio-and-scripts.md` |
+| 226 | Test movement only on the real build, and build one side first | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
