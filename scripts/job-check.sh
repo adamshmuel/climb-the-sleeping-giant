@@ -29,6 +29,16 @@ export PATH="$HOME/.rokit/bin:$PATH"
 # the Rare egg check before the ear ladders it depends on were even chosen.
 stands_on_check() {
 	local bad f
+	if [ $# -eq 0 ]; then
+		echo "Plan check FAILED: no files given."
+		return 1
+	fi
+	for f in "$@"; do
+		if [ ! -f "$f" ] || [ ! -r "$f" ]; then
+			echo "Plan check FAILED: can't read $f"
+			return 1
+		fi
+	done
 	bad=$(for f in "$@"; do
 		awk '
 			function name(s) { return match(s, /(Task|Step) [0-9]+[a-z]?/) ? substr(s, RSTART, RLENGTH) : "" }
