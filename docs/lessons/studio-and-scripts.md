@@ -829,3 +829,9 @@ One trace job grew past the 300-line job-file limit once StyLua spread its long 
 Task 61a's Step 2 trace gave up after two turns, with no step back and no shot from the player's camera, so its -20° stop couldn't be judged. This is the same kind of problem as the 2026-11-02 wedge between a ladder and the giant's head.
 
 **Do instead:** every Play trace includes a player's full retries (turn, step back, turn again) and a shot at any stall it reports. Because it happened twice, `scripts/job-check.sh` gets a rule that fails a Play job that can report STUCK without a step back and a stall shot.
+
+## Lesson 302: A trimmed paste voids that call
+
+In Task 61i's Step 1 the builder trimmed the dry run and the read scripts, although the handoff said to paste each script whole. code_lead accepted the result only because the climb script itself was pasted whole.
+
+**Do instead:** a handoff's stop rules say that a trimmed or edited paste voids that call's result. The builder pastes the script exactly as written, or stops and asks.

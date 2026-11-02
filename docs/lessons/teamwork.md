@@ -365,3 +365,9 @@ Plan 7 planned a whole real-controls play (Task 63b, computer and phone) that th
 code_lead's plan 7 rewrite dropped the `tie-top-side` shot. It is on designer's fixed camera list, so only designer can remove it. product caught it.
 
 **Do instead:** before cutting any shot or check, grep `look-cameras.md` and the spec's proof lists. A fixed camera or a listed proof moves to another task, never out.
+
+## Lesson 303: Every promise in a task header has a budgeted step
+
+Task 61h's header promised a quiet fall from the cap onto the cap and the "CapToCapFall" analytics event, but its steps never budgeted either. code_lead found the gap only while writing the handoff, so a new task (61n) was added.
+
+**Do instead:** when a plan is written or rewritten, match each promise in a task header to a budgeted step, and match each analytics event in the spec to a named task.

@@ -311,6 +311,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 299 | When a design pick replaces what a plan fixes, re-plan it | `teamwork.md` |
 | 300 | Check the spec's proof list before planning a proof task | `teamwork.md` |
 | 301 | A fixed camera moves to another task, never out | `teamwork.md` |
+| 302 | A trimmed paste voids that call | `studio-and-scripts.md` |
+| 303 | Every promise in a task header has a budgeted step | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
