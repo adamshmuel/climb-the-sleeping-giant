@@ -178,3 +178,11 @@ Product lowered the ladder bar because the bot's misses ended at the ladder's fo
 Two Task 58b fixes changed the ladder's foot. code_lead then built a test yard in Play: a flat floor and the same ladder at 0, 13, 23 and 30 degrees. Only the upright ladder climbed cleanly; every leaning one flickered and slid off, even on flat ground. The cause was the lean, not the foot.
 
 - Before changing a shape, compare the engine's default behaviour in a bare test yard: a flat floor, the same part at several angles or sizes.
+
+## Lesson 176: A design table's sizes follow the part's own size rules
+
+The upright ladder design gave its climb trusses (TrussPart) lengths of 33.1 and 26.2 studs. The Roblox docs say a TrussPart is 2 x 2 x n studs, with n a multiple of 2, so the engine can't build them. The world script quietly built 34 and 26, while a test still checked 33.1.
+
+- Before a size goes into a design table, check it against that part class's size rules in the docs (`roblox-docs` skill).
+- If a build script has to round a size, it says so in its report, and the design table and the tests change to the built size.
+- **Who checks:** `designer` (design tables), `code_lead` (handoffs), `builder` (build scripts).

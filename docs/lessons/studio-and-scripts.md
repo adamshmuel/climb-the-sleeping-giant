@@ -548,3 +548,12 @@ The first try at Task 58b was dropped, and its code files were put back to Task 
 
 - When a task's code is put back, put its world changes back too, or write them down in the progress row.
 - Before the next full run, check the edit world against what the last commit expects (a read-only names check).
+
+## Lesson 174: A job script is pasted as written, comment lines aside
+
+In Task 58b's beard slip rerun, a builder retyped the job scripts without their comments to save memory. The output matched, but a retyped paste is not the text `code_lead` checked (Lesson 76).
+
+- Paste each job file as written. Only whole comment lines may be left out.
+- Never change, move or drop a code line.
+- The report says when comment lines were left out.
+- **Who checks:** `builder`, `runner`, `code_lead` (in every Play prompt).

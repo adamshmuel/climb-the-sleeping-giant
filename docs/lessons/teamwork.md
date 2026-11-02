@@ -187,3 +187,11 @@ In Task 58c, `product` ruled that the beard slip's 56.5 was counted from the wro
 - Before an owner rules on how a job measured something, `code_lead` sends the job's own lines that take the measure (the start, the peak, the bar).
 - The main chat attaches those lines when it relays the question.
 - **Who checks:** main chat (when relaying), `product`, `code_lead`.
+
+## Lesson 175: Count the files a step edits before sizing it
+
+Task 58b Step 3 asked one builder to rewrite about 10 test files that read the old leaning ladder. It hit its 30-call cap with 4 files and the lint runs left. Step 1 of the same task had stopped over its size too.
+
+- Before sizing a step, search for every file that reads the thing being changed, and count them.
+- A code step edits at most 5 files. More are split into steps of 5 or fewer (`docs/plans/handoff-template.md`).
+- **Who checks:** `code_lead` (when writing a handoff), main chat (before starting a step).

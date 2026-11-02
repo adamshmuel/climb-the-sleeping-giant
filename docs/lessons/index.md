@@ -183,6 +183,9 @@ What this project learned the hard way, so it doesn't happen again.
 | 171 | A fall caught by a ladder is not a fall | `studio-and-scripts.md` |
 | 172 | Putting a task's code back also puts its world back | `studio-and-scripts.md` |
 | 173 | A ruling on how a job measures reads the job's own lines first | `teamwork.md` |
+| 174 | A job script is pasted as written, comment lines aside | `studio-and-scripts.md` |
+| 175 | Count the files a step edits before sizing it | `teamwork.md` |
+| 176 | A design table's sizes follow the part's own size rules | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|

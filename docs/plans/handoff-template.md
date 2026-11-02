@@ -20,3 +20,4 @@ code_lead copies this shape into `work/<task>/handoff-<name>.md` for every task.
 - **Full runs** are always their own Haiku step (Lesson 132).
 - **Play steps** begin with a dry start, or name the dry start their starts already held in (Lesson 120).
 - Run `scripts/job-check.sh --handoff <file>` before the handoff goes out.
+- **Files per step (Lesson 175).** Before sizing a step, count the files it edits (search for every file that reads the thing being changed). A code step edits at most 5 files; more are split into steps of 5 or fewer.
