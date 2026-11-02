@@ -335,3 +335,9 @@ Trials chased "every climb works", while the stuck rescue already made every fai
 A rescue result used as decision evidence ("the rescue lands him on top") came from a safe spot left by an earlier test case. A real kid is rescued at the tie's foot.
 
 **Do instead:** before deciding on where the rescue puts a player, read the safe-spot rule in the code and check the case's last safe spot is where a real player's would be.
+
+## Lesson 293: Count only real rules before flagging a spec split
+
+A spec was reported as over the 15-rule limit. The count included retired numbers ("Rule 81: not used") and changes to rules that belong to other specs. It really had 14.
+
+**Do instead:** count only real rules, not "not used" lines or changes to older rules, before flagging a split.
