@@ -29,6 +29,8 @@ Measured in Studio (Edit mode) on 2026-11-02.
 | `gate-6` | Spawn view from garden gate 6 | (92.9, 3.9, -108.2) | (22.3, 44.2, -30.5) |
 | `gate-7` | Spawn view from garden gate 7 | (132.0, 4.5, -54.1) | (33.3, 44.8, -18.1) |
 | `gate-8` | Spawn view from garden gate 8 (far right): the side of his head and his right arm | (142.2, 3.9, 11.7) | (38.0, 44.2, -1.3) |
+| `tie-top-side` | Close-up of the left cap tie's top rows and the fold, from outside his left ear and a little behind. It shows a climber halfway up the leaning rows (about y 100) and one standing at the top. The sight lines were measured clear. For the right tie, use x 52 and look at x 32 | (-52, 107, 42) | (-32, 105, 32) |
+| `tie-top-front` | The same rows seen from the ear side, so you see the climber's side view: is the climber close to the strap or floating beside it, and does anything stick out toward the ear? The sight lines were measured clear. For the right tie, use x 46 and look at x 32 | (-46, 106, 14) | (-32, 105, 32) |
 
 ### How the gate cameras were worked out
 
@@ -44,6 +46,7 @@ Measured in Studio (Edit mode) on 2026-11-02.
 | His belly, boots or the ways up to the belly | `meadow-wide`, `meadow-front`, and the gate cameras that face that side |
 | His sides, arms or cuffs | `meadow-wide`, plus `gate-1` to `gate-3` (left) or `gate-6` to `gate-8` (right) |
 | The meadow, the gardens or the light | `meadow-wide`, plus every gate camera |
+| How a climber looks on a cap tie (taken in Play, with the climber held in place) | `tie-top-side`, `tie-top-front` |
 
 ## Not found
 
