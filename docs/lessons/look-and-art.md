@@ -84,3 +84,7 @@ About how the game looks, the art and models, and approving a design. The map of
 ## Lesson 221: A placement list gives measured spots, or says "measure first"
 - **What happened:** the designer's list put the tie's top landing at "about y 104". The cap there is 3.7 studs higher, so the fold would have sat inside a dip. The designer measured and raised it. It was the second guessed spot in one day, after Lesson 219 (2026-11-02).
 - **Do instead:** whoever writes a placement list measures each spot first, or writes "measure first". The rule is now in `agent-workflow.md`, "Fewer round trips".
+
+## Lesson 227: Route a look along the visible surface, not an invisible guard part
+- **What happened:** the cap-tie climb test read "the cap's side" from a ray hit, but the part hit was `CapSideLeft_28`, an invisible guard plate up to 7 studs outside the visible cap. A tie routed along the plates framed his face with striped poles from the front, which looked worse (2026-11-02).
+- **Do instead:** before routing anything along a character, check whether each hit part is visible. Leave guard and collision-only parts out of the look route, and list the ones the new part must replace.

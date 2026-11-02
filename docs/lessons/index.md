@@ -236,6 +236,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 224 | Walk tests on the giant hold the sleep meter at 0 and log any move the game makes | `studio-and-scripts.md` |
 | 225 | Smoke-run the first case of a Play job before the job runs | `studio-and-scripts.md` |
 | 226 | Test movement only on the real build, and build one side first | `studio-and-scripts.md` |
+| 227 | Route a look along the visible surface, not an invisible guard part | `look-and-art.md` |
 
 | File | What it covers |
 |---|---|
