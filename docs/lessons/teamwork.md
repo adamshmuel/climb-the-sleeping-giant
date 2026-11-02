@@ -359,3 +359,9 @@ Plan 7 was meant to fix one way up. The thing it fixed was replaced three times 
 Plan 7 planned a whole real-controls play (Task 63b, computer and phone) that the spec's proof list (Rule 101) had already given to the build review. product found it at the 10-task check.
 
 **Do instead:** before planning a proof task, check whether the spec's proof list already gives that proof to another step. If it does, plan only what that step doesn't cover.
+
+## Lesson 301: A fixed camera moves to another task, never out
+
+code_lead's plan 7 rewrite dropped the `tie-top-side` shot. It is on designer's fixed camera list, so only designer can remove it. product caught it.
+
+**Do instead:** before cutting any shot or check, grep `look-cameras.md` and the spec's proof lists. A fixed camera or a listed proof moves to another task, never out.
