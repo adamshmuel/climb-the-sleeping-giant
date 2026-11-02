@@ -58,12 +58,6 @@ local LANDING_RAY_ABOVE = 3 -- the ground under a landing spot: a ray from this 
 
 local LANDING_RAY_LENGTH = 6 -- ...this far down
 
--- Stuck safety Task 22, test 4 (game_creator's check 5): the way to the beard ladder stays open. The walk-map spots
--- within BEARD_FOOT_RADIUS studs of the ladder's foot must not drop below what they were before the patches.
-local BEARD_FOOT_SPOTS = 4 -- measured in step 22-0, after Task 25
-
-local BEARD_FOOT_RADIUS = 4 -- studs
-
 -- Stuck safety Task 23, test 3: the hump top under his cushion, where Task 22's seat walks 5 and 10 ended their push
 -- (plan, Task 23, "walks 5 and 10"). Walk 5's point is the plan's hump top; walk 10's is its 30 degree twin, the push end
 -- written in "t22/walk-22-14a2.txt" (line W10: push end (9.5, 25.1, 40.8)). Those are positions of the walker's root
@@ -645,58 +639,6 @@ describe("the stuck scan on the real world", function()
 		expect(hasClimbLink(beardFoot :: number, capTop :: number, map)).toBe(false)
 		expect(hasClimbLink(beardTop :: number, capFoot :: number, map)).toBe(false)
 		expect(canWalk(beardFoot :: number, { capFoot :: number }, map)).toBe(false)
-	end)
-
-	-- Stuck safety Task 22, test 4 (game_creator's check 5): the patches must not narrow or block the way past the beard
-	-- ladder's foot. From the walk-map spot nearest the foot, a walk alone reaches the spot nearest RoutePoint_Belly_4, and
-	-- at least BEARD_FOOT_SPOTS spots lie within BEARD_FOOT_RADIUS studs of the foot. It uses the walk map built above.
-	it("the way to the beard ladder stays open", function()
-		local ladder = (world :: any).WalkSurfaces:FindFirstChild("BeardLadder") :: Instance?
-		expect(ladder).never.toBeNil()
-		local truss = (ladder :: Instance):FindFirstChild("Climb") :: BasePart?
-		expect(truss).never.toBeNil()
-		-- The foot: the lower end of the truss's longest side, as ladderEndSpots finds it.
-		local size = (truss :: BasePart).Size
-		local half = if size.X >= size.Y and size.X >= size.Z
-			then Vector3.new(size.X / 2, 0, 0)
-			elseif size.Y >= size.Z then Vector3.new(0, size.Y / 2, 0)
-			else Vector3.new(0, 0, size.Z / 2)
-		local endA = (truss :: BasePart).CFrame:PointToWorldSpace(half)
-		local endB = (truss :: BasePart).CFrame:PointToWorldSpace(-half)
-		local foot = if endB.Y < endA.Y then endB else endA
-
-		local problems: { string } = {}
-		local near = 0
-		for _, spot in map.spots do
-			if (spot.position - foot).Magnitude <= BEARD_FOOT_RADIUS then
-				near += 1
-			end
-		end
-		if near < BEARD_FOOT_SPOTS then
-			table.insert(
-				problems,
-				`only {near} walk-map spots within {BEARD_FOOT_RADIUS} studs of the beard ladder's foot {format(foot)}, wanted at least {BEARD_FOOT_SPOTS}`
-			)
-		end
-
-		local footSpot = PathCheck.nearestSpot(map, foot, LADDER_REACH_STEPS * map.spacing)
-		local bellyFour: Vector3? = nil
-		for _, point in WorldIndex.loadRoute(world) do
-			if point.name == "RoutePoint_Belly_4" then
-				bellyFour = point.position
-			end
-		end
-		local goal = if bellyFour then PathCheck.nearestSpot(map, bellyFour, 2 * map.spacing) else nil
-		if footSpot == nil then
-			table.insert(problems, "no walk-map spot near the beard ladder's foot")
-		elseif goal == nil then
-			table.insert(problems, "no walk-map spot near RoutePoint_Belly_4")
-		elseif not canWalk(footSpot, { goal }, map) then
-			table.insert(problems, "no walk from the beard ladder's foot reaches RoutePoint_Belly_4's spot")
-		end
-		if #problems > 0 then
-			error("\n" .. table.concat(problems, "\n"), 0)
-		end
 	end)
 
 	-- Stuck safety Task 23, test 3: the hump top walks out by the walk map. Each point of HUMP_TOPS has a walk-map spot

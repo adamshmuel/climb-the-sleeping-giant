@@ -1,9 +1,7 @@
 --!strict
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect, beforeAll = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.beforeAll
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Config = require(ReplicatedStorage.Shared.Config)
 local Collisions = require(ServerScriptService.Server.Players.Collisions)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
@@ -37,12 +35,6 @@ describe("the real world, his solid body sits where he's drawn", function()
 	local MAX_EXAMPLES = 3 -- most examples written out for each piece
 	local BUILD_TIMEOUT_MS = 60000 -- reading the six meshes takes a few seconds
 	local TEST_TIMEOUT_MS = 60000
-	-- Task 24's belly-top climb: a player stands here (x, z) and walks into the beard ladder's climbing truss, `Climb`.
-	-- It is where V1's truss foot is.
-	local BELLY_TOP_X = 0
-	local BELLY_TOP_Z = -24.5
-	local MIN_TRUSS_OVERLAP = 1 -- studs: a standing player's head reaches this far into the truss
-	local FOOTPRINT_STEP = 0.25 -- studs between the places under a standing player's body that are read
 
 	local skin: DrawnSkin.Skin = nil :: any
 
@@ -440,68 +432,4 @@ describe("the real world, his solid body sits where he's drawn", function()
 		local lower = spotProblems({ { name = original.name, position = original.position - Vector3.new(0, 0.5, 0) } })
 		expect({ higher = #higher, lower = #lower }).toEqual({ higher = 1, lower = 1 })
 	end, TEST_TIMEOUT_MS)
-
-	----------------------------------------------------------------------------------------------------------------
-	-- The beard ladder is within reach of a player standing on his belly top
-	----------------------------------------------------------------------------------------------------------------
-
-	local function beardTruss(): BasePart
-		local walk = realWorld():FindFirstChild("WalkSurfaces")
-		expect(walk).never.toBeNil()
-		local ladder = (walk :: Instance):FindFirstChild("BeardLadder")
-		expect(ladder).never.toBeNil()
-		local truss = (ladder :: Instance):FindFirstChild("Climb")
-		expect(truss).never.toBeNil()
-		return truss :: BasePart
-	end
-
-	-- Where his solid shape is at the belly-top spot: the height a player's feet stand at.
-	local function bellyTopStandY(): number
-		local meshes = bodyMeshes()
-		local low, high = boundsOf(meshes)
-		local hit = Workspace:Raycast(
-			Vector3.new(BELLY_TOP_X, high.Y + 1, BELLY_TOP_Z),
-			Vector3.new(0, -(high.Y - low.Y + 2), 0),
-			bodyParams(meshes)
-		)
-		expect(hit).never.toBeNil()
-		return (hit :: RaycastResult).Position.Y
-	end
-
-	-- How far a player's head, standing with feet at `standY`, reaches into the truss: the top of the body minus the
-	-- lowest point of the truss anywhere over the body's footprint. Negative: the head is under the truss.
-	local function trussOverlap(truss: BasePart, standY: number): number
-		local solid = DrawnSkin.solidOf(truss)
-		local half = Config.Stuck.BodyWidth / 2
-		local lowest = math.huge
-		for dx = -half, half, FOOTPRINT_STEP do
-			for dz = -half, half, FOOTPRINT_STEP do
-				local bottom = DrawnSkin.columnSpan(solid, BELLY_TOP_X + dx, BELLY_TOP_Z + dz)
-				if bottom ~= nil then
-					lowest = math.min(lowest, bottom)
-				end
-			end
-		end
-		return standY + Config.Stuck.BodyHeight - lowest
-	end
-
-	it("a player on his belly top can grab the beard ladder: his head reaches 1 stud into its truss", function()
-		local overlap = trussOverlap(beardTruss(), bellyTopStandY())
-		expect({ overlap = overlap, reaches = overlap >= MIN_TRUSS_OVERLAP }).toEqual({
-			overlap = overlap,
-			reaches = true,
-		})
-	end)
-
-	-- Proof that the test above can fail: the same truss 3 studs higher is out of reach.
-	it("the truss check notices a truss 3 studs too high", function()
-		local standY = bellyTopStandY()
-		local raised = beardTruss():Clone()
-		raised.CFrame = raised.CFrame + Vector3.new(0, 3, 0)
-		local realOverlap = trussOverlap(beardTruss(), standY)
-		local raisedOverlap = trussOverlap(raised, standY)
-		raised:Destroy()
-		expect(realOverlap >= MIN_TRUSS_OVERLAP).toBe(true)
-		expect(raisedOverlap < MIN_TRUSS_OVERLAP).toBe(true)
-	end)
 end)

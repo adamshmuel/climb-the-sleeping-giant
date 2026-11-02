@@ -1,4 +1,4 @@
-# Stuck safety plan, Part 7: every ladder can be climbed where the player sees it (Tasks 58, 58b, 58c and 59)
+# Stuck safety plan, Part 7: every ladder can be climbed where the player sees it (Tasks 58 to 63)
 
 Added by code_lead on 2026-11-01 from product's build review Part 4 (`work/review/part4.md`), code_lead's measured cause (`work/review/part4-cause.md`) and product's ruling "beard ladder fix" (`work/review/plan.md`). It is the second task on the beard ladder, so product decided first ("Stuck on one problem"), and said to build it.
 
@@ -10,6 +10,8 @@ Words used here:
 - **Off-line push:** a climb push turned a few degrees away from the ladder's own way, like a phone stick that turns with the camera.
 
 ## Task 58: Every ladder can be climbed across its whole width
+
+Stands on: product's ruling "beard ladder fix" (2026-11-01, final). Approved 2026-11-01.
 
 - **What it's for:** core gameplay. The ladders are the only ways up to his head. Today each ladder's only climbable part is a 2-stud truss under a 5.2-stud visible ladder, so a push 13 degrees off the line let go 3 of 3 times (`work/review/part4-climb.md`).
 - **Spec rules:** Rule 24 (A bot walks every way): every ladder's way up reaches its end. Rule 20 (One collision source): the part a player climbs is the ladder they see.
@@ -51,6 +53,10 @@ Words used here:
 
 ## Task 58b: The ladder side walls leave the ladder ends open
 
+Stands on: Task 58. Stopped 2026-11-02 (red alert).
+
+- **Stopped on 2026-11-02 (red alert, `work/red-alert-stuck-safety/decision.md`).** Its upright ladders, ledge and fills go back out in Task 60. Its Step 5 shots and Step 6 run are not done. Task 58e (Task 58b's Step 6 reds, including the Rare egg 4 move) is stopped too. Task 58d (a belly ramp) moved to spec 3 (Gardens and ways up) with no new task: spec 3 builds two belly ramps, and its bot walk (Rule 24: A bot walks every way) checks the walk back.
+
 - **What it's for:** core gameplay. Task 58's side walls reach the ladder ends. At the top, a wall's corner stands up past the end the climber steps off. At the beard ladder's foot, the wall hangs over the belly at head height, so a player walking from `RoutePoint_Belly_4` to the ladder bumps into an invisible wall (measured in `work/t58/step4-cause.md`).
 - **Spec rules:** Rule 24 (A bot walks every way): the way to each ladder stays open, and every climb reaches the top. Rule 20 (One collision source): the climbable part is the ladder the player sees. V1's Rule 8 (Steps make noise, `docs/specs/core-heist.md`): a drop off the open bottom of a ladder is no louder than a step.
 - **Product's ruling (2026-11-01, `work/review/plan.md`):** build it. It is the second task on the ladders, so product decided first.
@@ -91,6 +97,8 @@ Words used here:
 
 ## Task 58c: A fall caught by a ladder makes no thud
 
+Stands on: Task 58b's upright ladders (built 2026-11-01). Approved 2026-11-01.
+
 - **What it's for:** core gameplay. At the cap ladder's top, the player sometimes stumbles in front of the ladder and grabs it again. The game counted that as a fast fall and made a thud (a loud landing noise) worth 40. A clean climb must never wake the giant because of a stumble.
 - **Spec rules:** V1 Rule 8 (Steps make noise, `docs/specs/core-heist.md`): only a jump or a real fall onto the ground thuds. Rule 24 (A bot walks every way): every climb reaches the top within Task 58b's bar of 8.2 extra noise.
 - **Cause (measured by code_lead on 2026-11-01, cap trace climb 4 of 6):** the server's ground check is a ray straight down. On the ladder, it finds the deck 25 studs below, so the stumble and the climb back count as one fall.
@@ -104,7 +112,74 @@ Words used here:
 
 ## Task 59: The ladder drops still land safely after Task 58
 
+Stands on: nothing. No task (2026-11-02, red alert).
+
+- **No task (2026-11-02, red alert).** Task 60's full run already includes the drop tests, and the rescue backs them up. Any red from it is written into spec 5 (Egg nests and climbing).
+
 - **What it's for:** core gameplay safety. Roblox can't climb down a leaning ladder, so letting go is the way down (Rule 24). Task 58 adds parts beside each ladder, so its 5 drops are walked again: the cap ladder's walk-off and drops onto the beard ladder's top, and the beard ladder's drops.
 - **Spec rules:** Rule 24 (A bot walks every way): each drop lands on ground with a way out, never wedged.
 - **How big:** about 8 Studio calls, 2 steps. code_lead writes its job from `scripts/bot-walk/` (legs 346 to 350) when Task 58b is approved.
 - **Why it is its own task:** Task 58b already has 6 steps, the most a task may have.
+
+## Task 60: The face ladders come off his face
+
+Stands on: Adam's removal decision (2026-11-02, final): no ladder on his face, whatever replaces it (Rule 101: Ladders hold you).
+
+- **Changed on 2026-11-02.** Adam decided the face ladders come off, so the old Task 60 (the leaning ladders go back) never started. Then product ordered the rest of the work on his face and cap by what each piece stands on (`work/order-test/product-order-7.md`, approved by Adam), and code_lead split it: this task keeps only the pieces that stand on nothing still open. Putting eggs and the route point back, and every check that reads the ways up, moved to Tasks 61 to 63.
+- **What it's for:** the first view a new player sees. His sleeping face is the main character, and the ladders hid it. Core look, not scenery.
+- **Spec rules:** Rule 20 (One collision source), Rule 101 (Ladders hold you): no ladder on his face.
+- **Later task that reshapes this area (Lesson 193):** Task 61 (the chosen ear ladders). This task builds nothing new on his head.
+- **How big:** 8 steps, 50 Studio calls, about 5 h in all (Steps 1 and 2 done: 18 calls). Handoff: `work/remove-face-ladders/handoff.md`.
+- **Files:** `tools/world/19-remove-face-ladders.luau` (new), `src/tests/server/World/RealWorld/FaceClear.spec.luau` (new), `OnTheGiant.spec.luau`, `Zones.spec.luau` and `DrawnBody.spec.luau` (edited), `CapLadderSlot.spec.luau`, `NoseRails.spec.luau` and `LadderLookAndBeard.spec.luau` (deleted).
+- **Failing test first:** `FaceClear.spec`, "nothing climbable or visible stands in front of his face". It failed with both ladders there (Step 2), and passes when script 19 has moved them to `ServerStorage.WorldBackups.FaceLadders`.
+- **Steps:** 1 phone before shots (done); 2 red test, script 19, first deletions (done); 3 script 19 check, apply, check again (Haiku); 4 narrow run of `FaceClear.spec` (Haiku); 5 after shots of the cleared face, computer and phone (Sonnet); 6 designer judges each pair (Opus); 7 the face-only tests go, and the Rare egg walk test moves to `work/` for Task 62 (Sonnet); 8 narrow runs of Zones and DrawnBody (Haiku).
+- **Accepted reds until Task 61** (they read the removed ladders; Task 61 points them at the ear ladders): `Zones.spec`'s two eye tests, `LadderWidth.spec`'s real-world describe, `WalkPieces.spec`'s two ladder tests, `BrimFill.spec`, `SlideGuardsReal.spec`'s `realNeeds` tests, and `OnTheGiant.spec`'s "each ladder joins its two ends on the real walk map".
+- **Pass:** script 19 says `already done`; `FaceClear.spec` green; designer judges every pair "same or better"; the narrow runs fail only on the accepted reds above.
+- **Saved where:** the world change lives in the place file. Adam saves it at Gate 4.
+- **Lessons:** Lesson 3, Lesson 41, Lesson 51, Lesson 76, Lesson 166, Lesson 182, Lesson 190, Lesson 193, Lesson 206.
+
+### Before the ear ladders: the decision (not tasks)
+
+These come from product's order (its Steps 6 to 9). No code is written for them.
+1. designer mocks up option A (a fixed ladder by each ear) and option B (a rope ladder pair players place or raise) in the cleared world, from the fixed cameras on computer and phone, plus each ladder close up with a player climbing. Eggs on his cap are drawn in the mockup only, never placed in the world.
+2. game_creator and product judge A and B side by side: the viral test, and fairness (both sides give the same climb, way home and Deep Sleep race).
+3. Adam picks A or B.
+4. product updates the specs for the pick (Rule 101 and spec 5's way to the cap), and says which plan builds the ear ladders.
+
+## Task 61: The chosen ear ladders are built
+
+Stands on: Task 60, Adam's pick between option A and option B, product's spec update for that pick.
+
+- **Status: can't start.** Adam's pick is still open (2026-11-02), and so is the spec update after it. The main chat checks this line before starting (`agent-workflow.md`, "Order work by what it stands on").
+- **Which plan holds it** is product's question: the spec index gives the ear ladder build to spec 5 (Egg nests and climbing). If product rules spec 5, this task moves to that plan with the same "Stands on:" line.
+- **What it's for:** core gameplay. It brings back the only way up to his cap (the Legendary eggs and the Dream Egg), and it touches the first view.
+- **Spec rules:** Rule 101 (Ladders hold you), Rule 20 (One collision source), Rule 24 (A bot walks every way), as product rewrites them for the pick.
+- **How big:** starting size 6 steps, about 40 Studio calls, 4 h. code_lead sets the real size when the spec update is written; a seventh step means a new task.
+- **Files:** a new world script for the chosen ladders, their tests, and the tests about ladders in general pointed at them (never deleted before): `LadderWidth.spec`'s real-world describe, `WalkPieces.spec`'s two ladder tests, `Zones.spec`'s two eye tests, `BrimFill.spec`, `SlideGuardsReal.spec`, `OnTheGiant.spec`'s "each ladder joins its two ends", and the ladder legs in `scripts/bot-walk/`.
+- **Failing test first:** the tests above, pointed at the new ladders, fail before the ladders are built and pass after.
+- **Look check (product's Step 12, the last steps of this task):** Task 60's after shots are the "before" shots. The same cameras after the build, any `Workspace.Mockup_*` folder hidden; designer judges each pair before the commit.
+- **Lessons:** Lesson 153 (a ladder's climbable part is as wide as the ladder the player sees), Lesson 190, Lesson 193.
+
+## Task 62: Belly_4 and Rare eggs 3 and 4 go back, and walk both ways
+
+Stands on: Task 61.
+
+- **What it's for:** core gameplay. Rare eggs 3 and 4 must be reachable both ways with no jump (game_creator, 2026-11-02: no accepted red).
+- **Spec rules:** Rule 24 (A bot walks every way), with game_creator's Rare egg condition.
+- **How big:** 5 steps, about 16 Studio calls, 2 h.
+- **Steps, in this order** (product's Steps 13 to 16; putting back is placing, so each waits for the ear ladders):
+  1. `RoutePoint_Belly_4` back: `tools/world/08-route.luau` at its last commit, run from a clone (Haiku, 1 Studio call).
+  2. Rare eggs 3 and 4 back to (-8.1, -30.7) and (2.5, -30.5): `tools/world/04-egg-spots.luau` at its last commit (Haiku, 1 Studio call).
+  3. The Rare egg walk test goes back into `OnTheGiant.spec.luau` from `work/remove-face-ladders/rare-egg-walk-test.luau` (if that file is lost: `work/t60/old-58b-58e.diff` lines 1734 to 1790, with Step 2's wording), then a narrow run of `OnTheGiant` (Sonnet, 3 Studio calls). If a spot fails, the Rare spot table: try points on the flat line toward `RoutePoint_Belly_4`, every 0.5 studs, up to 4 studs; the closest that passes is written into `EggSpots.spec.luau` first (red), then into `RARE_SPOTS` in script 04. None within 4 studs: stop for a ruling. If `RoutePoint_Belly_4` itself is red, it goes to product before Gate 4.
+  4. A narrow run of `EggSpots.spec` (Haiku, 3 Studio calls): it reads the Rare spots' final places, so it runs after the last move.
+  5. If an egg moved: before shots (Task 61's after shots) and after shots of that egg, computer and phone, and designer judges them before the commit (Sonnet, about 6 Studio calls).
+- **Changed from product's order:** product put the after shots of a moved egg in its Step 17 (the whole-play check). They move here, because a look change is judged before its own commit (`agent-workflow.md`, "Before and after"). They stand on the same thing: the egg's last move.
+
+## Task 63: The whole play is checked once
+
+Stands on: Task 62, Task 61.
+
+- **What it's for:** core gameplay safety. A check of the whole play (stuck scan, bot walk, full test run) reads the ways up, the eggs and the gardens together, so it runs once, after every change to them.
+- **Spec rules:** Rule 21 (The stuck scan runs on every test run), Rule 24 (A bot walks every way).
+- **How big:** 2 steps, about 14 Studio calls, 2 h: the full run (Haiku, the runner, 4 Studio calls), then the bot walk with its new ladder legs (Sonnet, about 10 Studio calls, with a dry start).
+- **Pass:** the full run has 0 failed: no accepted red is left. The bot walks every way, including both ear ladders. Only after this do the eggs on his cap, a player playtest and Gate 4 follow.

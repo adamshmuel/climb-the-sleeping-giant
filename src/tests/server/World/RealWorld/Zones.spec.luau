@@ -45,8 +45,9 @@ describe("the real world, zones and extras", function()
 		local bellyMiddle = Vector3.new(-9.303, 48.424, -36.275)
 		expect(locate(bellyMiddle + up).zone).toBe("Belly")
 
-		-- the beard ladder's middle
-		local ladderCenter = walk.BeardLadder:GetBoundingBox().Position
+		-- a point on his beard: where the middle of the beard ladder was (that ladder came off his face in Task 60;
+		-- measured 2026-11-02, before the move). Now a fixed point.
+		local ladderCenter = Vector3.new(0, 76.65, -19.0)
 		expect(locate(ladderCenter).zone).toBe("Beard")
 
 		-- the top of his nose. Fixed named points (stuck safety Task 25 took V1's walk pieces away; measured 2026-10-20):
@@ -205,11 +206,9 @@ describe("the real world, zones and extras", function()
 			return "too many see-through parts in the way"
 		end
 
-		-- The bottom of his beard: the foot of the beard ladder (it runs up his beard), 5 studs up the slope.
-		local ladderCenter, ladderSize = (world :: any).WalkSurfaces.BeardLadder:GetBoundingBox()
-		local beardBottom = ladderCenter.Position
-			- ladderCenter.LookVector * (ladderSize.Z / 2)
-			+ ladderCenter.LookVector * 5
+		-- The bottom of his beard: where the foot of the beard ladder was, 5 studs up the slope (that ladder came off his
+		-- face in Task 60; measured 2026-11-02, before the move). Now a fixed point.
+		local beardBottom = Vector3.new(0, 76.65, -14.0)
 
 		local blocked = {}
 		for _, garden in WorldIndex.loadGardens(world) do
