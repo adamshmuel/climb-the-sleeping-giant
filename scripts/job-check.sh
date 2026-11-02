@@ -248,7 +248,76 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Give each spec name its own run, and write \"one spec name per run (Lesson 41)\" on the line."
 		exit 1
 	fi
-	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in, and every run filter names one spec."
+	# Red flag 61a, the meter hold: twice a script that held the giant's sleep
+	# meter stopped between runs, the giant woke, and the run looked real but
+	# was void. In a handoff with a Play step, every work/ script it names has
+	# the hold check (a), passes the script checks before any paste (b), and
+	# has a CHECK_ONLY switch run read-only in Edit first (c).
+	# A Play handoff has a step heading with "Play", or a step with Studio calls in a handoff that talks of Play.
+	hasplay=$(awk '
+		/^## Step [0-9]/ && $0 ~ /Play/ && $0 !~ /\(0 Studio calls/ { n++ }
+		/^## Step [0-9]/ && $0 ~ /Studio call/ && $0 !~ /\(0 Studio calls/ { calls++ }
+		!/^#/ && /(^|[^A-Za-z])Play([^A-Za-z]|$)/ { talks = 1 }
+		END { print n + (talks ? calls : 0) + 0 }
+	' "$@")
+	if [ "$hasplay" -gt 0 ]; then
+		scripts_named=$(grep -ohE 'work/[A-Za-z0-9_./-]+\.luau' "$@" | sort -u)
+		# (a) The hold: the handoff names the session hold, and every named run script reads the beat.
+		if ! grep -q 'scripts/studio/session-hold\.luau' "$@"; then
+			echo "Handoff check FAILED: this handoff has a Play step but never names scripts/studio/session-hold.luau."
+			echo "Paste the session hold right after Start Play, and say so in the step (red flag 61a)."
+			exit 1
+		fi
+		# (d) A named script must exist, unless its line says "written in Step <n>" (red flag 61a).
+		for f in $scripts_named; do
+			[ -f "$f" ] && continue
+			if grep -hF "$f" "$@" | grep -qv 'written in Step [0-9]'; then
+				echo "$f: no such file"
+				echo "Handoff check FAILED: the script above is named but does not exist. Write it first, or say \"written in Step <n>\" on its line (red flag 61a)."
+				exit 1
+			fi
+		done
+		for f in $scripts_named; do
+			[ -f "$f" ] || continue
+			head -5 "$f" | grep -q '(no hold: Edit only)' && continue
+			if ! grep -q 'TrialHoldBeat' "$f"; then
+				echo "$f: no TrialHoldBeat check"
+				echo "Handoff check FAILED: the script above has no hold check. Copy the held() snippet from scripts/studio/session-hold.luau into it,"
+				echo "or write \"(no hold: Edit only)\" in its first 5 lines if it never runs in Play (red flag 61a)."
+				exit 1
+			fi
+		done
+		# (c) Dry run in Edit: a CHECK_ONLY switch in each script, and a "dry run in Edit" line before the first Play step.
+		for f in $scripts_named; do
+			[ -f "$f" ] || continue
+			head -5 "$f" | grep -q '(no hold: Edit only)' && continue
+			if ! grep -q 'CHECK_ONLY' "$f"; then
+				echo "$f: no CHECK_ONLY switch"
+				echo "Handoff check FAILED: the script above has no CHECK_ONLY switch, so it can't be dry run in Edit (red flag 61a)."
+				exit 1
+			fi
+		done
+		nodryedit=$(awk '
+			FNR == 1 { seen = 0 }
+			tolower($0) ~ /dry run in edit/ { seen = 1 }
+			tolower($0) ~ /start play|dry.start/ && !seen { print FILENAME ":" FNR ": " $0; seen = 1 }
+		' "$@")
+		if [ -n "$nodryedit" ]; then
+			echo "$nodryedit"
+			echo "Handoff check FAILED: the line above starts Play before any \"dry run in Edit\" line (red flag 61a)."
+			exit 1
+		fi
+		# (b) Before the paste: the plain script checks (selene, type check) on every named work/ and scripts/studio/ script.
+		studio_named=$(grep -ohE 'scripts/studio/[A-Za-z0-9_./-]+\.luau' "$@" | sort -u)
+		for f in $scripts_named $studio_named; do
+			[ -f "$f" ] || continue
+			if ! bash scripts/job-check.sh "$f" >/dev/null 2>&1; then
+				echo "Handoff check FAILED: $f fails scripts/job-check.sh $f (run it to see why). Red flag 61a: no script is pasted before it passes."
+				exit 1
+			fi
+		done
+	fi
+	echo "Handoff check passed: every pick names its part, no stop rests on a measured count, every step names its model, every red step budgets Studio, every full run is on Haiku, every full-run pass line names only what the fetch prints, every Play step starts with a dry start, every fit test uses StartCheck, no start comes from StartCheck.find, and every proven or grab start names the dry start it held in, every run filter names one spec, and every Play handoff names the session hold, checks the beat, passes the script checks and has a dry run in Edit."
 	exit 0
 fi
 joined=0
