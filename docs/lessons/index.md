@@ -198,6 +198,28 @@ What this project learned the hard way, so it doesn't happen again.
 | 186 | A measure job keeps the whole message of the one test it needs | `studio-and-scripts.md` |
 | 187 | Fill a stuck pocket with a solid block, never a thin board | `world-scenery.md` |
 | 188 | A red run filters to the step's own tests, and its cap counts every page | `studio-and-scripts.md` |
+| 189 | A cut failure message hides the next offender | `studio-and-scripts.md` |
+| 190 | Run a world script by requiring its synced copy, never by pasting it | `studio-and-scripts.md` |
+| 191 | Scan the skin under a wide object before naming its spot | `world-scenery.md` |
+| 192 | Write "checked in Task N" for a later task's proof | `teamwork.md` |
+| 193 | Name the later spec that reshapes each part, and give the plan a time budget | `teamwork.md` |
+| 194 | Before adding anything to the main character, ask if it must be there, and judge it from the wide view | `look-and-art.md` |
+| 195 | A world script that removes parts saves a copy of them first | `studio-and-scripts.md` |
+| 196 | "Go back" is an idea to test, not a safe default | `teamwork.md` |
+| 197 | Judge a way up to a main character's head as one line, foot to top | `look-and-art.md` |
+| 198 | Start a placement ruling with what sits at the top and who needs it | `teamwork.md` |
+| 199 | When a part on a main character is questioned, question what pulls players there too | `teamwork.md` |
+| 200 | Four agents agreeing is not a check; ask what nobody tried | `teamwork.md` |
+| 201 | A fairness check names where the ways up join | `teamwork.md` |
+| 202 | Judge a one-sided route on the trip there and the trip home | `teamwork.md` |
+| 203 | Judge every way up from every garden camera and the way home | `look-and-art.md` |
+| 204 | Show both options as mockups before choosing between them | `teamwork.md` |
+| 205 | Write test names in a Pass line without quote marks | `studio-and-scripts.md` |
+| 206 | The shot steps say how to hold the camera in Play | `look-and-art.md` |
+| 207 | Putting back is placing | `teamwork.md` |
+| 208 | Split a world-script step by layer before ordering it | `teamwork.md` |
+| 209 | A task ends at its own goal | `teamwork.md` |
+| 210 | Agents ordered work by excuses until one checklist banned them | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
