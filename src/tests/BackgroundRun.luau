@@ -186,8 +186,8 @@ function BackgroundRun.new(deps: Deps): Run
 		if folder:GetAttribute("Status") ~= "done" then
 			return `running, {folder:GetAttribute("Done") or 0} spec files done`
 		end
-		local pageIndex: number = folder:GetAttribute("PageNext") or 1
-		local count: number = folder:GetAttribute("PageCount") or 1
+		local pageIndex: number = (folder:GetAttribute("PageNext") :: number?) or 1
+		local count: number = (folder:GetAttribute("PageCount") :: number?) or 1
 		local page = tostring(folder:GetAttribute(`Page{pageIndex}`))
 		if pageIndex >= count then
 			clear()
