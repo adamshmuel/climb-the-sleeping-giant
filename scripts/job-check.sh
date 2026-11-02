@@ -177,14 +177,70 @@ if [ $# -eq 0 ]; then
 fi
 fail=0
 
-echo "== Size (Lesson 63: at most 300 lines per job file)"
+echo "== Size (Lesson 63: at most 300 lines per job file; Lesson 164: 1000 for tools/world/)"
 for f in "$@"; do
 	n=$(wc -l <"$f" | tr -d ' ')
+	case "$f" in
+	tools/world/* | */tools/world/*)
+		if [ "$n" -gt 1000 ]; then
+			echo "  $f: $n lines, over 1000; split it by topic"
+			fail=1
+		fi
+		continue
+		;;
+	esac
 	if [ "$n" -gt 300 ]; then
 		echo "  $f: $n lines, over 300; split it"
 		fail=1
 	fi
 done
+
+echo "== CHECK_ONLY switch in new world scripts (Lesson 166: Task 58b's 18 stopped twice in Play on a wrong guess)"
+# A world script not yet in git must have a CHECK_ONLY switch, so its own
+# lookups and guards run read-only in Edit before its first Play paste.
+# Older world scripts already in git only get a warning.
+for f in "$@"; do
+	case "$f" in
+	tools/world/* | */tools/world/*) ;;
+	*) continue ;;
+	esac
+	if ! grep -q "CHECK_ONLY" "$f"; then
+		if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+			echo "  warning: $f has no CHECK_ONLY switch (add one when it next changes)"
+		else
+			echo "  $f: new world script with no CHECK_ONLY switch; add one and run it read-only in Edit first"
+			fail=1
+		fi
+	fi
+done
+
+echo "== Fetch reads its job's shared. names (Lesson 169: Task 58b's rerun fetch read the old trial's name)"
+# When a fetch is checked together with its jobs, every shared. name the
+# fetch reads must be written by one of those jobs.
+jobNames=""
+for f in "$@"; do
+	case "$f" in
+	*fetch*) ;;
+	*) jobNames="$jobNames $(grep -oE 'shared\.[A-Za-z0-9_]+' "$f" | sort -u | tr '\n' ' ')" ;;
+	esac
+done
+if [ -n "${jobNames// /}" ]; then
+	for f in "$@"; do
+		case "$f" in
+		*fetch*) ;;
+		*) continue ;;
+		esac
+		for name in $(grep -oE 'shared\.[A-Za-z0-9_]+' "$f" | sort -u); do
+			case " $jobNames " in
+			*" $name "*) ;;
+			*)
+				echo "  $f reads $name, but no job checked with it uses that name"
+				fail=1
+				;;
+			esac
+		done
+	done
+fi
 
 if [ "$joined" -eq 1 ]; then
 	mkdir -p work
@@ -254,8 +310,21 @@ stylua --check "$@" || fail=1
 echo "== Lint"
 # Each paste runs as its own chunk, so the joined file always warns that the
 # next part re-declares the last one's names (Task 12c step 2). Lint the parts.
+# A part that doesn't start with --!strict goes in the same paste as the part
+# before it (Task 58b trial), so it is linted joined to that part.
 if [ "$joined" -eq 1 ]; then
-	selene "${parts[@]}" || fail=1
+	groups=()
+	g=-1
+	for f in "${parts[@]}"; do
+		if [ "$g" -lt 0 ] || [ "$(head -n 1 "$f")" = "--!strict" ]; then
+			g=$((g + 1))
+			groups[g]="work/.job-check-paste-$g.luau"
+			: >"${groups[g]}"
+		fi
+		cat "$f" >>"${groups[g]}"
+	done
+	selene "${groups[@]}" || fail=1
+	rm -f "${groups[@]}"
 else
 	selene "$@" || fail=1
 fi
