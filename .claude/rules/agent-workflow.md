@@ -1,10 +1,46 @@
 # Agent workflow
 
-How the project agents work together. Today: `game_creator`, `designer`, `product`, `code_lead`, `builder` and `runner` (`qa` comes later). New agents get a row in each table below.
+How the project agents work together. Today: `game_creator`, `designer`, `product`, `product_reviewer`, `code_lead`, `builder` and `runner` (`qa` comes later). New agents get a row in each table below.
 
 ## The goal comes first
 
 The game's goal is to go viral. Every look, feel and gameplay decision, review and approval passes the viral test in `viral-goal.md`.
+
+## Think critically and creatively, in every job
+
+Every agent, in every job (ideas, designs, specs, plans, reviews, fixes and rulings), thinks like this (Adam, 2026-11-02):
+
+- **Start from the player's problem, not from the current design or a plan already written.** An existing design or a later spec's choice is one idea to test, never the default answer.
+- **Look for a different kind of answer**, not only a better version of the same thing. For example: instead of placing ladders on a wall, give every player a ladder to place themselves, the way soldiers climb a castle wall.
+- **Challenge every answer, your own and other agents'.** Ask what it breaks for the player. Agreement between agents is not a check: if everyone picked the same answer, ask what nobody tried.
+- **Owners check their own area every time:** `game_creator` and `product` judge every idea for the players and the gameplay, including fairness (does a player on one side or in one spot get a head start?), even when another agent raised it only in passing.
+- **Compare real costs.** "It's a new feature" is not a reason to drop an idea. Weigh it against the real total cost of the fixes it replaces (tasks done, tasks still planned, tests to rewrite). A string of fixes can cost as much as a feature.
+- **Briefs don't steer.** A brief states the player's problem, the facts and the questions. It never hints at an answer, such as "a later spec already plans this". It always gives the big picture as facts: what the problem has cost so far, and what it blocks.
+- **See the options before choosing.** When the choice is between looks or ways to play, `designer` makes a mockup of each option from the fixed cameras (computer and phone) and the views it changes, and `game_creator` and `product` judge them side by side before anyone picks. A choice made from words alone is not finished. A brief for such a choice never says "thinking only".
+- **No "later".** Each option is in or out now (`sdd.md`). "Build X now and Y later" is two answers: decide Y too.
+
+## Order work by what it stands on
+
+Work done in the wrong order gets done twice. So every task is ordered by what it depends on, never by what is in front of us (Adam, 2026-11-02).
+
+**The method is the `order-the-work` skill** (`.claude/skills/order-the-work/SKILL.md`). Every agent that orders work, writes a "Stands on:" line, rules on an order or checks one follows it step by step and shows its answers: decision first, the layer map, one goal per piece, the table, the reasons that never count, then the order. The skill holds the five generic layers. `product` writes this game's own layer map in `docs/layers.md`.
+
+The short version:
+
+- **Every task has a "Stands on:" line.** It lists each thing that must be final before the task can be done once and never redone. A task that depends on nothing says "Stands on: nothing".
+- **Final means decided and built.** An open decision is never final, and neither is a part that any step will still add, move, reshape or remove.
+- **A task starts only when everything it stands on is final.** Never "do it now and redo it if it changes". Distance from an open change, a guess about how an option not yet chosen will look, "a test that reruns will catch it" and "it closes a task already started" are that same thing, and never count as reasons to go early.
+- **An order already written is an idea to test, not a fact,** even one the user approved before.
+- **Who does what:**
+
+  | Who | Job |
+  |---|---|
+  | `product` | Writes the "Stands on" list for every piece of work it specifies, rules on or changes |
+  | `product_reviewer` | Writes the "Stands on" list for every fix in a **changes** verdict |
+  | `code_lead` | Copies the list into each task and step, adds lists for the tasks it creates, and orders the work by them |
+  | Main chat | Before starting any task or step, reads its "Stands on" line. If anything on it is still open, it doesn't start the task and takes the order back to `product` |
+
+- **The check:** `scripts/job-check.sh --plan <file>` fails a plan or handoff where a task or step has no "Stands on:" line, stands on something marked open, or comes before a task or step it stands on. `--handoff` runs the same check.
 
 ## Everyone uses the game
 
@@ -20,6 +56,34 @@ Nobody approves what they haven't seen in the running game. Reading code and pas
 - Screenshots are evidence: a report names what they show, and compares them with the spec and the approved mockups.
 - Problems are judged on the whole screen, not only the part the task changed: something covering the main character or enemy, text cut off at an edge, or controls overlapping are problems even if no rule names them.
 - If a tool can't do something (for example, it can't capture a screen), test it in Play before believing it, and tell the main chat. Never quietly push a check to "later".
+
+## Before and after: a look never gets worse
+
+Any task that changes something the player can see (a part, a model, a color, a light, a button) proves it didn't make the game look worse. This covers fixes too, such as a safety fix, a fit fix or a route fix, not only look tasks (Adam, 2026-11-02).
+
+1. **Fixed cameras.** `designer` keeps one list of fixed cameras for the version in `docs/design/<version>/look-cameras.md`: the wide view a new player first sees, the main character's face, and each spawn view, each with its exact camera position and field of view, on computer and phone. It writes the list the first time a task needs it.
+2. **Before shots.** Before the first world change, the task takes every fixed camera that shows the changed area, on computer and phone, and saves the shots in `work/<task>/look-before/`.
+3. **After shots.** After the change, it takes the same shots from the same cameras and saves them in `work/<task>/look-after/`. Close-ups of the changed part may be added, but never replace the fixed shots.
+4. **Designer judges side by side, before the commit.** For each pair: **same or better**, or **worse**, with the reason. One "worse" sends the change back, even if every test and every other rule passes. Saving time is never a reason to accept a worse look (`viral-goal.md`).
+5. **The plan budgets it.** `code_lead` adds the before shots, the after shots and the designer check to the steps and caps of every task that changes what the player sees.
+
+### Red alert: a main character or the first view got worse
+
+A "worse" on a main character (the hero, the boss, the giant) or on the first view a new player sees is a **red alert**, not a normal "changes". Fixing it one patch at a time is how a fix makes the game worse. So all work on that change stops, nothing more is built on it, and the team steps back together (Adam, 2026-11-02).
+
+1. **The same brief to everyone.** The main chat sends `game_creator`, `designer`, `product` and `code_lead` the same short brief: the problem the change was meant to solve (what the player suffered), and the before and after shots.
+2. **Each thinks from the goal, not from the last design.** Each answers from its own area, in one reply:
+   - **Do we need this thing at all?** Can the player's problem be solved another way, without it? (For example: let players climb a part directly instead of adding a ladder to it.)
+   - **If we need it, where or how would it serve the game best?** Where does it help play, keep the main character looking good, and pass the viral test (`viral-goal.md`)?
+   - **What does each idea cost** to build, and what work already done does it keep or throw away?
+   There is no fixed number of options. One good idea that fits the goal beats several made only to have a choice.
+   - **"Go back to the old design" is an idea like any other, never the safe default.** It answers the same questions. If the old design had known problems, it says how it solves them, or it is out (Lesson 196).
+   - **Price every idea before choosing.** An undo is only cheap if a commit or a script can bring it back. A part built by hand in Studio costs a rebuild.
+   - **No idea rebuilds a part that a later spec replaces** ("Don't build what a later plan replaces").
+3. **One decision.** `product` weighs the answers with `game_creator` and picks one direction, with its reasons and the viral-test answer. The "Asking the user" checks apply as usual.
+   - **The main chat checks the decision before acting on it:** does it answer both questions above, is it priced, is it fair to players on every side, does it avoid rebuilding what a later spec replaces, and did someone ask what nobody tried ("Think critically and creatively")? If not, it goes back to `product` with the missing part.
+   - **If the cost jumps while building** (a new tool, a lost script, a rebuild by hand), the work stops and the decision goes back to the team. It is never pushed through.
+4. **Then build.** Only the chosen direction goes into a plan and a task. It passes the before-and-after check like any other look change.
 
 ## Shared reference library: `references/top-games/`
 
@@ -91,6 +155,27 @@ When the team fails twice on the same problem (two tries, steps or tasks that en
    If the owner can, `product` weighs that cost against the fix still planned and picks the cheaper safe one. If nobody can, `product` takes it to `game_creator` to advise: keep it as it is, simplify it or cut it. The "What matters most" tier sets how much more time it may get: scenery gets the least, core gameplay the most.
 4. If the path changes approved work, the "Asking the user" checks apply as usual.
 
+## Red alert: a plan is eating too much time
+
+"Stuck on one problem" catches one task. This catches a whole plan (one feature) that keeps growing a little at a time, until weeks go into something players may barely notice (Adam, 2026-11-02).
+
+**When it starts.** The main chat checks these at every task close:
+- the plan's time so far passes **1.5 times** its planned time;
+- the plan has grown by **half** its first task count (tasks added or split during building);
+- **every 10 tasks** committed on one plan, even when nothing looks wrong, because slow growth looks normal from inside;
+- any owner, or the health check, says the plan is costing more than it gives.
+
+**What happens.**
+1. **Pause the plan.** No new task in that plan starts. A step under way finishes at a safe point (never in the middle of a world change).
+2. **The same brief to everyone.** The main chat sends `game_creator`, `designer`, `product` and `code_lead` one short brief: the plan's goal (what the player gets), planned against real time and tasks, the tasks done and still to come, and what each one protects.
+3. **Each advises from its own area,** in one reply:
+   - Which of the work done or still to come does a player really need? What would a player never notice?
+   - What can be cut, made simpler, left to the safety net, or moved to a later plan that changes that part anyway ("Don't polish what a later spec replaces")?
+   - Is there a cheaper way to finish the rest?
+   - Why did it grow, and what would have caught it sooner?
+4. **One decision.** `product` weighs the answers with `game_creator` and decides: keep going as planned, trim, change the approach, or stop the plan here. It says what is cut, the time saved and the viral-test answer. Cutting a whole feature goes to Adam ("Asking the user").
+5. **Rewrite, then carry on.** `code_lead` rewrites the plan's remaining tasks to match, and the work starts again from there. The main chat tells Adam in one line what changed and the time saved. The answer to "why did it grow" goes into the lessons.
+
 ## Learning from experience
 
 The team writes down what went wrong, so it is caught early next time and never happens a third time.
@@ -105,6 +190,7 @@ The team writes down what went wrong, so it is caught early next time and never 
   | Two tasks in a row closed with nothing built | the team is stuck: "Stuck on one problem" above |
   | A task went past its planned size | stop and ask `code_lead` to split it or `product` whether it's worth it |
   | A second task on the same object | a product decision: "Stuck on one problem" above |
+  | A plan past 1.5 times its time, grown by half its tasks, or 10 more tasks committed on it | "Red alert: a plan is eating too much time" above |
   | Any Rojo crash, agent over its limit or other unplanned stop | a problems-log line; twice means fix the cause |
 
   An alarm means stop and step back before the next step, and take it to the owner (usually `product`). Never carry on as if nothing happened.
@@ -151,7 +237,7 @@ A cheaper model costs less for every word it reads, so each job uses the cheapes
 
 | Kind of job | Model |
 |---|---|
-| **Thinking:** ideas, looks, specs, plans, reviews, rulings, finding why something failed | Opus (the default of `game_creator`, `designer`, `product` and `code_lead`) |
+| **Thinking:** ideas, looks, specs, plans, reviews, rulings, finding why something failed | Opus (the default of `game_creator`, `designer`, `product`, `product_reviewer` and `code_lead`) |
 | **Building:** writing tests, code and Play jobs; running Play and judging it against a pass list | Sonnet (the default of `builder`) |
 | **Running only:** a full test run and its fetch, fetching a job that's already running, a read-only names check, copying files, filling a table from given numbers, running `scripts/job-check.sh` | Haiku (the `runner` agent) |
 
@@ -194,7 +280,8 @@ After every approved task, it updates the "Now" section of `docs/handoff.md` (un
 |---|---|
 | Game idea, gameplay, players, business and monetization | `game_creator` |
 | Look and feel, style guide, mockup images | `designer` |
-| Specs, and reviewing what was built against them | `product` |
+| Specs | `product` |
+| Reviewing what was built, as a player and against its spec | `product_reviewer` |
 | Code architecture, plans, task breakdown, code review, progress table | `code_lead` |
 | Writing the code and its tests | `builder` |
 | Running jobs others wrote and decided: test runs, fetches, names checks, progress rows | `runner` |
@@ -228,7 +315,7 @@ After every approved task, it updates the "Now" section of `docs/handoff.md` (un
 9. **Plan.** After Gate 3, when Adam says so, the main chat starts `code_lead`. It keeps `docs/architecture.md` current and writes `docs/plans/<version>/index.md` and one `docs/plans/<version>/<feature>.md` per spec: small tasks in test-first order, each naming the spec rules it covers. Its questions go to the owners like everyone else's.
 10. **Code.** Only after Adam says "let's start coding X" (sdd.md). The main chat makes the feature's branch (git.md). `code_lead` hands one task at a time to `builder`. `builder` writes it test-first in `src/` and proves it works. `code_lead` reviews every task: **approve** or **changes** (max 3 rounds, then Adam). The main chat commits each approved task on the branch. `code_lead` keeps `docs/progress.md` up to date.
 11. **Test.** When a whole feature or a fix is approved, `code_lead` hands it to `qa`, which tests it. Bugs go back to `builder`.
-12. **Build review.** `product` first plays the feature like a regular player: whole sessions, with the player's own controls only, on computer and phone. Anything that hurts the player is a fail, even if no rule names it. Then it checks the feature against its spec, the idea and the business goals, then writes `docs/reviews/<feature>.md` with an **accept** or **changes** verdict. `game_creator` also plays it and judges the first impression next to the top games, the fun and the business fit (its Job 6), and `designer` checks the look (its Job 4). Changes go back to `builder`.
+12. **Build review.** `product_reviewer` (not the agent that wrote the spec, so the review is a fresh look) first plays the feature like a regular player: whole sessions, with the player's own controls only, on computer and phone. Anything that hurts the player is a fail, even if no rule names it. Then it checks the feature against its spec, the idea and the business goals, then writes `docs/reviews/<feature>.md` with an **accept** or **changes** verdict. `game_creator` also plays it and judges the first impression next to the top games, the fun and the business fit (its Job 6), and `designer` checks the look (its Job 4). Changes go back to `builder`.
 13. **Gate 4: Adam approves the built feature.** The main chat shows Adam the review, merges the feature's branch into `main`, and tells Adam it's ready to push (git.md).
 
 ## No open questions at a gate
@@ -271,7 +358,8 @@ Adam talks only to the main chat. When he asks why an agent decided something, o
 | `references/top-games/` (the shared reference library, see above) | any agent that needs it | **no**, because those images belong to other games |
 | `docs/specs/index.md`, `docs/specs/<version>/index.md`, `docs/specs/<version>/<feature>.md` | `product` | yes |
 | `docs/specs/<version>/research/` (owner input saved for fresh agents) | main chat | yes |
-| `docs/reviews/<feature>.md` | `product` | yes |
+| `docs/reviews/<feature>.md` | `product_reviewer` | yes |
+| `docs/layers.md` (the layer map: the world's layers and which sits on which) | `product`, checked by `game_creator` | yes |
 | `docs/architecture.md`, `docs/plans/<version>/index.md`, `docs/plans/<version>/<feature>.md`, `docs/progress/index.md`, `docs/progress/<version>.md` or `docs/progress/<version>/<feature>.md` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |
 | `docs/lessons/` (index plus topic files), `docs/problems-log/` (index plus area files) | main chat | yes |

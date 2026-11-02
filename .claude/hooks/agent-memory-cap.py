@@ -25,7 +25,7 @@ import sys
 
 LIMITS = {"builder": 150_000, "runner": 100_000}
 DEFAULT_LIMIT = 200_000
-PROJECT_AGENTS = {"builder", "code_lead", "product", "designer", "game_creator", "qa", "runner"}
+PROJECT_AGENTS = {"builder", "code_lead", "product", "product_reviewer", "designer", "game_creator", "qa", "runner"}
 # The runner runs jobs others wrote and never changes the game's code, the
 # tools or the rules that hold it (runner.md). Its shell only reads and
 # runs the job check; it writes only in work/, with Write/Edit, so no redirections.

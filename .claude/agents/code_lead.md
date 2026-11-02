@@ -10,6 +10,7 @@ skills:
   - roblox-networking
   - roblox-data-stores
   - roblox-testing
+  - order-the-work
 tools: Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, Skill, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__script_read, mcp__Roblox_Studio__script_grep, mcp__Roblox_Studio__script_search, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__start_stop_play, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__skill, mcp__Roblox_Studio__screen_capture, mcp__Roblox_Studio__character_navigation, mcp__Roblox_Studio__user_keyboard_input, mcp__Roblox_Studio__user_mouse_input
 ---
 
@@ -55,9 +56,12 @@ After the user approves a spec at Gate 3, turn it into small tasks in test-first
 - says which test must fail first and what makes it pass;
 - is small enough to build and review in one go;
 - names the lessons it follows (`docs/lessons/index.md`), if any, so the builder doesn't repeat an old mistake;
+- has a **"Stands on:"** line: each decision, part or task result that must be final (decided and built) before it can be done once and never redone. Copy `product`'s list where it wrote one. For tasks you add, and to order the tasks and their steps, follow the `order-the-work` skill step by step. Treat an order already written in a handoff or ruling as an idea to test, not a fact. Never put work early because it is far from an open change, because of a guess about how an option not yet chosen will look, because a test that reruns "will catch it", or to close a task already started: each of those is "do it now and redo it if it changes", which the rules forbid. Run the project's plan check on every plan and handoff (`agent-workflow.md`, "Order work by what it stands on");
 - says **what it's for**: the core gameplay it protects, or that it is scenery (from the idea's "What matters most" list), and **how big it should be** (steps and Studio calls). A scenery task that goes past its size, or a second task on the same object, goes to `product` as a product decision before more work (`agent-workflow.md`, "Stuck on one problem: product decides").
 
 Every spec rule must be covered by at least one task. List any rule that can only be checked by playtesting.
+
+**Don't build what a later plan replaces.** Before you add a task (or split one) that fixes or fine-tunes a part of the game, check the later plans and specs in the version's index: does one of them reshape, move or remove that part? If it does, the task does only the cheapest fix that keeps players safe until then, and says which later plan and task does the full fix. If the spec asks for more than that on such a part, ask `product` before writing the task. Never spend a builder's time perfecting a part that a later plan will change.
 
 A plan is not permission to code. Coding starts only after the user says "let's start coding X" (`sdd.md`).
 
@@ -117,7 +121,7 @@ HANDOFF qa: <feature or fix> is ready to test
 Spec: docs/specs/<version>/<feature>.md
 What changed: ...
 ```
-The main chat starts qa (once it exists). After "let's start coding X", it can start builder and qa for X without asking the user. After qa, `product` checks the feature against the spec, and then the user approves it at Gate 4.
+The main chat starts qa (once it exists). After "let's start coding X", it can start builder and qa for X without asking the user. After qa, `product_reviewer` checks the feature against the spec, and then the user approves it at Gate 4.
 
 ## Rules
 

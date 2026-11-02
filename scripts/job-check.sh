@@ -24,11 +24,55 @@ done
 set -- "${args[@]}"
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.rokit/bin:$PATH"
+# Every task and step says what it stands on, and nothing comes before what it
+# stands on (agent-workflow.md, "Order work by what it stands on"). Task 60 put
+# the Rare egg check before the ear ladders it depends on were even chosen.
+stands_on_check() {
+	local bad f
+	bad=$(for f in "$@"; do
+		awk '
+			function name(s) { return match(s, /(Task|Step) [0-9]+[a-z]?/) ? substr(s, RSTART, RLENGTH) : "" }
+			function close_head() {
+				if (head != "" && !seen) print FILENAME ":" headline ": \"" head "\" has no \"Stands on:\" line"
+			}
+			# First pass: where each task and step heading is.
+			NR == FNR { if (/^#+ / && name($0) != "" && !(name($0) in pos)) pos[name($0)] = FNR; next }
+			/^#+ / { close_head(); head = name($0); headline = FNR; seen = 0; next }
+			head != "" && /^[*_ -]*Stands on/ {
+				seen = 1
+				low = tolower($0)
+				if (low ~ /(^|[^a-z])(open|undecided|not decided|pending|waiting|tbd)([^a-z]|$)/)
+					print FILENAME ":" FNR ": \"" head "\" stands on something not final"
+				s = $0
+				while (match(s, /(Task|Step) [0-9]+[a-z]?/)) {
+					ref = substr(s, RSTART, RLENGTH)
+					s = substr(s, RSTART + RLENGTH)
+					if ((ref in pos) && pos[ref] > headline)
+						print FILENAME ":" FNR ": \"" head "\" comes before \"" ref "\", which it stands on"
+				}
+			}
+			END { close_head() }
+		' "$f" "$f"
+	done)
+	if [ -n "$bad" ]; then
+		echo "$bad"
+		echo "Plan check FAILED: every task and step needs a \"Stands on:\" line, and comes after"
+		echo "everything it stands on, which must be final (agent-workflow.md, \"Order work by what it stands on\")."
+		return 1
+	fi
+}
+if [ "${1:-}" = "--plan" ]; then
+	shift
+	stands_on_check "$@" || exit 1
+	echo "Plan check passed: $*"
+	exit 0
+fi
 if [ "${1:-}" = "--handoff" ]; then
+	shift
+	stands_on_check "$@" || exit 1
 	# A part a job picks by a search at paste time is first seen by the
 	# paste (Task 7 step 2, Lesson 80). Every pick is made in code_lead's
 	# names-check call, and the handoff names the part by path or position.
-	shift
 	# A pick that can only happen in Play (for example, the landing spot
 	# nearest where the player landed) is marked "(runtime pick)" on its line.
 	pick='\b(nearest|finds? (it|them) by|picks? the|whichever)\b'
