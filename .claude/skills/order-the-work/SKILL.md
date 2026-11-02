@@ -60,6 +60,8 @@ Fill this for every piece of work, and put the table in your output:
 Use the question that fits the goal:
 
 1. **A check of the whole play** (can't get stuck, can reach everything, fair to every side) covers every layer the player moves on, plus everything that sits on them, whole and everywhere. It waits for every open change to them, so it runs once.
+   - **Except the reach walk, which comes first.** Before anything is built, placed or argued about at a spot (a way up, a ladder, an item, a goal), a quick walk proves a player can get to that spot from where players already are, with a plain stand-in if the thing isn't built yet. It stands on nothing but the ground the player walks on, so it is never "a whole-play check" and never waits. Every task that builds or places at a spot stands on its reach walk. If the walk fails, the spot moves before any more work on it.
+   - **Name the shape before fitting.** A task that places or fits parts names on its "Stands on:" line the exact shape it fits to (the body, the final design of the thing it touches, the reach walk). That shape is built and checked first, and the cause of a misfit is checked on 5 real examples first (Lesson 26). Fitting to shapes that weren't final cost V2 five tasks on the skin and pillow.
 2. **Choosing between design options:** change only the layer the choice is in, and only as much as the mockups need. The layers that sit on it wait for the choice.
 3. **A design change in one layer:** the layers that sit on it are updated next, and the whole change is tested only after them.
 

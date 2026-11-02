@@ -42,21 +42,41 @@ stands_on_check() {
 	bad=$(for f in "$@"; do
 		awk '
 			function name(s) { return match(s, /(Task|Step) [0-9]+[a-z]?/) ? substr(s, RSTART, RLENGTH) : "" }
+			# A reach walk comes first (order-the-work, Step 4, item 1): Task 61a built a cap tie at a spot
+			# no player could walk to, found only by the last task. A task or step whose heading builds or
+			# places a way up or an item stands on a reach walk: named on its "Stands on:" line, or a Task
+			# or Step whose heading is one. A heading that is itself a reach walk needs none.
+			function isreach(s) { return s ~ /reach (walk|check|probe)/ }
+			function places(s) {
+				return s ~ /(ladder|ramp|bridge|way up|tie|truss|perch|deck|plank|rope|stair|nest|egg|route ?point)/ \
+					&& s ~ /(build|built|place|go(es)? back|put back|restore|mirror|lean|added|adds|moved|moves)/ \
+					&& !isreach(s)
+			}
 			function close_head() {
 				if (head != "" && !seen) print FILENAME ":" headline ": \"" head "\" has no \"Stands on:\" line"
+				if (head != "" && builds && !reached)
+					print FILENAME ":" headline ": \"" head "\" builds or places at a spot, but stands on no reach walk"
 			}
-			# First pass: where each task and step heading is.
-			NR == FNR { if (/^#+ / && name($0) != "" && !(name($0) in pos)) pos[name($0)] = FNR; next }
-			/^#+ / { close_head(); head = name($0); headline = FNR; seen = 0; next }
+			# First pass: where each task and step heading is, and which are reach walks.
+			NR == FNR {
+				if (/^#+ / && name($0) != "") {
+					if (!(name($0) in pos)) pos[name($0)] = FNR
+					if (isreach(tolower($0))) reach[name($0)] = 1
+				}
+				next
+			}
+			/^#+ / { close_head(); head = name($0); headline = FNR; seen = 0; builds = places(tolower($0)); reached = 0; next }
 			head != "" && /^[*_ -]*Stands on/ {
 				seen = 1
 				low = tolower($0)
+				if (isreach(low)) reached = 1
 				if (low ~ /(^|[^a-z])(open|undecided|not decided|pending|waiting|tbd)([^a-z]|$)/)
 					print FILENAME ":" FNR ": \"" head "\" stands on something not final"
 				s = $0
 				while (match(s, /(Task|Step) [0-9]+[a-z]?/)) {
 					ref = substr(s, RSTART, RLENGTH)
 					s = substr(s, RSTART + RLENGTH)
+					if (ref in reach) reached = 1
 					if ((ref in pos) && pos[ref] > headline)
 						print FILENAME ":" FNR ": \"" head "\" comes before \"" ref "\", which it stands on"
 				}
@@ -68,6 +88,7 @@ stands_on_check() {
 		echo "$bad"
 		echo "Plan check FAILED: every task and step needs a \"Stands on:\" line, and comes after"
 		echo "everything it stands on, which must be final (agent-workflow.md, \"Order work by what it stands on\")."
+		echo "One that builds or places at a spot also stands on its reach walk (order-the-work, Step 4, item 1)."
 		return 1
 	fi
 }

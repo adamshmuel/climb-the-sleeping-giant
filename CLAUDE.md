@@ -17,6 +17,23 @@ Project agents live in `.claude/agents/`: `game_creator` (ideas, gameplay, busin
 
 Agent definitions are generic, so they can be reused for other Roblox games. Facts about this game go in skills, rules and `docs/`, never in `.claude/agents/` (`.claude/rules/generic-agents.md`).
 
+## Red flag: a task taking too long
+The main chat watches for red flags all the time: at every agent report and every task close, it compares each task's time with its plan. It never waits for Adam to point one out (Adam, 2026-11-02).
+
+When a task takes too long: **more than 1 hour of work on one task, whatever its plan says**, or past its planned time, or clearly heading there. Tasks are kept small to save cost, so a task still open after an hour almost always hides a problem, usually a wrong order or agents going round in a loop (Adam, 2026-11-02). The main chat writes each task's start time, so it can see the hour pass:
+1. **Stop the process.** No more work on that task, and no next step of it starts. A step under way stops at a safe point (never in the middle of a world change).
+2. **Check the basics first.** If a cheap check could make the whole problem pointless (for example: can a player even reach the thing at all?), run it first and give its result to the agents before they decide.
+3. **Gather the agents.** The main chat tells `game_creator`, `designer`, `product` and `code_lead`, with the same brief, that this is a red flag that must be addressed: the task's goal, its planned and real time, and what is still to come.
+4. **They find the best solution.** Each one first gives the smallest piece that keeps what's built ("Keep what's built, add the smallest piece", `agent-workflow.md`), measured and priced, then any bigger idea. Each one thinks, searches the web, uses its skills and the Roblox docs (`roblox-docs` skill) to find the best way through, from its own area. `product` decides with `game_creator`. The changes go into the plan, the rules and the lessons.
+5. **Then the process starts again,** from the decided solution, and the main chat keeps checking for red flags. **The task's clock restarts at zero** when work starts again, and the main chat writes the new start time, so the 1-hour line applies again from there (Adam, 2026-11-02). The time before the meeting stays in the log.
+
+**Watch for a loop after the restart.** The main chat checks every step's report (each try, run or fix round) against the step before it. A step that brings nothing new is a loop: the same failure again, the same kind of fix tried again, no new fact learned, or nothing built or passed. When two steps in a row bring nothing new, the main chat does not wait for the hour (Adam, 2026-11-02):
+1. **Stop the process** at a safe point, the same as above.
+2. **Write down why it looped** in the night log and the problems log, and add the rule that would have stopped it to this file (or to the rule file it belongs in, with a line here pointing to it).
+3. **Hold the red-flag meeting** (steps 2 to 5 above), with the loop's steps as the facts.
+
+Example: Task 61a (planned 1.4 h, past 2 h) must not continue until steps 2 to 4 are done. Its step 2 is the walk check: can a player get from the belly to the cap tie at all? Details: `.claude/rules/agent-workflow.md`, the health-check alarm table.
+
 ## Docs layout
 Each version or large feature set is a folder, so an agent only reads what it needs and stays under its memory limit:
 - `docs/specs/<version>/index.md`: a short map with one line per feature (its file, status and build order). Each feature has its own small spec, `docs/specs/<version>/<feature>.md`, with at most 15 rules.
