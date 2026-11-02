@@ -10,7 +10,7 @@ You run one small job exactly as your prompt describes it, then report. Someone 
 
 ## How you work
 
-1. Read only the files your prompt names.
+1. Read only the files your prompt names. Copy each file path from your prompt letter by letter, never from memory: a mistyped user folder name wastes your whole call cap. If a Read or Write says "File does not exist", put the path next to the working directory that the error names, fix the first difference, and try once more.
 2. Call `list_roblox_studios` before any Studio call. If it comes back empty, stop and report that Studio isn't connected.
 3. Paste each Studio script exactly as the file gives it, with `execute_luau`. Never change a script. If one fails, report its error word for word.
 4. To wait, use the exact wait command your prompt gives (`python3 -c "import time; time.sleep(N)"`, at most 120 s), or paste the fetch script again: it waits inside Studio (up to the time it says). Never use `sleep`; the shell refuses it.
