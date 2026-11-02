@@ -464,3 +464,87 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 - **Do instead:** use the Lesson 143 flip only in shot jobs with no input. Before any touch hold or press on a billboard, set it back to the built value, and say so in the job.
 - **Who checks:** whoever writes a Play job with a press; `code_lead` for a builder's handoff.
 
+## Lesson 154: A handoff that grows a job file near 300 lines plans its split first
+
+Task 58b Step 1 added a rule to a 287-line world script. It reached 401 lines, job-check failed at the very end, and the step ran out of calls before it could split it (Lesson 63 sets 300 lines per job file).
+
+- When a step adds to a job file over about 200 lines, the handoff says how the file is split before the builder writes.
+- A world script in `tools/` is never split into `--joined` parts: `scripts/check.sh` lints each `tools/` file by itself, so a part that uses another part's names fails. Move helpers into a module the pasted script loads as a fresh copy (as `15-real-shape/Run.luau` does).
+- The builder counts lines against 300 while writing, not only at the final check.
+
+## Lesson 155: The fetch names every failure first
+
+Task 58b Step 2's red run had 5 failures, but the fetch gave each one a 150-character message, so only 3 names fit in the report and the rest were "and 2 more". The pass rule ("nothing else fails") couldn't be checked, and the red had to be run again.
+
+- The full-run report lists a name line for every failure first, then adds messages in the room left.
+- "and N more" appears only when even the names don't fit.
+
+## Lesson 157: A part pasted with the one before it is linted with it
+
+The Task 58b trial script was 348 lines, so it was split into two parts pasted together in one call. `job-check.sh --joined` linted each part alone, so part b failed selene with 26 "not defined" errors for names part a declares. The same gap had blocked a split in `tools/` before.
+
+- A part that starts with `--!strict` is its own paste, and is linted alone.
+- A part that doesn't start with `--!strict` goes in the same paste as the part before it, and `--joined` lints them joined.
+
+## Lesson 158: Write a full-run pass line with no quote marks
+
+In the Task 58b step-trial handoff, `job-check.sh --handoff` rejected the full run's pass line because it had quote marks round "N passed, 0 failed". The check treats any quote mark on a full-run pass line as a printed name (Lesson 151).
+
+- Write it bare: Pass: N passed, 0 failed.
+
+## Lesson 164: The 300-line job cap is for work/ jobs, not world scripts
+
+In Task 58b, `job-check.sh` failed `tools/world/18-upright-ladders.luau` (546 lines) on Size. The 300-line cap (Lesson 63) keeps a pasted trial job small. A world script in `tools/world/` is a kept file, so the project's 1000-line file rule applies instead.
+
+- `job-check.sh` checks files under `tools/world/` against 1000 lines, and `work/` jobs against 300.
+
+## Lesson 165: A names check prints each copied template's shape
+
+In Task 58b Step 2, `18-upright-ladders.luau` stopped on its own guard because the ladder's Rail is a Cylinder, and the script took every template for a Block. The names check (Lesson 61) had listed parts by name and kind, but not by shape.
+
+- When a world script copies a part's look, the names check also prints that template's ClassName, Shape, Size and turn.
+- World scripts size a Cylinder along its X axis (its length), and turn it to point the way the plan needs.
+
+## Lesson 166: A world script checks itself read-only before its first Play paste
+
+In Task 58b Step 2, `18-upright-ladders.luau` stopped twice in Play on a wrong guess about a part already in the world. First the ladder's Rail was a Cylinder, not a Block. Then the nest Model's real name was `"nest"]`, not `nest`. A separate names check (Lessons 61 and 165) guesses again at what the script looks up. Only the script's own guards are the full list.
+
+- Every world script that edits existing parts has a `CHECK_ONLY` switch. With it on, the script runs every lookup and guard, prints "CHECK ONLY ... passed", and changes nothing.
+- Before its first Play paste, it runs once read-only in Edit (Haiku, 1 Studio call), as its own handoff step.
+- `job-check.sh` fails a new `tools/world/` script with no `CHECK_ONLY` line, and warns for older ones.
+
+## Lesson 168: A noise trial waits for a calm meter before each measure
+
+In Task 58b Step 2, the climb trial read noise as "highest minus start". While the meter was falling, that read 0 for real noise. And because the meter was never let down between tries, the giant woke during the long trial and sent the body far away, which counted as 2 failed climbs.
+
+- Before each noise measure, wait until the meter is under 5.
+- A body more than 20 studs from the test spot is SENT AWAY: log it, and retry the try once. Never count it as a fail.
+- Split a step's rise into its parts (for example, the end of the climb and the landing), so a loud part can be named.
+
+## Lesson 169: A fetch reads the same `shared.` name its job writes
+
+In Task 58b, the rerun jobs wrote `shared.T58bRerun`, but their fetch was copied from the old trial and still read `shared.T58bUp`. Every fetch would have said NOT STARTED, and job-check missed it. code_lead caught it while reading the jobs before the paste.
+
+- When a job is copied into a new job, rename its `shared.` name in the fetch too.
+- job-check compares the `shared.` names a job writes with the names its fetch reads, and fails if they don't match.
+
+## Lesson 170: A noise trial watches the meter for 3 s after the player stands still
+
+In the Task 58b rerun, the beard slip read as quiet (6.2). But the game only counts a thud (the noise when a fall ends) after the player has been at rest for 0.3 s, and then the meter updates. The job had already stopped watching, so a loud slip passed.
+
+- Every noise measure that ends at a landing keeps watching the meter for 3 s after the player stands still, and reads the highest value.
+- Before setting a noise bar, check the game's own noise rule. A slip is a jump, and every jump makes a thud of 20 times the zone's multiplier.
+
+## Lesson 171: A fall caught by a ladder is not a fall
+
+In the Task 58b cap trace, the player slipped off the front of the truss top, grabbed the ladder again and climbed back up. The server checks the ground with a ray straight down. While the player was back on the ladder, that ray hit the deck 25 studs below, so the slip and the climb back counted as one fast fall. It thudded (made a landing noise) of 62.3, when no thud should have happened at all.
+
+- A fall-end check that uses a downward ray also watches the Humanoid's state: entering Climbing cancels the fall.
+- When a ladder top is loud, rule out the noise code before reshaping the ladder. Here the world had no gap, and changing it would not have helped.
+
+## Lesson 172: Putting a task's code back also puts its world back
+
+The first try at Task 58b was dropped, and its code files were put back to Task 58's commit. But the shorter side walls it built stayed in the edit world. The next full run then showed changed reds, with a new count and new problems, and nobody could tell at first where they came from.
+
+- When a task's code is put back, put its world changes back too, or write them down in the progress row.
+- Before the next full run, check the edit world against what the last commit expects (a read-only names check).

@@ -163,6 +163,26 @@ What this project learned the hard way, so it doesn't happen again.
 | 151 | A full-run pass line names only what the fetch prints | `studio-and-scripts.md` |
 | 152 | The always-on-top flip is for shots only, never before a touch hold | `studio-and-scripts.md` |
 | 153 | A ladder's climbable part is as wide as the ladder the player sees | `world-scenery.md` |
+| 154 | A handoff that grows a job file near 300 lines plans its split first | `studio-and-scripts.md` |
+| 155 | The fetch names every failure first | `studio-and-scripts.md` |
+| 156 | Play the off-angle climb before cutting a ladder's guide | `world-scenery.md` |
+| 157 | A part pasted with the one before it is linted with it | `studio-and-scripts.md` |
+| 158 | Write a full-run pass line with no quote marks | `studio-and-scripts.md` |
+| 159 | After one failed fix, measure the cause before another shape | `world-scenery.md` |
+| 160 | Play a "miss is cheap" safety net with real controls before lowering a bar | `world-scenery.md` |
+| 161 | Measure the default behaviour in a bare test yard before changing a shape | `world-scenery.md` |
+| 162 | Place a copied model by its bounding box, and check it before the shot | `look-and-art.md` |
+| 163 | A runner copies file paths from its prompt, never from memory | `teamwork.md` |
+| 164 | The 300-line job cap is for work/ jobs, not world scripts | `studio-and-scripts.md` |
+| 165 | A names check prints each copied template's shape | `studio-and-scripts.md` |
+| 166 | A world script checks itself read-only before its first Play paste | `studio-and-scripts.md` |
+| 167 | A Play restart that pastes a big file gets a fresh agent | `teamwork.md` |
+| 168 | A noise trial waits for a calm meter before each measure | `studio-and-scripts.md` |
+| 169 | A fetch reads the same `shared.` name its job writes | `studio-and-scripts.md` |
+| 170 | A noise trial watches the meter for 3 s after the player stands still | `studio-and-scripts.md` |
+| 171 | A fall caught by a ladder is not a fall | `studio-and-scripts.md` |
+| 172 | Putting a task's code back also puts its world back | `studio-and-scripts.md` |
+| 173 | A ruling on how a job measures reads the job's own lines first | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

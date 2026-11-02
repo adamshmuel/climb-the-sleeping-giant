@@ -153,3 +153,28 @@ About placing, fitting or fixing objects in the world, and checks that measure t
 - **Do instead:** make the climbable parts cover the whole visible ladder. Test every climb with a bot push a little off the line (about 13°), not only straight along it.
 - **Who checks:** `code_lead` when planning a climb; `designer` when a ladder's look is wider than its climb part.
 
+
+## Lesson 156: Play the off-angle climb before cutting a ladder's guide
+
+- **What happened:** in Task 58b, the beard ladder's side walls were trimmed 3 studs at the foot so the walk to Belly_4 stayed open. That opened exactly the spot where a climb starts. The belly also drops away beside the foot (61.9 in the middle, 60.0 and 60.3 at 3.9 studs out), so a push 25° off the line slid the climber downhill before he reached the walls. 0 of 6 climbs at 25° reached the top, and each slip made a full landing thud (about 30 on the meter).
+- **Do instead:** before cutting or trimming any guide beside a ladder, measure the ground beside its foot, and run the off-angle climb (13° and 25°) in Play.
+- **Who checks:** `code_lead` when a plan trims a guide; `designer` when a guide's shape changes near a climb start.
+
+## Lesson 159: After one failed fix, measure the cause before another shape
+
+Task 58b tried three shapes at the ladder foot (side walls, a climb helper, a wooden step). Each one guessed why a 25-degree climb lets go, and each failed. The bot's fixed push also stood in for a real player the whole time.
+
+- After the first failed fix, find the measured cause before trying another shape.
+- Judge the player bar with real controls (phone and keyboard) before a bot stand-in.
+
+## Lesson 160: Play a "miss is cheap" safety net with real controls before lowering a bar
+
+Product lowered the ladder bar because the bot's misses ended at the ladder's foot. In Part 4b on the phone, one real miss dropped the player to the meadow ground, and another walked off the beard into a fold.
+
+- Before a ruling leans on "a miss only costs a few seconds", play that miss with the player's own controls.
+
+## Lesson 161: Measure the default behaviour in a bare test yard before changing a shape
+
+Two Task 58b fixes changed the ladder's foot. code_lead then built a test yard in Play: a flat floor and the same ladder at 0, 13, 23 and 30 degrees. Only the upright ladder climbed cleanly; every leaning one flickered and slid off, even on flat ground. The cause was the lean, not the foot.
+
+- Before changing a shape, compare the engine's default behaviour in a bare test yard: a flat floor, the same part at several angles or sizes.

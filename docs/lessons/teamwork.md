@@ -167,3 +167,23 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **What happened:** Build review Part 2 packed a whole phone session, 4 pill checks and a computer redo into one 30-tool-call job. The shots, and the copies to save them, used up the calls, and the job stopped at 18 of 24 Studio calls with most checks not reached (2026-11-01).
 - **Do instead:** a phone part of a review holds at most about 3 checks, and saves all its shots with one copy command at the end.
 - **Who checks:** `product` when writing a review plan; the main chat when it reads the plan.
+
+## Lesson 163: A runner copies file paths from its prompt, never from memory
+- **What happened:** twice on 2026-11-01 a Haiku runner typed the user folder wrong (`adamshmuth` instead of the name in its prompt). Each Read or Write failed and was retried the same way, and the names check spent all 6 of its tool calls.
+- **Do instead:** a runner copies every path from its prompt letter by letter. On "File does not exist" it compares the path with the working directory the error names, fixes the first difference, and tries once more (`runner.md`, step 1). Prompts for a runner give full paths, written out once each.
+- **Who checks:** `runner`, main chat (when writing a runner prompt).
+
+## Lesson 167: A Play restart that pastes a big file gets a fresh agent
+
+In Task 58b Step 2, the main chat resumed the same builder for two restarts. Each restart pasted the 584-line world script again, so the builder carried it three times and stopped at 148k of 150k before its last fetch, with Play still running.
+
+- Before resuming an agent for a restart, add its size to the size of every file it will paste. If that goes over about two thirds of its limit, start a fresh agent with the state note instead.
+- A fetch-only finish goes to the `runner`, never back to the builder.
+
+## Lesson 173: A ruling on how a job measures reads the job's own lines first
+
+In Task 58c, `product` ruled that the beard slip's 56.5 was counted from the wrong starting point and changed the spec's proof line. `code_lead` then read the job: it already took its starting value at the let-go, just before the jump. The ruling rested on a guess about the job.
+
+- Before an owner rules on how a job measured something, `code_lead` sends the job's own lines that take the measure (the start, the peak, the bar).
+- The main chat attaches those lines when it relays the question.
+- **Who checks:** main chat (when relaying), `product`, `code_lead`.

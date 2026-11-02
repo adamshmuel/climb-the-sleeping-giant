@@ -31,3 +31,8 @@ About how the game looks, the art and models, and approving a design. The map of
 - **What happened:** in Task 54 designer generated the brim tuft, then searched the world for it by the word "tuft". The search found the live meadow `Nature_GrassTuft` and moved it into the mockup folder. Two more Studio calls went to putting it back, so designer ran out of its 6 calls with no mockup and no shots (2026-10-28).
 - **Do instead:** a mockup script loads a generated model only by its asset id, into its own mockup folder. It never moves or changes anything a world search finds. A mockup's first call makes the folder and loads the model, before anything else.
 - **Who checks:** `designer`.
+
+## Lesson 162: Place a copied model by its bounding box, and check it before the shot
+- **What happened:** in Task 58b's upright-ladder mockup, designer copied the nest and the Dream Egg and placed them by their pivot point. They landed in the wrong spot, so no shot showed them and their place was given by numbers only (2026-11-01).
+- **Do instead:** place a copied model by its bounding box (`GetBoundingBox`), and print its real position before taking the screenshot.
+- **Who checks:** `designer`.
