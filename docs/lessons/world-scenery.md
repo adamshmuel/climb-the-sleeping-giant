@@ -327,3 +327,65 @@ In Task 61d the builder measured his shoulders with rays at z 0. The rays hit hi
 In Task 61d a fall from his cap that ends on his belly became quiet, with the rescue puff. A fall off the brim's front can slide down his beard onto the belly, so it would count as quiet too: a quick way home that nobody planned.
 
 **Do instead:** when a rule makes a fall quiet because of where it ends, also log where falls end, and set a playtest trigger for players using it as a shortcut.
+
+## Lesson 256: Set the push angles and walk-across paths a climb must survive before building it
+
+Task 61a's left tie was built and gated on the push angles someone thought of. A push 25 degrees to one side stalled partway up (2 of 2) and was found only after the build. Walking across the tie's hidden parts on the cap had never been tried either, and it thudded.
+
+**Do instead:** before any climb is built or gated, game_creator writes the push angles (a thumb's drift either side of straight) and the walk-across paths over every hidden part that the climb must survive. The climb checks test that whole list.
+
+code_lead adds: the first Play job on a built climb sweeps push angles (for example -25 to +25 degrees in 5-degree steps, plus a walk off the top), and its trace names the part where a climber stops before any fix is priced. Fixes priced before the trace in Task 61a aimed at the wrong spot (the top, not the ledge partway up).
+
+## Lesson 257: Scan every seam along a climb route before a climb Play job
+
+In Task 61a, each Play round on the left tie found one more seam (a step between two walk surfaces): first the strip top on the cap, then the ledge where the hidden truss hands over to the strip. Every one of them could have been measured in Edit.
+
+**Do instead:** before any climb Play job, run one read-only seam scan that lists every step over 0.5 studs between walk surfaces along the route. Fix or rule on each one before spending a Play run.
+
+## Lesson 259: Build a hidden climb from as few kinds of piece as it can, and push-test every joint
+
+Task 61a's hidden climb mixed four kinds of piece. The climber froze exactly where one kind handed over to the next (the truss top meeting the strip), and each joint was found by a full Play job, one at a time.
+
+**Do instead:** a hidden climb uses as few kinds of piece as it can. Each joint between kinds gets a push test (straight, 13 and 25 degrees) on the trial copy before the real climb is built.
+
+## Lesson 261: Measure each corner a fix rests on with a ray
+
+In Task 61a the handoff put the hidden wedge's corner at x -36.84, read off the span of two parts. A ray showed the truss top's real corner at x -35.84, 1 stud away, so the test range and wedge numbers had to be redone.
+
+**Do instead:** every corner, edge or face a fix rests on is measured with a ray in the names check before the builder starts, never worked out from part sizes.
+
+## Lesson 262: A walkable slab on a slope steps up by its thickness over the cosine
+
+In Task 61a the flat fold (0.6 studs thick) lay on a 46 to 50° cap with every underside edge within 0.5 of it, so it passed the "every edge within 0.5" rule. But its top still stood 0.86 studs or more above the cap, measured straight up, so players crossing its sides would thud. Six hidden ramps were then needed, past the task's size.
+
+**Do instead:** before choosing the thickness of anything players walk onto on a slope, work out its top step: thickness divided by the cosine of the slope. If that is over the step limit, make the piece thinner or plan its side ramps in the same decision.
+
+## Lesson 270: Check a stuck spot on the real world with the rescue running
+
+The climb trials used a copy of the cap tie in the sky. The game's stuck rescue only covers the real giant, so the copy never showed what the rescue does to a stuck player.
+
+**Do instead:** rule on a stuck spot only after a check on the real world with the stuck rescue running.
+
+## Lesson 271: Scan behind every side of a climb before a climb test
+
+The climb tests tried only the tie side the route arrived at. Four tasks later a slot 1.5 studs wide between the giant's head and that side pinned the player at y 76.8. Only the outer side was clear all the way up.
+
+**Do instead:** before any climb test on a ladder, scan the space behind every side at every height in one read-only call, and end the route at a side that is clear all the way up.
+
+## Lesson 274: Measure the shortest crossing before pricing a new route
+
+A crossing was priced at the book bridge's 33 to 35 studs, while the real gap from the arm end to the cap tie's foot was only about 8 studs.
+
+**Do instead:** before pricing a new route, measure the shortest crossing from the spot players already reach to the foot of what is already built.
+
+## Lesson 275: Start each down-ray just above the line being measured
+
+A sloped walkway was checked with down-rays from high above. They hit the pom-pom and the head, and the walkway was drawn steeper than it needed to be.
+
+**Do instead:** start each down-ray just above the walkway's own line, so it only finds the surface under that line.
+
+## Lesson 279: Measure the surface under a handed-over spot
+
+The "arm-end stop spot" handed to the designer was the floor of the gap, not the top of the arm.
+
+**Do instead:** before building on any spot someone hands over, measure the surface there with a down-ray.

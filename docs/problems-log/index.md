@@ -26,6 +26,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 
 | Kind | Fixed by | Date |
 |---|---|---|
+| A Play job's script never run before failed (1 time, Task 61a Step 3: script X first ran at case 5) | Lesson 254 (the smoke run runs every script of the job once; every spot a script waits for is measured) | 2026-11-02 |
 | A world script's guess about an existing part didn't match the world (2 times, Task 58b Step 2) | Lesson 166 (CHECK_ONLY switch, read-only run in Edit first; job-check fails a new world script without it) | 2026-11-01 |
 | A runner mistyped a file path | 2 times (Task 58b cause job, Task 58b names check): `runner.md` step 1 (copy paths letter by letter; on "File does not exist" compare with the working directory and retry once) and Lesson 163 | 2026-11-01 |
 | A pass rule worded differently from the real error | 3 times (Task 15 Step 2 red error; Task 57 Step 2 full run; Task 58 Step 2 part names): Lesson 151 and a `job-check.sh --handoff` rule that fails a full-run pass line naming output the fetch doesn't print, or a CamelCase name that isn't a spec | 2026-11-01 |

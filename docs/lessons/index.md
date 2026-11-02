@@ -261,6 +261,35 @@ What this project learned the hard way, so it doesn't happen again.
 | 249 | A look-only part can't be found by rays, so tests measure it from its shape | `studio-and-scripts.md` |
 | 250 | Before naming a world script as a fix, match what the test reads with what the script writes | `studio-and-scripts.md` |
 | 251 | A fix for a red test covers every kind of object the test checks | `studio-and-scripts.md` |
+| 252 | Check a job's scripts as script files, not its written page | `studio-and-scripts.md` |
+| 253 | A rescue can end a climb case on the goal without a climb | `studio-and-scripts.md` |
+| 254 | The smoke run runs every script of the job once | `studio-and-scripts.md` |
+| 255 | Compare two sides of a slope at the same spot, with the added part left out | `studio-and-scripts.md` |
+| 256 | Set the push angles and walk-across paths a climb must survive before building it | `world-scenery.md` |
+| 257 | Scan every seam along a climb route before a climb Play job | `world-scenery.md` |
+| 258 | A mockup piece players walk on states its biggest step | `look-and-art.md` |
+| 259 | Build a hidden climb from as few kinds of piece as it can, and push-test every joint | `world-scenery.md` |
+| 260 | A second Play round on the same task starts "Stuck on one problem" | `teamwork.md` |
+| 261 | Measure each corner a fix rests on with a ray | `world-scenery.md` |
+| 262 | A walkable slab on a slope steps up by its thickness over the cosine | `world-scenery.md` |
+| 263 | A spec limit names what the player feels, not a stand-in | `teamwork.md` |
+| 264 | Read a tool's real limit in its code before a lesson relies on it | `studio-and-scripts.md` |
+| 265 | Prove a player can walk to a way up before building the way up | `teamwork.md` |
+| 266 | Every red flag lists the smallest keep-what's-built piece first | `teamwork.md` |
+| 267 | A Play climb job steers like a player when it stalls | `studio-and-scripts.md` |
+| 268 | Check the docs before naming an engine limit to the user | `teamwork.md` |
+| 269 | A climber can't swivel round a truss with the stick | `studio-and-scripts.md` |
+| 270 | Check a stuck spot on the real world with the rescue running | `world-scenery.md` |
+| 271 | Scan behind every side of a climb before a climb test | `world-scenery.md` |
+| 272 | Run `date` before writing any time in a log | `teamwork.md` |
+| 273 | Hold a scripted camera every frame until the shot | `look-and-art.md` |
+| 274 | Measure the shortest crossing before pricing a new route | `world-scenery.md` |
+| 275 | Start each down-ray just above the line being measured | `world-scenery.md` |
+| 276 | Each walk case starts standing on the ground | `studio-and-scripts.md` |
+| 277 | List every mirrored line before reusing a walk script | `studio-and-scripts.md` |
+| 278 | Price a task from the plan and the progress file, and use the larger | `teamwork.md` |
+| 279 | Measure the surface under a handed-over spot | `world-scenery.md` |
+| 280 | A scripted press uses the walk's own input | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

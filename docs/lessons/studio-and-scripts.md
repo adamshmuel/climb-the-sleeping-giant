@@ -709,3 +709,63 @@ Task 61g was planned to run script 11a, picked because it works on every `Mockup
 Task 61g's first copy script fixed only the mockup's parts, the kind the cut-off failure line listed. The test also checks effects (lights, sparkles, labels) and avatars, and 10 egg effects still had no saved value. The test stayed red for a second run.
 
 **Do instead:** before writing a fix, read the test and count every kind of object it checks, in one read-only call. A runner's report copies a failing test's whole message, never only its first line.
+
+## Lesson 252: Check a job's scripts as script files, not its written page
+
+Task 61a's climb job was checked with `scripts/job-check.sh` straight on its `.md` page. The check read the plain-English text as code and failed.
+
+**Do instead:** save each script of a job as its own `.luau` file in `work/` and check those files. Check the `.md` page with `--handoff` only.
+
+## Lesson 253: A rescue can end a climb case on the goal without a climb
+
+In Task 61a's climb job, cases 2 and 4 got stuck on the tie. After 3 s the game's stuck rescue moved each player to an old safe spot on the cap, so the case "ended on the cap" though the climb never reached the top.
+
+**Do instead:** a Play job logs the position just before any move of more than 8 studs and labels it a rescue, never a pass. A climb case passes only on a logged climb to the top.
+
+## Lesson 254: The smoke run runs every script of the job once
+
+Task 61a's smoke run covered case 1 only. Script X (a stand-in second climber) was new and first ran at case 5, where its guessed wait spot never caught the climber.
+
+**Do instead:** the smoke run runs every script of a Play job at least once, including a script that starts only in a later case. Every spot or line a script waits for is measured from a real run (Lessons 26, 219 and 225).
+
+## Lesson 255: Compare two sides of a slope at the same spot, with the added part left out
+
+In Task 61a, code_lead compared the cap's slope on the two sides of the tie at different x, with the tie inside the measure. One side looked steeper (69-70 degrees against 58-62), and product almost ruled the tie unfair. Measured again at the same x with the tie left out, both sides match within about 3 degrees.
+
+**Do instead:** compare two sides at the same x (or the same distance along), and leave the new part out of a measure of the ground under it.
+
+## Lesson 264: Read a tool's real limit in its code before a lesson relies on it
+
+Lesson 188 promised that a narrow run keeps each failure message whole. In Task 61a Step 3b, the report still cut the seam test's message short. code_lead found the cut in the test runner itself (`WHY_LIMIT = 150` in `src/tests/BackgroundRun.luau`), not in the fetch script, so Lesson 188's promise was never true.
+
+**Do instead:** before a lesson or a handoff relies on what a tool keeps or shows, find the limit in the tool's code and quote it. Until the runner keeps longer messages for small runs, put the key numbers of a failure message in its first 150 characters.
+
+## Lesson 267: A Play climb job steers like a player when it stalls
+
+A climb job held the stick at one angle. The character got wedged between the cap tie and the giant's head, and the team read it as a slow climb. Adam saw from one screenshot that a player would turn and try again.
+
+**Do instead:** before calling a climb slow or stuck, measure the gaps around the climb line and take a screenshot from the player's camera. When a scripted climb stalls, it reacts like a player (turn, step back, jump, a few times). A turn that works is a pass.
+
+## Lesson 269: A climber can't swivel round a truss with the stick
+
+While Climbing, the engine keeps the character facing the truss: a sideways or turned stick doesn't turn him or move him sideways (measured at y 66 and y 76.8, AutoRotate on). The docs don't say this. Two trial loops left running at once also mixed their log lines.
+
+**Do instead:** to get round a truss, test it as a player would: climb down, jump to the side, walk round, push into the other face. Finish or unbind each trial loop before starting the next.
+
+## Lesson 276: Each walk case starts standing on the ground
+
+A reach-walk case started with the character still hanging on the last case's ladder. The start move was over 20 studs and tripped the teleport watcher, a false fail.
+
+**Do instead:** each walk case first moves the character to its start spot and waits for Grounded before its own start.
+
+## Lesson 277: List every mirrored line before reusing a walk script
+
+A walk script mirrored its spots with a sign `s` inside its own table. A copy given new spots for both sides would have mirrored the right side twice.
+
+**Do instead:** a job that reuses a walk script lists every line that uses the mirror sign before the first paste.
+
+## Lesson 280: A scripted press uses the walk's own input
+
+A reach probe called `Humanoid:Move` once. The control script reset it, so the probe stopped before any walk ran (Lesson 65 was known, but nothing enforced it).
+
+**Do instead:** a job's press uses `MoveTo`, or `Move` from `BindToRenderStep`, never a single `Move` call.

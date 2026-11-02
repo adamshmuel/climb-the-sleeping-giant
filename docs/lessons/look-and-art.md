@@ -94,3 +94,15 @@ About how the game looks, the art and models, and approving a design. The map of
 In Task 61a, the cap tie's look was designed first. Then each gate found a player move it failed: a freeze, a push off the line, a climb down facing out. Each one cost a new round.
 
 **Do instead:** before mocking up any way up, list every player move on it (up, freeze, off the line, down facing in and facing out, jump off). Test the bare shape against all of them in one sky test, then dress it.
+
+## Lesson 258: A mockup piece players walk on states its biggest step
+
+In Task 61a the mockup's fold on his cap was judged only from the camera. It tilted about 20 degrees on a cap that tilts about 43, so one edge stood 2 studs off the cap. Walking across it made a full thud.
+
+**Do instead:** every mockup piece players will walk on states its biggest step to the surface around it (0.5 studs or less), measured in Studio before the mockup is handed over.
+
+## Lesson 273: Hold a scripted camera every frame until the shot
+
+A scriptable camera set once in Play was reset by the game's camera before the shot was taken.
+
+**Do instead:** hold the camera with BindToRenderStep at a priority after Enum.RenderPriority.Last until the shot is taken, then unbind it.

@@ -275,3 +275,45 @@ In Task 58e code_lead wrote "proven in Task 58d" in a handoff. The handoff check
 ## Lesson 220: Measure a disputed fact before weighing two rulings
 - **What happened:** game_creator and product split over whether players could reach the pillow from the meadow. That is a fact, not a design choice. One read-only Studio call settled it: every pillow edge is 9+ studs above what's next to it, and a jump reaches 7.2 (2026-11-02).
 - **Do instead:** when judges disagree about something the world can answer, measure it in one read-only call first, then weigh the rulings.
+
+## Lesson 260: A second Play round on the same task starts "Stuck on one problem"
+
+Task 61a's hours were counted only at task close, so it ran through five Play rounds before any alarm went off.
+
+**Do instead:** the second Play round on the same task that ends without a pass starts "Stuck on one problem", even if the task's hours still look fine.
+
+## Lesson 263: A spec limit names what the player feels, not a stand-in
+
+In Task 61a the spec said every edge where the tie meets the cap is within 0.5 studs, as a stand-in for "never thuds". Nobody checked it against the game's thud setting: a free fall of about 0.25 studs already lands fast enough to thud. The fold was refit twice for a number the player never feels.
+
+**Do instead:** before a spec sets a limit, ask whether it is what the player feels or only a stand-in for it. Write the bar the player feels (here: no thud), and measure the stand-in against it before building to it.
+
+## Lesson 265: Prove a player can walk to a way up before building the way up
+
+Every check of the cap ties started with the bot already at a tie's foot. Nobody walked from the belly crest, where players really come from, to that foot until Task 63, the last task before Gate 4. Adam caught it after about 2 h on Task 61a. If the foot can't be reached, the fix may be moving the tie, which throws away every task built on it.
+
+**Do instead:** when a way up is placed or moved, the first check is a no-jump walk from where players really come from to its foot. It is decision work, ordered before any task that fits, sweeps or mirrors the way up.
+
+## Lesson 266: Every red flag lists the smallest keep-what's-built piece first
+
+In two red-flag rounds on Task 61a, four agents framed the problem as "where should the ladder go" (move it, rebuild it, a new route). Nobody asked what small piece connects the arm players already reach to the cap tie already built. Adam had to propose the wooden walkway.
+
+**Do instead:** in every red flag or red alert, list first the smallest new piece that connects what players reach to what is built, measured and priced, then any bigger idea (agent-workflow.md, "Keep what's built, add the smallest piece").
+
+## Lesson 268: Check the docs before naming an engine limit to the user
+
+The main chat told Adam "Roblox climbing does not let a character turn" as a possible cause without checking. The docs say nothing like it. It later turned out to be true, but only because the builder measured it.
+
+**Do instead:** before naming an engine limit to the user, even as one option among several, check the docs (roblox-docs skill) or say plainly that it is untested.
+
+## Lesson 272: Run `date` before writing any time in a log
+
+Night-log times written from guesses ran about 35 minutes ahead of the clock, so the 1-hour red-flag line was measured wrong.
+
+**Do instead:** run `date` before writing any time in a log or a report.
+
+## Lesson 278: Price a task from the plan and the progress file, and use the larger
+
+A way up was priced from the plan file while the progress file had a bigger size (Task 63: 2.5 h against 3.5 h).
+
+**Do instead:** every price check reads both files and uses the larger number.
