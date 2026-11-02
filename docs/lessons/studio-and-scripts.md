@@ -805,3 +805,9 @@ The script that holds the giant's sleep meter lived inside each run and stopped 
 Two script bugs (a function that doesn't exist and a broken compare) were pasted into Play untested, and each cost a run.
 
 **Do instead:** run luau-lsp and a dry run in Edit on every trial script before its first paste. `scripts/job-check.sh --handoff` checks this.
+
+## Lesson 294: A names check marks which names exist only in Play
+
+A handoff said an Edit dry run "must find GiantState". The server makes that folder only when Play starts, so the builder spent 2 Studio calls finding out, and the step went over its caps.
+
+**Do instead:** the handoff's world table marks each name "exists in Edit" or "made at Play by <script>". A dry run in Edit reports a Play-only name as "not found (made at Play)" and doesn't fail.

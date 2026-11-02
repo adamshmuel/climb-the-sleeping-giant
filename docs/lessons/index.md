@@ -303,6 +303,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 291 | Price the safety net before chasing "every try works" | `teamwork.md` |
 | 292 | Check a case's last safe spot matches a real player's | `teamwork.md` |
 | 293 | Count only real rules before flagging a spec split | `teamwork.md` |
+| 294 | A names check marks which names exist only in Play | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|
