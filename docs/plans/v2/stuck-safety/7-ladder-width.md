@@ -304,7 +304,7 @@ Stands on: Task 61m (the session hold, for Step 4's Play), the Rule 101 spec cha
   3. apply, then a narrow run; side ramps only where the seam test is still red (Sonnet, 2 Studio calls, 15 tool calls);
   4. Play: the seam climbs from the tie's foot at 0°, +15°, -15°, +20° and -20°, each to the top with no rescue; the session hold, a smoke run first, each case starting standing at the foot (Sonnet, 3 Studio calls, 20 tool calls).
 - **Stop rules:** if no fold tilt keeps every edge within 0.5 of the cap, stop and ask designer. If a band climb stalls at the seam after Step 3, stop and report its height and a player-camera screenshot.
-- **After shots and designer's check:** in Task 61i, after the band is proven. **Commit:** Tasks 61a and 61i together.
+- **After shots and designer's check:** in Task 61i, after the band is proven. **Commit:** Task 61a alone, once approved: one test file, plus script 20 and `CapTies.spec.luau` going into git for the first time (code_lead, 2026-11-03).
 - **Lessons:** 41, 76, 166, 187, 188, 190, 225, 236, 253, 255.
 
 ## Task 61h: Any fall from a cap tie is quiet
@@ -337,21 +337,22 @@ Task 61f is folded in here: the real drop and the close shots.
 - **Files:** none in `src/` unless a fix below fires. The proof job in `work/ear-ladders/`, written by code_lead before Step 1.
 - **The proof list** (session hold, smoke run first, each case starts standing at the foot):
   - the band climbs 61a didn't run: +5°, -5°, +10° and -10°;
+  - **the rail joint case** (added by code_lead, 2026-11-03): -20° from z 32.45, three times, with `work/red-flag-61a/t61a-seam-retry.luau` (a player's retries: two turns, then a step back and 0°, then a step back and +20°, no jump). In Task 61a's Step 2 this climb once stood still on top of the side rail `Rail_04_B` at y 108.9, where `Rail_05_B` begins 0.38 ahead at his feet. In Step 3 it climbed clean, so the stop is not yet shown to be a trap or a fair retry. Any stall at that joint gets a player-camera shot. Pass: every run "ON TOP", with a player's retry on the way counting as a pass. Stands on: Task 61a, Task 61h;
   - the 10-second stand at the top, empty-handed, then carrying an egg;
   - a walk off each side of the fold;
   - three drops: walk off the landing with an egg (quiet, puff, egg kept, "CapDrop" logged), let go halfway (quiet), jump off the cap (one thud);
   - two climbs with real controls: computer keys, and the phone in the device simulator;
   - close shots: `tie-top-side` on computer, and the pillow before and after the puff.
 - **Not here:** the ±25° and ±30° stall cases. They need the chute and the lined-up rescue, so they are in Task 61r.
-- **Fix only if the proof finds it** (red test first, then a narrow run): either stand slides past the top-out creep limit: a hidden 20° patch under the fold's middle, edges flush (at most 0.5).
-- **How big:** 6 steps, about 14 Studio calls, 1.0 h:
-  1. smoke run, then the four band climbs, the stands and the walk-offs (Sonnet, 4 Studio calls, 20 tool calls);
+- **Fix only if the proof finds it** (red test first, then a narrow run): either stand slides past the top-out creep limit: a hidden 20° patch under the fold's middle, edges flush (at most 0.5). If the rail joint case ends "STUCK" or "RESCUED", the step stops and the shot goes to `product` as a product decision ("Stuck on one problem"), because no fix shape for the joint is decided yet.
+- **How big:** 6 steps, about 16 Studio calls, 1.0 h (the rail joint case adds about 3 minutes):
+  1. smoke run, then the four band climbs, the rail joint case, the stands and the walk-offs (Sonnet, 6 Studio calls, 24 tool calls);
   2. the drops, the real-control climbs and the close shots (Sonnet, 4 Studio calls, 20 tool calls);
   3. the fix above, only if needed (Sonnet, 2 Studio calls, 15 tool calls);
   4. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls);
   5. after shots from the same cameras as Task 61a's before shots (Sonnet, 4 Studio calls, 12 tool calls);
   6. designer judges the fold pairs, the close shots and the puff pair (Opus, 0 Studio calls, 10 tool calls).
-- **Commit:** Tasks 61a and 61i together, after Step 6.
+- **Commit:** its own commit, after Step 6. (Task 61a commits alone: its only change is a test, the world is unchanged, and Task 61h now sits between them; code_lead, 2026-11-03.)
 - **Lessons:** 51, 182, 225, 232, 241, 253, 255.
 
 ## Task 61b: The right tie is built, mirrored, with the tie tests
