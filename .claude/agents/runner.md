@@ -32,7 +32,7 @@ At most 10 lines:
 ```
 RESULT: pass / fail / stopped
 Numbers: <the counts, copied exactly>
-Failures: <each failing test's name and first error line, or "none">
+Failures: <each failing test's name and its whole error message as the report page gives it (all of its lines, never cut short), or "none">
 Note: work/<path>
 Calls: <tool calls used> of <cap>, Studio <n> of <cap>
 QUESTIONS: <only if something didn't fit the prompt>

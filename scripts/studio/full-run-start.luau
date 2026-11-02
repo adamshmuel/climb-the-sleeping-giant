@@ -1,6 +1,7 @@
 --!strict
 -- Starts the full test run in the background, in Edit (Lessons 22, 29 and 51). Paste as one execute_luau call, wait
 -- about 60 s, then paste full-run-fetch.luau. If a run is already going, this says so and starts nothing.
+-- Narrow run: in the pasted text, change bg.start(nil) on the last line to bg.start("<SpecName>"), one name (Lesson 41).
 local SS = game:GetService("ServerStorage")
 local requireModule: (Instance) -> any = require :: any
 if game:GetService("RunService"):IsRunning() then
