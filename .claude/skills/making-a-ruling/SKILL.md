@@ -27,6 +27,7 @@ description: Use when an owner writes a ruling, a spec limit or a review plan, a
 - A ruling that offers fix paths says what each must leave untouched (the core path, a route, a ladder end).
 - A ruling on where a way up goes starts with a table: what sits at the top, and which players need it. Then the route.
 - When a part on a main character is questioned, also question the gameplay spots that pull players there. Moving one spot can remove a whole path.
+- **Don't polish what a later spec replaces.** Before you write a rule, approve a fix or add a task for a part of the game, check the version's spec and plan index: does a later spec reshape, move or remove that part? If so, ask only for the cheapest fix that keeps players safe until then (block it off, or let the safety net catch the player), and name the later spec or task that does the full fix.
 - How to measure, place and fix the parts themselves: `world-parts` skill.
 
 ## Fairness

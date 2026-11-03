@@ -38,7 +38,7 @@ Pick from the CLAUDE.md "Model per job" table. A resumed agent keeps its model, 
 
 **Ready-made run scripts.** A full test run is always the `runner`:
 1. paste `scripts/studio/full-run-start.luau`;
-2. wait about 60 s with `python3 -c "import time; time.sleep(62)"` (a hook blocks Bash `sleep`);
+2. wait about 60 s with `python3 -c "import time; time.sleep(62)"` (how to wait: `studio-jobs` skill);
 3. paste `scripts/studio/full-run-fetch.luau`, again while a page ends with "fetch again", until "end of report". Never start a run twice. Copy every page.
 
 Never call `get_console_output` after a test run: it returns the log of earlier runs too (about 10k tokens). Read only the fetch's own return.
@@ -75,7 +75,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 - **Play like a player.** Each case marks "between", moves the character to its start and waits for Grounded, then names the case. Before calling a climb slow or stuck, measure the gaps round the climb line. When the character stalls, the script turns toward the open face, steps back or jumps a few times; a turn that works is a pass. A stall is never reported as a cause until a shot from the player's camera shows what stops the character.
 - **Phone checks** rerun only what the phone screen changes (shots, on-screen buttons and text), never walks.
 - **A shot of an effect is checked against how long it lasts.** If the effect ends before the capture, prove it with the game's own signal and ask for no shot. The handoff says up front whether the task changes what the player sees; if not, it budgets no look shots.
-- **A proof camera** is placed only by `screen_capture`'s own `camera_position` and `look_at_position` (`look-check` skill, shots job), set off the player's facing line. A camera set by script doesn't show in the shot. Aim it so the target sits at the wanted screen y (a phone sees only about 35° below the view centre). A Play proof recreates the bug shot's camera position and target.
+- **A proof camera** is placed the `look-check` skill's way ("Shots"), set off the player's facing line. Aim it so the target sits at the wanted screen y (a phone sees only about 35° below the view centre). A Play proof recreates the bug shot's camera position and target.
 - **A gap proof** aims the camera at a right angle to the line between the two edges (about 10 studs away, 3 up), with both edges and the gap in the frame. Zoom the shot before naming what blocks it.
 - **Choose the shot and the pass rule together.** A "feet on the floor" proof is shot from behind the player along their path, at their own zoom distance, never from a high side camera where a wall can hide their legs.
 
@@ -93,4 +93,4 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 
 - At most about 20 lines: result, numbers, questions. Details go in the state note in `work/`.
 - Never read a whole file over 1000 lines; never pull more than about 100 lines of output (write it to `work/` and read its summary); never reread a file.
-- An agent that spots a learning other agents also need ends with `LESSON: <what happened> → <do instead>`.
+- A learning other agents also need ends the report as a `LESSON:` line (`agent-workflow.md`, "Learn from the past").

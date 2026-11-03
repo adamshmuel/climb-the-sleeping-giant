@@ -15,7 +15,7 @@ Run `python3 scripts/health.py` (also at the start of every session). It prints 
 | Two tasks in a row closed with nothing built | `stop-and-step-back` (loop) |
 | A task past 1 hour or its planned size | `stop-and-step-back` (task) |
 | A second task on the same object | `stop-and-step-back` (same object) |
-| A plan past 1.5 times its time, grown by half, or 10 more tasks committed | `stop-and-step-back` (plan) |
+| The plan trigger in `stop-and-step-back`, "Triggers" | `stop-and-step-back` (plan) |
 | A Rojo crash, an agent over its limit, or another unplanned stop | a problems-log line |
 
 An alarm means stop before the next step. Never carry on as if nothing happened.
@@ -32,7 +32,7 @@ Ask in one line: what slowed this task down, and could a hook, a rule, a skill o
 
 ## 3. Commit (`git.md`)
 
-- **When:** a task, after `code_lead` approves it. A small fix, after its one `runner` test run passes, with no review round.
+- **When:** `git.md`, "Commits".
 - What goes in: the task's tests, code, world scripts and docs together. Never a failing test, except reds the plan names as accepted.
 - A task that changed the world runs the full suite before it closes. Its accepted reds are listed from that full run, each with the later task that turns it green.
 - Then go straight to the next task in the plan's order.
