@@ -179,6 +179,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 1 (6 min, Sonnet, builder): the walk, the spawn moves and the walks again. Cap: 14 tool calls, 10 of them Studio.
 - Step 2 (1 min, Opus, game_creator): checks the times table. Cap: 4 tool calls, no Studio.
 - Step 3 (3 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
+- Done 2026-11-03: **pass**, no spawn spot moved (`work/t4e4/walk-times.md`). Garden 1 6.97 s, garden 8 6.93 s, garden 2 4.50 s, garden 7 4.53 s; pairs 0.04 s and 0.03 s apart. game_creator approved (`work/t4e4/game_creator-check.md`). Step 3 skipped: nothing in the world or the code changed since the last full run (2921 passed, 1 accepted red).
 
 **Task 4g: Move the bush out of the gate 8 view** (added 2026-11-03 by product's split of Task 4f; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
 - Stands on: Task 4e4 (the spawn spots, final), and through it Tasks 4e3 and 4f (the Sock and the Teacup moved).
