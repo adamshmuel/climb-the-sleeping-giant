@@ -1,5 +1,22 @@
 # Spec 1: Core heist
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+  - [The sleep meter (top centre)](#the-sleep-meter-top-centre)
+  - [Spots and states](#spots-and-states)
+  - [Sound](#sound)
+  - [The world](#the-world)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 ## 1. Goal and why
 
 A player sneaks onto the sleeping giant, grabs an egg and carries it home before he wakes. This is the heart of the game: the "Sneak, Grab, Escape" part of the core loop (the actions players repeat) and the twist, one giant that the whole server (one running copy of the game, up to 8 players) shares (`docs/ideas/climb-the-sleeping-giant.md`, sections "Core loop", "Twist", "Sneaking and noise" and "The wake-up"). It comes first so the fun part is playable before anything else is built. Hatching, cash and upgrades come in the next specs (see `docs/specs/index.md`).

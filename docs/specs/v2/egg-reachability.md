@@ -2,6 +2,19 @@
 
 Status: `approved` by Adam (2026-10-18).
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 **Changed on 2026-10-18** (game_creator's round 2 review, in `research/review-specs-3-5-round2.md`): V2 starts with the solo drain at 1.5 points a second, so every score uses it from the first report (Rule 47: How the score is worked out).
 
 **Changed on 2026-10-19** (designer's nest art, in `research/decisions-egg-nests.md`, "designer: art job" and "designer: job 2 part 2 done"): eggs now sit deep inside a straw nest, and some nests lean on his slopes while their eggs stand upright. So Rule 59 (Eggs sit on something you can see) now measures the nest against the surface under it, and the egg against the nest's bottom. Its limits are in section 5.

@@ -2,6 +2,44 @@
 
 Part of `../decisions-plans.md` (the index).
 
+**Contents**
+
+- [Ruling before Task 22: the two big groups (code_lead, 2026-10-21)](#ruling-before-task-22-the-two-big-groups-code_lead-2026-10-21)
+- [designer on Task 22's pillow notice (2026-10-21)](#designer-on-task-22s-pillow-notice-2026-10-21)
+- [Task 22 step 22-0: the free-spot list near the changes is enough (code_lead, 2026-10-21)](#task-22-step-22-0-the-free-spot-list-near-the-changes-is-enough-code_lead-2026-10-21)
+- [Task 22: two fixes to the patch test (code_lead, 2026-10-21)](#task-22-two-fixes-to-the-patch-test-code_lead-2026-10-21)
+- [Task 22: running the world script without pasting it (code_lead, 2026-10-21)](#task-22-running-the-world-script-without-pasting-it-code_lead-2026-10-21)
+- [Task 22 step 22-5: 51 pillow spots lost on purpose (code_lead, 2026-10-21)](#task-22-step-22-5-51-pillow-spots-lost-on-purpose-code_lead-2026-10-21)
+- [Task 22 step 22-6: Play check rulings (code_lead, 2026-10-21)](#task-22-step-22-6-play-check-rulings-code_lead-2026-10-21)
+- [designer on the pillow shots, computer (2026-10-21): changes](#designer-on-the-pillow-shots-computer-2026-10-21-changes)
+- [Task 22: why the pillow went dark (code_lead, 2026-10-21)](#task-22-why-the-pillow-went-dark-code_lead-2026-10-21)
+- [designer on the pillow shots, computer, round 2 (2026-10-21): approve](#designer-on-the-pillow-shots-computer-round-2-2026-10-21-approve)
+- [designer on the pillow shots, phone (2026-10-21): approve](#designer-on-the-pillow-shots-phone-2026-10-21-approve)
+- [Task 22 step 22-7: Play flags (code_lead, 2026-10-21)](#task-22-step-22-7-play-flags-code_lead-2026-10-21)
+- [Feet on the giant's cloth: designer's final rule (2026-10-21)](#feet-on-the-giants-cloth-designers-final-rule-2026-10-21)
+- [product on the Climbing hang (2026-10-21): noted, no change](#product-on-the-climbing-hang-2026-10-21-noted-no-change)
+- [Task 22 step 22-8: rulings (code_lead, 2026-10-21)](#task-22-step-22-8-rulings-code_lead-2026-10-21)
+- [product on slide guards in the Belly zone (2026-10-21): yes, with conditions](#product-on-slide-guards-in-the-belly-zone-2026-10-21-yes-with-conditions)
+- [Task 22 step 22-8c: the cave is a real trap, Ruling 6 (code_lead, 2026-10-21)](#task-22-step-22-8c-the-cave-is-a-real-trap-ruling-6-code_lead-2026-10-21)
+- [designer on the invisible cave lid (2026-10-21)](#designer-on-the-invisible-cave-lid-2026-10-21)
+- [product on the cave lid (2026-10-21): yes, under the other clause of Rule 20](#product-on-the-cave-lid-2026-10-21-yes-under-the-other-clause-of-rule-20)
+- [Task 22 step 22-8e: the simpler lid (code_lead, 2026-10-21)](#task-22-step-22-8e-the-simpler-lid-code_lead-2026-10-21)
+- [Task 22: the final lid ruling (code_lead, 2026-10-21)](#task-22-the-final-lid-ruling-code_lead-2026-10-21)
+- [Task 22: one rule for the cave blocks (code_lead, 2026-10-21)](#task-22-one-rule-for-the-cave-blocks-code_lead-2026-10-21)
+- [Task 22: rule C for the cave lid (code_lead, 2026-10-21)](#task-22-rule-c-for-the-cave-lid-code_lead-2026-10-21)
+- [Task 22: the visible cave skirt (code_lead, 2026-10-21)](#task-22-the-visible-cave-skirt-code_lead-2026-10-21)
+- [product on the visible cave skirt (2026-10-21)](#product-on-the-visible-cave-skirt-2026-10-21)
+- [designer on the cave skirt's look (2026-10-21)](#designer-on-the-cave-skirts-look-2026-10-21)
+- [game_creator on the cave-skirt perch (2026-10-21): approve, with two Play checks](#game_creator-on-the-cave-skirt-perch-2026-10-21-approve-with-two-play-checks)
+- [Task 22 step 22-8f: keep the corridor behind his wall open (code_lead, 2026-10-21)](#task-22-step-22-8f-keep-the-corridor-behind-his-wall-open-code_lead-2026-10-21)
+- [Task 22 step 22-8h: skirt 19 moves back (code_lead, 2026-10-21)](#task-22-step-22-8h-skirt-19-moves-back-code_lead-2026-10-21)
+- [designer on the cave highlight shots (2026-10-21): approve](#designer-on-the-cave-highlight-shots-2026-10-21-approve)
+- [designer on the computer Play shots of the cave (2026-10-21): approve](#designer-on-the-computer-play-shots-of-the-cave-2026-10-21-approve)
+- [Task 22 step 22-14a: rulings (code_lead, 2026-10-21)](#task-22-step-22-14a-rulings-code_lead-2026-10-21)
+- [product on the notch wedge (2026-10-21): noted, with two additions to Task 23](#product-on-the-notch-wedge-2026-10-21-noted-with-two-additions-to-task-23)
+- [designer on the phone Play shots of Task 22 (2026-10-21): approve](#designer-on-the-phone-play-shots-of-task-22-2026-10-21-approve)
+- [product on two Task 23 questions (2026-10-21)](#product-on-two-task-23-questions-2026-10-21)
+
 ## Ruling before Task 22: the two big groups (code_lead, 2026-10-21)
 
 - **Cushion top behind his head (84 spots):**

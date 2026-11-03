@@ -2,6 +2,36 @@
 
 Part of `../decisions-plans.md` (the index).
 
+**Contents**
+
+- [Stuck safety Task 4: the scan's edge and water (2026-10-19)](#stuck-safety-task-4-the-scans-edge-and-water-2026-10-19)
+- [Stuck safety Task 18: the teacup's bowl (2026-10-19)](#stuck-safety-task-18-the-teacups-bowl-2026-10-19)
+- [Stuck safety Task 5: the shell, the camera and the skin gap (2026-10-19)](#stuck-safety-task-5-the-shell-the-camera-and-the-skin-gap-2026-10-19)
+- [Stuck safety Task 6: the tea on a tilted rim (2026-10-19)](#stuck-safety-task-6-the-tea-on-a-tilted-rim-2026-10-19)
+- [Stuck safety Task 6: look check and the saucer (2026-10-19)](#stuck-safety-task-6-look-check-and-the-saucer-2026-10-19)
+- [Stuck safety Task 19: how "his slope" is judged (2026-10-19)](#stuck-safety-task-19-how-his-slope-is-judged-2026-10-19)
+- [Stuck safety Task 19: closeness at body size (Ruling 3, 2026-10-19)](#stuck-safety-task-19-closeness-at-body-size-ruling-3-2026-10-19)
+- [Stuck safety Task 19: the shell fails, option A (2026-10-19)](#stuck-safety-task-19-the-shell-fails-option-a-2026-10-19)
+- [Stuck safety Task 19: option 1, his real shape patched (2026-10-19)](#stuck-safety-task-19-option-1-his-real-shape-patched-2026-10-19)
+- [Stuck safety Tasks 19–23: owners confirm code_lead's test definitions (2026-10-20)](#stuck-safety-tasks-1923-owners-confirm-code_leads-test-definitions-2026-10-20)
+- [Stuck safety Task 19 v2: look check and the floating walk planks (2026-10-20)](#stuck-safety-task-19-v2-look-check-and-the-floating-walk-planks-2026-10-20)
+- [Stuck safety Task 24: walk pieces sit on his skin, owner answers (2026-10-20)](#stuck-safety-task-24-walk-pieces-sit-on-his-skin-owner-answers-2026-10-20)
+- [Stuck safety Task 21: the cuff seam line (2026-10-20)](#stuck-safety-task-21-the-cuff-seam-line-2026-10-20)
+- [Stuck safety Task 21 round 3: look check (2026-10-20)](#stuck-safety-task-21-round-3-look-check-2026-10-20)
+- [Stuck safety Task 24 split: crossing ramps, egg moves, nose deck (2026-10-20)](#stuck-safety-task-24-split-crossing-ramps-egg-moves-nose-deck-2026-10-20)
+- [Stuck safety Task 24 prep: the half-height ramp clause (2026-10-20)](#stuck-safety-task-24-prep-the-half-height-ramp-clause-2026-10-20)
+- [Stuck safety Task 24: one long ramp over the knee and the steep band (2026-10-20)](#stuck-safety-task-24-one-long-ramp-over-the-knee-and-the-steep-band-2026-10-20)
+- [Task 24 step 5: two route links (code_lead, 2026-10-20, Ruling 11)](#task-24-step-5-two-route-links-code_lead-2026-10-20-ruling-11)
+- [Task 24 step 6a: long knee ramp look (designer, 2026-10-20)](#task-24-step-6a-long-knee-ramp-look-designer-2026-10-20)
+- [Task 24 step 6b-1: the pin at the knee guard's top end (code_lead, 2026-10-20, Ruling 12)](#task-24-step-6b-1-the-pin-at-the-knee-guards-top-end-code_lead-2026-10-20-ruling-12)
+- [Stuck safety Task 25: cap ladder shape (designer, 2026-10-20)](#stuck-safety-task-25-cap-ladder-shape-designer-2026-10-20)
+- [Stuck safety Task 25: the forehead slab (game_creator, 2026-10-20)](#stuck-safety-task-25-the-forehead-slab-game_creator-2026-10-20)
+- [Stuck safety Task 25: code_lead's three decisions (owner confirmations, 2026-10-20)](#stuck-safety-task-25-code_leads-three-decisions-owner-confirmations-2026-10-20)
+- [Stuck safety Task 25: step 1a stops (code_lead, 2026-10-20, Task 25 Rulings 1–6)](#stuck-safety-task-25-step-1a-stops-code_lead-2026-10-20-task-25-rulings-16)
+- [Stuck safety Task 25: step 1b (code_lead, 2026-10-20, Task 25 Rulings 7–11)](#stuck-safety-task-25-step-1b-code_lead-2026-10-20-task-25-rulings-711)
+- [Stuck safety Task 25: step 5b, six new stuck spots on the second grid (code_lead, 2026-10-20, Task 25 Rulings 12–14)](#stuck-safety-task-25-step-5b-six-new-stuck-spots-on-the-second-grid-code_lead-2026-10-20-task-25-rulings-1214)
+- [Stuck safety Task 25: ladder climb flicker (code_lead, 2026-10-20, step 6a-1 ruling)](#stuck-safety-task-25-ladder-climb-flicker-code_lead-2026-10-20-step-6a-1-ruling)
+
 ## Stuck safety Task 4: the scan's edge and water (2026-10-19)
 - **code_lead asked product:** may "Meadow exit" also include the open meadow at the edge of the scanned area (always at least 10 studs from the giant)? In Play, a player walked 10 studs past the south edge, and swam out of the riverbed (about 3 studs deep) without a jump.
 - **product: yes.** The meadow goes on past the edge, so a player who reaches it is out. Getting stuck in the meadow is outside this spec (section 11). Growing the map 10 studs past the area would cost scan time and catch nothing on the giant, so it stays only as the fallback: if a real player is found stuck in the meadow near the edge, the area grows 10 studs there.

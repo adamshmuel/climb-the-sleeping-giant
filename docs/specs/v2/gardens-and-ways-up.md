@@ -2,6 +2,19 @@
 
 Status: `approved` by Adam (2026-10-18). Changes Rules 8 and 15. New Rules 34 to 45.
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 **Changed on 2026-11-03** (Adam: "let's drop those ladders and keep only the ones that go on the giant feet"): the two side ladders, their side pads and the two thigh planks are dropped. There are now **four ways up**: the two boot ramps and the two boot ladders. Gardens 1 and 2 use the left boot ladder, like garden 3; gardens 7 and 8 use the right boot ladder, like garden 6. Rule 38 (Rope ladders up his sides) is removed and its number stays unused. Rule 35 (Every garden has a way up close by) gives gardens 1 and 8 a longer walk limit, and Rule 43 (Landing spots on every side) adds 2 landing spots, not 4. Every way up still ends boot top → lap plank → lap landing, so the climb from the boot top is the same on both sides.
 
 **Changed on 2026-10-18** (owner decisions after code_lead's ramp build in Studio, in `research/decisions-egg-nests.md`, sections "code_lead: the moved ramp build" to the end):

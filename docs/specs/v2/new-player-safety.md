@@ -2,6 +2,19 @@
 
 Status: `approved` by Adam (2026-10-18).
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 ## 1. Goal and why
 
 A new player should feel real danger from the giant, but get one "phew, that was close" moment before he can really wake. Today Rule 11 (New players can't wake him) freezes the sleep meter (the shared bar that fills with noise; at 100 he wakes) at 84 for a new player with no time limit. Adam found this in his playtest on 2026-10-14: he took every Rare egg without ever waking the giant, and the 85% warning never played. This spec turns that forever-shield into **one free save**.

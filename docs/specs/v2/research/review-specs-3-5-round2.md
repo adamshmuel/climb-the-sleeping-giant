@@ -1,5 +1,12 @@
 # Specs 1, 3 and 5 after the big rewrite: review (2026-10-18)
 
+**Contents**
+
+- [designer: changes (16), review only, no Studio](#designer-changes-16-review-only-no-studio)
+- [Confirmed list of mockups still to make (designer, Studio)](#confirmed-list-of-mockups-still-to-make-designer-studio)
+- [game_creator: changes (3), plus a confirmation](#game_creator-changes-3-plus-a-confirmation)
+- [game_creator: which nests spec 3's fairness checks use (answer to designer item 10)](#game_creator-which-nests-spec-3s-fairness-checks-use-answer-to-designer-item-10)
+
 ## designer: changes (16), review only, no Studio
 **Spec 5 (egg-nests-and-climbing.md)**
 1. **Words "Seam", Rule 80, section 5 "Seam match", section 6 (art):** the seam isn't "painted" on his texture. It is made of small flat parts (cream stitch dashes plus a hem-blue band, with no collision) laid on his pyjama. Re-texturing the generated mesh isn't a beginner build. Fix: "a stitched seam made of small flat parts laid on his pyjama (style guide, 'How the seam looks'); his texture doesn't change."
