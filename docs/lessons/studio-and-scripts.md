@@ -877,3 +877,15 @@ Update (Task 61n Step 3, 2026-11-03): a 4-page run needed 17 tool calls against 
 ## Lesson 315: Measure what a check's ray hits before ruling it onto a new kind of piece
 - **What happened:** Task 61b Step 5a moved rung-ladder checks onto the cap ties, a near-vertical truss. The ray along `axis.back` and the ground read 1 stud past the top gave false fails: the rails "touched" the skin 19-21 times, and the top read the nightcap. The ruling was written before anyone measured the left tie, so the builder spent 3 unplanned Studio calls probing, and a second ruling round followed.
 - **Do instead:** before a check is ruled onto a new kind of piece, the ruler measures what its ray really hits on the built piece (one read-only call). Where that piece already has a stricter test of its own, reuse it and skip the old one, with a comment.
+
+## Lesson 321: A red run's report grows with its failures
+Task 61w Step 1 had a cap of 3 Studio calls (2026-11-03). Its narrow red run had 17 failing tests, so its report was 4 pages long. The builder used 4 calls and still left the last page unfetched, which the next step had to clear first.
+→ A red step's Studio cap counts 1 start, plus 1 fetch for about every 5 failing tests it expects, plus 1 spare. A step that inherits an unfetched page budgets one extra fetch to clear it.
+
+## Lesson 322: StyLua makes a job file longer than you wrote it
+Task 61v Step 1 (2026-11-03): a Play job written to a 220-line cap came out about 300 lines after StyLua, because it splits long `table.insert(...)` and `string.format(...)` calls at column 120 into 4 to 6 lines. The builder rewrote it twice to fit and ran out of memory before its first Studio call.
+→ Write job lines short (for example `rows[#rows + 1] = ...`) and check `wc -l` right after the first save. A job a few lines over its cap is fine; only the 300-line limit is hard. A step that writes a job of more than about 150 lines gets its own step, before the Studio step.
+
+## Lesson 323: Build each paste from the file's text, never retype a line
+- **What happened:** In Task 61v Step 3 the builder retyped one expression of the Edit dry-run paste instead of copying it from the job file. code_lead ruled the dry run void (Lesson 302), though the verdict stayed the same.
+- **Do instead:** every paste into Studio is built from the file's own text (read and paste whole, or cut by line numbers). Never type a line again by hand.

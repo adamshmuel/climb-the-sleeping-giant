@@ -401,3 +401,7 @@ Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w buil
 ## Lesson 320: Shots repeat, so the shot method is a ready-made job
 - **What happened:** The 8 look shots were taken twice tonight, by two builders. Task 61b Step 4 (the before shots) took 28 tool calls against 24. Task 61j Step 4 (the after shots) took 27 against 14. Each one worked out again how to hide the mockup folders, set the phone device and place the camera. The second builder read the device-simulator skill and got the folder name wrong once.
 - **Do instead:** when a step is going to be done again, the first builder writes its exact calls once into a ready-made job file in `work/` (the hide and restore, the device setup, and each camera's arguments). The next handoff tells the builder to run that file and nothing else, and budgets the calls it really took.
+
+## Lesson 324: Read a task's progress row before ordering work against it
+- **What happened:** A ruling asked for a check "before Task 61n", but Task 61n was already done (2026-11-03). code_lead had to make a new task, Task 61y, to hold the check.
+- **Do instead:** before writing "before Task X" or "after Task X", read Task X's row in the progress file. A task that is done can't have work put before it.

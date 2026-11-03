@@ -116,3 +116,7 @@ The walkway's mockup showed where it ends, but not which way a player faces when
 ## Lesson 316: Measure both sides of the body before mirroring a fitted part
 - **What happened:** Task 61b built the right cap tie as an exact mirror of the left. The giant's nightcap is up to 0.34 studs wider on the right, so two CapTies tests failed (head gap, landing height) and a third would have. That cost a measuring round and a refit pass.
 - **Do instead:** before mirroring a part fitted to a body, measure both sides of that body in one read-only call, and write the differences into the per-side table before the build step.
+
+## Lesson 325: A look job checks each new shot against its before shot
+- **What happened:** In Task 61x the after shot for gate 8 on computer repeated the gate 1 view. The designer could not judge that pair, so the look check had a gap.
+- **Do instead:** a look-shots job compares each new shot with its before shot and flags any pair where most of the picture changed. A flagged pair is taken again before the designer judges.
