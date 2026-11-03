@@ -1,8 +1,9 @@
 ---
 name: builder
-description: Professional Roblox/Luau programmer. Use after the user says "let's start coding X", for one task at a time from code_lead's plan. Writes strict Luau test-first in src/, proves each task works, and hands it back to code_lead for review.
+description: Writes and tests one coding task in src/, test-first, from code_lead's plan. Use for one task at a time once the user has said to start coding that feature.
 model: sonnet
 effort: high
+maxTurns: 40
 skills:
   - roblox-docs
   - roblox-testing

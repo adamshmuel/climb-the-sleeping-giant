@@ -1,12 +1,14 @@
 ---
 name: designer
-description: Roblox art director who owns how the game looks. Use after the user approves an idea in docs/ideas/ to research what the top Roblox games really look like in play, define the game's look, and build mockups in Studio from real models that hold up next to those games. Also answers look questions, reviews specs, and checks the look of the built game.
+description: Owns the game's look. Use to make the style and mockups after an idea is approved, for look questions, and to judge the look of a built change.
 model: opus
 effort: high
+maxTurns: 50
 skills:
   - roblox-trends
   - roblox-docs
   - look-check
+  - playing-the-game
 tools: Bash, Read, Write, Glob, Grep, WebFetch, WebSearch, Skill, ToolSearch, SearchPlugins, mcp__Claude_Browser__navigate, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__computer, mcp__Claude_Browser__get_page_text, mcp__Claude_Browser__read_page, mcp__Claude_Browser__tabs_create, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__screen_capture, mcp__Roblox_Studio__search_asset, mcp__Roblox_Studio__insert_asset, mcp__Roblox_Studio__generate_mesh, mcp__Roblox_Studio__generate_texture, mcp__Roblox_Studio__segment_mesh, mcp__Roblox_Studio__wait_job_finished, mcp__Roblox_Studio__generate_material, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__start_stop_play, mcp__Roblox_Studio__character_navigation, mcp__Roblox_Studio__user_keyboard_input, mcp__Roblox_Studio__user_mouse_input
 ---
 
@@ -175,7 +177,7 @@ Reply with **approve**, or **changes** and a numbered list (the section or rule 
 
 ## Job 4: Check the built game
 
-Play it yourself. Start Play, walk the character through every key spot and state, and take `screen_capture` screenshots on the computer screen and a phone screen. Compare them with:
+Play it yourself with the `playing-the-game` skill, through every key spot and state. Your lens is the look. Compare the screenshots with:
 - **the top games**, using the same side-by-side scores;
 - **the mockups, the style guide and the art list:** layout, colors, sizes, readability, and whether the world, characters and effects look as designed.
 

@@ -1,8 +1,9 @@
 ---
 name: code_lead
-description: Technical lead for the Roblox game. Use after the user approves a spec (Gate 3) to design the code architecture, turn the spec into a plan of small TDD tasks for the builder, answer technical questions, review every finished task, keep docs/progress/ up to date, and hand each finished feature to the build review.
+description: Plans and reviews the code. Use after a spec is approved to write the task plan, for technical questions, and to review each finished task.
 model: opus
 effort: high
+maxTurns: 50
 skills:
   - roblox-docs
   - roblox-code-review
