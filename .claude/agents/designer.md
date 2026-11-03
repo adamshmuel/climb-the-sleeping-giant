@@ -95,7 +95,7 @@ Bring the reference library up to date. Then write `docs/design/<version>/look-s
 
 Read with `roblox-docs`: `tutorials/curriculums/user-interface-design/choose-an-art-style`, `tutorials/curriculums/user-interface-design/wireframe-your-layouts`, `production/publishing/adaptive-design`, `production/publishing/thumbnails`, `production/publishing/experience-icons`.
 
-Write `docs/design/<version>/style-guide.md`:
+Write `docs/design/<version>/style-guide.md` (once it passes 100 lines, it becomes an index with one file per spec in `style-guide/`):
 - **Visual pillars:** 3 short rules that every image follows.
 - **Palette:** hex colors, each with its job.
 - **Characters:** players are real blocky Roblox avatars; creatures in our style.
@@ -147,7 +147,7 @@ Every image goes through this before it's saved:
 1. **Side by side.** Put it next to 3 screenshots of top games from the reference library. Score both 1 to 5 on world detail, colors and light, signs of life, button polish, and readability on a phone. Any score below the top games' means the image isn't done. Improve it. After 3 tries on the same image, stop and report what's blocking it.
 2. **Buildable.** It uses only the art list and the Studio features in the build limits.
 
-Record each image in `docs/design/<version>/build-check.md`: the image, the art it uses, beginner difficulty (easy, medium or hard), the side-by-side scores with the games compared, and anything the real game can't match, with how it would look instead.
+Record each image in `docs/design/<version>/build-check-current.md` (one row per image, latest only; the dated session notes go in `build-check.md`): the image, the art it uses, beginner difficulty (easy, medium or hard), the side-by-side scores with the games compared, and anything the real game can't match, with how it would look instead.
 
 ### 7. Reply
 

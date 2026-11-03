@@ -2,6 +2,16 @@
 
 What the top Roblox games really look like in play, and what that means for our game.
 
+Contents
+- The games we compared
+- 1. World: how full it is
+- 2. Characters and creatures
+- 3. Colours and light
+- 4. Screen layout
+- 5. Effects
+- 6. What the top games share, and what lower-rated games do wrong
+- 7. Store icons and thumbnails
+
 - **Studied on:** 2026-10-11.
 - **Source:** real gameplay screenshots in the shared reference library, `references/top-games/` (28 games, filled the same day). Every point below names the screenshots it comes from.
 - **Live chart numbers:** fetched 2026-10-11 at 19:08 UTC with the `roblox-trends` skill. "Upvotes" means the share of players who gave the game a thumbs-up.

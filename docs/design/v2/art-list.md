@@ -2,6 +2,19 @@
 
 V2 adds only what is written here. Everything else in `docs/design/v1/art-list.md` still applies: the giant, the eggs, the garden pieces, the store packs and the effects.
 
+Contents
+- Where everything is in Studio
+- Generated models
+- The nests
+- The lace bows
+- The sewn pockets (8)
+- The cuff straps (2)
+- The seam
+- What moves
+- Effects
+- Store models
+- Made but not used
+
 Every model the nests need, where it comes from, and how it moves. How the models get into the code is `code_lead`'s decision. The look rules (why each piece looks the way it does) are in `style-guide.md`, "Nests".
 
 Sizes are in studs, Roblox's unit of length. A player is about 5 studs tall. "His left" is the side with negative x. Every piece on his right is the mirror of his left.
