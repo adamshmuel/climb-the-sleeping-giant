@@ -9,7 +9,7 @@ Over the limit means the approach is wrong, not that it needs more time. Fixing 
 
 ## Triggers
 
-The main chat checks these at every agent report and every task close. It never waits for the user to point one out. It writes each task's start time, so it can see the limit pass.
+The main chat checks these at every agent report and every task close. It never waits for the user to point one out. It writes each task's start time to `work/task-clock.txt` (`Task 5 | small | 2026-11-03 12:00`; small, task or done), and `.claude/hooks/task-clock.py` warns on every prompt and agent start once the limit passes.
 
 | Trigger | Kind |
 |---|---|

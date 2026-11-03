@@ -11,8 +11,10 @@ Setup files are CLAUDE.md, .claude/rules, .claude/agents, .claude/skills,
   less). Shrinking a file already over the line is always allowed.
 - Bash that writes a setup file (>, tee, sed -i, mv, cp or ln into it,
   git mv, or a Python script that writes one): blocked, so every setup change
-  goes through Edit/Write and the check above. rm and git rm only get the
-  reminder, because deleting can't make a file longer.
+  goes through Edit/Write and the check above. Every target is resolved
+  against any `cd` before it. rm and git rm of rule, skill or agent text only
+  get the reminder (deleting can't make a file longer); of a hook or settings
+  file they are blocked, because that turns a guard off.
 Written rules kept being missed; the memory guide says a rule Claude must
 follow every time belongs in a hook (2026-11-03).
 """
@@ -38,8 +40,12 @@ BEST = "https://code.claude.com/docs/en/best-practices"
 SETUP = r"CLAUDE(\.local)?\.md|\.claude/(rules|agents|skills|hooks|commands|settings)"
 # Case-blind, because the Mac's disk is: `claude.md` is the same file as `CLAUDE.md`.
 SETUP_IN_SHELL = re.compile(SETUP, re.I)
+# Deleting these turns a guard off, so it is blocked, not only reminded.
+PROTECTED = re.compile(r"\.claude/(hooks|settings)", re.I)
 # A redirect counts only when it points at a setup file, so `2>/dev/null` or a copy into work/ still reads.
-REDIRECT_TO_SETUP = re.compile(r">{1,2}\s*[\"']?[^\s;&|]*(" + SETUP + ")", re.I)
+REDIRECT = re.compile(r">{1,2}\s*[\"']?([^\s;&|\"']+)")
+SCRIPT_FLAGS = {"-e", "-f", "--expression", "--file"}
+TARGET_FLAGS = {"-t", "--target-directory"}
 # A Python script that opens a file to write, or copies, moves or writes one.
 PYTHON = re.compile(r"\bpython3?\b")
 PYTHON_WRITES = re.compile(r"""['"][wax]b?\+?['"]|write_text|write_bytes|shutil\.(copy|move)|os\.(rename|replace|remove)""")
@@ -128,36 +134,61 @@ def check_file(tool, tool_input):
     )
 
 
-def segment_writes_setup(segment):
-    try:
-        words = shlex.split(segment)
-    except ValueError:
-        words = segment.split()
-    if not words:
-        return False
-    cmd, args = os.path.basename(words[0]), words[1:]
-    files = [a for a in args if not a.startswith("-")]
-    if cmd == "git" and files[:1] in (["mv"], ["rm"]):
-        cmd, files = files[0], files[1:]
+def sed_files(args):
+    """The files sed or perl edits: never the script text, given with -e or as the first word."""
+    files, script_given, skip = [], False, False
+    for a in args:
+        if skip:
+            skip = False
+        elif a in SCRIPT_FLAGS:
+            script_given = skip = True
+        elif a and not a.startswith("-"):
+            files.append(a)
+    return files if script_given else files[1:]
+
+
+def written_files(cmd, args):
+    files = [a for a in args if a and not a.startswith("-")]
     if cmd in CHANGES_EVERY_FILE:
-        return any(SETUP_IN_SHELL.search(f) for f in files)
+        return files
     if cmd in CHANGES_LAST_FILE:
-        return bool(files) and bool(SETUP_IN_SHELL.search(files[-1]))
+        for i, a in enumerate(args[:-1]):
+            if a in TARGET_FLAGS:
+                return [args[i + 1]]
+        return files[-1:]
     if cmd in ("sed", "perl") and any(IN_PLACE.match(a) for a in args):
-        return any(SETUP_IN_SHELL.search(f) for f in files)
-    return False
+        return sed_files(args)
+    return []
 
 
-def segment_deletes_setup(segment):
-    words = segment.split()
-    if words[:2] == ["git", "rm"]:
-        words = words[1:]
-    return bool(words) and os.path.basename(words[0]) == "rm" and any(SETUP_IN_SHELL.search(w) for w in words[1:])
+def shell_targets(command):
+    """Return (written, deleted) paths, each resolved against any `cd` before it."""
+    written, deleted, cwd = [], [], ""
+    for segment in SEGMENTS.split(command):
+        try:
+            words = shlex.split(segment)
+        except ValueError:
+            words = segment.split()
+        if not words:
+            continue
+        cmd, args = os.path.basename(words[0]), words[1:]
+        if cmd == "git" and args[:1] in (["mv"], ["rm"]):
+            cmd, args = args[0], args[1:]
+        if cmd == "cd" and args:
+            cwd = os.path.normpath(os.path.join(cwd, args[0]))
+            continue
+        here = lambda p: os.path.normpath(os.path.join(cwd, p)) if cwd else p  # noqa: E731
+        written += [here(p) for p in REDIRECT.findall(segment)]
+        written += [here(p) for p in written_files(cmd, args)]
+        if cmd == "rm":
+            deleted += [here(a) for a in args if a and not a.startswith("-")]
+    return written, deleted
 
 
 def check_shell(command):
+    written, deleted = shell_targets(command)
     python_write = PYTHON.search(command) and SETUP_IN_SHELL.search(command) and PYTHON_WRITES.search(command)
-    if python_write or REDIRECT_TO_SETUP.search(command) or any(segment_writes_setup(s) for s in SEGMENTS.split(command)):
+    if python_write or any(SETUP_IN_SHELL.search(p) for p in written):
         emit(
             "PreToolUse",
             permissionDecision="deny",
@@ -167,7 +198,16 @@ def check_shell(command):
                 ".claude/hooks/setup-guides.py runs on them."
             ),
         )
-    elif any(segment_deletes_setup(s) for s in SEGMENTS.split(command)):
+    elif any(PROTECTED.search(p) for p in deleted):
+        emit(
+            "PreToolUse",
+            permissionDecision="deny",
+            permissionDecisionReason=(
+                "Deleting a hook or settings file turns a guard off. Empty its entry in .claude/settings.json "
+                "with Edit first, or ask the user."
+            ),
+        )
+    elif any(SETUP_IN_SHELL.search(p) for p in deleted):
         emit(
             "PreToolUse",
             additionalContext=(

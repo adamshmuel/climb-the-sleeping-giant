@@ -117,6 +117,11 @@ class SetupGuides(unittest.TestCase):
             "cd work && cp x.md ../.claude/skills/s/SKILL.md",
             "python3 - <<'EOF'\nopen('.claude/rules/git.md','w').write('x')\nEOF",
             "python3 -c \"open('CLAUDE.md','w')\"",
+            "cd .claude && tee rules/x.md",
+            "cd .claude/rules; echo x > a.md",
+            "cp -t .claude/rules work/a.md",
+            "rm .claude/hooks/git-guard.py",
+            "git rm .claude/settings.json",
         ]:
             result = run({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}, self.project)
             self.assertEqual(decision(result), "deny", command)
@@ -129,7 +134,7 @@ class SetupGuides(unittest.TestCase):
             self.assertIn("Anthropic", context(result), command)
 
     def test_shell_reads_of_setup_files_are_allowed(self):
-        for command in ["wc -l CLAUDE.md .claude/rules/*.md", "grep -n paths .claude/rules/git.md", "sed -n 1,20p CLAUDE.md", "git add CLAUDE.md", "wc -l CLAUDE.md 2>/dev/null", "cat CLAUDE.md > work/copy.md", "cp .claude/agents/x.md work/", "cat .claude/rules/git.md | tee work/x.md", "rm work/old.md && wc -l CLAUDE.md"]:
+        for command in ["wc -l CLAUDE.md .claude/rules/*.md", "grep -n paths .claude/rules/git.md", "sed -n 1,20p CLAUDE.md", "git add CLAUDE.md", "wc -l CLAUDE.md 2>/dev/null", "cat CLAUDE.md > work/copy.md", "cp .claude/agents/x.md work/", "cat .claude/rules/git.md | tee work/x.md", "rm work/old.md && wc -l CLAUDE.md", "sed -i '' -e 's/CLAUDE.md/x/' work/a.md", "sed -i 's#.claude/rules#x#' work/a.md", "cd .claude && cat rules/git.md"]:
             result = run({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}, self.project)
             self.assertIsNone(decision(result), command)
 
