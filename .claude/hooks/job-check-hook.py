@@ -22,10 +22,15 @@ def main():
         data = json.load(sys.stdin)
     except ValueError:
         return
-    path = (data.get("tool_input") or {}).get("file_path") or ""
+    inp = data.get("tool_input") if isinstance(data, dict) else None
+    path = inp.get("file_path") if isinstance(inp, dict) else None
+    if not isinstance(path, str) or not path:
+        return
     project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
+    # A relative path is the project's, not this hook's working folder.
+    path = os.path.abspath(os.path.join(project, path))
     work = os.path.join(project, "work") + os.sep
-    if not os.path.abspath(path).startswith(work):
+    if not path.startswith(work):
         return
     name = os.path.basename(path)
     if CARD.search(name):
@@ -42,8 +47,13 @@ def main():
     else:
         return
     script = os.path.join(project, "scripts", "job-check.sh")
-    out = subprocess.run([script, *args], capture_output=True, text=True, cwd=project)
-    if out.returncode != 0:
+    # A check that cannot run is reported, never passed (fail closed).
+    try:
+        out = subprocess.run([script, *args], capture_output=True, text=True, cwd=project, timeout=60)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        problems.append(f"The job check could not run ({type(error).__name__}), so {name} is unchecked. Run scripts/job-check.sh {' '.join(args)} by hand.")
+        out = None
+    if out is not None and out.returncode != 0:
         tail = "\n".join((out.stdout + out.stderr).strip().splitlines()[-15:])
         problems.append(
             f"scripts/job-check.sh {' '.join(args)} failed:\n{tail}\n"

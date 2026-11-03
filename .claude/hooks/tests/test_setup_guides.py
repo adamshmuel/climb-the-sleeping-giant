@@ -138,6 +138,12 @@ class SetupGuides(unittest.TestCase):
             result = run({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}, self.project)
             self.assertIsNone(decision(result), command)
 
+    def test_python_that_only_reads_a_setup_file_is_allowed(self):
+        # A quoted letter is only a write mode inside open(); a test filter or a count is not.
+        for command in ["python3 .claude/hooks/tests/test_setup_guides.py -k \"a\"", "python3 -c \"print(open('CLAUDE.md').read().count('x'))\""]:
+            result = run({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}, self.project)
+            self.assertIsNone(decision(result), command)
+
 
 if __name__ == "__main__":
     unittest.main()

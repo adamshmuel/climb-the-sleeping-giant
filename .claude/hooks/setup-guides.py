@@ -48,7 +48,8 @@ SCRIPT_FLAGS = {"-e", "-f", "--expression", "--file"}
 TARGET_FLAGS = {"-t", "--target-directory"}
 # A Python script that opens a file to write, or copies, moves or writes one.
 PYTHON = re.compile(r"\bpython3?\b")
-PYTHON_WRITES = re.compile(r"""['"][wax]b?\+?['"]|write_text|write_bytes|shutil\.(copy|move)|os\.(rename|replace|remove)""")
+# A quoted w, a or x is a write mode only as open()'s later argument; alone it is a test filter or a count.
+PYTHON_WRITES = re.compile(r"""open\(.*?,\s*(mode\s*=\s*)?['"][wax]b?\+?['"]|write_text|write_bytes|shutil\.(copy|move)|os\.(rename|replace|remove)""")
 SEGMENTS = re.compile(r"&&|\|\||[;|\n]")
 # Commands where every file named is changed (mv also removes its source), and where only the last one is.
 # rm is not here: deleting can't make a file longer, so it only gets the guide reminder.

@@ -52,6 +52,22 @@ class JobCheckHook(unittest.TestCase):
         self.assertIn("bad step", result["reason"])
         self.assertNotIn("--handoff", result["reason"])
 
+    def test_a_checker_that_cannot_run_is_reported(self):
+        # A missing or broken job-check.sh must not let a card through unchecked.
+        os.remove(os.path.join(self.project, "scripts", "job-check.sh"))
+        result = self.run_on("work/t5/card.md", "## Step 1\n")
+        self.assertEqual(result.get("decision"), "block")
+        self.assertIn("could not", result["reason"])
+
+    def test_a_relative_path_is_read_from_the_project(self):
+        path = os.path.join(self.project, "work", "t5", "handoff.md")
+        with open(path, "w") as f:
+            f.write("## Step 1 FAIL\n")
+        data = {"tool_name": "Write", "tool_input": {"file_path": "work/t5/handoff.md"}}
+        env = dict(os.environ, CLAUDE_PROJECT_DIR=self.project)
+        out = subprocess.run([sys.executable, HOOK], input=json.dumps(data), capture_output=True, text=True, env=env, cwd=tempfile.mkdtemp())
+        self.assertEqual(json.loads(out.stdout or "{}").get("decision"), "block")
+
     def test_files_outside_work_are_left_alone(self):
         self.assertEqual(self.run_on("src/x.luau", "-- FAIL\n"), {})
         self.assertEqual(self.run_on("work/t5/notes.md", "FAIL\n"), {})
