@@ -26,12 +26,14 @@ import shlex
 import sys
 
 MEMORY = "https://code.claude.com/docs/en/memory"
+# An agent's prompt follows its model's prompting guide too; guides-check.py watches the same pages.
+MODEL_GUIDES = "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-{opus,sonnet,haiku}-5-5"
 GUIDES = [
     (re.compile(r"(^|/)CLAUDE(\.local)?\.md$"), MEMORY, 200),
     (re.compile(r"(^|/)\.claude/rules/.+\.md$"), MEMORY, 200),
     (re.compile(r"(^|/)\.claude/skills/.+/SKILL\.md$"), "https://code.claude.com/docs/en/skills", 500),
     (re.compile(r"(^|/)\.claude/skills/"), "https://code.claude.com/docs/en/skills", None),
-    (re.compile(r"(^|/)\.claude/agents/"), "https://code.claude.com/docs/en/sub-agents", None),
+    (re.compile(r"(^|/)\.claude/agents/"), f"https://code.claude.com/docs/en/sub-agents and the agent's model page {MODEL_GUIDES}", None),
     (re.compile(r"(^|/)\.claude/hooks/"), "https://code.claude.com/docs/en/hooks", None),
     (re.compile(r"(^|/)\.claude/commands/"), "https://code.claude.com/docs/en/skills", None),
     (re.compile(r"(^|/)\.claude/settings(\.local)?\.json$"), "https://code.claude.com/docs/en/settings", None),
