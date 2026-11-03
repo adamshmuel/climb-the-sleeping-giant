@@ -32,4 +32,5 @@ When the choice is between looks or ways to play, `designer` mocks up each optio
 - Use `screen_capture`, and the device simulator for phone. Anything that only exists in Play is shot in Play.
 - Take fixed-camera shots with the ready-made [shots job](shots-job.md), in Edit and in Play: only `screen_capture`'s own `camera_position` and `look_at_position` place the camera. A camera set by script doesn't show in the shot. The job's last step compares each after shot with its before shot, before the designer judges.
 - Judge a shot only with what this version really spawns. A stand-in from a later version is named as such and judged in that version's check. Check a copied library model's `Transparency` before the shot: library copies can be stored hidden.
-- Judge the whole screen, not only the changed part: something covering the main character, text cut off at an edge, or controls overlapping are problems even if no rule names them.
+- Judge the whole screen (`playing-the-game` skill, step 7).
+- Aim so the target sits at the wanted screen y; a phone sees only about 35° below the view centre. A Play proof recreates the bug shot's camera position and target.

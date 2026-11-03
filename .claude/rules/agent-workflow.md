@@ -24,6 +24,10 @@ Every agent, in every job:
 - **Briefs don't steer.** A brief gives the player's problem, the facts, the cost so far and what it blocks, and the questions. It never hints at an answer.
 - **See the options before choosing** between looks or ways to play (`look-check` skill).
 - **No "later".** Each option is in or out now (`docs.md`).
+- **Check what exists before you make something new:** the reference library, the plugin and skill catalog (`SearchPlugins`), the web.
+- **Test before you propose.** Propose only what you proved, and say plainly what you didn't test.
+- **When a route is blocked, try another one,** and report which worked.
+- **Show evidence:** sources, links, screenshots, console lines, asset ids, exact numbers.
 ## Order work by what it stands on
 
 Work done in the wrong order gets done twice. The method is the `order-the-work` skill; this game's layer map is `docs/layers.md`.

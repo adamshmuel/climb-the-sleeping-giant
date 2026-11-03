@@ -75,7 +75,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 - **Play like a player.** Each case marks "between", moves the character to its start and waits for Grounded, then names the case. Before calling a climb slow or stuck, measure the gaps round the climb line. When the character stalls, the script turns toward the open face, steps back or jumps a few times; a turn that works is a pass. A stall is never reported as a cause until a shot from the player's camera shows what stops the character.
 - **Phone checks** rerun only what the phone screen changes (shots, on-screen buttons and text), never walks.
 - **A shot of an effect is checked against how long it lasts.** If the effect ends before the capture, prove it with the game's own signal and ask for no shot. The handoff says up front whether the task changes what the player sees; if not, it budgets no look shots.
-- **A proof camera** is placed the `look-check` skill's way ("Shots"), set off the player's facing line. Aim it so the target sits at the wanted screen y (a phone sees only about 35° below the view centre). A Play proof recreates the bug shot's camera position and target.
+- **A proof camera** is placed and aimed the `look-check` skill's way ("Shots"), set off the player's facing line.
 - **A gap proof** aims the camera at a right angle to the line between the two edges (about 10 studs away, 3 up), with both edges and the gap in the frame. Zoom the shot before naming what blocks it.
 - **Choose the shot and the pass rule together.** A "feet on the floor" proof is shot from behind the player along their path, at their own zoom distance, never from a high side camera where a wall can hide their legs.
 
