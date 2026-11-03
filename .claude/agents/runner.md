@@ -4,6 +4,7 @@ description: Runs one fully described job (a test run and its fetch, a read-only
 model: haiku
 effort: low
 maxTurns: 25
+autoCompactWindow: 100000
 omitClaudeMd: true
 tools: Bash, Read, Write, Edit, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance
 hooks:

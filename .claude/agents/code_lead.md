@@ -4,6 +4,7 @@ description: Plans and reviews the code. Use after a spec is approved to write t
 model: opus
 effort: high
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-docs
   - roblox-code-review

@@ -4,6 +4,7 @@ description: Writes the feature specs and owns the order of work. Use after the 
 model: opus
 effort: high
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-docs
   - roblox-trends

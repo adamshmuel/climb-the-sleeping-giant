@@ -4,6 +4,7 @@ description: Owns the game idea, gameplay and business. Use for new ideas, gamep
 model: opus
 effort: high
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-trends
   - roblox-docs

@@ -4,6 +4,7 @@ description: Owns the game's look. Use to make the style and mockups after an id
 model: opus
 effort: high
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-trends
   - roblox-docs

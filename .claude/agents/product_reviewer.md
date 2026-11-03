@@ -4,6 +4,7 @@ description: Plays a finished feature as a new player and checks it against its 
 model: opus
 effort: high
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-docs
   - roblox-trends

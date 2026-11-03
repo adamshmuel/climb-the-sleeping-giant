@@ -4,6 +4,7 @@ description: Writes and tests one coding task in src/, test-first, from code_lea
 model: sonnet
 effort: high
 maxTurns: 40
+autoCompactWindow: 150000
 skills:
   - roblox-docs
   - roblox-testing
