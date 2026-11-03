@@ -420,13 +420,14 @@ Stands on: Task 61b (the right tie built, full run green), Task 61h (the quiet-f
 - **Spec rules:** Rule 101 (Ladders hold you); spec 5's Rule 8 (Steps make noise).
 - **The proof list** (right tie only, session hold, smoke run first, each case starts standing at the foot): pushes at 0°, ±15° and ±20°; the mirrored rail joint case three times (Task 61i's retry, flipped: x times -1); one cap-to-cap fall on the right fold; one walk-out from the right brim pocket (below). The quiet let-go from the right tie is in Task 61v, after the chute is built under it (product, 2026-11-03). Not a both-tie sweep: the left tie is proven by Tasks 61a, 61i and 61h. Every case retries like a player and shoots any stall (Lesson 297).
 - **The brim pocket walk-out** (Stands on: Task 61b closed; product, 2026-11-03, `work/t61b/redflag-decision.md`, item 2). The stuck scan found a pocket under the right cap's brim at (35.2, 74.3, 37.0), floor at 49 degrees, open on its outer side. One case: start standing on the right upright at y 74, step +z into the pocket, then press out like a player (turn, step back, jump, a few times), with one shot from the player's camera. Pass: he walks or slides out with no rescue (Rule 22 (What counts as stuck), condition 4). Fail: a hidden filler in the crease, red test first, under the line below. Right side only: the left pocket measures the same (Lesson 305). About 5 minutes, 2 Studio calls.
-- **Fix only if the proof finds it:** a STUCK at the mirrored joint or in the brim pocket gets a hidden filler built the way Task 61k planned it (red test first); any other STUCK goes to `product` as a product decision.
-- **How big:** 5 steps, about 14 Studio calls, 0.7 h:
-  1. smoke run, then the five band climbs and the joint case (Sonnet, at most 10 Studio calls, at most 26 tool calls);
-  2. the cap-to-cap fall, then the brim pocket walk-out (Sonnet, at most 6 Studio calls, at most 16 tool calls);
-  3. the fix, only if needed, then a narrow run, then a full run by the runner if a fix fired (Sonnet then Haiku, 3 Studio calls, 15 tool calls);
-  4. after shots from the same cameras as Task 61b's before shots (Sonnet, 4 Studio calls, 12 tool calls);
-  5. designer judges each pair, left and right side by side (Opus, 0 Studio calls, 10 tool calls).
+- **Task 61jf dropped (2026-11-03):** the proof found no STUCK or RESCUED. All 8 climbs ended ON TOP, the fall made no thud, and product ruled the pocket a pass: he climbs out by `ClimbTrussUp_2` on the first push, and Rule 22 (What counts as stuck) counts a ladder as a way out (`work/t61b/redflag-decision.md`, item 2). The rule below is kept for the record.
+- **Fix only if the proof finds it, as its own numbered task:** a STUCK or RESCUED stops Task 61j after its stall shots (a task has at most 6 steps, and a fix with its red test, narrow run and full run does not fit in 61j). A STUCK at the mirrored joint or in the brim pocket becomes Task 61jf: a hidden filler built the way Task 61k planned it, red test first, then a narrow run, then a full run by the runner, then 61j's remaining cases. Stands on: Task 61j's stall shots and measured stall spot (Lesson 26: the cause named on real examples), Task 61b. Any other STUCK goes to `product` as a product decision.
+- **How big:** 5 steps, about 48 Studio calls, 0.7 h (handoff `work/t61j/handoff.md`; a player-like try costs 2 to 4 Studio calls, and the paste limit splits the climbs over two steps):
+  1. right-side copies of the scripts and their Edit dry runs (Sonnet, at most 4 Studio calls, at most 18 tool calls, 7 min);
+  2. smoke run, then the five band climbs (Sonnet, at most 18 Studio calls, at most 30 tool calls, 13 min);
+  3. the joint case twice more, the cap-to-cap fall, then the brim pocket walk-out (Sonnet, at most 16 Studio calls, at most 28 tool calls, 11 min);
+  4. after shots from the same cameras as Task 61b's before shots (Sonnet, at most 10 Studio calls, at most 14 tool calls, 7 min);
+  5. designer judges each pair (Opus, 0 Studio calls, at most 10 tool calls, 4 min).
 - **Lessons:** 51, 182, 225, 253, 255, 297.
 
 ## Task 61n: Cap-to-cap falls and cap egg grabs are counted per trip
