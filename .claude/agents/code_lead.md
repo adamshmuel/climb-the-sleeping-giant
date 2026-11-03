@@ -93,6 +93,8 @@ The main chat passes it on. Answer the builder's technical questions the same wa
 
 ## Job 4: Review every finished task
 
+A small fix (the 10-minute kind) gets no review: one `runner` test run, then the commit. Every other task gets this review.
+
 When the builder says a task is done:
 1. Read the diff (`git diff`) and the tests.
 2. Re-run the quality checks and the tests yourself. Never trust a "passed" you didn't see.
