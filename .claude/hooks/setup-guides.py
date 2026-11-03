@@ -9,6 +9,10 @@ Setup files are CLAUDE.md, .claude/rules, .claude/agents, .claude/skills,
   that leaves CLAUDE.md or a rule file over 200 lines, or a SKILL.md over
   500, and makes it longer (the guides' size targets: long files are followed
   less). Shrinking a file already over the line is always allowed.
+- Edit/Write of setup text (CLAUDE.md, rules, agents, skills, commands): warns
+  when a new line nearly repeats a line in another of those files, so the
+  copy becomes a pointer to the rule's one home (the memory guide: no
+  duplicates). A warning, not a block: a home moving its own text is fine.
 - Bash that writes a setup file (>, tee, sed -i, mv, cp or ln into it,
   git mv, or a Python script that writes one): blocked, so every setup change
   goes through Edit/Write and the check above. Every target is resolved
@@ -64,6 +68,20 @@ CHANGES_EVERY_FILE = {"mv", "truncate", "tee"}
 CHANGES_LAST_FILE = {"cp", "ln", "install", "rsync"}
 IN_PLACE = re.compile(r"^(-[a-zA-Z]*i|--in-place)")
 # The reminder is for setup talk only, so game prompts stay short.
+# A copied rule: most of a new line's words already stand in one line of another setup text file.
+SETUP_TEXT = re.compile(r"(^|/)(CLAUDE(\.local)?\.md|\.claude/(rules|agents|skills|commands)/.+\.md)$")
+WORD = re.compile(r"[a-z0-9_]{3,}")
+COMMON = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "its", "are", "not", "never", "only", "every",
+    "one", "each", "when", "before", "after", "your", "you", "them", "than", "then", "what", "which", "all",
+    "any", "but", "has", "have", "was", "use", "add",
+}  # fmt: skip
+# A pointer ("Follow `luau.md`") has too few words to count; a copy shares at least 3 in 4 of the longer line's,
+# so a short line that only borrows a few words from a long one is not a copy.
+MIN_WORDS = 6
+SAME = 0.75
+# Frontmatter (tools:, skills:, model:) repeats across agent files on purpose.
+FRONTMATTER = re.compile(r"^[\w-]+:(\s|$)")
 SETUP_WORDS = re.compile(r"\b(rules?|agents?|subagents?|skills?|hooks?|claude\.md|settings?|workflow|setup|memory|guides?)\b", re.I)
 
 PROMPT_NOTE = (
@@ -112,6 +130,39 @@ def count(text):
     return len(text.splitlines()) if text else 0
 
 
+def words(line):
+    if FRONTMATTER.match(line):
+        return set()
+    return {w.rstrip("s") for w in WORD.findall(line.lower()) if w not in COMMON}
+
+
+def setup_texts(skip):
+    root = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    paths = [os.path.join(root, "CLAUDE.md")]
+    for top in ("rules", "agents", "skills", "commands"):
+        for folder, _, names in os.walk(os.path.join(root, ".claude", top)):
+            paths += [os.path.join(folder, n) for n in names if n.endswith(".md")]
+    for p in paths:
+        text = None if os.path.realpath(p) == os.path.realpath(skip) else read_lines(p)
+        if text:
+            yield os.path.relpath(p, root).replace(os.sep, "/"), text
+
+
+def duplicates(path, old, after):
+    """Lines of other setup text files that a line this change adds nearly repeats, as `file:line`."""
+    known = set((old or "").splitlines())
+    added = [w for w in (words(line) for line in after.splitlines() if line not in known) if len(w) >= MIN_WORDS]
+    found = []
+    if not added:
+        return found
+    for rel, text in setup_texts(path):
+        for n, line in enumerate(text.splitlines(), 1):
+            have = words(line)
+            if len(have) >= MIN_WORDS and any(len(w & have) >= SAME * max(len(w), len(have)) for w in added):
+                found.append(f"{rel}:{n}")
+    return found
+
+
 def check_file(tool, tool_input):
     path = tool_input.get("file_path", "")
     found = guide_for(path.replace(os.sep, "/"))
@@ -133,13 +184,17 @@ def check_file(tool, tool_input):
                 ),
             )
             return
-    emit(
-        "PreToolUse",
-        additionalContext=(
-            f"Setup file. Check Anthropic's guide ({url}, and {BEST}) before this change, "
-            "and say in your report which guide point it follows."
-        ),
+    note = (
+        f"Setup file. Check Anthropic's guide ({url}, and {BEST}) before this change, "
+        "and say in your report which guide point it follows."
     )
+    copies = duplicates(path, old, after) if after is not None and SETUP_TEXT.search(path.replace(os.sep, "/")) else []
+    if copies:
+        note += (
+            f" New lines nearly repeat {', '.join(copies[:5])}. Each rule has one home ({MEMORY}: no duplicates): "
+            "point to that home in one line, or move the rule there, instead of keeping two copies."
+        )
+    emit("PreToolUse", additionalContext=note)
 
 
 def sed_files(args):

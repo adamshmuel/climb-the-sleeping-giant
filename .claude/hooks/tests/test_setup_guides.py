@@ -105,6 +105,35 @@ class SetupGuides(unittest.TestCase):
         )
         self.assertEqual(result, {})
 
+    def write_rule(self, name, text):
+        path = os.path.join(self.project, ".claude", "rules", name)
+        with open(path, "w") as f:
+            f.write(text)
+        return path
+
+    def agent_edit(self, added):
+        path = os.path.join(self.project, ".claude", "agents", "builder.md")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write("# Builder\n")
+        return run(self.edit(path, "# Builder\n", "# Builder\n" + added + "\n"), self.project)
+
+    def test_a_line_copied_from_another_setup_file_gets_a_duplicate_warning(self):
+        self.write_rule("git.md", "# Git\n\n- No AI mentions, badges or watermarks in code comments, docs, README files or commit messages.\n")
+        result = self.agent_edit("- Never add AI mentions, badges or watermarks in code comments, docs, README files or commits.")
+        self.assertIsNone(decision(result))
+        self.assertIn(".claude/rules/git.md:3", context(result))
+
+    def test_a_one_line_pointer_to_the_home_gets_no_duplicate_warning(self):
+        self.write_rule("git.md", "# Git\n\n- No AI mentions, badges or watermarks in code comments, docs, README files or commit messages.\n")
+        result = self.agent_edit("- No AI mentions (`git.md`, \"No AI attribution\").")
+        self.assertNotIn("repeats", context(result))
+
+    def test_a_new_rule_found_nowhere_else_gets_no_duplicate_warning(self):
+        self.write_rule("git.md", "# Git\n\n- No AI mentions, badges or watermarks in code comments, docs, README files or commit messages.\n")
+        result = self.agent_edit("- Run the whole test suite after every change to the world before the task closes.")
+        self.assertNotIn("repeats", context(result))
+
     def test_shell_write_to_a_setup_file_is_blocked(self):
         for command in [
             "echo hi >> CLAUDE.md",
