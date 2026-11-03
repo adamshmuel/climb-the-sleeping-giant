@@ -2,8 +2,9 @@
 name: designer
 description: Owns the game's look. Use to make the style and mockups after an idea is approved, for look questions, and to judge the look of a built change.
 model: opus
-effort: high
+effort: medium
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-trends
   - roblox-docs

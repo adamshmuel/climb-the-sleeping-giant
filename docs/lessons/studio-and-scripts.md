@@ -150,7 +150,8 @@ About deleting files, reading output, and writing scripts for Studio. The map of
 ## Lesson 73: The hook counts an agent's tool calls, not the agent
 - **What happened:** Task 54 place step 3's builder had to write a new 409-line job and then run it. It spent 36 shell reads finding the pieces, used 51 tool calls against a cap of 30, and reported "about 24 of 30" (2026-10-28). The main chat had started one builder for both writing and pasting, against Lesson 63.
 - **Do instead:** the memory hook (`.claude/hooks/agent-memory-cap.py`) counts each agent's tool calls since its last prompt or resume. From call 25 it shows the real count. Past 30 only a Studio call (to finish a world change or fetch a running job) or a note still works; past 35 only a note. Reports give the hook's count, never a guess. A handoff step that writes a new job over about 300 lines and runs it is always two builders (Lesson 63), even when the handoff names one step.
-- **Who checks:** the hook; the main chat (splitting the step); `code_lead` (sizing the handoff).
+- **Now (2026-11-03):** no hook counts calls any more. The agent's `maxTurns` is the official limit (Lesson 25), and each handoff step lists its calls (`writing-handoffs` skill).
+- **Who checks:** the main chat (splitting the step); `code_lead` (sizing the handoff).
 
 ## Lesson 74: A Studio script requires a tools module through a clone
 - **What happened:** in Task 54's names check, a plain `require` of `ServerStorage.Tools.checks.StartCheck` in Edit gave back an old cached copy, so `nearSpot` was nil ("attempt to call a nil value") and the start re-check was lost (2026-10-28). The builder's call 7 used `require(...StartCheck:Clone())` and worked.

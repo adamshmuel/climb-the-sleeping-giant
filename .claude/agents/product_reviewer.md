@@ -2,8 +2,9 @@
 name: product_reviewer
 description: Plays a finished feature as a new player and checks it against its spec. Use after code review passes, before the user's final approval.
 model: opus
-effort: high
+effort: medium
 maxTurns: 50
+autoCompactWindow: 200000
 skills:
   - roblox-docs
   - roblox-trends

@@ -36,7 +36,8 @@ About handing work between agents and asking owners. The map of all lessons is `
 - **Do instead:** `.claude/hooks/agent-memory-cap.py` reads each project agent's real memory size before every tool call. At 85% it warns the agent to wrap up. A builder at its limit is blocked from everything except writing its state note in `work/`. Agents also write a long script once: paste it straight into Studio, never into a file and then again into Studio.
 - **What happened again:** a fresh code_lead ended one Task 33 job at 208k of 200k in 31 tool calls. The hook only blocked builders, and no other agent's prompt had a call cap (2026-10-27).
 - **Do instead (added):** the hook blocks every project agent at its limit, not only the builder. Every agent prompt carries a cap of at most 30 tool calls, and a job that needs more is split.
-- **Who checks:** the hook; `code_lead` keeps handoff scripts short.
+- **Now (2026-11-03):** the homemade hook is gone. Each agent file sets the official `autoCompactWindow` (when its memory is compacted) and `maxTurns` (its turn limit), from the [sub-agents guide](https://code.claude.com/docs/en/sub-agents).
+- **Who checks:** the agent settings; `code_lead` keeps handoff scripts short.
 
 ## Lesson 27: Every task close compares the scan with the planned reds
 - **What happened:** two stuck spots at the cushion's front edge were found only at Task 41's review, though Task 41 didn't touch the cushion. Earlier task closes hadn't compared the scan's unlisted spots with the planned reds (2026-10-27).

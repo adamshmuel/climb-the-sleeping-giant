@@ -2,8 +2,9 @@
 name: runner
 description: Runs one fully described job (a test run and its fetch, a read-only check, copying files, filling a table) and reports the exact result. Use only when the prompt says what to run and what counts as a pass.
 model: haiku
-effort: low
+effort: medium
 maxTurns: 25
+autoCompactWindow: 100000
 omitClaudeMd: true
 tools: Bash, Read, Write, Edit, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance
 hooks:

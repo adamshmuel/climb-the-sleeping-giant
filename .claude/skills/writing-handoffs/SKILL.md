@@ -11,12 +11,13 @@ Most of an agent's cost is rereading its memory before every step, so every extr
 
 | Agent | Limit |
 |---|---|
-| `builder` | A fresh agent per task, never over 150k tokens. It stops and reports after each step (after a green test run, never in the middle of a world change), with a short state note in `work/`. Under 150k the main chat resumes it; above, a fresh builder carries on from the note |
-| `runner` | A fresh agent per job, never over 100k tokens, never resumed |
-| Others | Resume while under 200k. Above that, a fresh one at the next natural break |
+| `builder` | A fresh agent per task. It stops and reports after each step (after a green test run, never in the middle of a world change), with a short state note in `work/`. The main chat resumes it for the next step; a fresh builder carries on from the note when it was compacted or cut off |
+| `runner` | A fresh agent per job, never resumed |
+| Others | Resume them; start a fresh one at the next natural break once they have been compacted |
 
+- Each agent file sets `autoCompactWindow` (when its memory is compacted) and `maxTurns` (how many turns it gets before its report comes back marked partial). These are the [official subagent settings](https://code.claude.com/docs/en/sub-agents); no hook counts calls.
 - A fresh agent starts at about 50k tokens; each tool call adds about 2.4k.
-- **Every step: at most 30 tool calls** (Studio, shell and reads together), numbered under the step heading: session hold, phone set and reset, camera bind and reset, console read, one fetch per expected report page. The cap is that count plus one spare. `.claude/hooks/agent-memory-cap.py` enforces it.
+- **Every step lists its tool calls** (Studio, shell and reads together), numbered under the step heading: session hold, phone set and reset, camera bind and reset, console read, one fetch per expected report page. The list plus one spare stays under the agent's `maxTurns`.
 - **Every step gives planned minutes and its model** in its heading, for example `## Step 3: The full run (2 Studio calls, 4 min, Haiku)`. Steps add up to the task's hours. No task is planned over 1 hour unless it says why.
 - **Reads:** a step names at most 5 files and quotes the lesson lines it needs.
 - **Pastes:** each script is pasted once, straight into Studio. A step's caps give paste lines (file lines times pastes). Over about 2000 paste lines, split the step. No job file over 300 lines. Every snippet is in the handoff or one named job file.
