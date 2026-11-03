@@ -328,6 +328,8 @@ What this project learned the hard way, so it doesn't happen again.
 | 316 | Measure both sides of the body before mirroring a fitted part | `look-and-art.md` |
 | 317 | Run a check on the built twin before making it a pass item | `teamwork.md` |
 | 318 | When a check is skipped, drop the setup only it used | `teamwork.md` |
+| 319 | Budget script-writing steps per script, and look parts up from their model | `teamwork.md` |
+| 320 | Shots repeat, so the shot method is a ready-made job | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

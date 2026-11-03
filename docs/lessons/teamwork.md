@@ -393,3 +393,11 @@ Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w buil
 ## Lesson 318: When a check is skipped, drop the setup only it used
 - **What happened:** In Task 61b the tie-top ray in WalkPieces was skipped for the cap ties, but the constant `TIE_TOP_GROUND` and the code that fed it stayed. Code review found it doing nothing, which cost a review round (about 12 minutes).
 - **Do instead:** when a check is skipped for one case, remove in the same change any setup that only that check used.
+
+## Lesson 319: Budget script-writing steps per script, and look parts up from their model
+- **What happened:** Task 61j Step 1 had to write 4 Play scripts of 120 to 287 lines and dry-run each, with a cap of 18 tool calls. It used 29. The pocket script also looked `ClimbTrussUp_1` up by its bare name and found the left tie's part, which cost a fix and a fifth Studio call.
+- **Do instead:** a step that writes job scripts budgets about 4 tool calls per script (write, lint fix, dry run, spare) plus its reads. A script finds every part from its model first (for example `CapTieRight`, then the part inside it), never by a bare part name that a mirror twin also has.
+
+## Lesson 320: Shots repeat, so the shot method is a ready-made job
+- **What happened:** The 8 look shots were taken twice tonight, by two builders. Task 61b Step 4 (the before shots) took 28 tool calls against 24. Task 61j Step 4 (the after shots) took 27 against 14. Each one worked out again how to hide the mockup folders, set the phone device and place the camera. The second builder read the device-simulator skill and got the folder name wrong once.
+- **Do instead:** when a step is going to be done again, the first builder writes its exact calls once into a ready-made job file in `work/` (the hide and restore, the device setup, and each camera's arguments). The next handoff tells the builder to run that file and nothing else, and budgets the calls it really took.
