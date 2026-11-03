@@ -86,7 +86,7 @@ When the user asks why an agent decided something, send the question to that own
 ## Files
 
 - **No big files.** No file in `src/`, `tools/`, `scripts/`, `docs/`, `.claude/` or `work/` goes over 1000 lines. Split a file near the limit by topic, listed in its folder's index. `.claude/hooks/file-size.py` warns at 900 on every edit and sends the edit back over 1000.
-- **Working files live in `work/`** (git-ignored): handoffs, state notes, reports, trial scripts. Never in `/tmp`, which the Mac empties.
+- **Working files live in `work/<task>/`** (git-ignored): handoffs, state notes, reports, trial scripts. Never loose in `work/`, never in `/tmp`, which the Mac empties. Worktrees link to the main `work/` (`worktree.symlinkDirectories`). `.claude/hooks/work-tidy.py` notes a loose file and, at session start, moves anything untouched for 7 days to the Trash, except shared folders and files a git file names.
 
 | Path | Written by | In git |
 |---|---|---|
