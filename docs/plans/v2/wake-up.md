@@ -1,5 +1,18 @@
 # Plan: Wake-up (V2, spec 6)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [Already built elsewhere, not built again here](#already-built-elsewhere-not-built-again-here)
+- [Decisions for the build](#decisions-for-the-build)
+- [Sound hooks for plan 7](#sound-hooks-for-plan-7)
+- [Tasks](#tasks)
+  - [Part 1: Who the hand hunts (server)](#part-1-who-the-hand-hunts-server) (Tasks 1 to 9)
+  - [Part 2: World prep](#part-2-world-prep) (Task 10)
+  - [Part 3: What players see (client)](#part-3-what-players-see-client) (Tasks 11 to 20)
+  - [Part 4: Analytics, a whole session, and the Play proof](#part-4-analytics-a-whole-session-and-the-play-proof) (Tasks 21, 22, 23)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+- [Answers (2026-10-19)](#answers-2026-10-19)
+
 **Status: written** (2026-10-19). Not started. Updated the same day with product's check of its two build decisions and designer's answers (`docs/specs/v2/research/decisions-plans.md`); nothing waits any more. It is built after plans 1 to 5, because it changes pieces they build: the ladder warning (plan 3, Task 15), the stuck rescue's red-circle guard (plan 2, Task 12) and his right arm with the cuff that rides it (plan 5, Task 9).
 
 How `docs/specs/v2/wake-up.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`.

@@ -1,5 +1,10 @@
 # Stuck safety plan, Part 6: the phone grab pill stays on screen (Task 56)
 
+**Contents**
+- [Task 56: Keep the phone grab pill on screen](#task-56-keep-the-phone-grab-pill-on-screen), with its pin rule, Steps 1 to 6 and the rules checked only by playing
+- [Task 57: Split the HUD messages file and share the grab-prompt test rig](#task-57-split-the-hud-messages-file-and-share-the-grab-prompt-test-rig)
+- [Progress row](#progress-row)
+
 Added by code_lead on 2026-11-01 from product's build review Part 2 (ruling 1 in `work/review/part2-rulings.md`), code_lead's causes (`work/review/part2-causes.md`) and designer's placement (`work/review/pill-place.md`, option B with the pill in the tip's place). product approved option B on 2026-11-01 with one change (`work/review/pill-place-product.md`): a show-once tip waits while the pill is pinned. product added the new line to Rule 4 (Hold to grab) in `docs/specs/core-heist.md`. The main chat starts the builder. It is built before Gate 4, because it blocks it.
 
 **Number:** the main chat called it "Task 17", but this plan already has a Task 17 ("The scan counts only real stuck spots", `1-walk-check.md`), and a task keeps its number forever. So this is **Task 56**, the next free number.

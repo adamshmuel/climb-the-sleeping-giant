@@ -26,6 +26,8 @@ A short map of where the game stands. Each plan has its own progress file in thi
 
 Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who has approved it so far.
 
+**History files:** a finished task's review, result and close notes move out of its plan into `docs/progress/v2/history/`, and the plan keeps a one-line "History:" link in their place. V1: [core heist](v1/history/core-heist.md). Stuck safety: [Part 1](v2/history/stuck-safety-1.md), [2a](v2/history/stuck-safety-2a.md), [2b](v2/history/stuck-safety-2b.md), [2d](v2/history/stuck-safety-2d.md), [3 and 4](v2/history/stuck-safety-3-4.md).
+
 ## Tests that are red today
 
 None. Task 33's accepted red ("patches sit on his drawn skin, or are sealed inside him", on `Patch_Forehead_1`) turned green in Task 33b (2026-10-28). Latest full run, Task 12 (2026-10-29): 2831 passed, 0 failed.

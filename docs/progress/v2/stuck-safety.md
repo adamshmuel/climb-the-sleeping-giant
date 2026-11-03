@@ -1,5 +1,11 @@
 # Progress: Stuck safety (V2 plan 2)
 
+**Contents**
+- The task table (below)
+- [Notes for the next V2 review](#notes-for-the-next-v2-review)
+- [Plan 7 (ladder width) rolled back, 2026-11-03](#plan-7-ladder-width-rolled-back-2026-11-03)
+- Part 2d's finished-task history: [v2/history/stuck-safety-2d.md](history/stuck-safety-2d.md)
+
 Plan: `docs/plans/v2/stuck-safety.md` (the map; each task is in a part file in `docs/plans/v2/stuck-safety/`). Where every plan stands: `docs/progress/index.md`.
 
 Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who has approved it so far.

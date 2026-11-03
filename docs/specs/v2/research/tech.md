@@ -34,7 +34,7 @@ A carried Rare is 2.5 times louder, so the meter hits 84 within seconds, then fr
 | `src/tests/server/Giant/GiantDirector.spec.luau` ("never lets a player with no eggs home push the meter past 84") | 20 steps on the belly | Also expects the freeze, and doesn't check how long it lasts |
 | The same file's test setup (`eggsHome = eggsHome or 2`) | Every other director test | Every test player has 2 eggs home by default, so every heist test plays a veteran |
 | The worked-example tests, and the Play measurements in Tasks 21, 40 and 41 | A full Rare heist | All used 2 eggs home |
-| `docs/plans/core-heist.md`, line 788 | How to test in Play | Tells testers to set eggs home to 2 |
+| `docs/plans/core-heist.md`, line 734 | How to test in Play | Tells testers to set eggs home to 2 |
 
 **What was missing:** a whole-session test of a brand-new player: start at 0 eggs home, walk the belly, grab a Rare, keep walking 60 seconds, and check that the 85% warning fires and how long the meter sits frozen. code_lead says this was its own gap as reviewer: it approved tests that checked the cap, not the experience. (Now a rule: `.claude/rules/tdd.md`.)
 

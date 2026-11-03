@@ -1,5 +1,20 @@
 # Plan: Audio (V2, spec 7)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [Nobody listens, ever, in this plan](#nobody-listens-ever-in-this-plan)
+- [Decisions for the build](#decisions-for-the-build)
+- [Every sound, and what the screen shows with it](#every-sound-and-what-the-screen-shows-with-it)
+- [Tasks](#tasks)
+  - [Part 1: The sound list, the files and the sound board](#part-1-the-sound-list-the-files-and-the-sound-board) (Tasks 1 to 4)
+  - [Part 2: Music and the giant's sleep](#part-2-music-and-the-giants-sleep) (Tasks 5 to 8)
+  - [Part 3: The wake-up, the slams and the eggs](#part-3-the-wake-up-the-slams-and-the-eggs) (Tasks 9 to 12)
+  - [Part 4: The player's own sounds](#part-4-the-players-own-sounds) (Tasks 13, 14, 15)
+  - [Part 5: The music button](#part-5-the-music-button) (Tasks 16, 17)
+  - [Part 6: A whole session, the Gate 4 sound check, and the Play proof](#part-6-a-whole-session-the-gate-4-sound-check-and-the-play-proof) (Tasks 18, 19, 20)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing (or by listening)](#checked-only-by-playing-or-by-listening)
+- [Questions](#questions)
+
 **Status: written** (2026-10-19). Not started. It is built last, after plans 1 to 6, because it connects sound to pieces they build: the 85% snort (plan 1, Task 8), the rescue puff (plan 2, Task 14), the nests and their refills (plan 5), and the wake-up's sound places (plan 6, "Sound hooks for plan 7").
 
 How `docs/specs/v2/audio.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md` (section 10 is about sound).

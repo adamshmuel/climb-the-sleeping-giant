@@ -1,5 +1,15 @@
 # Plan: Egg reachability (V2, spec 4)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [What changes, in short](#what-changes-in-short)
+- [Decisions for the build](#decisions-for-the-build)
+- [Tasks](#tasks)
+  - [Part 1: Five ranks](#part-1-five-ranks) (Tasks 1 to 5)
+  - [Part 2: Measuring every nest](#part-2-measuring-every-nest) (Tasks 6 to 11)
+  - [Part 3: Analytics, a whole session, and the Play proof](#part-3-analytics-a-whole-session-and-the-play-proof) (Tasks 12, 13)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+
 **Status: written** (2026-10-19). Not started. It is built after plan 3. Updated the same day with product's answers (`docs/specs/v2/research/decisions-plans.md`, "product: answers to code_lead #1" and "#2"): the walk map, "reachable" meaning walking and ladders only, the trip up and the trip home each the quietest, "visible surface" meaning less than half see-through, and the new "WakeRank" event. Nothing waits any more.
 
 How `docs/specs/v2/egg-reachability.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`; the shared walk check is in its section 9.

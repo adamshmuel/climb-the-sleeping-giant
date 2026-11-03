@@ -1,5 +1,13 @@
 # Stuck safety plan, Part 1: the shared walk check (Tasks 1 to 4, 17, 18)
 
+**Contents** (tasks in the order they appear; search for `**Task N:` to jump).
+- Task 1: One walk check for the footprint route
+- Task 2: Room for a body
+- Task 3: The walk map and routes
+- Task 4: The stuck scan on the real world
+- Task 17: The scan counts only real stuck spots
+- Task 18: The scan's edge is the open meadow
+
 Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plans/v2/stuck-safety.md` ("Words used here", and which file holds which task).
 
 ### Part 1: The shared walk check
@@ -51,7 +59,7 @@ Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plan
 - Failing test first: the scan itself. **It is expected to fail on today's world**, listing the stuck spots: that list is the failing test for Tasks 5, 6 and 19 to 24. Until Task 41 (the pillow redesigned; it replaced Task 23b on 2026-10-27) makes it pass, this one test is the only accepted failure in the run.
 - If the scan flags a spot a player can clearly walk out of: no "ignore" list. The world is fixed, or the scan is corrected with code_lead's approval and a Play test of a real player walking out (spec section 8).
 - Done when: the scan runs within 2 minutes, its list is in the report with a screenshot of the worst areas, and every other test passes.
-- **Built and approved (2026-10-19):** 1524 stuck spots in 1.8 seconds. code_lead played the flagged meadow spots at the review (Play, no jump, Roblox's own walk-to command):
+- History: [docs/progress/v2/history/stuck-safety-1.md, "Task 4"](../../../progress/v2/history/stuck-safety-1.md#task-4)
 
 | Flagged spots | Why the scan flagged them | In Play | Ruling |
 |---|---|---|---|
@@ -77,7 +85,7 @@ The forehead slot check is wider than the slots: it takes every spot behind a si
   3. A Water-material part above a floor, higher than a body, so a body fits under it: no spot on the floor under it.
   4. Something between two spots that a body standing at either end, turned the best way, doesn't touch (for example a post in the middle of a diagonal link): no walk link. This passes before the change too, so prove it with a mutant: remove the check between the ends once, see it fail, put it back.
 - Done when: the tests pass; the real route test still passes all its links; the stuck scan no longer lists the six spots beside the cushion and the teacup, the spot under the ramp, or any spot under the river's water; the report gives the new stuck count, the count per part, and the scan time (under 2 minutes); no world changes are left.
-- **Built and approved (2026-10-19, first review).** All four tests were shown red first (the fourth with a mutant). The real map: 7253 spots (was 7465), 1341 stuck spots (was 1524), in 1.8 seconds. None of the named spots is listed any more, and no spot under the river's water. Left: 8 spots on the area's edge plus one river-bank spot whose only links go to edge spots (Task 18), and the giant's own list (Tasks 5 and 6). code_lead's two rulings at the review:
+- History: [docs/progress/v2/history/stuck-safety-1.md, "Task 17"](../../../progress/v2/history/stuck-safety-1.md#task-17)
 
 | Question | Ruling | Why |
 |---|---|---|
@@ -97,7 +105,7 @@ The forehead slot check is wider than the slots: it takes every spot behind a si
   3. A floor with no exit but its edge spots has no stuck spots.
   4. A closed pit at the edge whose floor isn't the ground part is still stuck.
 - Done when: the tests pass, the real route test still passes, and the stuck scan lists no spot on the area's edge. The report gives the new stuck count and the count per part: what is left should be the giant's own list for Tasks 5 and 6. Any listed spot with "none within 10 studs" is reported with the reason each of its links fails, for code_lead to rule on; it is never hidden.
-- **Built and approved (2026-10-19, first review).** All four tests were shown red first. The real map: 7404 spots (was 7253), 1336 stuck spots (was 1341), in 1.8 seconds; 229 edge exits, all on the Terrain. The 8 edge spots and the river-bank spot are gone. Left: the giant's own 1332, and 4 spots inside the teacup's bowl. code_lead's ruling on those 4:
+- History: [docs/progress/v2/history/stuck-safety-1.md, "Task 18"](../../../progress/v2/history/stuck-safety-1.md#task-18)
 
 | What was checked | Result |
 |---|---|

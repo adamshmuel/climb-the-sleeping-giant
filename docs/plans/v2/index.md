@@ -1,5 +1,12 @@
 # V2 plans: Heist update
 
+**Contents**
+- [Build order for the rest of V2](#build-order-for-the-rest-of-v2)
+- [Why this order](#why-this-order)
+- [Pulled forward](#pulled-forward)
+- V2 setups: [1, real-world tests green](#v2-setup-1-the-real-world-tests-are-green-again); [2, meter pulse test](#v2-setup-2-the-meter-pulse-test-doesnt-need-studios-animations); [3, mockup folders hidden](#v2-setup-3-nothing-in-the-mockup-folders-shows-in-play); [4, mockup avatars](#v2-setup-4-no-mockup-avatar-stands-in-a-players-way); [5, beams hide up close](#v2-setup-5-beams-on-his-body-hide-up-close); [6, carried egg](#v2-setup-6-your-carried-egg-never-hides-you)
+- [One walk map per test run](#one-walk-map-per-test-run)
+
 How the V2 specs (`docs/specs/v2/index.md`) get built. One plan file per spec, each a list of small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`.
 
 A plan is not permission to code. Adam said on 2026-10-18 that V2 coding starts once this build plan is done.
