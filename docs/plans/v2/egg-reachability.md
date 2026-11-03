@@ -156,7 +156,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Spec rules: section 10 ("Success signals").
 - Files: `src/server/Analytics.luau`, `src/server/Eggs/Grab.luau` (its `grabbed` Signal already gives the rarity), `src/server/init.server.luau` (connects "WakeRank" to the director's `woke` Signal, as plan 3 did for "WakeWayUp"), `Analytics.spec`.
 - What it logs:
-  - **"EggGrab"** (new): every grab, with the rank and the server size ("1", "2-4", "5-8");
+  - **"EggGrab"** (new): every grab, with the rank and the server size ("1", "2-4", "5-8"); a grab on his cap also logs the trip number from the tracker's trip count (spec 5, section 10; Stands on: stuck safety Task 61n, which builds the count);
   - **"EggHome"** and **"PlayerCaught"**: their rarity breakdown now also says "Epic" and "Legendary" (a test proves it);
   - **"WakeRank"** (new, spec section 10): once per wake-up, on the same player "GiantWoke" is logged on. Two breakdowns: the rank of the egg the waker carried at the moment he woke ("None", "Common", "Uncommon", "Rare", "Epic" or "Legendary"; "None" when they carried nothing or nobody is named), read before the wake-up sends the egg back; and the server size ("1", "2-4", "5-8"). A separate event because Roblox allows three breakdowns per event and "GiantWoke" already uses all three (plan 1, Task 10 gives the third to "New", "Veteran" or "Nobody");
   - **"GiantWoke"** keeps its three breakdowns, unchanged.

@@ -97,3 +97,38 @@ describe("CapDrop.landing", function()
 		expect(endedOn).toBe(nil)
 	end)
 end)
+
+-- Task 61n: a cap-to-cap fall is a fall with no jump that started on his cap, a cap tie or a tie's landing and ended
+-- on his cap (spec 5, section 10: CapToCapFall). Its fields bucket the height, name the egg and the trip.
+local function isCapToCap(drop: Drop): boolean
+	local CapDrop = require(ServerScriptService.Server.Players.CapDrop)
+	return CapDrop.isCapToCap(drop)
+end
+
+describe("CapDrop.isCapToCap", function()
+	it("a fall with no jump that ends on the cap is a cap-to-cap fall", function()
+		expect(isCapToCap(dropFor("Nightcap", "Nightcap", false, false))).toBe(true)
+	end)
+
+	it("a jump that ends on the cap is not", function()
+		expect(isCapToCap(dropFor("Nightcap", "Nightcap", true, true))).toBe(false)
+	end)
+
+	it("a drop that ends on the pillow is not", function()
+		expect(isCapToCap(dropFor("Nightcap", "Belly", false, false))).toBe(false)
+	end)
+end)
+
+describe("CapDrop.capFallFields", function()
+	local function fieldsOf(height: number, carrying: string?, trip: number)
+		local CapDrop = require(ServerScriptService.Server.Players.CapDrop)
+		return CapDrop.capFallFields(height, carrying, trip)
+	end
+
+	it("cap fall fields bucket the height, name the egg and the trip", function()
+		expect(fieldsOf(3.9, nil, 1)).toEqual({ height = "under 4", egg = "none", trip = "trip 1" })
+		expect(fieldsOf(4, "Gold", 3)).toEqual({ height = "4 to 10", egg = "Gold", trip = "trip 3" })
+		expect(fieldsOf(10, nil, 9).height).toBe("10 to 20")
+		expect(fieldsOf(25, nil, 12)).toEqual({ height = "20 and over", egg = "none", trip = "trip 10 and over" })
+	end)
+end)

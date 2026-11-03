@@ -175,7 +175,7 @@ What the angle trial found: the tie's outer face climbs on the first try only fr
 | 3b | Task 61c: the CapDrop event's fields reach analytics | 0.4 | nothing |
 | 4 | Task 61b: the right tie is built, mirrored, with the tie tests | 1.0 | Task 61i, Task 61h, the reach walk |
 | 5 | Task 61j: the right tie climbs, its brim pocket lets go, and falls from it are quiet | 0.7 | Task 61b, Task 61h |
-| 5b | Task 61n: cap-to-cap falls and cap egg grabs are counted per trip | 0.4 | Task 61h, Task 61c, Task 61j |
+| 5b | Task 61n: cap-to-cap falls are counted per trip | 0.4 | Task 61h, Task 61c, Task 61j |
 | 6 | Task 61w: the walkways with their chutes are built | 1.0 | designer's chute shape, Task 61j, the reach walk |
 | 6b | Task 61v: a let-go from either tie ends quiet on the giant or in the chute | 0.5 | Task 61w, Task 61c, Task 61h's case 4 lines |
 | 7 | Task 61x: the walkway look check | 0.3 | Task 61w |
@@ -430,19 +430,20 @@ Stands on: Task 61b (the right tie built, full run green), Task 61h (the quiet-f
   5. designer judges each pair (Opus, 0 Studio calls, at most 10 tool calls, 4 min).
 - **Lessons:** 51, 182, 225, 253, 255, 297.
 
-## Task 61n: Cap-to-cap falls and cap egg grabs are counted per trip
+## Task 61n: Cap-to-cap falls are counted per trip
 
 Stands on: Task 61h (the detector's cap-to-cap drop report, committed), Task 61j (the right tie's falls proven: if it finds a fall the detector misses, the detector changes first; product, 2026-11-03).
 
 - **What it's for:** the business goals. The section 5 playtest trigger counts trips on which a Legendary egg was carried that have a fall over 4 studs. Without the event, nobody can tell whether the quiet cap falls hide a problem.
 - **Spec rules:** spec 5's section 10 rows "CapToCapFall" (a fall with no jump from his cap, a cap tie or a landing that ends on his cap: drop height, the egg carried, the trip number; never logged as "CapDrop") and "EggGrab" (a grab on his cap also gets the trip number).
-- **The trip number:** counts up each time a player stands on the cap (grounded in the Nightcap zone) after last standing anywhere else, once per session per player, cleared when they leave.
+- **The trip number** (product, 2026-11-03, following spec 5): counts up only when the player reaches the cap by a cap tie from below. A no-jump fall from a tie or its landing that ends on the cap keeps the current trip number. Kept per player for the session, cleared when they leave. Stands on: nothing open (both ties final after Task 61j).
 - **Files:** `src/server/Analytics.luau`, `src/server/init.server.luau` (`onDrop` logs "CapToCapFall" when the drop ends in the Nightcap zone), `src/server/Players/PlayerTracker.luau` (the trip count), their specs.
-- **Failing test first:** "a fall with no jump that ends on the cap logs CapToCapFall with its height, egg and trip, and no CapDrop", and "a Legendary grab on the cap carries the trip number".
-- **How big:** 3 steps, about 6 Studio calls, 0.4 h:
-  1. the red tests and the red runs, one spec name per run (Sonnet, 4 Studio calls, 24 tool calls);
-  2. the change and the green narrow runs (Sonnet, 4 Studio calls, 24 tool calls);
-  3. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls).
+- **Failing test first:** "a fall with no jump that ends on the cap logs CapToCapFall with its height, egg and trip, and no CapDrop", and "a no-jump fall from a cap tie onto the cap keeps the trip number". The Legendary grab's trip number moved to egg reachability Task 12 with "EggGrab".
+- **Moved out (code_lead, 2026-11-03):** the trip number on "EggGrab" goes to egg reachability Task 12, because "EggGrab" is not built yet (plan 4 is not started). This task gives the tracker's trip count that Task 12 reads.
+- **How big:** 3 steps, about 23 Studio calls, 0.6 h (handoff `work/t61n/handoff.md`):
+  1. the pure rules and the event: red tests, red and green narrow runs (Sonnet, at most 8 Studio calls, at most 26 tool calls, 15 min);
+  2. the trip count, the drop height and the wiring: red tests with a whole-session test, red and green narrow runs (Sonnet, at most 8 Studio calls, at most 28 tool calls, 18 min);
+  3. the full run (Haiku, the runner, 7 Studio calls, at most 14 tool calls, 5 min).
 - **Played:** nothing a player sees changes. Task 63's scripted Play reads the event once, with the other runs.
 - **Commit:** its own commit, once approved.
 - **Lessons:** 41, 188, 293.

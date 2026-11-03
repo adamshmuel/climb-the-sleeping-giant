@@ -49,6 +49,10 @@ export type Sample = {
 	thudFrom: Config.ZoneName?, -- set on the tick a thud is due: the highest zone the fall (or hop) left
 	drop: LandingDetector.Drop?, -- set on the tick a fall from the cap, a cap tie or a tie's landing ends (Task 61d)
 	onPillow: boolean?, -- set with `drop`: did it end on the pillow?
+	-- Set with `drop`: studs from the highest point since he last stood at rest down to where the drop ended (Task 61n).
+	dropHeight: number?,
+	-- How many times he has reached the cap by climbing a cap tie from below: 0 before the first (Task 61n).
+	trip: number?,
 }
 
 -- What the tracker needs from a player. A real Player fits, and tests pass simple stand-ins.
@@ -90,7 +94,12 @@ type Memory = {
 	lastPosition: Vector3?,
 	landing: LandingDetector.State,
 	readings: { Reading }, -- the last 1 s of readings, oldest first
+	peakY: number, -- the highest root y since he last stood at rest (a fall keeps it until the drop ends)
 }
+
+-- How far a player has got with the cap, kept per player so a respawn keeps it (Task 61n). `below` is set once he
+-- stood on the ground somewhere other than the cap and a cap tie; `tieClimb` once he then climbed a cap tie.
+type Trips = { count: number, below: boolean, tieClimb: boolean }
 
 -- How far below the feet the ground check still says "on the ground", in studs.
 local GROUND_REACH = 0.5
@@ -220,6 +229,32 @@ end
 function PlayerTracker.new(deps: Deps): Tracker
 	local memories: { [number]: Memory } = {}
 	local graces: { [number]: Grace } = {} -- players the server moved, whose grace has not ended yet
+	local trips: { [number]: Trips } = {}
+
+	-- The trip rule: it counts up only when he is next on the ground in the Nightcap zone after a tie climb from below.
+	local function updateTrips(
+		userId: number,
+		root: BasePart,
+		zone: Config.ZoneName,
+		grounded: boolean,
+		climbingTie: boolean
+	)
+		local state = trips[userId]
+		if state == nil then
+			state = { count = 0, below = false, tieClimb = false }
+			trips[userId] = state
+		end
+		local onTie = climbingTie or (grounded and deps.onCapTie ~= nil and deps.onCapTie(root.Position))
+		if grounded and zone ~= "Nightcap" and not onTie then
+			state.below, state.tieClimb = true, false
+		elseif climbingTie and state.below then
+			state.tieClimb = true
+		end
+		if grounded and zone == "Nightcap" and state.below and state.tieClimb then
+			state.count += 1
+			state.below, state.tieClimb = false, false
+		end
+	end
 
 	local function tick(_self: Tracker): { Sample }
 		local samples: { Sample } = {}
@@ -238,6 +273,11 @@ function PlayerTracker.new(deps: Deps): Tracker
 				graces[userId] = nil
 			end
 		end
+		for userId in trips do
+			if not present[userId] then
+				trips[userId] = nil
+			end
+		end
 		for _, player in players do
 			local character = player.Character
 			local root = livingRoot(character)
@@ -250,6 +290,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 						lastPosition = nil,
 						landing = LandingDetector.new(place.zone),
 						readings = {},
+						peakY = root.Position.Y,
 					}
 					memories[player.UserId] = memory
 				end
@@ -264,6 +305,13 @@ function PlayerTracker.new(deps: Deps): Tracker
 				local thudFrom: Config.ZoneName?
 				local drop: LandingDetector.Drop?
 				local takeoffZones: { Config.ZoneName } = {}
+				-- A fall keeps the peak until its drop ends; any other rest starts it again from here.
+				local height = root.Position.Y
+				if memory.landing.falling or not LandingDetector.isAtRest(grounded, verticalSpeed) then
+					memory.peakY = math.max(memory.peakY, height)
+				else
+					memory.peakY = height
+				end
 				local grace = graces[player.UserId]
 				if grace ~= nil then
 					-- The server moved them: the move and the drop after it are neither walking nor a fall. A thud owed
@@ -282,6 +330,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 					fresh.owed = memory.landing.owed
 					thudFrom, memory.landing =
 						LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {}, climbing, onCapTie)
+					memory.peakY = height
 					table.clear(memory.readings)
 					recordReading(memory, deps.now(), root.Position, grounded)
 					memory.lastPosition = root.Position
@@ -303,6 +352,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 						onCapTie
 					)
 				end
+				updateTrips(player.UserId, root, place.zone, grounded, onCapTie)
 				table.insert(samples, {
 					userId = player.UserId,
 					position = root.Position,
@@ -313,6 +363,8 @@ function PlayerTracker.new(deps: Deps): Tracker
 					thudFrom = thudFrom,
 					drop = drop,
 					onPillow = if drop ~= nil and deps.onPillow ~= nil then deps.onPillow(root.Position) else nil,
+					dropHeight = if drop ~= nil then math.max(0, memory.peakY - height) else nil,
+					trip = (trips[player.UserId] :: Trips).count,
 				})
 			end
 		end

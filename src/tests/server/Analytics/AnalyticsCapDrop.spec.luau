@@ -52,3 +52,21 @@ describe("The CapDrop event's fields", function()
 		expect(last[FIELD_THREE]).toBe("woke yes - egg yes")
 	end)
 end)
+
+describe("The CapToCapFall event", function()
+	it("capToCapFall logs CapToCapFall with its height, egg and trip, and no CapDrop", function()
+		local harness, players = Helpers.serverOf(1)
+		local player = players[1] :: any
+		harness.analytics:capToCapFall(player, CapDrop.capFallFields(12, "Gold", 2))
+		local calls = Helpers.callsOf(harness, "custom", player)
+		expect(#calls).toBe(1)
+		expect(calls[1].eventName).toBe("CapToCapFall")
+		local fields = calls[1].fields :: { [string]: string }
+		expect(fields[FIELD_ONE]).toBe("10 to 20")
+		expect(fields[FIELD_TWO]).toBe("Gold")
+		expect(fields[FIELD_THREE]).toBe("trip 2")
+		for _, call in calls do
+			expect(call.eventName ~= "CapDrop").toBe(true)
+		end
+	end)
+end)

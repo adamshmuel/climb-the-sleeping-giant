@@ -11,6 +11,14 @@ export type EndedOn = "pillow" | "face" | "shoulders" | "belly"
 
 export type Fields = { how: string, woke: string, egg: string, endedOn: string }
 
+-- The fields of one "CapToCapFall" event (Task 61n): the drop height bucket, the egg carried and the trip number.
+export type FallFields = { height: string, egg: string, trip: string }
+
+-- The drop height buckets in studs: the first edge is the 4 studs of the section 5 playtest trigger.
+local HEIGHT_EDGES = { 4, 10, 20 }
+local HEIGHT_NAMES = { "under 4", "4 to 10", "10 to 20", "20 and over" }
+local MAX_NAMED_TRIP = 9
+
 local CapDrop = {}
 
 -- Does the landing puff, and where did the drop end? A walk-off ending on the pillow, his shoulders or his belly puffs
@@ -37,6 +45,28 @@ function CapDrop.fields(jumped: boolean, woke: boolean, carrying: boolean, ended
 		woke = if woke then "yes" else "no",
 		egg = if carrying then "yes" else "no",
 		endedOn = endedOn,
+	}
+end
+
+-- Is this drop a cap-to-cap fall? A fall with no jump that started on his cap, a cap tie or a tie's landing (the
+-- detector only reports those, Task 61h) and ended on his cap. It is never logged as a "CapDrop".
+function CapDrop.isCapToCap(drop: LandingDetector.Drop): boolean
+	return drop.to == "Nightcap" and not drop.jumped
+end
+
+-- The fields of one "CapToCapFall" event: the height bucket, the egg carried (none, or its rank) and the trip number.
+function CapDrop.capFallFields(height: number, carrying: string?, trip: number): FallFields
+	local bucket = #HEIGHT_NAMES
+	for index, edge in HEIGHT_EDGES do
+		if height < edge then
+			bucket = index
+			break
+		end
+	end
+	return {
+		height = HEIGHT_NAMES[bucket],
+		egg = carrying or "none",
+		trip = if trip > MAX_NAMED_TRIP then `trip {MAX_NAMED_TRIP + 1} and over` else `trip {trip}`,
 	}
 end
 

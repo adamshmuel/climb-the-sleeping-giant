@@ -265,7 +265,19 @@ local function onDrop(sample: PlayerTracker.Sample, drop: LandingDetector.Drop)
 		net.LandingPuff:FireAllClients(sample.position)
 	end
 	local player = Players:GetPlayerByUserId(sample.userId)
-	if endedOn == nil or player == nil then
+	if player == nil then
+		return
+	end
+	if CapDrop.isCapToCap(drop) then
+		-- A fall with no jump that ended on the cap: counted per trip, and never logged as "CapDrop" (Task 61n).
+		local fields = CapDrop.capFallFields(sample.dropHeight or 0, player:GetAttribute("Carrying"), sample.trip or 0)
+		task.delay(1, function()
+			if analytics ~= nil and player.Parent ~= nil then
+				analytics:capToCapFall(player, fields)
+			end
+		end)
+	end
+	if endedOn == nil then
 		return
 	end
 	local carrying = player:GetAttribute("Carrying") ~= nil
