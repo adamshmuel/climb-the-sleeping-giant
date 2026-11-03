@@ -95,7 +95,7 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 
 ## Phone and shots
 - Set the phone exactly as the `look-check` skill's [shots job](../look-check/shots-job.md) does (`Phone_844x390` through `StudioDeviceSimulatorService`, in the Client during Play) and turn it off the same way. Write every Studio call with its full service path.
-- Shot cameras: only `screen_capture`'s own `camera_position` and `look_at_position` (`look-check` skill). Aim so the target sits at the wanted screen y; a phone sees only about 35° below the view centre. A Play proof recreates the bug shot's camera position and target.
+- Shot cameras are placed the `look-check` skill's way ("Shots"). Aim so the target sits at the wanted screen y; a phone sees only about 35° below the view centre. A Play proof recreates the bug shot's camera position and target.
 - A shot that proves something is kept is taken right after the event, before another rule can remove it. Print the state at that moment.
 - A shot camera looks at a prompt's part from the side, with nothing between. Find a billboard's screen point from its adornee, never its `AbsolutePosition`.
 - A look check copies the client's own ray, list and fallback and judges where the client draws. A server value is only an input.

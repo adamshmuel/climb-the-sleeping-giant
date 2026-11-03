@@ -60,7 +60,7 @@ Each job uses the cheapest model that does it well.
 | **Small jobs, few agents** | A small fix is done by one agent (the main chat or one `builder`), checked by one `runner` test run, then committed. No meeting, no handoff, no review round. The full flow is only for new parts and features. |
 | **Backup before every world change** | A step that changes, moves or removes world parts clones them into `ServerStorage.WorldBackups.<task>` in the same call. Before a task's first world change, the main chat copies the saved place file to `work/place-backups/<task>-<date>.rbxl`. Backups are cleaned out only at Gate 4. |
 
-When a task starts, the main chat writes `Task 5 | small | 2026-11-03 12:00` (small, task or done) to `work/task-clock.txt`; a hook raises the red flag past the limit. Every stop trigger (time, loop, same object, plan, look) and what to do is in the `stop-and-step-back` skill. Each task close uses the `closing-a-task` skill.
+When a task starts, the main chat starts its task clock (`stop-and-step-back` skill, "Triggers"). Every stop trigger (time, loop, same object, plan, look) and what to do is in the `stop-and-step-back` skill. Each task close uses the `closing-a-task` skill.
 
 ## Roblox Studio MCP
 - Call `list_roblox_studios` first to get the `studio_id`. If it is empty, stop and report.

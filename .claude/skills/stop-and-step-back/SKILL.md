@@ -51,7 +51,7 @@ The brief never hints at an answer. Each owner answers from its own area, in one
 4. **For a plan:** which work does a player really need, and what would a player never notice? What can be cut, simplified, left to the safety net, or moved to a later plan that changes that part anyway?
 5. **Why did it grow, and what would have caught it sooner?**
 
-No idea rebuilds a part that a later spec replaces.
+No idea rebuilds a part that a later spec replaces (`making-a-ruling` skill).
 
 ## Step 4: product decides
 

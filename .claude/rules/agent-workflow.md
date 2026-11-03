@@ -41,6 +41,13 @@ Nobody approves what they haven't seen in the running game. Reading code and pas
 - Shots are evidence: a report names what they show and compares them with the spec and the mockups.
 - If a tool can't do something, test it in Play before believing it, and tell the main chat. Never quietly push a check to "later".
 
+## Learn from the past
+
+Every agent with `memory: project`, in every job:
+- Before the job, open your memory topic files that match it (`MEMORY.md`, loaded when you start, lists them) and follow them.
+- When you finish, save what you learned that would change your next job: one short line in the right topic file, and one line per topic file in `MEMORY.md`.
+- Something other agents also need goes at the end of your report as `LESSON: <what happened> → <do instead>`.
+
 ## The user only approves
 
 The user's only jobs are the gates and the decisions in "Asking the user". Never give them manual work (resizing windows, clicking in Studio, setup). Solve it, or accept the limit and say so in one line.

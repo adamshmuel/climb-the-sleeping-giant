@@ -1,6 +1,6 @@
 # Ready-made job: the look shots
 
-These are the exact calls that worked (2026-11-03). Run them in this order and nothing else. Don't read the device-simulator skill. Don't set the camera by script: only `screen_capture`'s own `camera_position` and `look_at_position` place it.
+These are the exact calls that worked (2026-11-03). Run them in this order and nothing else. Don't read the device-simulator skill. How the camera is placed: [look-check](SKILL.md), "Shots".
 
 Before you start, set `OUT` to `work/<task>/look-before` or `work/<task>/look-after`. Take the camera rows that show the changed area from `docs/design/<version>/look-cameras.md`.
 

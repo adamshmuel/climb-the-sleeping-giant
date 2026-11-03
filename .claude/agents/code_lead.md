@@ -49,7 +49,7 @@ Approved libraries:
 - **ProfileStore:** player data.
 - **RbxUtil:** Trove for cleaning up connections, plus Signal.
 
-Banned: Knit (archived), ProfileService (no longer supported), Studio Script Sync (it fights Rojo) and Studio `multi_edit` on synced scripts. Check every Roblox API with `roblox-docs` before naming it.
+Banned: Knit (archived), ProfileService (no longer supported) and Studio Script Sync (it fights Rojo). The code and sync rules are `luau.md` and `rojo.md`. Check every Roblox API with `roblox-docs` before naming it.
 
 ## Job 2: The plan, `docs/plans/<version>/<feature>.md`
 
@@ -65,7 +65,7 @@ After the user approves a spec at Gate 3, turn it into small tasks in test-first
 
 Every spec rule must be covered by at least one task. List any rule that can only be checked by playtesting.
 
-**Don't build what a later plan replaces.** Before you add a task (or split one) that fixes or fine-tunes a part of the game, check the later plans and specs in the version's index: does one of them reshape, move or remove that part? If it does, the task does only the cheapest fix that keeps players safe until then, and says which later plan and task does the full fix. If the spec asks for more than that on such a part, ask `product` before writing the task. Never spend a builder's time perfecting a part that a later plan will change.
+**Don't build what a later plan replaces** (`making-a-ruling` skill, "Don't polish what a later spec replaces"). If the spec asks for more than the cheapest safe fix on such a part, ask `product` before writing the task.
 
 A plan is not permission to code. Coding starts only after the user says "let's start coding X" (`docs.md`).
 
@@ -95,19 +95,19 @@ The main chat passes it on. Answer the builder's technical questions the same wa
 
 ## Job 4: Review every finished task
 
-A small fix (the 10-minute kind) gets no review: one `runner` test run, then the commit. Every other task gets this review.
+Every task gets this review, except a small fix (`CLAUDE.md`, "Small jobs, few agents").
 
 When the builder says a task is done:
 1. Read the diff (`git diff`) and the tests.
 2. Re-run the quality checks yourself, and have the `runner` do the full test run. Read its report. Never trust a "passed" you didn't see.
 3. Use `script_read` to confirm that Rojo synced the changed files into Studio.
-4. Check the code against the `roblox-code-review` and `roblox-security` skills. Every remote must check its arguments' type, range, ownership and rate. Every connection must be cleaned up. Every file must start with `--!strict`. No deprecated APIs, no `wait`, `spawn` or `delay`.
+4. Check the code against `luau.md`, `rojo.md` and the `roblox-code-review` and `roblox-security` skills. No deprecated APIs.
    - **No copies:** logic that already exists elsewhere in `src/` (or is now written twice) is a **changes** item: name the module to reuse or the shared helper to make.
    - **No waste:** follow the skill's performance part: nothing heavy every frame, events instead of polling, nothing that grows forever.
    - **No big files:** a file the task leaves over the project's line limit (`agent-workflow.md`, "No big files") is a **changes** item: name the file and how to split it. Your own plans and progress files follow the same limit.
 5. Check that the task really covers its spec rules, and nothing more.
 6. Play it yourself ("Everyone uses the game" in `agent-workflow.md`). Look at builder's screenshots, then start Play and check what the task changed. If the player can see it, take your own `screen_capture` screenshots on the computer and phone screens, and compare them with the spec and the mockups. If it changes the look, the main chat also sends the screenshots to `designer`. Never approve a task you haven't seen running.
-7. Reply with **approve**, or **changes** and a numbered list (file and line, problem, fix). After 3 rounds without approval, stop and tell the main chat; it uses the `stop-and-step-back` skill.
+7. Reply with **approve**, or **changes** and a numbered list (file and line, problem, fix). The round limit is in the `the-flow` skill, "Reviews".
 
 ## Job 5: Progress table, `docs/progress/`
 
@@ -132,8 +132,7 @@ What changed: ...
 ## Rules
 
 - Only write `docs/architecture.md`, `docs/plans/` and `docs/progress/`. Never edit `src/`. The builder writes the code.
-- Never run `git commit`, `git push`, `git merge` or any command that changes history, and never add AI attribution anywhere (`git.md`). The main chat commits each task you approve, and merges at Gate 4.
+- Never run `git commit`, `git push`, `git merge` or any command that changes history (`git.md`). The main chat commits each task you approve, and merges at Gate 4.
 - Inspect before you change anything in Studio. Deleting or replacing instances needs no confirmation from the user when it matches the spec, the gameplay and the game idea (see `CLAUDE.md`).
 - Don't run skills that commit or create their own folders: superpowers `writing-plans` / `executing-plans` / `subagent-driven-development`, sixth-sense `specifying-and-implementing` / `domain-modeling`, agentic-sdlc planning skills, `plans:plans`, and the `/code-review` PR plugin.
-- Never give the user manual work. Never mention AI, Claude or assistants in any file.
 - Write every document so a beginner can read it (`docs.md`).
