@@ -8,6 +8,7 @@ local Layout = require(game:GetService("StarterPlayer").StarterPlayerScripts.Cli
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local CameraFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.CameraFx)
 local Helpers = require(script.Parent.Helpers)
+local LADDER_NAMES = require(game:GetService("ServerStorage").Tests.server.World.PlayerNeeds).LADDER_NAMES
 local BODY_PIECES = Helpers.BODY_PIECES
 local locator = Helpers.locator
 local realWorld = Helpers.realWorld
@@ -345,42 +346,47 @@ describe("the real world, zones and extras", function()
 		return covered
 	end
 
-	it("the cap ladder does not cover his closed eyes from any spawn spot", function()
+	it("the cap ties do not cover his closed eyes from any spawn spot", function()
 		local world = realWorld() :: any
-		local ladder = world.WalkSurfaces.CapLadder :: Instance
 		local problems = {}
-		for _, garden in WorldIndex.loadGardens(world) do
-			local camera = spawnCameraFor(garden.spawnSpot)
-			local seen = seenEyePoints(camera, world)
-			if #seen == 0 then
-				table.insert(problems, `Plot_{garden.index} sees no point of his eyes, so the check proves nothing`)
-			end
-			local covered = pointsCoveredBy(ladder, camera, seen)
-			if covered > 0 then
-				table.insert(
-					problems,
-					`Plot_{garden.index}: the cap ladder covers {covered} of {#seen} seen points of his closed eyes`
-				)
+		for _, ladderName in LADDER_NAMES do
+			local ladder = world.WalkSurfaces:FindFirstChild(ladderName) :: Instance?
+			expect(ladder).never.toBeNil()
+			for _, garden in WorldIndex.loadGardens(world) do
+				local camera = spawnCameraFor(garden.spawnSpot)
+				local seen = seenEyePoints(camera, world)
+				if #seen == 0 then
+					table.insert(problems, `Plot_{garden.index} sees no point of his eyes, so the check proves nothing`)
+				end
+				local covered = pointsCoveredBy(ladder :: Instance, camera, seen)
+				if covered > 0 then
+					table.insert(
+						problems,
+						`Plot_{garden.index}: {ladderName} covers {covered} of {#seen} seen points of his closed eyes`
+					)
+				end
 			end
 		end
 		table.sort(problems)
 		expect(problems).toEqual({})
 	end)
 
-	it("the eye check notices a copy of the cap ladder moved in front of an eye", function()
+	it("the eye check notices a copy of a cap tie moved in front of an eye", function()
 		local world = realWorld() :: any
 		local garden = WorldIndex.loadGardens(world)[1]
 		local camera = spawnCameraFor(garden.spawnSpot)
 		local seen = seenEyePoints(camera, world)
 		expect(#seen > 0).toBe(true)
-		-- the copy is never parented, so it is never in the Workspace; its middle goes 80% of the way to a seen point
-		local copy = world.WalkSurfaces.CapLadder:Clone() :: Model
-		local middle = copy:GetBoundingBox().Position
-		local target = camera.Position:Lerp(seen[1], 0.8)
-		copy:PivotTo(copy:GetPivot() + (target - middle))
-		local covered = pointsCoveredBy(copy, camera, seen)
-		copy:Destroy()
-		expect(covered > 0).toBe(true)
+		for _, ladderName in LADDER_NAMES do
+			-- the copy is never parented, so it is never in the Workspace; its middle goes 80% of the way to a seen point
+			local copy = world.WalkSurfaces[ladderName]:Clone() :: Model
+			local middle = copy:GetBoundingBox().Position
+			local target = camera.Position:Lerp(seen[1], 0.8)
+			copy:PivotTo(copy:GetPivot() + (target - middle))
+			local covered = pointsCoveredBy(copy, camera, seen)
+			copy:Destroy()
+			expect(covered > 0).toBe(true)
+		end
 	end)
 
 	it("the Z Z Z sit below the sleep meter from every spawn spot, on phones and computers", function()

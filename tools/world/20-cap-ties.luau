@@ -6,7 +6,8 @@
 -- is the look designer approved in the c3 mockup. The numbers are copied into this script, so the mockup can go away.
 -- Product's ruling 2a: the invisible guard plate in the tie's way, SteepGuards.CapSide<Side>_28, is removed whole. It is
 -- moved (never destroyed) to ServerStorage.WorldBackups.CapTies, which is the undo. Rojo leaves WorldBackups alone.
--- Task 61a builds Side = "Left" (minus x). Task 61b builds "Right" with the table's right column.
+-- Task 61a builds Side = "Left" (minus x). Task 61b builds "Right": the left tie mirrored, with its foot raised by the right
+-- pillow's rise (0.16) and its top rows fitted to the right cap (see SIDES.Right).
 -- What it builds, into Workspace.World.WalkSurfaces.CapTie<Side> (a model):
 --   Strap_01...  the strap, one part per row of the route table (look only: 2.7 along z, 0.6 thick);
 --   Stripe_NN    red bands on the strap (look only: no collision, no query);
@@ -68,7 +69,7 @@ local RED = Color3.fromHex("c8283c")
 
 type Rows = { { number } } -- { height y, strap centre |x| }
 type Climb = { upX: number, upY: number, leanX: number, leanY: number, leanRise: number, leanRun: number }
-type SideInfo = { sign: number, route: Rows, pomPomY: number, climb: Climb? }
+type SideInfo = { sign: number, route: Rows, pomPomY: number, landingRise: number, climb: Climb? }
 
 -- The hidden climb pieces every built tie must have (left side).
 local HIDDEN_NAMES = {
@@ -90,14 +91,18 @@ local SIDES: { [string]: SideInfo } = {
 	Left = {
 		sign = -1,
 		pomPomY = 58.4,
+		landingRise = 0,
 		climb = { upX = 36.1, upY = 70.38, leanX = 35.478, leanY = 92.202, leanRise = 15.5, leanRun = 1.247 },
 		route = { { 60, 36.7 }, { 90, 36.7 }, { 95, 36.3 }, { 100, 35.3 }, { 105, 33.2 }, { 110, 29.9 } },
 	},
+	-- The right cap reaches farther out than the left's mirror (measured 2026-11-03: +0.31 at y 95 and 100, +0.34 at y 102,
+	-- +0.24 at y 105, 0.00 at y 110; the fold sits 0.09 higher), so these rows and the lean top differ from the left's.
 	Right = {
 		sign = 1,
-		pomPomY = 58.6,
-		climb = nil, -- Task 61b measures the right side's climb
-		route = { { 60, 36.7 }, { 90, 36.7 }, { 95, 36.6 }, { 100, 35.6 }, { 105, 33.5 }, { 110, 29.9 }, { 111, 29.1 } },
+		landingRise = 0.09,
+		pomPomY = 58.56, -- 58.4 + r, r = 0.16: the right pillow is 0.16 higher than the left (Task 61b, Step 1)
+		climb = { upX = 36.1, upY = 70.54, leanX = 35.628, leanY = 92.202, leanRise = 15.5, leanRun = 0.947 },
+		route = { { 60, 36.7 }, { 90, 36.7 }, { 95, 36.6 }, { 100, 35.6 }, { 105, 33.45 }, { 110, 29.9 } },
 	},
 }
 
@@ -283,7 +288,7 @@ local function build(tie: Model, info: SideInfo, climb: Climb)
 	-- The fold lies on the cap. LANDING_OUTER is its bottom face's outer (low) edge. It rises toward his head (toward x 0).
 	local rotation = CFrame.Angles(0, 0, if sign < 0 then LANDING_TILT else -LANDING_TILT)
 	local towardHead = rotation.RightVector * -sign
-	local bottomOuter = Vector3.new(sign * LANDING_OUTER.X, LANDING_OUTER.Y, TIE_Z)
+	local bottomOuter = Vector3.new(sign * LANDING_OUTER.X, LANDING_OUTER.Y + info.landingRise, TIE_Z)
 	local bottomCentre = bottomOuter + towardHead * (LANDING_SIZE / 2)
 	local centre = bottomCentre + rotation.UpVector * (LANDING_THICK / 2)
 	local landingCFrame = CFrame.new(centre) * rotation

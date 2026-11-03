@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local Helpers = require(script.Parent.Helpers)
+local PlayerNeeds = require(game:GetService("ServerStorage").Tests.server.World.PlayerNeeds)
 local LADDER_REACH_STEPS = Helpers.LADDER_REACH_STEPS
 local NEST_REACH = Helpers.NEST_REACH
 
@@ -127,26 +128,16 @@ local function walkTowardCave(
 	return nil, true
 end
 
--- The walk-map spots at the foot and the top of a ladder's solid Climb truss, found the way PathCheck joins them:
--- the end of the truss's longest side, and the nearest spot within two grid steps. nil when there is none.
+-- The walk-map spots at the foot and the top of a cap tie (PlayerNeeds.tieEnds), found the way PathCheck joins them:
+-- the nearest spot within two grid steps. nil when there is none.
 local function ladderEndSpots(ladderName: string, map: PathCheck.WalkMap, world: Instance): (number?, number?)
 	local ladder = (world :: any).WalkSurfaces:FindFirstChild(ladderName) :: Instance?
 	expect(ladder).never.toBeNil()
-	local truss = (ladder :: Instance):FindFirstChild("Climb") :: BasePart?
-	expect(truss).never.toBeNil()
-	local size = (truss :: BasePart).Size
-	local half = if size.X >= size.Y and size.X >= size.Z
-		then Vector3.new(size.X / 2, 0, 0)
-		elseif size.Y >= size.Z then Vector3.new(0, size.Y / 2, 0)
-		else Vector3.new(0, 0, size.Z / 2)
-	local endA = (truss :: BasePart).CFrame:PointToWorldSpace(half)
-	local endB = (truss :: BasePart).CFrame:PointToWorldSpace(-half)
-	local foot, top = endA, endB
-	if endB.Y < endA.Y then
-		foot, top = endB, endA
-	end
+	local foot, top = PlayerNeeds.tieEnds(ladder :: Instance)
+	expect(foot).never.toBeNil()
+	expect(top).never.toBeNil()
 	local reach = LADDER_REACH_STEPS * map.spacing
-	return PathCheck.nearestSpot(map, foot, reach), PathCheck.nearestSpot(map, top, reach)
+	return PathCheck.nearestSpot(map, foot :: Vector3, reach), PathCheck.nearestSpot(map, top :: Vector3, reach)
 end
 
 -- Whether a climb link goes from one spot to another.

@@ -2,6 +2,7 @@
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local expect = JestGlobals.expect
 local Helpers = require(script.Parent.Helpers)
+local PlayerNeeds = require(game:GetService("ServerStorage").Tests.server.World.PlayerNeeds)
 local BODY_PIECES = Helpers.BODY_PIECES
 local realWorld = Helpers.realWorld
 local Workspace = game:GetService("Workspace")
@@ -105,29 +106,21 @@ local function crossingRamps(): { BasePart }
 	return ramps
 end
 
--- The ladder's centre line is its truss, `Climb`: the longest side of the truss runs up the ladder.
+-- A cap tie's centre line runs from its foot to its top (PlayerNeeds.tieEnds).
 export type LadderAxis = { foot: Vector3, top: Vector3, up: Vector3, flat: Vector3, back: Vector3 }
 
 local function ladderAxis(ladder: Instance): LadderAxis
-	local truss = ladder:FindFirstChild("Climb")
-	expect(truss).never.toBeNil()
-	local part = truss :: BasePart
-	local size = part.Size
-	local length = math.max(size.X, size.Y, size.Z)
-	local up = if size.X == length
-		then part.CFrame.RightVector
-		elseif size.Y == length then part.CFrame.UpVector
-		else part.CFrame.LookVector
-	if up.Y < 0 then
-		up = -up
-	end
+	local foot, top = PlayerNeeds.tieEnds(ladder)
+	expect(foot).never.toBeNil()
+	expect(top).never.toBeNil()
+	local up = ((top :: Vector3) - (foot :: Vector3)).Unit
 	local flatPart = Vector3.new(up.X, 0, up.Z)
 	local flat = flatPart.Unit
 	-- "back" is toward his face: along the flat direction and tilted down, square to the ladder.
 	local back = (flat * up.Y - Vector3.yAxis * flatPart.Magnitude).Unit
 	return {
-		foot = part.Position - up * length / 2,
-		top = part.Position + up * length / 2,
+		foot = foot :: Vector3,
+		top = top :: Vector3,
 		up = up,
 		flat = flat,
 		back = back,

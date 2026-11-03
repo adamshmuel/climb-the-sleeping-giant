@@ -29,7 +29,7 @@ local NESTS: { Nest } = {
 	{ name = "right side nest", position = Vector3.new(17, 119, 28), group = "side" },
 }
 
-local LADDER_NAMES = { "BeardLadder", "CapLadder" }
+local LADDER_NAMES = { "CapTieLeft", "CapTieRight" } -- the two cap ties (Task 61b); BeardLadder and CapLadder are gone
 local LADDER_TRUSS = "Climb"
 local WALK_PIECE_SUFFIX = "_Walk" -- Boots_Walk, RightBoots_Walk, Belly_Walk, Ramp_Walk: the invisible walk pieces
 local WALK_PIECE_RAMP_PREFIX = "CrossingRamp" -- the crossing ramps are walk pieces too
@@ -40,6 +40,7 @@ local STEEP_LAYER_FOLDER = "SteepLayer"
 
 local PlayerNeeds = {}
 PlayerNeeds.NESTS = NESTS
+PlayerNeeds.LADDER_NAMES = LADDER_NAMES
 
 -- How far a point is from a box (0 inside it). A wedge is measured as its whole box, so a wedge is never judged farther
 -- away than it is.
@@ -127,6 +128,28 @@ local function trussEnds(truss: BasePart): (Vector3, Vector3)
 	return endA, endB
 end
 
+-- The two ends of a cap tie: its foot is the bottom centre between ClimbTrussUp_1 and _2, its top is the top centre
+-- between ClimbTrussLean_1 and _2. nil, nil when a truss is missing.
+function PlayerNeeds.tieEnds(tie: Instance): (Vector3?, Vector3?)
+	local function trussPart(name: string): BasePart?
+		local part = tie:FindFirstChild(name)
+		if part ~= nil and part:IsA("BasePart") then
+			return part
+		end
+		return nil
+	end
+	local up1, up2 = trussPart("ClimbTrussUp_1"), trussPart("ClimbTrussUp_2")
+	local lean1, lean2 = trussPart("ClimbTrussLean_1"), trussPart("ClimbTrussLean_2")
+	if up1 == nil or up2 == nil or lean1 == nil or lean2 == nil then
+		return nil, nil
+	end
+	local foot1 = trussEnds(up1)
+	local foot2 = trussEnds(up2)
+	local _, top1 = trussEnds(lean1)
+	local _, top2 = trussEnds(lean2)
+	return (foot1 + foot2) / 2, (top1 + top2) / 2
+end
+
 -- Every place players need, as the plan lists them: every route point and link, every egg spot, every landing spot,
 -- every ladder's foot and top and truss, every invisible walk piece, spec 5's Legendary nest points, and the seam and
 -- the steep layer when they exist. `world` is the model that holds WalkSurfaces (and the seam's folder, which may also be
@@ -164,9 +187,11 @@ function PlayerNeeds.build(
 	if walk ~= nil then
 		for _, ladderName in LADDER_NAMES do
 			local ladder = walk:FindFirstChild(ladderName)
-			local truss = if ladder then ladder:FindFirstChild(LADDER_TRUSS) else nil
-			if truss ~= nil and truss:IsA("BasePart") then
-				local foot, top = trussEnds(truss)
+			local foot, top = nil, nil
+			if ladder ~= nil then
+				foot, top = PlayerNeeds.tieEnds(ladder)
+			end
+			if foot ~= nil and top ~= nil then
 				table.insert(needs, PlayerNeeds.pointNeed(`{ladderName} foot`, foot))
 				table.insert(needs, PlayerNeeds.pointNeed(`{ladderName} top`, top))
 			end

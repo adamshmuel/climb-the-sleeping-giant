@@ -75,7 +75,7 @@ describe("the real world, slide guards", function()
 		for _, need in needs do
 			names[need.name] = true
 		end
-		for _, ladderName in { "BeardLadder", "CapLadder" } do
+		for _, ladderName in PlayerNeeds.LADDER_NAMES do
 			expect(names[`{ladderName} foot`]).toBe(true)
 			expect(names[`{ladderName} top`]).toBe(true)
 		end
