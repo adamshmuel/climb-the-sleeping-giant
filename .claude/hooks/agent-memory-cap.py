@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce the agent memory limits (agent-workflow.md, "Agent memory size").
+"""Enforce the agent memory limits (writing-handoffs skill, "Size").
 
 Runs before every tool call. Inside a project agent it reads that agent's
 own transcript, takes the size of its last request (its memory), and:
@@ -11,7 +11,7 @@ own transcript, takes the size of its last request (its memory), and:
 Call caps alone kept missing this (tool calls of very different sizes).
 
 It also counts the agent's own tool calls since its last prompt or resume against the 30-call cap per job
-("Size steps by tool calls"): a step 3 builder in Task 54 reported "about
+(writing-handoffs skill, "Size"): a step 3 builder in Task 54 reported "about
 24 of 30" after 51 calls, so the count can't be left to the agent. From call
 25 it shows the count; past 30 only a Studio call (to finish a world change
 or fetch a running job) or a note still works; past 35 only a note.
@@ -137,7 +137,7 @@ def git_word_ok(w):
 
 
 def runner_shell_ok(command):
-    # The full run's wait (agent-workflow.md, "Ready-made run scripts"), exactly as written there.
+    # The full run's wait (writing-handoffs skill, "Models"), exactly as written there.
     wait = re.fullmatch(r'python3 -c "import time; time\.sleep\(([0-9]{1,3})\)"', command.strip())
     if wait:
         return int(wait.group(1)) <= 120
@@ -247,7 +247,7 @@ def main():
         k = f"{size // 1000}k of your {limit // 1000}k limit"
         if size >= limit:
             deny.append(
-                f"Memory at {k} (agent-workflow.md, 'Agent memory size'). "
+                f"Memory at {k} (writing-handoffs skill, 'Size'). "
                 "Stop now: write your state note or answer as a .md or .txt file in work/ (only that and your report still work), "
                 "then end with your report. A fresh agent carries on."
             )
@@ -264,7 +264,7 @@ def main():
                 )
             context.append(f"Memory at {k}. {advice}")
     if calls is not None:
-        n = f"This is about tool call {calls + 1}; the cap is {CALL_CAP} per job (agent-workflow.md, 'Size steps by tool calls')."
+        n = f"This is about tool call {calls + 1}; the cap is {CALL_CAP} per job (writing-handoffs skill, 'Size')."
         if calls >= CALL_CAP + CALL_GRACE or (calls >= CALL_CAP and not studio_call):
             deny.append(
                 f"{n} Over the cap: only a .md or .txt note in work/ and your report still work"

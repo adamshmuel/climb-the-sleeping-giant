@@ -1,0 +1,48 @@
+---
+name: closing-a-task
+description: The main chat's checklist at every task close and at Gate 4 - health check and its alarms, the look back, lessons and problems-log lines, the commit, the handoff update, and merging a finished feature. Use when a task is approved, a small fix passes its test run, a session starts, or a feature reaches Gate 4.
+---
+
+# Closing a task
+
+## 1. Health check
+
+Run `python3 scripts/health.py` (also at the start of every session). It prints hours worked and idle, each agent's size, Rojo crashes and commits, then the alarms. Check these by hand too:
+
+| Alarm | Do |
+|---|---|
+| Nothing running for more than 30 minutes, and nobody knew | log an idle turn, start the next step now |
+| Two tasks in a row closed with nothing built | `stop-and-step-back` (loop) |
+| A task past 1 hour or its planned size | `stop-and-step-back` (task) |
+| A second task on the same object | `stop-and-step-back` (same object) |
+| A plan past 1.5 times its time, grown by half, or 10 more tasks committed | `stop-and-step-back` (plan) |
+| A Rojo crash, an agent over its limit, or another unplanned stop | a problems-log line |
+
+An alarm means stop before the next step. Never carry on as if nothing happened.
+
+## 2. Look back
+
+Ask in one line: what slowed this task down, and could a lesson have stopped it?
+
+- **Lessons (`docs/lessons/`).** The index lists every lesson by number, short name and topic file. Each `LESSON:` line from a report goes into the topic file that fits, with its line in the index.
+- **Problems log (`docs/problems-log/`).** One line per unplanned stop in the matching area file, as soon as it happens. Check the index's open kinds first. **The same kind twice means fix the cause** (a rule, a script or a hook) and add a lesson. A workaround alone is never the second fix.
+
+## 3. Commit (`git.md`)
+
+- **When:** a task, after `code_lead` approves it. A small fix, after its one `runner` test run passes, with no review round.
+- What goes in: the task's tests, code, world scripts and docs together. Never a failing test, except reds the plan names as accepted.
+- Then go straight to the next task in the plan's order.
+
+## 4. Tell the user and update the handoff
+
+- One line to the user: what finished, and the time against the plan, for example "Task 7: 1.2 h, planned 1 h".
+- Update the "Now" section of `docs/handoff.md` (untracked) after every agent step, not only every task: the task in progress, open questions, each agent's size, and what the user checks at the next gate. The app compacts the chat at any moment, so this file is the memory.
+
+## Gate 4: a finished feature
+
+1. `product_reviewer` writes `docs/reviews/<feature>.md`; `game_creator` and `designer` play it too.
+2. The user approves the built feature.
+3. If the world changed, the user saves the place over `climb-the-sleeping-giant.rbxl`, and the main chat commits it on the branch.
+4. Clean out the task backups in `ServerStorage.WorldBackups`.
+5. The main chat merges the branch into `main` with `git merge --no-ff <branch>`.
+6. The main chat tells the user it's ready to push. The user pushes.

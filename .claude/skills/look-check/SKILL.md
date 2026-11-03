@@ -1,0 +1,33 @@
+---
+name: look-check
+description: The before-and-after check that proves a change did not make the game look worse - fixed cameras on computer and phone, before and after shots, and the designer's side-by-side verdict. Use for any task that changes something the player can see (a part, a model, a color, a light, a button), including safety, fit and route fixes, and when planning or budgeting such a task.
+---
+
+# Look check: a look never gets worse
+
+Any task that changes something the player can see proves it didn't make the game look worse. This covers fixes too, not only look tasks.
+
+## Steps
+
+1. **Fixed cameras.** `designer` keeps one list per version in `docs/design/<version>/look-cameras.md`:
+   - the wide view a new player first sees;
+   - the main character's face;
+   - each spawn view;
+   - a "player's spot" row for anything players walk on or in;
+   each with its exact camera position and field of view, on computer and phone. It writes the list the first time a task needs it.
+2. **Before shots.** Before the first world change, take every fixed camera that shows the changed area, on computer and phone. Save them in `work/<task>/look-before/`.
+3. **After shots.** After the change, take the same shots from the same cameras into `work/<task>/look-after/`. Close-ups may be added, never instead of the fixed shots.
+4. **Designer judges side by side, before the commit.** For each pair: **same or better**, or **worse**, with the reason. One "worse" sends the change back, even if every test passes. Saving time is never a reason to accept a worse look.
+5. **The plan budgets it.** `code_lead` adds the before shots, after shots and the designer check to the steps and caps of every such task.
+
+A "worse" on a main character or on the first view is a red alert: use the `stop-and-step-back` skill.
+
+## Choosing between looks
+
+When the choice is between looks or ways to play, `designer` mocks up each option from the fixed cameras (computer and phone), and `game_creator` and `product` judge them side by side before anyone picks. A choice made from words alone is not finished.
+
+## Shots
+
+- Use `screen_capture` of the real Play screen, and the device simulator for phone.
+- A set view in Play uses the ready-made Client `BindToRenderStep` camera from the look-shots job (Play ignores a camera set once), placed off the player's facing line.
+- Judge the whole screen, not only the changed part: something covering the main character, text cut off at an edge, or controls overlapping are problems even if no rule names them.

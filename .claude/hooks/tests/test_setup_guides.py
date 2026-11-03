@@ -113,13 +113,20 @@ class SetupGuides(unittest.TestCase):
             "printf x | tee .claude/settings.json",
             "cp work/x.md .claude/agents/x.md",
             "mv .claude/rules/a.md work/a.md",
-            "rm .claude/hooks/old.py",
             "git mv .claude/rules/a.md .claude/rules/b.md",
-            "git rm CLAUDE.md",
             "cd work && cp x.md ../.claude/skills/s/SKILL.md",
+            "python3 - <<'EOF'\nopen('.claude/rules/git.md','w').write('x')\nEOF",
+            "python3 -c \"open('CLAUDE.md','w')\"",
         ]:
             result = run({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}, self.project)
             self.assertEqual(decision(result), "deny", command)
+
+    def test_deleting_a_setup_file_is_allowed_with_the_guide_reminder(self):
+        # Deleting can't make a file longer, and moving text out of a rule needs it.
+        for command in ["rm .claude/rules/tdd.md", "git rm .claude/rules/sdd.md"]:
+            result = run({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}, self.project)
+            self.assertIsNone(decision(result), command)
+            self.assertIn("Anthropic", context(result), command)
 
     def test_shell_reads_of_setup_files_are_allowed(self):
         for command in ["wc -l CLAUDE.md .claude/rules/*.md", "grep -n paths .claude/rules/git.md", "sed -n 1,20p CLAUDE.md", "git add CLAUDE.md", "wc -l CLAUDE.md 2>/dev/null", "cat CLAUDE.md > work/copy.md", "cp .claude/agents/x.md work/", "cat .claude/rules/git.md | tee work/x.md", "rm work/old.md && wc -l CLAUDE.md"]:

@@ -9,9 +9,10 @@ Setup files are CLAUDE.md, .claude/rules, .claude/agents, .claude/skills,
   that leaves CLAUDE.md or a rule file over 200 lines, or a SKILL.md over
   500, and makes it longer (the guides' size targets: long files are followed
   less). Shrinking a file already over the line is always allowed.
-- Bash that writes a setup file (>, tee, sed -i, mv, cp or ln into it, rm,
-  git mv, git rm): blocked, so
-  every setup change goes through Edit/Write and the check above.
+- Bash that writes a setup file (>, tee, sed -i, mv, cp or ln into it,
+  git mv, or a Python script that writes one): blocked, so every setup change
+  goes through Edit/Write and the check above. rm and git rm only get the
+  reminder, because deleting can't make a file longer.
 Written rules kept being missed; the memory guide says a rule Claude must
 follow every time belongs in a hook (2026-11-03).
 """
@@ -35,12 +36,17 @@ GUIDES = [
 ]
 BEST = "https://code.claude.com/docs/en/best-practices"
 SETUP = r"CLAUDE(\.local)?\.md|\.claude/(rules|agents|skills|hooks|commands|settings)"
-SETUP_IN_SHELL = re.compile(SETUP)
+# Case-blind, because the Mac's disk is: `claude.md` is the same file as `CLAUDE.md`.
+SETUP_IN_SHELL = re.compile(SETUP, re.I)
 # A redirect counts only when it points at a setup file, so `2>/dev/null` or a copy into work/ still reads.
-REDIRECT_TO_SETUP = re.compile(r">{1,2}\s*[\"']?[^\s;&|]*(" + SETUP + ")")
+REDIRECT_TO_SETUP = re.compile(r">{1,2}\s*[\"']?[^\s;&|]*(" + SETUP + ")", re.I)
+# A Python script that opens a file to write, or copies, moves or writes one.
+PYTHON = re.compile(r"\bpython3?\b")
+PYTHON_WRITES = re.compile(r"""['"][wax]b?\+?['"]|write_text|write_bytes|shutil\.(copy|move)|os\.(rename|replace|remove)""")
 SEGMENTS = re.compile(r"&&|\|\||[;|\n]")
 # Commands where every file named is changed (mv also removes its source), and where only the last one is.
-CHANGES_EVERY_FILE = {"mv", "rm", "truncate", "tee"}
+# rm is not here: deleting can't make a file longer, so it only gets the guide reminder.
+CHANGES_EVERY_FILE = {"mv", "truncate", "tee"}
 CHANGES_LAST_FILE = {"cp", "ln", "install", "rsync"}
 IN_PLACE = re.compile(r"^(-[a-zA-Z]*i|--in-place)")
 # The reminder is for setup talk only, so game prompts stay short.
@@ -142,8 +148,16 @@ def segment_writes_setup(segment):
     return False
 
 
+def segment_deletes_setup(segment):
+    words = segment.split()
+    if words[:2] == ["git", "rm"]:
+        words = words[1:]
+    return bool(words) and os.path.basename(words[0]) == "rm" and any(SETUP_IN_SHELL.search(w) for w in words[1:])
+
+
 def check_shell(command):
-    if REDIRECT_TO_SETUP.search(command) or any(segment_writes_setup(s) for s in SEGMENTS.split(command)):
+    python_write = PYTHON.search(command) and SETUP_IN_SHELL.search(command) and PYTHON_WRITES.search(command)
+    if python_write or REDIRECT_TO_SETUP.search(command) or any(segment_writes_setup(s) for s in SEGMENTS.split(command)):
         emit(
             "PreToolUse",
             permissionDecision="deny",
@@ -151,6 +165,14 @@ def check_shell(command):
                 "This shell command writes a setup file (CLAUDE.md, .claude/rules, agents, skills, hooks or "
                 "settings). Make setup changes with Edit or Write, so the guide check in "
                 ".claude/hooks/setup-guides.py runs on them."
+            ),
+        )
+    elif any(segment_deletes_setup(s) for s in SEGMENTS.split(command)):
+        emit(
+            "PreToolUse",
+            additionalContext=(
+                f"Deleting a setup file. Check Anthropic's guide ({BEST}) and update every pointer to it, "
+                "and say in your report which guide point the change follows."
             ),
         )
 

@@ -47,7 +47,7 @@ You may change something the user already approved when it fits the game idea an
 
 ## Your toolkit
 
-**Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are described in `agent-workflow.md`, "Shared reference library". Follow those steps whenever you need the library.
+**Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are in the `top-games-library` skill. Follow its steps whenever you need the library.
 
 **Live Roblox data**, with the `roblox-trends` skill:
 

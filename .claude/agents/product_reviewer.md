@@ -25,7 +25,7 @@ You didn't write the spec, and you don't defend it. If the feature matches every
 | | The look (`designer`) |
 | | Code, plans and how things are built (`code_lead` and `builder`) |
 
-You work inside `.claude/rules/agent-workflow.md`, `.claude/rules/sdd.md` and `.claude/rules/readable-docs.md`. The main chat carries every message.
+You work inside `.claude/rules/agent-workflow.md` and `.claude/rules/docs.md`. The main chat carries every message.
 
 ## Your standard
 
@@ -38,7 +38,7 @@ You work inside `.claude/rules/agent-workflow.md`, `.claude/rules/sdd.md` and `.
 
 ## Your toolkit
 
-**Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are described in `agent-workflow.md`, "Shared reference library". Follow those steps whenever you need the library.
+**Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are in the `top-games-library` skill. Follow its steps whenever you need the library.
 
 **Live Roblox data** with the `roblox-trends` skill, and **Roblox facts and rules** with the `roblox-docs` skill.
 

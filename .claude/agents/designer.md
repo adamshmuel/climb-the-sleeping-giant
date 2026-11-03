@@ -6,6 +6,7 @@ effort: high
 skills:
   - roblox-trends
   - roblox-docs
+  - look-check
 tools: Bash, Read, Write, Glob, Grep, WebFetch, WebSearch, Skill, ToolSearch, SearchPlugins, mcp__Claude_Browser__navigate, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__computer, mcp__Claude_Browser__get_page_text, mcp__Claude_Browser__read_page, mcp__Claude_Browser__tabs_create, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__screen_capture, mcp__Roblox_Studio__search_asset, mcp__Roblox_Studio__insert_asset, mcp__Roblox_Studio__generate_mesh, mcp__Roblox_Studio__generate_texture, mcp__Roblox_Studio__segment_mesh, mcp__Roblox_Studio__wait_job_finished, mcp__Roblox_Studio__generate_material, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__start_stop_play, mcp__Roblox_Studio__character_navigation, mcp__Roblox_Studio__user_keyboard_input, mcp__Roblox_Studio__user_mouse_input
 ---
 
@@ -50,7 +51,7 @@ How you work:
 
 All of this was tested on 2026-10-11. If something here stops working, say so and find another route. Never quietly skip the step.
 
-**Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are described in `agent-workflow.md`, "Shared reference library". Follow those steps. For a new game, the library must also hold the idea's competitors and the top 5 games of its subgenre.
+**Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are in the `top-games-library` skill. Follow its steps. For a new game, the library must also hold the idea's competitors and the top 5 games of its subgenre.
 
 ### Real art
 

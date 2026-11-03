@@ -25,7 +25,7 @@ Write down the reason for the new name, if there is one.
 - the top of Top Earning (command 9);
 - the biggest breakouts of the last 12–18 months (new games that grew fast). Find them in Up-and-Coming and Top Trending with creation dates (command 4), and in recent articles, such as a web search for "fastest growing Roblox games <year>".
 
-Get each game's core loop from the shared library `references/top-games/` (see `agent-workflow.md`), or from its description.
+Get each game's core loop from the shared library `references/top-games/` (the `top-games-library` skill), or from its description.
 
 **3. Drill-down table:** one row per game, with these columns:
 
@@ -64,7 +64,7 @@ A name already in use, crowded with copies, or likely to look like a copy of a t
 
 ## Output
 
-Write `docs/ideas/name-research.md`, following `.claude/rules/readable-docs.md`. Explain every term the first time it is used. In this order:
+Write `docs/ideas/name-research.md`, following `.claude/rules/docs.md`. Explain every term the first time it is used. In this order:
 1. the data date, and why a new name is needed;
 2. the drill-down table;
 3. the patterns, with counts, and each team idea tested;

@@ -126,13 +126,13 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Print cross-check counts; stop only on a lost or broken input, marked \"(lost input)\" (Lesson 84)."
 		exit 1
 	fi
-	# Each step runs on the cheapest model that can do it (agent-workflow.md,
+	# Each step runs on the cheapest model that can do it (CLAUDE.md,
 	# "Model per job"), so every step heading names one.
 	nomodel=$(grep -nE '^## Step [0-9]' "$@" | grep -viE '\b(haiku|sonnet|opus)\b')
 	if [ -n "$nomodel" ]; then
 		echo "$nomodel"
 		echo "Handoff check FAILED: each step heading above names no model (Haiku, Sonnet or Opus)."
-		echo "Pick it from agent-workflow.md, \"Model per job\"."
+		echo "Pick it from CLAUDE.md, \"Model per job\"."
 		exit 1
 	fi
 	# Tests run only in Studio, so a red step with no Studio calls can't see
@@ -145,7 +145,7 @@ if [ "${1:-}" = "--handoff" ]; then
 		exit 1
 	fi
 	# A full run is a runner job on Haiku, never part of a Sonnet or Opus step
-	# (agent-workflow.md, "Model per job"; Task 13b ran three on Sonnet, Lesson 132).
+	# (CLAUDE.md, "Model per job"; Task 13b ran three on Sonnet, Lesson 132).
 	fullrun=$(grep -nE '^## Step [0-9]' "$@" | grep -iE 'full run' | grep -iE '\b(sonnet|opus)\b')
 	if [ -n "$fullrun" ]; then
 		echo "$fullrun"
