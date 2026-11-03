@@ -316,6 +316,12 @@ What this project learned the hard way, so it doesn't happen again.
 | 304 | Use the game's own signal, and size job files before the step | `studio-and-scripts.md` |
 | 305 | One Play case per behaviour the player feels | `teamwork.md` |
 | 306 | A Play job's memory is mostly its pastes | `studio-and-scripts.md` |
+| 307 | Measure the floor under a Play case's path, and end it like a player | `studio-and-scripts.md` |
+| 308 | Rule on a Play result from its own lines | `teamwork.md` |
+| 309 | Release the stick on the game's state, and aim every retry at what the case climbs | `studio-and-scripts.md` |
+| 310 | Write each pass word as the game's own value, and name a spot after the part its ray hit | `studio-and-scripts.md` |
+| 311 | A push away from a Roblox ladder climbs down; trace one let-go before rewriting a climbing job | `studio-and-scripts.md` |
+| 312 | A Play case on a spot a later task builds over belongs to that task | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

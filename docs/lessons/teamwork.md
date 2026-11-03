@@ -377,3 +377,11 @@ Task 61h's header promised a quiet fall from the cap onto the cap and the "CapTo
 Task 61h's Play job listed one case per spot: both mirror sides of the same fold, which run the same code. It also asked for two shots of a 1-second puff, taken after a script that runs over 2 seconds, so the shots could never catch it. Both added time to a task already near its line, and the red-flag meeting cut them (product, game_creator, designer and code_lead, 2026-11-03).
 
 **Do instead:** each Play case names the behaviour the player feels that it proves. A mirror side or a second spot gets a case only when the measured spots or the code differ. Before asking for a shot of an effect, check how long the effect lasts. If it ends before the capture, prove it with the game's own signal.
+
+## Lesson 308: Rule on a Play result from its own lines
+In the 61h loop meeting, one answer said "never in the air" from the brief's summary. The run's own line "try 1: ended" showed a real fall at the cap's front (2026-11-03).
+→ Before ruling on a Play result, read the run's printed result lines in the state note, not only the brief's summary of them. A brief that sums up a run also quotes its result lines.
+
+## Lesson 312: A Play case on a spot a later task builds over belongs to that task
+Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w builds its chute deck (2026-11-03). Its result was always going to be redone, and three runs went into it.
+→ Before any Play case, check whether a later task builds or reshapes the spot it lands on. If so, the case moves into that task ("Don't build what a later plan replaces").

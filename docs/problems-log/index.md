@@ -22,6 +22,8 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | A picked fix failed its confirm run | 1 | 2026-11-02 | `world-scenery.md` |
 | A full-run report hid failed names (fix queued: the fetch lists every failed name first) | 3 | 2026-11-02 | `studio-and-scripts.md` |
 | The sleep-meter holder stopped between Play runs (cause fix due) | 2 | 2026-11-02 | `studio-and-scripts.md` |
+| A Play push that never stops (a step-down is not a fall) | 1 | 2026-11-03 | `studio-and-scripts.md` |
+| A Play pass list stricter than its plan (a loop of job fixes) | 1 | 2026-11-03 | `studio-and-scripts.md` |
 
 ## Fixed kinds
 
@@ -52,5 +54,5 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | File | What it covers | Rows |
 |---|---|---|
 | `world-scenery.md` | Objects in the world and how they fit the giant: the Sock, the pillow, the beard, the forehead | 19 |
-| `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 12 |
+| `studio-and-scripts.md` | Rojo, Studio syncing, and scripts pasted into Studio | 13 |
 | `teamwork.md` | Handing work between agents, agent memory, and task sizes | 22 |

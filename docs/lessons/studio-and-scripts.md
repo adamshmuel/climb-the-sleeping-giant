@@ -847,3 +847,19 @@ In Task 61h's Step 4 the builder wrote a 649-line drop script, because it rebuil
 In Task 61h the drop script was pasted many times, and each paste put the whole file back into the builder's memory. Two builders ran out of memory before the job ran (code_lead, 2026-11-03).
 
 **Do instead:** a Play step's caps give paste lines (file lines times pastes). A step over about 2000 paste lines is split before it starts. Each pass item names the game signal it reads, and code_lead checks the signal with a grep before the builder writes the script.
+
+## Lesson 307: Measure the floor under a Play case's path, and end it like a player
+A case "walk off the fold" waited for a fall. Off the fold the cap is only 1 stud lower, and a Humanoid walks down that without ever being in the air. So the job pushed for 6 s, twice, and walked him 90 studs off the giant. The fix between the runs changed only the timing (Task 61h Step 5, 2026-11-03).
+→ Before writing a case that expects a drop, cast rays down along its path and write the height from the start floor to the end floor. Under 2 studs it is a walk: the case ends on "on the ground, off the start part", then lets go of the stick. When a case ends far from where it should, first check whether he was ever in the air, before changing any timing.
+
+## Lesson 309: Release the stick on the game's state, and aim every retry at what the case climbs
+Task 61h case 4 failed twice from the job, not the game (2026-11-03). First the let-go push stayed held through the fall, and air control carried him 54 studs off the giant. Then the fix released the stick on a 0.3 s timer while he still hung on the ladder, so try 1 stalled with no line printed. Try 2 turned 25° off the tie, walked past it under the cap, and the held walk push carried him 140 studs onto Terrain.
+→ Release the stick on the game's own state (off the ladder, or falling), never on a timer. Keep each retry aimed at the thing the case climbs, and end a try that walks past it. Print one line per try: why it ended, its start, its highest point, whether he climbed, and where it ended.
+
+## Lesson 310: Write each pass word as the game's own value, and name a spot after the part its ray hit
+Task 61h case 4 failed a third time on the job, not the game (2026-11-03). The game did all the plan asked (Belly zone, quiet, one puff), but the pass wanted "lands on the Pillow" and a "CapDrop" ending "pillow". The handoff's world row had called the belly under the tie's foot "Pillow", though its own ray hit `body_geom`, and the game's rule (`CapDrop.landing`) calls that spot "shoulders". Each fix round fixed only the item that had just failed.
+→ Name every measured spot after the part its ray hit. Write each pass word as the value the game's own function returns, checked with a grep before the first run. Before every rerun, re-check the whole pass list against the plan's words, not only the failed item (rule "A pass list quotes its plan").
+
+## Lesson 311: A push away from a Roblox ladder climbs down; trace one let-go before rewriting a climbing job
+Three case-4 job fixes guessed how a held stick behaves on a ladder (2026-11-03). Pushing away from a TrussPart climbs down it instead of letting go, so the job never saw him "in the air" and called a clean landing STUCK. The end-rule fix from the round before had been applied to cases up to 3 only.
+→ Before rewriting a climbing job, trace one let-go (state, y and floor every 0.1 s) and build the end rule from what the trace shows. After an end-rule fault, check every case still to run against the fix.

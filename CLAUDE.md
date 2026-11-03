@@ -32,6 +32,10 @@ When a task takes too long: **more than 1 hour of work on one task, whatever its
 2. **Write down why it looped** in the night log and the problems log, and add the rule that would have stopped it to this file (or to the rule file it belongs in, with a line here pointing to it).
 3. **Hold the red-flag meeting** (steps 2 to 5 above), with the loop's steps as the facts.
 
+**Measure the world before fixing a Play job.** When a Play case ends in the wrong spot, the fix starts with one read-only raycast along the path the job pushes, and the fix names what it found. On 2026-11-03 a landing check was tuned twice while the real cause was a 1-stud step onto the cap, which a Humanoid walks down without ever being in the air (Task 61h Step 5).
+
+**A pass list quotes its plan.** Before a Play job's first run and before every rerun, `code_lead` checks every pass item against the plan line it proves and the measured world table, not only the item that just failed. Case 4 of Task 61h failed three runs on job faults; the last one wanted "the Pillow" where the plan asked only for the Belly zone (`.claude/rules/agent-workflow.md`, "Fewer round trips").
+
 Example: Task 61a (planned 1.4 h, past 2 h) must not continue until steps 2 to 4 are done. Its step 2 is the walk check: can a player get from the belly to the cap tie at all? Details: `.claude/rules/agent-workflow.md`, the health-check alarm table.
 
 ## Docs layout
