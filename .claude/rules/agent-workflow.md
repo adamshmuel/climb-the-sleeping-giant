@@ -85,7 +85,7 @@ When the user asks why an agent decided something, send the question to that own
 
 ## Files
 
-- **No big files.** No file in `src/`, `tools/`, `scripts/`, `docs/` or `.claude/` goes over 1000 lines. Split a file near the limit by topic, listed in its folder's index. The health check warns at 900.
+- **No big files.** No file in `src/`, `tools/`, `scripts/`, `docs/`, `.claude/` or `work/` goes over 1000 lines. Split a file near the limit by topic, listed in its folder's index. `.claude/hooks/file-size.py` warns at 900 on every edit and sends the edit back over 1000.
 - **Working files live in `work/`** (git-ignored): handoffs, state notes, reports, trial scripts. Never in `/tmp`, which the Mac empties.
 
 | Path | Written by | In git |
