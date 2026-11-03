@@ -425,4 +425,4 @@ A walk limit for gardens 1 and 8 was set from a straight-line distance, while th
 
 ## Lesson 341: Moving a prop moves its helper parts too
 - **What happened:** On 2026-11-03 product's ruling priced "move the Sock" as one value in its world script. The designer found 34 helper parts (a ramp, walk patches, slide guards) placed at fixed world spots by a different script. Left behind, they would be invisible blocks on garden 2's walk.
-- **Do instead:** before planning a prop move, grep every world script for parts named after the prop, and move them all with the same transform.
+- **Do instead:** before planning a prop move, grep every world script for parts named after the prop, and move them all with the same transform. Grep the tests too: spots a test hard-codes near the prop (closed hollows, measured rims, flower counts) move by the prop's real measured shift, not the planned one. In Task 4e3 the Sock's closed-hollow list stayed at the old spot and showed up as 2 "new" stuck spots, and the Teacup's real shift was (-0.497, 0, 87.713), not +88.
