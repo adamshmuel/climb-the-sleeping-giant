@@ -140,7 +140,7 @@ describe("the boot ladders (Task 4a)", function()
 				counts[part.Name] = (counts[part.Name] or 0) + 1
 				expect(part.Transparency < 1).toBe(true)
 				if part.Name == "Rung" or part.Name == "Rail" then
-					local reference = beard[part.Name] :: BasePart
+					local reference = beard.Look[part.Name] :: BasePart
 					expect(part.Material).toBe(reference.Material)
 					expect(part.BrickColor).toBe(reference.BrickColor)
 				end
@@ -213,6 +213,76 @@ describe("the boot ladders (Task 4a)", function()
 			local hit =
 				Workspace:Raycast(spot:GetPivot().Position + Vector3.new(0, 3, 0), Vector3.new(0, -10, 0), params)
 			expect(hit).toBeNil()
+		end
+	end)
+end)
+
+-- Plan 3, Task 4d: the beard and cap ladders get a Look model like the boot ladders (Rule 42, Footprints take the
+-- quickest way: the glow covers only the visible ladder). The world is changed by tools/world/19-ways-up-ladders.luau.
+describe("every ladder has a Look model (four d)", function()
+	local LADDER_NAMES = { "BeardLadder", "CapLadder", "BootLadder_Left", "BootLadder_Right" }
+	local MOVED_NAMES = { "BeardLadder", "CapLadder" }
+	local SAME = 0.01
+
+	it("each ladder has a Climb truss and a Look model of visible parts only (Rule 42)", function()
+		for _, name in LADDER_NAMES do
+			local ladder = walkSurfaces():FindFirstChild(name)
+			expect(ladder).never.toBeNil()
+			local climb = (ladder :: Instance):FindFirstChild("Climb")
+			expect(climb).never.toBeNil()
+			expect((climb :: Instance):IsA("TrussPart")).toBe(true)
+			local look = (ladder :: Instance):FindFirstChild("Look")
+			expect(look).never.toBeNil()
+			expect((look :: Instance):IsA("Model")).toBe(true)
+			expect(#(look :: Instance):GetChildren() > 0).toBe(true)
+			for _, part in (look :: Instance):GetChildren() do
+				expect(part:IsA("BasePart")).toBe(true)
+				expect((part :: BasePart).Transparency < 1).toBe(true)
+			end
+			for _, part in (ladder :: Instance):GetChildren() do
+				if part:IsA("BasePart") then
+					expect(part.Name == "TopPad" or part.Name == "Climb").toBe(true)
+				end
+			end
+		end
+	end)
+
+	it("nothing moved: the beard and cap rails and rungs match the backup (Rule 42)", function()
+		local backups = game:GetService("ServerStorage"):FindFirstChild("WorldBackups")
+		local backup = if backups ~= nil then backups:FindFirstChild("T4d") else nil
+		expect(backup).never.toBeNil()
+		for _, name in MOVED_NAMES do
+			local old = (backup :: Instance):FindFirstChild(name)
+			expect(old).never.toBeNil()
+			local look = (walkSurfaces():FindFirstChild(name) :: Instance):FindFirstChild("Look")
+			expect(look).never.toBeNil()
+			local used: { [Instance]: boolean } = {}
+			local checked = 0
+			for _, was in (old :: Instance):GetChildren() do
+				if was:IsA("BasePart") and (was.Name == "Rail" or was.Name == "Rung") then
+					local match: BasePart? = nil
+					for _, now in (look :: Instance):GetChildren() do
+						if
+							now:IsA("BasePart")
+							and not used[now]
+							and now.Name == was.Name
+							and (now.Position - was.Position).Magnitude <= SAME
+							and (now.Size - was.Size).Magnitude <= SAME
+						then
+							match = now
+							break
+						end
+					end
+					expect(match).never.toBeNil()
+					local now = match :: BasePart
+					used[now] = true
+					expect(now.CanCollide).toBe(was.CanCollide)
+					expect(now.BrickColor).toBe(was.BrickColor)
+					expect(now.Material).toBe(was.Material)
+					checked += 1
+				end
+			end
+			expect(checked > 0).toBe(true)
 		end
 	end)
 end)

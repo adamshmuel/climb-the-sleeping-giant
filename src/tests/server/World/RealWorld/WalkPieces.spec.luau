@@ -130,7 +130,9 @@ describe("the real world, the walk pieces sit on his skin", function()
 	local function endRung(ladder: Instance, axis: LadderAxis, atTop: boolean): BasePart
 		local found: BasePart? = nil
 		local best = 0
-		for _, child in ladder:GetChildren() do
+		local look = ladder:FindFirstChild("Look")
+		expect(look).never.toBeNil()
+		for _, child in (look :: Instance):GetChildren() do
 			if child:IsA("BasePart") and child.Name == "Rung" then
 				local along = child.Position:Dot(axis.up) * (if atTop then 1 else -1)
 				if found == nil or along > best then

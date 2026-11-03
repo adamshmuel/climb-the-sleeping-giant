@@ -134,9 +134,14 @@ local function ladderAxis(ladder: Instance): LadderAxis
 	}
 end
 
+-- The named parts of a ladder: rails and rungs are in its Look model, the Climb truss is in the ladder itself.
 local function ladderParts(ladder: Instance, name: string): { BasePart }
 	local found: { BasePart } = {}
-	for _, child in ladder:GetChildren() do
+	local holder = if name == "Climb" then ladder else ladder:FindFirstChild("Look")
+	if holder == nil then
+		return found
+	end
+	for _, child in holder:GetChildren() do
 		if child:IsA("BasePart") and child.Name == name then
 			table.insert(found, child)
 		end

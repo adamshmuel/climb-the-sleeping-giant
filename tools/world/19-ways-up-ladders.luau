@@ -37,7 +37,7 @@ local function numberAttr(part: Instance, name: string): number
 	return if type(value) == "number" then value else 0
 end
 
-local function run(): string
+local function run4a(): string
 	if RunService:IsRunning() then
 		error("a running game can't be changed: stop Play and run this in Edit mode")
 	end
@@ -187,6 +187,81 @@ local function run(): string
 		.. table.concat(made, "; ")
 		.. ". Backup: ServerStorage.WorldBackups."
 		.. BACKUP_NAME
+end
+
+-- Task 4d (docs/plans/v2/gardens-and-ways-up.md, "Task 4d"; spec Rule 42 (Footprints take the quickest way): the glow
+-- covers only the visible ladder). The beard and cap ladders get a Look model like the boot ladders: their Rail and Rung
+-- parts move into a new Look model inside the same ladder. Nothing else changes and nothing moves. Before any change both
+-- ladders are cloned into ServerStorage.WorldBackups.T4d (an existing T4d is left alone). Rollback: paste the T4d clones
+-- back over the two ladders. Worlds: both have a Look = "already done"; none = change; one = stop.
+local LADDERS_4D = { "BeardLadder", "CapLadder" }
+local BACKUP_4D = "T4d"
+
+local function run4d(): string
+	if RunService:IsRunning() then
+		error("a running game can't be changed: stop Play and run this in Edit mode")
+	end
+	local world = Workspace:FindFirstChild("World")
+	local surfaces = if world ~= nil then world:FindFirstChild("WalkSurfaces") else nil
+	if surfaces == nil then
+		error("nothing was changed. Workspace.World.WalkSurfaces is missing")
+	end
+	local ladders: { Instance } = {}
+	local withLook = 0
+	for _, name in LADDERS_4D do
+		local ladder = surfaces:FindFirstChild(name)
+		if ladder == nil or not ladder:IsA("Model") or ladder:FindFirstChild("Climb") == nil then
+			error(`nothing was changed. WalkSurfaces.{name} or its Climb is missing`)
+		end
+		table.insert(ladders, ladder)
+		if ladder:FindFirstChild("Look") ~= nil then
+			withLook += 1
+		end
+	end
+	if withLook == #LADDERS_4D then
+		return "already done: every ladder has a Look model"
+	elseif withLook ~= 0 then
+		error("nothing was changed. only one of the beard and cap ladders has a Look model, expected 0 or 2")
+	end
+
+	local backups = ServerStorage:FindFirstChild("WorldBackups")
+	if backups == nil then
+		backups = Instance.new("Folder")
+		backups.Name = "WorldBackups"
+		backups.Parent = ServerStorage
+	end
+	if backups:FindFirstChild(BACKUP_4D) == nil then
+		local folder = Instance.new("Folder")
+		folder.Name = BACKUP_4D
+		for _, ladder in ladders do
+			ladder:Clone().Parent = folder
+		end
+		folder.Parent = backups
+	end
+
+	pcall(function()
+		ChangeHistoryService:SetWaypoint("19-ways-up-ladders 4d: before")
+	end)
+	local moved = 0
+	for _, ladder in ladders do
+		local look = Instance.new("Model")
+		look.Name = "Look"
+		for _, child in ladder:GetChildren() do
+			if child:IsA("BasePart") and (child.Name == "Rail" or child.Name == "Rung") then
+				child.Parent = look
+				moved += 1
+			end
+		end
+		look.Parent = ladder
+	end
+	pcall(function()
+		ChangeHistoryService:SetWaypoint("19-ways-up-ladders 4d: after")
+	end)
+	return `4d: gave {#ladders} ladders a Look model ({moved} parts moved). Backup: ServerStorage.WorldBackups.{BACKUP_4D}`
+end
+
+local function run(): string
+	return run4a() .. " | " .. run4d()
 end
 
 local ok, message = pcall(run)
