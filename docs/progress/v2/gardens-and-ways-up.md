@@ -14,7 +14,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 4c: World prep: the two thigh planks | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4d: World prep: the beard and cap ladders get a Look model | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 4e: The outer gardens' walk to their boot ladder (the measurement; result FAIL, recorded) | ☑ done | builder |
-| Gardens and ways up (V2 spec 3) | Task 4e1: Meadow plants never block a walk | ◐ in progress | |
+| Gardens and ways up (V2 spec 3) | Task 4e1: Meadow plants never block a walk (dropped: every short plant was already walk-through) | removed | builder |
 | Gardens and ways up (V2 spec 3) | Task 4e2: designer picks new spots for the Sock and the Teacup | ◐ in progress | |
 | Gardens and ways up (V2 spec 3) | Task 4e3: Move the Sock | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 4f: Move the teacup out of the gate 7 view | ☐ not started | |

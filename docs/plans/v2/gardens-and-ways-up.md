@@ -128,21 +128,12 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Files: none if every walk passes; `tools/world/01-gardens.luau` (the spawn spot) if one moves.
 - What: a timed Play walk at normal speed (16 studs a second) from the spawn spots of gardens 1, 2, 7 and 8 to their boot ladder's foot, over the bridge, like a player walks it. The walk measurement's final times come from Task 4e4, which runs this same walk again; Task 8 reuses 4e4's times.
 - Pass: gardens 1 and 8 at or under 7.5 s, gardens 2 and 7 at or under 5 s, and each mirror pair (1 and 8, 2 and 7) within 0.3 s of each other. The times go in a table in `work/t4e/walk-times.md`.
-- Fail (what happened): recorded, and no spawn spot moved. The fixes follow product's ruling: plants (4e1), new prop spots (4e2), the Sock (4e3), the Teacup (4f), then the walk again with spawn moves (4e4). The limit is never raised.
+- Fail (what happened): recorded, and no spawn spot moved. The fixes follow product's ruling: new prop spots (4e2), the Sock (4e3), the Teacup (4f), then the walk again with spawn moves (4e4). The limit is never raised.
 - Look shots: none, unless a spawn spot moves. Then the fixed spawn cameras of that garden (computer and phone) before and after, judged by designer.
 - Step 1 (10 min, Sonnet, builder): the timed walk of the four gardens, and the spawn move if one fails. Cap: 12 tool calls, 8 of them Studio.
 - Step 2 (5 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
 
-**Task 4e1: Meadow plants never block a walk** (added 2026-11-03 by product's ruling on Task 4e; a small fix under the Speed rules: 10 minutes, one agent plus one runner check. Card already given: `work/t4e1/card.md`)
-- Stands on: nothing (scenery only: turning collision off changes no layer a player stands on).
-- Planned hours: 0.17 (Step 1: 2 min; Step 2: 3 min; Step 3: 5 min, with the full run in the builder's own card, as the card gives it).
-- Spec rules: Rule 35 (Every garden has a way up close by).
-- Files: `tools/world/29-walk-through-plants.luau` (new; numbers up to 28 are taken or planned, Lesson 339), `src/tests/server/World/MeadowPlants.spec.luau` (new).
-- What: every meadow plant under 5 studs tall (flowers, ferns, grass tufts, including `Blue_Flower_03`, `Nature_Fern` and both `Nature_GrassTuft`) gets `CanCollide = false` on its parts, after a backup into `ServerStorage.WorldBackups.T4e1`. Trees and the bush are left alone. Look unchanged, so no look shots.
-- Failing test first: every part of a short plant has `CanCollide == false`, and each is within 0.01 studs of its `T4e1` clone (red: both fail, the plants collide and `T4e1` is missing).
-- Step 1 (2 min, Sonnet, builder): one read-only call lists every plant under `Workspace.World.Nature` with its height, into `work/t4e1/plants.md`.
-- Step 2 (3 min, Sonnet, builder): the red test and its narrow run.
-- Step 3 (5 min, Sonnet, builder): the world script, its first and second run, the narrow run green, `scripts/check.sh`, and the full run. Cap for the whole task: 20 tool calls, 10 of them Studio.
+**Task 4e1: Meadow plants never block a walk.** Dropped on 2026-11-03, with nothing built: its builder measured that every short plant (228 models) is already walk-through (`CanCollide` off). The first raycast had hit them only because it ignored `CanCollide`. A walk-only raycast shows the real blocks: the Sock on gardens 1 and 2, the Teacup on gardens 7 and 8. Its test and world script were deleted, so number 29 is free again.
 
 **Task 4e2: designer picks new spots for the Sock and the Teacup** (added 2026-11-03 by product's ruling; no world change)
 - Stands on: nothing (a choice of spots, measured read-only against the built world).
@@ -175,7 +166,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 3 (3 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
 
 **Task 4e4: Walk again, then even out the mirror pairs** (added 2026-11-03 by product's ruling; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
-- Stands on: Task 4e1 (the plants walk-through), Task 4e3 (the Sock moved), Task 4f (the Teacup moved).
+- Stands on: Task 4e3 (the Sock moved), Task 4f (the Teacup moved).
 - Planned hours: 0.17 (Step 1: 6 min; Step 2: 1 min; Step 3: 3 min).
 - Spec rules: Rule 35 (Every garden has a way up close by). game_creator's condition (`work/t4c/game-creator-walk.md`).
 - Files: `tools/world/01-gardens.luau` (the spawn spots), only if one moves.
@@ -414,7 +405,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 |---|---|
 | Rule 15 (The climb needs no jump) | 4a, 6, 9, 18 |
 | Rule 34 (Gardens are handed out in two groups) | 1 |
-| Rule 35 (Every garden has a way up close by) | 4e, 4e1, 4e2, 4e3, 4f, 4e4, 8 |
+| Rule 35 (Every garden has a way up close by) | 4e, 4e2, 4e3, 4f, 4e4, 8 |
 | Rule 36 (The lap planks) | 5, 7, 19 |
 | Rule 37 (Rope ladders on the boots) | 4a |
 | Rule 38 (Rope ladders up his sides) | Removed on 2026-11-03 (no task) |
