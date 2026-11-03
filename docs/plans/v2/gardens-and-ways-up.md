@@ -133,19 +133,30 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 1 (10 min, Sonnet, builder): the timed walk of the four gardens, and the spawn move if one fails. Cap: 12 tool calls, 8 of them Studio.
 - Step 2 (5 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
 
-**Task 4f: Move the teacup and the bush out of gates 7 and 8** (added 2026-11-03 by product's decision: gate 7's teacup and gate 8's bush hide the right boot ladder; move both props, no flags; a small fix under the Speed rules: 10 minutes, one agent plus one runner check)
-- Stands on: Task 4e (the spawn spots, final), Task 4a, and a read-only measure of the new spots (Step 1).
-- Planned hours: 0.42 (Step 1: 5 min; Step 2: 10 min; Step 3: 5 min; Step 4: 5 min).
+**Task 4f: Move the teacup out of the gate 7 view** (added 2026-11-03 by product's decision: gate 7's teacup hides the right boot ladder; move it, no flags. Product split the first 0.42 h plan into two 10-minute tasks, one per prop. A small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- Stands on: Task 4e (the spawn spots, final), Task 4a (the boot ladders, built).
+- Planned hours: 0.17 (Step 1: 2 min; Step 2: 5 min; Step 3: 3 min).
 - Spec rules: Rule 44 (Your way up is in view from home).
-- Files: `tools/world/14-teacup-tea.luau` and `tools/world/16-meadow-bush.luau` (their spots, so a second run finds each prop at its new spot and says "already done").
-- What: back up both props into `ServerStorage.WorldBackups.T4f` in the same call as the move (and the main chat copies the place file to `work/place-backups/` first), then move them to the measured spots.
-- Each new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path (measured in Step 1, never guessed: Lessons 219 and 221).
-- Fixed cameras before and after (`docs/design/v2/look-cameras.md`): gate-6, gate-7, gate-8 and meadow-wide, computer and phone, saved in `work/t4f/look-before/` and `work/t4f/look-after/`. designer judges each pair. A "worse" on meadow-wide is a red alert (`agent-workflow.md`).
-- Pass: gate 7 shows the top half of its ladder, like gate 2; gate 8 shows at least as much of its ladder as gate 1.
-- Step 1 (5 min, Sonnet, builder): one read-only Edit call measures both new spots against the clear list above. Cap: 4 tool calls, 1 of them Studio.
-- Step 2 (10 min, Sonnet, builder): the before shots, the backup and the move in one call, the script spot changes, and the after shots. Cap: 25 tool calls, 21 of them Studio: 1-8 the before shots (4 cameras, computer and phone), 9-10 the phone set and reset, 11 the backup and move, 12-19 the after shots, 20-21 the phone set and reset; 22-23 the two script spot edits; 24 the state note; 25 spare.
-- Step 3 (5 min, Opus, designer): judges each before-and-after pair, same or better, or worse, with the reason. Cap: 10 tool calls, no Studio.
-- Step 4 (5 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
+- Files: `tools/world/14-teacup-tea.luau` (one value: the teacup's spot, so a second run finds it there and says "already done").
+- The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path (measured, never guessed: Lessons 219 and 221).
+- Look shots (`docs/design/v2/look-cameras.md`): only the cameras that show the teacup: gate-7 and meadow-wide, computer and phone, saved in `work/t4f/look-before/` and `work/t4f/look-after/`. gate-6 is shot only if Step 1's sight check finds the teacup in its view, at the old or the new spot.
+- Pass: gate 7 shows the top half of its ladder, like gate 2. designer judges the pairs in Task 4g, together with 4g's, once; a "worse" on meadow-wide is a red alert (`agent-workflow.md`). So the main chat commits 4f and 4g together, after that judgement.
+- Step 1 (2 min, Sonnet, builder): one read-only Edit call measures the new spot against the clear list and checks whether gate-6's camera sees the teacup. Cap: 3 tool calls: 1 read of `14-teacup-tea.luau`, 1 Studio measure, 1 spare.
+- Step 2 (5 min, Sonnet, builder, same agent): the before shots, then one call that backs the teacup up into `ServerStorage.WorldBackups.T4f` and runs the changed script, then the after shots (the main chat copies the place file to `work/place-backups/` first). Cap: 15 tool calls, 13 of them Studio: 1-2 before shots on computer, 3 phone set, 4-5 before shots on phone, 6 phone reset, 7 the one-value script edit, 8 the backup and run, 9-10 after shots on computer, 11 phone set, 12-13 after shots on phone, 14 phone reset, 15 spare. Add 4 shot calls if gate-6 is in.
+- Step 3 (3 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
+
+**Task 4g: Move the bush out of the gate 8 view** (added 2026-11-03 by product's split of Task 4f; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- Stands on: Task 4f (the teacup moved; designer judges both props' pairs together here).
+- Planned hours: 0.17 (Step 1: 2 min; Step 2: 4 min; Step 3: 2 min; Step 4: 2 min).
+- Spec rules: Rule 44 (Your way up is in view from home).
+- Files: `tools/world/16-meadow-bush.luau` (one value: `FOLIAGE_AT`, the bush's spot, so a second run finds it there and says "already done").
+- The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path, and of the teacup's new spot (measured: Lessons 219 and 221).
+- Look shots: gate-8 only, computer and phone, saved in `work/t4g/look-before/` and `work/t4g/look-after/`.
+- Pass: gate 8 shows at least as much of its ladder as gate 1.
+- Step 1 (2 min, Sonnet, builder): one read-only Edit call measures the new spot. Cap: 3 tool calls: 1 read of `16-meadow-bush.luau`, 1 Studio measure, 1 spare.
+- Step 2 (4 min, Sonnet, builder, same agent): the before shots, then one call that backs the bush up into `ServerStorage.WorldBackups.T4g` and runs the changed script, then the after shots. Cap: 11 tool calls, 9 of them Studio: 1 before shot on computer, 2 phone set, 3 before shot on phone, 4 phone reset, 5 the one-value script edit, 6 the backup and run, 7 after shot on computer, 8 phone set, 9 after shot on phone, 10 phone reset, 11 spare.
+- Step 3 (2 min, Opus, designer): judges every 4f and 4g pair at once: same or better, or worse, with the reason. Cap: 8 tool calls, no Studio.
+- Step 4 (2 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
 - Stands on: Task 4a (the boot ladders and their climb, built), Task 4d (the `Look` model on the beard and cap ladders), his body, the Safe Gates, the ray grid under each lap plank's boot end, and the reach check just before this task (build order step 2).
@@ -210,7 +221,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass and the second run says "already done".
 
 **Task 8: World prep: the footprint route, 10 landing spots and the walk-limit measure**
-- Stands on: Task 4e (the measured walk times and final spawn spots), Task 4f (the teacup and bush moved), Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), game_creator's walk-limit ruling of 2026-11-03 (`work/t4c/game-creator-walk.md`, decided), and the reach check just before this task (build order step 4). Task 4e owns the walk measurement; this task reuses its times (test 2b).
+- Stands on: Task 4e (the measured walk times and final spawn spots), Task 4f (the teacup moved), Task 4g (the bush moved), Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), game_creator's walk-limit ruling of 2026-11-03 (`work/t4c/game-creator-walk.md`, decided), and the reach check just before this task (build order step 4). Task 4e owns the walk measurement; this task reuses its times (test 2b).
 - Before: reach check from what exists (each garden's spawn spot to its way up's foot, over what steps 2 and 3 built), back up the parts into `ServerStorage.WorldBackups.Plan3Task8` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
@@ -371,7 +382,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 | Rule 41 (Every way up is equally loud) | 11, 12, 17, 18 |
 | Rule 42 (Footprints take the quickest way) | 8, 13, 14 |
 | Rule 43 (Landing spots on every side) | 8, 9, 19 |
-| Rule 44 (Your way up is in view from home) | 4f, 19 |
+| Rule 44 (Your way up is in view from home) | 4f, 4g, 19 |
 | Rule 45 (One way onto the belly) | 5, 6, 7, 8, 9, 10, 18 |
 | Section 10 (Success signals) | 16 |
 

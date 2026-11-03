@@ -14,7 +14,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 4c: World prep: the two thigh planks | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4d: World prep: the beard and cap ladders get a Look model | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 4e: The outer gardens' walk to their boot ladder | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 4f: Move the teacup and the bush out of gates 7 and 8 | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 4f: Move the teacup out of the gate 7 view | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 4g: Move the bush out of the gate 8 view | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 5: World prep: lap planks, lap landing, front apron and rail guards (closes with the Rule 82 re-check: the jump check with the lap planks and the lap landing as gateways; 2 Studio calls plus 1 spare, added 2026-10-28) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 6: World prep: the two belly ramps, their edge guards and his skin | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 7: World prep: ladder boxes and zone boxes | ☐ not started | |
