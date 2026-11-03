@@ -5,7 +5,7 @@ description: Research-first naming for a Roblox game. Drills down into about 30 
 
 # Roblox game naming
 
-A name is chosen from data, never from taste or memory. Every naming idea, including one from Adam or another agent (for example "good names name the main character"), is a **guess to test**: count it against the data and report what the data shows, even if it shows the idea is wrong.
+A name is chosen from data, never from taste or memory. Every naming idea, including one from the user or another agent (for example "good names name the main character"), is a **guess to test**: count it against the data and report what the data shows, even if it shows the idea is wrong.
 
 Live data comes from the `roblox-trends` skill (commands 1, 2, 4, 9 and 10). Always state the date and time the data was fetched.
 
@@ -75,7 +75,7 @@ Write `docs/ideas/name-research.md`, following `.claude/rules/docs.md`. Explain 
 8. the pick;
 9. sources: every chart, article and guide, with links. Then a line on what couldn't be found. No article proves that a naming style causes success; say so.
 
-The file only proposes. Renaming the idea file, the design folder or anything else happens only after Adam picks the name.
+The file only proposes. Renaming the idea file, the design folder or anything else happens only after the user picks the name.
 
 Reply with:
 - the file path;

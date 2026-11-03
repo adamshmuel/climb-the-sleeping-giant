@@ -1,6 +1,9 @@
 ---
 name: roblox-testing
 description: Testing Roblox code - testable modules with dependency injection, Jest Lua (runCLI, .spec files), legacy TestEZ, running tests in Studio, via Studio MCP, run-in-roblox, or CI with Open Cloud Luau Execution, Lune for pure Luau, multi-client playtests, QA checklist. Use when adding tests, setting up a test runner or CI, or verifying a gameplay change works.
+when_to_use: Writing or running .spec.luau tests, or setting up how tests run.
+paths:
+  - "**/*.luau"
 ---
 
 > **PROJECT OVERRIDE — read first.** This project's rules (`CLAUDE.md`, `.claude/rules/`) win over this skill wherever they conflict.
@@ -10,7 +13,7 @@ description: Testing Roblox code - testable modules with dependency injection, J
 > - Data: ProfileStore, or raw DataStore calls in `pcall` with `UpdateAsync` (never `SetAsync`), saving on `PlayerRemoving` and `game:BindToClose` and waiting for saves to finish.
 > - Map example paths onto the existing `src/` layout; never create new top-level folders, and never edit `CLAUDE.md`, `AGENTS.md`, `default.project.json`, MCP or client config.
 > - Never `git commit`/`push` or add AI attribution. No Knit, no ProfileService, Rokit (not Aftman). The project has no Open Cloud API keys.
-> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and Adam is never given manual work.
+> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and the user is never given manual work.
 > - Verify any API or 2026 platform claim with the `roblox-docs` skill before using it. Ignore references to skills that aren't installed.
 > - The CurrencyService example (GetAsync/SetAsync without pcall) only shows dependency injection; it is not an acceptable DataStore pattern.
 > - `references/cloud-test-runner.md` and Open Cloud Luau Execution are **not used in this project**: don't create API keys, run the curl script or upload place versions.

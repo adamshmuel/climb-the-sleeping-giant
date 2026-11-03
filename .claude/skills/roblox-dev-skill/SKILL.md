@@ -1,14 +1,13 @@
 ---
 name: roblox-dev-skill
 description: >
-  Core scripting and engine skill for Roblox game development.
-  Covers full-lifecycle development: architecture, Luau scripting, debugging, security,
-  performance, data persistence, networking, and the Roblox Studio environment.
-  MUST use this skill whenever the user mentions: 'Roblox', 'Luau', 'Roblox Studio',
-  'ServerScriptService', 'ReplicatedStorage', 'DataStoreService', 'RemoteEvent',
-  or when working with Roblox Studio MCP tools like execute_luau, search_game_tree.
-  Note: For UI/UX design, refer to roblox-design-skill and roblox-design-intelligence.
-  For Audio, VFX, or Monetization, refer to their respective skills in the suite.
+  Use when building a new Roblox system in Luau and the narrower skills don't cover it:
+  architecture and project layout, Luau types and style, UI, performance, legacy API
+  migration, and safe use of the Roblox Studio MCP tools. For remotes, data saving,
+  security, tests or code review, use the matching roblox-* skill instead.
+when_to_use: Writing or planning new Luau systems in src/ that need deeper Roblox guidance.
+paths:
+  - "**/*.luau"
 ---
 
 > **PROJECT OVERRIDE — read first.** This project's rules (`CLAUDE.md`, `.claude/rules/`) win over this skill wherever they conflict.
@@ -18,9 +17,9 @@ description: >
 > - Data: ProfileStore, or raw DataStore calls in `pcall` with `UpdateAsync` (never `SetAsync`), saving on `PlayerRemoving` and `game:BindToClose` and waiting for saves to finish.
 > - Map example paths onto the existing `src/` layout; never create new top-level folders, and never edit `CLAUDE.md`, `AGENTS.md`, `default.project.json`, MCP or client config.
 > - Never `git commit`/`push` or add AI attribution. No Knit, no ProfileService, Rokit (not Aftman). The project has no Open Cloud API keys.
-> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and Adam is never given manual work.
+> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and the user is never given manual work.
 > - Verify any API or 2026 platform claim with the `roblox-docs` skill before using it. Ignore references to skills that aren't installed.
-> - Ignore the "Knowledge Freshness Check" and "Manual Knowledge Update" sections: never edit this skill's files, never run `npx ctx7`, version-check `curl` calls, `roblox-api-monitor.sh` or `audit-skill-examples.py`, and never write to `~/RobloxDocs` or the Studio plugins folder.
+> - Never edit this skill's files, never run `npx ctx7`, version-check `curl` calls, `roblox-api-monitor.sh` or `audit-skill-examples.py`, and never write to the Studio plugins folder.
 > - Wherever a workflow here ends in `multi_edit` (`mcp-integration.md`, `worked-examples.md`, `agent-safety.md`, `legacy-migration.md`), read it as "edit the file in `src/`, then confirm Rojo synced it with `script_read`".
 > - Monetization, plugin authoring and asset formats were removed from this copy; use `roblox-docs` for them.
 > - Don't copy these known-buggy samples: the PlayerDataService example in `project-structure.md`, the ObjectPool usage in `performance-optimization.md` (acquire/release pass the pool twice), `ui-systems.md` lines 286–287, `legacy-migration.md` line 108 and its `wait(` regex. The MCP tool table here is out of date: trust the tools the host actually exposes.
@@ -147,9 +146,7 @@ Match user intent to the appropriate reference file. Read the file BEFORE genera
 | Using Roblox Studio MCP tools effectively | `references/mcp-integration.md` |
 | UI, GUI, ScreenGui, menus, HUD, StyleQuery | `references/ui-systems.md` |
 | Migrating legacy code, deprecated APIs | `references/legacy-migration.md` |
-| Monetization, game passes, donations, transfers | `references/monetization.md` |
-| File formats, import/export, asset management | `references/file-formats-and-assets.md` |
-| Plugins, `Script.Source` limits, HttpService/engine limits | `references/studio-plugins-and-limits.md` |
+| Monetization, file formats, plugins, engine limits | the `roblox-docs` skill |
 
 **Start with `worked-examples.md` when the task is a *doing* task** (build, debug, migrate, look up)
 rather than a *knowing* task. It gives the call sequence and the verification step, and each example
@@ -164,83 +161,14 @@ Documentation Lookup workflow below.
 
 ## API & Documentation Lookup
 
-### Priority 1: Local API Reference (`~/RobloxDocs/`)
+### Priority 1: the `roblox-docs` skill
 
-**Always check local files first** — they are pre-split, far cheaper to read than the full dump, and
-require no network. If `~/RobloxDocs/RobloxAPI/` exists, use it.
+Look up every Engine API there first: it has the URL table, the plain-language search and the
+deprecated list.
 
-**How much cheaper, re-measured 2026-10-01 on 0.741.19.7411056** (an earlier "845× smaller" figure
-was not reproducible from any measurement, so here are the real numbers and the command that
-produced them): the full dump is **8,356,896 bytes**; the 931 split class files run **101 B min,
-2,054 B median, 4,782 B mean, 104,956 B max**. So a typical class lookup reads about **0.02%** of
-the dump, and even the largest class reads under **1.3%** of it. Re-measure with:
+### Priority 2: Live Web Sources
 
-```bash
-# Portable (macOS, Linux, Windows). Do not use `stat -f %z`: on Linux `stat -f` reports the
-# *filesystem*, not the file, and prints a wrong number without any error. It also reads the
-# 75-byte latest.json symlink instead of the dump unless you remember -L.
-python3 -c "import os,glob,statistics as s; d=os.path.expanduser('~/RobloxDocs/RobloxAPI'); \
-z=sorted(os.path.getsize(f) for f in glob.glob(d+'/classes/*.json')); \
-print('dump', os.path.getsize(os.path.realpath(d+'/dumps/latest.json')), 'B | n', len(z), \
-'min', z[0], 'median', int(s.median(z)), 'mean', int(s.mean(z)), 'max', z[-1])"
-```
-
-```bash
-# Look up a specific class (~2 KB median vs the 8.4 MB full dump — see measurement above)
-cat ~/RobloxDocs/RobloxAPI/classes/<ClassName>.json
-
-# Query a specific property/method (jq if installed; the python3 form works everywhere)
-jq '.Members[] | select(.Name == "<MemberName>")' ~/RobloxDocs/RobloxAPI/classes/<ClassName>.json
-python3 -c "import json,os; print([m for m in json.load(open(os.path.expanduser('~/RobloxDocs/RobloxAPI/classes/<ClassName>.json')))['Members'] if m['Name']=='<MemberName>'])"
-
-# Find all services
-cat ~/RobloxDocs/RobloxAPI/service-index.json
-
-# Check what's deprecated
-cat ~/RobloxDocs/RobloxAPI/deprecated-index.json
-
-# Search across classes by filename
-ls ~/RobloxDocs/RobloxAPI/classes/ | grep -i <keyword>
-
-# Search for a property across all classes
-grep -l '"<PropertyName>"' ~/RobloxDocs/RobloxAPI/classes/*.json
-```
-
-**Obsolescence check:** Before using local data, verify freshness:
-```bash
-# Check when local data was last updated
-cat ~/RobloxDocs/RobloxAPI/.current-version
-# → {"version":"0.742.0.7421053","platform":"MacStudio","platformVersion":"0.742.0.7421053",
-#    "winHash":"version-9b554450a0fc4e65","updatedAt":"2026-10-11T07:35:36Z","checkedAt":"2026-10-11T07:35:36Z"}
-```
-
-> **Read whichever timestamp is present: `updatedAt` OR `checkedAt`.** `updatedAt` is when a dump
-> was last downloaded; `checkedAt` is when the version was last checked. The current monitor
-> (skill 2.12.0+) always writes both, but the older zsh script wrote **only `updatedAt`** after a
-> download — so an install that has not refreshed its tools may lack `checkedAt` entirely. Earlier
-> versions of this file told the agent to read `checkedAt`, which silently found nothing there.
-
-If that timestamp is older than 7 days, or a class/member is not found locally, **proceed with the
-live web fallback below and tell the user the local dump looks stale.** Offer to refresh it:
-
-```bash
-# Only after the user agrees — this downloads and re-splits the API dump
-~/RobloxDocs/scripts/roblox-api-monitor.sh                      # macOS, Linux, WSL, Git Bash
-python "%USERPROFILE%\RobloxDocs\scripts\roblox-api-monitor.py"    # Windows without bash
-```
-
-If `~/RobloxDocs` does not exist at all, the user never set it up. Say so and point them at the
-installer's `--docs-only` option (`-DocsOnly` in PowerShell) rather than creating it yourself.
-
-> **Do not background this and do not run it unasked.** Earlier versions of this file told the
-> agent to fire `roblox-api-monitor.sh &` automatically, which contradicted both the
-> Knowledge Freshness Check below ("NEVER auto-update without user approval") and the README.
-> There is no scheduler and no background job in this skill; a human triggers the refresh.
-> Staleness never blocks the answer — fall through to the web sources and say so.
-
-### Priority 2: Live Web Sources (Fallback)
-
-Use these when local data doesn't cover a topic, is obsolete, or you need prose docs:
+Use these when `roblox-docs` doesn't cover a topic:
 
 | Resource | URL | Use For |
 |----------|-----|--------|
@@ -261,8 +189,8 @@ Use these when local data doesn't cover a topic, is obsolete, or you need prose 
 
 ### Lookup Workflow
 1. Check if a **reference file** covers the topic (Routing Table above)
-2. Check **`~/RobloxDocs/RobloxAPI/classes/<Name>.json`** for Engine API details
-3. If not found locally, fetch the per-page markdown URL with whatever web-fetch tool the host
+2. Use the **`roblox-docs`** skill for Engine API details
+3. If not found there, fetch the per-page markdown URL with whatever web-fetch tool the host
    provides (`WebFetch` in Claude Code, `curl` in a shell — the URL is the portable part)
    - Example: `https://create.roblox.com/docs/en-us/studio/importer.md`
 4. If unsure which page to read, browse `llms.txt` for the right URL
@@ -280,10 +208,9 @@ Use these when local data doesn't cover a topic, is obsolete, or you need prose 
 > wrong index will produce non-functional code.
 
 > **Checking deprecated APIs**: Use these approaches (in priority order):
-> 1. `cat ~/RobloxDocs/RobloxAPI/deprecated-index.json` — instant local lookup
-> 2. `cat ~/RobloxDocs/RobloxAPI/deprecated/<ClassName>.json` — full deprecated class detail
-> 3. Check `robloxapi.github.io/ref/class/<Name>.html` — deprecated members marked visually
-> 4. Use Context7 (`resolve-library-id` → `get-library-docs`, or the `ctx7` CLI) to query specific APIs
+> 1. The `roblox-docs` skill's deprecated APIs page
+> 2. Check `robloxapi.github.io/ref/class/<Name>.html` — deprecated members marked visually
+> 3. Use Context7 (`resolve-library-id` → `get-library-docs`, or the `ctx7` CLI) to query specific APIs
 
 ---
 
@@ -436,69 +363,4 @@ end
 3. Flag security issues (client trust, exposed data)
 4. Flag performance issues (expensive loops, part count)
 5. Suggest improvements with before/after examples
-
----
-
-## Knowledge Freshness Check
-
-Nothing about this is automatic — there is no scheduler, hook, or background job behind it. It is an
-instruction to *you*, the agent reading this file: **when this skill is invoked**, read
-`metadata.json` in this skill directory and compare `last_updated` to the current date.
-
-### Logic:
-```
-IF (current_date - last_updated) > update_interval_days (default: 7):
-    TELL the user:
-    "⏰ Roblox Dev Skill knowledge was last updated on {last_updated}, {days} days ago.
-     Want me to run a knowledge update before we rely on it?"
-    ...then WAIT. Do not update anything unless they say yes.
-ELSE:
-    Proceed normally — knowledge is fresh.
-```
-
-### Decision Rules:
-- **NEVER auto-update** without user approval — always ask first
-- **Source of truth**: https://create.roblox.com/docs, https://devforum.roblox.com
-- **Decision maker**: Always the user (never the AI alone)
-- **Update process**: Deep research → fact-check → QnA with user → apply → audit
-- **After update**: Update `metadata.json` with new timestamp, version, and changes
-
----
-
-## Manual Knowledge Update
-
-The user can trigger a full knowledge update at any time by asking for one in plain language —
-"update roblox skill knowledge", "refresh roblox dev skill", "roblox-update".
-
-> **`/roblox-update` is NOT a registered slash command.** Earlier versions of this file presented it
-> as one; it has never been installed in `~/.claude/commands/` or shipped by a plugin, so typing it
-> resolves to nothing. It is a phrase this skill listens for, and that is all it has ever been.
-
-### Update Protocol:
-1. **Research** — Search for latest Roblox changes since `last_updated` timestamp
-   - DevForum release notes, API changelog, deprecation notices
-   - Use web search for "Roblox developer updates {year}" and "Roblox API changes {month} {year}"
-   - Visit https://devforum.roblox.com/c/updates/release-notes/58
-2. **Compare** — Cross-check findings against existing reference files
-3. **Report** — Present findings to user with clear "what changed" summary
-4. **Discuss** — QnA with user on any decisions (add/remove/modify content)
-5. **Apply** — Update reference files (keep what's correct, update what changed)
-6. **Audit** — Full fact-check (same pattern as initial audit: file integrity + content verification)
-7. **Stamp** — Update `metadata.json` with new timestamp and changelog entry
-
-> [!IMPORTANT]
-> All updates must be research-based. No improvisation. When in doubt, ask the user.
-> Fallback: consult official docs via context7 MCP or direct web search.
-
----
-
-## Export / Publish
-
-This skill is designed to be export-ready for GitHub publishing. See `README.md`
-in the skill root directory for the complete structure and usage guide.
-
-Users install it with the one-line installers in the repository (`install.sh`, `install.ps1`,
-`install.cmd`), which link it into each agent's skills folder. When copying it by hand, the folder
-**must be named `roblox-dev-skill`** — the Agent Skills spec requires the folder name to match the
-`name` field above, and stricter agents skip a skill whose folder does not.
 

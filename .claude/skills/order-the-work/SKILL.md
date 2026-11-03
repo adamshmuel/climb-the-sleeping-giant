@@ -1,6 +1,6 @@
 ---
 name: order-the-work
-description: Step-by-step checklist for putting a game project's remaining work in the right order, by what each piece stands on - decision first, then the world's layers, then a "Stands on:" list per piece - plus the reasons that never count for doing work early. Use before writing or checking any order of work, plan, handoff, ruling, fix list or "Stands on:" line.
+description: Use when writing or checking a plan's task order or a "Stands on:" line. Step-by-step checklist that orders the remaining work by what each piece stands on - decision first, then the world's layers, then a "Stands on:" list per piece - plus the reasons that never count for doing work early.
 ---
 
 # Order the work

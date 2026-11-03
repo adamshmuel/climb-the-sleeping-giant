@@ -1,6 +1,9 @@
 ---
 name: roblox-code-review
 description: Review Roblox/Luau code for exploits, data loss, memory leaks, performance problems, lifecycle bugs, policy issues, and deprecated or superseded APIs, using a severity-ranked checklist and the full 2026 deprecation map. Use when reviewing a PR or script, auditing a game before launch, modernizing legacy code, or asked what is wrong with some Roblox code.
+when_to_use: Reviewing a finished task's Luau diff or auditing scripts in src/.
+paths:
+  - "**/*.luau"
 ---
 
 > **PROJECT OVERRIDE — read first.** This project's rules (`CLAUDE.md`, `.claude/rules/`) win over this skill wherever they conflict.
@@ -10,7 +13,7 @@ description: Review Roblox/Luau code for exploits, data loss, memory leaks, perf
 > - Data: ProfileStore, or raw DataStore calls in `pcall` with `UpdateAsync` (never `SetAsync`), saving on `PlayerRemoving` and `game:BindToClose` and waiting for saves to finish.
 > - Map example paths onto the existing `src/` layout; never create new top-level folders, and never edit `CLAUDE.md`, `AGENTS.md`, `default.project.json`, MCP or client config.
 > - Never `git commit`/`push` or add AI attribution. No Knit, no ProfileService, Rokit (not Aftman). The project has no Open Cloud API keys.
-> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and Adam is never given manual work.
+> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and the user is never given manual work.
 > - Verify any API or 2026 platform claim with the `roblox-docs` skill before using it. Ignore references to skills that aren't installed.
 > - Raise to **High**: any DataStore call outside `pcall`, read-modify-write not done with `UpdateAsync`, a missing `PlayerRemoving` or `BindToClose` save (ProfileStore handles these internally: don't flag correct ProfileStore use), any Studio-only change that bypasses Rojo, any file missing `--!strict`, connections never disconnected, player-keyed tables never cleared, and new behavior or fixes with no test that failed first.
 > - Report findings only; never apply fixes yourself — the builder does, test first.
@@ -46,7 +49,7 @@ Verify claims against the code (and the engine reference when unsure) — don't 
 - Failed loads never overwritten with defaults; player-keyed tables cleared on leave.
 - Keys stable (`User_{UserId}`), Studio uses a separate store/universe.
 
-**Monetization** (`roblox-monetization`)
+**Monetization** (check with the `roblox-docs` skill)
 - Single `ProcessReceipt`; idempotent by `PurchaseId`; returns `PurchaseGranted` only after persisting.
 - Pass perks checked on join **and** after in-session purchase; prices not hardcoded; paid random items
   disclose odds and respect `PolicyService`.
