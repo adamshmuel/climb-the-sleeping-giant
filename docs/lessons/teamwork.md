@@ -417,3 +417,7 @@ Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w buil
 ## Lesson 328: A Studio cap is the count of a numbered call list
 - **What happened:** On 2026-11-03 four steps of Task 61x ran over their caps (17 of 10, 12 of 10, 21 of 18, 28 of 24 tool calls). The caps left out the session hold, the phone set and reset, the camera reset, the console read and extra report pages. Step 5g also pointed to a note that didn't hold the snippets it needed.
 - **Do instead:** every Studio cap in a handoff is the count of a numbered list under the step that names each counted call (session hold, phone set and reset, camera bind and reset, console read, one fetch per expected report page), plus one spare. Every snippet to paste is written in the handoff or in one named job file, never "see an older note".
+
+## Lesson 333: Check a spot's reach right before its piece, not up front
+- **What happened:** On 2026-11-03 product's V2 order put reach walks for every new spot first. Adam pointed out that the new ladders' tops and the belly spots can only be reached through pieces not built yet, so an up-front walk proves nothing.
+- **Do instead:** each new piece gets a reach check from what exists just before it is built, and one climb with the normal player controls just after.

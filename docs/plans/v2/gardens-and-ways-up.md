@@ -86,6 +86,10 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 ### Part 3: World prep
 
 **Task 4: World prep: boot ladders, side ladders, side pads and thigh planks**
+- Stands on: his body (never reshaped), the 10-22 ladders put back on 2026-11-03, the Safe Gates, and the reach check just before this task (build order step 2, `docs/plans/v2/index.md`).
+- Before: reach check from what exists (each ladder's foot on the grass), back up the parts into `ServerStorage.WorldBackups.Plan3Task4` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 37 (Rope ladders on the boots), Rule 38 (Rope ladders up his sides), Rule 15 (The climb needs no jump): "every ladder ends level with a flat pad or the flat boot top".
 - Files: `tools/world/15-ways-up-ladders.luau` (new), `src/tests/server/World/WaysUp.spec.luau` (new: the fast checks of this plan's world pieces, so `RealWorld.spec`, already 2,800 lines, doesn't grow).
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
@@ -100,6 +104,10 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass, the second run says "already done", screenshots from gardens 1 and 3 show the new pieces, and `docs/progress/index.md` ("Place file") says the place has unsaved world changes.
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
+- Stands on: Task 4 (the boot ladders, side pads and thigh planks, and their climb), his body, the Safe Gates, and the reach check just before this task (build order step 2).
+- Before: reach check from what exists (each boot top, reached up Task 4's boot ladders, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan3Task5` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 36 (The lap planks): the landing and apron, the rail guards and conditions 1, 2 and 6 of Rule 45 (One way onto the belly). Check D1.
 - Files: `tools/world/16-lap-landing.luau` (new), `WaysUp.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
@@ -118,6 +126,10 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   - Done when: every guard row is "no gateway" or passes every limit, each with its closest case; a failing guard goes to product.
 
 **Task 6: World prep: the two belly ramps, their edge guards and his skin**
+- Stands on: Task 5 (the lap landing and apron, and their climb), his body, the Safe Gates, and the reach check just before this task (build order step 2).
+- Before: reach check from what exists (the lap landing's back edge, built in Task 5, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan3Task6` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 45 (One way onto the belly): the belly ramps, the ramp edge guards, "his skin", points 3, 4 and 6. Rule 15 (The climb needs no jump). Check D2, Check D3.
 - Files: `tools/world/17-belly-ramps.luau` (new), `WaysUp.spec.luau`, `RealWorld.spec.luau` (V1's belly path tests change).
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
@@ -137,6 +149,10 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass, every other world test still passes (V1's belly path tests updated for the removed pieces, listed in the report), the second run says "already done", and screenshots of the fork match `view-lapfork-own.png` and `view-lapfork-cross.png`.
 
 **Task 7: World prep: ladder boxes and zone boxes**
+- Stands on: Task 4, Task 5 and Task 6 (every way up and the belly ramps, built), plan 5's (egg nests and climbing) Tasks 13, 14, 15 and 16 (the cuff straps, walk layer and seam, built), and the reach check just before this task (build order step 4).
+- Before: reach check from what exists (every walk surface built in steps 2 and 3), back up the parts into `ServerStorage.WorldBackups.Plan3Task7` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 40 (The server knows who is on a ladder): the boxes. Rule 36 (The lap planks): "Both lap planks, the landing and the apron count as the Boots zone". Rule 38 (Rope ladders up his sides): "count as the Boots zone". Rule 45 (One way onto the belly): "Zones". Rule 39 (Ladders are a little louder): the beard and cap ladders keep their V1 zones.
 - Files: `tools/world/18-ladder-boxes-and-zones.luau` (new), `WaysUp.spec.luau`, `src/server/World/WorldIndex.luau` (the world contract now asks for `LadderBoxes`).
 - What the script does: makes `World.LadderBoxes` (one box per ladder, six in all, covering the climbing space from the bottom rung to the top, with its `Ladder` and `Zone`); reshapes the zone boxes (see "Zone boxes on the new pieces" above), mirrored about x = 0 where the ramps and planks are.
@@ -150,6 +166,10 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass and the second run says "already done".
 
 **Task 8: World prep: the footprint route and 12 landing spots**
+- Stands on: Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), and the reach check just before this task (build order step 4).
+- Before: reach check from what exists (each garden's spawn spot to its way up's foot, over what steps 2 and 3 built), back up the parts into `ServerStorage.WorldBackups.Plan3Task8` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 42 (Footprints take the quickest way): the route. Rule 43 (Landing spots on every side). Rule 35 (Every garden has a way up close by). Rule 45 (One way onto the belly), point 3: the fork.
 - Files: `tools/world/08-route.luau`, `src/shared/RouteData.luau` (reads `Ladder`, `WayUpFoot` and `WayUpTop`), `src/shared/Config.luau` (`Config.WaysUp`), `src/server/World/WorldIndex.luau` (12 landing spots; `readWaysUp` from the route points), `RouteData.spec`, `WorldIndex.spec`, `RealWorld.spec.luau`.
 - What changes:

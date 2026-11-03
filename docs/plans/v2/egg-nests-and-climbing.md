@@ -195,6 +195,10 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, the second run says "already done", and every older test that named V1's spots is listed in the report with what replaced it. The place has unsaved world changes (Adam saves it).
 
 **Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes**
+- Stands on: plan 3's (gardens and ways up) Tasks 4, 5 and 6 (the ways up, the belly ramps and his skin, and their climb), his arm at rest (plan 6 keeps it), and the reach check just before this task, from plan 3's pieces (build order step 3, `docs/plans/v2/index.md`).
+- Before: reach check from what exists (the belly top, reached up plan 3's belly ramps, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan5Task13` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 79 (Walk anywhere down to the seam): the straps and ledges, "every spot ... out to the edge of each pocket ledge, must count as the Belly zone". Rule 82 (No new way onto the belly): fix 3, the cuff ridge. Section 5: "Cuff strap and ledge (Epic)", "Belly zone around each cuff", "The three invisible steep fixes".
 - Files: `tools/world/22-cuff-walk.luau` (new), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
@@ -209,6 +213,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass and the second run says "already done".
 
 **Task 14: The walk-area check**
+- Stands on: Task 13 (the cuff straps and ledges, built), plan 3's Tasks 4, 5 and 6 (the belly ramps and skin, built), his arm at rest (build order step 3).
+- No world change: this task adds a check only, so it needs no reach check, backup or climb.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 79 (Walk anywhere down to the seam), Rule 80 (The seam shows where walking ends). Section 5: "Seam angle", "Seam match", "Walk surface over what you see". Section 8: "A player stands right on the seam line".
 - Files: `src/server/World/WalkAreaCheck.luau` (new), `src/tests/server/World/WalkAreaCheck.spec.luau` (new, fake worlds), `WalkMap.spec.luau`, `src/server/World/PathCheck.luau` (the scan area out to x ±64).
 - What it checks, on the one walk map (see "Decisions" for "walk area"):
@@ -221,6 +228,10 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the fake-world tests pass, and the real world's failure list is in the task report.
 
 **Task 15: World prep: the walk layer, the steep layer and the three fixes**
+- Stands on: Task 14 (its real-world failure list is this task's failing test), Task 13, plan 3's Tasks 4, 5 and 6, his arm at rest, and the reach check just before this task (build order step 3).
+- Before: reach check from what exists (the belly top and each cuff strap built in Task 13, at their measured spots), back up the parts into `ServerStorage.WorldBackups.Plan5Task15` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 79 (Walk anywhere down to the seam). Rule 80 (The seam shows where walking ends): "a smooth invisible steep layer must cover it", "The accidental climbing under his beard near (−14, 67, −14) must be removed". Rule 82 (No new way onto the belly): fixes 1 and 2, the crease filler and the low-seam lift.
 - Files: `tools/world/23-walk-area.luau` (new), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
@@ -241,6 +252,10 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   - **Report:** each spot's distance.
 
 **Task 16: World prep: the seam**
+- Stands on: Task 15 (the walk layer and steep layer, built), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
+- Before: reach check from what exists (the walk layer's edge built in Task 15, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan5Task16` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play.
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 80 (The seam shows where walking ends): the stitches, "the edge of the walk area must match the seam's stitches", "On his arms the seam is the top rim of his white cuff", "A strap has no marks across it". Section 6, "The seam, seen from the belly top".
 - Files: `tools/world/24-seam.luau` (new), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.

@@ -342,6 +342,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 330 | Parts beside a walk floor are judged from the player's spot | `look-and-art.md` |
 | 331 | A feet proof is shot from behind the player | `look-and-art.md` |
 | 332 | Play ignores a camera set once; bind it every frame | `studio-and-scripts.md` |
+| 333 | Check a spot's reach right before its piece, not up front | `teamwork.md` |
 
 | File | What it covers |
 |---|---|
