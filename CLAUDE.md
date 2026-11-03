@@ -8,6 +8,7 @@ Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox
 The agent setup (this file, `.claude/rules`, `agents`, `skills`, `hooks`, settings and the workflow) follows Anthropic's official guides: [best practices](https://code.claude.com/docs/en/best-practices), [memory](https://code.claude.com/docs/en/memory), [subagents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks).
 - Before any setup change or suggestion, the user's included, check the guide and say in one line: it fits, or the better way the guide gives, with the link.
 - `.claude/hooks/setup-guides.py` enforces it: a reminder on setup prompts and edits, a block on CLAUDE.md or a rule file past 200 lines (SKILL.md past 500), and a block on shell writes to setup files.
+- `.claude/hooks/guides-check.py` compares the guide pages, model pages included, with their last reviewed copies at every session start. Changed lines are reviewed at the next task close (`guides-check` skill).
 - Lessons go to `docs/lessons/`, never into this file.
 
 ## Layout (default.project.json)

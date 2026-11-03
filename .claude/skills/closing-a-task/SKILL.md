@@ -20,6 +20,8 @@ Run `python3 scripts/health.py` (also at the start of every session). It prints 
 
 An alarm means stop before the next step. Never carry on as if nothing happened.
 
+If the session start said an Anthropic guide page changed (files in `work/guides/diffs/`), run the `guides-check` skill now.
+
 ## 2. Look back
 
 Ask in one line: what slowed this task down, and could a lesson have stopped it?
