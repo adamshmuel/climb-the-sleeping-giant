@@ -38,6 +38,15 @@ When a task takes too long: **more than 1 hour of work on one task, whatever its
 
 Example: Task 61a (planned 1.4 h, past 2 h) must not continue until steps 2 to 4 are done. Its step 2 is the walk check: can a player get from the belly to the cap tie at all? Details: `.claude/rules/agent-workflow.md`, the health-check alarm table.
 
+## Speed rules (Adam, 2026-11-03)
+Plan 7 (the ladder width) ran for days and was rolled back in one morning. These three rules stop that.
+
+| Rule | What it means |
+|---|---|
+| **Hard time limits** | A small fix (a moved part, a missing part, a failing test): **10 minutes**. A new part (a ladder, a bridge): **1 hour**. At the limit all work stops, finished or not, and the main chat tells Adam what is done and what isn't. Over the limit means the approach is wrong, not that it needs more time. |
+| **Backup before every world change** | Before a step changes, moves or removes world parts, it clones them into `ServerStorage.WorldBackups.<task>` in the same call. A rollback is then one paste, not a rebuild. Backups are cleaned out only at Gate 4. |
+| **Small jobs, few agents** | A small fix is done by one agent (the main chat or one `builder`), then checked by one `runner` test run. No meeting, no handoff and no review round. The full flow (owners, `code_lead` plan, review) is only for new parts and new features. |
+
 ## Docs layout
 Each version or large feature set is a folder, so an agent only reads what it needs and stays under its memory limit:
 - `docs/specs/<version>/index.md`: a short map with one line per feature (its file, status and build order). Each feature has its own small spec, `docs/specs/<version>/<feature>.md`, with at most 15 rules.
