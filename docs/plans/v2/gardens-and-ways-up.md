@@ -121,41 +121,82 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Failing tests first (real world): every ladder (the two boot ladders, the beard and the cap) has a `Climb` truss and a `Look` model, and `Look` holds only visible parts; every beard and cap ladder part is where it was (within 0.01 studs).
 - Done when: the tests pass, the second run says "already done", and the fixed-camera shots of his face show no change.
 
-**Task 4e: The outer gardens' walk to their boot ladder** (added 2026-11-03 by product's decision on designer's Rule 44 check; a small fix under the Speed rules: 10 minutes, one agent plus one runner check)
+**Task 4e: The outer gardens' walk to their boot ladder** (done 2026-11-03 as the measurement: **result FAIL**, recorded in `work/t4e/walk-times.md`. Gardens 1, 2 and 7 missed their limits, and the Sock, the Teacup and small plants block the walk lines. No spawn spot moved. product's ruling `work/t4e/product-ruling.md` puts the fixes in Tasks 4e1 to 4e4. Added 2026-11-03 by product's decision on designer's Rule 44 check; a small fix under the Speed rules)
 - Stands on: Task 4a (the boot ladders, committed ec95c9b), the side ladders' removal (Tasks 4b and 4c, committed), the ground players walk on.
 - Planned hours: 0.25 (Step 1: 10 min; Step 2: 5 min).
 - Spec rules: Rule 35 (Every garden has a way up close by). game_creator's condition (`work/t4c/game-creator-walk.md`).
 - Files: none if every walk passes; `tools/world/01-gardens.luau` (the spawn spot) if one moves.
-- What: a timed Play walk at normal speed (16 studs a second) from the spawn spots of gardens 1, 2, 7 and 8 to their boot ladder's foot, over the bridge, like a player walks it. **This task is the one owner of the walk measurement**; Task 8 reuses its times.
+- What: a timed Play walk at normal speed (16 studs a second) from the spawn spots of gardens 1, 2, 7 and 8 to their boot ladder's foot, over the bridge, like a player walks it. The walk measurement's final times come from Task 4e4, which runs this same walk again; Task 8 reuses 4e4's times.
 - Pass: gardens 1 and 8 at or under 7.5 s, gardens 2 and 7 at or under 5 s, and each mirror pair (1 and 8, 2 and 7) within 0.3 s of each other. The times go in a table in `work/t4e/walk-times.md`.
-- Fail: that garden's spawn spot moves toward its ladder (backed up into `ServerStorage.WorldBackups.T4e` in the same call, and the main chat copies the place file to `work/place-backups/` first), then the walk runs again. The limit is never raised.
+- Fail (what happened): recorded, and no spawn spot moved. The fixes follow product's ruling: plants (4e1), new prop spots (4e2), the Sock (4e3), the Teacup (4f), then the walk again with spawn moves (4e4). The limit is never raised.
 - Look shots: none, unless a spawn spot moves. Then the fixed spawn cameras of that garden (computer and phone) before and after, judged by designer.
 - Step 1 (10 min, Sonnet, builder): the timed walk of the four gardens, and the spawn move if one fails. Cap: 12 tool calls, 8 of them Studio.
 - Step 2 (5 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
 
-**Task 4f: Move the teacup out of the gate 7 view** (added 2026-11-03 by product's decision: gate 7's teacup hides the right boot ladder; move it, no flags. Product split the first 0.42 h plan into two 10-minute tasks, one per prop. A small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
-- Stands on: Task 4e (the spawn spots, final), Task 4a (the boot ladders, built).
-- Planned hours: 0.17 (Step 1: 2 min; Step 2: 5 min; Step 3: 3 min).
-- Spec rules: Rule 44 (Your way up is in view from home).
-- Files: `tools/world/14-teacup-tea.luau` (one value: the teacup's spot, so a second run finds it there and says "already done").
-- The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path (measured, never guessed: Lessons 219 and 221).
-- Look shots (`docs/design/v2/look-cameras.md`): only the cameras that show the teacup: gate-7 and meadow-wide, computer and phone, saved in `work/t4f/look-before/` and `work/t4f/look-after/`. gate-6 is shot only if Step 1's sight check finds the teacup in its view, at the old or the new spot.
-- Pass: gate 7 shows the top half of its ladder, like gate 2. designer judges the pairs in Task 4g, together with 4g's, once; a "worse" on meadow-wide is a red alert (`agent-workflow.md`). So the main chat commits 4f and 4g together, after that judgement.
-- Step 1 (2 min, Sonnet, builder): one read-only Edit call measures the new spot against the clear list and checks whether gate-6's camera sees the teacup. Cap: 3 tool calls: 1 read of `14-teacup-tea.luau`, 1 Studio measure, 1 spare.
-- Step 2 (5 min, Sonnet, builder, same agent): the before shots, then one call that backs the teacup up into `ServerStorage.WorldBackups.T4f` and runs the changed script, then the after shots (the main chat copies the place file to `work/place-backups/` first). Cap: 15 tool calls, 13 of them Studio: 1-2 before shots on computer, 3 phone set, 4-5 before shots on phone, 6 phone reset, 7 the one-value script edit, 8 the backup and run, 9-10 after shots on computer, 11 phone set, 12-13 after shots on phone, 14 phone reset, 15 spare. Add 4 shot calls if gate-6 is in.
+**Task 4e1: Meadow plants never block a walk** (added 2026-11-03 by product's ruling on Task 4e; a small fix under the Speed rules: 10 minutes, one agent plus one runner check. Card already given: `work/t4e1/card.md`)
+- Stands on: nothing (scenery only: turning collision off changes no layer a player stands on).
+- Planned hours: 0.17 (Step 1: 2 min; Step 2: 3 min; Step 3: 5 min, with the full run in the builder's own card, as the card gives it).
+- Spec rules: Rule 35 (Every garden has a way up close by).
+- Files: `tools/world/29-walk-through-plants.luau` (new; numbers up to 28 are taken or planned, Lesson 339), `src/tests/server/World/MeadowPlants.spec.luau` (new).
+- What: every meadow plant under 5 studs tall (flowers, ferns, grass tufts, including `Blue_Flower_03`, `Nature_Fern` and both `Nature_GrassTuft`) gets `CanCollide = false` on its parts, after a backup into `ServerStorage.WorldBackups.T4e1`. Trees and the bush are left alone. Look unchanged, so no look shots.
+- Failing test first: every part of a short plant has `CanCollide == false`, and each is within 0.01 studs of its `T4e1` clone (red: both fail, the plants collide and `T4e1` is missing).
+- Step 1 (2 min, Sonnet, builder): one read-only call lists every plant under `Workspace.World.Nature` with its height, into `work/t4e1/plants.md`.
+- Step 2 (3 min, Sonnet, builder): the red test and its narrow run.
+- Step 3 (5 min, Sonnet, builder): the world script, its first and second run, the narrow run green, `scripts/check.sh`, and the full run. Cap for the whole task: 20 tool calls, 10 of them Studio.
+
+**Task 4e2: designer picks new spots for the Sock and the Teacup** (added 2026-11-03 by product's ruling; no world change)
+- Stands on: nothing (a choice of spots, measured read-only against the built world).
+- Planned hours: 0.25 (Step 1: 15 min, Opus, designer).
+- Spec rules: Rule 35 (Every garden has a way up close by), Rule 44 (Your way up is in view from home).
+- What: one spot each for `GiantsThings.Sock` and `GiantsThings.Teacup`. Each spot keeps both props clear of a **corridor 10 studs wide** from each outer spawn spot (gardens 1, 2, 7 and 8) to its boot ladder foot. The walk line and the view line nearly match, so one clear corridor serves both rules, even if Task 4e4 later moves a spawn along it. Each spot is measured clear of every nest, landing spot, route point and ladder foot (Lessons 219 and 221). Mockups from meadow-wide and from the gates that show each prop; game_creator checks that the props still work as story landmarks.
+- Output: `work/t4e2/spots.md`: each prop's measured spot (the `SOCK_CENTRE` and `TEACUP_CENTRE` values for `tools/world/02b-garden-extras.luau`), and the list of fixed cameras that show it, old spot or new.
+- Step 1 (15 min, Opus, designer): measure, mock up, and write the spots. Cap: 20 tool calls, read-only Studio only.
+
+**Task 4e3: Move the Sock** (added 2026-11-03 by product's ruling; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- Stands on: Task 4e2 (the Sock's spot, picked and measured).
+- Planned hours: 0.17 (Step 1: 5 min; Step 2: 2 min; Step 3: 3 min).
+- Spec rules: Rule 35 (Every garden has a way up close by), Rule 44 (Your way up is in view from home).
+- Files: `tools/world/02b-garden-extras.luau` (one value: `SOCK_CENTRE`, plus `SOCK_YAW_DEGREES` only if `work/t4e2/spots.md` turns it).
+- Look shots: meadow-wide and the gates `work/t4e2/spots.md` lists for the Sock, computer and phone, in `work/t4e3/look-before/` and `work/t4e3/look-after/`. A "worse" on meadow-wide is a red alert (`agent-workflow.md`).
+- Pass: the Sock sits at its 4e2 spot (within 0.1 studs), and designer judges every pair same or better.
+- Step 1 (5 min, Sonnet, builder): the before shots, the one-value edit, then one call that backs the Sock up into `ServerStorage.WorldBackups.T4e3` and runs the script (the main chat copies the place file to `work/place-backups/` first), then the after shots. Cap: 2 Studio calls per camera (computer and phone), plus 2 for the phone set and reset each round, plus 1 run, plus 2 spare.
+- Step 2 (2 min, Opus, designer): judges each pair. Cap: 8 tool calls, no Studio.
 - Step 3 (3 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
 
+**Task 4f: Move the teacup out of the gate 7 view** (added 2026-11-03 by product's decision: gate 7's teacup hides the right boot ladder, and product's ruling on Task 4e puts it on garden 7's walk line too. A small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- Stands on: Task 4e2 (the Teacup's spot, picked and measured), Task 4a (the boot ladders, built).
+- Planned hours: 0.17 (Step 1: 5 min; Step 2: 2 min; Step 3: 3 min).
+- Spec rules: Rule 44 (Your way up is in view from home), Rule 35 (Every garden has a way up close by).
+- Files: `tools/world/02b-garden-extras.luau` (one value: `TEACUP_CENTRE`, where the Teacup's spot is set). `tools/world/14-teacup-tea.luau` changes only if it puts the tea at a fixed spot instead of inside the teacup; the builder checks it first, so the tea never floats where the teacup was.
+- Look shots (`docs/design/v2/look-cameras.md`): meadow-wide and the gates `work/t4e2/spots.md` lists for the Teacup (gate-7 at least; gate-6 only if it is listed), computer and phone, in `work/t4f/look-before/` and `work/t4f/look-after/`. A "worse" on meadow-wide is a red alert (`agent-workflow.md`).
+- Pass: the Teacup sits at its 4e2 spot (within 0.1 studs), and designer judges every pair same or better. The Rule 44 view check from the final spawn spots is in Task 4g.
+- Step 1 (5 min, Sonnet, builder): the before shots, the one-value edit, then one call that backs the Teacup (and its tea) up into `ServerStorage.WorldBackups.T4f` and runs the script (the main chat copies the place file to `work/place-backups/` first), then the after shots. Cap: 15 tool calls, 13 of them Studio, for 2 cameras; add 4 shot calls per extra camera.
+- Step 2 (2 min, Opus, designer): judges each pair. Cap: 8 tool calls, no Studio.
+- Step 3 (3 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
+
+**Task 4e4: Walk again, then even out the mirror pairs** (added 2026-11-03 by product's ruling; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- Stands on: Task 4e1 (the plants walk-through), Task 4e3 (the Sock moved), Task 4f (the Teacup moved).
+- Planned hours: 0.17 (Step 1: 6 min; Step 2: 1 min; Step 3: 3 min).
+- Spec rules: Rule 35 (Every garden has a way up close by). game_creator's condition (`work/t4c/game-creator-walk.md`).
+- Files: `tools/world/01-gardens.luau` (the spawn spots), only if one moves.
+- What: the same walk job as Task 4e, from gardens 1, 2, 7 and 8. **This task owns the final walk times** (`work/t4e4/walk-times.md`); Task 8 reuses them.
+- Pass: gardens 1 and 8 at or under 7.5 s, gardens 2 and 7 at or under 5 s, and each mirror pair within 0.3 s.
+- Fail: that garden's spawn spot moves along its 4e2 corridor toward its ladder (backed up into `ServerStorage.WorldBackups.T4e4` in the same call; the main chat copies the place file first), then that garden walks again. Garden 7's route is about 83 studs (5.2 s), so it needs about 4 studs of move. The limit is never raised. Look shots of the gates are taken in Task 4g, from the final spawn spots.
+- Step 1 (6 min, Sonnet, builder): the walk, the spawn moves and the walks again. Cap: 14 tool calls, 10 of them Studio.
+- Step 2 (1 min, Opus, game_creator): checks the times table. Cap: 4 tool calls, no Studio.
+- Step 3 (3 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
+
 **Task 4g: Move the bush out of the gate 8 view** (added 2026-11-03 by product's split of Task 4f; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
-- Stands on: Task 4f (the teacup moved; designer judges both props' pairs together here).
-- Planned hours: 0.17 (Step 1: 2 min; Step 2: 4 min; Step 3: 2 min; Step 4: 2 min).
+- Stands on: Task 4e4 (the spawn spots, final), and through it Tasks 4e3 and 4f (the Sock and the Teacup moved).
+- Planned hours: 0.17 (Step 1: 1 min; Step 2: 5 min; Step 3: 2 min; Step 4: 2 min).
 - Spec rules: Rule 44 (Your way up is in view from home).
 - Files: `tools/world/16-meadow-bush.luau` (one value: `FOLIAGE_AT`, the bush's spot, so a second run finds it there and says "already done").
 - The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path, and of the teacup's new spot (measured: Lessons 219 and 221).
-- Look shots: gate-8 only, computer and phone, saved in `work/t4g/look-before/` and `work/t4g/look-after/`.
-- Pass: gate 8 shows at least as much of its ladder as gate 1.
-- Step 1 (2 min, Sonnet, builder): one read-only Edit call measures the new spot. Cap: 3 tool calls: 1 read of `16-meadow-bush.luau`, 1 Studio measure, 1 spare.
-- Step 2 (4 min, Sonnet, builder, same agent): the before shots, then one call that backs the bush up into `ServerStorage.WorldBackups.T4g` and runs the changed script, then the after shots. Cap: 11 tool calls, 9 of them Studio: 1 before shot on computer, 2 phone set, 3 before shot on phone, 4 phone reset, 5 the one-value script edit, 6 the backup and run, 7 after shot on computer, 8 phone set, 9 after shot on phone, 10 phone reset, 11 spare.
-- Step 3 (2 min, Opus, designer): judges every 4f and 4g pair at once: same or better, or worse, with the reason. Cap: 8 tool calls, no Studio.
+- Look shots: gate-8 before and after, computer and phone, in `work/t4g/look-before/` and `work/t4g/look-after/`. Gates 1, 2 and 7 after only (computer and phone): with gate 8 they are the Rule 44 check from the final spawn spots.
+- Pass: gate 8 shows at least as much of its ladder as gate 1, and gate 7 shows the top half of its ladder, like gate 2.
+- Step 1 (1 min, Sonnet, builder): one read-only Edit call measures the new spot. Cap: 3 tool calls: 1 read of `16-meadow-bush.luau`, 1 Studio measure, 1 spare.
+- Step 2 (5 min, Sonnet, builder, same agent): the before shots, then one call that backs the bush up into `ServerStorage.WorldBackups.T4g` and runs the changed script, then the after shots. Cap: 17 tool calls, 15 of them Studio: 1 before shot on computer, 2 phone set, 3 before shot on phone, 4 phone reset, 5 the one-value script edit, 6 the backup and run, 7-10 after shots on computer (gates 8, 1, 2, 7), 11 phone set, 12-15 after shots on phone, 16 phone reset, 17 spare.
+- Step 3 (2 min, Opus, designer): judges the gate-8 pairs (same or better, or worse) and the Rule 44 views of gates 1, 2, 7 and 8. Cap: 8 tool calls, no Studio.
 - Step 4 (2 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
@@ -221,7 +262,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass and the second run says "already done".
 
 **Task 8: World prep: the footprint route, 10 landing spots and the walk-limit measure**
-- Stands on: Task 4e (the measured walk times and final spawn spots), Task 4f (the teacup moved), Task 4g (the bush moved), Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), game_creator's walk-limit ruling of 2026-11-03 (`work/t4c/game-creator-walk.md`, decided), and the reach check just before this task (build order step 4). Task 4e owns the walk measurement; this task reuses its times (test 2b).
+- Stands on: Task 4e4 (the final walk times and spawn spots), Task 4f (the teacup moved), Task 4g (the bush moved), Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), game_creator's walk-limit ruling of 2026-11-03 (`work/t4c/game-creator-walk.md`, decided), and the reach check just before this task (build order step 4). Task 4e4 owns the final walk times; this task reuses them (test 2b).
 - Before: reach check from what exists (each garden's spawn spot to its way up's foot, over what steps 2 and 3 built), back up the parts into `ServerStorage.WorldBackups.Plan3Task8` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
@@ -235,7 +276,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Failing tests first:
   1. `RouteData` reads `Ladder`, `WayUpFoot` and `WayUpTop`, and reports a `Ladder` on only one end of a link.
   2. (Real world) Rule 35: for each garden, the route distance from its spawn point to the foot of its own way up (`Config.WaysUp`) ÷ 16 is within its walk limit: 4 s for gardens 3 to 6, 5 s for 2 and 7, 7.5 s for 1 and 8 (spec, 2026-11-03). The times go in the report.
-  2b. (Real world) Task 4e owns the walk measurement (game_creator's condition, 2026-11-03). This test reads Task 4e's times (`work/t4e/walk-times.md`) and checks that the route built here gives each of gardens 1, 2, 7 and 8 the same walk within 0.3 s. It doesn't measure again or move a spawn spot: a miss goes back to Task 4e's fix.
+  2b. (Real world) Task 4e4 owns the final walk times (game_creator's condition, 2026-11-03). This test reads Task 4e4's times (`work/t4e4/walk-times.md`) and checks that the route built here gives each of gardens 1, 2, 7 and 8 the same walk within 0.3 s. It doesn't measure again or move a spawn spot: a miss goes back to Task 4e4's fix.
   3. (Real world) Every way up in `Config.WaysUp` has exactly one foot and one top point.
   4. (Real world) Rule 43: 10 landing spots; each at least 10 studs from every other spot and every egg spot, at least 5 studs from every ladder foot, with a 5×6×5 player box above it touching nothing (the V1 box check grows from 4×6×4), and outside every garden, plus V1's landing-spot checks.
   5. (Real world) The landing's back-edge point links to both belly ramps' first points.
@@ -373,7 +414,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 |---|---|
 | Rule 15 (The climb needs no jump) | 4a, 6, 9, 18 |
 | Rule 34 (Gardens are handed out in two groups) | 1 |
-| Rule 35 (Every garden has a way up close by) | 4e, 8 |
+| Rule 35 (Every garden has a way up close by) | 4e, 4e1, 4e2, 4e3, 4f, 4e4, 8 |
 | Rule 36 (The lap planks) | 5, 7, 19 |
 | Rule 37 (Rope ladders on the boots) | 4a |
 | Rule 38 (Rope ladders up his sides) | Removed on 2026-11-03 (no task) |
@@ -382,7 +423,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 | Rule 41 (Every way up is equally loud) | 11, 12, 17, 18 |
 | Rule 42 (Footprints take the quickest way) | 8, 13, 14 |
 | Rule 43 (Landing spots on every side) | 8, 9, 19 |
-| Rule 44 (Your way up is in view from home) | 4f, 4g, 19 |
+| Rule 44 (Your way up is in view from home) | 4e2, 4e3, 4f, 4g, 19 |
 | Rule 45 (One way onto the belly) | 5, 6, 7, 8, 9, 10, 18 |
 | Section 10 (Success signals) | 16 |
 
