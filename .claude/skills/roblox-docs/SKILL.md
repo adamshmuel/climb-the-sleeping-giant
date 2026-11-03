@@ -36,7 +36,7 @@ The docs are served as clean markdown at `create.roblox.com/docs/...md`. Never g
    `curl -s https://create.roblox.com/docs/reference/engine/classes/RemoteEvent.md | grep -n -i -A8 OnServerEvent`
    Fetch the whole page only when the section isn't enough. Members inherited from a superclass live on the superclass page (e.g. `Anchored` is on `BasePart`, not `Part`).
 
-The MCP `http_get` tool (from the Studio MCP `rbx-docs-search` skill) works on the same URLs. Prefer it when it succeeds. As of 2026-10-06 it fails with "HttpRequest.Url is not trusted", so curl is the default.
+The MCP `http_get` tool (from the Studio MCP `rbx-docs-search` skill) works on the same URLs. Try it once per session; if it fails (for example "HttpRequest.Url is not trusted"), use curl.
 
 ## Self-heal when a URL fails (anything other than 200)
 

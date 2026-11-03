@@ -12,7 +12,6 @@ import shlex
 import sys
 
 SYNCED = ("src", "tools")
-SAFE_SCRIPT = "rojo-safe-rm.sh"
 
 
 def synced_folder(path, cwd, project):
@@ -34,8 +33,7 @@ def words_of(command):
 
 
 def problem(command, cwd, project):
-    if SAFE_SCRIPT in command:
-        return None
+    # scripts/rojo-safe-rm.sh is not rm, rmdir or mv, so it passes on its own.
     words = words_of(command)
     for index, word in enumerate(words):
         if word == "cd" and index + 1 < len(words):

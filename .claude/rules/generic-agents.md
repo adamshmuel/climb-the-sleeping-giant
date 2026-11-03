@@ -1,3 +1,8 @@
+---
+paths:
+  - ".claude/agents/**"
+---
+
 # Generic agents
 
 The agents in `.claude/agents/` will be reused to build other Roblox games. So an agent definition describes a role and how to do it well, for any game.

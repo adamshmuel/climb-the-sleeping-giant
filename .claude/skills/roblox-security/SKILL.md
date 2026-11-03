@@ -1,6 +1,9 @@
 ---
 name: roblox-security
 description: Anti-exploit design - never trust the client, validate every remote argument (NaN, spoofed instances, strings), rate limiting, ProximityPrompt/ClickDetector abuse, network ownership, movement and hit validation, economy/trade duplication, code confidentiality, secure teleports, heuristics, Ban API. Use when writing server handlers for client input, combat/economy/trading, or reviewing for exploits.
+when_to_use: Writing server code that handles client input, or checking it for exploits.
+paths:
+  - "**/*.luau"
 ---
 
 > **PROJECT OVERRIDE — read first.** This project's rules (`CLAUDE.md`, `.claude/rules/`) win over this skill wherever they conflict.
@@ -10,7 +13,7 @@ description: Anti-exploit design - never trust the client, validate every remote
 > - Data: ProfileStore, or raw DataStore calls in `pcall` with `UpdateAsync` (never `SetAsync`), saving on `PlayerRemoving` and `game:BindToClose` and waiting for saves to finish.
 > - Map example paths onto the existing `src/` layout; never create new top-level folders, and never edit `CLAUDE.md`, `AGENTS.md`, `default.project.json`, MCP or client config.
 > - Never `git commit`/`push` or add AI attribution. No Knit, no ProfileService, Rokit (not Aftman). The project has no Open Cloud API keys.
-> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and Adam is never given manual work.
+> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and the user is never given manual work.
 > - Verify any API or 2026 platform claim with the `roblox-docs` skill before using it. Ignore references to skills that aren't installed.
 > - `HttpService:GetSecret` guidance is for the future; the project has no API keys today.
 
@@ -177,7 +180,7 @@ Client sends origin, direction/target part, and timestamp. Server checks:
 - Trades: validate both sides fully, then commit both, then save both; on any failure revert everything.
   Beware "trade then leave before save" duplication: lock items during trades and save immediately after.
 - Robux purchases: grant only in `MarketplaceService.ProcessReceipt` (developer products) or after a server
-  ownership check (passes). Never trust `PromptProductPurchaseFinished` from the client. See `roblox-monetization`.
+  ownership check (passes). Never trust `PromptProductPurchaseFinished` from the client. Check purchase APIs with the `roblox-docs` skill.
 
 ## Confidentiality
 
@@ -228,4 +231,4 @@ Security review checklist and common vulnerable-code patterns: [references/check
 ## Related skills
 
 `roblox-networking`, `roblox-physics` (ownership, server authority), `roblox-data-stores`,
-`roblox-monetization`, `roblox-code-review`.
+`roblox-code-review`.

@@ -48,25 +48,31 @@ def is_turn_start(entry):
     return True
 
 
+def read_transcript(path):
+    entries = []
+    try:
+        with open(path) as transcript:
+            for line in transcript:
+                try:
+                    entries.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+    except (OSError, TypeError):
+        pass
+    return entries
+
+
 def main():
     data = json.load(sys.stdin)
     if data.get("stop_hook_active"):
         return
-    entries = []
-    with open(data["transcript_path"]) as transcript:
-        for line in transcript:
-            try:
-                entries.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    start = None
+    entries = read_transcript(data.get("transcript_path"))
+    start = len(entries)
     for index in range(len(entries) - 1, -1, -1):
         if is_turn_start(entries[index]):
             start = index
             break
-    if start is None:
-        return
-    opener = text_of((entries[start].get("message") or {}).get("content"))
+    opener = text_of((entries[start].get("message") or {}).get("content")) if start < len(entries) else ""
     tools, last_text = set(), ""
     for entry in entries[start + 1 :]:
         if entry.get("type") != "assistant":
@@ -78,6 +84,8 @@ def main():
                 tools.add(part.get("name"))
             elif part.get("type") == "text" and part.get("text", "").strip():
                 last_text = part["text"]
+    # The hooks guide gives the final reply directly; the transcript may lag behind it.
+    last_text = data.get("last_assistant_message") or last_text
     if tools & STARTERS:
         return
     reason = None

@@ -176,7 +176,7 @@ error, list what your host actually exposes instead of trusting this table.
   an agent should ask the user to change them in Studio rather than retry. Measured in Studio
   0.741.19.7411056: reading any of them from `execute_luau` fails with
   `<Name> is not a valid member of Workspace "Workspace"`. That message reads like a typo, and it is
-  not one. Check the member's `Tags` in `~/RobloxDocs/RobloxAPI/classes/<Class>.json`.
+  not one. Check the member's tags on its docs page (`roblox-docs` skill).
 - In `Edit` it operates on the saved place. In `Client` / `Server` it operates on the live
   playtest DataModel, which only exists while a playtest is running.
 - **It does return values.** Earlier versions of this file claimed MCP tools could not return

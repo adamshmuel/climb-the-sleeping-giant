@@ -1,6 +1,9 @@
 ---
 name: roblox-networking
 description: Client-server communication - RemoteEvent, UnreliableRemoteEvent, RemoteFunction, what survives serialization, typed remote modules, server validation and rate limiting, bandwidth (deltas, buffers, batching), synced time, Zap/Blink. Use when adding remotes, syncing state to clients, debugging nil/lost remote arguments, or reducing lag and bandwidth.
+when_to_use: Adding or changing RemoteEvents, RemoteFunctions or state synced to clients.
+paths:
+  - "**/*.luau"
 ---
 
 > **PROJECT OVERRIDE — read first.** This project's rules (`CLAUDE.md`, `.claude/rules/`) win over this skill wherever they conflict.
@@ -10,7 +13,7 @@ description: Client-server communication - RemoteEvent, UnreliableRemoteEvent, R
 > - Data: ProfileStore, or raw DataStore calls in `pcall` with `UpdateAsync` (never `SetAsync`), saving on `PlayerRemoving` and `game:BindToClose` and waiting for saves to finish.
 > - Map example paths onto the existing `src/` layout; never create new top-level folders, and never edit `CLAUDE.md`, `AGENTS.md`, `default.project.json`, MCP or client config.
 > - Never `git commit`/`push` or add AI attribution. No Knit, no ProfileService, Rokit (not Aftman). The project has no Open Cloud API keys.
-> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and Adam is never given manual work.
+> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and the user is never given manual work.
 > - Verify any API or 2026 platform claim with the `roblox-docs` skill before using it. Ignore references to skills that aren't installed.
 > - Zap/Blink are not used unless `code_lead` decides so in `docs/architecture.md`. Treat `invokeWithTimeout` in `patterns.md` as illustration only (its timeout thread isn't cancelled).
 
