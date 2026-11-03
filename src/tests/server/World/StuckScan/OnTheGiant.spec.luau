@@ -33,7 +33,6 @@ local closedFacts = ScanFacts.closedFacts
 local WalkFacts = require(script.Parent.WalkFacts)
 local walkTowardCave = WalkFacts.walkTowardCave
 local ladderEndSpots = WalkFacts.ladderEndSpots
-local LADDER_NAMES = PlayerNeeds.LADDER_NAMES
 local hasClimbLink = WalkFacts.hasClimbLink
 local canWalk = WalkFacts.canWalk
 local spotsNearNest = WalkFacts.spotsNearNest
@@ -58,6 +57,12 @@ local NEAR_A_POINT = 1 -- studs: a named stuck spot sits on a grid column, so "a
 local LANDING_RAY_ABOVE = 3 -- the ground under a landing spot: a ray from this far above it...
 
 local LANDING_RAY_LENGTH = 6 -- ...this far down
+
+-- Stuck safety Task 22, test 4 (game_creator's check 5): the way to the beard ladder stays open. The walk-map spots
+-- within BEARD_FOOT_RADIUS studs of the ladder's foot must not drop below what they were before the patches.
+local BEARD_FOOT_SPOTS = 4 -- measured in step 22-0, after Task 25
+
+local BEARD_FOOT_RADIUS = 4 -- studs
 
 -- Stuck safety Task 23, test 3: the hump top under his cushion, where Task 22's seat walks 5 and 10 ended their push
 -- (plan, Task 23, "walks 5 and 10"). Walk 5's point is the plan's hump top; walk 10's is its 30 degree twin, the push end
@@ -576,58 +581,122 @@ describe("the stuck scan on the real world", function()
 	-- The ladders join their ends on the real walk map (stuck safety Task 25, test 6)
 	----------------------------------------------------------------------------------------------------------------
 
-	-- Rule 15 (The climb needs no jump) and Rule 101 (Fair mirror twins): each tie (left and right) is the same block.
-	-- Its foot and its top each have a walk-map spot, a climb link joins them, its foot has a route to a meadow exit
-	-- (the way the hump test checks), and a walk from its top reaches every brim nest point with no jump. The two side
-	-- nest points are only reported, per tie, as "reached" or "not reached".
+	-- Rule 15 (The climb needs no jump), designer 9 and game_creator 1 and 2: the beard ladder joins his belly top to
+	-- his nose top and the cap ladder joins his nose top to his cap, by climb links. A walk joins the beard ladder's top
+	-- to the cap ladder's foot across the nose top, and the cap ladder's top to both brim nest points with no jump. The
+	-- two side nest points are only reported, as "reached" or "not reached".
 	it("each ladder joins its two ends on the real walk map", function()
 		local problems: { string } = {}
-		for _, name in LADDER_NAMES do
-			local foot, top = ladderEndSpots(name, map, world)
-			if foot == nil then
-				table.insert(problems, `{name} foot: no walk-map spot within {LADDER_REACH_STEPS} grid steps`)
+		local beardFoot, beardTop = ladderEndSpots("BeardLadder", map, world)
+		local capFoot, capTop = ladderEndSpots("CapLadder", map, world)
+		for label, spot in
+			{
+				["beard ladder foot"] = beardFoot,
+				["beard ladder top"] = beardTop,
+				["cap ladder foot"] = capFoot,
+				["cap ladder top"] = capTop,
+			}
+		do
+			if spot == nil then
+				table.insert(problems, `{label}: no walk-map spot within {LADDER_REACH_STEPS} grid steps`)
 			end
-			if top == nil then
-				table.insert(problems, `{name} top: no walk-map spot within {LADDER_REACH_STEPS} grid steps`)
+		end
+		if #problems == 0 then
+			if not hasClimbLink(beardFoot :: number, beardTop :: number, map) then
+				table.insert(problems, "no climb link joins the beard ladder's foot to its top")
 			end
-			if foot ~= nil and top ~= nil then
-				if not hasClimbLink(foot, top, map) then
-					table.insert(problems, `no climb link joins {name}'s foot to its top`)
-				end
-				if PathCheck.route(map, foot, exits) == nil then
-					table.insert(problems, `{name}: the foot has no route to a meadow exit`)
-				end
-				for _, nestName in sortedNames(BRIM_NESTS) do
-					local near = spotsNearNest(BRIM_NESTS[nestName], map)
-					if #near == 0 then
-						table.insert(problems, `{nestName}: no walk-map spot within {NEST_REACH} studs of it`)
-					elseif not canWalk(top, near, map) then
-						table.insert(problems, `{nestName}: no walk from {name}'s top reaches it`)
-					end
-				end
-				local report: { string } = {}
-				for _, nestName in sortedNames(SIDE_NESTS) do
-					local near = spotsNearNest(SIDE_NESTS[nestName], map)
-					local reached = #near > 0 and canWalk(top, near, map)
-					table.insert(report, `{nestName}: {if reached then "reached" else "not reached"}`)
-				end
-				print(`[Task 25 test 6] side nest points from {name}'s top by walking: {table.concat(report, ", ")}`)
+			if not hasClimbLink(capFoot :: number, capTop :: number, map) then
+				table.insert(problems, "no climb link joins the cap ladder's foot to its top")
 			end
+			if not canWalk(beardTop :: number, { capFoot :: number }, map) then
+				table.insert(
+					problems,
+					"no walk joins the beard ladder's top to the cap ladder's foot across the nose top"
+				)
+			end
+			for _, name in sortedNames(BRIM_NESTS) do
+				local near = spotsNearNest(BRIM_NESTS[name], map)
+				if #near == 0 then
+					table.insert(problems, `{name}: no walk-map spot within {NEST_REACH} studs of it`)
+				elseif not canWalk(capTop :: number, near, map) then
+					table.insert(problems, `{name}: no walk from the cap ladder's top reaches it`)
+				end
+			end
+			local report: { string } = {}
+			for _, name in sortedNames(SIDE_NESTS) do
+				local near = spotsNearNest(SIDE_NESTS[name], map)
+				local reached = #near > 0 and canWalk(capTop :: number, near, map)
+				table.insert(report, `{name}: {if reached then "reached" else "not reached"}`)
+			end
+			print(
+				`[Task 25 test 6] side nest points from the cap ladder's top by walking: {table.concat(report, ", ")}`
+			)
 		end
 		expect(problems).toEqual({})
 	end)
 
-	-- The check above must be able to fail: a foot and the other tie's top have no climb link. (Both feet stand on the
-	-- pillow, so a walk from one foot to the other is fine and is not checked.)
+	-- The check above must be able to fail: two spots no ladder joins have no climb link, and no walk gets from his
+	-- belly to his nose without the beard ladder.
 	it("the ladder link check notices two spots no ladder joins", function()
-		local leftFoot, leftTop = ladderEndSpots(LADDER_NAMES[1], map, world)
-		local rightFoot, rightTop = ladderEndSpots(LADDER_NAMES[2], map, world)
-		expect(leftFoot).never.toBeNil()
-		expect(leftTop).never.toBeNil()
-		expect(rightFoot).never.toBeNil()
-		expect(rightTop).never.toBeNil()
-		expect(hasClimbLink(leftFoot :: number, rightTop :: number, map)).toBe(false)
-		expect(hasClimbLink(rightFoot :: number, leftTop :: number, map)).toBe(false)
+		local beardFoot, beardTop = ladderEndSpots("BeardLadder", map, world)
+		local capFoot, capTop = ladderEndSpots("CapLadder", map, world)
+		expect(beardFoot).never.toBeNil()
+		expect(capTop).never.toBeNil()
+		expect(hasClimbLink(beardFoot :: number, capTop :: number, map)).toBe(false)
+		expect(hasClimbLink(beardTop :: number, capFoot :: number, map)).toBe(false)
+		expect(canWalk(beardFoot :: number, { capFoot :: number }, map)).toBe(false)
+	end)
+
+	-- Stuck safety Task 22, test 4 (game_creator's check 5): the patches must not narrow or block the way past the beard
+	-- ladder's foot. From the walk-map spot nearest the foot, a walk alone reaches the spot nearest RoutePoint_Belly_4, and
+	-- at least BEARD_FOOT_SPOTS spots lie within BEARD_FOOT_RADIUS studs of the foot. It uses the walk map built above.
+	it("the way to the beard ladder stays open", function()
+		local ladder = (world :: any).WalkSurfaces:FindFirstChild("BeardLadder") :: Instance?
+		expect(ladder).never.toBeNil()
+		local truss = (ladder :: Instance):FindFirstChild("Climb") :: BasePart?
+		expect(truss).never.toBeNil()
+		-- The foot: the lower end of the truss's longest side, as ladderEndSpots finds it.
+		local size = (truss :: BasePart).Size
+		local half = if size.X >= size.Y and size.X >= size.Z
+			then Vector3.new(size.X / 2, 0, 0)
+			elseif size.Y >= size.Z then Vector3.new(0, size.Y / 2, 0)
+			else Vector3.new(0, 0, size.Z / 2)
+		local endA = (truss :: BasePart).CFrame:PointToWorldSpace(half)
+		local endB = (truss :: BasePart).CFrame:PointToWorldSpace(-half)
+		local foot = if endB.Y < endA.Y then endB else endA
+
+		local problems: { string } = {}
+		local near = 0
+		for _, spot in map.spots do
+			if (spot.position - foot).Magnitude <= BEARD_FOOT_RADIUS then
+				near += 1
+			end
+		end
+		if near < BEARD_FOOT_SPOTS then
+			table.insert(
+				problems,
+				`only {near} walk-map spots within {BEARD_FOOT_RADIUS} studs of the beard ladder's foot {format(foot)}, wanted at least {BEARD_FOOT_SPOTS}`
+			)
+		end
+
+		local footSpot = PathCheck.nearestSpot(map, foot, LADDER_REACH_STEPS * map.spacing)
+		local bellyFour: Vector3? = nil
+		for _, point in WorldIndex.loadRoute(world) do
+			if point.name == "RoutePoint_Belly_4" then
+				bellyFour = point.position
+			end
+		end
+		local goal = if bellyFour then PathCheck.nearestSpot(map, bellyFour, 2 * map.spacing) else nil
+		if footSpot == nil then
+			table.insert(problems, "no walk-map spot near the beard ladder's foot")
+		elseif goal == nil then
+			table.insert(problems, "no walk-map spot near RoutePoint_Belly_4")
+		elseif not canWalk(footSpot, { goal }, map) then
+			table.insert(problems, "no walk from the beard ladder's foot reaches RoutePoint_Belly_4's spot")
+		end
+		if #problems > 0 then
+			error("\n" .. table.concat(problems, "\n"), 0)
+		end
 	end)
 
 	-- Stuck safety Task 23, test 3: the hump top walks out by the walk map. Each point of HUMP_TOPS has a walk-map spot

@@ -11,7 +11,6 @@ local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local PlayerNeeds = require(ServerStorage.Tests.server.World.PlayerNeeds)
 local BrimPlaces = require(ServerStorage.Tools.world["15-real-shape"].BrimPlaces)
 local WalkFacts = require(script.Parent.WalkFacts)
-local LADDER_NAMES = PlayerNeeds.LADDER_NAMES
 
 -- Stuck safety Task 54: the two hidden blocks that fill most of the crease under the cap's edge, beside the Legendary brim
 -- nests. The limits are product's (work/t28/product-ruling.md, lines 187 to 192); the sizes and places come from BrimPlaces.
@@ -47,13 +46,13 @@ type Parts = {
 	head: BasePart,
 	cap: BasePart,
 	patch: BasePart,
-	ladders: { Instance },
+	ladder: Instance,
 	leaveAlone: { Instance },
 	headParams: RaycastParams,
 	capParams: RaycastParams,
 }
 
-type MapFacts = { map: PathCheck.WalkMap, tops: { [string]: number? } }
+type MapFacts = { map: PathCheck.WalkMap, top: number? }
 
 local function fmt(v: Vector3): string
 	return string.format("(%.2f, %.2f, %.2f)", v.X, v.Y, v.Z)
@@ -88,21 +87,12 @@ local function worldParts(): Parts
 	local head = findPath(world, { "Giant", "head_with_beard", "head_with_beard" })
 	local cap = findPath(world, { "Giant", "nightcap", "nightcap" })
 	local patch = findPath(world, { "WalkSurfaces", "SmallPatches", "Patch_Forehead_1" })
-	local ladders: { Instance } = {}
-	for _, ladderName in LADDER_NAMES do
-		local tie = findPath(world, { "WalkSurfaces", ladderName })
-		if tie then
-			table.insert(ladders, tie)
-		end
-	end
+	local ladder = findPath(world, { "WalkSurfaces", "CapLadder" })
 	local guardFolder = findPath(world, { "WalkSurfaces", "ForeheadGuard" })
-	if not (head and cap and patch and #ladders == #LADDER_NAMES and guardFolder) then
+	if not (head and cap and patch and ladder and guardFolder) then
 		error("a part the brim checks measure against is missing from the world")
 	end
-	local leave: { Instance } = { patch }
-	for _, tie in ladders do
-		table.insert(leave, tie)
-	end
+	local leave: { Instance } = { ladder, patch }
 	for _, child in guardFolder:GetChildren() do
 		if child.Name == "Guard" or child.Name == "SideRail" then
 			table.insert(leave, child)
@@ -112,7 +102,7 @@ local function worldParts(): Parts
 		head = head :: BasePart,
 		cap = cap :: BasePart,
 		patch = patch :: BasePart,
-		ladders = ladders,
+		ladder = ladder,
 		leaveAlone = leave,
 		headParams = includeParams({ head }),
 		capParams = includeParams({ cap }),
@@ -271,12 +261,8 @@ describe("the hidden brim blocks", function()
 			(world :: any).WalkSurfaces.RightBootRamp.Ramp_Walk,
 		}
 		local map = PathCheck.buildMap(options, mapArea(world))
-		local tops: { [string]: number? } = {}
-		for _, ladderName in LADDER_NAMES do
-			local _, top = WalkFacts.ladderEndSpots(ladderName, map, world)
-			tops[ladderName] = top
-		end
-		facts = { map = map, tops = tops }
+		local _, top = WalkFacts.ladderEndSpots("CapLadder", map, world)
+		facts = { map = map, top = top }
 	end, SCAN_TIMEOUT_MS)
 
 	-- Throws "no BrimFill_..." while a block is missing, so a missing block is the only reason these tests are red.
@@ -437,20 +423,17 @@ describe("the hidden brim blocks", function()
 		expect(problems).toEqual({})
 	end)
 
-	it("still reaches the brim nests from each cap tie's top, and every side nest too", function()
+	it("still reaches the brim nests from the cap ladder's top, and every side nest too", function()
 		local found = needFacts()
 		local problems: { string } = {}
-		for _, ladderName in LADDER_NAMES do
-			local top = found.tops[ladderName]
-			for _, nest in PlayerNeeds.NESTS do
-				local near = WalkFacts.spotsNearNest(nest.position, found.map)
-				if top == nil then
-					table.insert(problems, `{nest.name}: the {ladderName} top has no walk-map spot`)
-				elseif #near == 0 then
-					table.insert(problems, nest.name .. ": no walk-map spot near it")
-				elseif not WalkFacts.canWalk(top, near, found.map) then
-					table.insert(problems, `{nest.name}: not reached on foot from the {ladderName} top`)
-				end
+		for _, nest in PlayerNeeds.NESTS do
+			local near = WalkFacts.spotsNearNest(nest.position, found.map)
+			if found.top == nil then
+				table.insert(problems, nest.name .. ": the cap ladder's top has no walk-map spot")
+			elseif #near == 0 then
+				table.insert(problems, nest.name .. ": no walk-map spot near it")
+			elseif not WalkFacts.canWalk(found.top, near, found.map) then
+				table.insert(problems, nest.name .. ": not reached on foot from the cap ladder's top")
 			end
 		end
 		expect(problems).toEqual({})

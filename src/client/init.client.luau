@@ -99,7 +99,6 @@ if server then
 	-- A lavender puff with gold sparkles hides each rescue, for every player, where they were and where they are now.
 	local rescueFx = RescueFx.start({
 		rescued = server.Rescued.OnClientEvent,
-		landed = server.LandingPuff.OnClientEvent,
 		parent = Workspace,
 		after = function(seconds: number, fn: () -> ())
 			task.delay(seconds, fn)

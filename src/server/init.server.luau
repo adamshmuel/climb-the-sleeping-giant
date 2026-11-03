@@ -21,12 +21,9 @@ local HomeDisplay = require(script.Eggs.HomeDisplay)
 local Catcher = require(script.Giant.Catcher)
 local GiantDirector = require(script.Giant.GiantDirector)
 local SlamSurface = require(script.Giant.SlamSurface)
-local CapDrop = require(script.Players.CapDrop)
-local CapTieSpots = require(script.Players.CapTieSpots)
 local Collisions = require(script.Players.Collisions)
 local Floater = require(script.Players.Floater)
 local JumpWatcher = require(script.Players.JumpWatcher)
-local LandingDetector = require(script.Players.LandingDetector)
 local PlayerInfo = require(script.Players.PlayerInfo)
 local PlayerTracker = require(script.Players.PlayerTracker)
 local Recovery = require(script.Players.Recovery)
@@ -142,15 +139,6 @@ local jumpWatcher = JumpWatcher.start({
 	rootPosition = JumpWatcher.rootPositionOf,
 })
 
--- A landing is on the pillow if a ray down from the player's root hits it within this many studs (Task 61d).
-local PILLOW_RAY_STUDS = 6
-local pillowRay = RaycastParams.new()
-pillowRay.FilterType = Enum.RaycastFilterType.Include
-pillowRay.FilterDescendantsInstances = { pillow }
-
--- The cap ties, read once: a climb on one counts as a climb from the head at any height (Task 61h).
-local capTieBoxes = CapTieSpots.boxes(world:FindFirstChild("WalkSurfaces"))
-
 -- The giant's sleep meter: it reads every player's position ten times a second.
 local tracker = PlayerTracker.new({
 	getPlayers = function()
@@ -161,12 +149,6 @@ local tracker = PlayerTracker.new({
 	isGrounded = PlayerTracker.groundedByRay,
 	takeoffs = function(character: Model)
 		return jumpWatcher:took(character)
-	end,
-	onPillow = function(position: Vector3): boolean
-		return Workspace:Raycast(position, Vector3.new(0, -PILLOW_RAY_STUDS, 0), pillowRay) ~= nil
-	end,
-	onCapTie = function(position: Vector3): boolean
-		return CapTieSpots.sideAt(capTieBoxes, position) ~= nil
 	end,
 	now = os.clock,
 })
@@ -257,37 +239,6 @@ local catcher = Catcher.new({
 -- The analytics events (spec section 10). It is made after the director below, because it listens to his `woke` signal;
 -- the director's tick passes it every player's place, so it waits here until then.
 local analytics: Analytics.Analytics? = nil
--- A drop from the cap ended (Task 61d): the landing puff for everyone if the rules say so, and the "CapDrop" event a
--- second later, once it is known whether the landing woke him. The rules are in CapDrop.landing.
-local function onDrop(sample: PlayerTracker.Sample, drop: LandingDetector.Drop)
-	local puff, endedOn = CapDrop.landing(drop, sample.onPillow == true, sample.position)
-	if puff then
-		net.LandingPuff:FireAllClients(sample.position)
-	end
-	local player = Players:GetPlayerByUserId(sample.userId)
-	if player == nil then
-		return
-	end
-	if CapDrop.isCapToCap(drop) then
-		-- A fall with no jump that ended on the cap: counted per trip, and never logged as "CapDrop" (Task 61n).
-		local fields = CapDrop.capFallFields(sample.dropHeight or 0, player:GetAttribute("Carrying"), sample.trip or 0)
-		task.delay(1, function()
-			if analytics ~= nil and player.Parent ~= nil then
-				analytics:capToCapFall(player, fields)
-			end
-		end)
-	end
-	if endedOn == nil then
-		return
-	end
-	local carrying = player:GetAttribute("Carrying") ~= nil
-	task.delay(1, function()
-		if analytics ~= nil and player.Parent ~= nil then
-			local woke = net.GiantState:GetAttribute("Phase") == "Awake"
-			analytics:capDrop(player, CapDrop.fields(drop.jumped, woke, carrying, endedOn))
-		end
-	end)
-end
 -- Picks which empty-meadow point a slam goes to.
 local slamRandom = Random.new()
 local director = GiantDirector.new({
@@ -297,11 +248,6 @@ local director = GiantDirector.new({
 		banking:check(samples)
 		if analytics ~= nil then
 			analytics:check(samples)
-		end
-		for _, sample in samples do
-			if sample.drop ~= nil then
-				onDrop(sample, sample.drop)
-			end
 		end
 		floater:step()
 		return samples

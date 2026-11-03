@@ -86,16 +86,6 @@ export type Analytics = {
 	-- One tick of the giant (after Banking's check): opens a heist for a player who left the garden, and ends one whose
 	-- egg is gone.
 	check: (self: Analytics, samples: { PlayerTracker.Sample }) -> (),
-	-- A drop from the cap that ended on the giant (Task 61d): logs "CapDrop". How they dropped is slot 1, where it ended
-	-- is slot 2, and slot 3 says whether it woke him and whether they carried an egg (the service has only 3 slots).
-	capDrop: (
-		self: Analytics,
-		player: PlayerLike,
-		fields: { how: string, woke: string, egg: string, endedOn: string }
-	) -> (),
-	-- A fall with no jump from the cap area onto the cap again (Task 61n): logs "CapToCapFall", never "CapDrop". The drop
-	-- height is slot 1, the egg carried is slot 2 and the trip number is slot 3.
-	capToCapFall: (self: Analytics, player: PlayerLike, fields: { height: string, egg: string, trip: string }) -> (),
 	-- Removes every connection. Safe to call twice.
 	stop: (self: Analytics) -> (),
 }
@@ -150,8 +140,6 @@ local EVENT_PLAYER_CAUGHT = "PlayerCaught"
 local EVENT_SLAM = "Slam" -- one per hand slam, valued at the number of players it caught
 local EVENT_FREE_SAVE_USED = "FreeSaveUsed" -- one per free save
 local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, valued at the seconds since the save
-local EVENT_CAP_DROP = "CapDrop" -- one per drop from the cap that ends on the giant
-local EVENT_CAP_TO_CAP_FALL = "CapToCapFall" -- one per fall with no jump that starts and ends on his cap
 local EVENT_UNSTUCK = "Unstuck" -- one per rescue, Reset on the giant or loop send home
 local CARRYING = "Carrying"
 local EMPTY = "Empty"
@@ -602,36 +590,6 @@ function Analytics.start(deps: Deps): Analytics
 		end
 	end
 
-	local function capDrop(
-		_self: Analytics,
-		player: PlayerLike,
-		fields: { how: string, woke: string, egg: string, endedOn: string }
-	)
-		if stopped then
-			return
-		end
-		logCustom(player, EVENT_CAP_DROP, EVENT_VALUE, {
-			[FIELD_ONE] = fields.how,
-			[FIELD_TWO] = fields.endedOn,
-			[FIELD_THREE] = `woke {fields.woke} - egg {fields.egg}`,
-		})
-	end
-
-	local function capToCapFall(
-		_self: Analytics,
-		player: PlayerLike,
-		fields: { height: string, egg: string, trip: string }
-	)
-		if stopped then
-			return
-		end
-		logCustom(player, EVENT_CAP_TO_CAP_FALL, EVENT_VALUE, {
-			[FIELD_ONE] = fields.height,
-			[FIELD_TWO] = fields.egg,
-			[FIELD_THREE] = fields.trip,
-		})
-	end
-
 	local function stop(_self: Analytics)
 		if stopped then
 			return
@@ -640,7 +598,7 @@ function Analytics.start(deps: Deps): Analytics
 		trove:Destroy()
 	end
 
-	return { check = check, capDrop = capDrop, capToCapFall = capToCapFall, stop = stop }
+	return { check = check, stop = stop }
 end
 
 return Analytics

@@ -34,14 +34,6 @@ export type Config = {
 		WalkPerSecond: number,
 		TiptoeFactor: number,
 		JumpBurst: number,
-		-- A fall that starts in one of HeadDropFrom (or straight from a climb) and ends in one of HeadDropTo is a
-		-- head drop: it adds no thud (Task 61d). ShoulderMinZ splits "shoulders" (z at or above it) from "belly".
-		HeadDropFrom: { ZoneName },
-		HeadDropTo: { ZoneName },
-		-- Studs off a cap tie part within which a climber counts as on the tie (Task 61h): a climbing root sits about 1
-		-- to 1.5 studs off a truss face. Only asked while climbing. A climb on a cap tie counts as from the head.
-		CapTieMargin: number,
-		ShoulderMinZ: number,
 		ZoneMultiplier: {
 			Meadow: number,
 			Boots: number,
@@ -140,10 +132,6 @@ local config: Config = {
 		WalkPerSecond = 4,
 		TiptoeFactor = 0.2,
 		JumpBurst = 20,
-		HeadDropFrom = { "Nightcap", "Beard" },
-		HeadDropTo = { "Belly", "Beard" },
-		CapTieMargin = 3,
-		ShoulderMinZ = -10,
 		ZoneMultiplier = { Meadow = 0, Boots = 1, Belly = 1.5, Beard = 2, Nightcap = 3 },
 	},
 	Meter = {

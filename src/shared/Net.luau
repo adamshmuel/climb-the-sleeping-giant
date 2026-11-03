@@ -13,7 +13,6 @@ export type Made = {
 	SlamLanded: RemoteEvent, -- the server tells everyone the hand landed: (slam number, the same point)
 	Caught: RemoteEvent, -- the server tells everyone a carrier was caught: (the caught Player)
 	Rescued: RemoteEvent, -- the server tells everyone a player was moved back to a safe spot: (the Player, where they were (Vector3), where they go (CFrame))
-	LandingPuff: RemoteEvent, -- the server tells everyone a quiet drop landed: (where, a Vector3). The client never sends on it
 	RequestReset: RemoteEvent, -- the client asks for a Reset (sends nothing): the server decides what happens
 	SetPressing: RemoteEvent, -- the client says it started or stopped pressing to move: (on: boolean)
 	GiantState: Folder, -- attributes: Meter, Phase, ... (docs/architecture.md, section 2)
@@ -32,7 +31,6 @@ Net.SlamWarningName = "SlamWarning"
 Net.SlamLandedName = "SlamLanded"
 Net.CaughtName = "Caught"
 Net.RescuedName = "Rescued"
-Net.LandingPuffName = "LandingPuff"
 Net.RequestResetName = "RequestReset"
 Net.SetPressingName = "SetPressing"
 
@@ -65,7 +63,6 @@ function Net.setup(parent: Instance): Made
 	local slamLanded = (findOrMake(remotes, Net.SlamLandedName, "RemoteEvent"))
 	local caught = (findOrMake(remotes, Net.CaughtName, "RemoteEvent"))
 	local rescued = (findOrMake(remotes, Net.RescuedName, "RemoteEvent"))
-	local landingPuff = (findOrMake(remotes, Net.LandingPuffName, "RemoteEvent"))
 	local requestReset = (findOrMake(remotes, Net.RequestResetName, "RemoteEvent"))
 	local setPressing = (findOrMake(remotes, Net.SetPressingName, "RemoteEvent"))
 	local state, isNew = findOrMake(parent, Net.GiantStateName, "Folder")
@@ -84,7 +81,6 @@ function Net.setup(parent: Instance): Made
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
 		Rescued = rescued :: RemoteEvent,
-		LandingPuff = landingPuff :: RemoteEvent,
 		RequestReset = requestReset :: RemoteEvent,
 		SetPressing = setPressing :: RemoteEvent,
 		GiantState = state :: Folder,
@@ -133,9 +129,6 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		else nil
 	local caught = if remotes then waitForChildOfClass(remotes, Net.CaughtName, "RemoteEvent", remaining()) else nil
 	local rescued = if remotes then waitForChildOfClass(remotes, Net.RescuedName, "RemoteEvent", remaining()) else nil
-	local landingPuff = if remotes
-		then waitForChildOfClass(remotes, Net.LandingPuffName, "RemoteEvent", remaining())
-		else nil
 	local requestReset = if remotes
 		then waitForChildOfClass(remotes, Net.RequestResetName, "RemoteEvent", remaining())
 		else nil
@@ -154,7 +147,6 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		or slamLanded == nil
 		or caught == nil
 		or rescued == nil
-		or landingPuff == nil
 		or requestReset == nil
 		or setPressing == nil
 		or state == nil
@@ -190,9 +182,6 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		if rescued == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.RescuedName}`)
 		end
-		if landingPuff == nil then
-			table.insert(missing, `{Net.RemotesName}.{Net.LandingPuffName}`)
-		end
 		if requestReset == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.RequestResetName}`)
 		end
@@ -216,7 +205,6 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
 		Rescued = rescued :: RemoteEvent,
-		LandingPuff = landingPuff :: RemoteEvent,
 		RequestReset = requestReset :: RemoteEvent,
 		SetPressing = setPressing :: RemoteEvent,
 		GiantState = state :: Folder,

@@ -47,15 +47,6 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 ## Tasks
 
-### Part 0: The test report keeps every failed name (built first; moved here from stuck safety on 2026-11-02)
-
-#### Task 0: A failure message keeps both names
-
-- **What it's for:** a test tool, nothing a player sees. Today a long failure message is cut at 150 letters, and Jest's header lines use up most of that, so a failed name can be lost.
-- **Files:** `src/tests/BackgroundRun.luau` and its spec (the handoff names it).
-- **Failing test first:** a failure whose message starts with Jest's header lines ("expect(...)", "- Expected", "+ Received", "Table {", "{", "}") and holds two 70-letter names keeps both names. It passes when `whyText` drops those header lines before cutting, and `WHY_LIMIT` goes from 150 to 300.
-- **How big:** about 1 h, 2 steps: the red and the fix (Sonnet, 2 Studio calls), then the full run (Haiku, the runner, 4 Studio calls).
-
 ### Part 1: Random gardens
 
 **Task 1: Gardens are handed out in two groups**

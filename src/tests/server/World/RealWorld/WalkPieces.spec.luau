@@ -3,8 +3,6 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local Helpers = require(script.Parent.Helpers)
 local WalkHelpers = require(script.Parent.WalkHelpers)
-local PlayerNeeds = require(game:GetService("ServerStorage").Tests.server.World.PlayerNeeds)
-local LADDER_NAMES = PlayerNeeds.LADDER_NAMES
 local describePoint = Helpers.describePoint
 type LadderAxis = WalkHelpers.LadderAxis
 local MAX_EXAMPLES = WalkHelpers.MAX_EXAMPLES
@@ -107,84 +105,12 @@ describe("the real world, the walk pieces sit on his skin", function()
 	local END_PAST = 1 -- studs: at a top, the ground is read this far past the end, along the ladder's flat direction
 	local END_RAY_ABOVE = 2 -- studs: the ground ray starts this far over the highest (or lowest) point of the ladder
 	local END_TOUCH = 0.5 -- studs: an end rung is this close to his skin or closer
-	local TRUSS_REACH = 2 -- studs: a tie's upright pair reaches at least this far above the ground at its foot
-	local TIE_RAIL_NAMES = { "Rail_04_A", "Rail_04_B", "Rail_05_A", "Rail_05_B" }
-
-	-- A cap tie (Rule 101, Fair mirror twins) is built of trusses and look-only knots, not of rungs and rails.
-	local function isTie(ladderName: string): boolean
-		return string.find(ladderName, "^CapTie") ~= nil
-	end
-
-	-- The ground a climber steps onto at a tie's foot: his skin, plus the pillow. (A tie's top is not read against flat
-	-- ground, see below.)
-	local function tieGround(): RaycastParams
-		local params = bodyParams()
-		local included = bodyInstances()
-		local pillow = Helpers.realWorld():FindFirstChild("GiantsThings")
-		expect(pillow).never.toBeNil()
-		local pillowPart = (pillow :: Instance):FindFirstChild("Pillow")
-		expect(pillowPart).never.toBeNil()
-		table.insert(included, pillowPart :: Instance)
-		params.IncludeInstances = included
-		return params
-	end
-
-	local TRUSS_FRONT_CLEAR = 0.5 -- studs: a tie truss's climb face and front half sink into his skin no deeper than this
-	local TRUSS_STEP = 1 -- studs along a truss between the places its front is checked
-	local TRUSS_RAY_HALF = 6 -- studs: the front-face ray starts this far in front of the truss's centre line and runs 12
-
-	-- The places along a truss where his skin is more than TRUSS_FRONT_CLEAR in front of its centre line (inside the
-	-- front half): one line for the truss. The ray runs along the ladder's "back" (toward his face), so the distance to
-	-- the skin, minus the start offset, is how far the skin lies behind the centre line (negative: in front of it).
-	local function trussFrontProblems(params: RaycastParams, label: string, truss: BasePart, back: Vector3): { string }
-		local direction, length = longSide(truss)
-		local deepest = 0
-		local firstAt: Vector3? = nil
-		for step = 0, math.ceil(length / TRUSS_STEP) do
-			local along = math.min(step * TRUSS_STEP, length) - length / 2
-			local centre = truss.Position + direction * along
-			local hit = Workspace:Raycast(centre - back * TRUSS_RAY_HALF, back * (2 * TRUSS_RAY_HALF), params)
-			if hit ~= nil then
-				local skinBehind = hit.Distance - TRUSS_RAY_HALF
-				if skinBehind < -TRUSS_FRONT_CLEAR - WINDOW_SLACK then
-					deepest = math.min(deepest, skinBehind)
-					firstAt = firstAt or centre
-				end
-			end
-		end
-		if firstAt == nil then
-			return {}
-		end
-		return {
-			string.format(
-				"%s: %s has his skin up to %.2f studs in front of its centre line, near %s (it may be at most %g)",
-				label,
-				truss.Name,
-				-deepest,
-				describePoint(firstAt),
-				TRUSS_FRONT_CLEAR
-			),
-		}
-	end
-
-	-- The four rails of a tie that sit along its top two walk strips.
-	local function tieRails(tie: Instance): { BasePart }
-		local rails: { BasePart } = {}
-		for _, name in TIE_RAIL_NAMES do
-			local rail = tie:FindFirstChild(name)
-			if rail ~= nil and rail:IsA("BasePart") then
-				table.insert(rails, rail)
-			end
-		end
-		return rails
-	end
 
 	-- The highest (or lowest) point of any part of a ladder: its rails, rungs and the climbable truss.
-	-- With `only`, just the parts of those names (a tie's end is its truss pair, not its landing or rails).
-	local function ladderExtreme(ladder: Instance, highest: boolean, only: { string }?): number
+	local function ladderExtreme(ladder: Instance, highest: boolean): number
 		local extreme = if highest then -math.huge else math.huge
 		for _, part in ladder:GetDescendants() do
-			if part:IsA("BasePart") and (only == nil or table.find(only, part.Name) ~= nil) then
+			if part:IsA("BasePart") then
 				local half = part.Size / 2
 				for _, sx in { -1, 1 } do
 					for _, sy in { -1, 1 } do
@@ -200,9 +126,18 @@ describe("the real world, the walk pieces sit on his skin", function()
 		return extreme
 	end
 
-	-- The end piece of a cap tie: the top of its leaning truss pair, or the foot of its upright pair (a tie has no rungs).
-	local function endRung(ladder: Instance, _axis: LadderAxis, atTop: boolean): BasePart
-		local found = ladder:FindFirstChild(if atTop then "ClimbTrussLean_1" else "ClimbTrussUp_1")
+	-- The rung at the top (or foot) end of a ladder: the one farthest along (or against) the ladder's up direction.
+	local function endRung(ladder: Instance, axis: LadderAxis, atTop: boolean): BasePart
+		local found: BasePart? = nil
+		local best = 0
+		for _, child in ladder:GetChildren() do
+			if child:IsA("BasePart") and child.Name == "Rung" then
+				local along = child.Position:Dot(axis.up) * (if atTop then 1 else -1)
+				if found == nil or along > best then
+					found, best = child, along
+				end
+			end
+		end
 		expect(found).never.toBeNil()
 		return found :: BasePart
 	end
@@ -224,118 +159,71 @@ describe("the real world, the walk pieces sit on his skin", function()
 	it("the ladder ends meet the walk surface, and each end rung touches him without sinking in", function()
 		local walk = walkFolder()
 		-- the ground a climber steps onto: his skin, or a head walk piece that is still there
-		local rungGround = bodyParams()
+		local ground = bodyParams()
 		local included = bodyInstances()
 		for _, piece in headWalkPieces() do
 			table.insert(included, piece)
 		end
-		rungGround.IncludeInstances = included
+		ground.IncludeInstances = included
 		local overlap = OverlapParams.new()
 		overlap.IncludeInstances = bodyInstances()
 		overlap.RespectCanCollide = false
 		local touching = bodyParams()
 
 		local ends: { { label: string, ladder: string, atTop: boolean } } = {
-			{ label = "left tie foot", ladder = LADDER_NAMES[1], atTop = false },
-			{ label = "left tie top", ladder = LADDER_NAMES[1], atTop = true },
-			{ label = "right tie foot", ladder = LADDER_NAMES[2], atTop = false },
-			{ label = "right tie top", ladder = LADDER_NAMES[2], atTop = true },
+			{ label = "beard ladder top", ladder = "BeardLadder", atTop = true },
+			{ label = "cap ladder foot", ladder = "CapLadder", atTop = false },
+			{ label = "cap ladder top", ladder = "CapLadder", atTop = true },
 		}
 		local problems: { string } = {}
 		for _, ladderEnd in ends do
 			local ladder = walk:FindFirstChild(ladderEnd.ladder)
 			expect(ladder).never.toBeNil()
 			local axis = ladderAxis(ladder :: Instance)
-			local tie = isTie(ladderEnd.ladder)
-			-- a tie's top end is its leaning pair of trusses, its foot end the upright pair
-			local endNames = if tie then { if ladderEnd.atTop then "ClimbTrussLean_1" else "ClimbTrussUp_1" } else nil
-			if endNames ~= nil then
-				table.insert(endNames, if ladderEnd.atTop then "ClimbTrussLean_2" else "ClimbTrussUp_2")
-			end
-			local endHeight = ladderExtreme(ladder :: Instance, ladderEnd.atTop, endNames)
-			-- at a top the ground is read 1 stud past the pair toward his head (the flat direction runs foot to top)
+			local endHeight = ladderExtreme(ladder :: Instance, ladderEnd.atTop)
 			local readAt = if ladderEnd.atTop then axis.top + axis.flat * END_PAST else axis.foot
-			-- a tie's top is not read against flat ground: its truss top runs into the steep walk strip, so the -0.3 to +0.7
-			-- window does not apply. CapTies.spec's two step-off tests (steps at most 0.5, and no shelf between the rails) read
-			-- the real step-off more strictly (Rule 15, The climb needs no jump). The foot check below stays.
-			if not (tie and ladderEnd.atTop) then
-				local ground = if tie then tieGround() else rungGround
-				local hit = Workspace:Raycast(
-					Vector3.new(readAt.X, endHeight + END_RAY_ABOVE, readAt.Z),
-					Vector3.new(0, -2 * END_RAY_ABOVE - 6, 0),
-					ground
-				)
-				if hit == nil then
-					table.insert(problems, `{ladderEnd.label}: no ground found at {describePoint(readAt)}`)
-				elseif tie and not ladderEnd.atTop then
-					-- a truss can be grabbed anywhere along its face, so a foot sunk below the ground leaves no step: the
-					-- 0.3 under limit stays for rung ladders. The bottom is at most 0.7 over the ground (no jump), and the
-					-- pair reaches at least 2 over it.
-					local gap = endHeight - hit.Position.Y
-					local reach = ladderExtreme(ladder :: Instance, true, endNames) - hit.Position.Y
-					if gap > END_ABOVE + WINDOW_SLACK or reach < TRUSS_REACH - WINDOW_SLACK then
-						table.insert(
-							problems,
-							string.format(
-								"%s: the bottom is %+.2f studs from the ground at %s and the truss reaches %.2f over it "
-									.. "(the bottom must be at most %g over, the reach at least %g)",
-								ladderEnd.label,
-								gap,
-								describePoint(hit.Position),
-								reach,
-								END_ABOVE,
-								TRUSS_REACH
-							)
-						)
-					end
-				else
-					local gap = endHeight - hit.Position.Y
-					if gap > END_ABOVE + WINDOW_SLACK or gap < -END_BELOW - WINDOW_SLACK then
-						table.insert(
-							problems,
-							string.format(
-								"%s: the end is %+.2f studs from the ground at %s (it must be %g under to %g over)",
-								ladderEnd.label,
-								gap,
-								describePoint(hit.Position),
-								END_BELOW,
-								END_ABOVE
-							)
-						)
-					end
-				end
-			end
-
-			if tie then
-				-- the tie hangs clear of his head by design (CapTies.spec checks the gap), so a tie skips the touch limit and the
-				-- end-piece overlap. Its front face stays out of him instead, on all four trusses.
-				for _, trussName in endNames :: { string } do
-					local truss = (ladder :: Instance):FindFirstChild(trussName)
-					expect(truss).never.toBeNil()
-					for _, line in trussFrontProblems(touching, ladderEnd.label, truss :: BasePart, axis.back) do
-						table.insert(problems, line)
-					end
-				end
+			local hit = Workspace:Raycast(
+				Vector3.new(readAt.X, endHeight + END_RAY_ABOVE, readAt.Z),
+				Vector3.new(0, -2 * END_RAY_ABOVE - 6, 0),
+				ground
+			)
+			if hit == nil then
+				table.insert(problems, `{ladderEnd.label}: no ground found at {describePoint(readAt)}`)
 			else
-				local rung = endRung(ladder :: Instance, axis, ladderEnd.atTop)
-				local inside = Workspace:GetPartsInPart(rung, overlap)
-				if #inside > 0 then
-					table.insert(problems, `{ladderEnd.label}: its end rung is inside {inside[1].Name}`)
-				end
-				local down = skinDistance(touching, rung, Vector3.new(0, -1, 0))
-				local behind = skinDistance(touching, rung, axis.back)
-				local nearest = math.min(down or math.huge, behind or math.huge)
-				if nearest > END_TOUCH + WINDOW_SLACK then
+				local gap = endHeight - hit.Position.Y
+				if gap > END_ABOVE + WINDOW_SLACK or gap < -END_BELOW - WINDOW_SLACK then
 					table.insert(
 						problems,
 						string.format(
-							"%s: its end rung is %s from his skin (it must touch within %g)",
+							"%s: the end is %+.2f studs from the ground at %s (it must be %g under to %g over)",
 							ladderEnd.label,
-							if nearest == math.huge then "more than a stud" else string.format("%.2f studs", nearest),
-							END_TOUCH
+							gap,
+							describePoint(hit.Position),
+							END_BELOW,
+							END_ABOVE
 						)
 					)
 				end
+			end
+
+			local rung = endRung(ladder :: Instance, axis, ladderEnd.atTop)
+			local inside = Workspace:GetPartsInPart(rung, overlap)
+			if #inside > 0 then
+				table.insert(problems, `{ladderEnd.label}: its end rung is inside {inside[1].Name}`)
+			end
+			local down = skinDistance(touching, rung, Vector3.new(0, -1, 0))
+			local behind = skinDistance(touching, rung, axis.back)
+			local nearest = math.min(down or math.huge, behind or math.huge)
+			if nearest > END_TOUCH + WINDOW_SLACK then
+				table.insert(
+					problems,
+					string.format(
+						"%s: its end rung is %s from his skin (it must touch within %g)",
+						ladderEnd.label,
+						if nearest == math.huge then "more than a stud" else string.format("%.2f studs", nearest),
+						END_TOUCH
+					)
+				)
 			end
 		end
 		expect(problems).toEqual({})
@@ -378,11 +266,11 @@ describe("the real world, the walk pieces sit on his skin", function()
 	local function railTouchProblems(
 		params: RaycastParams,
 		ladderName: string,
-		rails: { BasePart },
+		ladder: Instance,
 		back: Vector3
 	): { string }
 		local problems: { string } = {}
-		for _, rail in rails do
+		for _, rail in ladderParts(ladder, "Rail") do
 			local direction, length = longSide(rail)
 			local touches = 0
 			local first: Vector3? = nil
@@ -422,96 +310,62 @@ describe("the real world, the walk pieces sit on his skin", function()
 		local params = bodyParams()
 		local problems: { string } = {}
 
-		for _, ladderName in LADDER_NAMES do
+		for _, ladderName in { "BeardLadder", "CapLadder" } do
 			local ladder = walk:FindFirstChild(ladderName)
 			expect(ladder).never.toBeNil()
 			local axis = ladderAxis(ladder :: Instance)
 
-			-- knots are look-only (no collision), so they can't snag: a tie skips the sunk-rung check
-			if not isTie(ladderName) then
-				local sunk = 0
-				local firstSunk: Vector3? = nil
-				for _, rung in ladderParts(ladder :: Instance, "Rung") do
-					if #Workspace:GetPartsInPart(rung, overlap) > 0 then
-						sunk += 1
-						firstSunk = firstSunk or rung.Position
-					end
-				end
-				if sunk > 0 then
-					table.insert(
-						problems,
-						`{ladderName}: {sunk} rungs are inside him (the first at {describePoint(firstSunk :: Vector3)})`
-					)
+			local sunk = 0
+			local firstSunk: Vector3? = nil
+			for _, rung in ladderParts(ladder :: Instance, "Rung") do
+				if #Workspace:GetPartsInPart(rung, overlap) > 0 then
+					sunk += 1
+					firstSunk = firstSunk or rung.Position
 				end
 			end
+			if sunk > 0 then
+				table.insert(
+					problems,
+					`{ladderName}: {sunk} rungs are inside him (the first at {describePoint(firstSunk :: Vector3)})`
+				)
+			end
 
-			if isTie(ladderName) then
-				-- a tie's rails slope with the walk strips into the cap rising ahead, so the ray along "back" would read the
-				-- cap, not a snag. Instead all four rails must be found, and none may sit inside him (a rail inside his
-				-- skin makes a snag or a ledge). The check can't pass on nothing.
-				local rails = tieRails(ladder :: Instance)
-				if #rails ~= #TIE_RAIL_NAMES then
-					table.insert(problems, `{ladderName}: found {#rails} of its {#TIE_RAIL_NAMES} rails`)
-				end
-				for _, rail in rails do
-					local inside = Workspace:GetPartsInPart(rail, overlap)
-					if #inside > 0 then
-						table.insert(problems, `{ladderName}: {rail.Name} is inside {inside[1].Name}`)
-					end
-				end
-			else
-				-- a rail touching his skin midway makes a snag or a ledge
-				for _, line in railTouchProblems(params, ladderName, ladderParts(ladder :: Instance, "Rail"), axis.back) do
-					table.insert(problems, line)
-				end
+			for _, line in railTouchProblems(params, ladderName, ladder :: Instance, axis.back) do
+				table.insert(problems, line)
 			end
 		end
 
-		for _, ladderName in LADDER_NAMES do
-			local tie = walk:FindFirstChild(ladderName)
-			expect(tie).never.toBeNil()
-			if isTie(ladderName) then
-				-- the tie's angle is CapTies.spec's 4.6 degree lean test; its distance from his head is the route test
-				continue
-			end
-			local capAxis = ladderAxis(tie :: Instance)
-			-- the steepness is read on the leaning pair of trusses, the part that lies on his face
-			for _, leanName in { "ClimbTrussLean_1", "ClimbTrussLean_2" } do
-				local lean = (tie :: Instance):FindFirstChild(leanName)
-				expect(lean).never.toBeNil()
-				local direction = longSide(lean :: BasePart)
-				local degrees = math.deg(math.asin(math.abs(direction.Y)))
-				if degrees < CAP_MIN_DEGREES or degrees > CAP_MAX_DEGREES then
+		local cap = walk:FindFirstChild("CapLadder")
+		expect(cap).never.toBeNil()
+		local capAxis = ladderAxis(cap :: Instance)
+		local degrees = math.deg(math.asin(capAxis.up.Y))
+		if degrees < CAP_MIN_DEGREES or degrees > CAP_MAX_DEGREES then
+			table.insert(
+				problems,
+				string.format(
+					"CapLadder: it is %.1f degrees steep (it must be %g to %g)",
+					degrees,
+					CAP_MIN_DEGREES,
+					CAP_MAX_DEGREES
+				)
+			)
+		end
+
+		-- the middle rung (or rungs, when two are equally near the middle) looks back at his face along the ladder's back
+		local middle = (capAxis.foot + capAxis.top) / 2
+		local rungs = ladderParts(cap :: Instance, "Rung")
+		local nearestToMiddle = math.huge
+		for _, rung in rungs do
+			nearestToMiddle = math.min(nearestToMiddle, math.abs((rung.Position - middle):Dot(capAxis.up)))
+		end
+		for _, rung in rungs do
+			if math.abs((rung.Position - middle):Dot(capAxis.up)) <= nearestToMiddle + MIDDLE_TIE then
+				local distance = skinDistance(params, rung, capAxis.back, CAP_MIDDLE_REACH)
+				if distance == nil then
 					table.insert(
 						problems,
-						string.format(
-							"%s %s: it is %.1f degrees steep (it must be %g to %g)",
-							ladderName,
-							leanName,
-							degrees,
-							CAP_MIN_DEGREES,
-							CAP_MAX_DEGREES
-						)
+						`CapLadder: its middle rung at {describePoint(rung.Position)} is more than {CAP_MIDDLE_REACH} studs from his face`
 					)
-				end
-			end
-
-			-- the middle rung (or rungs, when two are equally near the middle) looks back at his face along the ladder's back
-			local middle = (capAxis.foot + capAxis.top) / 2
-			local rungs = ladderParts(tie :: Instance, "Rung")
-			local nearestToMiddle = math.huge
-			for _, rung in rungs do
-				nearestToMiddle = math.min(nearestToMiddle, math.abs((rung.Position - middle):Dot(capAxis.up)))
-			end
-			for _, rung in rungs do
-				if math.abs((rung.Position - middle):Dot(capAxis.up)) <= nearestToMiddle + MIDDLE_TIE then
-					local distance = skinDistance(params, rung, capAxis.back, CAP_MIDDLE_REACH)
-					if distance == nil then
-						table.insert(
-							problems,
-							`{ladderName}: its middle rung at {describePoint(rung.Position)} is more than {CAP_MIDDLE_REACH} studs from his face`
-						)
-					end
 				end
 			end
 		end

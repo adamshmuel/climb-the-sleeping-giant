@@ -16,14 +16,7 @@ local BELLY: Config.ZoneName = "Belly"
 
 -- One 0.1 s tick of what the tracker sees: on standable ground or not, the up/down speed, the zone.
 -- `takeoffs` lists the zones the character took off from since the last tick, oldest first (nil means none).
--- `climbing` is true on ticks where the Humanoid is in its Climbing state (nil means not climbing).
-type Tick = {
-	grounded: boolean,
-	speed: number,
-	zone: Config.ZoneName,
-	takeoffs: { Config.ZoneName }?,
-	climbing: boolean?,
-}
+type Tick = { grounded: boolean, speed: number, zone: Config.ZoneName, takeoffs: { Config.ZoneName }? }
 
 -- Appends `count` identical ticks to `ticks`.
 local function add(ticks: { Tick }, count: number, grounded: boolean, speed: number, zone: Config.ZoneName)
@@ -48,13 +41,6 @@ local function addTakeoffs(
 	table.insert(ticks, { grounded = grounded, speed = speed, zone = zone, takeoffs = takeoffs })
 end
 
--- Appends `count` ticks of the character climbing a ladder (the ground check finds nothing below).
-local function addClimb(ticks: { Tick }, count: number, speed: number, zone: Config.ZoneName)
-	for _ = 1, count do
-		table.insert(ticks, { grounded = false, speed = speed, zone = zone, climbing = true })
-	end
-end
-
 -- One thud: the tick it came on (counting from 1) and its zone.
 type Thud = { tick: number, zone: Config.ZoneName }
 
@@ -64,14 +50,7 @@ local function thudTicksFor(startZone: Config.ZoneName, ticks: { Tick }): { Thud
 	local thuds: { Thud } = {}
 	for index, tick in ticks do
 		local thud: Config.ZoneName?
-		thud, state = LandingDetector.step(
-			state,
-			tick.grounded,
-			tick.speed,
-			tick.zone,
-			tick.takeoffs or {},
-			tick.climbing == true
-		)
+		thud, state = LandingDetector.step(state, tick.grounded, tick.speed, tick.zone, tick.takeoffs or {})
 		if thud ~= nil then
 			table.insert(thuds, { tick = index, zone = thud })
 		end
@@ -480,7 +459,7 @@ describe("LandingDetector.step with Jump held down", function()
 		local returned: { Config.ZoneName } = {}
 		for _ = 1, 10 do
 			local thud: Config.ZoneName?
-			thud, state = LandingDetector.step(state, false, 5, BELLY, zones, false)
+			thud, state = LandingDetector.step(state, false, 5, BELLY, zones)
 			mostWaiting = math.max(mostWaiting, #state.owed)
 			if thud ~= nil then
 				table.insert(returned, thud)
@@ -504,32 +483,5 @@ describe("LandingDetector.step with Jump held down", function()
 			{ tick = 7, zone = BELLY },
 			{ tick = 10, zone = BELLY },
 		})
-	end)
-
-	it("a fast fall that a ladder catches and then rests on the ground makes no thud", function()
-		local ticks: { Tick } = {}
-		add(ticks, 2, true, 0, BELLY)
-		add(ticks, 4, false, -20, BELLY) -- falls fast
-		addClimb(ticks, 3, 0, BELLY) -- grabs the ladder again
-		add(ticks, 3, true, 0, BELLY) -- at rest on the ground
-		expect(#thudsFor(BELLY, ticks)).toBe(0)
-	end)
-
-	it("a jump that falls fast, is caught by a ladder and then rests on the ground makes no thud", function()
-		local ticks: { Tick } = {}
-		add(ticks, 2, true, 0, BELLY)
-		addJump(ticks, false, 30, BELLY) -- take-off
-		add(ticks, 3, false, -20, BELLY) -- falls fast
-		addClimb(ticks, 3, 0, BELLY)
-		add(ticks, 3, true, 0, BELLY)
-		expect(#thudsFor(BELLY, ticks)).toBe(0)
-	end)
-
-	it("a fast fall straight onto the ground still thuds", function()
-		local ticks: { Tick } = {}
-		add(ticks, 2, true, 0, BELLY)
-		add(ticks, 4, false, -20, BELLY)
-		add(ticks, 3, true, 0, BELLY)
-		expect(#thudsFor(BELLY, ticks)).toBe(1)
 	end)
 end)
