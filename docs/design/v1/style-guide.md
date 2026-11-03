@@ -2,6 +2,21 @@
 
 The rules every picture, model and screen in the game follows. Based on `look-study.md` and tested in Studio on 2026-10-11 and updated on 2026-10-12 after game_creator's review. The mockups in `mockups/` show every rule in use.
 
+Contents
+- Visual pillars
+- Palette
+- Characters
+- World
+- Lighting and mood
+- First view (the first 10 seconds)
+- Edge of the world
+- Screen layout (phone first)
+- Icon and thumbnail rules
+- Build limits
+- Look decisions made during the build
+- How to check the look of a built task
+- Tool limits found while checking
+
 ## Visual pillars
 
 1. **The giant is always the star.** From every spot in the valley you can see his face. Nothing on screen covers it.

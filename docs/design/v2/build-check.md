@@ -1,4 +1,23 @@
-# Build check: V2 additions
+# Build check: V2 additions (history)
+
+This file is the full dated log of every V2 build-check session, kept word for word. It is history: where an image was retaken, an older row here no longer counts. The current record (one line per image, latest only, grouped by spec) is `docs/design/v2/build-check-current.md`. Index of the V2 look: `docs/design/v2/style-guide.md`.
+
+Contents
+- First table: rescue and ways up (2026-10-14)
+- Egg ranks (V2 spec 4: Egg reachability), 2026-10-14
+- Wake-up (V2 spec 6: Wake-up), 2026-10-14
+  - Egg ranks retake: the rank glow (2026-10-14)
+- Nest map and the seam (V2 spec 5 change), 2026-10-14
+- Studio session 2026-10-18: cuff pockets, ramp pocket, 85% warning, wake check
+- Studio session 2026-10-18 (second): the moved lap planks, the lap fold and Plan B
+- Studio session 2026-10-19: the nest art and the refill pop
+- Studio session 2026-10-19 (second): spec 5 world shots, part 1
+- Studio session 2026-10-19 (third): spec 5 world shots, part 2
+- Studio session 2026-10-19 (fourth): the wake with the right cuff egg raised (spec 5, Rule 100)
+- Studio session 2026-10-19 (fifth): the slide tip (spec 5) and the ways-up retakes on the moved build (spec 3)
+- Studio session 2026-10-19 (sixth): the 85% warning (spec 1)
+- The music button (V2 spec 7: Audio, Rule 98: The music button), 2026-10-19
+- Boot ladder from gardens 1 and 2 (2026-11-03)
 
 Same scoring as `docs/design/v1/build-check.md`: 1 (poor) to 5 (best), next to the same top-game screenshots. Best of the top games: World 4, Light 4, Life 5, Buttons 4, Phone 4.
 

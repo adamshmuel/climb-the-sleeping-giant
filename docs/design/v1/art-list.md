@@ -2,6 +2,14 @@
 
 Every model the game needs, where it comes from, and how it moves. How the models get into the code is `code_lead`'s decision.
 
+Contents
+- Where everything is in Studio
+- Generated models: the giant, the slam fist, eggs (and egg spots), pets, the giant's things, garden pieces, made but not used
+- Walk surfaces (how players get onto the giant)
+- Store models
+- Built from Studio parts
+- Effects
+
 Sizes are in studs, Roblox's unit of length. A player is about 5 studs tall.
 
 ## Where everything is in Studio

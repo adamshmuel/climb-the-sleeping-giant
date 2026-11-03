@@ -1,0 +1,69 @@
+# The wake-up (V2 spec 6: Wake-up)
+
+Part of the V2 style guide (index: `docs/design/v2/style-guide.md`). `mockups/` and `art-list.md` mean the ones in `docs/design/v2/`.
+
+Contents
+- His face wakes (Rule 66: His face wakes first)
+- The screen while he hunts (Rules 12, 67 and 68)
+- The bonk (Rule 61: The bonk is harmless)
+- The world reacts to a slam (Rule 69: The world reacts)
+
+When he wakes, his face comes first, then the screen tells the player to run. The world stays bright: the danger is shown by red at the screen edges, the red circles and the red pills, never by darkening the world (V1 rule, kept).
+
+Mockups: `mockups/wake-*-desktop.png` and `mockups/wake-*-phone.png` (the screen layer is `mockups/wake-hud.html`), plus the Studio shots `view-wake-*.png` and `view-phone-wake-*.png`. The face from gardens 1 and 8: `view-wake-face-g1.png`, `view-wake-face-g8.png` and their phone versions.
+
+## His face wakes (Rule 66: His face wakes first)
+
+| What | Value | Why |
+|---|---|---|
+| Eyes | V1's awake eyes swap in at once (unchanged) | The instant swap reads as "he's awake!" |
+| Head tip | V1's tip (`Awake_HeadTiltDeg` −12°), now over **0.3 s** instead of 0.5 s | The spec asks for a faster tip than V1 |
+| Open mouth | A new model, **AwakeMouth**, that tips with the head and shows only while he is awake. Two Studio parts with a sphere mesh, `SmoothPlastic`: **Mouth** 15 × 13 × 4 studs, dark plum `#3A1626`; **Tongue** 9 × 4.5 × 3 studs, pink `#FF7A8A`. In the asleep pose: Mouth at (0, 80.3, −15.6), Tongue at (0, 77.0, −16.7), both turned −25° around the left-right axis, so they sit under his moustache. The head tip then carries them into place | A round dark mouth with a tongue reads as a cartoon roar, surprised and cross, never scary (content rating Mild). Plum, not black, so it stays soft |
+| "!" pop | Where the Z Z Z float, a red badge with a white "!" and 8 white burst lines, built from frames in a `BillboardGui` 22 × 22 studs (anchor at (−8, 104, −22), offset 11, 4, 4). Badge: a circle half the gui's size, wake red fading from `#FF7A86` to `#C4142A` top to bottom, 5 px Ink outline. "!": a white bar and dot with 4 px Ink outlines. Burst lines: 8 white rounded bars, 8% × 16% of the gui, every 45° starting at 22.5°, 4 px Ink outlines. `AlwaysOnTop` off, `LightInfluence` 0. It pops in over 0.15 s (grows from nothing, with a small overshoot), stays 1.5 s, and fades over 0.3 s | Big text can't go past 100 px with sized-to-fit text, so the "!" is built from shapes. Seen from every garden: from gardens 1 and 8 his own head and raised arm hide his eyes and mouth, but the "!" still shows (`view-wake-face-g1.png`, `view-phone-wake-face-g8.png`) |
+| Z Z Z pop | At the wake the Z Z Z hide, and 3 soap bubbles (white, 75% see-through, white 4 px outline, a small white shine) with 10 tiny droplets (white with a `#5A78DC` outline) show where they were for **0.4 s**, then vanish. A `BillboardGui` 18 × 18 studs, offset 17, 11, 2 from the same anchor | The letters "pop like bubbles" (Rule 69: The world reacts) |
+| Birds | 24 cartoon birds burst out of the trees **behind** him (between x −98 and 95, 50 to 96 studs up, z 46 to 100), never between the gardens and his face. Each is 7 parts, about 11 studs wingspan: body and head sky blue `#3FA9FF` (some white, some orange `#FF8A3D`), cream belly `#FFF6E4`, gold beak `#FFC93C`, wings and tail `#358FD8`. They fly up and away from the gardens at about 30 studs a second, wings flapping 4 times a second, and are gone (out of sight, then removed) after 3 s | The first placement put birds between garden 1 and his face. Behind him they frame his head instead |
+| Dust | 7 puffs off his body: by each shoulder (±45, 50, −8), each hip (±52, 25, −20), his belly (0, 45, −38) and each boot top (±24, 33, −62). Each emits **20** puffs at once: smoke texture (`rbxasset://textures/particles/smoke_main.dds`), colour `#F2DFB8` fading to `#D8BF94`, size 5 → 12 studs, solid then fading out from 60% of its life, lifetime 0.8–1.2 s, speed 10–18, spread 70°, drag 3, drifting up (0, 4, 0), no glow | Warm sandy dust reads on his blue pyjamas and on the grass |
+| Shake | **1.5 studs** at the wake, fading to nothing over **1.0 s**. Each slam: up to **1 stud** for a fist landing within 15 studs of the player, shrinking to nothing at 60 studs, fading over **0.4 s**. No shake at all when Roblox's Reduce Motion setting is on (`GuiService.ReducedMotionEnabled`) | The shake moves the camera, so the nearby avatar jumps while his far-away face barely moves. Measured on a phone: the avatar moves 35 px at 1.5 studs and 46 px at 2; his eyes move 3 px either way. |
+
+## The screen while he hunts (Rules 12, 67 and 68)
+
+| What | Value | Why |
+|---|---|---|
+| **Red edges** | Four bands, one along each screen edge, in a `ScreenGui` of their own with `ScreenInsets` set to `None` (so the red reaches the real screen edge) and a lower `DisplayOrder` than the game's buttons, so every button and pill is drawn on top. Each band is a `Frame` in wake red `#FF3B4E` with a `UIGradient` (set once) that goes from **55% solid** at the screen edge to fully clear. **Depth: 14% of the screen height** on every edge (the side bands use `SizeConstraint` `RelativeYY`, so they are as deep as the top one) | Tested both values from the notes (`mockups/wake-hud.html?edges=weak`): at 35% and 9% the red was a faint pink on a phone and easy to miss. 55% and 14% read as "danger" on both screens, and the middle of the world stays bright |
+| Red edges on phones | The side bands stop 45% above the bottom (fading out over their last fifth). The bottom band runs only across the middle, from 28% to 72% of the width, fading at both ends. So the thumbstick and Jump button corners get no red | Rule 68: never on the phone's bottom corners |
+| Red edges on computers | All four bands full length | No touch controls to keep clear |
+| Pulse | Once a second, smooth (sine): the bands go from full strength to 40% and back, by changing each band's own transparency from 0 to 0.6 and back. The gradient itself is never changed | Roblox's docs warn that changing a gradient's colours or transparency often is slow, and suggest changing the object's own properties instead (`UIGradient`, "Performance considerations", checked 2026-10-14) |
+| Pulse with Reduce Motion on | No pulse: steady at the band transparency 0.3 | Rule 68 |
+| When they show | While he's awake and the player is outside every garden. Fade out over 0.5 s on entering a garden, fade back in over 0.5 s on leaving one, and fade out over 0.5 s when he lies back down | Rule 68 |
+| Mockups show | The top of the pulse (the strongest moment) | The worst case for covering things |
+| **"RUN HOME!"** | A red pill: wake-red fill fading from `#FF7A86` to `#C4142A`, 4 px Ink outline and a 5 px Ink shadow under it (phone: 3 and 3), turned −2°. A 🏃 picture, then "RUN HOME!" in white Fredoka One with an Ink outline: **34 px** on computers, **20 px** on phones | Big and red like the "RUN!" banners of Steal Animal Egg (`steal-animal-egg/shot-06.jpg`) and Break and Steal an Egg (`break-and-steal-an-egg/shot-06.jpg`), with our outline and shadow style |
+| Where "RUN HOME!" sits | **Top, right of the sleep meter**: level with it (14 px from the top; phone 12 px), its left edge 14 px right of the meter's right edge (phone 10 px) | Tested both places. **Under the meter it covered his "!" and the top of his nightcap** for a carrier who has just landed facing him, on the computer and the phone (test shots: `wake-hud.html?state=land&run=under`). Right of the meter it covers nothing of his. It fits on a 4.7-inch phone with 27 px to spare |
+| When "RUN HOME!" shows | For a carrier outside their own garden, from the moment they touch down after the bounce (or at once, if they weren't on him), until they reach their garden, lose the egg, or he lies down | Spec section 2: "1–2 s: they land… a carrier sees RUN HOME!" |
+| Cash (later spec) | The Cash counter planned for the top right (V1 style guide) sits right of where "RUN HOME!" goes. While "RUN HOME!" shows, it may be drawn over the Cash counter (at most 15 s) | A running carrier doesn't need their cash. Spec 6 passes this on to the Cash spec |
+| **Sleep meter while he's awake** | The V1 awake look, unchanged: rose panel `#FFE3E6`, 😠, "AWAKE! Back to sleep in 0:15" in dark wake red `#C4142A`, and the bar **full and solid wake red `#FF3B4E`**, with the two white marks at 60% and 85%. The clock counts down; the bar stays full | V1's real game (`docs/reviews/core-heist-shots/r2-16-phone-awake-banner.jpg`). The first wake mockups wrongly showed the green-to-orange sleep bar |
+| Egg words near "RUN HOME!" | A floating egg word that touches the "RUN HOME!" pill on screen fades out, exactly like V1's "Egg labels never sit under the meter" (0.15 s out, 0.15 s back, the egg itself always shows) | The pill sits where the meter's rule doesn't reach. In the first `ladder-slam` shot an "Uncommon" word sat half under the pill |
+| **Wake banner** (Rule 12) | One line only: "💥 [Name] woke the Giant!" (or "The Giant woke up!"), the V1 red banner, for 3 s. Computer: as V1 (34 px, middle at 66% across, bottom edge 100 px up) | V1 |
+| Wake banner on phones | 14 px, bottom edge 100 px up as in V1, but its **right edge** is pinned 12 px left of the Jump button column (138 px from the right edge of the safe area), so a long name grows to the left. A display name longer than **12 letters** is cut to its first 11 and "…" (phones only) | On a 4.7-inch phone with V1's "middle at 66%", a 20-letter name ran under the Jump button. Pinned right and cut, the longest banner ends 12 px before the Jump button and covers at most the player's right shoulder for its 3 s (V1 accepted the hip). Tested at 667 × 375 with "Supercalifragilistic" |
+| **Bottom pill for a carrier** | The V1 carry pill (dark, 85% solid, 4 px Ink outline, egg icon in the egg's colour) saying "Dodge the red circles!", 22 px / 14 px | Rule 67 (as in V1) |
+| **Bottom tip for a player with no egg** | The same pill and text, but its icon is a small red slam circle: red `#E0233A` with a gold `#FFC93C` rim and an Ink ring, 40 px (phone 24 px) | The icon matches the circle on the ground, so the tip and the danger look the same |
+| Inside a garden | No red edges, no "RUN HOME!", no pill or tip. Only the meter (still red, counting down) | Rule 68. The quiet screen says "safe" (`wake-garden-*`) |
+
+Checked on a 4.7-inch phone (667 × 375, no safe edge), in every state, with the 20-letter name: no text overlaps another text, a button, the thumbstick or the Jump button. The only cut is the long name in the banner (above).
+
+## The bonk (Rule 61: The bonk is harmless)
+
+| What | Value | Why |
+|---|---|---|
+| Tumble | The player falls onto their back where they stand in **0.15 s**, lies still for **0.6 s**, and gets back up in **0.25 s**: 1.0 s in all. No push | Rule 61. Lying flat reads at once as "knocked over", even on a phone (`wake-bonk-phone.png`) |
+| Star ring | **4 cartoon gold stars** circling above their head for the whole 1.0 s: a `BillboardGui` 5.5 × 2.6 studs, 2.4 studs above the head (`StudsOffset`, so it stays above the head as they fall), `LightInfluence` 0, holding 4 `TextLabel`s with the ⭐ picture (Roblox draws it as a gold cartoon star). The stars circle once every 0.8 s; with Reduce Motion on they stand still | Tested in Studio: Roblox's built-in sparkle texture, even at 2.6 studs and gold, read as small flashes, not stars, from the player's own camera. The ⭐ picture reads as "dizzy" straight away |
+| Puff | A small cream puff on the body at the hit: smoke texture, `#FFF6E4`, 5 puffs, size 1.5 → 4 studs, 30% see-through fading out, lifetime 0.5–0.7 s | A soft "bonk", not the big white caught puff |
+| On a ladder | No tumble: they keep holding on, with the same star ring, and can't climb for 1.0 s. The star ring keeps its normal height (2.4 studs over the head) | Rule 61. Checked halfway up the left boot ladder (`wake-bonk-ladder-*`): the stars sit in front of the boot, well below the meter (about 120 px clear on the computer, 50 px on the phone), and the boot rim doesn't hide them. No lower height is needed |
+| **The fist on your own screen** | For a player the fist hits (anyone inside its circle, on the ground or on a ladder), their own copy of the fist is drawn **90% see-through** from the moment it lands until it has lifted clear above their head. Everyone else sees it solid. The fall stays solid | The fist is about 29 studs tall and lands on the surface under the circle. Tested in Studio halfway up the left boot ladder: with the solid fist, the player's camera sat against its knuckles and the whole screen was white and blue fist (`mockups/test-bonk-ladder-solid-fist.png`). It would look broken. At 65% and 80% see-through the world showed through a milky haze. At 90% the player, the red ladder, the stars and the circle read clearly, with a faint glassy edge of the fist. The fist is made by each player's own game, so this needs no new art |
+| On screen | Nothing new: no card, no text. The bottom tip stays | Spec section 6 |
+
+## The world reacts to a slam (Rule 69: The world reacts)
+
+| What | Value | Why |
+|---|---|---|
+| **Flower shake** | Every store flower model (the flower clumps and sunflowers) whose middle is inside the landing circle tips up to **12°** away from the circle's centre, then springs back with two smaller wobbles: **0.5 s** in all. Nothing else moves. It still plays with Reduce Motion on, because it moves the world, not the camera | The flowers under the fist are the closest thing to the hit, so a small shake says "that was heavy". Start value, not yet tried in Studio |
+| Change it if | The build review can't see it from the circle's edge: tip **20°**. The phone simulator slows down: shake only the **8 flowers** nearest the centre | |
