@@ -163,7 +163,7 @@ What the angle trial found: the tie's outer face climbs on the first try only fr
 
 **Every task is planned at 1 hour or less,** because the main chat stops any task at 1 hour (`CLAUDE.md`, "Red flag"). So four old tasks are split in two, by goal: the right tie (61b builds, 61j proves), the walkways (61w builds, 61x walks and judges the look), and the whole-play check (63 runs the tests and the bot, 63b takes the shots). No work is added by the split.
 
-**Hours: about 24.7 in all** (about 15.6 used, about 8.8 left), under the 26-hour limit with about 1.6 hours spare. On 2026-11-03 product's loop ruling (`work/t61h/loop2-decision.md`) added Task 61c (0.4 h) and moved every let-go Play case into a new Task 61v (0.5 h, split from Task 61w so no task passes 1 hour), which also takes Task 61j's quiet fall (Task 61j -0.1 h, Task 61w -0.1 h). On 2026-11-03 code_lead added Task 61n (0.4 h) and 0.1 h on Task 61h: Task 61h named the "CapToCapFall" event and the cap-to-cap quiet fall, but its steps never budgeted them. Task 61i ended 3 of 3 on top (2026-11-03), so the joint filler (Task 61k) is not built. "Used" is code_lead's estimate; the main chat's start-time log is the real number. The 10-task check (product, 2026-11-03, `work/red-alert-plan7/ten-task-decision.md`, with game_creator's yes in `work/red-alert-plan7/ten-task-gc-agree.md`) saved about 2.0 hours: Task 61i keeps only the rail joint case, Task 61j proves the right tie only, Task 61x is a look check only, and Task 63b takes shots only (the real-controls play is the build review's job, by Rule 101's proof list). Red flag 61b (product, 2026-11-03, `work/t61b/redflag-decision.md`) added 0.3 h: the pocket walk-out case in Task 61j (+0.1 h) and a new Task 63a, the tie-top walk-map check (0.2 h, split from Task 63 so no task passes 1 hour). It cut teaching the walk map that two trusses end to end make one climb (about 1 h): no player would notice, and Play in Tasks 61h and 61j plus Task 63's bot walk prove the climb.
+**Hours: about 25.0 in all (2026-11-03: Task 61x round 2 is 0.9 h, Task 61y folds into Task 63, Tasks 61r and 63 are trimmed to 0.8 h and 0.7 h, and the fallback Task 61z adds about 0.65 h only if it runs; about 4.6 h left)** (about 15.6 used, about 8.8 left), under the 26-hour limit with about 1.6 hours spare. On 2026-11-03 product's loop ruling (`work/t61h/loop2-decision.md`) added Task 61c (0.4 h) and moved every let-go Play case into a new Task 61v (0.5 h, split from Task 61w so no task passes 1 hour), which also takes Task 61j's quiet fall (Task 61j -0.1 h, Task 61w -0.1 h). On 2026-11-03 code_lead added Task 61n (0.4 h) and 0.1 h on Task 61h: Task 61h named the "CapToCapFall" event and the cap-to-cap quiet fall, but its steps never budgeted them. Task 61i ended 3 of 3 on top (2026-11-03), so the joint filler (Task 61k) is not built. "Used" is code_lead's estimate; the main chat's start-time log is the real number. The 10-task check (product, 2026-11-03, `work/red-alert-plan7/ten-task-decision.md`, with game_creator's yes in `work/red-alert-plan7/ten-task-gc-agree.md`) saved about 2.0 hours: Task 61i keeps only the rail joint case, Task 61j proves the right tie only, Task 61x is a look check only, and Task 63b takes shots only (the real-controls play is the build review's job, by Rule 101's proof list). Red flag 61b (product, 2026-11-03, `work/t61b/redflag-decision.md`) added 0.3 h: the pocket walk-out case in Task 61j (+0.1 h) and a new Task 63a, the tie-top walk-map check (0.2 h, split from Task 63 so no task passes 1 hour). It cut teaching the walk map that two trusses end to end make one climb (about 1 h): no player would notice, and Play in Tasks 61h and 61j plus Task 63's bot walk prove the climb. On 2026-11-03 Task 61c's live "CapDrop" check moved out of Task 61v into a new Task 61y (0.6 h; product and game_creator, `work/t61v/puff-ruling.md`), because a let-go the chute catches logs no "CapDrop".
 
 | Order | Piece | Hours left | Stands on |
 |---|---|---|---|
@@ -178,12 +178,14 @@ What the angle trial found: the tie's outer face climbs on the first try only fr
 | 5b | Task 61n: cap-to-cap falls are counted per trip | 0.4 | Task 61h, Task 61c, Task 61j |
 | 6 | Task 61w: the walkways with their chutes are built | 1.0 | designer's chute shape, Task 61j, the reach walk |
 | 6b | Task 61v: a let-go from either tie ends quiet on the giant or in the chute | 0.5 | Task 61w, Task 61c, Task 61h's case 4 lines |
-| 7 | Task 61x: the walkway look check | 0.3 | Task 61w |
-| 8 | Task 61r: a rescue from a tie lands at the chute's end, lined up | 1.0 | Task 61a, Task 61j, Task 61x |
+| 6c | Task 61y: a real drop from the cap logs "CapDrop" for each ending | 0 (folded into Task 63) | Task 61c, Task 61n, Task 61d, Task 61j |
+| 7 | Task 61x: the walkways look like a cloud path (round 2) | 0.9 | Task 61w |
+| 7b | Task 61z: a flat cloud floor fallback, only if Task 61x's designer check finds a worse pair | 0.65 (only if it runs) | Task 61x |
+| 8 | Task 61r: a rescue from a tie lands at the chute's end, lined up | 0.8 | Task 61a, Task 61j, Task 61x |
 | 9 | Task 62a: the footprints run straight down each chute | 0.7 | Task 61j, Task 61x |
 | 10 | Task 62b: Rare eggs 3 and 4 go back, and walk both ways | 1.0 | Task 61j, Task 62a, the reach walk |
 | 10b | Task 63a: the walk-map check of each tie starts at its foot and ends at its Landing | 0.2 | Task 61j, Task 61x |
-| 11 | Task 63: the full run, the bot walk and the home times | 1.0 | Task 63a, Task 61d, Task 61h, Task 61j, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n, Task 61c, Task 61v |
+| 11 | Task 63: the full run, the bot walk and the home times. Before it runs, code_lead greps `src/server/Analytics.luau` to confirm its field warning checks every CapDrop field; if not, a 0.2 h debug print of the fields is added (game_creator's condition) | 0.7 | Task 63a, Task 61d, Task 61h, Task 61j, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n, Task 61c, Task 61v, Task 61y |
 | 12 | Task 63b: the shots on computer and phone, both ties | 0.3 | Task 63 |
 
 **Why this order** (the `order-the-work` steps, product's 10-task decision): the rail joint is the last open question about the left tie's shape. Task 61i answers it before anything else stands on that shape. If it ends STUCK, Task 61k fixes the joint (never the rescue), so the left tie is final. Task 61h comes next, because its quiet-fall check must name every part of the tie, including a filler if one is built. The right tie mirrors a final left tie, top, joint and falls. The walkways end at both final tie feet; the rescue spot is the chute's end, so 61r comes after the walkway is final; the footprints run down the built chute; the eggs wait for the footprint line; the full run and the shots come once, after every change to the ways up and home.
@@ -384,7 +386,7 @@ Stands on: nothing.
   1. the red test and its narrow red run (Sonnet, 2 Studio calls, 18 tool calls, 10 minutes);
   2. the change and its narrow green run (Sonnet, 3 Studio calls, 14 tool calls, 8 minutes);
   3. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls, 6 minutes).
-- **Played:** nothing a player sees changes. Task 61v's Play runs read the console once: no field warning, and each "CapDrop" line shows plain values.
+- **Played:** nothing a player sees changes. The live check (a real drop for each ending, no field warning) is Task 61y, moved there from Task 61v on 2026-11-03.
 - **Commit:** its own commit, once approved.
 - **Lessons:** 41, 188.
 
@@ -462,11 +464,11 @@ Stands on: designer's chute shape (`work/red-flag-61a/designer-angle.md`, final)
   - planks, rails and posts in the colours and sizes of designer's walkway file (`work/red-flag-61a/designer-walkway-outer-end.md`).
 - **Files:** a new `tools/world/21-walkways.luau` (check-only by default, mirrored like script 20), a new `Walkways.spec.luau` next to `CapTies.spec.luau`.
 - **Failing test first:** "each walkway's chute ends at its tie's foot within 0.5 studs, pointing at the outer face within 2°, mirrored left and right, with no slope over 18°, no gap at the corners, and rails on both chute sides". Red before script 21 runs.
-- **How big:** 4 steps, about 10 Studio calls, 0.9 h:
-  1. the red test, a narrow run (Sonnet, 2 Studio calls, 18 tool calls);
-  2. before shots from every fixed camera in `docs/design/v2/look-cameras.md` that shows a tie's foot (at least gate 1, gate 8 and the first view), computer and phone (Sonnet, 4 Studio calls, 12 tool calls);
-  3. script 21 builds both sides, the narrow run goes green (Sonnet, 2 Studio calls, 20 tool calls);
-  4. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls);
+- **How big:** 4 steps, about 28 Studio calls, 0.9 h (handoff `work/t61w/handoff.md`; the world table was measured 2026-11-03: the ties mirror exactly in x and z, and the right side is 0.16 to 0.24 higher, so it uses designer's right-column heights):
+  1. the red tests, a narrow run (Sonnet, 3 Studio calls, 18 tool calls, 16 min);
+  2. before shots of `meadow-wide`, `gate-1` and `gate-8`, computer and phone, with the ready-made job `work/t61w/look-shots-job.md` (Lesson 320; Sonnet, 13 Studio calls, 16 tool calls, 10 min);
+  3. script 21 builds both sides, the narrow run goes green (Sonnet, 6 Studio calls, 24 tool calls, 22 min);
+  4. the full run (Haiku, the runner, 6 Studio calls, 16 tool calls, 6 min; Lesson 313).
 - **After shots and designer's check:** in Task 61x. **Commit:** Tasks 61w, 61v and 61x together.
 
 ## Task 61v: A let-go from either tie ends quiet on the giant or in the chute
@@ -474,37 +476,69 @@ Stands on: designer's chute shape (`work/red-flag-61a/designer-angle.md`, final)
 Stands on: Task 61w (both walkways and chutes built, full run green), Task 61c (the CapDrop fields fixed, full run green), Task 61h's case 4 lines (`work/t61h/state.md`, rerun 2, final).
 
 - **What it's for:** core gameplay and fairness. A player who lets go low on either tie lands quietly on the giant, never in the meadow.
-- **Spec rules:** Rule 101 (Ladders hold you); spec 5's Rule 8 (Steps make noise); spec 5's section 10 row "CapDrop" (Task 61c's live proof).
+- **Spec rules:** Rule 101 (Ladders hold you); spec 5's Rule 8 (Steps make noise). Task 61c's live "CapDrop" proof moved to Task 61y (a let-go the chute catches is a short step and logs no "CapDrop").
 - **The cases** (session hold, smoke run first, each starts standing at the tie's foot; both ties, the same pass):
-  - **the low let-go:** climb to y 63 and let go. Pass: 0 thuds, 1 puff, camera 0°, lands on the giant within 5 studs of the tie's foot, Belly zone. Landing on the chute deck counts as the Belly zone: quiet, 1 puff, "CapDrop" ending "shoulders" or "belly" (game_creator, `work/t61h/loop2-gc-check.md`);
+  - **the low let-go:** climb to y 63 and let go. Pass: 0 thuds, no rescue, camera 0°, stands on the chute deck or the giant within 5 studs of the tie's foot (the chute deck counts as the Belly zone, game_creator, `work/t61h/loop2-gc-check.md`), and the puffs equal the "CapDrop" lines: 0 and 0 when the chute catches him after a short step (Step 1's trace), or 1 and 1 ending "shoulders" or "belly" if he falls fast (product, `work/t61v/puff-ruling.md`; game_creator agrees before Step 3);
   - **the held-back case:** the same let-go, holding "back" for 2 s. The same pass.
 - **The end rule:** a try ends when he stands on a floor again after the let-go. It is written from one let-go traced every 0.1 s (his state, his height and the part under him), never by the clock. A held push away from a truss makes him climb down it, so "in the air" alone never ends a try (Task 61h, rerun 2).
 - **Game signals:** thuds from the GiantState "Meter" attribute; the puff count and the landing spot from the client's down ray; "CapDrop" from the console line (`src/server/init.server.luau`, `onDrop`).
 - **A fail** goes to `designer` and `game_creator` to shape the chute (Rule 101 (Ladders hold you)).
-- **How big:** 3 steps, about 9 Studio calls, 0.5 h:
-  1. one let-go traced every 0.1 s on the left tie, dry run in Edit first (Sonnet, 3 Studio calls, 14 tool calls, 10 minutes);
+- **How big:** 3 steps, about 21 Studio calls, 0.9 h (the first count, 9 calls and 0.5 h, left out Play start, the session hold, the drop watch, the smoke shot, the console reads and Play stop; code_lead, 2026-11-03):
+  1. write the job, a smoke run at both feet, then a low and a held-back let-go traced every 0.1 s on the left tie, dry run in Edit first (Sonnet, 10 Studio calls, 22 tool calls, 22 minutes);
   2. code_lead writes the end rule from the trace into the job and reads the job (Opus, 0 Studio calls, 8 tool calls, 8 minutes);
-  3. the four cases, two per tie, plus one console read (Sonnet, at most 6 Studio calls, at most 24 tool calls, 12 minutes).
+  3. the four cases, two per tie, plus one console read (Sonnet, 11 Studio calls, 20 tool calls, 24 minutes).
 - **Played:** nothing new is seen; this proves the chute under the let-go.
 - **Lessons:** 225, 253, 297; "a let-go case on a spot a later task builds over moves into that task" (product, 2026-11-03).
 - **Lessons:** 2 (change the scenery, not the giant), 219 and 221 (measured spots), 225 (smoke run first).
 
-## Task 61x: The walkway look check
+## Task 61y: A real drop from the cap logs "CapDrop" for each ending
 
-Stands on: Task 61w (both walkways built, full run green).
+Stands on: Task 61c (the CapDrop fields fixed, committed f85d8ee), Task 61n (`onDrop` changed for "CapToCapFall", committed 7aab76c and 22083a1), Task 61d (the drop rules and the puff, committed), Task 61j (both ties final), the landing detector as committed (no task in plan 7 changes it).
 
-- **What it's for:** the look of the walkways (scenery around the core way up). The walk to each chute is proven by Task 61r's climbs from the chute's end and Task 63's bot walk.
-- **Spec rules:** Rule 101 (Ladders hold you): the walkway ends in a railed chute pointing at the outer face, as the mockups show.
-- **The shots:** gate-1, gate-8 and one chute close-up per side, on computer and phone, from the same cameras as Task 61w's before shots.
-- **How big:** 2 steps, about 6 Studio calls, 0.3 h:
-  1. the after shots (Sonnet, 6 Studio calls, 14 tool calls);
-  2. designer judges each pair (Opus, 0 Studio calls, 10 tool calls). A "worse" goes back to Task 61w as changes, before the commit.
-- **Commit:** Tasks 61w and 61x together.
-- **Lessons:** 253.
+**Folded into Task 63 (2026-11-03, `work/t61x/decision.md`).** Not built on its own. Task 63's console read covers it: after the bot walk's drop home it shows at least one real CapDrop line; every field of that line is a plain value, and its ending is one of the four names (pillow, face, shoulders, belly) (game_creator's condition). Planned 0 h here.
+
+- **What it's for:** the business goals. It proves in the real game that the drop home logs "CapDrop" with values Roblox accepts, for every ending, so the climb can be tuned from real numbers. Moved out of Task 61v (product and game_creator, `work/t61v/puff-ruling.md`): a let-go the chute catches is a short step, so it logs no "CapDrop".
+- **Why it goes here:** the owners asked for it before Task 61n, because 61n stands on 61c's fields. Task 61n was already built and approved, so this check runs next instead. Nothing it stands on will still change: its drops start on the cap or a tie's landing and end on the pillow or the giant, which no task still to come changes (61x is the walkway's look, 61r the rescue spot, 62a the footprints, 62b the eggs). A fail reopens Task 61c first; Task 63 reads 61n's "CapToCapFall" again after that.
+- **Spec rules:** spec 5's section 10 row "CapDrop" (how the drop ended: pillow, face, shoulders or belly); spec 5's Rule 8 (Steps make noise), the puff on the pillow, shoulders and belly.
+- **The cases** (session hold, smoke run first; each starts standing on the cap or a tie's landing and walks off with no jump, like a player going home): four drops, one per ending: pillow, face, shoulders, belly. The walk-off spots are measured in Step 1, never guessed (Lessons 219 and 221). An ending no real walk-off reaches goes to `product` before Step 2, never into a stand-in.
+- **Pass, per drop:** 0 thuds; 1 puff for pillow, shoulders and belly, 0 for face (`CapDrop.landing`); the job's down ray ends on the part that gives that ending (the Pillow; the Beard zone; the Belly zone at or past `Config.Noise.ShoulderMinZ`; the Belly zone before it); exactly 1 new "LogCustomEvent" line; no "CustomField" warning and no error.
+- **How the values are proven** (code_lead's method): Studio's "event fired" line prints no fields, and Studio sends nothing (`src/server/Analytics.luau` line 5). So the plain values are proven by Task 61c's test, which sends all four endings through the real Analytics module. This task proves each real drop reaches that call once, and that Roblox prints no field warning for it.
+- **How big:** 3 steps, 12 Studio calls, 0.6 h:
+  1. code_lead measures the four walk-off spots with down rays in one read-only Edit call, writes the handoff with its world table and pass list, and runs `scripts/job-check.sh --handoff` (Opus, 1 Studio call, 10 tool calls, 10 minutes);
+  2. the builder writes the job from `work/t61h/drops-client.luau` (at most 260 lines), dry run in Edit, Play with the session hold and the drop watch, the pillow drop as the smoke run with one player-camera shot, then face, shoulders and belly, one console read, Play stop (Sonnet, 11 Studio calls, 26 tool calls, 22 minutes);
+  3. code_lead's review (Opus, 0 Studio calls, 6 tool calls, 6 minutes).
+- **Played:** nothing new is seen; the puff's look is Task 61d's. No look shots.
+- **Commit:** nothing in `src/` changes, so it has no commit of its own; its progress row goes in the next task's commit.
+- **Lessons:** 225 (smoke run first), 219 and 221 (measured spots), 297 (retry like a player), 302 (paste each file whole), 304 and 306 (each pass item names its game signal; no job file over 300 lines).
+
+## Task 61x: The walkways look like a cloud path (round 2)
+
+Stands on: the cloud-path decision (`work/t61x/decision.md`, with game_creator's Agree); the Rule 101 cloud-path text in the spec (done, line 209); Task 61w (both walkways' hidden carriers built, full run green); Task 61v (carrier passes); the reach walk (`work/red-flag-61a/option2-reach-walk-result.md`, passed).
+
+- **Spec rule:** Rule 101 (Ladders hold you): the path in the cap-tie chutes is a soft white cloud the player can see, with sides as tall as the hidden walls (3.1 studs above the deck).
+- **What it's for:** core gameplay (the route to the cap ties), seen from the first view. Round 1 built wood planks, and designer judged them worse: they looked like a plank on the giant's chin (red alert, `work/t61x/red-alert-designer.md`).
+- **Files:** `tools/world/21-walkways.luau` (only the look parts made by `seen()`; the 11 hidden carriers don't change), `src/tests/server/World/RealWorld/Walkways.spec.luau` (the round-1 look test becomes one cloud test per side).
+- **Failing test first:** "everything you see on the left walkway is cloud", and the right one. They fail today because every seen part is a wood plank. They pass when every seen part is a cloud ball with designer's C2 values (`work/t61x/designer-step1.md`): floor balls 4.6 to 5.6 across with tops 0.0 to 0.3 above the deck top, a blue-white shade ball under each, one side row of 3.6 to 4.8 balls whose tops sit 3.0 to 3.2 above the deck top (code_lead raised her centres, which reached only + 1.9 to + 2.5, to meet the decided 3.1-stud sides), and no ball touching either cap tie.
+- **Same on both sides:** one mirrored script builds both (deck tops at y 56.4 left and 56.5 right). Each side is rebuilt with Undo then Apply, because the script answers "already done" while the carriers exist.
+- **Pass before the commit:** designer says same or better on meadow-wide, gate-1 and gate-8 (computer and phone) against `work/t61w/look-before/`; a shot from the player's spot in each chute shows his feet on a visible cloud (no gap, not sunk) and the sides up to the wall tops; the full run is green except the accepted reds named in Task 61w. Those are these 8, the same names in Task 61w's and Task 61x's full runs (2989 passed, 2026-11-03), all reading ladders, egg spots and stuck spots that Tasks 61r and 63 finish: egg spots "every egg spot is at its approved place"; ladder width "finds the beard ladder and the cap..." and "no solid truss stands without rails"; route and landing spots "every egg spot has its own target point"; the stuck scan's "the giant has no stuck spots", "each ladder joins its two ends on the real walk map" and "the ladder link check notices two spots no ladder joins"; and the hidden brim blocks' "still reaches the brim nests from each cap tie's top". Footprints on the white cloud are judged here only if one already shows in the chute shots; Task 62a carries the full check.
+- **Lessons:** Lesson 325 (a look job compares each new shot with its before shot; `work/t61w/look-compare.py`), and the decision's lesson: a task that adds visible parts takes its gate-view shots and the designer check inside that task.
+- **Size:** 6 steps, 54 min (0.9 h), 31 Studio calls. Handoff: `work/t61x/handoff.md`.
+- **If a pair is still worse:** Task 61z.
+
+## Task 61z: Fallback cloud floor (runs only if Task 61x's designer check finds a worse pair)
+
+Stands on: Task 61x (designer's verdict, with a worse pair); the cloud-path decision (`work/t61x/decision.md`, its fallback round); the reach walk (`work/red-flag-61a/option2-reach-walk-result.md`, passed).
+
+- **Spec rule:** Rule 101 (Ladders hold you).
+- **What:** a flat soft-white cloud floor at the deck top under the balls, and the side balls stacked up to the wall tops. Only the `seen()` parts in `tools/world/21-walkways.luau` change, then Undo and Apply per side, the full run, and the same shots and designer check as Task 61x.
+- **Size:** about 0.65 h (build 15 min, full run 4 min, shots 15 min, designer 5 min), counted only if it runs.
+- **If a pair is still worse:** all work stops and goes back to the red-alert meeting. A path players can't see is never the fallback.
 
 ## Task 61r: A rescue from a tie lands at the chute's end, lined up
 
 Stands on: Task 61a (the left tie final), Task 61j (the right tie final), Task 61x (the chutes built and their look approved, so the rescue spot has a final floor).
+
+**Trimmed 2026-11-03 (`work/t61x/decision.md`).** Step 5's Play cases are the press at the foot of each tie (left and right) plus one -30° stall on the left. The +25°, -25° and +30° cases are cut. A grep of `src/server/Players/StuckWatch.luau` and `src/server/Players/CapTieSpots.luau` found no side-specific value in the stall path: the stall rule is one rule for both ties, and only the rescue spot and facing differ per side, which the foot cases cover. If this task's build puts any per-side value into the stall path, the right side gets its own mirrored -30° stall case (Lesson 305). Planned 0.8 h (was 1.0).
 
 - **What it's for:** core gameplay. A climber who stalls is put back where the climb works on the first try, never at an old safe spot facing the wrong way, which could loop him home.
 - **Spec rules:** Rule 28 (Stuck players are rescued): the line-up and the press-without-rising case; Rule 101 (Ladders hold you): the ±25° and ±30° cases; Rule 29 (No rescue loops): a tie rescue still counts; Rule 31 (Being stuck is silent).
@@ -525,12 +559,14 @@ Stands on: Task 61a (the left tie final), Task 61j (the right tie final), Task 6
   2. the red tests, a narrow run (Sonnet, 2 Studio calls, 20 tool calls);
   3. the helper, the stuck watch, the rescue and the camera change, a narrow run (Sonnet, 2 Studio calls, 25 tool calls);
   4. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls);
-  5. Play: on each tie, the press at the foot, and pushes at +25°, -25°, +30° and -30°: each climbs, or stalls silently, is rescued within the stuck time to within 1 stud of the chute's end, facing the face with the camera behind him (a player-camera screenshot), and then climbs with one straight push. These are the ±25° and ±30° stall-then-rescue-then-climb cases from the 10-task decision. A case that can end STUCK first retries like a player and takes a stall shot (Lesson 297) (Sonnet, at most 5 Studio calls, at most 25 tool calls).
+  5. Step 5 (trimmed 2026-11-03, see the note above): the press at the foot of each tie, plus one -30° stall on the left.
 - **Lessons:** 41 (one filter per run), 182 and 188 (narrow runs), 225, 253, 297.
 
 ## Task 62a: The footprints run straight down each chute
 
 Stands on: Task 61j (both ties final), Task 61x (the walkways and chutes final).
+
+**Added 2026-11-03 (cloud path decision).** Its pass also needs the footprints to be easy to see on the white cloud from the player's view in each chute.
 
 - **What it's for:** core gameplay. The footprint line leads a new player along the walkway, and its last 3 footprints run down the chute's middle into the strap, so he arrives lined up.
 - **Spec rules:** Rule 24 (A bot walks every way); Rule 101 (Ladders hold you).
@@ -574,16 +610,18 @@ Stands on: Task 61j (both ties final, with any pocket filler), Task 61x (the foo
 
 ## Task 63: The full run, the bot walk and the home times
 
-Stands on: Task 63a, Task 61d, Task 61j, Task 61h, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n, Task 61c, Task 61v.
+Stands on: Task 63a, Task 61d, Task 61j, Task 61h, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n, Task 61c, Task 61v, Task 61y.
+
+**Trimmed 2026-11-03 (`work/t61x/decision.md`).** Two 10-second stands, one per tie: empty on the left, carrying on the right (was four). Before it runs, code_lead greps `src/server/Analytics.luau` to confirm its field warning checks every CapDrop field; if not, a 0.2 h debug print of the fields is added first (game_creator's condition). It also takes Task 61y's read: one console read after the bot walk's drop home shows at least one real CapDrop line, every field a plain value, ending one of the four names. Planned 0.7 h (was 0.8: +0.1 for the read, -0.2 for the stands).
 
 - **What it's for:** core gameplay safety. A whole-play check reads the ways up, the way home, the eggs and the gardens together, so it runs once, after every change to them.
 - **Spec rules:** Rule 21 (The stuck scan runs on every test run); Rule 24 (A bot walks every way), including section 5's "Chute at each walkway's end" row; section 5's "Left and right home times from the cap" row (within 2 seconds); section 5's Top-out creep row (product, 2026-11-03, `work/red-alert-plan7/plan-rewrite-product.md`).
 - **The chute heading:** the bot walk records the heading he arrives with at the end of each chute. Pass: within 15° of straight at the outer face. Further off, Rule 28's rescue line-up covers the player until the chute is lengthened.
-- **The stands:** a 10-second stand on the top of each tie, empty-handed and then carrying an egg (four stands), each starting standing on the fold. Pass: he slides at most 2 studs in all, and under 0.2 studs in the last 3 s.
+- **The stands:** a 10-second stand on the top of each tie, empty-handed and then carrying an egg (two stands (empty on the left, carrying on the right)), each starting standing on the fold. Pass: he slides at most 2 studs in all, and under 0.2 studs in the last 3 s.
 - **How big:** 3 steps, about 13 Studio calls, 1.0 h:
   1. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls);
   2. the bot walk with its tie legs in `scripts/bot-walk/`: along each walkway, up each tie, home by the drop (Sonnet, a dry start, 5 Studio calls, 25 tool calls);
-  3. the left and right carry-home times, then the four stands (Sonnet, a dry start, 6 Studio calls, 22 tool calls).
+  3. the left and right carry-home times, then the two stands (empty on the left, carrying on the right) (Sonnet, a dry start, 6 Studio calls, 22 tool calls).
 - **The third stuck spot:** the stuck scan drops the right brim pocket at (35.2, 74.3, 37.0) from the red list, or keeps it listed with Task 61j's walk-out as its proof (product, 2026-11-03).
 - **Pass:** the full run has 0 failed; the bot climbs both ties and comes home by the drop; each chute's arrival heading is within 15° of straight; the home times are within 2 seconds; every stand stays inside the creep limits.
 

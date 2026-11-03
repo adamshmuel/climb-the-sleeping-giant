@@ -12,7 +12,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 |---|---|---|---|
 | V2 setups 1 to 6 | `v2/setups.md` | 6 of 6 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
-| 2. Stuck safety | `v2/stuck-safety.md` | 71 of 83 | ◐ Plan 7 at about 24.4 h of the 26 h limit (about 8.8 h left). Tasks 61m, 61a and 61h approved; 61i done (no filler needed). Product's 61h loop ruling added Task 61c (CapDrop fields) and Task 61v (let-go cases after the chutes). Order: 61c → 61b → 61j → 61n → 61w → 61v → 61x → 61r → 62a → 62b → 63 → 63b. Next: Task 61c |
+| 2. Stuck safety | `v2/stuck-safety.md` | 77 of 85 | ◐ Plan 7 at about 25.0 h planned of the 26 h limit (Task 61y folded into Task 63; Tasks 61r and 63 trimmed; Task 61x round 2 builds a cloud path). Tasks 61m, 61a, 61h, 61c, 61b, 61j, 61n, 61w, 61v and 61x done; 61i done (no filler needed). Task 61c's live "CapDrop" check moved from 61v to a new Task 61y. Order: 61x (cloud path, round 2) → 61z (only if a look pair is worse) → 61r → 62a → 62b → 63a → 63 → 63b. Tasks 61x done (cloud path built and judged same, feet seen from behind) and committed with 61w and 61v; 61z out (not needed). Next: Task 61r |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 0 of 19 | ☐ not started |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |
