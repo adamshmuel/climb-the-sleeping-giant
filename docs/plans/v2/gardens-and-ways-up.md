@@ -181,11 +181,11 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 3 (3 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
 - Done 2026-11-03: **pass**, no spawn spot moved (`work/t4e4/walk-times.md`). Garden 1 6.97 s, garden 8 6.93 s, garden 2 4.50 s, garden 7 4.53 s; pairs 0.04 s and 0.03 s apart. game_creator approved (`work/t4e4/game_creator-check.md`). Step 3 skipped: nothing in the world or the code changed since the last full run (2921 passed, 1 accepted red).
 
-**Task 4g: Move the bush out of the gate 8 view** (added 2026-11-03 by product's split of Task 4f; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+**Task 4g: Move the bush and the rock out of the gate 8 and gate 1 views** (added 2026-11-03 by product's split of Task 4f; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
 - Stands on: Task 4e4 (the spawn spots, final), and through it Tasks 4e3 and 4f (the Sock and the Teacup moved).
 - Planned hours: 0.17 (Step 1: 1 min; Step 2: 5 min; Step 3: 2 min; Step 4: 2 min).
 - Spec rules: Rule 44 (Your way up is in view from home).
-- Files: `tools/world/16-meadow-bush.luau` (one value: `FOLIAGE_AT`, the bush's spot, so a second run finds it there and says "already done").
+- Files: a new `tools/world/30-clear-gate-views.luau` that moves `Workspace.World.Nature.Nature_Bush` (at (132.7, 5.9, -1.3), it hides 6 of 11 rays from gate 8 to `BootLadder_Right`) and the `Nature_MediumRock` that hides 6 of 11 rays from gate 1 to `BootLadder_Left`, the bush the least distance sideways and the rock out of the meadow into `ServerStorage.ArtLibrary.RemovedNature` (designer's pick: a sideways move ends in the stream or 2.7 studs from `EggSpot_Common_1`), and says "already done" on a second run. Not `16-meadow-bush.luau`: that bush covers the invisible `Block_R141_1`, so moving it would leave an invisible wall (read-only raycast, 2026-11-03).
 - The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path, and of the teacup's new spot (measured: Lessons 219 and 221).
 - Look shots: gate-8 before and after, computer and phone, in `work/t4g/look-before/` and `work/t4g/look-after/`. Gates 1, 2 and 7 after only (computer and phone): with gate 8 they are the Rule 44 check from the final spawn spots.
 - Pass: gate 8 shows at least as much of its ladder as gate 1, and gate 7 shows the top half of its ladder, like gate 2.
@@ -193,6 +193,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 2 (5 min, Sonnet, builder, same agent): the before shots, then one call that backs the bush up into `ServerStorage.WorldBackups.T4g` and runs the changed script, then the after shots. Cap: 17 tool calls, 15 of them Studio: 1 before shot on computer, 2 phone set, 3 before shot on phone, 4 phone reset, 5 the one-value script edit, 6 the backup and run, 7-10 after shots on computer (gates 8, 1, 2, 7), 11 phone set, 12-15 after shots on phone, 16 phone reset, 17 spare.
 - Step 3 (2 min, Opus, designer): judges the gate-8 pairs (same or better, or worse) and the Rule 44 views of gates 1, 2, 7 and 8. Cap: 8 tool calls, no Studio.
 - Step 4 (2 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
+- Done 2026-11-03: **pass**. The bush moved (3.8, 0, -4.7); the gate-1 rock went to `ServerStorage.ArtLibrary.RemovedNature` (backup `ServerStorage.WorldBackups.T4g`). View rays clear out of 11: gate 1 3 → 8, gate 8 3 → 8, gates 2 and 7 stay 7. Designer: all four pairs better, Rule 44 passes at gates 1, 2, 7 and 8 (`work/t4g/compare/`). Full run 2922 passed, 1 accepted red. About 14 min against 10: the card's Step 2 cap was too small (problems log, `teamwork.md`).
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
 - Stands on: Task 4a (the boot ladders and their climb, built), Task 4d (the `Look` model on the beard and cap ladders), his body, the Safe Gates, the ray grid under each lap plank's boot end, and the reach check just before this task (build order step 2).
