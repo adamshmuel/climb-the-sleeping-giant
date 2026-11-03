@@ -23,7 +23,7 @@ Nobody approves what they haven't seen in the running game. Reading code and pas
 
 ## Steps
 
-1. **Start Play** (mute the sound if the prompt says so).
+1. **Start Play** (mute the sound if the prompt says so: `studio-jobs` skill, "Muting the sound in Play").
 2. **Move only with the player's controls.** Never move the character or change the game with scripts.
 3. **Play whole sessions, not single checks.** Find out what to do from the screen alone. Try what a player would: win, lose, get greedy, try again, keep going past the first goal.
 4. **Computer and phone.** Play on a computer screen and on a phone screen.

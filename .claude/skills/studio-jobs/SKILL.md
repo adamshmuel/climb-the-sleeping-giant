@@ -101,7 +101,24 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - A look check copies the client's own ray, list and fallback and judges where the client draws. A server value is only an input.
 - A float check first asks whether the part sits inside a visible mesh, and reports a wall's height apart from a float.
 
+## Muting the sound in Play
+Never saved. Only in Play, only in the Client: run it with `execute_luau` and `datamodel_type` "Client", so it vanishes when Play stops.
+1. Make a `SoundGroup` named `SessionMute` in `SoundService` with `Volume` 0, and set every `Sound`'s `SoundGroup` to it, also for sounds added later (`DescendantAdded`).
+2. For the newer audio objects, every `Wire` whose `TargetInstance` is an `AudioDeviceOutput` gets `TargetInstance` nil, also for wires added or re-aimed later (anything wired to an `AudioDeviceOutput` is heard).
+3. Wrap each object in `pcall`.
+
+Never run it in Edit or on the Server: Edit changes are saved with the place. Never touch `UserGameSettings` or any Studio setting: they are the user's own and outlive the session. `SoundService` has no `Volume` property.
+
+## Driving a climb
+- `user_mouse_input` drives the phone's thumbstick: press at (90, 285) and drag to (90, 225). Don't use the `ThumbstickStart` path after the first use.
+- A climber frozen mid-ladder (anchored, animation stopped) can't be unfrozen without a drop, so start each shot from a fresh teleport.
+- A `Scriptable` camera set with `execute_luau` is reset before `screen_capture`: use a render-step bind or the capture's own camera arguments.
+
 ## This game
+- **A warning in a Play shot shows the real meter above 85**, never a Warning fired by hand with the meter at 0 (that shows the dark, empty "Giant is sleeping" bar). At a spawn spot a real crossing can't happen, so write `GiantState.Meter = 95` from a Server `execute_luau`, then fire the Warning with 85: that shows the real 85% look (orange meter, tip, glow).
+- **To spawn at garden N,** do what `Spawning` does: `PlotIndex`, `RespawnLocation = Plot_N.SpawnSpot`, `LoadCharacter`; then leave the game's own spawn camera alone.
+- **Not bugs** (designer, `docs/specs/v2/research/decisions-plans.md`): the pink and purple patch right of the belly is in the giant's own body texture, and the grey box over the bottom-left of the phone screen is the simulator's thumbstick area (`DynamicThumbstickFrame`).
+- Reduce Motion in Play and Studio's id: `docs/progress/v2/new-player-safety.md`, "Task 11 points for later", points 2 and 4.
 - `StartCheck.find` returns `position` (highest hit + 0.1) and `ground` (the hit under the body's middle). A settle or floor limit uses `ground`; a start uses `position` (`tools/checks/StartCheck.luau`).
 - The server lifts a rescued body 0.5 studs (`LIFT`, `src/server/Players/Recovery.luau`).
 - Banking an egg: move to the plot's `GardenVolume` pivot, inside the fence (`src/server/Eggs/Banking.luau`). The SpawnSpot is outside the garden.
