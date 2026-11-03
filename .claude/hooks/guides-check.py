@@ -8,8 +8,11 @@ and the model pages have none (measured 2026-11-03).
 - A change: writes only the changed lines to work/guides/diffs/<page>.diff and adds one line
   naming them. They are reviewed at the next task close (guides-check skill), never mid-task.
 - Every real change is logged once in work/guides/log.md, to learn how often the guides change.
+- Each site's llms.txt index is kept as one more "page": its sorted page links (descriptions left out),
+  so a brand-new guide page shows up as an added line in index-<site>.diff.
 `--reviewed <page>` (or `--reviewed all`) marks a page as reviewed after the skill's review.
-The page list can be swapped with GUIDES_CHECK_PAGES (JSON, name to URL) for tests.
+The lists can be swapped for tests with GUIDES_CHECK_PAGES (JSON, name to URL) and
+GUIDES_CHECK_INDEXES (JSON, name to [URL, [link prefixes kept]]).
 """
 
 import concurrent.futures
@@ -17,6 +20,7 @@ import datetime
 import difflib
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -28,6 +32,11 @@ PAGES = {
     "skill-authoring": PLATFORM + "agents-and-tools/agent-skills/best-practices.md",
     "prompting": PROMPTING + "claude-prompting-best-practices.md",
     **{model: PROMPTING + f"prompting-claude-{model}.md" for model in ["opus-5-5", "sonnet-5-5", "haiku-5-5"]},
+}
+# The platform index is mostly API reference, so only the sections our setup leans on are kept.
+INDEXES = {
+    "index-code": ["https://code.claude.com/docs/llms.txt", [CODE]],
+    "index-platform": ["https://platform.claude.com/llms.txt", [PLATFORM + "agents-and-tools/agent-skills/", PROMPTING]],
 }
 # After two weeks of log, the main chat tells the user how often the guides really change.
 REPORT_AFTER_DAYS = 14
@@ -62,9 +71,21 @@ def changed_lines(old, new):
     return "\n".join(diff) + "\n", added, removed
 
 
-def check(root, pages):
-    with concurrent.futures.ThreadPoolExecutor(len(pages) or 1) as pool:
-        fetched = dict(zip(pages, pool.map(fetch, pages.values())))
+def page_links(text, prefixes):
+    links = set(re.findall(r"\]\((https?://[^)\s]+)\)", text))
+    return "".join(link + "\n" for link in sorted(links) if link.startswith(tuple(prefixes)))
+
+
+def check(root, pages, indexes):
+    urls = {**pages, **{name: url for name, (url, _) in indexes.items()}}
+    with concurrent.futures.ThreadPoolExecutor(len(urls) or 1) as pool:
+        fetched = dict(zip(urls, pool.map(fetch, urls.values())))
+    broken = []
+    for name, (_, prefixes) in indexes.items():
+        if fetched[name] is not None:
+            fetched[name] = page_links(fetched[name], prefixes) or None
+            if fetched[name] is None:
+                broken.append(name)
     today = datetime.date.today().isoformat()
     log = os.path.join(root, "log.md")
     if not os.path.exists(log):
@@ -92,6 +113,11 @@ def check(root, pages):
             "Anthropic guide pages changed since their last review: " + ", ".join(waiting)
             + ". Changed lines are in work/guides/diffs/. Review them at the next task close with the "
             "guides-check skill, not mid-task."
+        )
+    if broken:
+        notes.append(
+            ", ".join(broken) + " has no page links: the index format may have changed, so new guide pages "
+            "are not being found. Fix INDEXES in .claude/hooks/guides-check.py at the next task close."
         )
     started = (read(log) or "").split("logged from ")[-1][:10]
     told = os.path.join(root, "frequency-told")
@@ -122,11 +148,12 @@ def main():
     project = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
     root = os.path.join(project, "work", "guides")
     pages = json.loads(os.environ["GUIDES_CHECK_PAGES"]) if os.environ.get("GUIDES_CHECK_PAGES") else PAGES
+    indexes = json.loads(os.environ["GUIDES_CHECK_INDEXES"]) if "GUIDES_CHECK_INDEXES" in os.environ else INDEXES
     if sys.argv[1:2] == ["--reviewed"]:
-        mark_reviewed(root, list(pages) if sys.argv[2:] == ["all"] else sys.argv[2:])
+        mark_reviewed(root, [*pages, *indexes] if sys.argv[2:] == ["all"] else sys.argv[2:])
         return
     try:
-        text = check(root, pages)
+        text = check(root, pages, indexes)
     except OSError:
         return
     if text:

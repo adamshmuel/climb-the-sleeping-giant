@@ -21,14 +21,19 @@ class GuidesCheck(unittest.TestCase):
         with open(os.path.join(self.site, name + ".md"), "w") as f:
             f.write(text)
 
-    def env(self, pages=None):
+    def env(self, pages=None, indexes=None):
         pages = pages or {"hooks": "file://" + os.path.join(self.site, "hooks.md")}
-        return dict(os.environ, CLAUDE_PROJECT_DIR=self.project, GUIDES_CHECK_PAGES=json.dumps(pages))
+        return dict(
+            os.environ,
+            CLAUDE_PROJECT_DIR=self.project,
+            GUIDES_CHECK_PAGES=json.dumps(pages),
+            GUIDES_CHECK_INDEXES=json.dumps(indexes or {}),
+        )
 
-    def start(self, pages=None):
+    def start(self, pages=None, indexes=None):
         data = {"hook_event_name": "SessionStart", "source": "startup"}
         out = subprocess.run(
-            [sys.executable, HOOK], input=json.dumps(data), capture_output=True, text=True, env=self.env(pages)
+            [sys.executable, HOOK], input=json.dumps(data), capture_output=True, text=True, env=self.env(pages, indexes)
         )
         result = json.loads(out.stdout) if out.stdout.strip() else {}
         return result.get("hookSpecificOutput", {}).get("additionalContext", "")
@@ -68,6 +73,37 @@ class GuidesCheck(unittest.TestCase):
         missing = {"hooks": "file://" + os.path.join(self.site, "gone.md")}
         self.assertEqual(self.start(missing), "")
         self.assertFalse(os.path.exists(self.guides("reviewed", "hooks.md")))
+
+    def index(self, *links):
+        self.page("llms", "# Docs\n\n" + "".join(f"- [Page](https://docs.test/{link}): about it\n" for link in links))
+        return {"index-docs": ["file://" + os.path.join(self.site, "llms.md"), ["https://docs.test/en/"]]}
+
+    def test_a_new_page_in_an_index_is_named(self):
+        self.start(indexes=self.index("en/hooks.md"))
+        text = self.start(indexes=self.index("en/hooks.md", "en/plugins.md"))
+        self.assertIn("index-docs (+1 -0 lines)", text)
+        with open(self.guides("diffs", "index-docs.diff")) as f:
+            self.assertIn("+https://docs.test/en/plugins.md", f.read())
+
+    def test_index_pages_outside_its_sections_and_new_descriptions_say_nothing(self):
+        self.start(indexes=self.index("en/hooks.md"))
+        self.page("llms", "- [Hooks guide](https://docs.test/en/hooks.md): new words\n- [X](https://docs.test/api/x.md)\n")
+        self.assertEqual(self.start(indexes={"index-docs": [
+            "file://" + os.path.join(self.site, "llms.md"), ["https://docs.test/en/"]]}), "")
+
+    def test_an_index_with_no_page_links_is_reported(self):
+        indexes = self.index("en/hooks.md")
+        self.page("llms", "# Docs moved\n")
+        self.assertIn("index-docs has no page links", self.start(indexes=indexes))
+        self.assertFalse(os.path.exists(self.guides("reviewed", "index-docs.md")))
+
+    def test_marking_all_reviewed_includes_the_indexes(self):
+        self.start(indexes=self.index("en/hooks.md"))
+        self.start(indexes=self.index("en/hooks.md", "en/plugins.md"))
+        env = self.env(indexes=self.index("en/hooks.md", "en/plugins.md"))
+        self.assertTrue(os.path.exists(self.guides("diffs", "index-docs.diff")))
+        subprocess.run([sys.executable, HOOK, "--reviewed", "all"], env=env, check=True)
+        self.assertFalse(os.path.exists(self.guides("diffs", "index-docs.diff")))
 
 
 if __name__ == "__main__":
