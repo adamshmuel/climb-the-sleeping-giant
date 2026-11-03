@@ -2,6 +2,11 @@
 
 **The goal: a game that can go viral.** Every look, feel and gameplay decision answers "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (`.claude/rules/viral-goal.md`). This comes before every other rule.
 
+## Follow Anthropic's guides
+The agent setup (this file, `.claude/rules`, `agents`, `skills`, `hooks`, settings and the workflow) follows Anthropic's official guides: [best practices](https://code.claude.com/docs/en/best-practices), [memory](https://code.claude.com/docs/en/memory), [subagents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks).
+- Before any setup change or suggestion, Adam's included, check the guide and say in one line: it fits, or the better way the guide gives, with the link (Adam, 2026-11-03).
+- `.claude/hooks/setup-guides.py` enforces it: it reminds on every prompt about the setup and every setup edit, blocks CLAUDE.md or a rule file growing past 200 lines (SKILL.md past 500), and blocks shell writes to setup files.
+
 Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox Studio is driven through the Roblox Studio MCP.
 
 ## Layout (default.project.json)
