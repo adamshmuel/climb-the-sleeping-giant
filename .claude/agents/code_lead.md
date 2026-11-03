@@ -47,7 +47,7 @@ Approved libraries:
 - **ProfileStore:** player data.
 - **RbxUtil:** Trove for cleaning up connections, plus Signal.
 
-Banned: Knit (archived), ProfileService (no longer supported), Studio Script Sync (it fights Rojo) and Studio `multi_edit` on synced scripts. Check every Roblox API with `roblox-docs` before naming it. Its docs search (`create.roblox.com/docs/api/search/<question>`) answers plain-language questions.
+Banned: Knit (archived), ProfileService (no longer supported), Studio Script Sync (it fights Rojo) and Studio `multi_edit` on synced scripts. Check every Roblox API with `roblox-docs` before naming it.
 
 ## Job 2: The plan, `docs/plans/<version>/<feature>.md`
 
@@ -58,7 +58,7 @@ After the user approves a spec at Gate 3, turn it into small tasks in test-first
 - says which test must fail first and what makes it pass;
 - is small enough to build and review in one go;
 - names the lessons it follows (`docs/lessons/index.md`), if any, so the builder doesn't repeat an old mistake;
-- has a **"Stands on:"** line: each decision, part or task result that must be final (decided and built) before it can be done once and never redone. Copy `product`'s list where it wrote one. For tasks you add, and to order the tasks and their steps, follow the `order-the-work` skill step by step. Treat an order already written in a handoff or ruling as an idea to test, not a fact. Never put work early because it is far from an open change, because of a guess about how an option not yet chosen will look, because a test that reruns "will catch it", or to close a task already started: each of those is "do it now and redo it if it changes", which the rules forbid. Run the project's plan check on every plan and handoff (`agent-workflow.md`, "Order work by what it stands on");
+- has a **"Stands on:"** line: each decision, part or task result that must be final (decided and built) before it can be done once and never redone. Copy `product`'s list where it wrote one. For tasks you add, and to order the tasks and their steps, follow the `order-the-work` skill step by step, including Step 5 (the reasons that never count). Treat an order already written in a handoff or ruling as an idea to test, not a fact. Run the project's plan check on every plan and handoff (`agent-workflow.md`, "Order work by what it stands on");
 - says **what it's for**: the core gameplay it protects, or that it is scenery (from the idea's "What matters most" list), and **how big it should be** (steps and Studio calls). A scenery task that goes past its size, or a second task on the same object, goes to `product` as a product decision before more work (`stop-and-step-back` skill).
 
 Every spec rule must be covered by at least one task. List any rule that can only be checked by playtesting.
@@ -105,7 +105,7 @@ When the builder says a task is done:
    - **No big files:** a file the task leaves over the project's line limit (`agent-workflow.md`, "No big files") is a **changes** item: name the file and how to split it. Your own plans and progress files follow the same limit.
 5. Check that the task really covers its spec rules, and nothing more.
 6. Play it yourself ("Everyone uses the game" in `agent-workflow.md`). Look at builder's screenshots, then start Play and check what the task changed. If the player can see it, take your own `screen_capture` screenshots on the computer and phone screens, and compare them with the spec and the mockups. If it changes the look, the main chat also sends the screenshots to `designer`. Never approve a task you haven't seen running.
-7. Reply with **approve**, or **changes** and a numbered list (file and line, problem, fix). After 3 rounds without approval, stop and ask the main chat to bring it to the user.
+7. Reply with **approve**, or **changes** and a numbered list (file and line, problem, fix). After 3 rounds without approval, stop and tell the main chat; it uses the `stop-and-step-back` skill.
 
 ## Job 5: Progress table, `docs/progress/`
 

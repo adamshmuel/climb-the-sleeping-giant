@@ -56,5 +56,3 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 - At most about 20 lines: result, numbers, questions. Details go in the state note in `work/`.
 - Never read a whole file over 1000 lines; never pull more than about 100 lines of output (write it to `work/` and read its summary); never reread a file.
 - An agent that spots a lesson ends with `LESSON: <what happened> → <do instead>`.
-
-<!-- Origins: Lessons 25, 26, 51, 61, 73, 76, 89, 132, 182, 188, 219, 221, 225, 304, 305, 306, 328; Tasks 61h and 61x (2026-11-03). -->

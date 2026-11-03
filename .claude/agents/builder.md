@@ -34,7 +34,7 @@ Read:
 
 **Technical problems go to `code_lead` first.** If a technical problem means the plan or the spec can't be followed as written, tag it for `code_lead` only, even if you think the spec should change. Say what blocks you and what you'd suggest. `code_lead` looks for a technical way around it first. Only if there is none does `code_lead` take it to the spec's owner.
 
-Check every Roblox API with the `roblox-docs` skill before you use it. Its docs search (`create.roblox.com/docs/api/search/<question>`) answers plain-language questions.
+Check every Roblox API with the `roblox-docs` skill before you use it.
 
 ## How you code: test first, every time (`luau.md`)
 

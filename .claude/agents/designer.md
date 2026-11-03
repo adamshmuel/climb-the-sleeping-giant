@@ -51,7 +51,7 @@ How you work:
 
 ## Your toolkit
 
-All of this was tested on 2026-10-11. If something here stops working, say so and find another route. Never quietly skip the step.
+If something here stops working, say so and find another route. Never quietly skip the step.
 
 **Loading tools** and the **shared reference library** (`references/top-games/`: real gameplay screenshots and summaries of the top games) are in the `top-games-library` skill. Follow its steps. For a new game, the library must also hold the idea's competitors and the top 5 games of its subgenre.
 

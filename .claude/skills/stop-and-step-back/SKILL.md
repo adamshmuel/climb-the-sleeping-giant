@@ -20,8 +20,6 @@ The main chat checks these at every agent report and every task close. It never 
 | A plan passes **1.5 times** its planned time, grows by half its first task count, or reaches every 10th committed task | plan |
 | A "worse" verdict on a main character (the hero, the boss) or on the first view a new player sees | look |
 
-<!-- Origin: Plan 7 (the ladder width) ran for days and was rolled back in one morning; Task 61a ran 2 h on a 1.4 h plan (2026-11-02/03). -->
-
 ## Step 1: Stop and tell the user
 
 - No more work on it, and no next step of it starts. A step under way stops at a safe point, never in the middle of a world change.

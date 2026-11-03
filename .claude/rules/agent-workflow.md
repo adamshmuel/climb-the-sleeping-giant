@@ -24,9 +24,6 @@ Every agent, in every job:
 - **Briefs don't steer.** A brief gives the player's problem, the facts, the cost so far and what it blocks, and the questions. It never hints at an answer.
 - **See the options before choosing** between looks or ways to play (`look-check` skill).
 - **No "later".** Each option is in or out now (`docs.md`).
-
-<!-- Origins: the plank from the arm to the cap ties came from the user, not the team (2026-11-02). -->
-
 ## Order work by what it stands on
 
 Work done in the wrong order gets done twice. The method is the `order-the-work` skill; this game's layer map is `docs/layers.md`.

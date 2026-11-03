@@ -28,7 +28,7 @@ Each numbered step needs the user's go-ahead to start. Inside coding, the main c
 ## Reviews
 
 - Every review replies **approve** or **changes**, plus a numbered list.
-- **Review rounds stop at 3.** After 3 rounds without approval, the main chat asks the user. This limit is for review rounds only.
+- **Review rounds stop at 3.** After 3 rounds without approval, the main chat uses the `stop-and-step-back` skill (loop). This limit is for review rounds only.
 
 ## No open questions at a gate
 

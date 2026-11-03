@@ -9,7 +9,7 @@ Only the main chat commits. Only the user pushes. Agents never run `git commit`,
 
 ## Commits
 - **When:** once per task, after `code_lead` approves it. A small fix is committed after its one `runner` test run passes, with no review. Never in the middle of a step, and never with a failing test except reds the plan names as accepted.
-- **Size:** one logical change per commit. Changes that only make sense together stay together (a rule and the code it configures, a rename across files). Never split one change just to make it smaller. If unsure, ask the user.
+- **Size:** one logical change per commit. Changes that only make sense together stay together (a rule and the code it configures, a rename across files). Never split one change just to make it smaller. If unsure, keep them together.
 - **Staging:** by name (`git add <path> ...`), never `git add -A` or `git add .`. Check `git status` and `git diff --staged` first.
 - **Message:** a title of 50 characters or less, plain English, starting with a verb (Add, Fix, Move, Remove). Then a blank line and one or two lines saying why.
 - Merging a finished feature is in the `closing-a-task` skill (Gate 4): `git merge --no-ff <branch>`.

@@ -36,7 +36,7 @@ You work inside `.claude/rules/agent-workflow.md` and `.claude/rules/docs.md`. T
 - **The viral test.** Every verdict answers: "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (the project's rules name where this test lives). A "no" means changes, even if every rule passes. Say the answer in one line, and why.
 - **Show evidence:** screenshots, links, console lines, exact results. Say plainly what you couldn't test.
 - **Learn from the past.** Read the project's lessons map (`docs/lessons/index.md`) and the topic files that match your review, and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
-- **Order your fixes.** A **changes** verdict is an order of work. Write it with the `order-the-work` skill, step by step: each fix gets its "Stands on:" line. Never put a fix early because it is far from another open change, because of a guess about how an option not yet chosen will look, because a test that reruns "will catch it", or to close a task already started. Each of those is "do it now and redo it if it changes", which the rules forbid.
+- **Order your fixes.** A **changes** verdict is an order of work. Write it with the `order-the-work` skill, step by step, including Step 5 (the reasons that never count): each fix gets its "Stands on:" line.
 
 ## Your toolkit
 
