@@ -92,14 +92,17 @@ end
 -- ends, otherwise nil, and the new state. A third value is the drop report when a fall from the cap, a cap tie or a
 -- tie's landing (or a let-go straight from a climb) ends on the giant or his head: a fast fall without a jump in
 -- those zones adds no thud when it ends on the giant (HeadDropTo), a jump from them still thuds. At most one thud a tick: more are kept to come on the next ticks.
--- `climbing` is true while the Humanoid is in its Climbing state.
+-- `climbing` is true while the Humanoid is in its Climbing state. `onCapTie` (optional) says the climber is on a cap
+-- tie: that climb counts as from the head at any height (Task 61h). A fall with no jump from the head is also quiet
+-- when it ends on the cap (Nightcap), with a drop report.
 function LandingDetector.step(
 	state: State,
 	grounded: boolean,
 	verticalSpeed: number,
 	zone: Config.ZoneName,
 	takeoffs: { Config.ZoneName },
-	climbing: boolean
+	climbing: boolean,
+	onCapTie: boolean?
 ): (Config.ZoneName?, State, Drop?)
 	local fellFast = state.fellFast or verticalSpeed < -FAST_FALL
 	local atRest = LandingDetector.isAtRest(grounded, verticalSpeed)
@@ -144,7 +147,7 @@ function LandingDetector.step(
 			falling = false,
 			fellFast = false,
 			jumped = false,
-			fromClimb = state.fromClimb or listHas(Config.Noise.HeadDropFrom, zone),
+			fromClimb = state.fromClimb or onCapTie == true or listHas(Config.Noise.HeadDropFrom, zone),
 			highest = zone,
 			restTicks = 0,
 			owed = due,
@@ -155,7 +158,8 @@ function LandingDetector.step(
 		if restTicks >= REST_TICKS then
 			local fromHead = state.fromClimb or listHas(Config.Noise.HeadDropFrom, state.highest)
 			local toGiant = listHas(Config.Noise.HeadDropTo, zone)
-			local quiet = fellFast and not state.jumped and fromHead and toGiant
+			-- With no jump, the cap itself is a quiet landing too (no height limit).
+			local quiet = fellFast and not state.jumped and fromHead and (toGiant or zone == "Nightcap")
 			local thuds = (fellFast or state.jumped) and not quiet
 			if thuds then
 				table.insert(due, state.highest)

@@ -22,6 +22,7 @@ local Catcher = require(script.Giant.Catcher)
 local GiantDirector = require(script.Giant.GiantDirector)
 local SlamSurface = require(script.Giant.SlamSurface)
 local CapDrop = require(script.Players.CapDrop)
+local CapTieSpots = require(script.Players.CapTieSpots)
 local Collisions = require(script.Players.Collisions)
 local Floater = require(script.Players.Floater)
 local JumpWatcher = require(script.Players.JumpWatcher)
@@ -147,6 +148,9 @@ local pillowRay = RaycastParams.new()
 pillowRay.FilterType = Enum.RaycastFilterType.Include
 pillowRay.FilterDescendantsInstances = { pillow }
 
+-- The cap ties, read once: a climb on one counts as a climb from the head at any height (Task 61h).
+local capTieBoxes = CapTieSpots.boxes(world:FindFirstChild("WalkSurfaces"))
+
 -- The giant's sleep meter: it reads every player's position ten times a second.
 local tracker = PlayerTracker.new({
 	getPlayers = function()
@@ -160,6 +164,9 @@ local tracker = PlayerTracker.new({
 	end,
 	onPillow = function(position: Vector3): boolean
 		return Workspace:Raycast(position, Vector3.new(0, -PILLOW_RAY_STUDS, 0), pillowRay) ~= nil
+	end,
+	onCapTie = function(position: Vector3): boolean
+		return CapTieSpots.sideAt(capTieBoxes, position) ~= nil
 	end,
 	now = os.clock,
 })

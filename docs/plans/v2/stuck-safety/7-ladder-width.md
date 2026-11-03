@@ -163,7 +163,7 @@ What the angle trial found: the tie's outer face climbs on the first try only fr
 
 **Every task is planned at 1 hour or less,** because the main chat stops any task at 1 hour (`CLAUDE.md`, "Red flag"). So four old tasks are split in two, by goal: the right tie (61b builds, 61j proves), the walkways (61w builds, 61x walks and judges the look), and the whole-play check (63 runs the tests and the bot, 63b takes the shots). No work is added by the split.
 
-**Hours: about 23.7 in all** (about 15.6 used, about 8.1 left), under the 26-hour limit with about 2.3 hours spare. On 2026-11-03 code_lead added Task 61n (0.4 h) and 0.1 h on Task 61h: Task 61h named the "CapToCapFall" event and the cap-to-cap quiet fall, but its steps never budgeted them. Task 61i ended 3 of 3 on top (2026-11-03), so the joint filler (Task 61k) is not built. "Used" is code_lead's estimate; the main chat's start-time log is the real number. The 10-task check (product, 2026-11-03, `work/red-alert-plan7/ten-task-decision.md`, with game_creator's yes in `work/red-alert-plan7/ten-task-gc-agree.md`) saved about 2.0 hours: Task 61i keeps only the rail joint case, Task 61j proves the right tie only, Task 61x is a look check only, and Task 63b takes shots only (the real-controls play is the build review's job, by Rule 101's proof list).
+**Hours: about 24.4 in all** (about 15.6 used, about 8.8 left), under the 26-hour limit with about 1.6 hours spare. On 2026-11-03 product's loop ruling (`work/t61h/loop2-decision.md`) added Task 61c (0.4 h) and moved every let-go Play case into a new Task 61v (0.5 h, split from Task 61w so no task passes 1 hour), which also takes Task 61j's quiet fall (Task 61j -0.1 h, Task 61w -0.1 h). On 2026-11-03 code_lead added Task 61n (0.4 h) and 0.1 h on Task 61h: Task 61h named the "CapToCapFall" event and the cap-to-cap quiet fall, but its steps never budgeted them. Task 61i ended 3 of 3 on top (2026-11-03), so the joint filler (Task 61k) is not built. "Used" is code_lead's estimate; the main chat's start-time log is the real number. The 10-task check (product, 2026-11-03, `work/red-alert-plan7/ten-task-decision.md`, with game_creator's yes in `work/red-alert-plan7/ten-task-gc-agree.md`) saved about 2.0 hours: Task 61i keeps only the rail joint case, Task 61j proves the right tie only, Task 61x is a look check only, and Task 63b takes shots only (the real-controls play is the build review's job, by Rule 101's proof list).
 
 | Order | Piece | Hours left | Stands on |
 |---|---|---|---|
@@ -172,15 +172,17 @@ What the angle trial found: the tie's outer face climbs on the first try only fr
 | done | Task 61i: the left tie's rail joint is a fair climb at -20° | 0 (3 of 3 on top, no commit) | Task 61a, Lesson 297 (Play jobs retry like a player before STUCK) |
 | not needed | Task 61k: a hidden filler at the rail joint, only if Task 61i ends STUCK | 0 (not needed: 61i 3 of 3) | Task 61i's result |
 | 3 | Task 61h: any fall from the left cap tie, and any no-jump fall onto the cap, is quiet | 0.8 | Task 61i (done, no filler), Task 61d, the Rule 8 and Rule 101 spec change |
+| 3b | Task 61c: the CapDrop event's fields reach analytics | 0.4 | nothing |
 | 4 | Task 61b: the right tie is built, mirrored, with the tie tests | 1.0 | Task 61i, Task 61h, the reach walk |
-| 5 | Task 61j: the right tie climbs, and falls from it are quiet | 0.7 | Task 61b, Task 61h |
-| 5b | Task 61n: cap-to-cap falls and cap egg grabs are counted per trip | 0.4 | Task 61h, Task 61j |
-| 6 | Task 61w: the walkways with their chutes are built | 0.9 | designer's chute shape, Task 61j, the reach walk |
+| 5 | Task 61j: the right tie climbs, and falls from it are quiet | 0.6 | Task 61b, Task 61h |
+| 5b | Task 61n: cap-to-cap falls and cap egg grabs are counted per trip | 0.4 | Task 61h, Task 61c, Task 61j |
+| 6 | Task 61w: the walkways with their chutes are built | 1.0 | designer's chute shape, Task 61j, the reach walk |
+| 6b | Task 61v: a let-go from either tie ends quiet on the giant or in the chute | 0.5 | Task 61w, Task 61c, Task 61h's case 4 lines |
 | 7 | Task 61x: the walkway look check | 0.3 | Task 61w |
 | 8 | Task 61r: a rescue from a tie lands at the chute's end, lined up | 1.0 | Task 61a, Task 61j, Task 61x |
 | 9 | Task 62a: the footprints run straight down each chute | 0.7 | Task 61j, Task 61x |
 | 10 | Task 62b: Rare eggs 3 and 4 go back, and walk both ways | 1.0 | Task 61j, Task 62a, the reach walk |
-| 11 | Task 63: the full run, the bot walk and the home times | 1.0 | Task 61d, Task 61h, Task 61j, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n |
+| 11 | Task 63: the full run, the bot walk and the home times | 1.0 | Task 61d, Task 61h, Task 61j, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n, Task 61c, Task 61v |
 | 12 | Task 63b: the shots on computer and phone, both ties | 0.3 | Task 63 |
 
 **Why this order** (the `order-the-work` steps, product's 10-task decision): the rail joint is the last open question about the left tie's shape. Task 61i answers it before anything else stands on that shape. If it ends STUCK, Task 61k fixes the joint (never the rescue), so the left tie is final. Task 61h comes next, because its quiet-fall check must name every part of the tie, including a filler if one is built. The right tie mirrors a final left tie, top, joint and falls. The walkways end at both final tie feet; the rescue spot is the chute's end, so 61r comes after the walkway is final; the footprints run down the built chute; the eggs wait for the footprint line; the full run and the shots come once, after every change to the ways up and home.
@@ -366,7 +368,24 @@ Stands on: Task 61i (done: 3 of 3 on top, so no filler), Task 61d, the Rule 8 (S
   4. the drop script, written and dry run in Edit, then read by code_lead (Sonnet, 1 Studio call, 20 tool calls);
   5. the drops in Play, with the low let-go and the puff shots (Sonnet, at most 16 Studio calls, at most 28 tool calls).
 - **Commit:** its own commit, once approved.
+- **Case 4 (the low let-go) closed on rerun 2's lines** (product, 2026-11-03, `work/t61h/loop2-decision.md`): 0 thuds, 1 puff, camera 0°, on the giant within 5 studs of the tie's foot, Belly zone. The job's end rule and the held-back case move to Task 61v.
 - **Lessons:** 41, 219 and 221 (measured spots), 225, 253.
+
+## Task 61c: The CapDrop event's fields reach analytics
+
+Stands on: nothing.
+
+- **What it's for:** the business goals. The "CapDrop" event (how a player came down from the cap) tunes the climb. Today Studio warns that its third field holds characters Roblox rejects (`,` `"` `'`), so the values may never arrive. Found in Task 61h's Play runs.
+- **Spec rules:** spec 5's section 10 row "CapDrop" (how the drop ended: pillow, face, shoulders or belly).
+- **Files:** `src/server/Analytics.luau` (around line 612, the third field "woke ..., egg ..." loses its comma, for example "woke no - egg no"), its spec.
+- **Failing test first:** "no CapDrop field holds a character Roblox rejects", run through the real Analytics module with a fake analytics service that records every field. The same test sends all four endings (pillow, face, shoulders, belly) and checks each arrives as a plain value (game_creator, `work/t61h/loop2-gc-check.md`). It passes when the third field is built without the comma.
+- **How big:** 3 steps, 4 Studio calls, 0.4 h:
+  1. the red test and its narrow red run (Sonnet, 1 Studio call, 18 tool calls, 10 minutes);
+  2. the change and its narrow green run (Sonnet, 1 Studio call, 14 tool calls, 8 minutes);
+  3. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls, 6 minutes).
+- **Played:** nothing a player sees changes. Task 61v's Play runs read the console once: no field warning, and each "CapDrop" line shows plain values.
+- **Commit:** its own commit, once approved.
+- **Lessons:** 41, 188.
 
 ## Task 61b: The right tie is built, mirrored, with the tie tests
 
@@ -396,11 +415,11 @@ Stands on: Task 61b (the right tie built, full run green), Task 61h (the quiet-f
 
 - **What it's for:** fairness. A player on the right gets the same first-try climb and quiet way home as on the left.
 - **Spec rules:** Rule 101 (Ladders hold you); spec 5's Rule 8 (Steps make noise).
-- **The proof list** (right tie only, session hold, smoke run first, each case starts standing at the foot): pushes at 0°, ±15° and ±20°; the mirrored rail joint case three times (Task 61i's retry, flipped: x times -1); one quiet fall from the tie; one cap-to-cap fall on the right fold. Not a both-tie sweep: the left tie is proven by Tasks 61a, 61i and 61h. Every case retries like a player and shoots any stall (Lesson 297).
+- **The proof list** (right tie only, session hold, smoke run first, each case starts standing at the foot): pushes at 0°, ±15° and ±20°; the mirrored rail joint case three times (Task 61i's retry, flipped: x times -1); one cap-to-cap fall on the right fold. The quiet let-go from the right tie is in Task 61v, after the chute is built under it (product, 2026-11-03). Not a both-tie sweep: the left tie is proven by Tasks 61a, 61i and 61h. Every case retries like a player and shoots any stall (Lesson 297).
 - **Fix only if the proof finds it:** a STUCK at the mirrored joint gets a hidden filler built the way Task 61k planned it (red test first); any other STUCK goes to `product` as a product decision.
-- **How big:** 5 steps, about 14 Studio calls, 0.7 h:
+- **How big:** 5 steps, about 12 Studio calls, 0.6 h:
   1. smoke run, then the five band climbs and the joint case (Sonnet, at most 10 Studio calls, at most 26 tool calls);
-  2. the quiet fall and the cap-to-cap fall (Sonnet, at most 6 Studio calls, at most 16 tool calls);
+  2. the cap-to-cap fall (Sonnet, at most 4 Studio calls, at most 12 tool calls);
   3. the fix, only if needed, then a narrow run, then a full run by the runner if a fix fired (Sonnet then Haiku, 3 Studio calls, 15 tool calls);
   4. after shots from the same cameras as Task 61b's before shots (Sonnet, 4 Studio calls, 12 tool calls);
   5. designer judges each pair, left and right side by side (Opus, 0 Studio calls, 10 tool calls).
@@ -441,8 +460,27 @@ Stands on: designer's chute shape (`work/red-flag-61a/designer-angle.md`, final)
   1. the red test, a narrow run (Sonnet, 2 Studio calls, 18 tool calls);
   2. before shots from every fixed camera in `docs/design/v2/look-cameras.md` that shows a tie's foot (at least gate 1, gate 8 and the first view), computer and phone (Sonnet, 4 Studio calls, 12 tool calls);
   3. script 21 builds both sides, the narrow run goes green (Sonnet, 2 Studio calls, 20 tool calls);
-  4. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls).
-- **After shots and designer's check:** in Task 61x. **Commit:** Tasks 61w and 61x together.
+  4. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls);
+- **After shots and designer's check:** in Task 61x. **Commit:** Tasks 61w, 61v and 61x together.
+
+## Task 61v: A let-go from either tie ends quiet on the giant or in the chute
+
+Stands on: Task 61w (both walkways and chutes built, full run green), Task 61c (the CapDrop fields fixed, full run green), Task 61h's case 4 lines (`work/t61h/state.md`, rerun 2, final).
+
+- **What it's for:** core gameplay and fairness. A player who lets go low on either tie lands quietly on the giant, never in the meadow.
+- **Spec rules:** Rule 101 (Ladders hold you); spec 5's Rule 8 (Steps make noise); spec 5's section 10 row "CapDrop" (Task 61c's live proof).
+- **The cases** (session hold, smoke run first, each starts standing at the tie's foot; both ties, the same pass):
+  - **the low let-go:** climb to y 63 and let go. Pass: 0 thuds, 1 puff, camera 0°, lands on the giant within 5 studs of the tie's foot, Belly zone. Landing on the chute deck counts as the Belly zone: quiet, 1 puff, "CapDrop" ending "shoulders" or "belly" (game_creator, `work/t61h/loop2-gc-check.md`);
+  - **the held-back case:** the same let-go, holding "back" for 2 s. The same pass.
+- **The end rule:** a try ends when he stands on a floor again after the let-go. It is written from one let-go traced every 0.1 s (his state, his height and the part under him), never by the clock. A held push away from a truss makes him climb down it, so "in the air" alone never ends a try (Task 61h, rerun 2).
+- **Game signals:** thuds from the GiantState "Meter" attribute; the puff count and the landing spot from the client's down ray; "CapDrop" from the console line (`src/server/init.server.luau`, `onDrop`).
+- **A fail** goes to `designer` and `game_creator` to shape the chute (Rule 101 (Ladders hold you)).
+- **How big:** 3 steps, about 9 Studio calls, 0.5 h:
+  1. one let-go traced every 0.1 s on the left tie, dry run in Edit first (Sonnet, 3 Studio calls, 14 tool calls, 10 minutes);
+  2. code_lead writes the end rule from the trace into the job and reads the job (Opus, 0 Studio calls, 8 tool calls, 8 minutes);
+  3. the four cases, two per tie, plus one console read (Sonnet, at most 6 Studio calls, at most 24 tool calls, 12 minutes).
+- **Played:** nothing new is seen; this proves the chute under the let-go.
+- **Lessons:** 225, 253, 297; "a let-go case on a spot a later task builds over moves into that task" (product, 2026-11-03).
 - **Lessons:** 2 (change the scenery, not the giant), 219 and 221 (measured spots), 225 (smoke run first).
 
 ## Task 61x: The walkway look check
@@ -514,7 +552,7 @@ Stands on: Task 61j, Task 62a (the footprint line ends where players reach), the
 
 ## Task 63: The full run, the bot walk and the home times
 
-Stands on: Task 61d, Task 61j, Task 61h, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n.
+Stands on: Task 61d, Task 61j, Task 61h, Task 61r, Task 61x, Task 62a, Task 62b, Task 61m, Task 61n, Task 61c, Task 61v.
 
 - **What it's for:** core gameplay safety. A whole-play check reads the ways up, the way home, the eggs and the gardens together, so it runs once, after every change to them.
 - **Spec rules:** Rule 21 (The stuck scan runs on every test run); Rule 24 (A bot walks every way), including section 5's "Chute at each walkway's end" row; section 5's "Left and right home times from the cap" row (within 2 seconds); section 5's Top-out creep row (product, 2026-11-03, `work/red-alert-plan7/plan-rewrite-product.md`).

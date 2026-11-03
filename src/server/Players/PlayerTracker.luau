@@ -63,6 +63,10 @@ export type Deps = {
 	takeoffs: (character: Model) -> { Vector3 },
 	-- Is this landing spot on the pillow? Asked only on the tick a drop ends. Without it, nothing is on the pillow.
 	onPillow: ((position: Vector3) -> boolean)?,
+	-- Is this climbing spot on a cap tie? Asked only on ticks where the character is climbing (Task 61h).
+	onCapTie: ((position: Vector3) -> boolean)?,
+	-- Is this character in its Climbing state? Injected so tests can fake it; without it, the Humanoid's state is read.
+	isClimbing: ((character: Model) -> boolean)?,
 	now: () -> number, -- the clock in seconds (os.clock), injected so tests can set the time by hand
 }
 
@@ -252,7 +256,10 @@ function PlayerTracker.new(deps: Deps): Tracker
 				local grounded = deps.isGrounded(character)
 				local verticalSpeed = root.AssemblyLinearVelocity.Y
 				local humanoid = character:FindFirstChildOfClass("Humanoid")
-				local climbing = humanoid ~= nil and humanoid:GetState() == Enum.HumanoidStateType.Climbing
+				local climbing = if deps.isClimbing ~= nil
+					then deps.isClimbing(character)
+					else humanoid ~= nil and humanoid:GetState() == Enum.HumanoidStateType.Climbing
+				local onCapTie = climbing and deps.onCapTie ~= nil and deps.onCapTie(root.Position)
 				local moving = false
 				local thudFrom: Config.ZoneName?
 				local drop: LandingDetector.Drop?
@@ -274,7 +281,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 					local fresh = LandingDetector.new(place.zone)
 					fresh.owed = memory.landing.owed
 					thudFrom, memory.landing =
-						LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {}, climbing)
+						LandingDetector.step(fresh, grounded, verticalSpeed, place.zone, {}, climbing, onCapTie)
 					table.clear(memory.readings)
 					recordReading(memory, deps.now(), root.Position, grounded)
 					memory.lastPosition = root.Position
@@ -292,7 +299,8 @@ function PlayerTracker.new(deps: Deps): Tracker
 						verticalSpeed,
 						place.zone,
 						takeoffZones,
-						climbing
+						climbing,
+						onCapTie
 					)
 				end
 				table.insert(samples, {

@@ -21,6 +21,7 @@ local TICK_SECONDS = 0.1
 local LANDING = Vector3.new(-27.5, 113.5, 32) -- the tie's landing, in the Nightcap box below
 local PILLOW = Vector3.new(-45.6, 54, 32) -- the pillow drop spot, in the Belly box below
 local SHOULDER_Y = 57
+local TIE_FOOT = Vector3.new(-38.7, 57.4, 32.45) -- the foot of the left cap tie, in the Belly box below
 
 local zoneBoxes: { Zones.ZoneBox } = {
 	{ zone = NIGHTCAP, cframe = CFrame.new(0, 120, 0), size = Vector3.new(200, 40, 200) }, -- y 100 to 140
@@ -28,16 +29,19 @@ local zoneBoxes: { Zones.ZoneBox } = {
 }
 
 type Rig = {
-	step: (position: Vector3, grounded: boolean, verticalSpeed: number) -> PlayerTracker.Sample,
+	step: (position: Vector3, grounded: boolean, verticalSpeed: number, climbing: boolean?) -> PlayerTracker.Sample,
 	destroy: () -> (),
 }
 
 -- A tracker for one brand-new player's character, reading once per 0.1 s tick. `onPillow` is true below y 60.
-local function newRig(start: Vector3): Rig
+-- `onCapTie` is the tracker's "is this spot on a cap tie" dep. `isClimbing` stands in for the Humanoid's Climbing state,
+-- which a character that isn't in the running world can't be put into.
+local function newRig(start: Vector3, onCapTie: boolean?): Rig
 	local character = TrackerRig.makeCharacter(start)
 	local players: { PlayerTracker.PlayerLike } = { { UserId = 1, Character = character } }
 	local time = 0
 	local grounded = true
+	local climbing = false
 	local deps: any = {
 		getPlayers = function()
 			return players
@@ -56,13 +60,27 @@ local function newRig(start: Vector3): Rig
 		onPillow = function(position: Vector3): boolean
 			return position.Y < 60
 		end,
+		isClimbing = function(_character: Model): boolean
+			return climbing
+		end,
+		onCapTie = if onCapTie == nil
+			then nil
+			else function(_position: Vector3): boolean
+				return onCapTie
+			end,
 	}
 	local tracker = PlayerTracker.new(deps)
 	local root = TrackerRig.rootOf(character)
 	return {
-		step = function(position: Vector3, onGround: boolean, verticalSpeed: number): PlayerTracker.Sample
+		step = function(
+			position: Vector3,
+			onGround: boolean,
+			verticalSpeed: number,
+			isClimbing: boolean?
+		): PlayerTracker.Sample
 			time += TICK_SECONDS
 			grounded = onGround
+			climbing = isClimbing == true
 			root.Position = position
 			root.AssemblyLinearVelocity = Vector3.new(0, verticalSpeed, 0)
 			return tracker:tick()[1]
@@ -158,6 +176,31 @@ describe("PlayerTracker whole session over the cap drop", function()
 		expect(walking).toBeCloseTo(expectedWalking, 5)
 		expect(samples[#samples].zone).toBe(BELLY)
 		expect(expectedWalking).toBeGreaterThan(0) -- he was heard walking home: the walk is not free
+
+		rig.destroy()
+	end)
+end)
+
+describe("PlayerTracker quiet drop from a cap tie", function()
+	it("a climber on a cap tie who lets go low and lands on the pillow gets a quiet drop sample", function()
+		local rig = newRig(TIE_FOOT, true)
+		local samples: { PlayerTracker.Sample } = {}
+		for i = 1, 3 do
+			table.insert(samples, rig.step(TIE_FOOT + Vector3.new(0, i, 0), false, 5, true))
+		end
+		for i = 1, 4 do
+			table.insert(samples, rig.step((TIE_FOOT + Vector3.new(0, 3, 0)):Lerp(PILLOW, i / 4), false, -20))
+		end
+		for _ = 1, 3 do
+			table.insert(samples, rig.step(PILLOW, true, 0))
+		end
+
+		for _, sample in samples do
+			expect(sample.thudFrom).toBeNil()
+		end
+		local last = samples[#samples] :: any
+		expect(last.drop).toEqual({ from = BELLY, to = BELLY, jumped = false, thudded = false })
+		expect(last.onPillow).toBe(true)
 
 		rig.destroy()
 	end)

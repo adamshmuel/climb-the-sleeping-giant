@@ -23,6 +23,7 @@ type Tick = {
 	zone: Config.ZoneName,
 	takeoffs: { Config.ZoneName }?,
 	climbing: boolean?,
+	onCapTie: boolean?,
 }
 type Drop = { from: Config.ZoneName, to: Config.ZoneName, jumped: boolean, thudded: boolean }
 type Result = { thuds: { Config.ZoneName }, drops: { Drop } }
@@ -35,9 +36,9 @@ local function add(ticks: { Tick }, count: number, grounded: boolean, speed: num
 	end
 end
 
-local function addClimb(ticks: { Tick }, count: number, zone: Config.ZoneName)
+local function addClimb(ticks: { Tick }, count: number, zone: Config.ZoneName, onCapTie: boolean?)
 	for _ = 1, count do
-		table.insert(ticks, { grounded = false, speed = 5, zone = zone, climbing = true })
+		table.insert(ticks, { grounded = false, speed = 5, zone = zone, climbing = true, onCapTie = onCapTie })
 	end
 end
 
@@ -63,7 +64,8 @@ local function run(startZone: Config.ZoneName, ticks: { Tick }): Result
 			tick.speed,
 			tick.zone,
 			tick.takeoffs or {},
-			tick.climbing == true
+			tick.climbing == true,
+			tick.onCapTie
 		)
 		if thud ~= nil then
 			table.insert(result.thuds, thud)
@@ -159,5 +161,27 @@ describe("LandingDetector head drop", function()
 
 		expect(result.thuds).toEqual({ BOOTS })
 		expect(#result.drops).toBe(0)
+	end)
+
+	it(
+		"climbing a cap tie from its foot, letting go low and ending on the pillow makes no thud, with a drop report",
+		function()
+			local ticks: { Tick } = {}
+			addClimb(ticks, 3, BELLY, true)
+			add(ticks, 4, false, FAST, BELLY)
+			add(ticks, 3, true, 0, BELLY)
+
+			local result = run(BELLY, ticks)
+
+			expect(#result.thuds).toBe(0)
+			expect(result.drops).toEqual({ { from = BELLY, to = BELLY, jumped = false, thudded = false } })
+		end
+	)
+
+	it("a fall with no jump from the cap that ends on the cap makes no thud, with a drop report", function()
+		local result = run(NIGHTCAP, fastFall(NIGHTCAP, NIGHTCAP))
+
+		expect(#result.thuds).toBe(0)
+		expect(result.drops).toEqual({ { from = NIGHTCAP, to = NIGHTCAP, jumped = false, thudded = false } })
 	end)
 end)
