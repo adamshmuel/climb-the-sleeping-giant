@@ -44,10 +44,10 @@ Each rule is written once, in its home. This table only names the home.
 | Scenery overrun | `world-parts` skill (scenery gets the cheap fix) | 2026-10-27 |
 | Studio busy ("not reachable") | `studio-jobs` skill and `.claude/agents/runner.md` (long work runs in the background; a full test run is fetched again, never started again) | 2026-10-27 |
 | Script error | `.claude/hooks/luau-paren-line.py` (blocks a Luau line that starts with "(") | 2026-10-27 |
-| Task over its size (step over its call cap) | `writing-handoffs` skill (every step lists its tool calls, reading included; one spare call per Play session; job files sized before the step; Play-only names marked) | 2026-11-03 |
+| Task over its size (step over its call cap) | `writing-handoffs` skill (every step lists its tool calls, reading included; a step names at most 5 files, with the exact functions or lines; one spare call per Play session; job files sized before the step; Play-only names marked) and `studio-jobs` skill (a background job writes a line after every try and a heartbeat, then is fetched once) | 2026-11-03 |
 | A new part fails an existing test | `world-parts` skill (a trial part also passes the tests for its kind) | 2026-10-27 |
 | A fill makes its own stuck spots | `world-parts` skill (a fill's top is a new floor) | 2026-10-27 |
-| Fix planned on an unconfirmed cause | `writing-handoffs` skill (trace before fixing: no fix without a measured cause) | 2026-10-27 |
+| Fix planned on an unconfirmed cause | `world-parts` skill (find the cause before the fix: a read-only check on about 5 real examples) and `writing-handoffs` skill (trace before fixing) | 2026-10-27 |
 | Over memory limit | `writing-handoffs` skill (memory and tool-call caps, one writer per job file) and `.claude/rules/agent-workflow.md` (a Studio script returns a short summary) | 2026-10-28 |
 | A job stopped before judging anything | `scripts/job-check.sh` and `scripts/job-props.py` (no part picked by a search, no stop on a cross-check count, real members only, `Net.waitForClient`, a dry start first) and `studio-jobs` skill (fresh counts) | 2026-10-29 |
 | A guessed placement spot in a brief or list | `writing-handoffs` skill (a placement list gives measured spots, or says "measure first") | 2026-11-02 |
