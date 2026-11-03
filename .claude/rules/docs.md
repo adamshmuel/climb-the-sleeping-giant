@@ -39,4 +39,6 @@ A rule keeps its number forever, so other documents can point to it. Analytics e
 - A doc over 100 lines starts with a table of contents. A reference doc (style guide, art list, build check) holds only what is true now: dated session logs and to-do lists go in their own file, linked from its index.
 - V1 is older: its design is in `docs/design/v1/`, its spec and plan in `docs/specs/core-heist.md` and `docs/plans/core-heist.md`.
 
+`.claude/hooks/docs-check.py` checks the contents list, links and "TBD" after every docs edit and at each task close (`scripts/health.py`). The rest of this rule needs judgment.
+
 Before a document goes to a review or a gate, re-read it as the user would. Rewrite any line that needs knowledge they don't have.

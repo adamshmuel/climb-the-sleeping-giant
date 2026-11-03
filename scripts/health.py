@@ -155,6 +155,10 @@ def main():
         alarms.append(f"{name} has {lines} lines, {verdict}")
     if crashes:
         alarms.append(f"Rojo crashed {crashes} time(s): log it in docs/problems-log/")
+    docs = subprocess.run(
+        [sys.executable, os.path.join(ROOT, ".claude", "hooks", "docs-check.py"), "--all"], capture_output=True, text=True
+    ).stdout.splitlines()
+    alarms.extend(f"Docs check: {line}" for line in docs)
     print("ALARMS:" if alarms else "ALARMS: none")
     for alarm in alarms:
         print(f"- {alarm}")
