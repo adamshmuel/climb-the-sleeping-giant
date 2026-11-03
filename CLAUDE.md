@@ -4,6 +4,11 @@
 
 Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox Studio is driven through the Roblox Studio MCP.
 
+## Check before you claim
+For the main chat and every agent that loads this file. Based on the prompting guide's [investigate before answering](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) sample.
+- Never state a number, time limit, interval, setting, URL, API name, file content or "it works" as a fact unless it was checked in this session: run it, fetch it, read the file or the guide.
+- When something isn't checked, check it first, or say "not checked" in the same sentence. A guess is never the reason given for a recommendation.
+
 ## Follow Anthropic's guides
 The agent setup (this file, `.claude/rules`, `agents`, `skills`, `hooks`, settings and the workflow) follows Anthropic's official guides: [best practices](https://code.claude.com/docs/en/best-practices), [memory](https://code.claude.com/docs/en/memory), [subagents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks).
 - Before any setup change or suggestion, the user's included, check the guide and say in one line: it fits, or the better way the guide gives, with the link.
