@@ -2,6 +2,28 @@
 
 game_creator's 9 decisions are already in `docs/specs/v2/egg-nests-and-climbing.md`.
 
+**Contents**
+
+- [Constraints that later specs hand to the nest map](#constraints-that-later-specs-hand-to-the-nest-map)
+- [Designer questions still open (10–13)](#designer-questions-still-open-1013)
+- [designer's nest map (done 2026-10-14), plus open findings](#designers-nest-map-done-2026-10-14-plus-open-findings)
+- [game_creator's calls on the nest map (2026-10-14)](#game_creators-calls-on-the-nest-map-2026-10-14)
+- [code_lead's Play test: jumping onto climb boxes and the button column (2026-10-14)](#code_leads-play-test-jumping-onto-climb-boxes-and-the-button-column-2026-10-14)
+- [game_creator re-decides spec 5's climbing (2026-10-14), after code_lead's test](#game_creator-re-decides-spec-5s-climbing-2026-10-14-after-code_leads-test)
+- [designer's Studio check of the seam, the mirror ramp and the new spots (2026-10-14)](#designers-studio-check-of-the-seam-the-mirror-ramp-and-the-new-spots-2026-10-14)
+- [game_creator's decisions after designer's Studio check (2026-10-18)](#game_creators-decisions-after-designers-studio-check-2026-10-18)
+- [code_lead: can it be built? (2026-10-18, from code and docs; no Studio)](#code_lead-can-it-be-built-2026-10-18-from-code-and-docs-no-studio)
+- [designer's Studio session (2026-10-18): measured results](#designers-studio-session-2026-10-18-measured-results)
+- [game_creator: the ramp pocket, the ramp over the lap plank, and the lap fold (2026-10-18)](#game_creator-the-ramp-pocket-the-ramp-over-the-lap-plank-and-the-lap-fold-2026-10-18)
+- [code_lead: the moved ramp build (measured in Studio, 2026-10-18)](#code_lead-the-moved-ramp-build-measured-in-studio-2026-10-18)
+- [game_creator confirms Plan B and the ramp build (2026-10-18)](#game_creator-confirms-plan-b-and-the-ramp-build-2026-10-18)
+- [designer: lap build look, lap fold, belly pocket, Plan B glows (2026-10-18)](#designer-lap-build-look-lap-fold-belly-pocket-plan-b-glows-2026-10-18)
+- [designer: art job (items A and B) done, 2026-10-19](#designer-art-job-items-a-and-b-done-2026-10-19)
+- [designer: job 2 (spec 5 world shots), part 1, 2026-10-19](#designer-job-2-spec-5-world-shots-part-1-2026-10-19)
+- [designer: job 2 part 2 done, 2026-10-19](#designer-job-2-part-2-done-2026-10-19)
+- [designer: job 3 (wake cuff shots, item 2) done, 2026-10-19](#designer-job-3-wake-cuff-shots-item-2-done-2026-10-19)
+- [designer: job 4, item 9 (slide tip) done, 2026-10-19](#designer-job-4-item-9-slide-tip-done-2026-10-19)
+
 ## Constraints that later specs hand to the nest map
 - **Eye limit (spec 4, Rule 50, widened 2026-10-14, approved by game_creator):**
   - No egg above Common may sit within 1 egg height below his closed eyes on screen, seen from any spawn spot or the belly path.

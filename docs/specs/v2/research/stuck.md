@@ -6,6 +6,19 @@ Research for the "Stuck safety" spec. There are two parts:
 
 Every API in part 2 was checked on its official docs page. **[Unverified]** marks claims that couldn't be checked. **[Idea]** marks our own suggestions.
 
+**Contents**
+
+- [Part 1: what happened in V1](#part-1-what-happened-in-v1)
+  - [How the world is built today](#how-the-world-is-built-today)
+- [Part 2: what Roblox and the DevForum say](#part-2-what-roblox-and-the-devforum-say)
+  - [Main points](#main-points)
+  - [Collision settings for a mesh](#collision-settings-for-a-mesh)
+  - [Characters and climbing](#characters-and-climbing)
+  - [Finding stuck spots automatically](#finding-stuck-spots-automatically)
+  - [Getting a stuck player out](#getting-a-stuck-player-out)
+  - [Studio tools for seeing collision](#studio-tools-for-seeing-collision)
+- [The proposal in the V2 plan](#the-proposal-in-the-v2-plan)
+
 ## Part 1: what happened in V1
 
 | Case | Cause | Fix | Where |

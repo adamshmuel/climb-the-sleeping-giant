@@ -2,6 +2,23 @@
 
 Status: `approved` by Adam (2026-10-18). Rules 20 to 33.
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+  - [Layer 1: one collision source](#layer-1-one-collision-source)
+  - [Layer 2: the automatic stuck scan](#layer-2-the-automatic-stuck-scan)
+  - [Layer 3: the bot walk](#layer-3-the-bot-walk)
+  - [Layer 4: player recovery](#layer-4-player-recovery)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 **Changed on 2026-10-19** (code_lead's Studio test while writing the build plan, in `research/decisions-plans.md`): Roblox's pathfinder (its built-in route finder), with jumping off, finds no route on any slope of about 48° or steeper. Players walk slopes up to 70°, so it would have called every Rare egg unreachable and the upper belly stuck. The walk check is now the game's own **walk map** (see "Words used here"). Rule 22 (What counts as stuck) uses it, Rule 23 (One walk check for everything) names it, and the scan body size (section 5) is now a standard player's solid body, measured in Play. Later the same day (code_lead's plan questions, "code_lead #2"): the walk map's words now say which moves each check counts. After code_lead's first real scan (Task 4): a meadow exit now also includes the open meadow on the scanned area's outer edge, and ground under water isn't a spot, because a player there swims out. Both were false stuck reports, checked in Play. After Task 5's trial: Rule 20 (One collision source) now lets the camera still stop at his look-only model, because Roblox's camera stops only at solid, non-see-through parts, so without this it would slide inside him on the belly path. Nothing the player sees or does changes.
 
 **Changed on 2026-10-20** (owner decision by code_lead, product and designer after the collision trials): Rule 20 (One collision source) now builds his real body shape with small invisible patches, because the invisible shell failed four trials on his legs and the smooth wrap broke the belly path, while his real shape passed with no hops and feet on his cloth. Rule 20 also lists the checks that prove it. The camera line of 2026-10-19 is gone: his body stays solid, so the camera stops at it anyway. Section 8 notes that the scan's body check counts the meadow ground.

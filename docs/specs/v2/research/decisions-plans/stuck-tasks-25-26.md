@@ -2,6 +2,19 @@
 
 Part of `../decisions-plans.md` (the index).
 
+**Contents**
+
+- [Stuck safety Task 25: getting down the ladders (code_lead, 2026-10-20, step 6a-1 descent ruling)](#stuck-safety-task-25-getting-down-the-ladders-code_lead-2026-10-20-step-6a-1-descent-ruling)
+- [Stuck safety Task 25: his collision floats above his drawn belly (code_lead step 6b-1e ruling + designer, 2026-10-20)](#stuck-safety-task-25-his-collision-floats-above-his-drawn-belly-code_lead-step-6b-1e-ruling--designer-2026-10-20)
+- [Stuck safety: new Task 26, "His solid body sits where he's drawn" (code_lead, 2026-10-20, ruling after Task 25 step 6b-1f)](#stuck-safety-new-task-26-his-solid-body-sits-where-hes-drawn-code_lead-2026-10-20-ruling-after-task-25-step-6b-1f)
+- [Task 26 step 26-3 ruling (code_lead, 2026-10-21)](#task-26-step-26-3-ruling-code_lead-2026-10-21)
+- [Task 26 Ruling 8 (code_lead, 2026-10-21) and the owners' answers](#task-26-ruling-8-code_lead-2026-10-21-and-the-owners-answers)
+- [Task 26 step 26-4e ruling (code_lead, 2026-10-21, Rulings 9–11)](#task-26-step-26-4e-ruling-code_lead-2026-10-21-rulings-911)
+- [Task 26 step 26-6a1 ruling (code_lead, 2026-10-21, Ruling 12)](#task-26-step-26-6a1-ruling-code_lead-2026-10-21-ruling-12)
+- [Task 26 approved (code_lead, 2026-10-21)](#task-26-approved-code_lead-2026-10-21)
+- [Task 25 step 4: Rare egg 4 by the beard rail (code_lead ruling + owners, 2026-10-21)](#task-25-step-4-rare-egg-4-by-the-beard-rail-code_lead-ruling--owners-2026-10-21)
+- [Task 25 approved (code_lead, 2026-10-21)](#task-25-approved-code_lead-2026-10-21)
+
 ## Stuck safety Task 25: getting down the ladders (code_lead, 2026-10-20, step 6a-1 descent ruling)
 
 - **Roblox can't climb down a leaning ladder.** Holding S climbs down about 2 studs, then the player lets go and drops. code_lead tested bare ladders, and V1's leaning ladders did the same. Not a stop for Task 25.

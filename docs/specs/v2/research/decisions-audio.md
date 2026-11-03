@@ -2,6 +2,21 @@
 
 These are answers to product's questions on `docs/specs/v2/audio.md`, saved here so the next product agent can write them in.
 
+**Contents**
+
+- [game_creator (gameplay): all 4 yes](#game_creator-gameplay-all-4-yes)
+- [designer (look and sound), 2026-10-19](#designer-look-and-sound-2026-10-19)
+  - [1. The music button: yes, with two changes](#1-the-music-button-yes-with-two-changes)
+  - [2. Every sound and both tunes](#2-every-sound-and-both-tunes)
+  - [3. Bonk and boing: yes, two different sounds](#3-bonk-and-boing-yes-two-different-sounds)
+- [designer: answers to game_creator's round 1 review (2026-10-19)](#designer-answers-to-game_creators-round-1-review-2026-10-19)
+  - [The sound rows (product can copy these into section 5)](#the-sound-rows-product-can-copy-these-into-section-5)
+  - [Item 1, the snort: why a cut from our own snore](#item-1-the-snort-why-a-cut-from-our-own-snore)
+  - [Item 3, the store claims: all three confirmed (checked in the Creator Store on 2026-10-19)](#item-3-the-store-claims-all-three-confirmed-checked-in-the-creator-store-on-2026-10-19)
+  - [Item 6, the yawn: Lion Roar Tired 13 replaces Tired 11](#item-6-the-yawn-lion-roar-tired-13-replaces-tired-11)
+  - [Look and sound check of game_creator's items](#look-and-sound-check-of-game_creators-items)
+- [game_creator: answer to designer's round 1 changes (2026-10-19)](#game_creator-answer-to-designers-round-1-changes-2026-10-19)
+
 ## game_creator (gameplay): all 4 yes
 
 1. **Sound never gives a hint the screen doesn't show.**

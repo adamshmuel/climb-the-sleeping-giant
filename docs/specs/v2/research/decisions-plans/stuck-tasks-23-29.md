@@ -2,6 +2,35 @@
 
 Part of `../decisions-plans.md` (the index).
 
+**Contents**
+
+- [Task 23 step 23-6: the notch and the slope read (code_lead, 2026-10-21)](#task-23-step-23-6-the-notch-and-the-slope-read-code_lead-2026-10-21)
+- [Adam on Task 23's scope (2026-10-21)](#adam-on-task-23s-scope-2026-10-21)
+- [product: Rule 22 now allows rare spots left to the rescue (2026-10-21)](#product-rule-22-now-allows-rare-spots-left-to-the-rescue-2026-10-21)
+- [game_creator on rare spots left to the rescue (2026-10-21): approve, with one Play check](#game_creator-on-rare-spots-left-to-the-rescue-2026-10-21-approve-with-one-play-check)
+- [Task 23: the stuck-spot sort and the rare-spot list (2026-10-21)](#task-23-the-stuck-spot-sort-and-the-rare-spot-list-2026-10-21)
+- [Task 23: the pillow becomes Task 23b (code_lead, 2026-10-21)](#task-23-the-pillow-becomes-task-23b-code_lead-2026-10-21)
+- [Task 23: the walk map's blind spot (code_lead, 2026-10-21)](#task-23-the-walk-maps-blind-spot-code_lead-2026-10-21)
+- [Task 23: sealed hollows are not stuck spots (code_lead, 2026-10-21; needs product)](#task-23-sealed-hollows-are-not-stuck-spots-code_lead-2026-10-21-needs-product)
+- [product on sealed hollows (2026-10-21): yes](#product-on-sealed-hollows-2026-10-21-yes)
+- [product on 7 more rare candidates (2026-10-21)](#product-on-7-more-rare-candidates-2026-10-21)
+- [Task 23: the cushion guard and the Sock ramp (code_lead, Rulings 10–11, 2026-10-21)](#task-23-the-cushion-guard-and-the-sock-ramp-code_lead-rulings-1011-2026-10-21)
+- [Task 23: the beard pocket and the decision table (code_lead, Ruling 13, 2026-10-26; needs product)](#task-23-the-beard-pocket-and-the-decision-table-code_lead-ruling-13-2026-10-26-needs-product)
+- [product on Ruling 13 and the decision table (2026-10-26)](#product-on-ruling-13-and-the-decision-table-2026-10-26)
+- [code_lead applies product's table changes (2026-10-26)](#code_lead-applies-products-table-changes-2026-10-26)
+- [Task 23: step 23-C1's questions, and the task split (code_lead, Rulings 15 and 16, 2026-10-26)](#task-23-step-23-c1s-questions-and-the-task-split-code_lead-rulings-15-and-16-2026-10-26)
+- [Task 23: step 23-C2's fills (code_lead, Ruling 17, 2026-10-26)](#task-23-step-23-c2s-fills-code_lead-ruling-17-2026-10-26)
+- [Task 23: step 23-9's fails, and Task 29 (code_lead, Ruling 18, 2026-10-26; one question for product)](#task-23-step-23-9s-fails-and-task-29-code_lead-ruling-18-2026-10-26-one-question-for-product)
+- [Task 29: handoff rulings (code_lead, product approved, 2026-10-26)](#task-29-handoff-rulings-code_lead-product-approved-2026-10-26)
+- [Task 29: the Sock gets a sealed fill (code_lead, Ruling 20, 2026-10-26)](#task-29-the-sock-gets-a-sealed-fill-code_lead-ruling-20-2026-10-26)
+- [Task 29: the forehead band gets a sealed fill (code_lead, Ruling 21, 2026-10-26; product approved)](#task-29-the-forehead-band-gets-a-sealed-fill-code_lead-ruling-21-2026-10-26-product-approved)
+- [Task 29: the beard pocket 1 guard (code_lead, Ruling 22, 2026-10-26)](#task-29-the-beard-pocket-1-guard-code_lead-ruling-22-2026-10-26)
+- [Task 29: the fills' open faces and the gap mark (code_lead, Ruling 23, 2026-10-26; product approved)](#task-29-the-fills-open-faces-and-the-gap-mark-code_lead-ruling-23-2026-10-26-product-approved)
+- [Task 29: the Sock moves to Task 32 (code_lead, Ruling 24, 2026-10-26; product approved)](#task-29-the-sock-moves-to-task-32-code_lead-ruling-24-2026-10-26-product-approved)
+- [Task 29: the forehead fill passes when the scan frees the spot (code_lead, Ruling 25, 2026-10-26)](#task-29-the-forehead-fill-passes-when-the-scan-frees-the-spot-code_lead-ruling-25-2026-10-26)
+- [Task 29: the beard moves to Task 33, and the forehead control run (code_lead, Ruling 26, 2026-10-26)](#task-29-the-beard-moves-to-task-33-and-the-forehead-control-run-code_lead-ruling-26-2026-10-26)
+- [Task 32: the Sock's east end and west lip (code_lead, Ruling 32, 2026-10-26; Q1 and Q3 for product)](#task-32-the-socks-east-end-and-west-lip-code_lead-ruling-32-2026-10-26-q1-and-q3-for-product)
+
 ## Task 23 step 23-6: the notch and the slope read (code_lead, 2026-10-21)
 
 1. **The notch behind his back** is a pocket, about 5 studs tall at z 38 and under 1 stud at a lip near z 41.

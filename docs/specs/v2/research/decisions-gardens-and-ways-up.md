@@ -2,6 +2,14 @@
 
 These are answers to product's questions on `docs/specs/v2/gardens-and-ways-up.md`, saved so the next product agent can write them in.
 
+**Contents**
+
+- [game_creator (gameplay)](#game_creator-gameplay)
+- [designer (look)](#designer-look)
+- [game_creator's answers to designer (round 2)](#game_creators-answers-to-designer-round-2)
+- [designer's look check of game_creator's round 2 (approved)](#designers-look-check-of-game_creators-round-2-approved)
+- [designer: job 4, item 12 (retakes on the moved build) done, 2026-10-19](#designer-job-4-item-12-retakes-on-the-moved-build-done-2026-10-19)
+
 ## game_creator (gameplay)
 game_creator read today's positions in Studio, Edit mode only:
 - Rare_1 is at x −12, Rare_2 at −11, Rare_3 at −8 and Rare_4 at +3. His middle line is x 0.

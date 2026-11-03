@@ -2,6 +2,27 @@
 
 Part of `../decisions-plans.md` (the index).
 
+**Contents**
+
+- [code_lead #1 (plans 1 and 2), 2026-10-19](#code_lead-1-plans-1-and-2-2026-10-19)
+- [product: answers to code_lead #1 (2026-10-19)](#product-answers-to-code_lead-1-2026-10-19)
+- [code_lead #2 (plans 3 and 4), 2026-10-19](#code_lead-2-plans-3-and-4-2026-10-19)
+- [product: answers to code_lead #2 (2026-10-19)](#product-answers-to-code_lead-2-2026-10-19)
+- [code_lead #3 (plan 5), 2026-10-19](#code_lead-3-plan-5-2026-10-19)
+- [designer: sideways jump reach (2026-10-19)](#designer-sideways-jump-reach-2026-10-19)
+- [product: check of plan 5's build decisions (2026-10-19)](#product-check-of-plan-5s-build-decisions-2026-10-19)
+- [code_lead #5: plans 2–4 updated (2026-10-19)](#code_lead-5-plans-24-updated-2026-10-19)
+- [code_lead #5: plan 5 updated for product's check (2026-10-19)](#code_lead-5-plan-5-updated-for-products-check-2026-10-19)
+- [code_lead #4 (plan 6), 2026-10-19](#code_lead-4-plan-6-2026-10-19)
+- [product: check of plan 6's two build decisions (2026-10-19)](#product-check-of-plan-6s-two-build-decisions-2026-10-19)
+- [designer: answers to code_lead #4 (2026-10-19)](#designer-answers-to-code_lead-4-2026-10-19)
+- [code_lead #6 (plan 7), 2026-10-19](#code_lead-6-plan-7-2026-10-19)
+- [product: answers to code_lead #6 (2026-10-19)](#product-answers-to-code_lead-6-2026-10-19)
+- [designer: answers to code_lead #6 (2026-10-19)](#designer-answers-to-code_lead-6-2026-10-19)
+- [code_lead (coding reviews): Task 1 review and "V2 setup 1" (2026-10-19)](#code_lead-coding-reviews-task-1-review-and-v2-setup-1-2026-10-19)
+- [designer: setup 3 round 2 look check (2026-10-19)](#designer-setup-3-round-2-look-check-2026-10-19)
+- [code_lead (coding reviews): Task 10 decision for product to know (2026-10-19)](#code_lead-coding-reviews-task-10-decision-for-product-to-know-2026-10-19)
+
 ## code_lead #1 (plans 1 and 2), 2026-10-19
 Wrote `docs/plans/v2/index.md`, `new-player-safety.md` (11 tasks), `stuck-safety.md` (16 tasks), and updated `docs/architecture.md` (section 9: the shared walk check `World/PathCheck.luau`) and `docs/progress.md`.
 

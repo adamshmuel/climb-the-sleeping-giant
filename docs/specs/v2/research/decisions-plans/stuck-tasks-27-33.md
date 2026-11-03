@@ -2,6 +2,38 @@
 
 Saved by the main chat so fresh agents have it. The builder's handoff (`work/handoff-p2-task33.md`) is untracked; this is the lasting copy of its decision table and product's ruling.
 
+**Contents**
+
+- [Decision table (code_lead)](#decision-table-code_lead)
+- [Product's ruling on the table](#products-ruling-on-the-table)
+- [Task 27 (product, 2026-10-27)](#task-27-product-2026-10-27)
+- [Task 33 forehead plate (product, after step 2)](#task-33-forehead-plate-product-after-step-2)
+- [After step 3 (product, 2026-10-27)](#after-step-3-product-2026-10-27)
+- [After the measurement (product and designer, 2026-10-27)](#after-the-measurement-product-and-designer-2026-10-27)
+- [Beard after step a (product and game_creator, 2026-10-27)](#beard-after-step-a-product-and-game_creator-2026-10-27)
+- [Beard shape B and the budget (code_lead, designer, product, 2026-10-27)](#beard-shape-b-and-the-budget-code_lead-designer-product-2026-10-27)
+- [After Play step b (product, 2026-10-27)](#after-play-step-b-product-2026-10-27)
+- [Step d Red 2 (code_lead and product, 2026-10-27)](#step-d-red-2-code_lead-and-product-2026-10-27)
+- [Task 27 decision table (product, 2026-10-27)](#task-27-decision-table-product-2026-10-27)
+- [Task 27 step 2: start check and split (code_lead, 2026-10-27)](#task-27-step-2-start-check-and-split-code_lead-2026-10-27)
+- [1. The start check reads steep ground: step 1c, then step 2b re-runs the starts](#1-the-start-check-reads-steep-ground-step-1c-then-step-2b-re-runs-the-starts)
+- [2. The known places: walk in from a checked start, never from the exact root](#2-the-known-places-walk-in-from-a-checked-start-never-from-the-exact-root)
+- [3. The task is split (6-step limit)](#3-the-task-is-split-6-step-limit)
+- [4. Studio calls](#4-studio-calls)
+- [Task 27 scope (product, 2026-10-27)](#task-27-scope-product-2026-10-27)
+- [1. Which spots get played](#1-which-spots-get-played)
+- [2. The tasks](#2-the-tasks)
+- [3. After launch](#3-after-launch)
+- [Task 27 step 2b: list kept as modules (code_lead, 2026-10-27)](#task-27-step-2b-list-kept-as-modules-code_lead-2026-10-27)
+- [What happened](#what-happened)
+- [1. The list: the rule is written down, not matched to 681](#1-the-list-the-rule-is-written-down-not-matched-to-681)
+- [2. Keeping it: yes, as tested modules](#2-keeping-it-yes-as-tested-modules)
+- [3. Task 27 closes; the rest is a new Task 45](#3-task-27-closes-the-rest-is-a-new-task-45)
+- [Known places](#known-places)
+- [Task 45: later product rulings (2026-10-27)](#task-45-later-product-rulings-2026-10-27)
+- [Task 43: product's ruling on the 10 places with no walk-in start (2026-10-28)](#task-43-products-ruling-on-the-10-places-with-no-walk-in-start-2026-10-28)
+- [Task 43: code_lead's answers after step 5 (2026-10-28)](#task-43-code_leads-answers-after-step-5-2026-10-28)
+
 ## Decision table (code_lead)
 | Cause step 1 finds (on most of the 5 examples) | Fix | Where |
 |---|---|---|

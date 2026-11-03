@@ -2,6 +2,21 @@
 
 code_lead's answers after Adam's first playtest. Proposals only: no code was changed.
 
+**Contents**
+
+- [1. The meter bug](#1-the-meter-bug)
+  - [Reproduced in Play (one player, garden 1, computer screen, no Tiptoe)](#reproduced-in-play-one-player-garden-1-computer-screen-no-tiptoe)
+  - [The spec contradicts itself](#the-spec-contradicts-itself)
+  - [How the tests missed it](#how-the-tests-missed-it)
+  - [Proposed fix: "one free save"](#proposed-fix-one-free-save)
+- [2. What can be built](#2-what-can-be-built)
+  - [The path check (Adam's reachability algorithm): yes](#the-path-check-adams-reachability-algorithm-yes)
+  - [Climbing anywhere on the belly: medium to large](#climbing-anywhere-on-the-belly-medium-to-large)
+  - [Six ways up: medium, no hard problem](#six-ways-up-medium-no-hard-problem)
+  - [Slams at everyone, with a "bonk": small to medium](#slams-at-everyone-with-a-bonk-small-to-medium)
+  - [Random refills: medium](#random-refills-medium)
+- [Not tested](#not-tested)
+
 ## 1. The meter bug
 
 **Adam's report:** "I was still able to get all the rare eggs without waking up the Giant. The waking bar kept going up until I stole an egg, and then I could walk on the Giant forever without waking him up."
@@ -36,7 +51,7 @@ A carried Rare is 2.5 times louder, so the meter hits 84 within seconds, then fr
 | The worked-example tests, and the Play measurements in Tasks 21, 40 and 41 | A full Rare heist | All used 2 eggs home |
 | `docs/plans/core-heist.md`, line 734 | How to test in Play | Tells testers to set eggs home to 2 |
 
-**What was missing:** a whole-session test of a brand-new player: start at 0 eggs home, walk the belly, grab a Rare, keep walking 60 seconds, and check that the 85% warning fires and how long the meter sits frozen. code_lead says this was its own gap as reviewer: it approved tests that checked the cap, not the experience. (Now a rule: `.claude/rules/tdd.md`.)
+**What was missing:** a whole-session test of a brand-new player: start at 0 eggs home, walk the belly, grab a Rare, keep walking 60 seconds, and check that the 85% warning fires and how long the meter sits frozen. code_lead says this was its own gap as reviewer: it approved tests that checked the cap, not the experience. (Now a rule: `.claude/rules/luau.md`, "Test helpers start from a brand-new player".)
 
 ### Proposed fix: "one free save"
 The spec changes first (sdd.md). game_creator decides the gameplay; product updates Rule 11 and the edge case.

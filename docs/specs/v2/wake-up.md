@@ -2,6 +2,19 @@
 
 Status: `approved` by Adam (2026-10-18). Changes Rule 12 and Rule 13. New Rules 60 to 69.
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 ## 1. Goal and why
 
 In Adam's first playtest the giant woke and "nothing happened". Three reasons: the slams only aim at egg carriers, so a solo player with no egg is never targeted; the screen shake is tiny (0.5 studs); and there's no sound yet (`research/gameplay.md`, section C). This spec makes the wake-up the big moment of the game, even alone: his face snaps awake, the screen shakes, the edges glow red, and he hunts **everyone** outside a garden. A carrier who is hit still loses the egg. A player with no egg just gets a funny, harmless "bonk".
