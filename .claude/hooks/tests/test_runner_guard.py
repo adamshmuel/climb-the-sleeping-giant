@@ -52,6 +52,23 @@ class RunnerGuard(unittest.TestCase):
         for path in ("src/server/a.luau", ".claude/agents/runner.md", "work/../src/a.luau"):
             self.assertEqual(self.decision("Edit", {"file_path": path}), "deny", path)
 
+    def test_changing_directory_is_blocked(self):
+        # cd work, then scripts/job-check.sh would run a copy the runner wrote in work/.
+        for command in ("cd work && scripts/job-check.sh", "cd work", "./scripts/job-check.sh"):
+            self.assertEqual(self.bash(command), "deny", command)
+
+    def test_only_notes_and_tables_can_be_written_in_work(self):
+        for name in ("scripts/job-check.sh", "x.py", "a.luau", ".git/config"):
+            path = os.path.join(self.project, "work", name)
+            self.assertEqual(self.decision("Write", {"file_path": path}), "deny", name)
+
+    def test_bad_hook_input_is_refused(self):
+        env = dict(os.environ, CLAUDE_PROJECT_DIR=self.project)
+        for raw in ("not json", "[]", '{"tool_name": "Bash", "tool_input": {"command": 5}}'):
+            out = subprocess.run([sys.executable, HOOK], input=raw, capture_output=True, text=True, env=env)
+            result = json.loads(out.stdout) if out.stdout.strip() else {}
+            self.assertEqual(result.get("hookSpecificOutput", {}).get("permissionDecision"), "deny", raw)
+
     def test_studio_calls_pass(self):
         self.assertEqual(self.decision("mcp__Roblox_Studio__execute_luau", {"code": "print(1)"}), "allow")
 

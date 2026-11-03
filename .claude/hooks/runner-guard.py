@@ -14,7 +14,10 @@ import re
 import shlex
 import sys
 
-RUNNER_SHELL = {"cd", "ls", "cat", "head", "tail", "grep", "wc", "date", "pwd", "echo", "scripts/job-check.sh", "./scripts/job-check.sh"}
+# No cd: the job check is named from the project root, and after a cd the same
+# name could run a copy the runner wrote in work/.
+RUNNER_SHELL = {"ls", "cat", "head", "tail", "grep", "wc", "date", "pwd", "echo", "scripts/job-check.sh"}
+NOTE_TYPES = {".md", ".txt", ".csv", ".json"}
 RUNNER_GIT = {"status", "diff", "log", "show"}
 RUNNER_GIT_FLAGS = {"--stat", "--oneline", "--name-only", "--name-status", "--short", "-s", "--porcelain", "--no-color", "-n", "--"}
 
@@ -76,33 +79,36 @@ def write_ok(raw, base):
         return False
     full = os.path.realpath(os.path.join(base, os.path.expanduser(raw))).lower()
     work = os.path.realpath(os.path.join(base, "work")).lower()
-    return full.startswith(work + os.sep)
+    return full.startswith(work + os.sep) and os.path.splitext(full)[1] in NOTE_TYPES
 
 
 def refusal(data):
     tool = data.get("tool_name")
     inp = data.get("tool_input") or {}
+    if not isinstance(inp, dict):
+        return "runner-guard: the tool input was not readable, so it is refused."
     base = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
     if tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
         raw = inp.get("file_path") or inp.get("notebook_path") or ""
-        if not raw or not write_ok(raw, base):
-            return "The runner writes only in work/ (runner.md). Report anything else as a question instead."
-    if tool == "Bash" and not shell_ok(inp.get("command") or ""):
+        if not isinstance(raw, str) or not raw or not write_ok(raw, base):
+            return "The runner writes only notes (.md, .txt, .csv, .json) in work/ (runner.md). Report anything else as a question instead."
+    command = inp.get("command") or ""
+    if tool == "Bash" and (not isinstance(command, str) or not shell_ok(command)):
         return (
             "The runner's shell only reads and runs scripts/job-check.sh "
-            "(cd, ls, cat, head, tail, grep, wc, date, pwd, echo, git status/diff/log/show), "
+            "from the project root (ls, cat, head, tail, grep, wc, date, pwd, echo, git status/diff/log/show), "
             "with no redirections. Write notes with Write. Report anything else as a question."
         )
     return None
 
 
 def main():
+    # A guard fails closed: bad input or a crash refuses the call.
     try:
         data = json.load(sys.stdin)
-    except ValueError:
-        print("runner-guard: hook input was not JSON", file=sys.stderr)
-        return
-    reason = refusal(data)
+        reason = refusal(data) if isinstance(data, dict) else "runner-guard: hook input was not an object."
+    except Exception as error:
+        reason = f"runner-guard could not check this call ({type(error).__name__}), so it is refused."
     if reason:
         print(json.dumps({
             "hookSpecificOutput": {
