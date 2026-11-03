@@ -1,0 +1,247 @@
+# Stuck safety: task-row history
+
+The status notes from each finished task's row in [stuck-safety.md](../stuck-safety.md), moved word for word on 2026-11-03. The row keeps a short status and a link to its section here. Notes that came out of the plan files are in the other `stuck-safety-*.md` history files.
+
+## Contents
+
+[Task 1](#task-1) · [Task 2](#task-2) · [Task 3](#task-3) · [Task 4](#task-4) · [Task 17](#task-17) · [Task 18](#task-18) · [Task 5](#task-5) · [Task 6](#task-6) · [Task 19](#task-19) · [Task 20](#task-20) · [Task 21](#task-21) · [Task 24](#task-24) · [Task 25](#task-25) · [Task 26](#task-26) · [Task 22](#task-22) · [Task 23](#task-23) · [Task 29](#task-29) · [Task 30](#task-30) · [Task 31](#task-31) · [Task 34](#task-34) · [Task 32](#task-32) · [Task 36](#task-36) · [Task 38](#task-38) · [Task 39](#task-39) · [Task 37](#task-37) · [Task 41](#task-41) · [Task 42](#task-42) · [Task 33](#task-33) · [Task 27](#task-27) · [Task 45](#task-45) · [Task 43](#task-43) · [Task 46](#task-46) · [Task 51](#task-51) · [Task 47](#task-47) · [Task 48](#task-48) · [Task 28](#task-28) · [Task 53](#task-53) · [Task 28w](#task-28w) · [Task 28x](#task-28x) · [Task 54](#task-54) · [Task 33b](#task-33b) · [Task 7](#task-7) · [Task 7c](#task-7c) · [Task 55](#task-55) · [Task 8](#task-8) · [Task 8b](#task-8b) · [Task 8c](#task-8c) · [Task 9](#task-9) · [Task 10](#task-10) · [Task 11](#task-11) · [Task 12](#task-12) · [Task 12d](#task-12d) · [Task 12c](#task-12c) · [Task 12i](#task-12i) · [Task 13](#task-13) · [Task 13b](#task-13b) · [Task 14](#task-14) · [Task 15](#task-15) · [Task 16](#task-16) · [Task 16b](#task-16b)
+
+## Task 1
+
+☑ done (approved at the first review on 2026-10-19: the route test and world script `08-route` now share one walk check, `World/PathCheck.linkProblem`; the two old copies were the same line by line. A blocked link now names the part in the way. 9 new tests on fake worlds, all shown red first; the real route test still passes and `08-route` still says "already done". 2336 tests pass (the builder's run; code_lead re-ran `check.sh` only, because product's build review was in Studio Play). No Play: nothing on screen changes. No world changes)
+
+## Task 2
+
+☑ done (approved at the first review on 2026-10-19. Measured in Play: a standard player's solid body is 2 studs wide and 4.3 tall (only the root part and the two torso parts bump into things; the head, arms and legs don't), now in `Config.Stuck`. The walk check's body box uses Roblox's exact-shape check, so the giant and the teacup need no special case any more; only the two ramp planks are left out, by design. The box faces the way the player walks, as V1's did. 2380 tests pass; the real route test still passes all 79 links; no probe part is left behind)
+
+## Task 3
+
+☑ done (approved in review round 2 on 2026-10-19. The walk map finds every spot a body fits on, including under overhangs, and links them by walking, ladders and slides; routes pick the quickest way, and the stuck search finds spots with no way out. Round 2: each ladder end now reaches two grid steps (4 studs), and a ladder's own face is never a spot. The real giant's map builds in 1.6 s (limit 2 minutes): 6459 spots, both ladders linked (belly path to nose, nose to nightcap), none on a ladder. 2398 tests pass. No Play: nothing on screen changes. No world changes)
+
+## Task 4
+
+☑ done (approved at the first review on 2026-10-19. The scan builds the walk map of the giant and the meadow around him and fails the run, as planned, with 1524 stuck spots, in 1.8 s (limit 2 minutes). Test worlds can no longer be left behind or saved. 2402 tests pass, plus that one accepted failure. code_lead's Play check of the flagged meadow spots: a player walks out of the river, from beside his cushion and the teacup, and past the scan's edge, with no jump. Those are false reports, fixed in Tasks 17 and 18; about 1340 spots on and inside the giant are left for Tasks 5 and 6. No world changes)
+
+## Task 17
+
+☑ done (approved at the first review on 2026-10-19. Three scan fixes, each from a Play check at the Task 4 review: a place to stand leaves nothing out of the body check, so no spot under the low end of a ramp; a player turns before walking, so a spot where a body fits only turned still links to its neighbours; and ground right under water isn't a spot. Four new tests, all shown red first (one with a mutant). The real map: 1341 stuck spots (was 1524) in 1.8 s; the six spots beside his cushion and the teacup, the spot under the ramp and every river-bed spot are gone. 2406 tests pass, plus the one accepted failure. No Play: nothing in the game changes. No world changes)
+
+## Task 18
+
+☑ done (approved at the first review on 2026-10-19. The scan's grid now reaches the far sides of its area, and the open meadow ground (the Terrain) on the area's outer edge counts as a way out. Four new tests, all shown red first. The real map: 1336 stuck spots (was 1341) in 1.8 s; the 8 edge spots and the river-bank spot are gone. 4 spots inside the teacup's bowl are still listed: code_lead's check found they are real (see "For stuck safety Task 6 and Tasks 19 to 21"), so Task 6 closes the bowl. 2410 tests pass, plus the one accepted failure. No world changes)
+
+## Task 5
+
+☑ done (approved at the first review on 2026-10-19. Screenshots with Studio's collision view: his real collision is a patchwork of flat-sided pieces, rough under the belly path and hollow inside. With the smooth wrap (`Hull`) each piece is one blob that bridges every dip. Smooth wrap: 140 stuck spots (was 1336) and 3 world tests broken (the leg's blob sticks out over the belly path). Neither has zero, so Rule 20 picks the invisible shell (Tasks 19 to 21). code_lead ran the saved script both ways and got the same numbers; the place is back as it was: all 6 pieces `Default`, no marks left, 2410 tests pass plus the one accepted failure (1336 spots). No Play: nothing in the game changed. No world changes)
+
+## Task 6
+
+☑ done (approved in review round 2 on 2026-10-19. The cup's collision is its smooth wrap, so the bowl is filled and no body fits in it; a tea disc sits tilted like the rim (the rim isn't level: 8.8°), never above it. The smooth wrap also fills the saucer's dish; designer accepted that. Round 2: the tea is a darker brown, `#9C5E34`, because the first colour showed as gold in the game's light. In the game it reads as warm brown (`#D18245` from above, `#D07E30` to `#D8893C` on the lid), clearly darker and redder than the cash gold; designer approved it from the shots. 2421 tests pass plus the accepted scan failure, now 1332 spots, none on the teacup. code_lead re-ran everything, ran the script ("already done") and played it: the player stands on the lid over the tea, walks off with no jump, and walks round the outside of the saucer. The place has unsaved world changes: Adam saves it at plan 2's Gate 4)
+
+## Task 19
+
+☑ done (approved at the first review on 2026-10-20. His six body pieces use Roblox's closest match of the mesh players see, so players stand on the skin they see; the shell's code is gone. Rare egg 2's route point moved 0.32 studs down onto his new belly. 2426 tests pass plus the accepted stuck scan, now 436 spots (was 1332). In Play on the computer and the iPhone 14: the shapes are the same as in Edit, feet on his cloth, no hops, the camera never inside him, Rare egg 2 easy to reach, no measurable phone cost. designer approved the look. Found on the way: V1's invisible walk pieces float over his real skin (Task 24), and the belly top now joins his left sleeve, which spec 5 wants anyway. The place has unsaved world changes: Adam saves it at plan 2's Gate 4)
+
+## Task 20
+
+☑ done (approved at the first review on 2026-10-20. The scan's body check now sees the meadow ground, so the 138 "spots" inside the ground under his chair are gone: 298 stuck spots left (body and cushion 202, head 42, pillow 33, nightcap 19, legs 2), all from the old list, in 1.8 s. Nothing on the open meadow was taken away. 2436 tests pass plus the accepted scan. code_lead's Play: a character put inside the ground under either armrest pops up onto the grass. At the front of the chair it ends up slightly sunk and wedged under the chair's thin front edge; Task 22 closes that gap. The route test and `08-route` get the same ground check in Task 21's step 0. No world changes)
+
+## Task 21
+
+☑ done (approved at round 3 of 3 on 2026-10-20. Round 1 made the route checks count the meadow ground and found where walking really ends; designer moved cuff points 2 and 3. Round 2 made the test pass; in Play the old "slide starts" rule was wrong, and designer ruled that the slip starts when the character visibly speeds up. Round 3: on bare cloth a character walks down his side to about 78° and slips 2.2 to 2.8 studs past the seam, so the test's list for plan 5's steep layer now reaches 78° (`SLIP_DEGREES`, measured in Play). Nobody slips above the seam. At cuff points 4 and 5 there is no slide: players walk off the rounded end of his arm about 4 studs past the cuff rim, which designer and product accepted (specs and style guide updated). 2445 tests pass plus the accepted scan (298). code_lead re-ran everything and walked his left side and cuff point 4 in Play with the same results. Slipping within 1 stud of the seam is checked in plan 5, Task 15, once the steep layer exists. No world changes)
+
+## Task 24
+
+☑ done (approved at the first review on 2026-10-20. V1's 33 floating walk pieces on his legs and belly are gone: players walk on his skin there. What is left: one fitted piece over a small step in the left boot top, and two solid invisible ramps over the two walls on his left leg (the boot's top edge, and one long ramp over the knee and the steep band below Rare egg 1, floating at most 6.5 studs, limit 8), with 4 invisible edge guards; the two knee guards have no friction, so a player cutting the corner to Rare egg 1 slides along them instead of sticking. Uncommon eggs 2 and 4 moved onto the flat top of their own boot, (−19.5, −62) and (19.5, −62); five other egg spots moved only up or down (Rare egg 4 down 2.8). The route got 6 new points on the left leg and belly. Every new test was shown red first. code_lead re-ran `check.sh` (passes) and the full run: 2460 passed, 1 failed (the accepted stuck scan, now 297: no new spot, one gone, none near the ramps or the removed pieces); Rojo synced; no leftovers; groups Default and Players; the six body pieces still Precise; slope limit 70. code_lead's Play: the whole climb from the left boot ramp to Rare egg 4 with no jump (Running only, biggest one-frame height change 0.34), the slant walk from the long ramp to Rare egg 1 from 16 starts on the computer and 3 on the iPhone 14 (all reach the egg in 0.5 to 2.3 s), and each knee guard stops a player walking into it, with no slide. designer approved the look on both screens (including the float on the long ramp and Rare egg 1's rims). Next: game_creator checks the moved route points and eggs (its condition 7). The place has unsaved world changes: Adam saves it at plan 2's Gate 4)
+
+## Task 25
+
+☑ done (approved at the first review on 2026-10-21. V1's floating nose deck, its three nightcap pieces and the invisible middle forehead slab are gone: players walk on his nose and cap skin. The cap ladder is re-made from the bridge of his nose to the top edge of his cap's brim (71.5°, 10 rungs), with no rung in his skin; the beard ladder leans 65.3° and its top rung touches his nose. Invisible side rails close the sides of the open nose top (at least 6.7 studs wide) and keep clear of his closed eyes; small invisible blocks beside the cap ladder close a gap a body fitted in. Last step: the beard ladder's visible rails got 2.75 studs longer at the bottom so they touch the belly players see, with one more rung, and Rare egg 4 moved 1 stud south to stay clear of the longer rail (game_creator and designer said yes). Every new test was shown red first. code_lead re-ran `check.sh` (passes) and the full run: 2498 passed, 1 failed (the accepted stuck scan, 287, no new spot on his head); Rojo synced; the test file a builder edited by script is whole (6915 lines, only the 5 planned old tests replaced). code_lead's Play (sound muted, sleep meter held at zero): on the computer and the iPhone 14, from the belly top up the beard ladder, across the nose top, up the cap ladder and onto the cap with no jump (only Roblox's 1-frame ladder flicker, 0.00 studs of drop); walking into a nose-top side stops at the rail, on his nose. designer approved the look on both screens; game_creator passed Rare egg 4 and its conditions. Left to other tasks: quiet ladder drops and the phone camera turning during climbs (plan 5, Task 26), designer's climb mockups (see the notes below), the right forehead stuck spot (Task 23). The place has unsaved world changes: Adam saves it at plan 2's Gate 4)
+
+## Task 26
+
+☑ done (approved at the first review on 2026-10-21. His solid shape now follows the skin players see: his belly and chair, head, nightcap and legs use Roblox's closest fit (`Tunable` at precision 1); his arms stay as they were. Check 6 (His body stands where he's drawn) passes: of 11141 places a player can stand on him, none is more than 0.2 studs over or 0.3 under the drawn skin (14 pass only by the 0.3-stud sideways rule). No shirt folds or slopes were needed (0 parts). Rare eggs 2, 3 and 4 and their route points dropped straight down onto his cloth (0.57, 2.77 and 0.56 studs); the belly path point `Belly_4` moved 4.7 studs north, round the end of a raised strip on his belly (product and game_creator said yes). Invisible changes: the beard ladder's hidden climbing bar is 32 long and its foot swings 1 stud back, so players grab it only at the visible ladder; the blocks beside the cap ladder are bigger; one cap-ladder side wall ends sooner. code_lead re-ran `check.sh` (passes) and the full run: 2497 passed, 2 failed, both accepted (Task 25's rails test, red until Task 25 goes on, and the stuck scan, now 287). Rojo synced. Saving check: code_lead copied his six pieces through Roblox's own save format and back: same shape setting, texture and heights. code_lead's Play (sleep meter held at zero, sound muted): belly walks on both sides of the strip with no jump (biggest one-frame height change 0.34), walking into the strip's side stops, the beard ladder from the belly top to the nose top and the cap ladder to the left brim nest with no jump; computer and iPhone 14 shots. designer approved the look on both screens. The place has unsaved world changes: Adam saves it at plan 2's Gate 4)
+
+## Task 22
+
+☑ done (approved at the first review on 2026-10-21. The pillow behind his head uses Roblox's closest fit (`Tunable` at precision 1), so players stand on the pillow they see; its shadow is off, because the close shape shaded the pillow dark (designer approved the light look). The cave under his cushion was a real trap: a player could walk in over the hump behind his back and not get out. It is now filled with 41 invisible patches, and its mouth is closed by a visible red "cave skirt" of 20 blocks (designer's look; product changed Rule 20 to allow a visible piece outside the walk area). The stuck scan went from 287 to 74 spots, all left for Task 23. 51 free spots were lost, all air spots over the old rough pillow. New tests, each shown red first: no stuck spot in the fixed places, the pillow's closer fit and its look, patches flush or sealed (with 12 made-up-world tests of the checker), the way to the beard ladder stays open, nobody walks into the cave, and the skirt is drawn and solid. code_lead re-ran `check.sh` (passes) and the full run: 2517 passed, 1 failed (the accepted stuck scan, now 74); Rojo synced (both test files match byte for byte). code_lead's Play: from the hump behind his back, pushing toward the cave stops at the skirt (root never past z 44.1, never in the cave, no Climbing), giant asleep. The builder's Play (computer and iPhone 14): 15 walks in from the seat all stay out; the pushing, pillow, cap-back landing, chair front and beard-ladder egg walks pass; a carrier on the skirt at a wake-up is bounced or caught. designer, product and game_creator approved their checks. Left to Task 23: the notch wedge in the hump (it was there before this task), the pillow's Climbing hang, the 10 small spots. The egg-score and Rule 41 checks for the skirt come with plan 3 Task 12 and plan 4 Task 9. The place has unsaved world changes: Adam saves it at plan 2's Gate 4)
+
+## Task 23
+
+☑ done (approved at review round 2 on 2026-10-26. The three copied pieces of code from round 1 are now one copy each: the test helpers in the real-world test file sit once at its top; one shared list of "the places players need" (`src/tests/server/World/PlayerNeeds.luau`) is used by both the stuck scan's rare-spot check and the slide guard check, with 2 new made-up-world tests shown red first (a rare spot near a `Belly_Walk` piece or a seam piece fails); the world script's folder helpers are shared by sections 3 and 4, and its second run says "already done" in all 17 sections. code_lead re-ran `check.sh` (passes) and the full run: 2581 passed, only the 4 planned reds (pillow spot 1, "Sock has no ramp", the stuck scan's 37 unlisted spots, and "no stuck spot in a fixed place"); Rojo synced. Round 1's Play found no hang at the new parts; nothing the player sees changed in round 2.) (2026-10-26, review round 1: **changes**. The 88 parts are in the world and every test result matches the plan (2579 passed, only the 4 planned reds), and code_lead's Play found no hang at the new parts. Three pieces of test and world-script code were written twice; they get merged into one copy each before approval.) (2026-10-26, later: split by the new 6-step limit. Task 23 now ends with the cushion guard, the Sock ramp, the notch fill and the neck and head in the world; the steep-spot batches are Task 27 and the finished-surface Play checks Task 28. The scan tools are rebuilt and match, the beard pocket test exception is in, and the forehead and beard guards passed their trial; the two fills passed; in the trial Play the forehead guard, beard pocket guard 1 and the Sock ramp hung, so they moved to Task 29. 3 steps left) (2026-10-26: the cushion guard, the Sock ramp and the notch fill passed their trials; the neck and head are next, by code_lead's Ruling 13 and decision table, waiting for product's yes; first the lost scan tools are rebuilt) (2026-10-21: the pillow moved to Task 23b; steps 23-0 to 23-8a.1c done; step 23-8b.1 found a blind spot in the walk map (the chair seat was missed), so the walk map is fixed first, test first, in new steps 23-W1 to 23-W4, then area b goes on) (2026-10-20: it no longer turns V1's middle forehead slab to 72°, because Task 25 removes the slab)
+
+## Task 29
+
+☑ done (approved at the first review on 2026-10-26, as built. The forehead fill (6 invisible boxes under his forehead plate) is in the world, so the old stuck spot there is gone. Its test was shown red, then green. The scan shows 0 new stuck spots and 0 free spots lost, and the full run (2581 pass) has only the planned reds: the pillow (Task 23b), the Sock (Task 32) and the beard (Task 33). **Open Play fail, owned by Task 34:** at (6.6, 105.6, 1.9), a player walking along his forehead bumps the end of the fill and can't walk out (3 runs of 3). Stuck safety can't reach Gate 4 while it is open)
+
+## Task 30
+
+☑ done (approved at the first review on 2026-10-26. The 12 test files over 1000 lines are now 12 folders of 86 small files (topic test files plus shared helpers files); the biggest is the stuck scan on the real world, 656 lines, which keeps its one shared setup. Every test kept its name and its body; the only edits are 21 calls in the stuck scan that now pass the world or the walk map to a helper that moved out. After every step the list of all 2585 test names was identical to the list taken before the split, with 2581 passing and the same 4 planned reds; the full run takes 53.2 s instead of 48.7 s (+9%). code_lead re-ran `check.sh` (passes), counted 2567 tests in the files (unchanged), found `--!strict` on all 86 files, and checked in Studio that all 86 are synced, the 12 old files are gone and nothing temporary is left. Nothing the player sees changed, so there was no Play check)
+
+## Task 31
+
+☑ done (approved at the first review on 2026-10-26. The last 3 files over 1000 lines are now folders of small files: `CameraFx` (7 files, the biggest 590 lines), `GiantFx` (7 files, the biggest 589) and the world script `15-real-shape` (24 files, the biggest 546). Every name the two modules give out is the same (33 and 39), no logic line changed, and nothing requires `init` from inside its folder, so there is no loop. After every step the list of all 2585 test names matched the list taken first, with 2581 passing and the same 4 planned reds, in about 53 s (52.5 s before). The 12 "after" screenshots (computer and iPhone 14: spawn view, bounce trail, caught, 85 bubble, waking pose with the slam swing, Heavy Sleep's Z Z Z) match the 12 "before" ones; the only differences are the moment in the swing and far trees still loading. The world script's report is the same character for character on two runs, and the world's part counts didn't change. `scripts/check.sh` has a new first step, "Size": it fails on any `.luau` or `.md` file over 1000 lines and notes files from 901 lines (today only `tools/world/08-route.luau`, 984); it was shown failing on a 1001-line file first. code_lead re-ran `check.sh` (passes), checked the requires and that no helper is copied, and checked in Studio that all 38 new scripts match the files and nothing temporary is left. Nothing the player sees changed)
+
+## Task 34
+
+☑ done (approved at the first review on 2026-10-26. The no-fill player's body, measured frame by frame, touches 5 of the fill's 6 boxes, and no shortening of boxes 5 and 6 cleared it (Rulings 30 and 31). So the forehead fill came out again: the world script removes exactly its 6 invisible boxes, and its second run says "already done". New test "the forehead fill stays out until Task 33", shown red, then green. Scan: the forehead spot (11.2, 98.2, 1) is stuck again (94 → 95), 0 free spots lost. 2586 tests, 2582 pass, the same 4 planned reds. Nothing on screen changes (the boxes were invisible). The forehead joins Task 33)
+
+## Task 32
+
+☑ done (approved at the first review on 2026-10-26. The Sock's open pocket is filled with 19 invisible boxes plus the ramp in front of it (20 parts), and each end of the fill was cut back until it sits under the Sock's overhang. The Sock's stuck spot is gone (stuck spots 95 → 94), with 0 new stuck spots and 0 free spots lost. Test 6's Sock line and two new tests were shown red, then green. 2588 tests, 2585 pass, the 3 planned reds with only the pillow's, the beard's and the forehead's lines; the ramp test is green. The world script's second run says "already done". code_lead's Play check: pushing into the mouth and walking along the Sock gave no hang (screenshot: the player at the mouth, nothing visible in the way). The hangs on the Sock's own lips, which were there before the fill, are Task 35)
+
+## Task 36
+
+☑ tried in Play, nothing built (closed 2026-10-27 by Ruling 42): 0 hangs in every run; boards 1 to 4, 7 and 8 pass; boards 5 and 6 stopped the player in open air in front of Task 32's plates, so they move to Task 38
+
+## Task 38
+
+☑ tried in Play, nothing built (closed 2026-10-27): the skirts fix the lips (0 hangs in 28 tries with them, 4 in 28 without); every shot passes (computer and phone: holds, jumps, corner); the pocket hang went to Task 39; the skirts get built in Task 37
+
+## Task 39
+
+☑ tried in Play, nothing built (closed 2026-10-27): two invisible turned boxes in the Sock's west corner remove the hang (0 in 32 from 38-1's spot, 0 in 32 from the usual start, no new stops). Task 37 builds them into the world
+
+## Task 37
+
+☑ done (closed 2026-10-27 by product's decision): the 8 boards and 6 boxes are in the world (unsaved; Adam saves at Gate 4); 2614 of 2617 tests pass, only the 3 planned reds; board 4 passes on computer and phone. The Sock's Play checks (a walk past the west end, a push at each lip, a shot by the west gap on computer and phone) moved to Task 28 and block Gate 4
+
+## Task 41
+
+☑ done (approved 2026-10-27. The pillow lies flat, 120 x 46 x 30, centre y 46.594, 1 stud under the nightcap. The old pillow's 37 stuck spots are gone, and the 61 new spots on the nightcap's lower sides are on the rare-spot list; all meet Rule 22 (What counts as stuck). `check.sh` passes. code_lead's one scan run: 13 passed, 2 failed, and the 2 reds hold only the 4 expected spots: under the chin (-6.8, 81.5, -11) and the right forehead band (11.2, 98.2, 1) for Task 33, and the cushion's front edge (-16.8, 27.6, 43) and (-14.8, 27.6, 43) for Task 42. The pillow's new tests pass. designer approved the look (it stays 120 wide). Still blocking Gate 4: step 3's leftovers (walks 1 and 6, the phone half, the cap-ladder shot) in Task 28 step 5, and the rescue proof for the cap spots in Task 12. 34 Studio calls in all)
+
+## Task 42
+
+☑ done (approved 2026-10-27 by product's close. The way out at the cushion's front edge was blocked by the flat pillow, not by a lost Task 23 part (Task 23's guard and all 39 notch boxes are as recorded). designer's fix: the pillow sunk 1 stud, centre y 45.594. code_lead's check: `check.sh` passes, the 4 changed files are synced, OnTheGiant 13 passed and 2 failed, the 2 reds hold only Task 33's spots (under the chin and the right forehead band), A (-16.8, 27.6, 43) and B (-14.8, 27.6, 43) are gone, and the rare-spot test passes (Rule 22). The full run: 2624 pass, 2 fail (the same 2). The pillow's size, place and turn check now live in one module, `tools/world/15-real-shape/PillowPlaces.luau`; sections 3a, 3a2 and 3d say "already done". Rulings: (a) `TASK_41_FLAT_CFRAME` and section 3a accepting Task 41's place are right, so a place still at Task 41's height passes 3a and is moved by 3d; (b) the fixed box "under the cushion, front edge" stays in `OnTheGiant.spec.luau` line 141 as a guard, because the spot reopened once unnoticed; (c) section 3a's shorter turn message (no "number n of 9") is accepted: players never see it. The computer walk-in at A and B moved to Task 28 step 2, the phone one is in Task 28 step 5; both block Gate 4)
+
+## Task 33
+
+☑ done, with one accepted red (approved 2026-10-27, 28 of 28 Studio calls). Built: the invisible forehead box `Patch_Forehead_1` under his forehead plate; the beard wedge listed as "accepted for now" (spec Rule 22), its rescue proven in Task 12 and fixed in Launch polish; a test that keeps the walking band clear of the box. Tests: 2630 pass, 1 fail. Scan: 117 stuck spots (was 118), the forehead spot gone, 0 free spots lost. The accepted red: "patches sit on his drawn skin, or are sealed inside him", `Patch_Forehead_1`, -z side, 22 of 39 rays (no plate above them). Task 33b fixes it. The forehead Play proof and the half-push ladder check are Task 28 step 5's
+
+## Task 27
+
+☑ done (approved and committed; 2026-10-27: steps 1, 1b, 1c done: the shared start check and its 12 tests. Step 2b stopped: step 2's list job was never kept, and the rebuilt list came to 678, not 681. code_lead closed Task 27 at its 11 Studio calls and moved the played list to Task 45, `work/t27/ruling-step2b.md`)
+
+## Task 45
+
+☑ done (2026-10-27: `SteepList`, `PlayedList` and `KnownPlaces` with 18 tests, red then green; the job listed 691 spots and played 197, 176 open (89%). Product closed it there and lowered the line to 176; the 21 not-open spots and the known places go to Task 43 step 1)
+
+## Task 43
+
+☑ done (approved 2026-10-28 by code_lead, 15 of 18 Studio calls. Walk-in starts are now checked directly with the start check, test first (7 tests, red then green). All 176 played starts and 27 walk-ins were played: 50 spots hang and 5 walk-outs wedge, sorted into 11 kinds with their measured parts (`work/t43/causes.md`). Nothing in the world changed; `T27Starts` is gone; 2663 tests pass plus the accepted red; the scan is unchanged at 117 stuck of 7487. The fixes are Tasks 46 to 48)
+
+## Task 46
+
+☑ done (approved 2026-10-28, committed ea02e6a: 192 of 197 starts open, V1F's start closed with "no floor", full run 2665 passed and only the accepted red; 7 Studio calls, plus about 17 to find and put back garden 2's moved box)
+
+## Task 51
+
+☑ done (approved 2026-10-28: a call made during the full run answered; one 202-character fetch gave 2675 passed, only the accepted red, and "117 stuck of 7487"; 9 Studio calls, spare unused)
+
+## Task 47
+
+☑ done (committed e5677d2 on 2026-10-28: the hang rule `HangRule` with 6 tests, red then green; all 52 starts played again: 0 hangs and 2 stuck walk-outs, R-141 trapped and F-195 with a free body; the list is `work/t47/hangs.md`)
+
+## Task 48
+
+☑ done (approved 2026-10-28 by code_lead; 19 of product's final 19 Studio calls). Built: the invisible box `Block_R141_1` (6x6x8, at (56.8, 5, -1.6), turned 25 degrees) in `S4SlideGuards.luau`, which now also knows the "after Task 48" world and no longer re-adds parts to the "after Task 33" world (the 26 doubled parts were removed); the meadow bush copy at scale 3 (`tools/world/16-meadow-bush.luau`); the hang row "meadow foot corner R-141" and the place R141; the name test now accepts `Block_<Place>_<n>`. Full run: 2682 passed, only the accepted red (`Patch_Forehead_1`). Scan: 117 stuck of 7482 spots (5 spots now under the box; none turned stuck). Play: the walk-in stops 4.4 studs outside the notch, 4 pushes free, walk-out 0.6 s, the boot ramp reached in 8.3 s, 0 hangs. F-195 measured only (3 links walk). 6 of 40 box points sit outside the leaves at foot height: designer judges the look. The place file holds the world changes (saved at Gate 4)
+
+## Task 28
+
+☑ done (closed 2026-10-28, approved by code_lead). The close (step 6): device off; full run 2684 passed, 1 failed (only the accepted Task 33 red, Patch_Forehead_1, until Task 33b); "the giant has no stuck spots" green; the stuck scan 117 of 7482 spots, the same 117 as the planned list. Studio calls: 42 builder calls (step 1: 2; 1b: 2; 1c: 1; 3: 8; 4c: 8; 4c-2: 4; 4d: 1; 5: 14; 6: 2), plus code_lead's read-only checks, against the plan's 36 + 3 spare; step 5 kept product's cap of 14 and step 6 its 2. About 10 calls were lost to starts and names nobody had checked (steps 1b, 4c, 4c-2, 5), which Task 53 fixes. The computer walks that never ran (step 4c-2 stopped on a name) moved to Task 28w. Earlier notes:. Step 3 done 2026-10-28: designer approved the cap-ladder top and R-141 bush shots; the Sock west gap shot was blocked by a fern, so step 5's phone shot (camera turned 90° away from the fern) is the proof. Step 4 handoff written (`work/handoff-t28.md`, "Step 4"). (re-sized 2026-10-28 by product's ruling: 5 steps (step 2, the highlight shots, cut), 36 Studio calls plus 3 spare fetches; step 1 half done (14 of 42 starts open, 2 of 2 calls); step 1b stopped with 0 calls (lap and thigh pieces not built yet), then rewritten by product's last ruling: fixed starts, the jump check against today's world (meadow exits and boot tops as gateways) and the W04 route check in one job, 3 calls (the spares), world names table checked; if the jump check doesn't finish, it moves to plan 3 Task 5 and leaves this task's "Done when"; handoff `work/handoff-t28.md`, "Step 1b"). Step 1b ran (2 of 3 calls): 6 of 16 starts open, W04 dropped (no route), 9 of 15 guards pass, 6 fail (Sock_1 to Sock_5 on the egg, Cushion_1 on the walk limit), both likely job faults. Step 1c ran (the last spare call): the 5 Sock guards pass; the 5 guard-top starts drop (the guards are steep, with no top to stand on); Cushion_1 is not proven yet, because the job's walk area shrank to 1 spot. It is re-measured inside step 4's Edit call, no extra call. Next: step 3; walks with no open start dropped or moved by product) Step 5 done 2026-10-28 (14 Studio calls): the phone shots of the cap top, the "Caught!" card and the east garden passed designer; the climb and beard-guard shots were skipped by a wrong start probe in the job. code_lead found every slide guard is a thin steep plate with no walk-map spot (BeardPocket_2, Sock_1, 5, 6, 8, Cushion_1: none open), so Task 28w drops the six guard slide-offs; Task 53 (one shared start check) is built before Task 28w. **Build review must-shows (product, from Task 28):** (1) the first climb on the phone with the thumbstick, played for real; (2) the Sock gap on each side, computer and phone, with the camera at a right angle to the feet-to-Sock line, walking away at the first press (fail: sink the Sock 2-3 studs); (3) the body against the R-141 bush leaves (Task 48); (4) the slides past the six slide guards (no open start on any of them), by play. (5) (from Task 28x) both ladders climbed on the phone with the thumbstick, including a climb down the cap ladder past its foot onto the beard ladder: the body must hang on a visible ladder, never float in the air (capDown's end counts as passed only if this shows no visible float).
+
+## Task 53
+
+☑ done (approved 2026-10-28 by code_lead. `StartCheck.nearSpot` builds a small walk map around a point, tries the 5 nearest spots (only on a named part, if given), checks the floor under each is that part and flat enough, then runs `find`; the first open one wins. With no spot it names what is at the point, or says "no walk-map spot". 3 new tests, red first; filter "StartCheck" 17 passed; check.sh green (code_lead re-ran it). Two of the plan's test worlds were changed after measuring (a ball for the turned block, a start beside a tall plate for the top edge). 2 of 2 Studio calls. code_lead's own run of the "StartCheck" filter is the first part of Task 28w's names call)
+
+## Task 28w
+
+☑ done, closed on results; failures to Tasks 54, 28x, 12 (product's ruling "Task 28w results", 2026-10-28; code_lead approved the close the same day). 7 of 7 + 1 Studio calls, spare unused; no INPUT DEAD, every lookup 100%, 0 job errors. Clean: W1, W3L, W3R, CLIMB1, LIPW, LIPE, dropC, pushDown, pushAlongMinus. Failed: the brim wedge (pushUp, pushAlongPlus) to Task 54; capUp (started mid-air), capHalf05 and the W2 and SOCKWALK walk-outs to Task 28x; the W6 nightcap wedge to Task 12's rescue proof; beardDown cut (not a fault). Results: `work/t28w/p2-report.md`. Play `shared` keys went at stop; `ServerStorage.T28Starts` is destroyed in Task 33b step 1
+
+## Task 28x
+
+☑ done, closed 2026-10-28 by code_lead; W2 moved to Task 54 (product's ruling "W2 after Task 28x"). 5 of 5 + 1 Studio calls (spare unused) plus code_lead's 1 names check; no INPUT DEAD, every lookup 100%, 0 job errors. Passed: SOCKWALK walk-out (the same wedge as Task 28w, 4 of 5 ways out); capUp 1.6 s; capHalf05 3 of 3 (0 stalls); capHalf10 1.6 s; capHalf03 5.1 s. W2's walk-in logged a wedge where it arrived on the meadow (-58.3, 2.0, 34.1), not the cushion wedge (-39.3, 30.7, 33.9), so it re-runs with a fixed walk-in in Task 54's Play check, at 0 extra calls. capDown's end: a visible beard-ladder rung under the feet; passes only if product's build review phone ladder climb shows no visible float. Play `shared` keys went at stop; the names check left 0 Edit keys (`work/t28x/review.md`)
+
+## Task 54
+
+☑ done (closed 2026-10-28 on product's pass, 16 of 16 Studio calls against 13). The two hidden blocks stay (unsaved until the user saves the place). Play: no wedge and no hang by the brim in all 6 pushUp and pushAlongPlus tries that wedged in Task 28w; the job's "BRIM: FAIL" was overruled by product (its 4 fails are not by the brim). The open crease point, the right-arm stop, W2 and the meadow stop, plus designer's look at the blocks, are build-review rows in `docs/plans/v2/stuck-safety.md`. Close: `T54pFacts` destroyed, `Mockup_Brim` and the T54 keys gone, both blocks in place
+
+## Task 33b
+
+☑ done (approved 2026-10-28, 9 of 9 Studio calls, Play spare unused). Box now 3.00 x 12.70 x 3.10 at (11.20, 95.05, 1.25) (its -z face at z -0.3); tests 2697 passed, 0 failed (the accepted red is green); scan 117 stuck of 7482 spots, 0 new stuck, 0 free spots lost; TROUGH12 open, moved 0.00; Play: (g)'s 3 tries ok, no hang, no wedge
+
+## Task 7
+
+☑ closed on its results (2026-10-28, 21 of 24 approved Studio calls, about 1 h). Proven in Play: the red circles at the belly, chin and boot and on the meadow sit on the surface they hug (0.000; the belly one on his visible skin, not the invisible knee ramp); the footprints lead up the boot ramp to Rare egg 2 (32 shown, the last 0.21 studs from its route point); computer shots of the belly circle and the trail, and a phone shot of the trail with the buttons, nothing covering him; the patch, ramp and Rare egg 1 starts are open. Not proven: the Rare egg 1 prompt, the grab, the carry sign, the bounce-off, the wake and the landing. The job stopped at its Rare egg 1 start (a measuring mistake in the job: the body dropped straight down into the egg's dip, it didn't slide), so these moved to Task 7c by product's stop rule. No code changed, so Task 33b's full run stands. Details: `work/t7/close.md`
+
+## Task 7c
+
+☑ closed on what it proves (2026-10-28, 10 of 9 + 1 Studio calls). Proven by the prints: the start rests on his skin; a real hold grabs Rare egg 1 (Carrying = Rare); he wakes; the bounce; the touchdown 0.00 studs from `LandingSpot_6`, still carrying (Rule 12). Not on screen yet: the phone's "Hold to Grab" pill and the egg on the carrier. Product ruled no Task 7d: both go on its build-review must-show list. A source check found nothing that hides the pill on a phone, and the carried egg and the carry pill already have tests, so no new task. No code changed, so Task 33b's full run stands. Details: `work/t7c/close.md`
+
+## Task 55
+
+☑ approved (2026-10-28, 4 of 4 Studio calls, none in Play). The start check now also gives `ground`, the ground under the body's middle, so no job reads a start's feet as the ground again. Red then green on its new test; full run 2698 passed, 0 failed; the stuck scan still 117 of 7482. Its print-only walk-parts list found 6 invisible parts near a route, for product to rule on. Details: `work/t55/run.md`
+
+## Task 8
+
+☑ done (approved at review round 2 on 2026-10-28: 339 legs, 13 up, 13 down, 313 step-offs, none missing; 4 of 4 BotLegs tests; full run 2701 passed, 0 failed, scan 117 of 7482)
+
+## Task 8b
+
+☑ done (approved 2026-10-28: 350 of 350 legs walked, 19 fails. Ways up 17 of 17, ways down 15 of 15, drops 1 of 5 (3 were a job fault and passed on the fixed re-run; #347 goes to Task 8c), step-offs 298 of 313 (2 "no start", 13 go to Task 8c). BotWalk tests: red 7 of 7, green 7 of 7)
+
+## Task 8c
+
+☑ done (approved 2026-10-28, 19 of 20 + 1 calls, spare unused): #144, #147 and #178 pass with the press stopping at touchdown; #279 passes by step 2's walk-out (24.7 studs) after its press fix; #347 closes as "drop from halfway not walked: the job can't grab from its start spot" (nothing blocks the ladder, checked). Carried to plan 3's full walk: #347's start, and re-checking #144, #147 and #178. New must-show: climb the cap ladder from its foot, 3 tries, computer and phone. BotWalk tests green 17 of 17
+
+## Task 9
+
+☑ done (approved 2026-10-28 at the first review: `Players/SafeSpots`, pure, saves a spot at most every 0.5 s only while walking or standing on ground up to 70° with room for the body, at least 1 stud apart, the newest 40 kept; `pick` gives the newest spot at least 4 studs away. 18 SafeSpots tests and 2 Config tests, red then green; full run 2739 passed, 0 failed; 6 of 7 Studio calls. No Play: nothing on screen until Task 10 wires it)
+
+## Task 10
+
+☑ done (approved 2026-10-29 at the first review, 27 + 1 Studio calls): `Players/Recovery` saves each player's safe spots, keeps the spot picked at a death, and moves a player back 0.5 studs above their newest safe spot with no speed; the device makes the same move (`Player/Recovery`); the tracker counts the move as neither walking nor a fall, and a body that goes less than 1 stud in a second makes no walking noise. 15 new tests, red then green; full run 2754 passed, 0 failed. Play on computer: a death kept a spot 5.28 studs back, the rescue moved the player 6.99 studs, root 0.50 from the target, nothing new on screen. The phone check moved to Task 11 and product's build review (product's ruling). Details: `work/t10/step5.md`
+
+## Task 11
+
+☑ done (approved 2026-10-29 at the first review, 39 of 40 Studio calls, planned 34): Roblox's Reset button now asks the server (`RequestReset`, at most one per 2 s). On the giant (or the pillow) while he sleeps, it moves the player a few steps back with the egg; awake, off the giant, a third move within 30 s, or no spot far enough sends them home and the egg back. 28 new tests (24 planned, plus 4 that belong: awake, no character, the ground under the feet, one player per limit), red then green; full run 2782 passed, 0 failed. Play on computer: Reset moved 6.48 studs, same character, egg kept, meter unchanged, nothing new on screen; loop Resets 1 and 2 moved and kept the egg, the 3rd sent the player home (3.2 studs from their spawn, egg back); the real keys in the garden respawned them at home. Phone (iPhone 14): the same Reset, nothing covering the player, no text cut off. Carried on: the pillow Reset with the real keys (Task 12), the puffs (Task 14). Details: `work/t11/play.md`, `work/t11/review.md`
+
+## Task 12
+
+☑ done (closed 2026-10-29 by product's ruling; code_lead approved the code the same day, 47 of 47 Studio calls). A player on the giant (or the pillow) who presses to move for 3 s while the body moves less than 1 stud is moved back with their egg; never while falling, floating down or standing in a red circle that hasn't landed; the third move in 30 s sends them home. The device tells the server only when pressing starts or stops (`SetPressing`: a boolean, at most 10 a second). Proven: tests 2831 passed, 0 failed; two belly rescues in Play at 3.7 and 3.8 s, same character; the real-key Reset on the pillow (5.1 studs, same character); no game errors. **Not proven here, moved to Task 12e:** the egg kept, the rescue silent, the rescue on the pillow, and the phone step. Details: `work/t12/codelead-step5b.md`
+
+## Task 12d
+
+☑ done (closed 2026-10-29 on the probe, 12 of 12 Studio calls). GRAB AFTER RESPAWN OK: 3 of 3 grabs (first character, after a server respawn, after the real Reset keys), each carrying a Rare egg at 1.05 s. Task 12's "no egg" came from its own job, which read the egg only from 1.3 s. The probe's "carry home" check teleported onto the spawn spot, which stands 18 studs outside the garden gate, so it could not bank; not a game bug. Details: `work/t12d/probe.md`
+
+## Task 12c
+
+☑ done: closed by product's ruling without a judged beard walk. The last run stopped in its dry start: the grab start that `StartCheck.nearSpot` picked slid 2.448 studs (the beard start held 0.185, the W6 stand 0.818). So the beard proof moves into product's build review, played with the player's own controls, and the 7 held rare spots' Play proof moves to spec 10 (Launch polish). The cause, a start check that accepts floors a body slides on, has its own fix plan (`work/t12c/codelead-nearspot.md`)
+
+## Task 12i
+
+☑ done: 2857 tests pass. 8 of 7 Studio calls: 2 floor prints, 4 for the red and green runs, and 2 lost to tool problems (a stale Studio id, and a blocked shell wait, now allowed by the hook). The corner rule was dropped after the floor print. The real proof is the first later dry start of a 12i start (product's ruling)
+
+## Task 13
+
+☑ done 2026-10-29: 2863 tests pass. 58 Studio calls, planned about 25 (3 failed Play runs on the death move, then product lowered the bar). A death on the giant goes home with the egg back on its spot, as in V1; only the Reset button keeps the egg (Task 11). The death-keep code is saved in `work/t13/spec10-death-keep/` for spec 10
+
+## Task 13b
+
+☑ done 2026-11-01: 2865 tests pass. 9 Studio calls, planned 3: the red step was planned with no Studio calls, but tests only run in Studio, so seeing red and the wrong-order check needed 2 extra full runs. A Reset on the sleeping giant while standing on the newest safe spot now keeps the player and the egg there; a stuck rescue is unchanged
+
+## Task 14
+
+☑ done 2026-11-01: 2872 tests pass (7 new). About 24 Studio calls, planned about 20: the first green run failed on one test that compared a decimal exactly (0.6 is stored as 0.6000000238), so the test was fixed and run again. Every rescue and every Reset move on the giant now shows a lavender cloud with gold sparkles where the player was and where they land, for every player, gone within 1 second, with nothing new on the screen. In Play on the computer and the iPhone 14 a belly Reset moved 6.7 studs, both puffs were in the right places and gone by 1.2 s, the player stayed visible and the phone buttons were clear. designer judges the look from `work/t14/shot-computer.jpg` and `work/t14/shot-phone.jpg`
+
+## Task 15
+
+☑ done 2026-11-01: 2885 tests pass (13 new, red then green). About 11 Studio calls, planned about 11. Every rescue, every Reset on the giant and every send home by the loop limit now sends one "Unstuck" event to Roblox's analytics, saying how ("Rescue", "Reset on giant" or "Loop home"), the zone, and "Carrying" or "Empty". A Reset on the giant while he is awake counts as "Reset on giant"; a Reset off the giant or a death sends nothing. In Play on the computer a Reset, a rescue and a third move within 30 s each printed one event line at the right moment, and the third sent the player home. Studio prints only "event fired" without the values, so the values are proven by the tests. Nothing on the screen changes, so no phone run
+
+## Task 16
+
+☑ done 2026-11-01: 2886 tests pass (1 new test plays a whole stuck session; it failed first when one rule was broken on purpose). About 54 Studio calls, planned 38: the green run first failed on a Rule 31 check of a rounded meter, and the phone grab job twice left the camera facing away from the egg (a test-tool fault, product's ruling). Computer proof passed: a rescue, a Reset on the giant, a loop-limit send home and a Reset while he's awake. On the phone the probe proved the grab (grabbed after 1.02 s, Rare carried). Rule 24's bot-walk results are in the proof. No grab pill showed in the phone shot: Task 16b
+
+## Task 16b
+
+☑ closed 2026-11-01, nothing built, 14 of 18 Studio calls. The first probe stopped twice on a drift rule too strict for a still stand (fixed). The rerun found the pill built and on: 44 px tall, attached to Rare 1, with its egg in the middle of the phone view. The phone shot still showed no pill, so the result is unclear. Outcome: product's build review checks the pill by hand on the phone, and Gate 4 waits for it
