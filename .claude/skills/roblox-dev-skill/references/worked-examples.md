@@ -185,21 +185,20 @@ notice introduced by your fix is a future break.
 
 **Sequence:**
 
-1. **Confirm the deprecation locally instead of trusting memory:**
+1. **Confirm the deprecation in the docs instead of trusting memory** (`roblox-docs` skill):
 
    ```bash
-   jq '.Members[] | select(.Name=="<MemberName>") | {Name, Tags, Security}' \
-     ~/RobloxDocs/RobloxAPI/classes/<ClassName>.json
+   curl -s https://create.roblox.com/docs/reference/engine/classes/<ClassName>.md | grep -n -i -A8 '<MemberName>'
    ```
 
-   A `Deprecated` tag often carries a `PreferredDescriptorName` naming the replacement — that is
-   the authoritative answer, not a guess.
+   A deprecated member's entry names its replacement — that is the authoritative answer, not a guess.
 2. `script_grep("<oldName>")` to find which scripts are affected. Capped at 50 matches, and its
    line numbers are unreliable.
 3. `script_read` each hit. **Check whether the replacement yields**: `GetTranslatorForPlayer` →
    `GetTranslatorForPlayerAsync` and `CreateCall` → `CreateCallAsync` are both now yielding calls,
    so a drop-in text substitution changes control flow.
-4. `multi_edit` per script — one call each. `replace_all: true` only when the symbol is unambiguous.
+4. Edit each script's source file in the Rojo tree, never in Studio: Rojo overwrites Studio edits
+   on the next sync, and `multi_edit` is denied in settings.
 
 **Verification:** playtest and confirm the deprecation warning is gone from
 `get_console_output` — and that the yielding replacement did not introduce a race where the old
@@ -217,15 +216,13 @@ existed for two weeks before vanishing.
 
 **Sequence:**
 
-```bash
-# 1. Is the local dump fresh? Read whichever timestamp is present — updatedAt OR checkedAt
-cat ~/RobloxDocs/RobloxAPI/.current-version
+Follow the `roblox-docs` skill: find the page, then read only the member.
 
-# 2. The class, and the exact member
-jq '.Members[] | select(.Name=="<Member>")' ~/RobloxDocs/RobloxAPI/classes/<Class>.json
+```bash
+curl -s https://create.roblox.com/docs/reference/engine/classes/<Class>.md | grep -n -i -A8 '<Member>'
 ```
 
-**Read three fields, not one:**
+**Read three things, not one:**
 
 - `Security` — `{"Read": "None", "Write": "PluginSecurity"}` means a Script can read it and
   **cannot write it**. This is the check that would have caught a broken `CollisionFidelity`
@@ -236,8 +233,7 @@ jq '.Members[] | select(.Name=="<Member>")' ~/RobloxDocs/RobloxAPI/classes/<Clas
   when `Security` is `None`. Treat `Security: None` + `PluginOrOpenCloud` as plugin-only.
 - `Tags` — `Deprecated`, `Yields`, `ReadOnly`, `NotScriptable`.
 
-Then fall through: local dump → `create.roblox.com/docs/en-us/{path}.md` → Context7
-(`resolve-library-id` → `get-library-docs`). If it is still unclear, **ask the user** rather than
+If the page fails, follow the `roblox-docs` skill's self-heal steps. If it is still unclear, **ask the user** rather than
 inventing a plausible member name.
 
 **Verification:** `execute_luau` the one-liner before building on it.
