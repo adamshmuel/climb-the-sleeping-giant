@@ -132,3 +132,7 @@ The walkway's mockup showed where it ends, but not which way a player faces when
 ## Lesson 331: A feet proof is shot from behind the player
 - **What happened:** In Task 61x Step 5e the chute shots came from a high side camera outside the wall. The near side row hid the player's legs, so the "both feet on the cloud" check could not pass, and a retake was needed (Step 5g).
 - **Do instead:** choose the shot list and the pass rule together. A "feet on the floor" shot is taken from behind the player along his path, at his own zoom distance.
+
+## Lesson 338: Check both sides of a mirrored view
+- **What happened:** On 2026-11-03 the Rule 44 (Your way up is in view from home) check passed on the left side of the meadow, but the right side failed. The two sides have different props (a sock on the left, a teacup on the right), and the teacup hides the right boot ladder.
+- **Do instead:** run view checks on both sides every time. Mirrored routes don't mean mirrored scenery.

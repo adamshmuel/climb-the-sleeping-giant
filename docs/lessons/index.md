@@ -343,6 +343,12 @@ What this project learned the hard way, so it doesn't happen again.
 | 331 | A feet proof is shot from behind the player | `look-and-art.md` |
 | 332 | Play ignores a camera set once; bind it every frame | `studio-and-scripts.md` |
 | 333 | Check a spot's reach right before its piece, not up front | `teamwork.md` |
+| 334 | Measure the ground under every planned end | `world-scenery.md` |
+| 335 | A deck's fit check scans its whole width | `world-scenery.md` |
+| 336 | Show the first piece of a new way up before building the second | `teamwork.md` |
+| 337 | Set walk limits from the measured route | `world-scenery.md` |
+| 338 | Check both sides of a mirrored view | `look-and-art.md` |
+| 339 | Check the folder before naming a new world script | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

@@ -421,3 +421,7 @@ Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w buil
 ## Lesson 333: Check a spot's reach right before its piece, not up front
 - **What happened:** On 2026-11-03 product's V2 order put reach walks for every new spot first. Adam pointed out that the new ladders' tops and the belly spots can only be reached through pieces not built yet, so an up-front walk proves nothing.
 - **Do instead:** each new piece gets a reach check from what exists just before it is built, and one climb with the normal player controls just after.
+
+## Lesson 336: Show the first piece of a new way up before building the second
+- **What happened:** On 2026-11-03 the side ladders and pads (Task 4b) were built and tuned, and the thigh planks (Task 4c) were planned on top of them. Then Adam saw the player fall off the pads in a test and dropped the whole way up, so both tasks' work was lost.
+- **Do instead:** before building the second piece of a new way up, show the user the first piece in Play (a short climb clip or screenshots) and confirm the way up stays.

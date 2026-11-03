@@ -401,3 +401,20 @@ A straight-on gap scan called the cap tie's outer face "clear all the way up". K
 On a computer the camera is Classic and doesn't turn by itself. With keys, a push moves in 45° steps, so a kid can be up to 22.5° off his aim.
 
 **Do instead:** before trusting a straight lane, test the climb at ±20° and ±25°.
+
+## Lesson 334: Measure the ground under every planned end
+
+A thigh plank's low end was written from the mockup. It hung over a 6-stud pit, 2 studs short of the boot top, so the plan's own "no step" test could never pass (Task 4c, 2026-11-03).
+
+**Do instead:** every plank or ladder end in a spec gets a measured ray-down height before the spec is approved.
+
+## Lesson 335: A deck's fit check scans its whole width
+
+The fit check of a thigh plank looked only at the walk lane. It missed the giant's leg rising up to 10 studs through the deck where the inner rail and posts stand (Task 4c, 2026-11-03).
+
+**Do instead:** a fit check of a deck against the giant scans the whole width, edges and rail line included, and reports the highest point.
+
+## Lesson 337: Set walk limits from the measured route
+A walk limit for gardens 1 and 8 was set from a straight-line distance, while the real footprint route bends over the bridge (2026-11-03).
+
+**Do instead:** set every walk limit from the measured footprint route. Fix an overrun by moving the spawn spot, never by raising the limit.

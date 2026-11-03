@@ -893,3 +893,7 @@ Task 61v Step 1 (2026-11-03): a Play job written to a 220-line cap came out abou
 ## Lesson 332: Play ignores a camera set once; bind it every frame
 - **What happened:** In Task 61x round 2, `screen_capture` in Play used the live player camera, not the spot the job had set once.
 - **Do instead:** a Play shot that needs a set view uses the ready-made Client `BindToRenderStep` camera from the look-shots job, checks the spot is off the player's facing line, and unbinds it and puts the camera back on Custom after.
+
+## Lesson 339: Check the folder before naming a new world script
+- **What happened:** On 2026-11-03 plans named world script numbers without looking in `tools/world/`. Task 5's `16-lap-landing` clashed with `16-meadow-bush`, and plan 4's `19-rank-eggs` clashes with the built `19-ways-up-ladders`.
+- **Do instead:** list `tools/world/` and the other plans' script names before writing a new script number into a plan.
