@@ -422,3 +422,7 @@ A walk limit for gardens 1 and 8 was set from a straight-line distance, while th
 ## Lesson 340: A walk check raycast respects collision
 - **What happened:** On 2026-11-03 the main chat raycast the Task 4e walk lines without `RespectCanCollide`, so it hit walk-through flowers and ferns (CanQuery on, CanCollide off). Task 4e1 was planned to make them walk-through and found they already were: 10 minutes for nothing.
 - **Do instead:** a raycast that asks "does this block a player?" sets `RaycastParams.RespectCanCollide = true`, and the brief names only the parts that ray still hits.
+
+## Lesson 341: Moving a prop moves its helper parts too
+- **What happened:** On 2026-11-03 product's ruling priced "move the Sock" as one value in its world script. The designer found 34 helper parts (a ramp, walk patches, slide guards) placed at fixed world spots by a different script. Left behind, they would be invisible blocks on garden 2's walk.
+- **Do instead:** before planning a prop move, grep every world script for parts named after the prop, and move them all with the same transform.

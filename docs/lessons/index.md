@@ -350,6 +350,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 338 | Check both sides of a mirrored view | `look-and-art.md` |
 | 339 | Check the folder before naming a new world script | `studio-and-scripts.md` |
 | 340 | A walk check raycast respects collision | `world-scenery.md` |
+| 341 | Moving a prop moves its helper parts too | `world-scenery.md` |
 
 | File | What it covers |
 |---|---|
