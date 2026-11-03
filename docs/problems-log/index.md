@@ -24,6 +24,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | The sleep-meter holder stopped between Play runs (cause fix due) | 2 | 2026-11-02 | `studio-and-scripts.md` |
 | A Play push that never stops (a step-down is not a fall) | 1 | 2026-11-03 | `studio-and-scripts.md` |
 | A Play pass list stricter than its plan (a loop of job fixes) | 1 | 2026-11-03 | `studio-and-scripts.md` |
+| A card step capped below its real call count | 1 | 2026-11-03 | `teamwork.md` |
 
 ## Fixed kinds
 
