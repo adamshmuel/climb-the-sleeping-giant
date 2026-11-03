@@ -1,0 +1,1 @@
+- [Idea file layout](idea-file-layout.md) — idea / research / history split; where new reasons and research go

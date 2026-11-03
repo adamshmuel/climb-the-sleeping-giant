@@ -108,8 +108,7 @@ You get the name of the idea the user chose. Write only that idea to `docs/ideas
 
 - **Pitch:** 2–3 sentences.
 - **Genre:** genre > subgenre.
-- **Trend evidence:** real numbers from the charts, with the fetch date.
-- **Competitor study:** the top games studied, with their prices, where players drop off, developer forum lessons (with links), and what their real gameplay looks like (with reference screenshots).
+- **Trend evidence** and **Competitor study:** written to `docs/ideas/<short-name>-research.md`, linked from the idea file. Trend evidence: real numbers from the charts, with the fetch date. Competitor study: the top games studied, with their prices, where players drop off, developer forum lessons (with links), and what their real gameplay looks like (with reference screenshots).
 - **Core loop**
 - **What matters most:** a short list that sorts the game's parts and world objects into **core gameplay** (players play with it: the core loop, progression, what's sold), **supporting** (it helps the core loop, for example a landmark players steer by) and **scenery** (only for looks). Other agents use it to match effort to value. Keep it current: when a spec adds a part or object, add it to the list.
 - **Twist**
