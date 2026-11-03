@@ -2,6 +2,35 @@
 
 How the game is built. Each choice has a short "why". Written 2026-10-12 for spec 1 (Core heist). Updated 2026-10-19 for V2 spec 1 (New-player safety), V2 spec 2 (Stuck safety), V2 spec 3 (Gardens and ways up), V2 spec 4 (Egg reachability), V2 spec 5 (Egg nests and the walk-anywhere belly), V2 spec 6 (Wake-up) and V2 spec 7 (Audio). It is updated whenever a later spec changes how things are built.
 
+**Contents**
+- [1. Where things live](#1-where-things-live)
+  - [The two homes: code in git, world in the place file](#the-two-homes-code-in-git-world-in-the-place-file)
+  - [Code folders](#code-folders)
+  - [Server modules (`src/server`)](#server-modules-srcserver)
+  - [Client modules (`src/client`)](#client-modules-srcclient)
+  - [Libraries](#libraries)
+- [2. Networking](#2-networking)
+  - [Client to server](#client-to-server)
+  - [Server to clients](#server-to-clients)
+- [3. Game loop on the server](#3-game-loop-on-the-server)
+- [4. Data saving](#4-data-saving)
+- [5. The screen (HUD)](#5-the-screen-hud)
+- [6. Testing](#6-testing)
+  - [The tool: Jest-Lua, run inside Studio](#the-tool-jest-lua-run-inside-studio)
+  - [How tests are written](#how-tests-are-written)
+  - [How tests are run](#how-tests-are-run)
+- [7. Quality checks before every handoff](#7-quality-checks-before-every-handoff)
+- [8. Studio rules for the build](#8-studio-rules-for-the-build)
+- [9. The shared walk check (`World/PathCheck`)](#9-the-shared-walk-check-worldpathcheck)
+  - [Why not Roblox's pathfinder](#why-not-robloxs-pathfinder)
+  - [The walk map](#the-walk-map)
+  - [Interface](#interface)
+  - [His collision: his real shape, patched (stuck safety Tasks 5, 19 to 23)](#his-collision-his-real-shape-patched-stuck-safety-tasks-5-19-to-23)
+- [10. Sound (V2 spec 7)](#10-sound-v2-spec-7)
+  - [The objects, and the loudness scale](#the-objects-and-the-loudness-scale)
+  - [How sound reaches the speakers](#how-sound-reaches-the-speakers)
+  - [Nobody hears a test](#nobody-hears-a-test)
+
 Words used here:
 
 | Word | Means |
@@ -438,7 +467,7 @@ Everything takes `options` first: which world to search (the Workspace, or a tes
 | `stuckSpots(map, exits)` | Every spot that can't reach an exit, each with its position and the part it stands on (the stuck scan's report names the giant part from that) | The stuck scan (Rule 22) |
 | `cleanup(options)` | Removes the body probe | Every test and world script that used `options` |
 
-**One map per test run:** `src/tests/server/World/WalkMap.spec.luau` (plan 2's stuck scan file, renamed in plan 3) builds the real walk map once in `beforeAll` and runs every check on it: the stuck scan, `WaysUpCheck`, `FairnessCheck` and spec 4's scores. It also builds the footprint trail's steps on that map once, for `FairnessCheck`'s check that Rare egg 1's window (60–80%) holds along the footprint route too (product, 2026-10-19). Why: Jest-Lua gives each test file its own copy of every module, so a map kept in a module would be built again in each file, and spec 4's limit is 2 minutes for the scan and the scores together.
+**One map per test run:** `src/tests/server/World/WalkMap.spec.luau` (plan 2's stuck scan, now `src/tests/server/World/StuckScan/OnTheGiant.spec.luau`, renamed in plan 3, Task 9; not the walk map's fake-world tests in `PathCheck/WalkMap.spec.luau`) builds the real walk map once in `beforeAll` and runs every check on it: the stuck scan, `WaysUpCheck`, `FairnessCheck` and spec 4's scores. It also builds the footprint trail's steps on that map once, for `FairnessCheck`'s check that Rare egg 1's window (60–80%) holds along the footprint route too (product, 2026-10-19). Why: Jest-Lua gives each test file its own copy of every module, so a map kept in a module would be built again in each file, and spec 4's limit is 2 minutes for the scan and the scores together.
 
 **Which links a scored heist uses:** walk and climb only, never slide links (a slide is a drop that can thud, and a scored heist has no thuds). A route that must stay on one way up keeps to spots off the meadow, except where it starts, so it can't cross the silent meadow to another way up.
 
