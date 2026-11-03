@@ -223,7 +223,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   1. `RouteData` reads `Ladder`, `WayUpFoot` and `WayUpTop`, and reports a `Ladder` on only one end of a link.
   2. (Real world) Rule 35: for each garden, the route distance from its spawn point to the foot of its own way up (`Config.WaysUp`) ÷ 16 is within its walk limit: 4 s for gardens 3 to 6, 5 s for 2 and 7, 5.8 s for 1 and 8. The times go in the report.
   3. (Real world) Every way up in `Config.WaysUp` has exactly one foot and one top point.
-  4. (Real world) Rule 43: 12 landing spots; each at least 10 studs from every other spot, every egg spot and every ladder foot, and outside every garden, plus V1's landing-spot checks.
+  4. (Real world) Rule 43: 12 landing spots; each at least 10 studs from every other spot and every egg spot, at least 5 studs from every ladder foot, with a 5×6×5 player box above it touching nothing (the V1 box check grows from 4×6×4), and outside every garden, plus V1's landing-spot checks.
   5. (Real world) The landing's back-edge point links to both belly ramps' first points.
 - Done when: the tests pass, `08-route` run twice says "already done" the second time, and Play shows the trail from garden 3 running to the boot ladder's foot (screenshot).
 
