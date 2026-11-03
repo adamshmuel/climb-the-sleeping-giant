@@ -111,7 +111,7 @@ local HAND_POINTS: { [string]: { number } } = {
 	Meadow_8 = { 22, -80, 2 },
 	Meadow_9 = { 30.5, -101, 2 }, -- the same beside the right ramp foot
 	Meadow_10 = { 54, -76, 2 },
-	Meadow_11 = { 46, -58, 2 }, -- these three pass between the giant and the teacup
+	Meadow_11 = { 52, -58, 2 }, -- these three pass between the giant and the teacup; moved 6 east of the right boot ladder foot (48.6, -64)
 	Meadow_12 = { 54, -40, 2 },
 	Meadow_13 = { 70, -30, 2 },
 	Meadow_14 = { 102, -22, 2 }, -- Meadow_14, 16 and 17 go round the flowering bush and the boulder east of the giant
@@ -226,7 +226,8 @@ link("Egg_Uncommon_3", "Egg_Uncommon_4")
 
 -- The landing spots: x and z (the grass under them gives the height). Around his feet, in the meadow, and each one at
 -- least 10 studs from every egg spot. Spots 1 and 2 are west of the left ramp, 3 and 4 east of the right ramp, 5 and 6
--- beside his left foot, 7 and 8 beside his right foot. Spot 3 is a stud north of the place designer drew, (52, -92),
+-- beside his left foot, 7 and 8 beside his right foot. Spots 5 and 7 are at x -58 and 54, clear of the boot ladder feet
+-- (truss feet at x -48.6 and 48.6); x -62 and 62 touch the sock and the teacup, measured. Spot 3 is a stud north of the place designer drew, (52, -92),
 -- because the grass there is a 22 degree slope and the rule says flat grass. Spot 8 is a stud west of (50, -54), where
 -- a flower clump was 2.4 studs away.
 local LANDING_PLACES: { { number } } = {
@@ -234,9 +235,9 @@ local LANDING_PLACES: { { number } } = {
 	{ -42, -97 },
 	{ 52, -91 },
 	{ 48, -80 },
-	{ -48, -64 },
+	{ -58, -64 },
 	{ -50, -54 },
-	{ 46, -64 },
+	{ 54, -64 },
 	{ 49, -54 },
 }
 

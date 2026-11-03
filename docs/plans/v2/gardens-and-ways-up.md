@@ -85,26 +85,68 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 ### Part 3: World prep
 
-**Task 4: World prep: boot ladders, side ladders, side pads and thigh planks**
+**Task 4 is split into 4a to 4d** (code_lead, 2026-11-03), so no task goes past the Speed rules' 1 hour for a new part. They share one world script, `tools/world/19-ways-up-ladders.luau` (new; 15 and 16 are taken by stuck safety's `15-real-shape` and `16-meadow-bush`), one section per task, and one test file, `src/tests/server/World/WaysUp.spec.luau` (new: the fast checks of this plan's world pieces, so `RealWorld.spec` doesn't grow). The script copies each piece from `Mockup_WaysUp` into `World.WalkSurfaces` as described in "Decisions" (a `Climb` truss, a `Look` model, see-through rails that players walk through as on the ramps), and a second run says "already done".
+
+**Task 4a: World prep: the two boot ladders**
 - Stands on: his body (never reshaped), the 10-22 ladders put back on 2026-11-03, the Safe Gates, and the reach check just before this task (build order step 2, `docs/plans/v2/index.md`).
-- Before: reach check from what exists (each ladder's foot on the grass), back up the parts into `ServerStorage.WorldBackups.Plan3Task4` in the same call (and the main chat copies the place file to `work/place-backups/`).
-- After: one climb with normal player controls, in Play.
-- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
-- Spec rules: Rule 37 (Rope ladders on the boots), Rule 38 (Rope ladders up his sides), Rule 15 (The climb needs no jump): "every ladder ends level with a flat pad or the flat boot top".
-- Files: `tools/world/15-ways-up-ladders.luau` (new), `src/tests/server/World/WaysUp.spec.luau` (new: the fast checks of this plan's world pieces, so `RealWorld.spec`, already 2,800 lines, doesn't grow).
-- Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
-- What the script does: copies both boot ladders, both side ladders, both side pads and both thigh planks from `Mockup_WaysUp` into `World.WalkSurfaces`, as described in "Decisions" (a `Climb` truss, a `Look` model, solid decks, see-through rails that players walk through as on the ramps). It puts each at the spec's spot (section 1) and gives the pads' open edges smooth invisible guards, leaving open only where the ladder and the thigh plank join. It also moves the beard and cap ladders' visible pieces into a `Look` model, changing nothing else about them.
+- Before: reach check from what exists (each boot ladder's foot on the grass at (±49, 2, −64), measured 2026-11-03), back up the parts into `ServerStorage.WorldBackups.T4a` in the same call as the change (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play, from the grass to the boot top.
+- Planned hours: 1. Handoff: `work/t4a/handoff.md`.
+- Spec rules: Rule 37 (Rope ladders on the boots), Rule 15 (The climb needs no jump): "every ladder ends level with a flat pad or the flat boot top".
+- Files: `tools/world/19-ways-up-ladders.luau` (new, section 4a), `WaysUp.spec.luau` (new).
+- Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task copies out of a `Mockup_` folder gets back its own values from its `Mockup*` attributes, or the values this task names for it, and then loses those attributes. A test checks that each solid piece arrives solid.
 - Failing tests first (real world):
-  1. Each boot ladder's foot and top are within 0.5 studs of (±49, 1, −64) and (±32, 31, −64), with its top within 0.1 studs of the boot top's height, and its top about 4 studs from the outer boot toe nest's spot (3 to 4.5 studs; the nest itself comes with spec 5, so the test uses the spot from spec 5's table).
-  2. Each side ladder's foot and top are within 0.5 studs of (±47, 1, −26) and (±36, 32, −26), its top between 30 and 34 high and within 0.1 of its pad's top.
-  3. Each pad is 7 × 9 with its top at 32; each thigh plank runs (±30, 32, −31.5) → (±25, 31, −54), at least 9 wide, with rope rails on both sides.
-  4. Every ladder (the four new ones, the beard and the cap) has a `Climb` truss and a `Look` model, and `Look` holds only visible parts.
-  5. The new ladders' look matches the beard ladder's (rung and rope colour and material).
-  6. Each pad's open edges have guards, and no guard has a flat top a player could stand on.
-- Done when: the tests pass, the second run says "already done", screenshots from gardens 1 and 3 show the new pieces, and `docs/progress/index.md` ("Place file") says the place has unsaved world changes.
+  1. Each boot ladder's `Climb` truss meets the grass within 0.5 studs (side to side and front to back) of (±49, −64), and its top end is within 0.5 of (±32, −64) and within 0.1 studs of the flat boot top's height there.
+  2. Its top end is 3 to 4.5 studs from the outer boot toe nest's spot in spec 5's table, (±28.5, 30.4, −64.5).
+  3. Each has a `Look` model with only visible parts, and its rungs and ropes match the beard ladder's colour and material.
+  4. The right ladder is the left one's exact mirror; no copied part keeps a `Mockup*` attribute; V1's Uncommon egg spots 1 and 3 are not covered.
+- Done when: the tests pass, the second run says "already done", the before and after shots are judged same or better by designer, and `docs/progress/index.md` ("Place file") says the place has unsaved world changes.
+- Also in this task: landing spots 5 and 7 and route point Meadow_11 move off the ladder feet (`tools/world/08-route.luau`), because the ladders sit on them.
+- Accepted red until Task 7: "every place a player can stand on the giant is in a giant zone" misses 4 spots on the new ladders and pads. Task 7's ladder boxes with a `Zone` attribute fix it.
+
+**Task 4b: World prep: the two side ladders and their side pads**
+- Stands on: Task 4a (the shared script and test file, and the ladder look it sets), his body, the 10-22 ladders, the Safe Gates, and the reach check just before this task (build order step 2).
+- Before: reach check from what exists (each side ladder's foot on the grass at (±47, −26), measured first), back up the parts into `ServerStorage.WorldBackups.T4b` in the same call as the change (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play, from the grass onto the side pad.
+- Planned hours: 1.
+- Spec rules: Rule 38 (Rope ladders up his sides): the ladders and the pads. Rule 15 (The climb needs no jump).
+- Files: `tools/world/19-ways-up-ladders.luau` (section 4b), `WaysUp.spec.luau`.
+- Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task copies out of a `Mockup_` folder gets back its own values from its `Mockup*` attributes, or the values this task names for it, and then loses those attributes. A test checks that each solid piece arrives solid.
+- What the script does: copies both side ladders and both side pads, puts each at the spec's spot (section 1), and gives the pads' open edges smooth invisible guards, leaving open only where the ladder and the thigh plank join.
+- Failing tests first (real world):
+  1. Each side ladder's foot and top are within 0.5 studs of (±47, 1, −26) and (±36, 32, −26), its top between 30 and 34 high and within 0.1 of its pad's top.
+  2. Each pad is 7 × 9 with its top at 32.
+  3. Each pad's open edges have guards, and no guard has a flat top a player could stand on.
+  4. Each side ladder has a `Climb` truss and a `Look` model with only visible parts, in the beard ladder's look; the right side is the left's mirror.
+- Done when: the tests pass, the second run says "already done", designer judges the before and after shots same or better, and the place file note is updated.
+
+**Task 4c: World prep: the two thigh planks**
+- Stands on: Task 4a (the boot tops reached by the boot ladders), Task 4b (the side pads the planks start from), his body, the Safe Gates, and the reach check just before this task (build order step 2).
+- Before: reach check from what exists (each side pad from Task 4b and each boot top from Task 4a, at their measured spots), back up the parts into `ServerStorage.WorldBackups.T4c` in the same call as the change (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play: up a side ladder, over the pad and down the thigh plank to the boot top.
+- Planned hours: 1.
+- Spec rules: Rule 38 (Rope ladders up his sides): "A thigh plank ... must join the pad to the boot top with no jump". Rule 15 (The climb needs no jump).
+- Files: `tools/world/19-ways-up-ladders.luau` (section 4c), `WaysUp.spec.luau`.
+- Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task copies out of a `Mockup_` folder gets back its own values from its `Mockup*` attributes, or the values this task names for it, and then loses those attributes. A test checks that each solid piece arrives solid.
+- Failing tests first (real world):
+  1. Each thigh plank runs (±30, 32, −31.5) → (±25, 31, −54), at least 9 wide, with rope rails on both sides.
+  2. Each plank meets its pad and the boot top with no step over 0.3 studs.
+  3. The planks are solid, and the right one is the left one's mirror.
+- Done when: the tests pass, the second run says "already done", designer judges the before and after shots same or better, and the place file note is updated.
+
+**Task 4d: World prep: the beard and cap ladders get a Look model**
+- Stands on: the 10-22 ladders (the beard and cap ladders, put back on 2026-11-03), Task 4a and Task 4b (the `Look` rule the four new ladders already follow) (build order step 2).
+- Before: reach check: none needed, because no new spot is made (it only regroups the visible parts of two built ladders); back up the parts into `ServerStorage.WorldBackups.T4d` in the same call as the change (and the main chat copies the place file to `work/place-backups/`).
+- After: one climb with normal player controls, in Play, up the beard ladder, to show nothing changed.
+- Planned hours: 0.5.
+- Spec rules: Rule 42 (Footprints take the quickest way): the glow covers only the visible ladder ("Decisions", "What the ladder glow lights up").
+- Files: `tools/world/19-ways-up-ladders.luau` (section 4d), `WaysUp.spec.luau`.
+- What the script does: moves the beard and cap ladders' visible pieces into a `Look` model, changing nothing else about them.
+- Failing tests first (real world): every ladder (the four new ones, the beard and the cap) has a `Climb` truss and a `Look` model, and `Look` holds only visible parts; every beard and cap ladder part is where it was (within 0.01 studs).
+- Done when: the tests pass, the second run says "already done", and the fixed-camera shots of his face show no change.
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
-- Stands on: Task 4 (the boot ladders, side pads and thigh planks, and their climb), his body, the Safe Gates, and the reach check just before this task (build order step 2).
+- Stands on: Tasks 4a, 4b, 4c and 4d (the boot ladders, side pads and thigh planks, and their climb), his body, the Safe Gates, and the reach check just before this task (build order step 2).
 - Before: reach check from what exists (each boot top, reached up Task 4's boot ladders, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan3Task5` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
@@ -149,7 +191,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass, every other world test still passes (V1's belly path tests updated for the removed pieces, listed in the report), the second run says "already done", and screenshots of the fork match `view-lapfork-own.png` and `view-lapfork-cross.png`.
 
 **Task 7: World prep: ladder boxes and zone boxes**
-- Stands on: Task 4, Task 5 and Task 6 (every way up and the belly ramps, built), plan 5's (egg nests and climbing) Tasks 13, 14, 15 and 16 (the cuff straps, walk layer and seam, built), and the reach check just before this task (build order step 4).
+- Stands on: Task 4a, Task 4b, Task 4c, Task 4d, Task 5 and Task 6 (every way up and the belly ramps, built), plan 5's (egg nests and climbing) Tasks 13, 14, 15 and 16 (the cuff straps, walk layer and seam, built), and the reach check just before this task (build order step 4).
 - Before: reach check from what exists (every walk surface built in steps 2 and 3), back up the parts into `ServerStorage.WorldBackups.Plan3Task7` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
@@ -174,7 +216,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Files: `tools/world/08-route.luau`, `src/shared/RouteData.luau` (reads `Ladder`, `WayUpFoot` and `WayUpTop`), `src/shared/Config.luau` (`Config.WaysUp`), `src/server/World/WorldIndex.luau` (12 landing spots; `readWaysUp` from the route points), `RouteData.spec`, `WorldIndex.spec`, `RealWorld.spec.luau`.
 - What changes:
   - **Route:** new points at each new ladder's foot and top, along each thigh plank and lap plank, on the landing, and up each belly ramp. The landing's back-edge point links to both ramp bottoms, so the trail forks there. `Belly_1` to `Belly_3` go (the old left path), and so do the hand points stuck safety Task 24 added at its crossing ramps (named `Belly_` plus a place word, such as `Belly_KneeFoot`; listed in its report).
-  - **Landing spots:** 5 and 7 move to about (−62, −64) and (62, −64); 9 to 12 are new, one near each new ladder's foot.
+  - **Landing spots:** 5 and 7 already moved to (−58, −64) and (54, −64) in Task 4a, because the boot ladders sit on them; 9 to 12 are new, one near each new ladder's foot.
   - **The route test** checks a ladder link as a climb (a `Climb` truss joins its two points; the foot is on the grass, the top on the pad or boot top) instead of with the walk check, and checks every other link as today.
   - **Plan 2's stuck scan** names V1's old belly spots by position, not by route point name, because `Belly_1` to `Belly_3` are gone.
 - Failing tests first:

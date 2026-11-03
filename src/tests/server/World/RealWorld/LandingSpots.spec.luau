@@ -360,15 +360,16 @@ describe("the real world, route and landing spots", function()
 	it("the landing spots are at the approved places", function()
 		-- Spot 2 is a stud and a half from (-43, -96) and spot 3 a stud from (52, -92): the first had a flower clump
 		-- 2.3 studs away, the second stands on a 22 degree slope (the rule says flat grass). Spot 8 is a stud west of
-		-- (50, -54), where a flower clump was 2.4 studs away.
+		-- (50, -54), where a flower clump was 2.4 studs away. Spots 5 and 7 moved off the boot ladder feet (Gardens and
+		-- ways up); the spec's x -62 and 62 touch the sock and the teacup, so they are the nearest clear spots, measured.
 		local approved: { { number } } = {
 			{ -45, -79 },
 			{ -42, -97 },
 			{ 52, -91 },
 			{ 48, -80 },
-			{ -48, -64 },
+			{ -58, -64 },
 			{ -50, -54 },
-			{ 46, -64 },
+			{ 54, -64 },
 			{ 49, -54 },
 		}
 		local spots = loadLandingSpots()
