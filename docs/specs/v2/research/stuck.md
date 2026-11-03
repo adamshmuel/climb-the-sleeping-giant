@@ -16,7 +16,7 @@ Every API in part 2 was checked on its official docs page. **[Unverified]** mark
 | Slid over the forehead guard to the nightcap top | The middle slab is 68.6°, just under 70° | Accepted (it's the cap ladder's route) | `docs/specs/index.md` |
 | The belly path middle was too steep | 10 pieces steeper than 60° | 7 slabs on one even 57.8° slope | `tools/world/03-climb.luau:174-255` |
 | A phone player hopped by itself and woke him | Roblox auto-jump on touch screens | Auto-jump off for the whole game. Rule: smooth a stuck ledge with a wedge, never turn auto-jump back on | `docs/plans/core-heist.md:768` |
-| The float-down sank 0.8 studs into the grass | The push let go too late | Stops 2.5 studs above standing height, and by time | `docs/plans/core-heist.md:475` |
+| The float-down sank 0.8 studs into the grass | The push let go too late | Stops 2.5 studs above standing height, and by time | `docs/progress/v1/history/core-heist.md:77` |
 
 ### How the world is built today
 - **His collision setting:** no script or test sets the giant's `CollisionFidelity` (how accurate his collision shape is). The docs only say his shape "is rough".

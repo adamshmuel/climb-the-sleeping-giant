@@ -1,5 +1,11 @@
 # Plan: New-player safety (V2, spec 1)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [What changes, in short](#what-changes-in-short)
+- [Tasks](#tasks) (Tasks 1, 2, 3, 4, 12, 5, 6, 7, 8, 9, 10, 11, 13)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+
 **Status: built** (2026-10-19). All 13 tasks are done and approved. Next: its build review, then Gate 4. It is the first V2 plan: its Task 1 is where V2 coding started.
 
 How `docs/specs/v2/new-player-safety.md` gets built, as small tasks in test-first order. How the code is organised is in `docs/architecture.md`.

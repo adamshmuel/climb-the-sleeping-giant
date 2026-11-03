@@ -1,5 +1,10 @@
 # Stuck safety plan, Part 2c: his drawn body and the patches (Tasks 26, 22, 23)
 
+**Contents** (tasks in the order they appear; search for `**Task N:` to jump).
+- Task 26: His solid body sits where he's drawn
+- Task 22: Patches for the open dents
+- Task 23: The last steep spots, and the stuck scan passes
+
 Part of the stuck safety build plan (V2, spec 2). Read the map first: `docs/plans/v2/stuck-safety.md` ("Words used here", and which file holds which task).
 
 ### Part 2: One collision source (continued)
