@@ -4,6 +4,28 @@ Reviewed on 2026-10-19, against `docs/specs/v2/new-player-safety.md` (Rules 11, 
 
 **Verdict: accept.** The free save works the way the spec says, from real play: a brand-new player hears both warnings, gets one "phew" moment where the bar drops to 70 and the warning plays again, and after that the giant wakes for real. Every rule I could test in Studio passes. Two things go to `designer` before Gate 4 (they come from the older carry look, not from this build): see "Sent to designer".
 
+**Contents**
+- [How I played](#how-i-played)
+- [Playing it as a player](#playing-it-as-a-player)
+  - [What works](#what-works)
+  - [Small things I noticed (none stops a new player)](#small-things-i-noticed-none-stops-a-new-player)
+- [Sent to designer (decide before Gate 4)](#sent-to-designer-decide-before-gate-4)
+- [Next to the top games](#next-to-the-top-games)
+- [Results table](#results-table)
+  - [Rules](#rules)
+  - [The bubble's four pass conditions (spec section 6)](#the-bubbles-four-pass-conditions-spec-section-6)
+  - [Story checks](#story-checks)
+- [Idea fit](#idea-fit)
+- [Business fit](#business-fit)
+- [Phone](#phone)
+- [Console](#console)
+- [Not testable in Studio, and how to check later](#not-testable-in-studio-and-how-to-check-later)
+- [Watch points from `docs/progress/index.md`](#watch-points-from-docsprogressindexmd)
+- [Verdict: accept](#verdict-accept)
+- [game_creator's check (2026-10-19): approve](#game_creators-check-2026-10-19-approve)
+- [designer's look check (2026-10-19): changes, one item](#designers-look-check-2026-10-19-changes-one-item)
+- [designer's re-check of the carried egg fix (2026-10-19): approve](#designers-re-check-of-the-carried-egg-fix-2026-10-19-approve)
+
 ## How I played
 
 | Session | Screen | What I did |
@@ -17,8 +39,8 @@ Reviewed on 2026-10-19, against `docs/specs/v2/new-player-safety.md` (Rules 11, 
 What I used:
 - **Moving:** the player's keys (W, A, S, D, Space, E to grab, C for Tiptoe) and Studio's walking tool. I never moved the character with a script.
 - **Starting the meter higher (to save time):** in sessions 2 to 5, after grabbing the Rare I set the meter to 70, 72, 78, 80 or 82 from the server, below 85. Every 85% warning, every save and every wake in the results below then came from real walking or real jumps.
-- **The 85% look at the spawn spots:** gardens are silent, so a real 85% can't happen there. As `docs/progress.md` says, I set the meter to 95 and fired the 85 warning, after moving the player to that garden the way the game does.
-- **Test helpers:** the session sound mute from `docs/progress.md`, the phone simulator switch, a meter logger (the server) and a screen-state logger (the player's own screen: the meter words, the tip, the bubble and the Z Z Z). Both loggers only read; they change nothing.
+- **The 85% look at the spawn spots:** gardens are silent, so a real 85% can't happen there. As the `studio-jobs` skill says (`.claude/skills/studio-jobs/SKILL.md`, section "This game"), I set the meter to 95 and fired the 85 warning, after moving the player to that garden the way the game does.
+- **Test helpers:** the session sound mute from the `studio-jobs` skill (`.claude/skills/studio-jobs/SKILL.md`, section "Muting the sound in Play"), the phone simulator switch, a meter logger (the server) and a screen-state logger (the player's own screen: the meter words, the tip, the bubble and the Z Z Z). Both loggers only read; they change nothing.
 
 ## Playing it as a player
 
@@ -130,7 +152,7 @@ There's nothing to buy in this spec, so no odds or prices to check. For retentio
 | A real phone's streaming (pieces loading in) | The simulator runs on the computer | `qa`, on a real phone |
 | The sound of the warnings | Muted in every session, and spec 7 isn't built | Spec 7's build review |
 
-## Watch points from `docs/progress.md`
+## Watch points from `docs/progress/index.md`
 
 | Watch point | Result |
 |---|---|
