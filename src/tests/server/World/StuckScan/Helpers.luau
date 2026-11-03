@@ -53,11 +53,11 @@ end
 -- The 17-ray closed check (escapingRays) decides, so a spot that fails it is not listed here and stays a stuck spot to fix.
 local CLOSED_SPOTS: { ClosedSpot } = {
 	-- Inside the Sock (its piece is the Sock model, not a giant piece).
-	closedSpot("Closed_Sock_1", "Sock", -68.8, 6.0, -67.0),
-	closedSpot("Closed_Sock_2", "Sock", -68.8, 3.0, -63.0),
-	closedSpot("Closed_Sock_3", "Sock", -68.8, 2.9, -61.0),
-	closedSpot("Closed_Sock_4", "Sock", -66.8, 5.0, -63.0),
-	closedSpot("Closed_Sock_5", "Sock", -66.8, 5.1, -61.0),
+	closedSpot("Closed_Sock_1", "Sock", -70.8, 6.0, 13.0),
+	closedSpot("Closed_Sock_2", "Sock", -70.8, 3.0, 17.0),
+	closedSpot("Closed_Sock_3", "Sock", -70.8, 2.9, 19.0),
+	closedSpot("Closed_Sock_4", "Sock", -68.8, 5.0, 17.0),
+	closedSpot("Closed_Sock_5", "Sock", -68.8, 5.1, 19.0),
 	-- Inside the beard.
 	closedSpot("Closed_Beard_1", "head_with_beard", 3.2, 73.8, 17.0),
 	closedSpot("Closed_Beard_2", "head_with_beard", 5.2, 74.2, 13.0),

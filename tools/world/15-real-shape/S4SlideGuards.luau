@@ -257,26 +257,26 @@ local function sectionSlideGuards(): string
 	-- Task 32, step 32-4: the Sock's way out, variant 1 of work/t32/cands-2b.txt (T6 r9 v1z, west cut 2 slices, east cut 2;
 	-- rows sock|1|... , checked equal by a script): the ramp, then 19 fill boxes, one per 0.25 stud slice in z.
 	local PATCHES_32: { FolderRecord } = {
-		wedge("Ramp_Sock_1", 3, 2.4, 2.86, -68.8, 2.2, -42.87, 0, 1),
-		block("Patch_Sock_1", 1.25, 1.389, 0.25, -68, 6.974, -47.25),
-		block("Patch_Sock_2", 4, 1.878, 0.25, -69.125, 6.967, -47),
-		block("Patch_Sock_3", 6.25, 2.405, 0.25, -70.25, 6.954, -46.75),
-		block("Patch_Sock_4", 8, 2.907, 0.25, -70.875, 6.954, -46.5),
-		block("Patch_Sock_5", 8.25, 3.396, 0.25, -71, 6.948, -46.25),
-		block("Patch_Sock_6", 8.5, 3.981, 0.25, -70.875, 6.978, -46),
-		block("Patch_Sock_7", 8.75, 4.65, 0.25, -71, 6.974, -45.75),
-		block("Patch_Sock_8", 9, 5.304, 0.25, -70.875, 6.973, -45.5),
-		block("Patch_Sock_9", 9.25, 5.969, 0.25, -71, 6.971, -45.25),
-		block("Patch_Sock_10", 9.5, 6.656, 0.25, -70.875, 6.971, -45),
-		block("Patch_Sock_11", 4.25, 6.598, 0.25, -73.75, 6.965, -44.75),
-		block("Patch_Sock_12", 2.75, 6.764, 0.25, -67.5, 6.924, -44.75),
-		block("Patch_Sock_13", 3.5, 6.587, 0.25, -74.125, 6.962, -44.5),
-		block("Patch_Sock_14", 1, 5.355, 0.25, -66.375, 6.937, -44.5),
-		block("Patch_Sock_15", 3, 6.797, 0.25, -74.375, 6.959, -44.25),
-		block("Patch_Sock_16", 1.25, 6.66, 0.25, -66.25, 6.916, -44.25),
-		block("Patch_Sock_17", 2.5, 6.786, 0.25, -74.875, 6.955, -44),
-		block("Patch_Sock_18", 1.75, 6.359, 0.25, -75.5, 6.961, -43.75),
-		block("Patch_Sock_19", 1.5, 6.237, 0.25, -75.625, 6.909, -43.5),
+		wedge("Ramp_Sock_1", 3, 2.4, 2.86, -70.8, 2.2, 37.13, 0, 1),
+		block("Patch_Sock_1", 1.25, 1.389, 0.25, -70, 6.974, 32.75),
+		block("Patch_Sock_2", 4, 1.878, 0.25, -71.125, 6.967, 33),
+		block("Patch_Sock_3", 6.25, 2.405, 0.25, -72.25, 6.954, 33.25),
+		block("Patch_Sock_4", 8, 2.907, 0.25, -72.875, 6.954, 33.5),
+		block("Patch_Sock_5", 8.25, 3.396, 0.25, -73, 6.948, 33.75),
+		block("Patch_Sock_6", 8.5, 3.981, 0.25, -72.875, 6.978, 34),
+		block("Patch_Sock_7", 8.75, 4.65, 0.25, -73, 6.974, 34.25),
+		block("Patch_Sock_8", 9, 5.304, 0.25, -72.875, 6.973, 34.5),
+		block("Patch_Sock_9", 9.25, 5.969, 0.25, -73, 6.971, 34.75),
+		block("Patch_Sock_10", 9.5, 6.656, 0.25, -72.875, 6.971, 35),
+		block("Patch_Sock_11", 4.25, 6.598, 0.25, -75.75, 6.965, 35.25),
+		block("Patch_Sock_12", 2.75, 6.764, 0.25, -69.5, 6.924, 35.25),
+		block("Patch_Sock_13", 3.5, 6.587, 0.25, -76.125, 6.962, 35.5),
+		block("Patch_Sock_14", 1, 5.355, 0.25, -68.375, 6.937, 35.5),
+		block("Patch_Sock_15", 3, 6.797, 0.25, -76.375, 6.959, 35.75),
+		block("Patch_Sock_16", 1.25, 6.66, 0.25, -68.25, 6.916, 35.75),
+		block("Patch_Sock_17", 2.5, 6.786, 0.25, -76.875, 6.955, 36),
+		block("Patch_Sock_18", 1.75, 6.359, 0.25, -77.5, 6.961, 36.25),
+		block("Patch_Sock_19", 1.5, 6.237, 0.25, -77.625, 6.909, 36.5),
 	}
 	local PATCHES_AFTER32: { FolderRecord } = table.clone(PATCHES_23) -- the small patches after Task 32 (today's world)
 	table.move(PATCHES_32, 1, #PATCHES_32, #PATCHES_AFTER32 + 1, PATCHES_AFTER32)
@@ -284,22 +284,22 @@ local function sectionSlideGuards(): string
 	-- Task 37, step 37-3: the Sock's lip boards and the boxes tried with them (rows board|2|... of work/t36/cands.txt, checked
 	-- equal by a script): 6 sealed boxes for SmallPatches, then 8 invisible boards for SlideGuards.
 	local PATCHES_37: { FolderRecord } = {
-		block("Patch_Sock_20", 1.25, 3.237, 2, -77, 3.469, -44.125),
-		block("Patch_Sock_21", 0.5, 1.762, 0.75, -76.125, 2.731, -43.75),
-		block("Patch_Sock_22", 1, 1.761, 1.75, -75.375, 2.73, -44.25),
-		block("Patch_Sock_23", 1.75, 3.909, 1, -64.75, 3.805, -45.125),
+		block("Patch_Sock_20", 1.25, 3.237, 2, -79, 3.469, 35.875),
+		block("Patch_Sock_21", 0.5, 1.762, 0.75, -78.125, 2.731, 36.25),
+		block("Patch_Sock_22", 1, 1.761, 1.75, -77.375, 2.73, 35.75),
+		block("Patch_Sock_23", 1.75, 3.909, 1, -66.75, 3.805, 34.875),
 		turned(
 			"Patch_Sock_24",
 			"Part",
 			Vector3.new(1.5, 8.15, 1.7473),
-			Vector3.new(-77.1611, 5.925, -47.6056),
+			Vector3.new(-79.1611, 5.925, 32.3944),
 			{ 0.940861, 0, -0.338793, 0, 1, 0, 0.338793, 0, 0.940861 }
 		),
 		turned(
 			"Patch_Sock_25",
 			"Part",
 			Vector3.new(1.5, 8.15, 2.6852),
-			Vector3.new(-76.5882, 5.925, -49.6067),
+			Vector3.new(-78.5882, 5.925, 30.3933),
 			{ 0.972144, 0, -0.234384, 0, 1, 0, 0.234384, 0, 0.972144 }
 		),
 	}
@@ -308,56 +308,56 @@ local function sectionSlideGuards(): string
 			"SlideGuard_Sock_1",
 			"WedgePart",
 			Vector3.new(0.678, 6.5, 0.18),
-			Vector3.new(-77.9256, 5.25, -43.2765),
+			Vector3.new(-79.9256, 5.25, 36.7235),
 			{ -0.796162, 0, 0.605083, 0, 1, 0, -0.605083, 0, -0.796162 }
 		),
 		turned(
 			"SlideGuard_Sock_2",
 			"WedgePart",
 			Vector3.new(0.3532, 6.5, 0.15),
-			Vector3.new(-77.6132, 5.25, -43.0841),
+			Vector3.new(-79.6132, 5.25, 36.9159),
 			{ -0.987441, 0, 0.157991, 0, 1, 0, -0.157991, 0, -0.987441 }
 		),
 		turned(
 			"SlideGuard_Sock_3",
 			"WedgePart",
 			Vector3.new(1.3514, 6.5, 0.11),
-			Vector3.new(-76.8776, 5.25, -43.0749),
+			Vector3.new(-78.8776, 5.25, 36.9251),
 			{ -0.99885, 0, -0.047945, 0, 1, 0, 0.047945, 0, -0.99885 }
 		),
 		turned(
 			"SlideGuard_Sock_4",
 			"WedgePart",
 			Vector3.new(1.3532, 8, 0.18),
-			Vector3.new(-75.6315, 6, -43.1848),
+			Vector3.new(-77.6315, 6, 36.8152),
 			{ -0.997418, 0, -0.071814, 0, 1, 0, 0.071814, 0, -0.997418 }
 		),
 		turned(
 			"SlideGuard_Sock_5",
 			"WedgePart",
 			Vector3.new(1.25, 1.712, 0.25),
-			Vector3.new(-74.25, 2.706, -44),
+			Vector3.new(-76.25, 2.706, 36),
 			{ -1, 0, 0, 0, 1, 0, 0, 0, -1 }
 		),
 		turned(
 			"SlideGuard_Sock_6",
 			"WedgePart",
 			Vector3.new(0.75, 1.736, 0.25),
-			Vector3.new(-66.375, 2.718, -44.25),
+			Vector3.new(-68.375, 2.718, 35.75),
 			{ -1, 0, 0, 0, 1, 0, 0, 0, -1 }
 		),
 		turned(
 			"SlideGuard_Sock_7",
 			"WedgePart",
 			Vector3.new(1.6133, 7, 0.16),
-			Vector3.new(-65.2606, 5.5, -44.1393),
+			Vector3.new(-67.2606, 5.5, 35.8607),
 			{ -0.991228, 0, -0.132164, 0, 1, 0, 0.132164, 0, -0.991228 }
 		),
 		turned(
 			"SlideGuard_Sock_8",
 			"WedgePart",
 			Vector3.new(0.6436, 6.5, 0.21),
-			Vector3.new(-64.3277, 5.25, -44.395),
+			Vector3.new(-66.3277, 5.25, 35.605),
 			{ -0.842271, 0, -0.539054, 0, 1, 0, 0.539054, 0, -0.842271 }
 		),
 	}

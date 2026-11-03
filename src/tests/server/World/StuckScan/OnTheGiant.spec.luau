@@ -139,7 +139,7 @@ local FIXED_PLACES: { FixedPlace } = {
 	-- front edge of the cave under the cushion (product: found by real play in Task 22), and the Sock's one open spot
 	-- (the Sock is in the Meadow zone, where the rescue does not cover a stuck player).
 	groupBox("under the cushion, front edge", Vector3.new(-16.8, 27.6, 43), Vector3.new(-14.8, 27.6, 43)),
-	groupBox("the Sock's open spot", Vector3.new(-68.8, 4.4, -45), Vector3.new(-68.8, 4.4, -45)),
+	groupBox("the Sock's open spot", Vector3.new(-70.8, 4.4, 35), Vector3.new(-70.8, 4.4, 35)),
 	-- Task 23: the small-place boxes that are still fixed, with the plan's exact numbers (plan, Task 23, "the 10 small
 	-- spots"): group 30 (right side of the neck) and group 23 (under the brim). The plan's other four small boxes
 	-- (groups 20, 26 and 29 at the back of the neck, 11 and 32 on the right chair arm, 18 on the left chair arm) and

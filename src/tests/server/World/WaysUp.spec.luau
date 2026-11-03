@@ -286,3 +286,121 @@ describe("every ladder has a Look model (four d)", function()
 		end
 	end)
 end)
+
+-- Tasks 4e3 and 4f (docs/plans/v2/gardens-and-ways-up.md): the Sock and the Teacup stand beside the outer walks.
+-- Spec Rule 35 (Every garden has a way up close by). Lessons 340 (a walk check ray respects collision) and
+-- 341 (moving a prop moves its helper parts too).
+describe("the outer walks are clear of the giant's things (four e three)", function()
+	local WALK_CASES =
+		{ { plot = 1, side = -1 }, { plot = 2, side = -1 }, { plot = 7, side = 1 }, { plot = 8, side = 1 } }
+	local WALK_HEIGHTS = { 1, 3 }
+	local WALK_SIDES = { -5, 0, 5 } -- a corridor 10 studs wide
+	local FRONT_OF_LADDER = 4
+	local HELPER_SAME = 0.05
+	local SOCK_HELPERS: { { folder: string, name: string } } = { { folder = "SmallPatches", name = "Ramp_Sock_1" } }
+	for i = 1, 25 do
+		table.insert(SOCK_HELPERS, { folder = "SmallPatches", name = "Patch_Sock_" .. i })
+	end
+	for i = 1, 8 do
+		table.insert(SOCK_HELPERS, { folder = "SlideGuards", name = "SlideGuard_Sock_" .. i })
+	end
+
+	local function worldFolder(name: string): Instance
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local found = (world :: Instance):FindFirstChild(name)
+		expect(found).never.toBeNil()
+		return found :: Instance
+	end
+
+	local function thingsFolder(): Instance
+		return worldFolder("GiantsThings")
+	end
+
+	it("nothing in GiantsThings stands on the walk from each outer spawn to its boot ladder (Rule 35)", function()
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Include
+		params.FilterDescendantsInstances = { thingsFolder() }
+		params.RespectCanCollide = true
+		for _, case in WALK_CASES do
+			local plot = worldFolder("Plots"):FindFirstChild("Plot_" .. case.plot) :: Instance
+			expect(plot).never.toBeNil()
+			local spawn = plot:FindFirstChild("SpawnSpot") :: BasePart
+			expect(spawn).never.toBeNil()
+			local top, bottom = ends(climbOf(case.side))
+			local outward = Vector3.new(bottom.X - top.X, 0, bottom.Z - top.Z).Unit
+			local goal = Vector3.new(bottom.X, 0, bottom.Z) + outward * FRONT_OF_LADDER
+			local start = Vector3.new(spawn.Position.X, 0, spawn.Position.Z)
+			local across = goal - start
+			local sideways = Vector3.new(-across.Z, 0, across.X).Unit
+			local groundY = spawn.Position.Y + spawn.Size.Y / 2
+			for _, offset in WALK_SIDES do
+				for _, height in WALK_HEIGHTS do
+					local origin = start + sideways * offset + Vector3.new(0, groundY + height, 0)
+					local hit = Workspace:Raycast(origin, across, params)
+					local hitName = if hit ~= nil then hit.Instance:GetFullName() else nil
+					expect(hitName).toBeNil() -- plot case.plot, side offset, height: what the walk bumps into
+				end
+			end
+		end
+	end)
+
+	it("every Sock helper keeps its place on the Sock when the Sock moves (Lesson 341)", function()
+		local backups = game:GetService("ServerStorage"):FindFirstChild("WorldBackups")
+		local backup = if backups ~= nil then backups:FindFirstChild("T4e3") else nil
+		expect(backup).never.toBeNil()
+		local oldSock = (backup :: Instance):FindFirstChild("Sock") :: Model
+		expect(oldSock).never.toBeNil()
+		local liveSock = thingsFolder():FindFirstChild("Sock") :: Model
+		expect(liveSock).never.toBeNil()
+		for _, helper in SOCK_HELPERS do
+			local was = (backup :: Instance):FindFirstChild(helper.name) :: BasePart
+			expect(was).never.toBeNil()
+			local now = (walkSurfaces():FindFirstChild(helper.folder) :: Instance):FindFirstChild(
+					helper.name
+				) :: BasePart
+			expect(now).never.toBeNil()
+			local wasOffset = oldSock:GetPivot():ToObjectSpace(was.CFrame)
+			local nowOffset = liveSock:GetPivot():ToObjectSpace(now.CFrame)
+			expect((wasOffset.Position - nowOffset.Position).Magnitude <= HELPER_SAME).toBe(true)
+		end
+	end)
+
+	it("from the Sock no giant or pillow surface is a jump away (game_creator's jump reach rule)", function()
+		local sock = thingsFolder():FindFirstChild("Sock") :: Model
+		expect(sock).never.toBeNil()
+		local sockParams = RaycastParams.new()
+		sockParams.FilterType = Enum.RaycastFilterType.Include
+		sockParams.FilterDescendantsInstances = { sock }
+		sockParams.RespectCanCollide = true
+		local near = OverlapParams.new()
+		near.FilterType = Enum.RaycastFilterType.Include
+		near.FilterDescendantsInstances = { worldFolder("Giant"), thingsFolder():FindFirstChild("Pillow") :: Instance }
+		near.RespectCanCollide = true
+		local boxCFrame, boxSize = sock:GetBoundingBox()
+		local step = 3
+		local checked = 0
+		local x = boxCFrame.X - boxSize.X / 2
+		while x <= boxCFrame.X + boxSize.X / 2 do
+			local z = boxCFrame.Z - boxSize.Z / 2
+			while z <= boxCFrame.Z + boxSize.Z / 2 do
+				local hit = Workspace:Raycast(
+					Vector3.new(x, boxCFrame.Y + boxSize.Y / 2 + 1, z),
+					Vector3.new(0, -boxSize.Y - 2, 0),
+					sockParams
+				)
+				if hit ~= nil and hit.Normal.Y > 0.6 then
+					checked += 1
+					-- the band 0.5 to 7.2 studs above this standing spot, 10 studs across each way
+					local band = CFrame.new(hit.Position + Vector3.new(0, 3.85, 0))
+					local parts = Workspace:GetPartBoundsInBox(band, Vector3.new(20, 6.7, 20), near)
+					local name = if #parts > 0 then parts[1]:GetFullName() else nil
+					expect(name).toBeNil()
+				end
+				z += step
+			end
+			x += step
+		end
+		expect(checked > 0).toBe(true)
+	end)
+end)

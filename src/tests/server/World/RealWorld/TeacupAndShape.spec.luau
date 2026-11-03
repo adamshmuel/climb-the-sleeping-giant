@@ -18,24 +18,28 @@ describe("the real world, the teacup's bowl", function()
 
 	-- MEASURED BY HAND on 2026-10-19, in Studio Edit mode, before the cup became Hull (once it is Hull the inside of the
 	-- bowl can't be measured again). The method: rays straight down onto the cup's own mesh (RespectCanCollide off,
-	-- only the cup in the filter), outwards from (76, -58) every 0.1 studs from 6 to 16 studs, at 72 angles 5 degrees
+	-- only the cup in the filter), outwards from (76, 30) every 0.1 studs from 6 to 16 studs, at 72 angles 5 degrees
 	-- apart. The rim crest of each angle is its highest hit. The rim plane is the least-squares plane through the 72
 	-- crest points: y = RIM_SLOPE_X * x + RIM_SLOPE_Z * z + RIM_BASE. It tilts the rim 8.8 degrees, highest to the
 	-- west/north-west (lowest crest 18.35, highest on the bowl 23.0).
 	local RIM_SLOPE_X = -0.134338
 	local RIM_SLOPE_Z = -0.077725
 	local RIM_BASE = 26.486
+	-- The cup was measured at its old place; it now sits this far away (Tasks 4e3 and 4f moved it). The measured
+	-- spots below are shifted by it, and the rim plane is read at the old place.
+	local MOVED_X = -0.497
+	local MOVED_Z = 87.713
 	-- The crest point that sits farthest below the plane (the worst one), 0.45336 studs under it.
-	local WORST_RIM_X = 69.55
-	local WORST_RIM_Z = -46.8283
+	local WORST_RIM_X = 69.55 + MOVED_X
+	local WORST_RIM_Z = -46.8283 + MOVED_Z
 	local WORST_RIM_Y = 20.3291
 	-- The tea's top is this far under the rim plane: the worst point's distance plus 0.1 (designer).
 	local TEA_DROP = 0.5534
 	-- The circle fitted to the inside of the bowl at the tea's height (the wall found by rays down along 72 angles
 	-- in the tea's own plane): its centre, on the tea's top plane, and its radius. The tea's radius is that plus 0.3,
 	-- so its edge tucks into the cup wall (designer).
-	local CIRCLE_CENTRE_X = 77.3985
-	local CIRCLE_CENTRE_Z = -57.1986
+	local CIRCLE_CENTRE_X = 77.3985 + MOVED_X
+	local CIRCLE_CENTRE_Z = -57.1986 + MOVED_Z
 	local CIRCLE_RADIUS = 11.941
 	local TEA_RADIUS = CIRCLE_RADIUS + 0.3
 	local TEA_THICKNESS = 0.4
@@ -93,7 +97,7 @@ describe("the real world, the teacup's bowl", function()
 	end
 
 	local function rimPlaneHeight(x: number, z: number): number
-		return RIM_SLOPE_X * x + RIM_SLOPE_Z * z + RIM_BASE
+		return RIM_SLOPE_X * (x - MOVED_X) + RIM_SLOPE_Z * (z - MOVED_Z) + RIM_BASE
 	end
 
 	it("the teacup's collision is the smooth wrap", function()
@@ -109,27 +113,27 @@ describe("the real world, the teacup's bowl", function()
 		local spots: { { name: string, feet: Vector3, up: Vector3 } } = {
 			{
 				name = "stuck spot 1",
-				feet = Vector3.new(69.2, 11.6036, -61),
+				feet = Vector3.new(69.2, 11.6036, 27),
 				up = Vector3.new(0.8267, 0.5524, -0.1065).Unit,
 			},
 			{
 				name = "stuck spot 2",
-				feet = Vector3.new(69.2, 11.7288, -59),
+				feet = Vector3.new(69.2, 11.7288, 29),
 				up = Vector3.new(0.6058, 0.7956, 0.0002).Unit,
 			},
 			{
 				name = "stuck spot 3",
-				feet = Vector3.new(69.2, 11.7282, -57),
+				feet = Vector3.new(69.2, 11.7282, 31),
 				up = Vector3.new(0.6058, 0.7956, 0.0002).Unit,
 			},
 			{
 				name = "stuck spot 4",
-				feet = Vector3.new(69.2, 11.7276, -55),
+				feet = Vector3.new(69.2, 11.7276, 33),
 				up = Vector3.new(0.6058, 0.7956, 0.0002).Unit,
 			},
 			{
 				name = "bottom of the bowl",
-				feet = Vector3.new(75, 6.0759, -58),
+				feet = Vector3.new(75, 6.0759, 30),
 				up = Vector3.new(0.1949, 0.9799, -0.0424).Unit,
 			},
 		}
@@ -204,9 +208,9 @@ describe("the real world, the teacup's bowl", function()
 		params.FilterDescendantsInstances = { teacup() }
 		params.RespectCanCollide = true -- sees only what a player bumps into
 		local points: { [string]: Vector3 } = {
-			west = Vector3.new(68, 0, -58),
-			middle = Vector3.new(76, 0, -58),
-			east = Vector3.new(86, 0, -58),
+			west = Vector3.new(68, 0, 30),
+			middle = Vector3.new(76, 0, 30),
+			east = Vector3.new(86, 0, 30),
 		}
 		local bad: { string } = {}
 		for name, point in points do

@@ -45,13 +45,13 @@ describe("the real world, slide guards", function()
 		{ name = "notch, walk 14", kind = "patch", root = KnownPlaces.get("N14").place, prefix = NOTCH_PATCH_PREFIX },
 		-- Task 32: the Sock's open spot (-68.8, 4.4, -45) (stuck scan, test 2's Sock box). It lies inside Patch_Sock_10 of the
 		-- chosen fill (rank 1 of work/t32/cands-2b.txt: x -75.625 to -66.125, y 3.643 to 10.299, z -45.125 to -44.875).
-		{ name = "Sock", kind = "patch", root = Vector3.new(-68.8, 4.4, -45), prefix = SOCK_PATCH_PREFIX },
+		{ name = "Sock", kind = "patch", root = Vector3.new(-70.8, 4.4, 35), prefix = SOCK_PATCH_PREFIX },
 		-- Task 37: the Sock's lips and gaps (the boards and boxes of work/t36/cands.txt, "board|2|" rows).
 		{
 			name = "Sock, west lip",
 			kind = "guard",
 			-- Task 35's hang table, "Scrape walk going +x, run 1"
-			root = Vector3.new(-76.61, 5.42, -42.13),
+			root = Vector3.new(-78.61, 5.42, 37.87),
 			prefix = "",
 			face = "body_geom", -- the Sock's mesh part (World.GiantsThings.Sock.body.body_geom)
 		},
@@ -59,14 +59,14 @@ describe("the real world, slide guards", function()
 			name = "Sock, east lip",
 			kind = "guard",
 			-- Task 35's hang table, "Walk into the fill's east end, run 1"
-			root = Vector3.new(-64.65, 5.21, -43.37),
+			root = Vector3.new(-66.65, 5.21, 36.63),
 			prefix = "",
 			face = "body_geom",
 		},
 		-- Inside Patch_Sock_20, in the gap under the west ledge (work/t35/results-35-1.txt, rows Ws1 and Ws2).
-		{ name = "Sock, west gap", kind = "patch", root = Vector3.new(-77.0, 3.0, -44.0), prefix = SOCK_PATCH_PREFIX },
+		{ name = "Sock, west gap", kind = "patch", root = Vector3.new(-79, 3.0, 36), prefix = SOCK_PATCH_PREFIX },
 		-- Inside Patch_Sock_23, in the open cave under the east ledge (work/t35/results-35-1.txt, row E1a).
-		{ name = "Sock, east gap", kind = "patch", root = Vector3.new(-64.75, 3.0, -45.1), prefix = SOCK_PATCH_PREFIX },
+		{ name = "Sock, east gap", kind = "patch", root = Vector3.new(-66.75, 3.0, 34.9), prefix = SOCK_PATCH_PREFIX },
 		-- The beard wedge has no fix for now: spec Rule 22, "Accepted for now: the beard wedge"; it is listed in
 		-- StuckScan/Helpers.luau, ACCEPTED_FOR_NOW.
 		-- Task 33: the forehead slot under V1's plate ForeheadGuard.Guard (stuck scan spot (11.2, 98.2, 1)), closed by Patch_Forehead_*.
@@ -75,7 +75,7 @@ describe("the real world, slide guards", function()
 		{
 			name = "Sock, west corner",
 			kind = "patch",
-			root = Vector3.new(-76.5, 7.03, -49.0),
+			root = Vector3.new(-78.5, 7.03, 31),
 			prefix = SOCK_PATCH_PREFIX,
 		},
 		-- Task 48: the meadow notch at the giant's foot (stuck scan R-141). A bush stands in front of it and the invisible

@@ -136,6 +136,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 **Task 4e1: Meadow plants never block a walk.** Dropped on 2026-11-03, with nothing built: its builder measured that every short plant (228 models) is already walk-through (`CanCollide` off). The first raycast had hit them only because it ignored `CanCollide`. A walk-only raycast shows the real blocks: the Sock on gardens 1 and 2, the Teacup on gardens 7 and 8. Its test and world script were deleted, so number 29 is free again.
 
 **Task 4e2: designer picks new spots for the Sock and the Teacup** (added 2026-11-03 by product's ruling; no world change)
+- **Done 2026-11-03:** Sock (-78, 22) at a 96 degree turn, Teacup (76, 30); game_creator approved the landmarks (`work/t4e2/spots.md`).
 - Stands on: nothing (a choice of spots, measured read-only against the built world).
 - Planned hours: 0.25 (Step 1: 15 min, Opus, designer).
 - Spec rules: Rule 35 (Every garden has a way up close by), Rule 44 (Your way up is in view from home).
@@ -144,6 +145,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 1 (15 min, Opus, designer): measure, mock up, and write the spots. Cap: 20 tool calls, read-only Studio only.
 
 **Task 4e3: Move the Sock** (added 2026-11-03 by product's ruling; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- **Done 2026-11-03 (with 4f, one commit, about 25 min):** Sock and its 34 helper parts moved by (-2, 0, +80); old test spots moved by the real shift (Lesson 341). Full run 2921 passed, 1 accepted red. Designer: every pair same or better (`work/t4e3/designer-look.md`).
 - Stands on: Task 4e2 (the Sock's spot, picked and measured).
 - Planned hours: 0.17 (Step 1: 5 min; Step 2: 2 min; Step 3: 3 min).
 - Spec rules: Rule 35 (Every garden has a way up close by), Rule 44 (Your way up is in view from home).
@@ -155,6 +157,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 3 (3 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
 
 **Task 4f: Move the teacup out of the gate 7 view** (added 2026-11-03 by product's decision: gate 7's teacup hides the right boot ladder, and product's ruling on Task 4e puts it on garden 7's walk line too. A small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
+- **Done 2026-11-03 (with 4e3):** Teacup moved by (-0.497, 0, +87.713); shots are in `work/t4e3/` with the Sock's.
 - Stands on: Task 4e2 (the Teacup's spot, picked and measured), Task 4a (the boot ladders, built).
 - Planned hours: 0.17 (Step 1: 5 min; Step 2: 2 min; Step 3: 3 min).
 - Spec rules: Rule 44 (Your way up is in view from home), Rule 35 (Every garden has a way up close by).

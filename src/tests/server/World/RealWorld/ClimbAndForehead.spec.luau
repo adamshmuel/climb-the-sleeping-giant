@@ -316,7 +316,8 @@ describe("the real world, zones and extras", function()
 			})
 			table.insert(expected, { prop = label, inMeadow = 0, inRemovedNature = 1 })
 		end
-		-- Nothing else was taken away.
+		-- Nothing else was taken away. (One yellow flower, 24 down to 23, stood in the way of the moved teacup and
+		-- went to RemovedNature too: tools/world/02b-garden-extras.luau step 3, Tasks 4e3 and 4f.)
 		local left: { [string]: number } = { Nature_Sunflower = 0, Inno_White_Flowers = 0, Inno_Yellow_Flowers = 0 }
 		for _, child in nature:GetChildren() do
 			if child:IsA("Model") and left[child.Name] ~= nil then
@@ -325,7 +326,7 @@ describe("the real world, zones and extras", function()
 		end
 		expect({ props = found, left = left }).toEqual({
 			props = expected,
-			left = { Nature_Sunflower = 23, Inno_White_Flowers = 21, Inno_Yellow_Flowers = 24 },
+			left = { Nature_Sunflower = 23, Inno_White_Flowers = 21, Inno_Yellow_Flowers = 23 },
 		})
 	end)
 end)
