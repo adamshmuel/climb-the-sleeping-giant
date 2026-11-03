@@ -12,8 +12,6 @@ paths:
 - Server-authoritative: the server validates every RemoteEvent and RemoteFunction argument (type, range, ownership, rate). Never trust client values for currency, damage or position.
 - DataStores: wrap every call in `pcall`, prefer `UpdateAsync`, and save on `PlayerRemoving` and `game:BindToClose`.
 - Disconnect connections and destroy instances you create. Don't leak them per player or per round.
-- Look up any Roblox API with the `roblox-docs` skill. Never guess names or signatures.
-- The PostToolUse hook runs StyLua and selene on `.luau` files. Fix what it reports.
 - Never start a line with `(`: StyLua joins it onto the line above and the script breaks with no lint error. Write a cast as `local x = y :: Instance`.
 
 ## Test first

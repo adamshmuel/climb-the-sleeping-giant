@@ -14,5 +14,4 @@ paths:
 - **Never use MCP `multi_edit` on synced scripts.** Rojo overwrites Studio edits on the next sync. Edit `src/` instead.
 - **Trial and harness scripts never go in `src/` or `tools/`.** Deleting a synced file can crash `rojo serve`. Keep them in `work/` and paste them with `execute_luau`; build any temporary ModuleScripts there and destroy them in the same call.
 - **Delete synced folders only with `scripts/rojo-safe-rm.sh <path>`.** `rojo serve` 7.7.1 crashes when a synced folder is removed or moved while it still has files. Deleting a single file is safe. A hook blocks `rm -r`, `rmdir` and `mv` on folders under `src/` and `tools/`.
-- `tools/` syncs to `ServerStorage.Tools`: world scripts, run by requiring a copy.
 - Anything built in Studio that must persist lives in the place file (the user saves it) or gets exported into the Rojo tree. Say which one.
