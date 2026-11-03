@@ -379,9 +379,9 @@ Stands on: nothing.
 - **Spec rules:** spec 5's section 10 row "CapDrop" (how the drop ended: pillow, face, shoulders or belly).
 - **Files:** `src/server/Analytics.luau` (around line 612, the third field "woke ..., egg ..." loses its comma, for example "woke no - egg no"), its spec.
 - **Failing test first:** "no CapDrop field holds a character Roblox rejects", run through the real Analytics module with a fake analytics service that records every field. The same test sends all four endings (pillow, face, shoulders, belly) and checks each arrives as a plain value (game_creator, `work/t61h/loop2-gc-check.md`). It passes when the third field is built without the comma.
-- **How big:** 3 steps, 4 Studio calls, 0.4 h:
-  1. the red test and its narrow red run (Sonnet, 1 Studio call, 18 tool calls, 10 minutes);
-  2. the change and its narrow green run (Sonnet, 1 Studio call, 14 tool calls, 8 minutes);
+- **How big:** 3 steps, 7 Studio calls, 0.4 h:
+  1. the red test and its narrow red run (Sonnet, 2 Studio calls, 18 tool calls, 10 minutes);
+  2. the change and its narrow green run (Sonnet, 3 Studio calls, 14 tool calls, 8 minutes);
   3. the full run (Haiku, the runner, 2 Studio calls, 8 tool calls, 6 minutes).
 - **Played:** nothing a player sees changes. Task 61v's Play runs read the console once: no field warning, and each "CapDrop" line shows plain values.
 - **Commit:** its own commit, once approved.

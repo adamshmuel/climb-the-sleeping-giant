@@ -10,6 +10,7 @@ local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
+local FIELD_THREE = Enum.AnalyticsCustomFieldKeys.CustomField03.Name
 
 -- Everything the fake AnalyticsService was asked to log, in order.
 export type Call = {
@@ -298,6 +299,7 @@ end
 return {
 	FIELD_ONE = FIELD_ONE,
 	FIELD_TWO = FIELD_TWO,
+	FIELD_THREE = FIELD_THREE,
 	OWN_GARDEN_SPAWN_X = OWN_GARDEN_SPAWN_X,
 	awayFromHome = awayFromHome,
 	bank = bank,

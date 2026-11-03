@@ -609,7 +609,7 @@ function Analytics.start(deps: Deps): Analytics
 		logCustom(player, EVENT_CAP_DROP, EVENT_VALUE, {
 			[FIELD_ONE] = fields.how,
 			[FIELD_TWO] = fields.endedOn,
-			[FIELD_THREE] = `woke {fields.woke}, egg {fields.egg}`,
+			[FIELD_THREE] = `woke {fields.woke} - egg {fields.egg}`,
 		})
 	end
 
