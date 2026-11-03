@@ -4,6 +4,24 @@ Reviewed on 2026-10-13, after the fix round (Tasks 44 to 51), against `docs/spec
 
 **Verdict: accept.** Both must-fix problems from the first round are gone: at spawn the first egg and its trail now sit beside the player, and on the belly path the player stays in view. The other five changes work too. Three small things are left for `designer` to look at (see "Small things left"), but none of them stops a new player.
 
+**Contents**
+- [How I played](#how-i-played)
+- [The 7 changes from the first review](#the-7-changes-from-the-first-review)
+- [Playing it as a player](#playing-it-as-a-player)
+  - [What works](#what-works)
+  - [Small things left](#small-things-left)
+- [Thuds and noise](#thuds-and-noise)
+- [Next to the top games](#next-to-the-top-games)
+- [Results table](#results-table)
+  - [Rules](#rules)
+  - [Story checks](#story-checks)
+- [Idea fit](#idea-fit)
+- [Business fit](#business-fit)
+- [Phone](#phone)
+- [Console](#console)
+- [Not testable in Studio, and how to check later](#not-testable-in-studio-and-how-to-check-later)
+- [Verdict: accept](#verdict-accept)
+
 ## How I played
 
 | Session | Screen | What I did |
