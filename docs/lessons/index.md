@@ -322,6 +322,7 @@ What this project learned the hard way, so it doesn't happen again.
 | 310 | Write each pass word as the game's own value, and name a spot after the part its ray hit | `studio-and-scripts.md` |
 | 311 | A push away from a Roblox ladder climbs down; trace one let-go before rewriting a climbing job | `studio-and-scripts.md` |
 | 312 | A Play case on a spot a later task builds over belongs to that task | `teamwork.md` |
+| 313 | Budget a full run from the last run's page count | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

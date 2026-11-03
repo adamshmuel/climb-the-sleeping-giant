@@ -863,3 +863,7 @@ Task 61h case 4 failed a third time on the job, not the game (2026-11-03). The g
 ## Lesson 311: A push away from a Roblox ladder climbs down; trace one let-go before rewriting a climbing job
 Three case-4 job fixes guessed how a held stick behaves on a ladder (2026-11-03). Pushing away from a TrussPart climbs down it instead of letting go, so the job never saw him "in the air" and called a clean landing STUCK. The end-rule fix from the round before had been applied to cases up to 3 only.
 → Before rewriting a climbing job, trace one let-go (state, y and floor every 0.1 s) and build the end rule from what the trace shows. After an end-rule fault, check every case still to run against the fix.
+
+## Lesson 313: Budget a full run from the last run's page count
+The Task 61c handoff gave the full run 2 Studio calls (2026-11-03). The last full run's report was 5 pages long, so the runner needed 1 start plus 4 page fetches and went over its cap. Lesson 188 already said to count one fetch per page, but the handoff counted one fetch in total.
+→ Give a full-run step 1 start, plus 1 fetch for each page of the last full run, plus 1 spare (5 pages now, so 7 Studio calls). Its tool-call cap is the Studio calls plus 5, for the reads, the wait and the write (12 now).
