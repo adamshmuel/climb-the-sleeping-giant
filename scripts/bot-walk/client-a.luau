@@ -1,8 +1,8 @@
 --!strict
 -- Task 8b client-a (writer C): the leg runner (Rule 24: A bot walks every way; Rule 22: the walk-out). Pasted first in
--- the Play client; client-b follows it in the same chunk (Lesson 63) and ends it, so this file has no top-level return.
--- Input (Lesson 65): Move and Jump come from ONE BindToRenderStep at Input + 1, always unbound again.
--- Feet (Lesson 69): every leg's end is printed and returned as feet; only a walk-out decides "got out".
+-- the Play client; client-b follows it in the same chunk and ends it, so this file has no top-level return.
+-- Input: Move and Jump come from ONE BindToRenderStep at Input + 1, always unbound again.
+-- Feet: every leg's end is printed and returned as feet; only a walk-out decides "got out".
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -173,7 +173,7 @@ local function walkOut(endFeet: Vector3): { number }
 	return distances
 end
 
--- One press rule for drops and step-offs (Lesson 85): BotWalk.keepPressing says when a fallen body stops pressing.
+-- One press rule for drops and step-offs: BotWalk.keepPressing says when a fallen body stops pressing.
 -- Presses towards `direction` (a drop) or steers to `target` (a step-off). Returns landed, seconds.
 local function pushUntilLanded(direction: Vector3?, target: Vector3?): (boolean, number)
 	local humanoid, root = bot()

@@ -13,12 +13,13 @@ Any task that changes something the player can see proves it didn't make the gam
    - the wide view a new player first sees;
    - the main character's face;
    - each spawn view;
-   - a "player's spot" row for anything players walk on or in;
+   - a "player's spot" row for anything players walk on or in, taken from where they stand on it and facing the way the approved mockup faces;
    each with its exact camera position and field of view, on computer and phone. It writes the list the first time a task needs it.
 2. **Before shots.** Before the first world change, take every fixed camera that shows the changed area, on computer and phone. Save them in `work/<task>/look-before/`.
 3. **After shots.** After the change, take the same shots from the same cameras into `work/<task>/look-after/`. Close-ups may be added, never instead of the fixed shots.
-4. **Designer judges side by side, before the commit.** For each pair: **same or better**, or **worse**, with the reason. One "worse" sends the change back, even if every test passes. Saving time is never a reason to accept a worse look.
+4. **Designer judges side by side, inside the same task, before `code_lead` approves it.** For each pair: **same or better**, or **worse**, with the reason. One "worse" sends the change back, even if every test passes. Saving time is never a reason to accept a worse look.
 5. **The plan budgets it.** `code_lead` adds the before shots, after shots and the designer check to the steps and caps of every such task.
+6. **Never cut a fixed camera.** Before cutting any shot or check, grep `look-cameras.md` and the spec's proof lists. A fixed camera or a listed proof moves to another task, never out; only `designer` removes a camera.
 
 A "worse" on a main character or on the first view is a red alert: use the `stop-and-step-back` skill.
 
@@ -28,6 +29,7 @@ When the choice is between looks or ways to play, `designer` mocks up each optio
 
 ## Shots
 
-- Use `screen_capture` of the real Play screen, and the device simulator for phone.
-- A set view in Play uses the ready-made Client `BindToRenderStep` camera from the look-shots job (Play ignores a camera set once), placed off the player's facing line.
+- Use `screen_capture`, and the device simulator for phone. Anything that only exists in Play is shot in Play.
+- Take fixed-camera shots with the ready-made [shots job](shots-job.md), in Edit and in Play: only `screen_capture`'s own `camera_position` and `look_at_position` place the camera. A camera set by script doesn't show in the shot. The job's last step compares each after shot with its before shot, before the designer judges.
+- Judge a shot only with what this version really spawns. A stand-in from a later version is named as such and judged in that version's check. Check a copied library model's `Transparency` before the shot: library copies can be stored hidden.
 - Judge the whole screen, not only the changed part: something covering the main character, text cut off at an edge, or controls overlapping are problems even if no rule names them.

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Checks for Studio job scripts in work/ before their first paste.
 # Three Task 54 Studio calls were lost to job scripts that stopped before
-# judging anything (Lesson 76). This catches the mistakes a shell can see.
+# judging anything. This catches the mistakes a shell can see.
 # Usage: scripts/job-check.sh work/t54/server-p.luau [more files]
-# A handoff is checked with --handoff work/handoff-x.md (Lesson 80).
-# A job split into parts (Lesson 63) is checked with --joined part-a part-b:
+# A handoff is checked with --handoff work/handoff-x.md.
+# A job split into parts is checked with --joined part-a part-b:
 # each part's size, then every other check on the parts joined in paste order.
 set -uo pipefail
 # Paths are made absolute before the cd, so a file name given from any
@@ -102,7 +102,7 @@ if [ "${1:-}" = "--handoff" ]; then
 	shift
 	stands_on_check "$@" || exit 1
 	# A part a job picks by a search at paste time is first seen by the
-	# paste (Task 7 step 2, Lesson 80). Every pick is made in code_lead's
+	# paste (Task 7 step 2). Every pick is made in code_lead's
 	# names-check call, and the handoff names the part by path or position.
 	# A pick that can only happen in Play (for example, the landing spot
 	# nearest where the player landed) is marked "(runtime pick)" on its line.
@@ -112,18 +112,18 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$found" ]; then
 		echo "$found"
 		echo "Handoff check FAILED: each line above picks a part by a rule with no path or position."
-		echo "Run the pick in the names-check call and name the part (Lesson 80)."
+		echo "Run the pick in the names-check call and name the part."
 		exit 1
 	fi
 	# A stop on a cross-check count that nothing reads (Task 7c call 1, Task 8b
-	# slot 3) cost calls twice (Lesson 84). A job stops only when an input is
+	# slot 3) cost calls twice. A job stops only when an input is
 	# lost or broken; such a line is marked "(lost input)".
 	match='(must|don.t|do not|doesn.t|not) match|match(es)? slot|differ(s)? from slot'
 	stops=$(grep -nEi "$match" "$@" | grep -Ei 'FIRED|stop' | grep -v '(lost input)')
 	if [ -n "$stops" ]; then
 		echo "$stops"
 		echo "Handoff check FAILED: each line above stops a job on a measured count."
-		echo "Print cross-check counts; stop only on a lost or broken input, marked \"(lost input)\" (Lesson 84)."
+		echo "Print cross-check counts; stop only on a lost or broken input, marked \"(lost input)\"."
 		exit 1
 	fi
 	# Each step runs on the cheapest model that can do it (CLAUDE.md,
@@ -136,7 +136,7 @@ if [ "${1:-}" = "--handoff" ]; then
 		exit 1
 	fi
 	# Tests run only in Studio, so a red step with no Studio calls can't see
-	# its red (Task 13 step 6b and Task 13b step 1, Lesson 132).
+	# its red (Task 13 step 6b and Task 13b step 1).
 	nostudiored=$(grep -nE '^## Step [0-9]' "$@" | grep -iE '\b(red|failing test)' | grep -iE '\(0 Studio calls|\(no Studio calls')
 	if [ -n "$nostudiored" ]; then
 		echo "$nostudiored"
@@ -145,7 +145,7 @@ if [ "${1:-}" = "--handoff" ]; then
 		exit 1
 	fi
 	# A full run is a runner job on Haiku, never part of a Sonnet or Opus step
-	# (CLAUDE.md, "Model per job"; Task 13b ran three on Sonnet, Lesson 132).
+	# (CLAUDE.md, "Model per job"; Task 13b ran three on Sonnet).
 	fullrun=$(grep -nE '^## Step [0-9]' "$@" | grep -iE 'full run' | grep -iE '\b(sonnet|opus)\b')
 	if [ -n "$fullrun" ]; then
 		echo "$fullrun"
@@ -170,7 +170,7 @@ if [ "${1:-}" = "--handoff" ]; then
 	fi
 	# A full run's fetch reports only its counts (passed, failed, could not run,
 	# spec files) and the failing test names. A pass line copied from an older
-	# step asked for a "stuck scan line" no run prints (Task 57 step 2, Lesson 151).
+	# step asked for a "stuck scan line" no run prints (Task 57 step 2).
 	badpass=$(awk '
 		FNR == 1 || /^## / { full = 0 }
 		/^## Step [0-9]/ { full = (tolower($0) ~ /full run/) }
@@ -196,12 +196,12 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$badpass" ]; then
 		echo "$badpass"
 		echo "Handoff check FAILED: each full-run pass line above names output the fetch doesn't print."
-		echo "Word it only from the fetch's report: \"N passed, 0 failed\", \"could not run\", spec files, failing test names (Lesson 151)."
+		echo "Word it only from the fetch's report: \"N passed, 0 failed\", \"could not run\", spec files, failing test names."
 		exit 1
 	fi
 	# A start taken from an Edit-time probe can float in the air or sit on a
 	# slope (Task 12b step 2, the ninth job stopped before judging). So every
-	# Play step that uses Studio begins with a dry-start call (Lesson 120).
+	# Play step that uses Studio begins with a dry-start call.
 	nodry=$(awk '
 		FNR == 1 || /^## / { if (play && !dry) print head; play = 0; dry = 0 }
 		/^## Step [0-9]/ { head = FILENAME ":" FNR ": " $0; play = ($0 ~ /Play/ && $0 !~ /\(0 Studio calls/) }
@@ -211,12 +211,12 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$nodry" ]; then
 		echo "$nodry"
 		echo "Handoff check FAILED: each Play step above has no \"dry start\" call."
-		echo "Begin it with one: put the body on each start, settle 2 s, press 1 s, print the drift and the floor under the feet, and stop \"(lost input)\" if a start drifts over 1 stud (Lesson 120)."
+		echo "Begin it with one: put the body on each start, settle 2 s, press 1 s, print the drift and the floor under the feet, and stop \"(lost input)\" if a start drifts over 1 stud."
 		exit 1
 	fi
 	# A climb trace that gave up after two turns, with no step back and no shot
 	# from the player's camera, called a stall it couldn't show (Task 61a Step 2;
-	# the same kind as the 2026-11-02 ladder wedge, Lesson 297). So a Play step
+	# the same kind as the 2026-11-02 ladder wedge). So a Play step
 	# that can report STUCK retries like a player and shoots the stall.
 	nostall=$(awk '
 		function check() { if (play && stuck && (!back || !shot)) print head }
@@ -230,11 +230,11 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$nostall" ]; then
 		echo "$nostall"
 		echo "Handoff check FAILED: each Play step above can report STUCK, but has no \"step back\" retry or no stall shot."
-		echo "Before a STUCK, retry like a player (turn, step back, turn again) and take a screen_capture at the stall (Lesson 297)."
+		echo "Before a STUCK, retry like a player (turn, step back, turn again) and take a screen_capture at the stall."
 		exit 1
 	fi
 	# Task 61h's drop job rebuilt the game's own landing check and was pasted
-	# many times, so two builders ran out of memory (Lessons 304 to 306). So
+	# many times, so two builders ran out of memory. So
 	# every step gives its planned minutes, and every Play step gives its paste
 	# lines and names the game signal each pass item reads.
 	nosize=$(awk '
@@ -253,18 +253,18 @@ if [ "${1:-}" = "--handoff" ]; then
 	' "$@")
 	if [ -n "$nosize" ]; then
 		echo "$nosize"
-		echo "Handoff check FAILED: each step above needs its planned minutes, and each Play step its paste lines (file lines times pastes, split over about 2000) and the game signal each pass item reads (Lessons 304 to 306)."
+		echo "Handoff check FAILED: each step above needs its planned minutes, and each Play step its paste lines (file lines times pastes, split over about 2000) and the game signal each pass item reads."
 		exit 1
 	fi
 	# A handoff that invented its own "does a body fit" box check hit the
 	# giant's mesh and found no start at 18 of 18 spots (Task 12c step 1, the
-	# tenth wrong start check). Starts come only from StartCheck (Lesson 43).
+	# tenth wrong start check). Starts come only from StartCheck.
 	fitwords='overlap box|GetPartBoundsInBox|GetPartsInPart|GetPartsInBox|GetPartsInRegion|room for the body|body fits|room check|raycast room'
 	fits=$(grep -nEi "$fitwords" "$@" | grep -v 'StartCheck' | grep -v '(not a fit check)')
 	if [ -n "$fits" ]; then
 		echo "$fits"
 		echo "Handoff check FAILED: each line above tests whether a body fits without StartCheck."
-		echo "Take every start and stand spot from StartCheck.find or StartCheck.nearSpot, and name it on the line (Lesson 43)."
+		echo "Take every start and stand spot from StartCheck.find or StartCheck.nearSpot, and name it on the line."
 		exit 1
 	fi
 	# StartCheck.find checks room, not a floor you can stand on, so 13 of 15
@@ -273,7 +273,7 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$finds" ]; then
 		echo "$finds"
 		echo "Handoff check FAILED: each line above takes a start from StartCheck.find, which doesn't check the floor's slope."
-		echo "Take it from StartCheck.nearSpot, or name a start that held in an earlier dry start (Lesson 43)."
+		echo "Take it from StartCheck.nearSpot, or name a start that held in an earlier dry start."
 		exit 1
 	fi
 	# A grab start that had only ever begun a walk was called "proven" and slid
@@ -283,7 +283,7 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$proven" ]; then
 		echo "$proven"
 		echo "Handoff check FAILED: each line above calls a start proven without the dry start it held in."
-		echo "Write \"held 0.19 in <task> dry start\" on the line, or mark it \"(not a start)\" (Lesson 120)."
+		echo "Write \"held 0.19 in <task> dry start\" on the line, or mark it \"(not a start)\"."
 		exit 1
 	fi
 	# A grab start marked "(not a start)" dodged the rule above, slid, and the
@@ -292,17 +292,17 @@ if [ "${1:-}" = "--handoff" ]; then
 	if [ -n "$grabs" ]; then
 		echo "$grabs"
 		echo "Handoff check FAILED: each line above grabs from a position with no dry start it held in."
-		echo "Write \"held 0.19 in <task> dry start\" on the line; a grab start is a start (Lesson 124)."
+		echo "Write \"held 0.19 in <task> dry start\" on the line; a grab start is a start."
 		exit 1
 	fi
 	# A red run over "the five spec names" ran only the first name, and three
-	# specs never ran (Task 61d step 1, the second break of Lesson 41). The runner
+	# specs never ran (Task 61d step 1). The runner
 	# takes one name per filter, so a filter over several names, or with "|", fails.
-	multifilter=$(grep -nEi 'filter' "$@" | grep -Ei '[A-Za-z]\|[A-Za-z]|spec names|test names' | grep -viE 'one (spec )?name per run|Lesson 41')
+	multifilter=$(grep -nEi 'filter' "$@" | grep -Ei '[A-Za-z]\|[A-Za-z]|spec names|test names' | grep -viE 'one (spec )?name per run')
 	if [ -n "$multifilter" ]; then
 		echo "$multifilter"
 		echo "Handoff check FAILED: each line above runs several spec names in one filter."
-		echo "Give each spec name its own run, and write \"one spec name per run (Lesson 41)\" on the line."
+		echo "Give each spec name its own run, and write \"one spec name per run\" on the line."
 		exit 1
 	fi
 	# Red flag 61a, the meter hold: twice a script that held the giant's sleep
@@ -388,7 +388,7 @@ if [ $# -eq 0 ]; then
 fi
 fail=0
 
-echo "== Size (Lesson 63: at most 300 lines per job file; Lesson 164: 1000 for tools/world/)"
+echo "== Size (at most 300 lines per job file; 1000 for tools/world/)"
 for f in "$@"; do
 	n=$(wc -l <"$f" | tr -d ' ')
 	case "$f" in
@@ -406,7 +406,7 @@ for f in "$@"; do
 	fi
 done
 
-echo "== CHECK_ONLY switch in new world scripts (Lesson 166: Task 58b's 18 stopped twice in Play on a wrong guess)"
+echo "== CHECK_ONLY switch in new world scripts (Task 58b's 18 stopped twice in Play on a wrong guess)"
 # A world script not yet in git must have a CHECK_ONLY switch, so its own
 # lookups and guards run read-only in Edit before its first Play paste.
 # Older world scripts already in git only get a warning.
@@ -425,7 +425,7 @@ for f in "$@"; do
 	fi
 done
 
-echo "== Fetch reads its job's shared. names (Lesson 169: Task 58b's rerun fetch read the old trial's name)"
+echo "== Fetch reads its job's shared. names (Task 58b's rerun fetch read the old trial's name)"
 # When a fetch is checked together with its jobs, every shared. name the
 # fetch reads must be written by one of those jobs.
 jobNames=""
@@ -462,7 +462,7 @@ if [ "$joined" -eq 1 ]; then
 	set -- "$joinedFile"
 fi
 
-echo "== Fit tests outside StartCheck (Lesson 43: Task 12c step 1's own box check hit the giant's mesh)"
+echo "== Fit tests outside StartCheck (Task 12c step 1's own box check hit the giant's mesh)"
 # An overlap query in a job that doesn't load StartCheck is a home-made fit
 # test. One used for something else is marked "(not a fit check)" on its line.
 for f in "$@"; do
@@ -474,18 +474,18 @@ for f in "$@"; do
 	fi
 done
 
-echo "== Starts from StartCheck.find (Lesson 43: Task 12c step 3's stand spots slid off steep floors)"
+echo "== Starts from StartCheck.find (Task 12c step 3's stand spots slid off steep floors)"
 if grep -nE 'StartCheck\.find' "$@" | grep -v '(not a start)'; then
 	echo "  ^ take starts from StartCheck.nearSpot, which checks the floor's slope"
 	fail=1
 fi
 
-echo "== Lines starting with \"(\" (Lesson 7)"
+echo "== Lines starting with \"(\""
 if grep -nE '^\s*\(' "$@"; then
 	fail=1
 fi
 
-echo "== Clones of modules that use script.Parent (Lesson 74)"
+echo "== Clones of modules that use script.Parent"
 # A module that loads its neighbours through script.Parent fails as an
 # unparented clone, so a job must require it the plain way.
 # Comment lines don't count: BotLegs says "It uses no script.Parent" (Task 8).
@@ -499,7 +499,7 @@ for name in $parent_users; do
 	fi
 done
 
-echo "== string.format behind a ... wrapper (Lesson 79: the type check can't see its arguments)"
+echo "== string.format behind a ... wrapper (the type check can't see its arguments)"
 if grep -nE 'string\.format\([A-Za-z_]+, *\.\.\.\)' "$@"; then
 	echo "  ^ call string.format at each site with a literal format; wrap booleans in tostring"
 	fail=1
@@ -568,4 +568,4 @@ if [ "$fail" -ne 0 ]; then
 	echo "Job check FAILED: fix the lines above before any Studio paste."
 	exit 1
 fi
-echo "Job check passed. code_lead still reads the job against the lessons before its first paste (Lesson 76)."
+echo "Job check passed. code_lead still reads the job before its first paste."

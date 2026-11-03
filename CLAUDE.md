@@ -14,7 +14,7 @@ The agent setup (this file, `.claude/rules`, `agents`, `skills`, `hooks`, settin
 - Before any setup change or suggestion, the user's included, check the guide and say in one line: it fits, or the better way the guide gives, with the link.
 - `.claude/hooks/setup-guides.py` enforces it: a reminder on setup prompts and edits, a block on CLAUDE.md or a rule file past 200 lines (SKILL.md past 500), and a block on shell writes to setup files.
 - `.claude/hooks/guides-check.py` compares the guide pages, model pages included, with their last reviewed copies at every session start. Changed lines are reviewed at the next task close (`guides-check` skill).
-- Lessons go to `docs/lessons/`, never into this file.
+- A learning goes to its home, never into this file: a hook if it must always happen, a rule or path rule if every agent needs it, a skill if it is a procedure, or the agent's own memory (`memory: project`) if only that agent needs it (`closing-a-task` skill).
 
 ## Layout (default.project.json)
 - `src/shared` → `ReplicatedStorage.Shared` (ModuleScripts used by both sides)

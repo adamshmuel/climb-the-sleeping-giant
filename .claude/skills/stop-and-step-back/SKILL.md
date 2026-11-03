@@ -16,8 +16,10 @@ The main chat checks these at every agent report and every task close. It never 
 | A small fix (a moved part, a missing part, a failing test) passes **10 minutes** | small fix |
 | A task or a new part (a ladder, a bridge) passes **1 hour**, or its planned time, or is clearly heading there | task |
 | Two steps in a row bring nothing new: the same failure, the same kind of fix, no new fact, nothing built or passed | loop |
+| A second Play round on the same task ends without a pass, even if the hours look fine | loop |
 | A second task is added for the same object or place, even if nothing failed | same object |
 | A plan passes **1.5 times** its planned time, grows by half its first task count, or reaches every 10th committed task | plan |
+| A design pick replaces what the plan is fixing: re-plan and re-price it as a new plan before any task of the new design starts | plan |
 | A "worse" verdict on a main character (the hero, the boss) or on the first view a new player sees | look |
 
 ## Step 1: Stop and tell the user
@@ -37,13 +39,15 @@ For a task, a loop, a plan or a look trigger, the main chat sends `game_creator`
 
 - the player's problem the work was meant to solve;
 - planned against real time and tasks, what is done and what is still to come;
-- the facts (for a loop, its steps; for a look, the before and after shots).
+- the facts (for a loop, its steps; for a look, the before and after shots). A brief that sums up a run quotes its result lines.
 
 The brief never hints at an answer. Each owner answers from its own area, in one reply, after searching the web, its skills and the Roblox docs:
 
 1. **The smallest piece first.** What is the smallest new piece that connects what players already reach to what is already built? Measure the gap and price it.
 2. **Do we need this at all?** Can the player's problem be solved another way?
 3. **Other ideas**, each priced: what it costs to build, and what built work it keeps or throws away. "Go back to the old design" is an idea like any other: it says how it solves the old design's problems, or it is out. An undo is cheap only if a commit or a script can bring it back.
+   Undoing a task's code also undoes its world changes (from `ServerStorage.WorldBackups.<task>`), or the progress row lists what stayed. Before the next full run, a read-only names check confirms the edit world matches the last commit.
+   Price a task from both the plan and the progress file, and use the larger number.
 4. **For a plan:** which work does a player really need, and what would a player never notice? What can be cut, simplified, left to the safety net, or moved to a later plan that changes that part anyway?
 5. **Why did it grow, and what would have caught it sooner?**
 
@@ -66,6 +70,6 @@ Before acting, the main chat checks the decision: does it answer the questions a
 ## Step 5: Restart
 
 - `code_lead` rewrites the plan's remaining tasks to match.
-- The lesson ("why it grew") goes into `docs/lessons/`.
+- The learning ("why it grew") goes to its home (`closing-a-task` skill, "Learnings").
 - **The task's clock restarts at zero**, and the main chat writes the new start time. The time before stays in the log.
 - The main chat tells the user in one line what changed and the time saved, and keeps checking the triggers.

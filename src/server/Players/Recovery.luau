@@ -90,7 +90,7 @@ local function bodyOf(character: Model?): (BasePart?, Humanoid?)
 end
 
 -- Where the feet are: the root is a Humanoid's HipHeight plus half the root's height above them. Spots are feet, so a
--- distance to a spot measures feet to feet (Lesson 110).
+-- distance to a spot measures feet to feet.
 local function feetOf(root: BasePart, humanoid: Humanoid): Vector3
 	return root.Position - Vector3.new(0, humanoid.HipHeight + root.Size.Y / 2, 0)
 end

@@ -10,8 +10,8 @@
 -- invisible, anchored, collides, can be hit by rays, and does not fire touch events.
 -- What it removes: the folder Workspace.Mockup_Brim (the 10 non-colliding mock-up parts that measured the hollow).
 --
--- It counts first and goes on only when the count is exactly "adding 2 parts, removing 1 folder" (Lesson 58). It finds
--- every part by its full path, never by a name search (Lessons 61 and 70). On a second run, when both blocks match
+-- It counts first and goes on only when the count is exactly "adding 2 parts, removing 1 folder". It finds
+-- every part by its full path, never by a name search. On a second run, when both blocks match
 -- BrimPlaces and Mockup_Brim is gone, it says "already done". A world it doesn't know (one block missing, a block in the
 -- wrong place, a second copy, the mock-up folder changed) stops with nothing changed and names what differs.
 -- The change runs between two ChangeHistoryService waypoints, with the blocks built away from the Workspace first, and

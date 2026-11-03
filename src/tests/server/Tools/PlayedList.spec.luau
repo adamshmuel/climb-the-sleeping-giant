@@ -4,7 +4,7 @@ local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.e
 local ServerStorage = game:GetService("ServerStorage")
 local PlayedList = require(ServerStorage.Tools.checks.PlayedList)
 
--- Stuck safety Task 45, step 1 (lessons 38 and 40): the played list's groups, far sample, labels and known-place
+-- Stuck safety Task 45, step 1: the played list's groups, far sample, labels and known-place
 -- walk-in points, tested on made-up lists. The function parts are plain functions here, so nothing needs a world.
 describe("PlayedList.group", function()
 	local FAR = 1000 -- studs: a distance to needs that puts a spot in no core group

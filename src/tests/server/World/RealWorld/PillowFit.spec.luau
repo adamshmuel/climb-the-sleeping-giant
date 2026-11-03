@@ -115,7 +115,7 @@ describe("the real world, the pillow's closer fit", function()
 
 	-- Task 41, test 2. Two things: no nightcap part touches the pillow or comes within 1 stud of it (up and slanted-up
 	-- rays from the pillow's drawn top), and rays from behind and below, aimed at his head's lowest point, meet the pillow
-	-- before any nightcap part (Lesson 21: a ray starts only where a small ball overlaps nothing).
+	-- before any nightcap part (a ray starts only where a small ball overlaps nothing).
 	local CAP_GAP_MIN = 1.0
 	local HEAD_LOWEST = Vector3.new(2.5, 47.3, 23.5) -- his head's lowest underside point, measured in step 1
 
@@ -279,7 +279,7 @@ describe("the real world, the pillow's closer fit", function()
 	end)
 
 	-- Task 41, test 7: kept green before and after. The nightcap and the noise zone boxes keep their places and sizes
-	-- (Lesson 2): as read in step 1 (2026-10-27). The cap ladder is not covered here: no part is named for it.
+	--: as read in step 1 (2026-10-27). The cap ladder is not covered here: no part is named for it.
 	local NIGHTCAP_SIZE = Vector3.new(102.5489, 64.1555, 67.5884)
 	local NIGHTCAP_POSITION = Vector3.new(0.0211, 90.9223, 34.5585)
 	local ZONE_BOXES: { { zone: string, position: Vector3, size: Vector3 } } = {

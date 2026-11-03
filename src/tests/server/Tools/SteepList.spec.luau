@@ -6,7 +6,7 @@ local Helpers = require(ServerStorage.Tests.server.World.RealWorld.Helpers)
 local SteepList = require(ServerStorage.Tools.checks.SteepList)
 local inFakeWorld = Helpers.inFakeWorld
 
--- Stuck safety Task 45, step 1 (lessons 38 and 40): the steep list's rule, tested on made-up worlds. Each kind of entry
+-- Stuck safety Task 45, step 1: the steep list's rule, tested on made-up worlds. Each kind of entry
 -- (steep, wall, guard) is listed in one test, and each "not listed" case sits next to a listed one, so a stub that
 -- returns an empty list fails every test.
 describe("SteepList.build", function()

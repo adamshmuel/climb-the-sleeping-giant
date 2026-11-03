@@ -1,12 +1,12 @@
 --!strict
 -- Stuck safety Task 8b (Rule 24: A bot walks every way): how the bot's walks and landings are judged.
--- Pure: no services, no require, no script.Parent, so the server can clone it into ReplicatedStorage (Lesson 74).
+-- Pure: no services, no require, no script.Parent, so the server can clone it into ReplicatedStorage.
 local BotWalk = {}
 
 -- A walk must reach its end within this many seconds (spec: "Bot walk time limit").
 BotWalk.LIMIT = 8
 -- A walk-out try that ends this many studs from the end's feet got the bot out (product's walk-out ruling, Task 8b
--- block in the plan, and Lesson 69).
+-- block in the plan).
 BotWalk.AWAY = 3
 -- The walk-out tries, in order: four pushes, then one jump.
 BotWalk.TRIES = { "north", "east", "south", "west", "jump" }
@@ -35,7 +35,7 @@ function BotWalk.judgeWalk(seconds: number, reached: boolean): (boolean, string)
 	return false, "SLOW"
 end
 
--- True when a walk-out try got the bot AWAY studs (Lesson 69: only a walk-out decides "got out").
+-- True when a walk-out try got the bot AWAY studs (only a walk-out decides "got out").
 local function gotAway(distances: { number }): boolean
 	for _, distance in distances do
 		if distance >= BotWalk.AWAY then
@@ -54,7 +54,7 @@ function BotWalk.nextTry(distances: { number }): string?
 	return BotWalk.TRIES[#distances + 1]
 end
 
--- A landing passes when the bot landed and is on the meadow, or a walk-out try got it AWAY studs (Lesson 69).
+-- A landing passes when the bot landed and is on the meadow, or a walk-out try got it AWAY studs.
 -- Reason: OK, NO_LANDING (never landed) or WEDGED (landed, but stuck).
 function BotWalk.judgeLanding(onMeadow: boolean, landed: boolean, distances: { number }): (boolean, string)
 	if not landed then
@@ -66,7 +66,7 @@ function BotWalk.judgeLanding(onMeadow: boolean, landed: boolean, distances: { n
 	return false, "WEDGED"
 end
 
--- Lesson 85: should the press go on? `fallStartY` is the feet height where the fall began (nil: never seen falling).
+-- Should the press go on? `fallStartY` is the feet height where the fall began (nil: never seen falling).
 -- A drop stops at touchdown after any fall. A step-off stops on the first floor after a real fall of REACH_HEIGHT
 -- studs (a smaller bump on the way to the edge does not count); it never looks at its target height, because a ledge
 -- above it is a floor too.

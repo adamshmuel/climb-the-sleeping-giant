@@ -33,7 +33,7 @@ local function tiltedFloor(world: WorldModel, degrees: number, yawDegrees: numbe
 	)
 end
 
--- Stuck safety Task 27, step 1 (lesson 21): the shared start check, tested on made-up worlds. Since step 1b the rays
+-- Stuck safety Task 27, step 1: the shared start check, tested on made-up worlds. Since step 1b the rays
 -- start 0.5 studs over the spot (RAY_ABOVE), not 10. The thick roofs here are kept so the old cases still run: a ray
 -- from 0.5 up still starts inside a thick slab, so (like a ray in the giant) it never hits the roof and finds the floor.
 describe("StartCheck.find", function()
@@ -109,7 +109,7 @@ describe("StartCheck.find", function()
 		end)
 	end)
 
-	-- Stuck safety Task 27, step 1c (lesson 38): steep ground. The uphill corner rays start inside the slope.
+	-- Stuck safety Task 27, step 1c: steep ground. The uphill corner rays start inside the slope.
 	it("is open on a 45 degree slope, standing above its uphill corners", function()
 		inFakeWorld(function(world)
 			tiltedFloor(world, 45)
@@ -195,7 +195,7 @@ describe("StartCheck.find", function()
 		end)
 	end)
 
-	-- Stuck safety Task 55 (lesson 75): `position` is the highest ray's hit + 0.1, so in a dip it is not the ground under
+	-- Stuck safety Task 55: `position` is the highest ray's hit + 0.1, so in a dip it is not the ground under
 	-- the body's middle. `ground` is that middle ground, for jobs that measure how far a body settles.
 	it("find gives the ground under the middle of a dip", function()
 		inFakeWorld(function(world)
@@ -266,7 +266,7 @@ describe("StartCheck.nearSpot", function()
 		end)
 	end)
 
-	-- Task 12i (Lesson 125): a start is accepted only on ground a body has stood still on (normal Y 0.65, about 49
+	-- Task 12i: a start is accepted only on ground a body has stood still on (normal Y 0.65, about 49
 	-- degrees), not on any ground it can walk up (70 degrees).
 	it("a 60 degree slope is too steep to hold still", function()
 		inFakeWorld(function(world)

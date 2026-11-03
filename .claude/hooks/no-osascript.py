@@ -2,7 +2,7 @@
 """Refuse osascript (AppleScript) in Bash, for every agent.
 
 osascript and System Events can pop up macOS permission prompts that Adam
-would have to answer ("Adam only approves"). A Task 13 Play builder tried
+would have to answer ("The user only approves"). A Task 13 Play builder tried
 `osascript` to mute the Mac because its handoff said "Sound muted".
 Sound in a Play job is muted inside the game, from the job itself.
 

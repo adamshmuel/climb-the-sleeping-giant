@@ -16,8 +16,8 @@ code_lead copies this shape into `work/<task>/handoff-<name>.md` for every task.
 ## Step 4: Play check (<n> Studio calls, Sonnet)
 ```
 
-- **Check-only step (Lesson 166).** Any task with a world script that edits existing parts gets a check-only step before its first Play paste. The runner (Haiku) pastes a copy of the script with `CHECK_ONLY = true`, in Edit, in 1 Studio call. Pass: it prints "CHECK ONLY ... passed" and changes nothing. A task with no world script leaves this step out.
-- **Full runs** are always their own Haiku step (Lesson 132).
-- **Play steps** begin with a dry start, or name the dry start their starts already held in (Lesson 120).
+- **Check-only step.** Any task with a world script that edits existing parts gets a check-only step before its first Play paste. The runner (Haiku) pastes a copy of the script with `CHECK_ONLY = true`, in Edit, in 1 Studio call. Pass: it prints "CHECK ONLY ... passed" and changes nothing. A task with no world script leaves this step out.
+- **Full runs** are always their own Haiku step.
+- **Play steps** begin with a dry start, or name the dry start their starts already held in.
 - Run `scripts/job-check.sh --handoff <file>` before the handoff goes out.
-- **Files per step (Lesson 175).** Before sizing a step, count the files it edits (search for every file that reads the thing being changed). A code step edits at most 5 files; more are split into steps of 5 or fewer.
+- **Files per step.** Before sizing a step, count the files it edits (search for every file that reads the thing being changed). A code step edits at most 5 files; more are split into steps of 5 or fewer.

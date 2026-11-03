@@ -1,7 +1,7 @@
 --!strict
 -- Task 8b slot N (Edit, code_lead): the names check for `work/handoff-t8b.md`. Read-only: it measures, prints and
--- clears `shared.T8Legs` (Lesson 68). It stops only on a missing part or module (Lessons 61 and 80).
--- Starts come from the shared StartCheck (`nearSpot`, feet points, Lesson 21); modules through clones (Lesson 74).
+-- clears `shared.T8Legs`. It stops only on a missing part or module.
+-- Starts come from the shared StartCheck (`nearSpot`, feet points); modules through clones.
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local requireModule: (ModuleScript) -> any = require :: any
@@ -25,7 +25,7 @@ local function v(p: Vector3): string
 	return string.format("(%.1f,%.1f,%.1f)", p.X, p.Y, p.Z)
 end
 
--- 1. Every lookup, by full path, counted (Lesson 61).
+-- 1. Every lookup, by full path, counted.
 local WALK = "Workspace.World.WalkSurfaces."
 local ROUTE = "Workspace.World.Route.RoutePoint_"
 local POINTS =
@@ -70,7 +70,7 @@ local StartCheck = requireModule((at("ServerStorage.Tools.checks.StartCheck") ::
 local LIFT = 3.225 -- studs from the feet to the root's middle (Config.luau line 170)
 local REACH = 4 -- studs a start may move to an open walk-map spot
 
--- 2. The legs Task 8 left in shared: step-offs on him and off him, then clear (Lesson 68).
+-- 2. The legs Task 8 left in shared: step-offs on him and off him, then clear.
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
 rayParams.FilterDescendantsInstances = {}
@@ -145,7 +145,7 @@ end
 local LABELS = { "BS", "AT", "B1", "KF", "B2", "B3", "KT", "BT", "R1", "R2", "R3", "B4", "CR", "R4" }
 for index, name in POINTS do
 	local point = (at(ROUTE .. name) :: BasePart).Position
-	local skin = under(point, 12, 2) -- route points sit under his skin (Lesson 21, Task 7 "Also")
+	local skin = under(point, 12, 2) -- route points sit under his skin (Task 7 "Also")
 	snap(LABELS[index], if skin then skin.Position else point)
 end
 type Structure = { label: string, path: string, onTop: boolean }

@@ -1,6 +1,6 @@
 --!strict
 -- The bot's legs list (stuck safety Task 8, Rule 24: A bot walks every way). It works out every leg the bot walk must
--- walk, in Edit, from the world alone, so the Play walk (Task 8b) and the later plans share one tested list (lesson 40).
+-- walk, in Edit, from the world alone, so the Play walk (Task 8b) and the later plans share one tested list.
 --
 -- A leg is one straight job for the bot: walk from `from` to `to`.
 --   * "up" and "down": each way up, from the route's points. A way names its two route points (World.Route); the up
@@ -14,7 +14,7 @@
 -- second list, never skipped.
 --
 -- It builds a walk map, so it yields (task.wait) like PathCheck.buildMap. It uses no `script.Parent`, so a Studio
--- job can require a clone of it (lesson 74).
+-- job can require a clone of it.
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

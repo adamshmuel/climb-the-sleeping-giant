@@ -24,7 +24,7 @@ local sameTurn = PillowPlaces.sameTurn
 -- Measured on a clone in step 1 (2026-10-27, work/t41/state.md): size 120 x 46 x 30, centre (0.142862, 46.594, 40), no turn
 -- but its own Z axis up, so its top is at y 61.59. It is 0.1 lower than step 1's first place, because the nearest
 -- nightcap part was 0.94 above that (code_lead, 2026-10-27).
--- The nightcap, the cap ladder, his head and the noise zone boxes never move (Lesson 2, Lesson 19).
+-- The nightcap, the cap ladder, his head and the noise zone boxes never move.
 -- The one piece that is removed with the old pillow is World.WalkSurfaces.SteepGuards.CapSideLeft_52: it touched nothing
 -- but the old pillow (the decision table's first row). Section 03-climb no longer makes it either.
 -- It knows two worlds, and changes nothing on any difference:

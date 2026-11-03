@@ -1,5 +1,5 @@
 --!strict
--- Task 8b slot 4, second half (Lesson 63): pasted right after client-a.luau in the same Client call.
+-- Task 8b slot 4, second half: pasted right after client-a.luau in the same Client call.
 -- Uses client-a's names (Leg, BotWalk, feetNow, placeBot, press, runLeg) and never redefines them.
 -- Every name here starts with "wk" so it can't clash with client-a's.
 local wkWallName = "Left boot ramp up"
@@ -29,7 +29,7 @@ local wkShared: any = shared
 local wkRequire: (Instance) -> any = require :: any
 local wkOut: { string } = {}
 
--- A stop goes first in the reply (Lesson 23) and names the check that fired with its own failure (Lesson 79).
+-- A stop goes first in the reply and names the check that fired with its own failure.
 local function wkStop(line: string): string
 	table.insert(wkOut, 1, "FIRED: " .. line)
 	return string.sub(table.concat(wkOut, "\n"), 1, 1000)
@@ -54,7 +54,7 @@ local function wkToLeg(raw: any): Leg
 	return leg :: Leg
 end
 
--- 1. Load the two items (found N of 2, Lesson 65).
+-- 1. Load the two items (found N of 2).
 local wkRS = game:GetService("ReplicatedStorage")
 local wkLegsValue = wkRS:WaitForChild("T8bLegs", 10)
 local wkModule = wkRS:WaitForChild("T8bBotWalk", 10)
@@ -104,7 +104,7 @@ local function wkRun(leg: Leg): (boolean, string, Vector3, number)
 	return pass, reason, endFeet, secs
 end
 
--- 2. Self-check (Lesson 65): 1 s of input towards -z must move the body at least 8 studs.
+-- 2. Self-check: 1 s of input towards -z must move the body at least 8 studs.
 placeBot(wallLeg.from)
 task.wait(0.4)
 local wkStart = feetNow()
@@ -129,7 +129,7 @@ if wkPass or wkReason ~= "SLOW" then
 end
 table.insert(wkOut, wkWallLine .. " (wanted SLOW, ok)")
 
--- 4. The shared state the fetches read (Lessons 29 and 31).
+-- 4. The shared state the fetches read.
 local wkNow = os.time()
 local wkState: WkState = {
 	done = false,
@@ -209,7 +209,7 @@ local function wkReplay(slot: string, index: number, holdFrom: number)
 	wkHold(wkFailHold)
 end
 
--- 5. The reply the slot returns now (Lesson 23). The hold, the walk and the replay go on in the background.
+-- 5. The reply the slot returns now. The hold, the walk and the replay go on in the background.
 wkState.expectedEnd = wkState.startedAt + math.ceil(wkLeft())
 local wkWalkAt, wkEndAt = wkState.startedAt, wkState.expectedEnd
 table.insert(wkOut, `wall hold {wkClock(wkNow)} to {wkClock(wkWalkAt)} UTC (os.time {wkNow} to {wkWalkAt})`)

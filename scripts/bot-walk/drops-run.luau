@@ -1,6 +1,6 @@
 --!strict
 -- Task 8b slot 8 (Client, Play): the 5 drops (#346-#350) again with the fixed client-a (the Task 8b block in the plan).
--- Pasted joined after client-a.luau. The drops run in the background (a long call times out, Lesson 23);
+-- Pasted joined after client-a.luau. The drops run in the background (a long call times out);
 -- the call waits up to 25 s and returns what is done. Pasting it again only reads the results (no second run).
 -- selene: allow(global_usage)
 local drShared: any = shared

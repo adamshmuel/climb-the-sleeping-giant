@@ -3,7 +3,7 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ServerStorage = game:GetService("ServerStorage")
 
--- Loaded inside each test, as a clone (Lesson 74), so a missing module turns each test red on its own.
+-- Loaded inside each test, as a clone, so a missing module turns each test red on its own.
 local function botWalk(): any
 	return (require :: any)(ServerStorage.Tools.checks.BotWalk:Clone())
 end
@@ -47,7 +47,7 @@ describe("BotWalk.judgeLanding", function()
 	end)
 
 	it("never counts an end lower than the start as got out by itself", function()
-		-- Lesson 69: only a walk-out decides "got out". Landed, not on the meadow, no try got 3 studs away.
+		-- Only a walk-out decides "got out". Landed, not on the meadow, no try got 3 studs away.
 		local BotWalk = botWalk()
 		local okNoTries, reasonNoTries = BotWalk.judgeLanding(false, true, {})
 		local okShortTries, reasonShortTries = BotWalk.judgeLanding(false, true, { 0.5, 2.9 })
@@ -93,7 +93,7 @@ describe("BotWalk.nextTry", function()
 	end)
 end)
 
--- Task 8c (Lesson 85): when the press stops. Args: where the fall began (nil: never seen falling), feet height now,
+-- Task 8c: when the press stops. Args: where the fall began (nil: never seen falling), feet height now,
 -- standing on a floor, and whether this is a step-off (true) or a drop (false).
 describe("BotWalk.keepPressing", function()
 	it("a step-off stops pressing on the first floor after a fall of 3 studs", function()

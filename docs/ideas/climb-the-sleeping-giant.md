@@ -147,7 +147,7 @@ The core loop is the set of actions a player repeats over and over.
 
 ## What matters most
 
-This list sorts every real thing in the world by how much it matters to the player. Use it to match effort to value. It follows Lesson 1 (Scenery gets the cheap fix) and Lesson 2 (Change the scenery, not the giant), in `docs/lessons/world-scenery.md`.
+This list sorts every real thing in the world by how much it matters to the player. Use it to match effort to value. It follows two rules: scenery gets the cheap fix, and change the scenery, not the giant.
 
 | Tier | What it means | How much effort a problem gets |
 |---|---|---|
@@ -196,7 +196,7 @@ This list sorts every real thing in the world by how much it matters to the play
 | Trees, bushes, flowers, mushrooms, rocks, logs, stumps, lantern posts, the stream, the hills, the garden hedges and flower borders, the pollen and petals | The storybook valley that makes the game look full |
 | The lace bows on his boot tops | Players walk straight through them |
 | The tail and pom-pom of his nightcap | Their nests were dropped in spec 5 (Egg nests and climbing) |
-| The parts of him off every route: his back, under his beard, his cheeks, the sides of his forehead, his skin below the seam | Only for looks. But he is the star of every thumbnail, so **he is never reshaped**: block these parts off with smooth guards, or change the scenery next to them (Lesson 2) |
+| The parts of him off every route: his back, under his beard, his cheeks, the sides of his forehead, his skin below the seam | Only for looks. But he is the star of every thumbnail, so **he is never reshaped**: block these parts off with smooth guards, or change the scenery next to them |
 
 ### The things that touch the giant
 
