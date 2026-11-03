@@ -94,7 +94,7 @@ Everything you read or print stays in your memory for the rest of the task, and 
 - **Nothing big comes into memory.** Never read a whole file over 1000 lines: search it and read only the lines you need. Never pull more than about 100 lines of console or script output: write long output to a file in `work/` and read its summary. Never reread a file you already read. Keep your report to about 20 lines and put the details in your state note.
 - **Print summaries, not dumps.** In Studio code, print counts, worst cases and the few lines that matter. Write long lists, ray maps or tables to a file in the `work/` folder and read back only the part you need.
 - **Run tests filtered** while working (only the spec you changed). Read only the failures. The full suite is the `runner`'s job, never yours.
-- **Screenshots are costly.** Take the ones the handoff asks for, plus one when something looks wrong. Don't retake a shot unless something changed.
+- **Screenshots when the look matters.** Take the ones the handoff asks for, plus one whenever something looks wrong. Retake a shot only after something changed.
 - **Read only what you need:** the parts of a file you change, not whole large files.
 
 ## Rules

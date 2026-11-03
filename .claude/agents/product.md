@@ -2,7 +2,7 @@
 name: product
 description: Writes the feature specs and owns the order of work. Use after the design is approved, for spec questions, and to rule on what comes first.
 model: opus
-effort: high
+effort: medium
 maxTurns: 50
 autoCompactWindow: 200000
 skills:

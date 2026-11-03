@@ -2,7 +2,7 @@
 name: runner
 description: Runs one fully described job (a test run and its fetch, a read-only check, copying files, filling a table) and reports the exact result. Use only when the prompt says what to run and what counts as a pass.
 model: haiku
-effort: low
+effort: medium
 maxTurns: 25
 autoCompactWindow: 100000
 omitClaudeMd: true

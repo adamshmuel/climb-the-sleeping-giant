@@ -2,7 +2,7 @@
 name: game_creator
 description: Owns the game idea, gameplay and business. Use for new ideas, gameplay or money questions, reviewing designs and specs against the idea, and judging a built feature's first impression.
 model: opus
-effort: high
+effort: medium
 maxTurns: 50
 autoCompactWindow: 200000
 skills:

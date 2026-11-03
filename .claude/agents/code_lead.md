@@ -2,7 +2,7 @@
 name: code_lead
 description: Plans and reviews the code. Use after a spec is approved to write the task plan, for technical questions, and to review each finished task.
 model: opus
-effort: high
+effort: medium
 maxTurns: 50
 autoCompactWindow: 200000
 skills:
