@@ -418,3 +418,7 @@ The fit check of a thigh plank looked only at the walk lane. It missed the giant
 A walk limit for gardens 1 and 8 was set from a straight-line distance, while the real footprint route bends over the bridge (2026-11-03).
 
 **Do instead:** set every walk limit from the measured footprint route. Fix an overrun by moving the spawn spot, never by raising the limit.
+
+## Lesson 340: A walk check raycast respects collision
+- **What happened:** On 2026-11-03 the main chat raycast the Task 4e walk lines without `RespectCanCollide`, so it hit walk-through flowers and ferns (CanQuery on, CanCollide off). Task 4e1 was planned to make them walk-through and found they already were: 10 minutes for nothing.
+- **Do instead:** a raycast that asks "does this block a player?" sets `RaycastParams.RespectCanCollide = true`, and the brief names only the parts that ray still hits.
