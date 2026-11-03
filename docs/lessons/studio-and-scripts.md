@@ -889,3 +889,7 @@ Task 61v Step 1 (2026-11-03): a Play job written to a 220-line cap came out abou
 ## Lesson 323: Build each paste from the file's text, never retype a line
 - **What happened:** In Task 61v Step 3 the builder retyped one expression of the Edit dry-run paste instead of copying it from the job file. code_lead ruled the dry run void (Lesson 302), though the verdict stayed the same.
 - **Do instead:** every paste into Studio is built from the file's own text (read and paste whole, or cut by line numbers). Never type a line again by hand.
+
+## Lesson 332: Play ignores a camera set once; bind it every frame
+- **What happened:** In Task 61x round 2, `screen_capture` in Play used the live player camera, not the spot the job had set once.
+- **Do instead:** a Play shot that needs a set view uses the ready-made Client `BindToRenderStep` camera from the look-shots job, checks the spot is off the player's facing line, and unbinds it and puts the camera back on Custom after.

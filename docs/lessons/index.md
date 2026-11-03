@@ -335,6 +335,13 @@ What this project learned the hard way, so it doesn't happen again.
 | 323 | Build each paste from the file's text, never retype a line | `studio-and-scripts.md` |
 | 324 | Read a task's progress row before ordering work against it | `teamwork.md` |
 | 325 | A look job checks each new shot against its before shot | `look-and-art.md` |
+| 326 | A task that adds visible parts takes its look check before approval | `teamwork.md` |
+| 327 | What a decision calls "untried" is tried before the build | `teamwork.md` |
+| 328 | A Studio cap is the count of a numbered call list | `teamwork.md` |
+| 329 | Check a part's outline from the camera before restyling it | `look-and-art.md` |
+| 330 | Parts beside a walk floor are judged from the player's spot | `look-and-art.md` |
+| 331 | A feet proof is shot from behind the player | `look-and-art.md` |
+| 332 | Play ignores a camera set once; bind it every frame | `studio-and-scripts.md` |
 
 | File | What it covers |
 |---|---|

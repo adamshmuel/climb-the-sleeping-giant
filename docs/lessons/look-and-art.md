@@ -120,3 +120,15 @@ The walkway's mockup showed where it ends, but not which way a player faces when
 ## Lesson 325: A look job checks each new shot against its before shot
 - **What happened:** In Task 61x the after shot for gate 8 on computer repeated the gate 1 view. The designer could not judge that pair, so the look check had a gap.
 - **Do instead:** a look-shots job compares each new shot with its before shot and flags any pair where most of the picture changed. A flagged pair is taken again before the designer judges.
+
+## Lesson 329: Check a part's outline from the camera before restyling it
+- **What happened:** Restyling a part's colors didn't fix how its shape broke the giant's outline from a fixed camera (Task 61x round 1).
+- **Do instead:** before mocking up new colors, project the part into that camera and check whether its shape breaks the main character's outline. If it does, change the shape or the place, not the color.
+
+## Lesson 330: Parts beside a walk floor are judged from the player's spot
+- **What happened:** The cloud path was chosen from the gate cameras only. Side cloud balls 4.7 studs wide, on walls 4 studs apart, met over the floor and buried the player to his chest (Task 61x, 2026-11-03).
+- **Do instead:** the look table for parts beside a walk floor gives each part's inward reach from the wall, checked against half the walk width. Every look option for something players walk on is mocked up from the player's own spot too, and the build test checks the floor strip stays clear.
+
+## Lesson 331: A feet proof is shot from behind the player
+- **What happened:** In Task 61x Step 5e the chute shots came from a high side camera outside the wall. The near side row hid the player's legs, so the "both feet on the cloud" check could not pass, and a retake was needed (Step 5g).
+- **Do instead:** choose the shot list and the pass rule together. A "feet on the floor" shot is taken from behind the player along his path, at his own zoom distance.

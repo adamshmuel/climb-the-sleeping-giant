@@ -405,3 +405,15 @@ Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w buil
 ## Lesson 324: Read a task's progress row before ordering work against it
 - **What happened:** A ruling asked for a check "before Task 61n", but Task 61n was already done (2026-11-03). code_lead had to make a new task, Task 61y, to hold the check.
 - **Do instead:** before writing "before Task X" or "after Task X", read Task X's row in the progress file. A task that is done can't have work put before it.
+
+## Lesson 326: A task that adds visible parts takes its look check before approval
+- **What happened:** Task 61w was approved before its fixed-camera after shots. A board on the giant's chin was found only after Task 61v was built on top of it (2026-11-03).
+- **Do instead:** a task that adds parts the player can see takes its before and after fixed-camera shots, and the designer's check, inside the same task, before code_lead approves it.
+
+## Lesson 327: What a decision calls "untried" is tried before the build
+- **What happened:** In the Task 61x red flag, the decision named the player's own view as "what nobody tried", but still put the build first. The build then buried the player in the side clouds.
+- **Do instead:** anything a decision names as untried goes into "the least work to decide", before the build starts.
+
+## Lesson 328: A Studio cap is the count of a numbered call list
+- **What happened:** On 2026-11-03 four steps of Task 61x ran over their caps (17 of 10, 12 of 10, 21 of 18, 28 of 24 tool calls). The caps left out the session hold, the phone set and reset, the camera reset, the console read and extra report pages. Step 5g also pointed to a note that didn't hold the snippets it needed.
+- **Do instead:** every Studio cap in a handoff is the count of a numbered list under the step that names each counted call (session hold, phone set and reset, camera bind and reset, console read, one fetch per expected report page), plus one spare. Every snippet to paste is written in the handoff or in one named job file, never "see an older note".
