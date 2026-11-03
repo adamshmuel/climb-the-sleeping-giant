@@ -24,3 +24,6 @@ sourcemap.json
 # Session notes for the main chat, kept out of git on purpose
 /docs/handoff.md
 /docs/action-items.md
+
+# Working files. No trailing slash, so a worktree's link to the main work/ is ignored too
+/work
