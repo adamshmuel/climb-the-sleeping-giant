@@ -41,7 +41,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 | A name a person understands (Rule 57) | Each egg spot gets a `NestName` attribute, for example "Belly, left of the beard". The check fails if one is missing | Rule 57's "Nest" column. Spot names like `EggSpot_Rare_2` stay as they are: other code finds spots by them |
 | Rare egg 4's spot (Rule 50's eye limit and Rule 59) | This plan lowers it onto his skin (Rule 59's fix), as section 4 says. Designer measured that the lowered spot still fails the eye limit; spec 5 moves it away (section 8), so plan 5 replaces it | The spec: "the spot is moved, never given a different rank. Where the real nests go is spec 5's decision" |
 | The beam length | `SpotModels` sets each waiting egg's beam to 10 studs on a spot on him (any zone but the Meadow), and leaves V1's beam on spots on the boots and in the meadow | Section 6: beams from eggs on his body are 10 studs, so none reaches his eyes |
-| New world scripts | `19-rank-eggs`, `20-egg-ranks` | 15 to 18 are taken by plan 3 |
+| New world scripts | `28-rank-eggs`, `20-egg-ranks` | 15 to 19 and 27 are taken by plans 2 and 3 (`19-ways-up-ladders` is built); `19-rank-eggs` clashed with it and became 28, the first free number (2026-11-03) |
 
 ## Tasks
 
@@ -59,7 +59,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 
 **Task 2: World prep: Epic and Legendary eggs**
 - Spec rules: Rule 51 (One colour per rank): the Epic tint `#5E3CFF` and the Legendary tint `#FFA51F`. Rule 52 (The rank shows everywhere): the egg's colour.
-- Files: `tools/world/19-rank-eggs.luau` (new), `src/server/World/WorldIndex.luau` (`readEggTemplates` needs all five), `RealWorld.spec.luau`.
+- Files: `tools/world/28-rank-eggs.luau` (new), `src/server/World/WorldIndex.luau` (`readEggTemplates` needs all five), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
 - What the script does: copies designer's tested Epic and Legendary eggs (`Workspace.Mockup_EggRanks.Eggs`, from `ServerStorage.ArtLibrary._Generated.Egg_Epic` and `Egg_Legendary`) into `ServerStorage.Assets.Eggs` as `Epic` and `Legendary`, with the tint on each egg's `SurfaceAppearance.Color` (a property a script can set, Roblox docs), the Rare egg's light beam and its size. Then it moves `Mockup_EggRanks` to `ServerStorage.ArtLibrary`.
 - Failing tests first (real world): `Assets.Eggs` has all five; the Epic and Legendary tints are within 1 colour step of `#5E3CFF` and `#FFA51F`; Rare, Epic and Legendary have a beam and Common and Uncommon don't; Epic and Legendary are within 5% of the Rare egg's height; every part is anchored.

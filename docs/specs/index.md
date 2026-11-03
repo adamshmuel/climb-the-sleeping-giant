@@ -18,7 +18,7 @@ Each spec has at most 15 rules. Status words:
 | Order | Spec | What it covers | Status |
 |---|---|---|---|
 | 1 | Core heist | The valley and the sleeping giant. Sneak onto him, grab a Common, Uncommon or Rare egg, carry it home through your Safe Gate. The shared sleep meter, Tiptoe, his warnings, and the wake-up (bounce-off, blame banner, hand slams, Heavy Sleep). File: `core-heist.md`. | `reviewed` |
-| V2 | Heist update | New-player safety, stuck safety, random gardens and six ways up, egg ranks and nests, a thrilling wake-up, and the music and sound effects. Seven small specs, listed in `v2/index.md`. | `approved` |
+| V2 | Heist update | New-player safety, stuck safety, random gardens and four ways up, egg ranks and nests, a thrilling wake-up, and the music and sound effects. Seven small specs, listed in `v2/index.md`. | `approved` |
 | 2 | Hatching and pets | Eggs at home go into the incubator, wobble, crack and pop into a pet. First egg hatches in 3 seconds. Sizes (Big, Huge) and Golden. Pets sit on pads; one pet can follow you. A guaranteed Rare egg for every new player. | `todo` |
 | 3 | Cash and saving | Pets earn cash into the cash bin; walk over it to collect. Cash and income on screen. Your eggs, pets and cash are saved. Offline cash for up to 8 hours and the welcome-back pile. | `todo` |
 | 4 | Upgrades | The Upgrade menu: Quiet Shoes, Fast Legs, Strong Back, More Incubators, More Pet Pads. (The Epic and Legendary eggs moved to V2, `v2/egg-nests-and-climbing.md`.) | `todo` |

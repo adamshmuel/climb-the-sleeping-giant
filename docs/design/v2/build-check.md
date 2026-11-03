@@ -422,3 +422,14 @@ Compared with three top-game shots that show a game button in Roblox's top bar:
 | `mockups/hud-music-small-phone.png` | A 4.7-inch phone (667 × 375) with Roblox's buttons at full size: the button would touch the meter, so it moves under Roblox's round button | Same | Easy (one size check in code) | 4 | 4 | 4 | 4 | 4 | No. Nothing is cut off or covered |
 
 What the real game can't match: nothing. Not checked in Play (this place was not run, by request): the real size of Roblox's buttons, the value of `GuiService.TopbarInset` (it reads 0 in edit mode), and whether Roblox shows a backpack button in our game. The build review checks them on the computer and the iPhone 14 simulator.
+
+## Boot ladder from gardens 1 and 2 (2026-11-03)
+
+The side ladders were dropped, so gardens 1 and 2 now use the left boot ladder. These replace `wayup-side-desktop.png` and `wayup-side-phone.png` (and their `view-*-wayup-side` shots), which show the dropped side ladder. They are real Play captures of the built game at the `gate-1` and `gate-2` cameras in `look-cameras.md`: computer at Studio's window size, phone in the device simulator (iPhone 14, landscape). The avatar stands on each garden's spawn spot. The screen layer is the game's own, not an HTML overlay.
+
+| Image | Shows | Art used | Difficulty | Notes |
+|---|---|---|---|---|
+| `mockups/wayup-gate1-desktop.png`, `mockups/wayup-gate1-phone.png` | Garden 1 at first spawn: the giant's side, and off to the left the plain-wood left boot ladder on his boot, its foot behind the sock and a rock | Built world only | Easy (nothing new) | Ladder is on screen but small and brown on a dark boot. Readable once the trail glow lights it |
+| `mockups/wayup-gate2-desktop.png`, `mockups/wayup-gate2-phone.png` | Garden 2 at first spawn: the left boot ladder above the sock, its top half clear | Built world only | Easy (nothing new) | Ladder clearly on screen; the sock hides its foot |
+
+Not re-scored side by side: same cameras, world and light as the earlier `wayup-side` check (all 4s), with a smaller ladder than the side ladder had.

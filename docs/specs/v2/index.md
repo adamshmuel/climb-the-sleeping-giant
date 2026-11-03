@@ -8,7 +8,7 @@ The specs are written one at a time, in build order. Each has at most 15 rules.
 |---|---|---|---|
 | 1 | `new-player-safety.md` | Rule 11 becomes "one free save": a new player's first would-be wake drops the meter to 70 and replays the 85% warning, then the safety is used up. A player stops being new with their first Rare egg home | `approved` |
 | 2 | `stuck-safety.md` | Stop players getting stuck inside the giant: one collision source, an automatic stuck scan, a test walk of every way up, and a way out for a stuck player | `approved` |
-| 3 | `gardens-and-ways-up.md` | Random gardens (middle four first), six ways up the giant that all reach the belly through one lap landing and its two belly ramps, rail guards on the planks, and fair noise on every way up | `approved` |
+| 3 | `gardens-and-ways-up.md` | Random gardens (middle four first), four ways up the giant (two boot ramps and two boot ladders; side ladders dropped by Adam, 2026-11-03) that all reach the belly through one lap landing and its two belly ramps, rail guards on the planks, and fair noise on every way up | `approved` |
 | 4 | `egg-reachability.md` | The reachability check: a difficulty score for every nest, which sets its rank, its egg colour and its hatch-odds order | `approved` |
 | 5 | `egg-nests-and-climbing.md` | 38 hand-placed nests, random refills within a rank, Epic eggs in pockets on his white cuffs, walking anywhere on his belly, sides and arms down to a stitched seam, and nothing players stand on moves while he sleeps (climbable patches and buttons dropped, Adam 2026-10-14) | `approved` |
 | 6 | `wake-up.md` | A thrilling wake-up, even solo: he hunts everyone outside a garden, the harmless "bonk", faster slams, a bigger shake and "RUN HOME!" | `approved` |
