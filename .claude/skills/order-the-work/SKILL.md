@@ -23,7 +23,7 @@ Look at the big picture before the task list. Write down:
 
 1. **The biggest open problem.** What it has cost so far (tasks, hours, redone work), and what it blocks for the player and for the team.
 2. **The decision that ends it,** and the options already on the table.
-3. **The least work to decide.** Only the work that decision really needs, so it is made well and soon (for example: clearing the space the options go into, a mockup of each option, judging them side by side, the user's pick). This work goes first.
+3. **The least work to decide.** Only the work that decision really needs, so it is made well and soon (for example: clearing the space the options go into, a mockup of each option, judging them side by side, the user's pick). This work goes first. Anything the decision names as untried goes into this work, before the build.
 4. **Everything else waits,** unless it stands on no open change at all **and** costs little.
 
 ## Step 2: The layer map
@@ -61,7 +61,8 @@ Use the question that fits the goal:
 
 1. **A check of the whole play** (can't get stuck, can reach everything, fair to every side) covers every layer the player moves on, plus everything that sits on them, whole and everywhere. It waits for every open change to them, so it runs once.
    - **Except the reach walk, which comes first.** Before anything is built, placed or argued about at a spot (a way up, a ladder, an item, a goal), a quick walk proves a player can get to that spot from where players already are, with a plain stand-in if the thing isn't built yet. It stands on nothing but the ground the player walks on, so it is never "a whole-play check" and never waits. Every task that builds or places at a spot stands on its reach walk. If the walk fails, the spot moves before any more work on it.
-   - **Name the shape before fitting.** A task that places or fits parts names on its "Stands on:" line the exact shape it fits to (the body, the final design of the thing it touches, the reach walk). That shape is built and checked first, and the cause of a misfit is checked on 5 real examples first (Lesson 26). Fitting to shapes that weren't final cost V2 five tasks on the skin and pillow.
+   - **When the spot is reached only through pieces not built yet,** the reach check runs from what exists just before that piece is built, plus one climb with the player's controls just after.
+   - **Name the shape before fitting.** A task that places or fits parts names on its "Stands on:" line the exact shape it fits to (the body, the final design of the thing it touches, the reach walk). That shape is built and checked first, and the cause of a misfit is checked on 5 real examples first (`world-parts` skill). Fitting to shapes that weren't final cost V2 five tasks on the skin and pillow.
 2. **Choosing between design options:** change only the layer the choice is in, and only as much as the mockups need. The layers that sit on it wait for the choice.
 3. **A design change in one layer:** the layers that sit on it are updated next, and the whole change is tested only after them.
 
@@ -88,6 +89,7 @@ If any reason below is why a piece goes early, it doesn't go early. Look for the
 1. Put every piece after everything it stands on. The decision's work from Step 1 comes first.
 2. For every piece placed before the decision's build, read its row again: does it change or read a layer that the decision changes? If yes, move it after the build.
 3. Run the project's plan check on the written order (the workflow rules name it).
+4. Before writing "before Task X" or "after Task X", read Task X's progress row. A task that is done can't have work put before it.
 
 ## Output
 
@@ -95,4 +97,5 @@ If any reason below is why a piece goes early, it doesn't go early. Look for the
 - The layer map path, and any change you made to it.
 - The Step 4 table.
 - The numbered order. Each piece has its "Stands on:" line (or "Stands on: nothing") and one line saying why.
+- A piece that waits on an open decision names the decision on its "Stands on:" line ("the user's pick between option A and option B"), with "Status: can't start" on the line below. The plan check fails the word "open" on a "Stands on:" line.
 - Any order you were given that this checklist changed, and why.

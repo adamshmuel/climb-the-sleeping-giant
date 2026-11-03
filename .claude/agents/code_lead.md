@@ -5,6 +5,7 @@ model: opus
 effort: medium
 maxTurns: 50
 autoCompactWindow: 200000
+memory: project
 skills:
   - roblox-docs
   - roblox-code-review
@@ -58,7 +59,7 @@ After the user approves a spec at Gate 3, turn it into small tasks in test-first
 - says which files it touches;
 - says which test must fail first and what makes it pass;
 - is small enough to build and review in one go;
-- names the lessons it follows (`docs/lessons/index.md`), if any, so the builder doesn't repeat an old mistake;
+- quotes the lines from your memory, the rules or a skill that the builder needs, so it doesn't repeat an old mistake;
 - has a **"Stands on:"** line: each decision, part or task result that must be final (decided and built) before it can be done once and never redone. Copy `product`'s list where it wrote one. For tasks you add, and to order the tasks and their steps, follow the `order-the-work` skill step by step, including Step 5 (the reasons that never count). Treat an order already written in a handoff or ruling as an idea to test, not a fact. Run the project's plan check on every plan and handoff (`agent-workflow.md`, "Order work by what it stands on");
 - says **what it's for**: the core gameplay it protects, or that it is scenery (from the idea's "What matters most" list), and **how big it should be** (steps and Studio calls). A scenery task that goes past its size, or a second task on the same object, goes to `product` as a product decision before more work (`stop-and-step-back` skill).
 
@@ -98,7 +99,7 @@ A small fix (the 10-minute kind) gets no review: one `runner` test run, then the
 
 When the builder says a task is done:
 1. Read the diff (`git diff`) and the tests.
-2. Re-run the quality checks and the tests yourself. Never trust a "passed" you didn't see.
+2. Re-run the quality checks yourself, and have the `runner` do the full test run. Read its report. Never trust a "passed" you didn't see.
 3. Use `script_read` to confirm that Rojo synced the changed files into Studio.
 4. Check the code against the `roblox-code-review` and `roblox-security` skills. Every remote must check its arguments' type, range, ownership and rate. Every connection must be cleaned up. Every file must start with `--!strict`. No deprecated APIs, no `wait`, `spawn` or `delay`.
    - **No copies:** logic that already exists elsewhere in `src/` (or is now written twice) is a **changes** item: name the module to reuse or the shared helper to make.

@@ -1,0 +1,6 @@
+# Plans
+
+- A plan that changes a shared check (a reach, a limit) lists the tests that place things by it as "setup moves, expectations stay".
+- A move right after the engine spawns a body: measure it in Play first (position and who runs its physics, every frame for 1 s), then fix. If the task can't hold that, it goes to a later spec.
+- A rule that changes what happens after a climb names the parts it covers ("the two cap ties"), and the code checks those parts, not only the body zones.
+- Before writing a new world script number into a plan, list `tools/world/` and the other plans' script names.

@@ -11,7 +11,7 @@
 -- Before any change it makes ServerStorage.WorldBackups.T4a and clones both mockup models into it. Rollback: delete
 -- WalkSurfaces.BootLadder_Left and _Right (nothing that existed before is changed).
 -- Worlds, checked before any change: both ladders there = "already done"; none there = build; one there = stop.
--- The message starts with how much changed (Lesson 58). Run in Studio EDIT mode: read this file and pass its text as
+-- The message starts with how much changed. Run in Studio EDIT mode: read this file and pass its text as
 -- `code` to execute_luau. The place file must be saved by Adam afterwards.
 
 local Workspace = game:GetService("Workspace")

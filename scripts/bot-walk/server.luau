@@ -1,8 +1,8 @@
 --!strict
 -- Task 8b slot 3 (Play server): the bot's 350 legs for the client. Leaves ReplicatedStorage.T8bLegs (JSON, walking order)
 -- and ReplicatedStorage.T8bBotWalk (a clone of the judging module). Parts are named by path or by value measured in
--- slot N (8b's names check, scripts/bot-walk/names.luau, Lesson 80); starts go through StartCheck (Lessons 21, 75).
--- Counts that differ from slot N's are printed, never a stop (Lesson 84); T8bLegs is written anyway.
+-- slot N (8b's names check, scripts/bot-walk/names.luau); starts go through StartCheck.
+-- Counts that differ from slot N's are printed, never a stop; T8bLegs is written anyway.
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -13,7 +13,7 @@ local TIME_LIMIT, MARGIN, REACH, WALK_OFF, MAX_JSON = 38, 10, 3, 6, 100000 -- s,
 local WALK = "Workspace.World.WalkSurfaces."
 local TOOLS = "ServerStorage.Tools.checks."
 local EXPECT: { [string]: number } = { up = 17, down = 15, drop = 5, step = 313 } -- slot N's totals, printed if they differ
-local SLOT_N_HIM, SLOT_N_OFF = 260, 53 -- measured, so printed, never a stop (Lesson 80): it only sets the walk order
+local SLOT_N_HIM, SLOT_N_OFF = 260, 53 -- measured, so printed, never a stop: it only sets the walk order
 local PATHS = [[
 Workspace.World Workspace.World.Giant Workspace.World.WalkSurfaces Workspace.World.LandingSpots
 Workspace.World.WalkSurfaces.BootRamp.Ramp_Walk Workspace.World.WalkSurfaces.RightBootRamp.Ramp_Walk
@@ -83,7 +83,7 @@ local function job(): string
 	if not giant:IsA("Model") then
 		return "FIRED lookups: Workspace.World.Giant is a " .. giant.ClassName .. ", not a Model"
 	end
-	local BotLegs = requireModule((at(TOOLS .. "BotLegs") :: ModuleScript):Clone()) -- no script.Parent (Lesson 74)
+	local BotLegs = requireModule((at(TOOLS .. "BotLegs") :: ModuleScript):Clone()) -- no script.Parent
 	local StartCheck = requireModule(at(TOOLS .. "StartCheck") :: ModuleScript) -- Play: a fresh copy, plain require
 
 	-- 1. The temporary route: a marker for each feet point (its top centre is the point), the 17 ways, the cuffs.
@@ -229,7 +229,7 @@ local function job(): string
 			table.insert(wrong, string.format("%s %d, slot N %d", key, counts[key], want))
 		end
 	end
-	if #items ~= 350 or #wrong > 0 then -- a cross-check, printed and never a stop (Lesson 84)
+	if #items ~= 350 or #wrong > 0 then -- a cross-check, printed and never a stop
 		print(
 			string.format("T8b counts differ from slot N (total %d, slot N 350): %s", #items, table.concat(wrong, "; "))
 		)

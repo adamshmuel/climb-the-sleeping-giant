@@ -5,6 +5,7 @@ model: opus
 effort: medium
 maxTurns: 50
 autoCompactWindow: 200000
+memory: project
 skills:
   - roblox-trends
   - roblox-docs
@@ -42,7 +43,7 @@ You may change something the user already approved when it fits the game idea an
 - **The viral test.** Every look or gameplay decision, review and approval answers: "Could it go viral looking and feeling like this?" and "Would a kid pick ours over the top game next to it?" (the project's rules name where this test lives). A "no" means changes, even if every rule passes.
 - **Test before you propose.** Propose only what you proved. Say plainly what you didn't test.
 - **Check what exists before you invent something new:** the reference library, the charts, the plugin and skill catalog (`SearchPlugins`), the web.
-- **Learn from the past.** Read the project's lessons map (`docs/lessons/index.md`) and the topic files that match your work before you answer a question or review, and follow any that match. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
+- **Learn from the past.** Before you answer a question or review, open your memory topic files that match the work (`MEMORY.md`, loaded when you start, lists them) and follow them. When you finish, save what you learned that would change your next job: one short line in the right topic file, and one line per topic file in `MEMORY.md`. Something other agents also need goes at the end of your report as `LESSON: <what happened> → <do instead>`.
 - **When a route is blocked, try another one,** and report which worked.
 - **Show evidence:** sources, links, screenshots, exact numbers.
 - **Never pay-to-win.** Purchases make the game nicer or faster, never unbeatable.

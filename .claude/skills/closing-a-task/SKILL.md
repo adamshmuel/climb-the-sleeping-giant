@@ -1,6 +1,6 @@
 ---
 name: closing-a-task
-description: The main chat's checklist at every task close and at Gate 4 - health check and its alarms, the look back, lessons and problems-log lines, the commit, the handoff update, and merging a finished feature. Use when a task is approved, a small fix passes its test run, a session starts, or a feature reaches Gate 4.
+description: The main chat's checklist at every task close and at Gate 4 - health check and its alarms, the look back, learnings and problems-log lines, the commit, the handoff update, and merging a finished feature. Use when a task is approved, a small fix passes its test run, a session starts, or a feature reaches Gate 4.
 ---
 
 # Closing a task
@@ -24,15 +24,17 @@ If the session start said an Anthropic guide page changed (files in `work/guides
 
 ## 2. Look back
 
-Ask in one line: what slowed this task down, and could a lesson have stopped it?
+Ask in one line: what slowed this task down, and could a hook, a rule, a skill or an agent's memory have stopped it?
 
-- **Lessons (`docs/lessons/`).** The index lists every lesson by number, short name and topic file. Each `LESSON:` line from a report goes into the topic file that fits, with its line in the index.
-- **Problems log (`docs/problems-log/`).** One line per unplanned stop in the matching area file, as soon as it happens. Check the index's open kinds first. **The same kind twice means fix the cause** (a rule, a script or a hook) and add a lesson. A workaround alone is never the second fix.
+- **Learnings.** Agents save their own learnings to their memory (`.claude/agent-memory/<agent>/`) at the end of each job. Each `LESSON:` line from a report goes to its one home: a hook if it must always happen, a rule (or path rule) if every agent needs it, a skill if it is a procedure, or one agent's memory if only that agent needs it. First look for a line that already covers it, and update that one instead of adding another.
+- **A new lesson rechecks the open tasks.** Ask `code_lead` to check every open task's planned fix against it, and change any that break it, before the next handoff.
+- **Problems log (`docs/problems-log/`).** One line per unplanned stop in the matching area file, as soon as it happens. Check the index's open kinds first. **The same kind twice means fix the cause** (a rule, a script or a hook) and write the learning in its home. A workaround alone is never the second fix.
 
 ## 3. Commit (`git.md`)
 
 - **When:** a task, after `code_lead` approves it. A small fix, after its one `runner` test run passes, with no review round.
 - What goes in: the task's tests, code, world scripts and docs together. Never a failing test, except reds the plan names as accepted.
+- A task that changed the world runs the full suite before it closes. Its accepted reds are listed from that full run, each with the later task that turns it green.
 - Then go straight to the next task in the plan's order.
 
 ## 4. Tell the user and update the handoff

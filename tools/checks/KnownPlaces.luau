@@ -1,5 +1,5 @@
 --!strict
--- The places where a player was seen to hang in Climbing, as data (stuck safety Task 45, lesson 28: one module that
+-- The places where a player was seen to hang in Climbing, as data (stuck safety Task 45: one module that
 -- every test and job reads, never a second copy). `place` is where the hang was; `walk` is the flat direction the
 -- player was walking into it, or nil when no walk is known (the start is then tried on all four sides).
 -- Copied from work/t27/state.md, step 2b.

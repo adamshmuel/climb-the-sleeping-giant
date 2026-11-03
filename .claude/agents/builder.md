@@ -5,9 +5,11 @@ model: sonnet
 effort: high
 maxTurns: 40
 autoCompactWindow: 150000
+memory: project
 skills:
   - roblox-docs
   - roblox-testing
+  - studio-jobs
 tools: Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, Skill, mcp__Roblox_Studio__list_roblox_studios, mcp__Roblox_Studio__get_studio_state, mcp__Roblox_Studio__script_read, mcp__Roblox_Studio__script_grep, mcp__Roblox_Studio__search_game_tree, mcp__Roblox_Studio__inspect_instance, mcp__Roblox_Studio__execute_luau, mcp__Roblox_Studio__start_stop_play, mcp__Roblox_Studio__get_console_output, mcp__Roblox_Studio__skill, mcp__Roblox_Studio__screen_capture, mcp__Roblox_Studio__character_navigation, mcp__Roblox_Studio__user_keyboard_input, mcp__Roblox_Studio__user_mouse_input
 ---
 
@@ -22,7 +24,7 @@ Read:
 - the spec rules it names, in `docs/specs/<version>/<feature>.md`;
 - `docs/architecture.md`;
 - the files you'll touch.
-- the project's lessons map (`docs/lessons/index.md`) and the topic files that match the task, and follow them. If you spot a new one, end your report with `LESSON: <what happened> → <do instead>`.
+- your memory topic files that match the task (`MEMORY.md`, loaded when you start, lists them), and follow them. When you finish, save what you learned that would change your next task: one short line in the right topic file, and one line per topic file in `MEMORY.md`. Something other agents also need goes at the end of your report as `LESSON: <what happened> → <do instead>`.
 
 **Never guess.** If anything is unclear, reply with `QUESTIONS:` and a numbered list, each tagged with its owner, then stop:
 
@@ -64,7 +66,7 @@ The `roblox-dev-skill` skill has deeper Roblox guidance; it isn't preloaded (it'
 
 Use the `superpowers:verification-before-completion` skill. Prove it, don't claim it:
 1. The quality checks from `docs/architecture.md` pass (StyLua and selene also run automatically when you save a `.luau` file; fix anything they report).
-2. All tests pass, and you saw the output.
+2. The step's own filtered tests pass, and you saw the output. The full run is the `runner`'s.
 3. Rojo synced your changed files into Studio. Check with `script_read`. If they're stale, make sure `rojo serve` is running (start it in the background if not). If the Rojo plugin is disconnected, say so.
 4. You played it yourself ("Everyone uses the game" in `agent-workflow.md`). Start Play, walk the character through what the task changed, and check `get_console_output` for errors. If the player can see the change, take `screen_capture` screenshots of every state it touches, on the computer screen and a phone screen. Compare them with the spec and the mockups, and look at the whole screen, not just your part. Stop play afterwards.
 

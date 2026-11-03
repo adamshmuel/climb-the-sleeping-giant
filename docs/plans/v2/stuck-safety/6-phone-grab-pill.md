@@ -24,10 +24,10 @@ Words used here:
   - `src/client/init.client.luau`: wires GrabPrompt's pinned state to Messages;
   - new tests: `src/tests/client/Hud/PillPin.spec.luau`, and `src/tests/client/Hud/GrabPromptPin.spec.luau`. `GrabPrompt.spec.luau` is already 741 lines, so don't add to it. Messages' tests go in the Messages spec file that tests the tip.
 - **Lessons:**
-  - Lesson 26 (name the cause as measured): step 1 measures before anything is built.
-  - Lesson 120 (every Play step starts with a dry start).
-  - Lesson 141 (a shot camera looks at the prompt from the side; find a billboard's place from its adornee's screen point, never from its `AbsolutePosition`).
-  - Lesson 143 (`screen_capture` doesn't draw AlwaysOnTop billboards: a review shot of the following pill sets it to false in Play only, never in `src/`).
+  - Name the cause as measured: step 1 measures before anything is built.
+  - Every Play step starts with a dry start.
+  - A shot camera looks at the prompt from the side; find a billboard's place from its adornee's screen point, never from its `AbsolutePosition`.
+  - `screen_capture` doesn't draw AlwaysOnTop billboards: a review shot of the following pill sets it to false in Play only, never in `src/`.
 
 ### The pin rule (designer's values, `work/review/pill-place.md`)
 
@@ -90,7 +90,7 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 - The red counts as seen only if every new test failed for the right reason.
 - Tool calls: at most 25.
 
-- **Step 4 finish (Sonnet builder, 0 Studio calls, at most 6 tool calls):** the one failing test had wrong numbers, not wrong code. Apply the exact change in `work/t56/step4-ruling.md`, point 1: the test's points are computed from `Layout.pin` (Lesson 147: A test on a pixel line works its numbers out from the line), and the "follows again" point sits exactly on the 84 px line. Step 5's full run is its green.
+- **Step 4 finish (Sonnet builder, 0 Studio calls, at most 6 tool calls):** the one failing test had wrong numbers, not wrong code. Apply the exact change in `work/t56/step4-ruling.md`, point 1: the test's points are computed from `Layout.pin` (a test on a pixel line works its numbers out from the line), and the "follows again" point sits exactly on the 84 px line. Step 5's full run is its green.
 - Task 56 adds no more lines to `Messages.luau` (891 lines). Task 57 splits it next.
 
 ## Step 5: The full run (Haiku runner, 2 Studio calls)
@@ -98,7 +98,7 @@ The 64 and 84 px lines are starting values. Step 1's numbers can move them only 
 - `scripts/studio/full-run-start.luau`, a 62 s wait, then `scripts/studio/full-run-fetch.luau`, fetched again until it reports.
 - Plus the quality checks: `rojo build`, StyLua, selene, `luau-lsp analyze`.
 - Pass: 0 failed.
-- Note (fixed 2026-11-01): this step first asked for an unchanged stuck-scan result the full run never prints. Lesson 27's stuck scan is the StuckScan specs, so 0 failed already covers it (Lesson 151).
+- Note (fixed 2026-11-01): this step first asked for an unchanged stuck-scan result the full run never prints. The stuck scan is the StuckScan specs, so 0 failed already covers it.
 
 ## Step 6: Phone Play proof, rerun (Play, 8 Studio calls, Sonnet)
 
@@ -107,13 +107,13 @@ The first try failed at call 3 (`work/t56/step6.md`): the start on the egg's dom
 - Call 1 (Edit), in one paste: set the iPhone 14 in landscape. Then require a copy of `ServerStorage.Tools.checks.StartCheck` and print `StartCheck.nearSpot(anchor, 4)`, where `anchor` is `Workspace.World.EggSpots.EggSpot_Common_1.Base.PromptAnchor.WorldPosition`. This is the meadow egg a new player's footprints lead to, on flat ground. If no spot is open, stop and report.
 - Call 2: start Play.
 - Call 3 (Client), in one paste:
-  1. Dry start on the spot call 1 printed: settle 2 s, press 1 s, and print the drift and the floor height. Stop with "(lost input)" if it drifts more than 1 stud (Lesson 120).
+  1. Dry start on the spot call 1 printed: settle 2 s, press 1 s, and print the drift and the floor height. Stop with "(lost input)" if it drifts more than 1 stud.
   2. Turn the body to face the egg, and wait until `PlayerGui.WorldPrompts.GrabPrompt` exists (5 s at most; stop if it doesn't).
   3. Keep the camera's position, set `CameraType` to Scriptable, and hold the camera with a RenderStepped connection at `CFrame.lookAt(position, anchor) * CFrame.Angles(tilt, 0, 0)`. Here `tilt = math.atan((345 - h / 2) / (h / 2) * math.tan(math.rad(FieldOfView / 2)))`, h is `ViewportSize.Y`, and `anchor` is `EggSpot_Common_1.Base.PromptAnchor.WorldPosition`.
   4. Wait 1 s, then print the anchor's viewport y, whether it is on screen, and whether the pill is pinned.
   5. Pass: y within 5 px of 345, on screen, `PlayerGui.PinnedPrompt.Pill` exists, and the GrabPrompt billboard is empty.
-- Call 4: shot before. Pass: the whole pinned pill shows with the hand and "Hold to Grab", in the chip's place, with nothing covering it and no chip. The pinned pill sits on a ScreenGui, so no AlwaysOnTop switch is needed (Lesson 143).
-- Call 5: hold the pinned pill with `user_mouse_input` for 2.5 s. Aim at the pill's game point plus (47, 0) (Lesson 149). The rerun added 58 on y too and missed, so product ruled it a tool limit.
+- Call 4: shot before. Pass: the whole pinned pill shows with the hand and "Hold to Grab", in the chip's place, with nothing covering it and no chip. The pinned pill sits on a ScreenGui, so no AlwaysOnTop switch is needed.
+- Call 5: hold the pinned pill with `user_mouse_input` for 2.5 s. Aim at the pill's game point plus (47, 0). The rerun added 58 on y too and missed, so product ruled it a tool limit.
 - Call 6: shot after. Pass: the carry pill shows. It shows only once the server has set `Carrying`.
 - Call 7: stop Play.
 - Call 8 (Edit): reset the device.
@@ -137,7 +137,7 @@ Added by code_lead on 2026-11-01, after the Task 56 review (`work/t56/review.md`
   - `src/tests/client/Hud/GrabPromptRig.luau` (new, not a spec): the fake-prompt test rig that `GrabPrompt.spec.luau` and `GrabPromptPin.spec.luau` both copy today.
   - `src/client/Hud/PillPin.luau` and `src/tests/client/Hud/PillPin.spec.luau`: delete `PillPin.pinnedBox` and its one test. Only that test used it.
   - `src/client/Hud/GrabPrompt.luau`: the pill's height and billboard width are worked out once (when the pill shows, and in `relayout` when the screen changes), not every frame.
-- **Lessons:** Lesson 3 (never delete or move a synced folder). `Messages.luau` stays a file; it does not become a folder. Adding new files and deleting one function is safe.
+- **Rules it follows:** never delete or move a synced folder. `Messages.luau` stays a file; it does not become a folder. Adding new files and deleting one function is safe.
 
 ### Decisions
 
@@ -153,7 +153,7 @@ Added by code_lead on 2026-11-01, after the Task 56 review (`work/t56/review.md`
 ### Pass
 
 - Step 1: `rojo build`, StyLua and selene clean. No file it touches over 900 lines. `git diff --stat` shows no change outside the files above.
-- Step 2: the full run prints **2904 passed, 0 failed** (2905 minus the deleted `pinnedBox` test). The StuckScan specs are part of that run, so 0 failed covers Lesson 27's stuck scan. (Fixed 2026-11-01: this asked for a "stuck scan's line" the run never prints.)
+- Step 2: the full run prints **2904 passed, 0 failed** (2905 minus the deleted `pinnedBox` test). The StuckScan specs are part of that run, so 0 failed covers the stuck scan. (Fixed 2026-11-01: this asked for a "stuck scan's line" the run never prints.)
 
 ## Progress row
 

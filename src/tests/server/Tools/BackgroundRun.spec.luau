@@ -5,7 +5,7 @@ local describe, it, expect, beforeEach, afterEach =
 local ServerStorage = game:GetService("ServerStorage")
 local BackgroundRun = require(ServerStorage.Tests.BackgroundRun)
 
--- Stuck safety Task 51, step 1 (lessons 22, 29, 31 and 51): a full test run starts in the background and is fetched
+-- Stuck safety Task 51, step 1: a full test run starts in the background and is fetched
 -- later as a short report. Every test uses a fake runner and a fake Folder for the attributes, never the real
 -- ServerStorage.Tests. A fake Jest result has only the fields the report reads.
 describe("BackgroundRun", function()

@@ -48,10 +48,10 @@ local childrenNamed = FolderShared.childrenNamed
 -- the later spec "Launch polish: Beard wedge" brings its fix. SlideGuard_ForeheadBand_1 and SlideGuard_BeardPocket_1 are
 -- not made.
 -- Task 48 adds one more small patch, Block_R141_1: an invisible 6 x 6 x 8 box, turned 25 degrees so it
--- follows the giant's slanted skin (Lesson 56), at (56.8, 5, -1.6) inside the flowering bush that
+-- follows the giant's slanted skin, at (56.8, 5, -1.6) inside the flowering bush that
 -- tools/world/16-meadow-bush.luau places in front of R-141's notch at the giant's foot on the meadow. Meadow bushes have no
 -- collision, so the box is what players meet. It is named Block_, so the patch tests (which read only Patch_ blocks) skip it,
--- and it lives here because this script owns the SmallPatches folder and counts its parts (Lesson 55).
+-- and it lives here because this script owns the SmallPatches folder and counts its parts.
 -- So this section makes 124 parts (11 guards and 113 small patches).
 -- Every part has the steep guards' settings (step 22-0): Transparency 1, CanCollide, CanQuery, CanTouch off, CastShadow
 -- off, SmoothPlastic, collision group Default, Anchored, Archivable on (Archivable on, so the place file keeps them).

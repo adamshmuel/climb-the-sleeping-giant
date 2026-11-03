@@ -8,7 +8,7 @@ How the project agents work together. The rare processes are skills, loaded when
 | `stop-and-step-back` | anything over its time limit, a loop, a second task on one object, a plan over budget, a look made worse |
 | `writing-handoffs` | sizing and writing a task handoff or Play job |
 | `look-check` | before and after shots for any change the player can see |
-| `closing-a-task` | the health check, lessons, commit and handoff update at each task close, and Gate 4 |
+| `closing-a-task` | the health check, learnings, commit and handoff update at each task close, and Gate 4 |
 | `top-games-library` | real screenshots of the top games, and refreshing them |
 | `order-the-work` | ordering work by what it stands on |
 
@@ -65,7 +65,8 @@ Owners decide everything in their area, including changes to approved work that 
 The user is asked first only for:
 - a new feature, or removing one;
 - anything about money: prices, Robux, game passes, what is sold;
-- a change that doesn't fit the game idea.
+- a change that doesn't fit the game idea;
+- the first piece of a new way through the world: show it in Play (a short clip or shots) and confirm it stays before the second piece is built.
 
 Then ask right away, one question at a time, with a recommendation. Never park a question for the user in a file.
 
@@ -85,5 +86,6 @@ When the user asks why an agent decided something, send the question to that own
 | `docs/reviews/<feature>.md` | `product_reviewer` | yes |
 | `docs/architecture.md`, `docs/plans/...`, `docs/progress/...` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |
-| `docs/lessons/`, `docs/problems-log/` | main chat | yes |
+| `docs/problems-log/` | main chat | yes |
+| `.claude/agent-memory/<agent>/` | that agent (the main chat adds `LESSON:` lines) | yes |
 | `references/top-games/` | any agent | no (other games' pictures) |

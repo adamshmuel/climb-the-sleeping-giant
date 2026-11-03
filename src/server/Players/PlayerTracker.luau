@@ -12,18 +12,18 @@ local TELEPORT_DISTANCE = 20
 local SPEED_WINDOW_SECONDS = 1
 -- A player counts as moving only if their body went at least this many studs in a straight line over the last
 -- second (Rule 31: being stuck is silent). A body shaking in a gap goes nowhere, so it makes no walking noise.
--- Players can't see this number (Lesson 5).
+-- Players can't see this number.
 local MIN_TRIP = 1
 -- A body whose kept readings (at least MIN_COVERED_SECONDS of them) all lie within this many studs of the newest one
 -- is shaking in a pocket, not walking: no walking noise (Rule 31: being stuck is silent). It is the 1.6-stud gap plus
--- 0.2. Measured in 3D, so a ladder climber still counts. Players can't see this number (Lesson 5).
+-- 0.2. Measured in 3D, so a ladder climber still counts. Players can't see this number.
 local POCKET_SIZE = 1.8
 local MIN_COVERED_SECONDS = 0.9
 -- After the server moves a player (a rescue), the move and the drop that follows it are neither walking nor a fall.
 -- That grace ends once the body has been on the ground and still for this many ticks in a row (0.3 s)...
 local MOVE_SETTLE_TICKS = 3
 -- ...or once this many seconds have passed since the move: the server may see the device 0.4 s late, then the drop,
--- then the settle ticks. A body still falling after that is a real fall. Players can't see this number (Lesson 5).
+-- then the settle ticks. A body still falling after that is a real fall. Players can't see this number.
 local MOVE_GRACE_SECONDS = 1.5
 
 local Players = game:GetService("Players")

@@ -5,13 +5,13 @@
 -- into it and hang in Climbing, and the rescue doesn't reach the meadow (spec Rule 22), so the pocket is closed instead.
 -- What it does: the bush (a Nature_FloweringBush marked with the attribute MeadowBushR141 = true) is set to scale 3
 -- (Model:ScaleTo, which is absolute) and moved so the centre of its leaves (the MeshPart "Foliage") is at FOLIAGE_AT, over the
--- invisible box Block_R141_1 (made by S4SlideGuards in tools/world/15-real-shape, which owns the SmallPatches folder:
--- Lesson 55). Meadow bushes have no collision, so that box is the solid part.
+-- invisible box Block_R141_1 (made by S4SlideGuards in tools/world/15-real-shape, which owns the SmallPatches folder).
+-- Meadow bushes have no collision, so that box is the solid part.
 -- Three worlds, checked before any change:
 --   1. no marked bush: copies the Nature_FloweringBush that stands within 3 studs of (88, 6, -21), then scales and moves it;
 --   2. a marked bush still at the old record (bounding box middle x 58.5, z -1, bottom y 2): scales and moves it;
 --   3. a marked bush at scale 3 with its leaves in place: "already done", nothing changes.
--- Anything else stops with nothing changed. The message starts with how much changed (Lesson 58): "copied 1 bush",
+-- Anything else stops with nothing changed. The message starts with how much changed: "copied 1 bush",
 -- "scaled 1 bush" or "already done".
 -- Run in Studio EDIT mode: read this file and pass its text as `code` to execute_luau (or require a copy of it). The place
 -- file must be saved by Adam afterwards.

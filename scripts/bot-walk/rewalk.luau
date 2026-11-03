@@ -1,8 +1,8 @@
 --!strict
 -- Task 8c (Client, Play): re-walks the legs in LEGS, one full line each (Rule 24: A bot walks every way).
--- Pasted joined after client-a.luau (Lesson 63). The first paste starts the run in the background and returns at once
--- (Lesson 29); pasting again only reads: "running k of n", then every line and the shot windows (shots only if RW_SHOTS > 0).
--- Lesson 85: each line has reason, end feet, part under them, speed, note ("climbed" for drops). Lesson 68: the
+-- Pasted joined after client-a.luau. The first paste starts the run in the background and returns at once
+--; pasting again only reads: "running k of n", then every line and the shot windows (shots only if RW_SHOTS > 0).
+-- Each line has reason, end feet, part under them, speed, note ("climbed" for drops). The
 -- task's close clears shared.T8cRewalk and shared.T8cShow.
 local LEGS = { 144, 147, 178, 279, 347 }
 -- selene: allow(global_usage)
@@ -15,7 +15,7 @@ local function rwClock(t: number): string
 	return DateTime.fromUnixTimestamp(t):FormatUniversalTime("HH:mm:ss", "en-us")
 end
 
--- 1. Load the two items; a missing one is a lost input, so the paste stops (Lessons 79, 84).
+-- 1. Load the two items; a missing one is a lost input, so the paste stops.
 local rwRS = game:GetService("ReplicatedStorage")
 local rwValue, rwModule = rwRS:WaitForChild("T8bLegs", 10), rwRS:WaitForChild("T8bBotWalk", 10)
 if rwValue == nil or rwModule == nil then
@@ -75,7 +75,7 @@ local function rwEscape(leg: Leg, endFeet: Vector3): (boolean, string, { number 
 	return false, "escape FAILED: " .. table.concat(parts, ", "), distances
 end
 
--- 2. The run, in the background (Lesson 22). Each line is kept in shared and printed as it ends (Lesson 31).
+-- 2. The run, in the background. Each line is kept in shared and printed as it ends.
 local function rwLeg(state: any, n: number): string
 	local leg = rwByN[n]
 	local text = `#{n} FIRED: no such leg in T8bLegs (lost input)`
@@ -105,7 +105,7 @@ local function rwLeg(state: any, n: number): string
 	return text
 end
 
--- A leg that errors prints its own line and the run goes on; done is always set (Lesson 79).
+-- A leg that errors prints its own line and the run goes on; done is always set.
 local function rwRun(state: any)
 	for _, n in LEGS do
 		local ok, err = pcall(rwLeg, state, n)

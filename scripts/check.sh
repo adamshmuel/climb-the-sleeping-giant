@@ -23,11 +23,11 @@ if [ -n "$too_big" ]; then
 fi
 echo "== Fresh modules in the ready-made Studio scripts"
 # Studio keeps the first copy of a module it loaded, even after Rojo syncs a newer one, so an
-# Edit-time paste that requires a module the plain way runs old code (Lesson 74, Setup 7).
+# Edit-time paste that requires a module the plain way runs old code (Setup 7).
 plain=$(grep -nE 'require(Module)?\(' scripts/studio/*.luau | grep -v ':Clone()' | grep -vE '= require :: any' || true)
 if [ -n "$plain" ]; then
 	echo "$plain"
-	echo "Each line above requires a module without :Clone(), so Studio may run an old copy (Lesson 74)."
+	echo "Each line above requires a module without :Clone(), so Studio may run an old copy."
 	exit 1
 fi
 echo "== Build"

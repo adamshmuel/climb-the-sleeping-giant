@@ -1,5 +1,5 @@
 --!strict
--- Starts a test run in the background and fetches a short report later (Lessons 22, 29 and 51).
+-- Starts a test run in the background and fetches a short report later.
 -- A full run holds Studio for about a minute, so the caller starts it, waits, then fetches once. The state lives in
 -- attributes (named values) on `folder`: Status ("running" or "done"), Done (spec files finished), Page1, Page2 ...
 -- (the report, one page per fetch), PageCount and PageNext. Every page stays under 900 characters, because Studio

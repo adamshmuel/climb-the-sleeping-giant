@@ -1,5 +1,5 @@
 --!strict
--- Task 8b fetch (Lesson 29): reads shared.T8bWalk. Done: adds the 350 letters (BotLegs order) and sets T8bShow.
+-- Task 8b fetch: reads shared.T8bWalk. Done: adds the 350 letters (BotLegs order) and sets T8bShow.
 -- Fail lines (fails, then short) are paged: each fetch adds the whole lines that fit under 1000 characters.
 -- selene: allow(global_usage)
 local sh: any = shared

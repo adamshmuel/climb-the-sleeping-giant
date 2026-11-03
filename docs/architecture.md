@@ -362,7 +362,7 @@ return require(game:GetService("ServerStorage").Tests.TestRunner:Clone())()
 
 It returns `TESTS PASSED` or `TESTS FAILED`, with the count and every failure message. To run some tests only, pass part of the file name, for example `("Noise")`. The `:Clone()` makes sure the newest runner is loaded each time.
 
-**A full run goes in the background (stuck safety Task 51, Lesson 51).** A full run takes about a minute, longer than one Studio call may last (about 45 seconds). So it is started and fetched with `ServerStorage.Tests.BackgroundRun`:
+**A full run goes in the background (stuck safety Task 51).** A full run takes about a minute, longer than one Studio call may last (about 45 seconds). So it is started and fetched with `ServerStorage.Tests.BackgroundRun`:
 - **How Studio stays free:** before every spec file, Jest runs `PauseBetweenFiles`. It counts the file and waits one frame, so Studio answers other calls during the run.
 - **Start (one call):** `BackgroundRun.new({ runner = TestRunner.runRaw, folder = <a Folder made for this run>, extra = <optional function returning one line, such as the scan> })`, then `start()`. A second start while a run is going is refused.
 - **Wait:** about 60 seconds in the terminal.

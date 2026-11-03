@@ -2,7 +2,7 @@
 """PreToolUse hook (Studio execute_luau): block a code line that starts with "(".
 
 Luau reads a line starting with "(" as a call on the line before, so the
-script fails to parse and the Studio call is lost (Lesson 7). Lines inside
+script fails to parse and the Studio call is lost. Lines inside
 long strings and block comments are skipped.
 """
 
@@ -73,7 +73,7 @@ def main():
         shown = ", ".join(str(n) for n in lines[:5])
         print(
             f"Blocked: line {shown} of this Studio script starts with \"(\". Luau reads it as a call on "
-            f"the line before, so the script fails to parse and the Studio call is lost (Lesson 7). "
+            f"the line before, so the script fails to parse and the Studio call is lost. "
             f"Put the value in a local first, for example `local sh: any = shared` and then `sh.x = ...`.",
             file=sys.stderr,
         )

@@ -19,7 +19,7 @@ afterEach(RecoveryRig.cleanUp)
 -- where they were. Spawning's arrival is waited out so any move after it has had its turn.
 local SPAWN = Vector3.new(500, 5, 0)
 
--- The engine's order (Lesson 129): CharacterAdded fires first, and the new body is put into the world after that.
+-- The engine's order: CharacterAdded fires first, and the new body is put into the world after that.
 local function dieOnGiant(player: FakePlayer, rig: Rig): Model
 	local where = rig.where
 	rootOf(player.Character :: Model).Position = Vector3.new(0, 30, 0)

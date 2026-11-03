@@ -292,7 +292,7 @@ describe("A brand-new player's stuck session", function()
 			expect(s.player:GetAttribute("Carrying")).toBeNil()
 			expect(s.rareOnSpot).toBe(true) -- Rule 30: the Rare is back on its spot
 
-			-- 6. After the respawn, grabs the Rare again and climbs again (Lesson 107).
+			-- 6. After the respawn, grabs the Rare again and climbs again.
 			expect(s.player.Character).never.toBe(firstCharacter)
 			grabRare(s)
 			walk(s, 30)

@@ -1,5 +1,5 @@
 --!strict
--- The shared start check (stuck safety Task 27, lesson 21): is the place where a walk, a check or a camera is about to
+-- The shared start check (stuck safety Task 27): is the place where a walk, a check or a camera is about to
 -- start open, with nothing of a mesh around it? A ray never hits the part it starts in, so a start inside a mesh looks
 -- "clear" to rays. This asks a body-sized probe instead, with GetPartsInPart, which uses the real shapes (never
 -- GetPartBoundsInBox: it compares rough outer boxes, so near the giant every spot looks closed).
@@ -13,9 +13,9 @@
 -- A hit steeper than the climb limit is a wall: it pulls the way downhill but never sets the probe's height.
 -- The probe is only used by the players' collision group, so other players' bodies never count.
 --
--- Stuck safety Task 46: the walk map and this check must agree (lesson 43), so whether a body fits is asked of the walk
+-- Stuck safety Task 46: the walk map and this check must agree, so whether a body fits is asked of the walk
 -- map's own test, `PathCheck.roomToStand`, standing on the centre ray's hit with the ground's normal (its box tilts with
--- the ground, and may turn). And the start needs a floor (lesson 47): the centre ray must hit ground within MAX_FLOOR
+-- the ground, and may turn). And the start needs a floor: the centre ray must hit ground within MAX_FLOOR
 -- studs under the spot, else "no floor". A corner ray landing on a thin plate never counts as the floor for the body.
 --
 -- Stuck safety Task 53: every start comes from the walk map. `nearSpot(near, maxStuds, root, standsOn)` builds the walk
@@ -23,7 +23,7 @@
 -- (the first thing a ray hits under it is that part, and flat enough to stand on), and runs `find` on it. The first
 -- open one wins. With no spot at all it says what is at `near`, or "no walk-map spot".
 --
--- Task 12i (lesson 125): a start must also hold still. The floor under the centre of where `find` ended up (its `ground`,
+-- Task 12i: a start must also hold still. The floor under the centre of where `find` ended up (its `ground`,
 -- after the downhill moves) must have a normal Y of HOLD_MIN_NORMAL_Y or more, else "too steep to hold still".
 
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -55,7 +55,7 @@ local HOLD_MIN_NORMAL_Y = 0.65 -- about 49 degrees: the floor under a start is n
 local TOO_STEEP = "too steep to hold still"
 
 -- `position` is the highest ray's hit + 0.1 (so no start digs into a slope); `ground` is the centre ray's hit, the
--- ground under the body's middle (Lesson 75). In a dip they are far apart: measure a settle from `ground`.
+-- ground under the body's middle. In a dip they are far apart: measure a settle from `ground`.
 export type Result = { open: boolean, position: Vector3?, ground: Vector3?, moves: number, blockers: { string } }
 
 local StartCheck = {}
@@ -115,7 +115,7 @@ local function downhill(offsets: { Vector3 }, heights: { number }): Vector3?
 	return pull.Unit
 end
 
--- True when a point is inside a solid part. A tiny probe, because a ray never hits the part it starts in (lesson 21).
+-- True when a point is inside a solid part. A tiny probe, because a ray never hits the part it starts in.
 local function isInside(point: Vector3, world: WorldRoot, probe: Part, overlap: OverlapParams): boolean
 	local size = probe.Size
 	probe.Size = Vector3.one * TINY
@@ -228,7 +228,7 @@ local function notOpen(blockers: { string }): Result
 end
 
 -- Does a ray from over the spot, straight down, first hit the part the walk map says the spot stands on, on ground a
--- player can stand on (lesson 59)?
+-- player can stand on?
 local function hasFloor(spot: PathCheck.Spot, world: WorldRoot, rays: RaycastParams): boolean
 	local from = spot.position + Vector3.new(0, FLOOR_RAY_UP, 0)
 	local hit = world:Raycast(from, Vector3.new(0, -FLOOR_RAY_LENGTH, 0), rays)
@@ -239,7 +239,7 @@ local function hasFloor(spot: PathCheck.Spot, world: WorldRoot, rays: RaycastPar
 end
 
 -- Is the floor under the centre of where `find` ended up (its `ground`, after the downhill moves) flat enough for a body
--- to stand still on (Task 12i, lesson 125)? That limit is lower than the walk-up limit hasFloor reads.
+-- to stand still on (Task 12i)? That limit is lower than the walk-up limit hasFloor reads.
 local function holdsStill(found: Result, world: WorldRoot, rays: RaycastParams): boolean
 	local ground = found.ground
 	if ground == nil then
