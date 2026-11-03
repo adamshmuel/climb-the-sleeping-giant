@@ -44,7 +44,7 @@ Plan 7 (the ladder width) ran for days and was rolled back in one morning. These
 | Rule | What it means |
 |---|---|
 | **Hard time limits** | A small fix (a moved part, a missing part, a failing test): **10 minutes**. A new part (a ladder, a bridge): **1 hour**. At the limit all work stops, finished or not, and the main chat tells Adam what is done and what isn't. Over the limit means the approach is wrong, not that it needs more time. |
-| **Backup before every world change** | Before a step changes, moves or removes world parts, it clones them into `ServerStorage.WorldBackups.<task>` in the same call. A rollback is then one paste, not a rebuild. Backups are cleaned out only at Gate 4. |
+| **Backup before every world change** | Before a step changes, moves or removes world parts, it clones them into `ServerStorage.WorldBackups.<task>` in the same call. A rollback is then one paste, not a rebuild. Backups are cleaned out only at Gate 4. Also, before a task's first world change, the main chat copies the saved place file to `work/place-backups/<task>-<date>.rbxl` (Adam, 2026-11-03), so the whole place can be brought back even if a backup folder is lost. |
 | **Small jobs, few agents** | A small fix is done by one agent (the main chat or one `builder`), then checked by one `runner` test run. No meeting, no handoff and no review round. The full flow (owners, `code_lead` plan, review) is only for new parts and new features. |
 
 ## Docs layout
