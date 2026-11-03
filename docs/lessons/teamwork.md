@@ -385,3 +385,11 @@ In the 61h loop meeting, one answer said "never in the air" from the brief's sum
 ## Lesson 312: A Play case on a spot a later task builds over belongs to that task
 Task 61h ran its let-go case on the belly at the tie's foot, where Task 61w builds its chute deck (2026-11-03). Its result was always going to be redone, and three runs went into it.
 → Before any Play case, check whether a later task builds or reshapes the spot it lands on. If so, the case moves into that task ("Don't build what a later plan replaces").
+
+## Lesson 317: Run a check on the built twin before making it a pass item
+- **What happened:** Task 61b's handoff made OnTheGiant's "each ladder joins its two ends" a green pass item for both cap ties. It had been an accepted red since Task 61 and had never passed, even on the left tie that Play had already climbed. The red runs stopped on "CapTieRight missing", which hid the left tie's own failure from Step 2 to Step 5b. The task ran into a red flag at 39 minutes.
+- **Do instead:** before a reshaped or general check becomes a pass item for a new twin, run it once on the twin that is already built and proven in Play, and quote that result in the handoff. If it fails there, the test is wrong, not the world. Never make an accepted red a pass item without first showing it can pass.
+
+## Lesson 318: When a check is skipped, drop the setup only it used
+- **What happened:** In Task 61b the tie-top ray in WalkPieces was skipped for the cap ties, but the constant `TIE_TOP_GROUND` and the code that fed it stayed. Code review found it doing nothing, which cost a review round (about 12 minutes).
+- **Do instead:** when a check is skipped for one case, remove in the same change any setup that only that check used.

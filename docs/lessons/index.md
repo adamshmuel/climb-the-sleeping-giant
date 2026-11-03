@@ -323,6 +323,11 @@ What this project learned the hard way, so it doesn't happen again.
 | 311 | A push away from a Roblox ladder climbs down; trace one let-go before rewriting a climbing job | `studio-and-scripts.md` |
 | 312 | A Play case on a spot a later task builds over belongs to that task | `teamwork.md` |
 | 313 | Budget a full run from the last run's page count | `studio-and-scripts.md` |
+| 314 | A shot step names the camera method that works | `studio-and-scripts.md` |
+| 315 | Measure what a check's ray hits before ruling it onto a new kind of piece | `studio-and-scripts.md` |
+| 316 | Measure both sides of the body before mirroring a fitted part | `look-and-art.md` |
+| 317 | Run a check on the built twin before making it a pass item | `teamwork.md` |
+| 318 | When a check is skipped, drop the setup only it used | `teamwork.md` |
 
 | File | What it covers |
 |---|---|

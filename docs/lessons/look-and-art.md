@@ -112,3 +112,7 @@ A scriptable camera set once in Play was reset by the game's camera before the s
 The walkway's mockup showed where it ends, but not which way a player faces when he gets to the tie.
 
 **Do instead:** a path that ends at a climb shows its measured arrival heading inside the climb's clear angles in the mockup. Movement is tested only on the built piece, with player-like steering.
+
+## Lesson 316: Measure both sides of the body before mirroring a fitted part
+- **What happened:** Task 61b built the right cap tie as an exact mirror of the left. The giant's nightcap is up to 0.34 studs wider on the right, so two CapTies tests failed (head gap, landing height) and a third would have. That cost a measuring round and a refit pass.
+- **Do instead:** before mirroring a part fitted to a body, measure both sides of that body in one read-only call, and write the differences into the per-side table before the build step.

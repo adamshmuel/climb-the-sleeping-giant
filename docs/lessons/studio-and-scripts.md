@@ -867,3 +867,12 @@ Three case-4 job fixes guessed how a held stick behaves on a ladder (2026-11-03)
 ## Lesson 313: Budget a full run from the last run's page count
 The Task 61c handoff gave the full run 2 Studio calls (2026-11-03). The last full run's report was 5 pages long, so the runner needed 1 start plus 4 page fetches and went over its cap. Lesson 188 already said to count one fetch per page, but the handoff counted one fetch in total.
 → Give a full-run step 1 start, plus 1 fetch for each page of the last full run, plus 1 spare (5 pages now, so 7 Studio calls). Its tool-call cap is the Studio calls plus 5, for the reads, the wait and the write (12 now).
+Update (Task 61b Step 6, 2026-11-03): a runner at exactly that cap spent 2 calls on a Studio check and ran out before the write, so 4 fetched pages were lost (a fetched page is gone). → The runner writes each page to the file right after fetching it, never all at the end, and the tool-call cap is the Studio calls plus 7 (14 now).
+
+## Lesson 314: A shot step names the camera method that works
+- **What happened:** Task 61b Step 4 went over both caps (28 of 24 tool calls, 21 of 18 Studio calls). The phone shots in Play took 3 tries, because a camera set by script doesn't show in `screen_capture`. Only `screen_capture`'s own `camera_position` and `look_at_position` arguments placed it. Phone shots also come back small (416x186 for an 840x368 simulated phone).
+- **Do instead:** every handoff step that takes fixed-camera shots in Play says to pass the camera through `screen_capture`'s `camera_position` and `look_at_position`, never a script. The after shots use the same method and size as the before shots, so the pairs compare like for like.
+
+## Lesson 315: Measure what a check's ray hits before ruling it onto a new kind of piece
+- **What happened:** Task 61b Step 5a moved rung-ladder checks onto the cap ties, a near-vertical truss. The ray along `axis.back` and the ground read 1 stud past the top gave false fails: the rails "touched" the skin 19-21 times, and the top read the nightcap. The ruling was written before anyone measured the left tie, so the builder spent 3 unplanned Studio calls probing, and a second ruling round followed.
+- **Do instead:** before a check is ruled onto a new kind of piece, the ruler measures what its ray really hits on the built piece (one read-only call). Where that piece already has a stricter test of its own, reuse it and skip the old one, with a comment.
