@@ -153,6 +153,21 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Give the full run its own step on Haiku (the runner)."
 		exit 1
 	fi
+	# The runner (Haiku) has no screen_capture, Play or input tools, so a Haiku
+	# step that needs one stops at once (review Part 4, then Task 4b Step 1).
+	notools=$(awk '
+		FNR == 1 || /^## / { haiku = 0 }
+		/^## Step [0-9]/ { haiku = (tolower($0) ~ /haiku/); step = $0 }
+		haiku && /screen_capture|start_stop_play|user_keyboard_input|user_mouse_input|character_navigation/ {
+			print FILENAME ": " step; haiku = 0
+		}
+	' "$@")
+	if [ -n "$notools" ]; then
+		echo "$notools"
+		echo "Handoff check FAILED: each Haiku step above needs screen_capture, Play or input tools, which the runner lacks."
+		echo "Give the shots and Play to a Sonnet step (the builder); keep only the full run on Haiku."
+		exit 1
+	fi
 	# A full run's fetch reports only its counts (passed, failed, could not run,
 	# spec files) and the failing test names. A pass line copied from an older
 	# step asked for a "stuck scan line" no run prints (Task 57 step 2, Lesson 151).

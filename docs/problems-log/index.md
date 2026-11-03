@@ -16,7 +16,7 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 |---|---|---|---|
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 | A new test hidden by the red break | 1 | 2026-11-01 | `teamwork.md` |
-| A job given to an agent without its tools | 1 | 2026-11-01 | `teamwork.md` |
+| A job given to an agent without its tools (cause fixed: `job-check.sh --handoff` fails a Haiku step that needs shots, Play or input) | 2 | 2026-11-03 | `teamwork.md` |
 | A second task on the same object (ladder width) | 4 | 2026-11-01 | `world-scenery.md` |
 | A bot never entered Climbing on a tie | 2 | 2026-11-02 | `world-scenery.md` |
 | A picked fix failed its confirm run | 1 | 2026-11-02 | `world-scenery.md` |
