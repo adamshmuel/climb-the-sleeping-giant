@@ -1,5 +1,18 @@
 # Name research: a new name for "Steal the Giant's Eggs"
 
+This is a dated research snapshot (2026-10-14), kept as it was. The name it led to, "Climb the Sleeping Giant", and why, are in [the idea's history file](climb-the-sleeping-giant-history.md#what-changed-and-why).
+
+Contents:
+- [1. The drill-down: 30 successful games](#1-the-drill-down-30-successful-games)
+  - [Our own corner: games about sneaking past a sleeper](#our-own-corner-games-about-sneaking-past-a-sleeper)
+- [2. The patterns (with counts)](#2-the-patterns-with-counts)
+  - [Adam's idea, tested](#adams-idea-tested)
+  - [Words that keep coming back, and why to avoid them](#words-that-keep-coming-back-and-why-to-avoid-them)
+  - [What Roblox itself says about names](#what-roblox-itself-says-about-names)
+- [3. Name options](#3-name-options)
+- [4. My pick](#4-my-pick)
+- [Sources](#sources)
+
 Data fetched 2026-10-14, 06:22 UTC, from the live Roblox charts (Top Playing Now, Top Earning, Up-and-Coming, Top Trending), Roblox game details and Roblox search. Peak numbers come from the articles listed at the bottom.
 
 Why a new name: the current name sounds hostile, and "Steal ... Eggs" looks like a copy of "Steal An Egg", the biggest game on Roblox.
