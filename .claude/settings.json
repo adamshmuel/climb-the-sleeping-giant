@@ -26,7 +26,18 @@
 			"mcp__Roblox_Studio__user_keyboard_input",
 			"mcp__Roblox_Studio__user_mouse_input",
 			"mcp__Roblox_Studio__execute_luau",
-			"Bash(rojo serve:*)"
+			"Bash(rojo serve:*)",
+			"mcp__Roblox_Studio__generate_mesh",
+			"mcp__Roblox_Studio__wait_job_finished",
+			"WebSearch",
+			"WebFetch(domain:www.anthropic.com)",
+			"WebFetch(domain:create.roblox.com)",
+			"WebFetch(domain:github.com)",
+			"WebFetch(domain:devforum.roblox.com)",
+			"WebFetch(domain:luau.org)",
+			"WebFetch(domain:roblox.github.io)",
+			"WebFetch(domain:about.roblox.com)",
+			"WebFetch(domain:rojo.space)"
 		],
 		"deny": ["mcp__Roblox_Studio__multi_edit", "Bash(git push *)"]
 	},
