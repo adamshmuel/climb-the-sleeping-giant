@@ -19,6 +19,16 @@
 -- ServerStorage.WorldBackups.Plan3Task6 (an existing one is left alone). Rollback: delete BellyRamp_*, RampEdgeGuards
 -- and paste the clones back. Worlds, checked before any change: both ramps there = "already done"; none = build; anything
 -- else = stop. CHECK_ONLY = true runs the checks only and changes nothing.
+-- Task 6a2 (look): the pieces stay invisible and solid; each ramp gets a Rails folder (one look-only rope per span between
+-- posts, posts read from LapPlank_Left: a rope is dropped when the ray at either end finds his skin above it; a post needs
+-- a ray down from 6 above its foot to hit the ramp's own piece or fill first) and a Cover folder of look-only wood boards
+-- laid level with the walk (Step 6 of work/t6/look-fix.md, code_lead's split ruling): one straight board per straight
+-- run, the run 4 to 10 cut into the fewest boards (at most 3) whose every piece top is within 0.35 of the board top, each
+-- side as wide as his skin allows (the skin line minus 0.3), a later board at a corner 0.05 lower, and an end that rests
+-- more than 0.3 inside his skin (SunkParts' own measure) shortened 0.1 at a time. Both are worked out on the left ramp,
+-- the right gets the exact mirror. Worlds: ramps with visible pieces and Rails, no Cover = clone both into
+-- ServerStorage.WorldBackups.t6a2-step6 and "updated cover"; invisible pieces and both Covers = "already done"; no
+-- ramps = build all, the rails and the cover.
 -- Run in Studio EDIT mode: read this file and pass its text as `code` to execute_luau (or require a copy of it).
 
 local CHECK_ONLY = false
@@ -28,7 +38,13 @@ local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
+-- The cover boards live in tools/world/17b-belly-cover.luau (a clone is required so an edited copy is always read).
+local coverModule = ServerStorage:WaitForChild("Tools"):WaitForChild("world"):WaitForChild("17b-belly-cover")
+local coverCopy = coverModule:Clone() :: ModuleScript
+local Cover = (require :: any)(coverCopy)
+
 local BACKUP_NAME = "Plan3Task6"
+local COVER_BACKUP = "t6a2-step6"
 local WIDTH = 6
 local HALF = WIDTH / 2
 local THICK = 0.6
@@ -49,6 +65,13 @@ local BEND_MIN = math.rad(1)
 local GROUP_BEND = math.rad(1.5) -- a heading change over this starts a new straight run for the guards
 local UP = Vector3.new(0, 1, 0)
 local SIDES = { { label = "Left", sign = 1 }, { label = "Right", sign = -1 } }
+local ROPE_OUT = 2.85 -- rope and post centre line, from the ramp's centre line (spec 3, Task 6a2)
+-- Post stations per side and one straight rope between neighbours (designer's verdict work/t6/look-verdict-6a2.md, item 2).
+-- No rail over the landing deck, and the P side has no rail at all: posts 6 and 12 stand inside his skin, so a lone post
+-- 10 would be left (designer, work/t6/look-verdict-6a2.md, Step 4 again).
+local POST_STATIONS: { [string]: { number } } = { N = { 6, 7, 10, 13, 16 }, P = {} }
+local ROPE_SAMPLES = 4 -- rays along a span rope
+local RAIL_RAY_UP = 6
 
 local function flat(v: Vector3): Vector3
 	return Vector3.new(v.X, 0, v.Z)
@@ -246,17 +269,17 @@ local function classify(verts: { Vector3 }, run: Edge, params: RaycastParams, wa
 	return stretches
 end
 
-local function backupFolder(): Folder
+local function backupFolder(name: string): Folder
 	local backups = ServerStorage:FindFirstChild("WorldBackups")
 	if backups == nil then
 		backups = Instance.new("Folder")
 		backups.Name = "WorldBackups"
 		backups.Parent = ServerStorage
 	end
-	local folder = backups:FindFirstChild(BACKUP_NAME)
+	local folder = backups:FindFirstChild(name)
 	if folder == nil then
 		folder = Instance.new("Folder")
-		folder.Name = BACKUP_NAME
+		folder.Name = name
 		folder.Parent = backups
 	end
 	return folder :: Folder
@@ -340,6 +363,143 @@ local function buildRamp(label: string, verts: { Vector3 }, params: RaycastParam
 	return model, `{label}: {count - 1} pieces, {fills} fills`
 end
 
+type Look = {
+	deckColor: Color3,
+	ropeColor: Color3,
+	ropeMaterial: Enum.Material,
+	ropeSize: Vector3,
+	ropeHeight: number,
+	postColor: Color3,
+	postMaterial: Enum.Material,
+	postSize: Vector3,
+	postHeight: number,
+}
+
+-- The look of the planks, ropes and posts, read from LapPlank_Left (heights are along the deck's own up, above its top).
+local function readLook(surfaces: Instance): Look
+	local plank = surfaces:FindFirstChild("LapPlank_Left")
+	local deck = if plank ~= nil then plank:FindFirstChild("Deck") else nil
+	local rope = if plank ~= nil then plank:FindFirstChild("Rope") else nil
+	local post = if plank ~= nil then plank:FindFirstChild("Post") else nil
+	if deck == nil or rope == nil or post == nil or not deck:IsA("BasePart") then
+		error("nothing was changed. LapPlank_Left.Deck, Rope or Post is missing")
+	end
+	local d, r, p = deck :: BasePart, rope :: BasePart, post :: BasePart
+	return {
+		deckColor = d.Color,
+		ropeColor = r.Color,
+		ropeMaterial = r.Material,
+		ropeSize = Vector3.new(r.Size.X, r.Size.Y, 1),
+		ropeHeight = d.CFrame:ToObjectSpace(r.CFrame).Position.Y - d.Size.Y / 2,
+		postColor = p.Color,
+		postMaterial = p.Material,
+		postSize = p.Size,
+		postHeight = d.CFrame:ToObjectSpace(p.CFrame).Position.Y - d.Size.Y / 2,
+	}
+end
+
+local function mirrorX(v: Vector3): Vector3
+	return Vector3.new(-v.X, v.Y, v.Z)
+end
+
+-- The reflection of a box's frame across x = 0 (one axis is turned round, so the frame stays right-handed).
+local function mirrorCf(cf: CFrame): CFrame
+	return CFrame.fromMatrix(mirrorX(cf.Position), -mirrorX(cf.XVector), mirrorX(cf.YVector), mirrorX(cf.ZVector))
+end
+
+local function railPart(name: string, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = size
+	part.CFrame = cf
+	part.Color = color
+	part.Material = material
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	return part
+end
+
+-- Lays the rails on the left ramp by the ray rules, then the exact mirror on the right. Returns the summary.
+local function layRails(surfaces: Instance, left: Model, right: Model, look: Look): string
+	local leftRails, rightRails = Instance.new("Folder"), Instance.new("Folder")
+	leftRails.Name, rightRails.Name = "Rails", "Rails"
+	leftRails.Parent, rightRails.Parent = left, right
+	local extra: { Instance } = { leftRails, rightRails }
+	local guards = surfaces:FindFirstChild("RampEdgeGuards")
+	if guards ~= nil then
+		table.insert(extra, guards)
+	end
+	local params = groundParams(extra)
+	local ropes, posts = 0, 0
+	local dropped: { string } = {}
+	local under: { string } = {}
+	for _, tag in { "N", "P" } do
+		local s = if tag == "P" then 1 else -1
+		local stations = POST_STATIONS[tag]
+		local feet: { [number]: Vector3? } = {}
+		for _, i in stations do
+			local piece = left:FindFirstChild("Piece" .. i) :: BasePart?
+			if piece == nil then
+				table.insert(dropped, `post {i}{tag} (no piece)`)
+				continue
+			end
+			local foot = (piece.CFrame * CFrame.new(s * ROPE_OUT, THICK / 2, -piece.Size.Z / 2 + 0.25)).Position
+			local hit = Workspace:Raycast(foot + Vector3.new(0, RAIL_RAY_UP, 0), Vector3.new(0, -20, 0), params)
+			if hit == nil or not hit.Instance:IsDescendantOf(left) then
+				table.insert(dropped, `post {i}{tag} ({if hit ~= nil then hit.Instance.Name else "none"})`)
+				continue
+			end
+			local dirFlat = flat(piece.CFrame.LookVector).Unit
+			local cf = CFrame.fromMatrix(foot + UP * look.postHeight, UP:Cross(dirFlat).Unit, UP)
+			local name = `Post_{i}_{tag}`
+			railPart(name, look.postSize, cf, look.postColor, look.postMaterial).Parent = leftRails
+			railPart(name, look.postSize, mirrorCf(cf), look.postColor, look.postMaterial).Parent = rightRails
+			feet[i] = foot
+			posts += 1
+		end
+		for k = 1, #stations - 1 do
+			local a, b = stations[k], stations[k + 1]
+			local footA, footB = feet[a], feet[b]
+			if footA == nil or footB == nil then
+				table.insert(dropped, `rope {a}-{b}{tag} (a post is missing)`)
+				continue
+			end
+			local pa, pb = footA + UP * look.ropeHeight, footB + UP * look.ropeHeight
+			local blocked: string? = nil
+			for n = 0, ROPE_SAMPLES do
+				local pt = pa:Lerp(pb, n / ROPE_SAMPLES)
+				local hit =
+					Workspace:Raycast(pt + Vector3.new(0, RAIL_RAY_UP, 0), Vector3.new(0, -4 * RAIL_RAY_UP, 0), params)
+				if hit ~= nil and hit.Position.Y > pt.Y then
+					if not hit.Instance:IsDescendantOf(left) and blocked == nil then
+						blocked = hit.Instance.Name
+					elseif hit.Instance:IsDescendantOf(left) then
+						table.insert(under, `{a}-{b}{tag} under {hit.Instance.Name}`)
+					end
+				end
+			end
+			if blocked ~= nil then
+				table.insert(dropped, `rope {a}-{b}{tag} (skin or other ramp: {blocked})`)
+				continue
+			end
+			local cf = CFrame.lookAt((pa + pb) / 2, pb)
+			local size = Vector3.new(look.ropeSize.X, look.ropeSize.Y, (pb - pa).Magnitude)
+			local name = `Rope_{a}_{b}_{tag}`
+			railPart(name, size, cf, look.ropeColor, look.ropeMaterial).Parent = leftRails
+			railPart(name, size, mirrorCf(cf), look.ropeColor, look.ropeMaterial).Parent = rightRails
+			ropes += 1
+		end
+	end
+	return `ropes {ropes}, posts {posts} per ramp; dropped: {if #dropped == 0
+		then "none"
+		else table.concat(dropped, ", ")}; span samples under own ramp: {if #under == 0
+		then "none"
+		else table.concat(under, ", ")}`
+end
+
 local function run(): string
 	if RunService:IsRunning() then
 		error("a running game can't be changed: stop Play and run this in Edit mode")
@@ -354,14 +514,53 @@ local function run(): string
 	if surfaces == nil or landing == nil or spot == nil or routePoint == nil then
 		error("nothing was changed. WalkSurfaces, LapLanding, EggSpot_Rare_1 or RoutePoint_Egg_Rare_1 is missing")
 	end
-	local existing = 0
+	local existing, covered, visible = 0, 0, 0
 	for _, side in SIDES do
-		if surfaces:FindFirstChild("BellyRamp_" .. side.label) ~= nil then
+		local ramp = surfaces:FindFirstChild("BellyRamp_" .. side.label)
+		if ramp ~= nil then
 			existing += 1
+			if ramp:FindFirstChild("Cover") ~= nil and ramp:FindFirstChild("Rails") ~= nil then
+				covered += 1
+			end
+			local piece1 = ramp:FindFirstChild("Piece1")
+			if piece1 ~= nil and piece1:IsA("BasePart") and piece1.Transparency < 1 then
+				visible += 1
+			end
 		end
 	end
+	local look = readLook(surfaces)
 	if existing == #SIDES and surfaces:FindFirstChild("RampEdgeGuards") ~= nil then
-		return "already done: both belly ramps and RampEdgeGuards are in WalkSurfaces"
+		if covered == #SIDES and visible == 0 then
+			return "already done: both belly ramps have invisible pieces, span-rope Rails and a Cover of wood boards, and RampEdgeGuards is in WalkSurfaces"
+		elseif covered ~= 0 or visible ~= #SIDES then
+			error("nothing was changed. the ramps are half way (some covered, some hidden), expected none or all")
+		end
+		for _, side in SIDES do
+			if (surfaces:FindFirstChild("BellyRamp_" .. side.label) :: Instance):FindFirstChild("Rails") == nil then
+				error("nothing was changed. a visible ramp has no Rails folder")
+			end
+		end
+		local leftRamp = surfaces:FindFirstChild("BellyRamp_Left") :: Model
+		local rightRamp = surfaces:FindFirstChild("BellyRamp_Right") :: Model
+		-- the boards are worked out first: nothing is changed when no plan fits
+		local boards, summary = Cover.plan(leftRamp, flat)
+		if CHECK_ONLY then
+			return `checks passed: {summary}; nothing changed`
+		end
+		local backup = backupFolder(COVER_BACKUP)
+		for _, ramp in { leftRamp, rightRamp } do
+			if backup:FindFirstChild(ramp.Name) == nil then
+				ramp:Clone().Parent = backup
+			end
+		end
+		pcall(function()
+			ChangeHistoryService:SetWaypoint("17-belly-ramps cover: before")
+		end)
+		Cover.lay(leftRamp, rightRamp, boards, look.deckColor, railPart, mirrorCf)
+		pcall(function()
+			ChangeHistoryService:SetWaypoint("17-belly-ramps cover: after")
+		end)
+		return `updated cover: {summary}. Backup: ServerStorage.WorldBackups.{COVER_BACKUP}`
 	elseif existing ~= 0 or surfaces:FindFirstChild("RampEdgeGuards") ~= nil then
 		error("nothing was changed. only part of the belly ramps is in WalkSurfaces, expected none or all")
 	end
@@ -375,7 +574,7 @@ local function run(): string
 	end
 
 	-- Backup first, in the same run as the change.
-	local folder = backupFolder()
+	local folder = backupFolder(BACKUP_NAME)
 	for _, item in { landing, spot, routePoint } do
 		if folder:FindFirstChild(item.Name) == nil then
 			item:Clone().Parent = folder
@@ -446,6 +645,10 @@ local function run(): string
 		model.Parent = surfaces
 	end
 	guards.Parent = surfaces
+	table.insert(notes, layRails(surfaces, models[1], models[2], look))
+	local boards, coverSummary = Cover.plan(models[1], flat)
+	Cover.lay(models[1], models[2], boards, look.deckColor, railPart, mirrorCf)
+	table.insert(notes, coverSummary)
 
 	-- Rare egg 1: lift it so its Base sits on the ramp (at most MAX_LIFT).
 	local include = RaycastParams.new()

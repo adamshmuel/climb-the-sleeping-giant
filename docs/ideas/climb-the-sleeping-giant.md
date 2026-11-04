@@ -104,8 +104,8 @@ This list sorts every real thing in the world by how much it matters to the play
 | His belly top and upper sides down to the stitched seam, with the lower belly nests and the 2 belly pockets | Belly zone, Rare eggs, walk anywhere |
 | His arms out to his white cuffs, the 4 cuff pockets and the 2 cuff straps | Epic eggs |
 | The beard–belly fold nests at the foot of his beard | Rare eggs |
-| The two ear ladders: one behind each ear, a matching pair, from each shoulder to the cap's side stripe | The only way to his nightcap. One per side keeps the climb, the way home and the Deep Sleep race level for every garden |
-| His nightcap: the ear ladder tops, the brim, the side stripe and the top of the cap | Legendary eggs, the top of the climb, and the Dream Egg during Deep Sleep |
+| The beard ladder and the cap ladder: one middle pair on his centre line (x 0), the beard ladder from the belly to his nose, the cap ladder from his nose to the nightcap brim | The only way to his nightcap. On the centre line it is the same distance from both sides, so the climb, the way home and the Deep Sleep race stay level for every garden (V2, Adam, 2026-11-04) |
+| His nightcap: the cap ladder top, the brim, the side stripe and the top of the cap | Legendary eggs, the top of the climb, and the Dream Egg during Deep Sleep |
 | Every egg and its straw nest: 16 in the meadow, 22 on him | What players come for |
 | Each garden: the Safe Gate, the incubators, the pet pads, the cash chest, and the plank bridge over the stream | Home: carry the egg in, hatch it, earn and upgrade. Every heist starts and ends here |
 
@@ -140,9 +140,9 @@ This list sorts every real thing in the world by how much it matters to the play
 |---|---|---|---|
 | **The Sock** | Scenery | No. No egg, no path, no noise. Players only bump into it in the meadow by his left side, near the ladders gardens 1 to 3 use | No, if it still reads as a giant sock from the gardens. Smaller, with no overhanging edge, or moved a few studs off the walk: nobody would notice |
 | **The pillow** | Scenery | No. No egg and no path. A player only lands on it by stepping or jumping off the back of his nightcap, so it only has to let them slide off safely. (Zone 5 is called "Beard, Pillow and Nightcap", but nothing is played on the pillow) | Half as big, with his head still clearly leaning on it: no. Moved away from his head: yes, because his head would float |
-| **The nightcap** | Core gameplay (the brim, the side stripe, the top of the cap and the ear ladder tops) | Yes. The 4 Legendary nests, the Dream Egg in Deep Sleep, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
-| **The beard** | Core gameplay for the fold at its foot only; the rest is scenery | Only the fold, with its Rare nests. Nothing climbs his face: the way to his cap goes behind his ears (red alert, 2026-11-02) | The fold: yes. The rest: block it, never reshape it |
-| **The forehead and nose** | Scenery | No. No egg and no path: the way up goes behind his ears, and the Dream Egg sits on his cap. A player got stuck on the forehead sides in the first playtest | No. A smooth guard that slides players off is enough |
+| **The nightcap** | Core gameplay (the brim, the side stripe, the top of the cap and the cap ladder top) | Yes. The 4 Legendary nests, the Dream Egg in Deep Sleep, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
+| **The beard** | Core gameplay for the fold at its foot only; the rest is scenery | The fold, with its Rare nests, and the middle beard ladder, the way up to his nose (V2, Adam, 2026-11-04) | The fold: yes. The rest: block it, never reshape it |
+| **The forehead and nose** | Supporting (the nose top only, where the beard ladder ends and the cap ladder starts); the rest is scenery | The nose top is on the way to the cap. No egg on them: the Dream Egg sits on his cap. A player got stuck on the forehead sides in the first playtest | No. A smooth guard that slides players off is enough |
 
 ## Twist
 
@@ -229,7 +229,7 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
 - **For 60 seconds:**
   - he snores deeper;
   - noise counts half;
-  - a glowing **Dream Egg** (Secret rarity) appears on the top of his nightcap, between the two ear ladder tops.
+  - a glowing **Dream Egg** (Secret rarity) appears on the top of his nightcap, above the cap ladder top.
 - **The race:** the whole server tries for the cap at once, up one ladder on each side, so this is where the funniest wake-ups happen.
 - **Team Egg:** a giant **Team Egg** also appears on his belly. It needs 2 players holding it to move it, and both carriers get a pet from it, rolled at Epic odds or better.
 
@@ -419,7 +419,7 @@ Moved to [the history file, "Decisions made after Gate 1, and why"](climb-the-sl
 
 Play it as a brand-new player, on computer and on a phone screen, in a solo server and with other players if possible. Take screenshots and compare them with `references/top-games/`, especially `adopt-me`, `ride-a-pet` and `steal-an-egg`.
 
-1. **First 10 seconds:** I spawn facing his whole sleeping face, with no camera fix from a script, and the footprints and the meter are on screen. Nothing covers his face, and the bottom corners are free on a phone.
+1. **First 10 seconds:** I spawn facing his whole sleeping face, with no camera fix from a script, and the footprints and the meter are on screen. Only the thin middle cap and beard ladders cross his face (V2, 2026-11-04): his eyes and the "!" stay readable, and the bottom corners are free on a phone.
 2. **Would a kid stay?** The world looks at least as full as Ride A Pet's, and clearly better than the flat-stud egg games.
 3. **First egg home within 60 seconds,** with a clear "Safe!" reward moment.
 4. **The first scare happens solo:** a walking Rare heist from Rare_1 passes 60%, and I notice it without sound (pulse, Z Z Z pause, flutter).

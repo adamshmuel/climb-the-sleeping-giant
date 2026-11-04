@@ -292,25 +292,196 @@ describe("the belly ramps (task six a)", function()
 		end
 	)
 
-	it("makes every ramp piece and fill invisible and solid, and leaves no mockup mark on them (T7)", function()
+	local function lapPlankColor(): Color3
+		local plank = surfaces():FindFirstChild("LapPlank_Left")
+		expect(plank).never.toBeNil()
+		local deck = (plank :: Instance):FindFirstChild("Deck")
+		expect(deck).never.toBeNil()
+		return (deck :: BasePart).Color
+	end
+
+	it("keeps every ramp piece and fill invisible and solid, with no mockup mark (T7)", function()
 		for _, side in sides() do
 			local ramp = rampOf(side.label)
-			local all: { BasePart } = {}
-			for _, p in piecesOf(ramp) do
-				table.insert(all, p)
+			expect(#piecesOf(ramp) > 0).toBe(true)
+			for _, piece in piecesOf(ramp) do
+				expect(`{piece.Name} {piece.Transparency} {piece.CanCollide}`).toBe(`{piece.Name} 1 true`)
 			end
-			for _, f in fillsOf(ramp) do
-				table.insert(all, f)
-			end
-			expect(#all > 0).toBe(true)
-			for _, part in all do
-				expect(part.Transparency).toBe(1)
-				expect(part.CanCollide).toBe(true)
+			for _, fill in fillsOf(ramp) do
+				expect(fill.Transparency).toBe(1)
+				expect(fill.CanCollide).toBe(true)
 			end
 			for _, d in ramp:GetDescendants() do
 				for name in d:GetAttributes() do
 					expect(string.sub(name, 1, 6)).never.toBe("Mockup")
 				end
+			end
+		end
+	end)
+
+	it("lays look-only rope rails on both edges of each ramp, the right the mirror of the left (T8)", function()
+		local leftRails: { [string]: Vector3 } = {}
+		local leftCount = 0
+		for _, side in sides() do
+			local ramp = rampOf(side.label)
+			local rails = ramp:FindFirstChild("Rails")
+			expect(rails).never.toBeNil()
+			local params = groundParams()
+			local skip = params.FilterDescendantsInstances
+			table.insert(skip, rails :: Instance)
+			local guards = surfaces():FindFirstChild("RampEdgeGuards")
+			if guards ~= nil then
+				table.insert(skip, guards)
+			end
+			params.FilterDescendantsInstances = skip
+			local ropes, posts, rightFound = 0, 0, 0
+			local landingDeck = (surfaces():FindFirstChild("LapLanding") :: Instance):FindFirstChild("Deck")
+			expect(landingDeck).never.toBeNil()
+			local children = (rails :: Instance):GetChildren()
+			-- the wood top under each post (a ray down from the post's top), and the post's axis 2.5 above it
+			local ropeTarget: { [string]: Vector3? } = {}
+			for _, part in children do
+				local bp = part :: BasePart
+				if string.sub(bp.Name, 1, 5) == "Post_" then
+					local hit = Workspace:Raycast(
+						bp.Position + Vector3.new(0, bp.Size.Y / 2, 0),
+						Vector3.new(0, -20, 0),
+						params
+					)
+					if hit ~= nil then
+						ropeTarget[bp.Name] = Vector3.new(bp.Position.X, hit.Position.Y + 2.5, bp.Position.Z)
+					end
+				end
+			end
+			for _, part in children do
+				local bp = part :: BasePart
+				expect(`{bp.Name} {bp.CanCollide} {bp.CanQuery} {bp.CanTouch}`).toBe(`{bp.Name} false false false`)
+				expect(bp.Transparency).toBe(0)
+				-- no rail over the landing deck: the fork stays open (ways-up.md lines 16 and 17)
+				local below = Workspace:Raycast(bp.Position + Vector3.new(0, 1, 0), Vector3.new(0, -30, 0), params)
+				expect(`{bp.Name} over landing deck: {below ~= nil and below.Instance == landingDeck}`).toBe(
+					`{bp.Name} over landing deck: false`
+				)
+				-- the belly (P) side has no rail: his skin is the wall there (designer, work/t6/look-verdict-6a2.md)
+				expect(`{bp.Name} on the P side: {string.sub(bp.Name, -2) == "_P"}`).toBe(
+					`{bp.Name} on the P side: false`
+				)
+				-- the stick ropes (one per piece) are gone: a rope is one straight span between two posts
+				expect(`{bp.Name} old name: {string.match(bp.Name, "^Rope_%d+_[NP]$") ~= nil}`).toBe(
+					`{bp.Name} old name: false`
+				)
+				if string.sub(bp.Name, 1, 5) == "Rope_" then
+					ropes += 1
+					local a, b, tag = string.match(bp.Name, "^Rope_(%d+)_(%d+)_([NP])$")
+					expect(`{bp.Name} span name: {a ~= nil}`).toBe(`{bp.Name} span name: true`)
+					local from, to = ropeTarget[`Post_{a}_{tag}`], ropeTarget[`Post_{b}_{tag}`]
+					expect(`{bp.Name} posts {a} and {b}: {from ~= nil and to ~= nil}`).toBe(
+						`{bp.Name} posts {a} and {b}: true`
+					)
+					local endA = (bp.CFrame * CFrame.new(0, 0, -bp.Size.Z / 2)).Position
+					local endB = (bp.CFrame * CFrame.new(0, 0, bp.Size.Z / 2)).Position
+					local straight = (endA - from :: Vector3).Magnitude < 0.2 and (endB - to :: Vector3).Magnitude < 0.2
+					local flipped = (endB - from :: Vector3).Magnitude < 0.2 and (endA - to :: Vector3).Magnitude < 0.2
+					expect(`{bp.Name} ends on the post axes at 2.5: {straight or flipped}`).toBe(
+						`{bp.Name} ends on the post axes at 2.5: true`
+					)
+				elseif string.sub(bp.Name, 1, 5) == "Post_" then
+					posts += 1
+					local index = tonumber(string.match(bp.Name, "^Post_(%d+)_"))
+					local across = math.abs(inPiece(piecesOf(ramp)[index :: number], bp.Position).X)
+					expect(`{bp.Name} across {string.format("%.2f", across)}: {across >= 2.7 and across <= 3.0}`).toBe(
+						`{bp.Name} across {string.format("%.2f", across)}: true`
+					)
+					local top = bp.Position + Vector3.new(0, bp.Size.Y / 2, 0)
+					local hit = Workspace:Raycast(top, Vector3.new(0, -20, 0), params)
+					expect(hit).never.toBeNil()
+					local ok = (hit :: RaycastResult).Instance:IsDescendantOf(ramp)
+					expect(`{bp.Name} stands on {(hit :: RaycastResult).Instance.Name}: {ok}`).toBe(
+						`{bp.Name} stands on {(hit :: RaycastResult).Instance.Name}: true`
+					)
+				end
+				if side.label == "Left" then
+					leftRails[bp.Name] = bp.Position
+					leftCount += 1
+				else
+					rightFound += 1
+					local want = leftRails[bp.Name]
+					expect(want).never.toBeNil()
+					local m = mirror(want)
+					expect(
+						`{bp.Name} off {string.format("%.2f", (bp.Position - m).Magnitude)}: {(bp.Position - m).Magnitude < 0.05}`
+					).toBe(`{bp.Name} off {string.format("%.2f", (bp.Position - m).Magnitude)}: true`)
+				end
+			end
+			expect(ropes >= 2).toBe(true)
+			if side.label == "Right" then
+				expect(rightFound).toBe(leftCount)
+			end
+		end
+	end)
+
+	-- Task 6a2 Step 6 (code_lead's split ruling, work/t6/look-fix.md): look-only cover boards lie on the invisible walk.
+	local BOARD_GAP_LIMIT = 0.35 -- code_lead's measuring limit for "top level with the walk"
+	local BOARD_MIRROR_LIMIT = 0.05
+
+	-- The piece's top-centre minus the board's top plane, straight up and down at that point (plus = piece higher).
+	local function gapUnder(board: BasePart, piece: BasePart): number
+		local p = (piece.CFrame * CFrame.new(0, THICK / 2, 0)).Position
+		local n = board.CFrame.UpVector
+		local planePoint = board.Position + n * (board.Size.Y / 2)
+		return (p - planePoint):Dot(n) / n.Y
+	end
+
+	it("lays look-only wood boards on the walk, level with it, the right the mirror of the left (T9)", function()
+		local color = lapPlankColor()
+		local leftBoards: { [string]: CFrame } = {}
+		for _, side in sides() do
+			local ramp = rampOf(side.label)
+			local cover = ramp:FindFirstChild("Cover")
+			expect(cover).never.toBeNil()
+			local pieces = piecesOf(ramp)
+			local boards = (cover :: Instance):GetChildren()
+			expect(#boards > 0).toBe(true)
+			local covering: { [number]: { BasePart } } = {}
+			for _, child in boards do
+				expect(`{child.Name} is a part: {child:IsA("BasePart")}`).toBe(`{child.Name} is a part: true`)
+				local board = child :: BasePart
+				local first, last = string.match(board.Name, "^Board_(%d+)_(%d+)$")
+				expect(`{board.Name} name: {first ~= nil}`).toBe(`{board.Name} name: true`)
+				expect(
+					`{board.Name} {board.Transparency} {board.Material.Name} {board.CanCollide} {board.CanQuery} {board.CanTouch}`
+				).toBe(`{board.Name} 0 WoodPlanks false false false`)
+				expect(math.abs(board.Color.R - color.R) < 0.01).toBe(true)
+				expect(math.abs(board.Color.G - color.G) < 0.01).toBe(true)
+				expect(math.abs(board.Color.B - color.B) < 0.01).toBe(true)
+				for i = tonumber(first) :: number, tonumber(last) :: number do
+					local list: { BasePart } = covering[i] or {}
+					table.insert(list, board)
+					covering[i] = list
+				end
+				if side.label == "Left" then
+					leftBoards[board.Name] = board.CFrame
+				else
+					local want = leftBoards[board.Name]
+					expect(want).never.toBeNil()
+					local off = (board.Position - mirror((want :: CFrame).Position)).Magnitude
+					expect(`{board.Name} off {string.format("%.2f", off)}: {off < BOARD_MIRROR_LIMIT}`).toBe(
+						`{board.Name} off {string.format("%.2f", off)}: true`
+					)
+				end
+			end
+			for i, piece in pieces do
+				local list: { BasePart } = covering[i] or {}
+				expect(`{piece.Name} under {#list} boards: {#list >= 1 and #list <= 2}`).toBe(
+					`{piece.Name} under {#list} boards: true`
+				)
+				local best = math.huge
+				for _, board in list do
+					best = math.min(best, math.abs(gapUnder(board, piece)))
+				end
+				expect(`{piece.Name} gap {string.format("%.2f", best)}: {best <= BOARD_GAP_LIMIT}`).toBe(
+					`{piece.Name} gap {string.format("%.2f", best)}: true`
+				)
 			end
 		end
 	end)

@@ -242,7 +242,7 @@ Every Common, Uncommon and Rare state keeps its V1 mockup.
 | A nest leans on a steep slope while its egg stands upright, like the beard–belly fold nests (57°): his skin under each nest's centre is 1.2 studs (left) and 0.9 (right) above the nest's bottom | It passes: "upright egg, leaning nest" is allowed. The nest is measured against his pyjamas (sinks 1.2 and 0.9, under the 1.5 limit for a leaning nest), and the egg against the nest's bottom (Rule 59: Eggs sit on something you can see) |
 | Rare egg 4 floats about 2.2 studs today | The check fails on it (Rule 59: Eggs sit on something you can see), and the build lowers the spot onto his skin |
 | A nest (or, before spec 5, a bare egg) sits on an invisible walk plank above his skin | It fails the run: the plank doesn't count as a visible surface, and the gap down to his skin is about 0.7 studs (Rule 59: Eggs sit on something you can see) |
-| The Dream Egg appears on his nose | It isn't a nest and has no score or rank (Rule 51: One colour per rank). Its odds come with its own later spec |
+| The Dream Egg appears above the cap ladder top | It isn't a nest and has no score or rank (Rule 51: One colour per rank). Its odds come with its own later spec |
 | An Epic egg is lost when its carrier is caught | It goes back to its nest, like a Rare (Rule 49: Higher eggs carry like a Rare) |
 
 ## 9. Risks
