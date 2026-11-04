@@ -28,7 +28,7 @@
 			"mcp__Roblox_Studio__execute_luau",
 			"Bash(rojo serve:*)"
 		],
-		"deny": ["mcp__Roblox_Studio__multi_edit"]
+		"deny": ["mcp__Roblox_Studio__multi_edit", "Bash(git push *)"]
 	},
 	"hooks": {
 		"PostToolUse": [
@@ -128,7 +128,8 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/setup-guides.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/setup-guides.py",
+						"onFailure": "block"
 					}
 				]
 			},
@@ -137,7 +138,8 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rojo-safe-delete.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rojo-safe-delete.py",
+						"onFailure": "block"
 					},
 					{
 						"type": "command",
@@ -145,7 +147,8 @@
 					},
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/git-guard.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/git-guard.py",
+						"onFailure": "block"
 					}
 				]
 			},
