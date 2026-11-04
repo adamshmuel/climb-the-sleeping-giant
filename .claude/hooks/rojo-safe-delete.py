@@ -8,14 +8,20 @@ go through scripts/rojo-safe-rm.sh.
 
 import json
 import os
+import re
 import shlex
 import sys
 
 SYNCED = ("src", "tools")
+# In a desktop worktree session CLAUDE_PROJECT_DIR is the main checkout, so a folder
+# inside a worktree is checked against that worktree (code.claude.com/docs/en/worktrees).
+WORKTREE = re.compile(r"^(.*?/\.claude/worktrees/[^/]+)(?:/|$)")
 
 
 def synced_folder(path, cwd, project):
     full = os.path.normpath(os.path.join(cwd, os.path.expanduser(path)))
+    match = WORKTREE.match(full)
+    project = match.group(1) if match else project
     for root in SYNCED:
         base = os.path.join(project, root)
         if full == base or full.startswith(base + os.sep):

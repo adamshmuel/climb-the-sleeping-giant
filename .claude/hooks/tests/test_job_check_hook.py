@@ -68,6 +68,15 @@ class JobCheckHook(unittest.TestCase):
         out = subprocess.run([sys.executable, HOOK], input=json.dumps(data), capture_output=True, text=True, env=env, cwd=tempfile.mkdtemp())
         self.assertEqual(json.loads(out.stdout or "{}").get("decision"), "block")
 
+    def test_a_card_inside_a_worktree_is_checked(self):
+        # Desktop worktree sessions set CLAUDE_PROJECT_DIR to the main checkout.
+        tree = os.path.join(self.project, ".claude", "worktrees", "w1")
+        os.makedirs(os.path.join(tree, "work", "t5"))
+        os.makedirs(os.path.join(tree, "scripts"))
+        os.symlink(os.path.join(self.project, "scripts", "job-check.sh"), os.path.join(tree, "scripts", "job-check.sh"))
+        result = self.run_on(".claude/worktrees/w1/work/t5/handoff.md", "## Step 1 FAIL\n")
+        self.assertEqual(result.get("decision"), "block")
+
     def test_files_outside_work_are_left_alone(self):
         self.assertEqual(self.run_on("src/x.luau", "-- FAIL\n"), {})
         self.assertEqual(self.run_on("work/t5/notes.md", "FAIL\n"), {})

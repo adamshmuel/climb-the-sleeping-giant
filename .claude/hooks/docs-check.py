@@ -18,6 +18,14 @@ import sys
 LONG = 100
 CONTENTS_WITHIN = 20  # the contents list sits under the title, before the first section
 TBD_FOLDERS = ("docs/specs/", "docs/plans/")
+# In a desktop worktree session CLAUDE_PROJECT_DIR is the main checkout, so a file
+# inside a worktree is checked against that worktree (code.claude.com/docs/en/worktrees).
+WORKTREE = re.compile(r"^(.*?/\.claude/worktrees/[^/]+)(?:/|$)")
+
+
+def root_of(path, project):
+    match = WORKTREE.match(path)
+    return match.group(1) if match else project
 
 
 def slug(heading, seen):
@@ -91,6 +99,7 @@ def hook():
     project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
     # A relative path is the project's, not this hook's working folder.
     path = os.path.abspath(os.path.join(project, path))
+    project = root_of(path, project)
     if not is_doc(path, project):
         return
     found = problems(path, project)
