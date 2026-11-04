@@ -24,7 +24,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 6a: The belly ramps and their edge guards | ☑ done 2026-11-04, 6 wide (full run 2934 passed, 6 accepted reds: CrossingGuards 2 → Task 6b, Route 2 → Task 8, Zones 1 → Task 7, EggSpots 1 → egg-nests Task 12) | builder, runner, designer, product, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 6d: No visible part sinks into a main character | ☑ done (red with 32 accepted rows, turn green in 6a2 and 5b) | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 6a2: The belly ramps get a visible plank walk (restarted at Step 6: cover boards, after 6d) | ☑ done (designer pass; code_lead approved after 1 changes round; full run 2936 passed, the 7 accepted reds) | builder, code_lead |
-| Gardens and ways up (V2 spec 3) | Task 6a3: From the belly ramp top up to the CapLadder | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 6a3: From the belly ramp top up to the nose (split 2026-11-04: the cap ladder is 6a3c) | ☑ done 2026-11-04, pass both sides on the computer (`beard` 3 of 3 each; measuring only, no world change) | builder, code_lead |
+| Gardens and ways up (V2 spec 3) | Task 6a3c: The cap ladder, from the nose to the cap | ☑ done 2026-11-04, pass: computer 3 + 3 on the cap, phone 1 per side (tp 0, no drop); result table to product (`work/t6/6a3-stepback-product.md`) | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 5b: Visible parts laid on him, not sunk (lap planks, lap landing, boot ladders) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 6b: V1's left crossing ramps removed, the gap under the left plank closed, both boot climbs again | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 6c: His skin closed between each boot top and the belly, mockups moved | ☐ not started | |

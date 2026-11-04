@@ -1,1 +1,2 @@
 - [Idea file layout](idea-file-layout.md) — idea / research / history split; write docs in the worktree path
+- [Step backs on measuring jobs](step-back-measuring-jobs.md) — check the job's steer and past passing Plays before calling a world gap

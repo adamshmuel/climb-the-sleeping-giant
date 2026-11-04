@@ -17,14 +17,13 @@ A kind stays here until its cause is fixed. Then its row moves to "Fixed kinds".
 | A rerun rebuilt from memory | 2 | 2026-10-27 | `teamwork.md` |
 | A new test hidden by the red break | 1 | 2026-11-01 | `teamwork.md` |
 | A job given to an agent without its tools (cause fixed: `job-check.sh --handoff` fails a Haiku step that needs shots, Play or input) | 2 | 2026-11-03 | `teamwork.md` |
-| A second task on the same object (ladder width) | 4 | 2026-11-01 | `world-scenery.md` |
+| A second task on the same object (ladder width) | 5 | 2026-11-04 | `world-scenery.md` |
 | A bot never entered Climbing on a tie | 2 | 2026-11-02 | `world-scenery.md` |
 | A picked fix failed its confirm run | 1 | 2026-11-02 | `world-scenery.md` |
 | A full-run report hid failed names (fix queued: the fetch lists every failed name first) | 3 | 2026-11-02 | `studio-and-scripts.md` |
 | The sleep-meter holder stopped between Play runs (cause fix due) | 2 | 2026-11-02 | `studio-and-scripts.md` |
 | A Play push that never stops (a step-down is not a fall) | 1 | 2026-11-03 | `studio-and-scripts.md` |
 | A Play pass list stricter than its plan (a loop of job fixes) | 1 | 2026-11-03 | `studio-and-scripts.md` |
-| A card step capped below its real call count | 1 | 2026-11-03 | `teamwork.md` |
 
 ## Fixed kinds
 
@@ -32,6 +31,7 @@ Each rule is written once, in its home. This table only names the home.
 
 | Kind | Where the rule lives now | Fixed |
 |---|---|---|
+| A card step capped below its real call count (3 times) | `writing-handoffs` skill: every file a step pastes or reads is a numbered `Read` line | 2026-11-04 |
 | A Play trace didn't retry like a player | `scripts/job-check.sh --handoff` (a Play step that can report STUCK needs a "step back" retry and a stall shot) | 2026-11-03 |
 | A Play job's script never run before failed | `writing-handoffs` and `studio-jobs` skills (the smoke run runs every script once) | 2026-11-02 |
 | A world script's guess about an existing part didn't match the world | `scripts/job-check.sh` (a new world script needs a `CHECK_ONLY` read-only run) | 2026-11-01 |

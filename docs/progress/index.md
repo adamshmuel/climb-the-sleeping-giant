@@ -4,7 +4,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 
 **V1 (core heist):** done. All 51 tasks were approved, it passed Gate 4, and it is committed. Its rows, its Gate 4 hand-over and its commit list: `docs/progress/v1.md`.
 
-**V2 (Heist update):** 89 of 196 tasks done, setups included.
+**V2 (Heist update):** 101 of 202 tasks done, setups included.
 - New-player safety (plan 1) passed Gate 4 on 2026-10-19 and is committed.
 - Stuck safety (plan 2): all 67 tasks done. Its build review is still to come.
 - Plan 3 (gardens and ways up) is in progress.
@@ -18,12 +18,12 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | V2 setups 1 to 7b | `v2/setups.md` | 8 of 8 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
-| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 1 of 26 | ◐ in progress |
+| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 13 of 32 | ◐ in progress |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 0 of 26 | ☐ not started |
 | 6. Wake-up | `v2/wake-up.md` | 0 of 23 | ☐ not started |
 | 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
-| **All of V2** | | **89 of 196** (setups included) | |
+| **All of V2** | | **101 of 202** (setups included) | |
 
 Removed and dropped tasks are not counted.
 
@@ -33,11 +33,11 @@ Removed and dropped tasks are not counted.
 
 Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who has approved it so far.
 
-**History files:** a finished task's review, result and close notes move out of its plan into `docs/progress/v2/history/`, and the plan keeps a one-line "History:" link in their place. V1: [core heist](v1/history/core-heist.md). Stuck safety: [Part 1](v2/history/stuck-safety-1.md), [2a](v2/history/stuck-safety-2a.md), [2b](v2/history/stuck-safety-2b.md), [2d](v2/history/stuck-safety-2d.md), [3 and 4](v2/history/stuck-safety-3-4.md), [row notes](v2/history/stuck-safety-rows.md). V2 status log: [v2-status-log](v2/history/v2-status-log.md).
+**History files:** a finished task's review, result and close notes move out of its plan into `docs/progress/v2/history/`, and the plan keeps a one-line "History:" link in their place. V1: [core heist](v1/history/core-heist.md). Stuck safety: [Part 1](v2/history/stuck-safety-1.md), [2a](v2/history/stuck-safety-2a.md), [2b](v2/history/stuck-safety-2b.md), [2d](v2/history/stuck-safety-2d.md), [3 and 4](v2/history/stuck-safety-3-4.md), [row notes](v2/history/stuck-safety-rows.md). V2 status log: [v2-status-log](v2/history/v2-status-log.md). Gardens and ways up: [history](v2/history/gardens-and-ways-up.md).
 
 ## Tests that are red today
 
-None. Task 33's accepted red ("patches sit on his drawn skin, or are sealed inside him", on `Patch_Forehead_1`) turned green in Task 33b (2026-10-28). Latest full run, Task 12 (2026-10-29): 2831 passed, 0 failed.
+7 accepted reds: EggSpots, Route ×2, Zones, CrossingGuards ×2 and SunkParts. Latest full run, Task 6a2 (2026-11-04): 2936 passed, 7 failed, 0 could not run (`work/t6/full-run-6a2-r1.md`).
 
 The stuck scan is green: 117 stuck spots, all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
 

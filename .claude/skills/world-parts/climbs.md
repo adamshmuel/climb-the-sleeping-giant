@@ -25,7 +25,9 @@ Part of the `world-parts` skill. Use when planning, pricing, mocking up, buildin
 One read-only call scans:
 - every seam (a step over 0.5 studs between walk surfaces) along the route;
 - the space behind every side of the climb at every height; end the route at a side that is clear all the way up;
-- every face a climber can slide onto from the angles players arrive at.
+- every face a climber can slide onto from the angles players arrive at;
+- the climb's width and the floor around its foot (floor rays): the job steers to the mouth of that floor, then turns to face the climb. One fixed heading from far away misses a narrow truss (Task 6a3, 2026-11-04).
+- the spec's own route to the climb (the `World.Route` points and the spec's walk rule): the job walks it point by point. A miss off that route is a wrong job, not a world gap (Task 6a3: two tries pushed into an edge the spec says to walk round).
 Fix or rule on each one before spending a Play run.
 
 ## Probes
