@@ -8,7 +8,7 @@
   - [Part 2: Ladders are a little louder](#part-2-ladders-are-a-little-louder) (Tasks 2, 3)
   - [Part 3: World prep](#part-3-world-prep) (Tasks 4a, 4b, 4c, 4d removed, 4e, 4e1, 4e2, 4e3, 4f, 4e4, 4g, 5, 6, 7, 8)
   - [Part 4: Checks on the walk map](#part-4-checks-on-the-walk-map) (Tasks 9, 10, 11, 12)
-  - [Part 5: What the player sees](#part-5-what-the-player-sees) (Tasks 13, 13b, 15; 14 dropped)
+  - [Part 5: What the player sees](#part-5-what-the-player-sees) (Tasks 13, 13b, 15a, 15b; 14 dropped)
   - [Part 6: Analytics, a whole session, and the Play proof](#part-6-analytics-a-whole-session-and-the-play-proof) (Tasks 16, 17, 18, 19)
 - [Every rule is covered](#every-rule-is-covered)
 - [Checked only by playing](#checked-only-by-playing)
@@ -41,7 +41,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 |---|---|---|
 | Where do the new world pieces come from? | From designer's tested pieces in `Workspace.Mockup_WaysUp` (the boot ladders and the lap planks) and code_lead's ramp build in `Workspace.Mockup_Nests.RampBuild_CodeLead` (moved planks, apron, rail guards, belly ramps). Each world script copies them into `World.WalkSurfaces`, fixes them to the spec's spots, and makes them solid | They are the look designer approved in the mockups. Copying keeps it the same |
 | The mockup boot ladders climb with a plain `Part` | Each real ladder climbs with an invisible `TrussPart` named `Climb`, like the beard ladder | The walk map turns every `TrussPart` into a climb link on its own (plan 2, Task 3) |
-| Rays through ladders | The slam circle's rays skip every ladder part: the `Climb` truss and every visible piece of the ladder model (Task 15). No rule reads a `Look` model any more | Check C4 |
+| Rays through ladders | The slam circle's rays skip every ladder part: the `Climb` truss and every visible piece of the ladder model (Task 15a). No rule reads a `Look` model any more | Check C4 |
 | The apron's width | **11.2 studs**, like the landing. The Studio mockup apron is 10.2 wide and code_lead's test piece 10; the game builds 11.2 | The spec's section 1, and designer's note: landing and apron read as one deck with straight sides |
 | How the server knows who climbs | A player is on a ladder when their root part (the body's middle) is inside a ladder box **and** they aren't standing on standable ground (the server's own ground ray, `PlayerTracker.groundedByRay`) | The box alone would catch a player on the grass at the ladder's foot or on the top pad. The ground ray is the server's own, so a cheater's device can't change it (Rule 40) |
 | Which zone a climber is in | The higher of the zone boxes' zone and the ladder box's own `Zone` attribute. The new ladders' boxes say `Boots`. The beard and cap ladders' boxes say the zone their V1 zone boxes already give | Today the lower half of each new ladder is in no zone box, so it would count as the silent Meadow (measured in Studio: `Boots_Legs` starts 12 studs up and ends at x ±40). Rule 39 says the new ladders count as Boots |
@@ -123,7 +123,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 4c: World prep: the two thigh planks.** Removed on 2026-11-03, for the same reason as Task 4b. Its tests 1 and 2 (the plank's spots, and no step at the pad and the boot top), which the main chat had edited, go with it.
 
-**Task 4d: World prep: the beard and cap ladders get a Look model.** Removed on 2026-11-04 by code_lead, nothing built. No spec rule needs `Look` any more: the ladder glow (Task 14) and the red ladder flash (Task 15) were both dropped by Adam, and Task 15's rays skip the whole ladder model, found by its `Climb` truss (`work/t5/drop-ladder-flash.md`, item 4). The number stays unused.
+**Task 4d: World prep: the beard and cap ladders get a Look model.** Removed on 2026-11-04 by code_lead, nothing built. No spec rule needs `Look` any more: the ladder glow (Task 14) and the red ladder flash (Task 15, now 15a and 15b) were both dropped by Adam, and Task 15a's rays skip the whole ladder model, found by its `Climb` truss (`work/t5/drop-ladder-flash.md`, item 4). The number stays unused.
 
 **Task 4e: The outer gardens' walk to their boot ladder** (done 2026-11-03 as the measurement: **result FAIL**, recorded in `work/t4e/walk-times.md`. Gardens 1, 2 and 7 missed their limits, and the Sock, the Teacup and small plants block the walk lines. No spawn spot moved. product's ruling `work/t4e/product-ruling.md` puts the fixes in Tasks 4e1 to 4e4. Added 2026-11-03 by product's decision on designer's Rule 44 check; a small fix under the Speed rules)
 - Stands on: Task 4a (the boot ladders, committed ec95c9b), the side ladders' removal (Tasks 4b and 4c, committed), the ground players walk on.
@@ -376,15 +376,28 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 14: The ladder glows on your screen.** Dropped on 2026-11-03 by Adam ("drop the "ladder glow" we don't need it"), nothing built. The number stays unused. The trail now ends facing the rungs instead (Rule 42, Tasks 8 and 13).
 
-**Task 15: A slam warning on a ladder**
-- Spec rules: Check C4 (the circle part; the whoosh is plan 7 Task 10). Section 8, "A red circle under a player on a ladder" (the behaviour this spec builds for ladders; spec 6 rewrites Rule 13's words). The red ladder flash was dropped by Adam on 2026-11-04 (`work/t5/drop-ladder-flash.md`).
-- Files: `src/server/Giant/SlamSurface.luau`, `src/server/Giant/GiantDirector.luau`, `src/client/Fx/SlamFx.luau`, their tests. `SlamWarning` keeps its 3 values.
+**Task 15 is split into 15a and 15b** (product's order ruling, 2026-11-04, `work/t5/slamsurface-order-ruling.md`): 15a is where the circle lies (the ray filter), 15b is the ladder grace and the Play check. They stand on different things. 15a is built before plan 6 Task 3, whose `SlamSurface.under` uses its filter.
+
+**Task 15a: The slam circle skips ladders and steep surfaces**
+- Spec rules: Check C4 (the circle part; the whoosh is plan 7 Task 10). Section 8, "A red circle under a player on a ladder" (the behaviour this spec builds for ladders; spec 6 rewrites Rule 13's words). The red ladder flash was dropped by Adam on 2026-11-04 (`work/t5/drop-ladder-flash.md`). Spec 5, section 8, "The red slam circle under a sliding player" (the 75° slope test, moved here from plan 6 Task 6).
+- Files: `src/server/Giant/SlamSurface.luau`, `src/server/Giant/GiantDirector.luau` (only hands `SlamSurface` the ladder parts from Task 3's `readLadders`), `src/client/Fx/SlamFx.luau`, their tests. `SlamWarning` keeps its 3 values.
 - What changes:
   - **The circle's point:** the server's ray skips every ladder part (the `Climb` truss and every visible piece of the ladder model) and stops at the first surface a player could stand on (no steeper than 70°): the grass or the boot top.
   - **The circle's pieces:** `SlamFx`'s rays also skip the ladders, so no piece sits on the rungs.
-  - Being caught is unchanged (V1: within 15 studs across and 10 above or below the target's middle).
-- Failing tests first: on a fake world with a truss and a visible ladder model over a pad, the surface point is on the pad, not the truss or the rungs; no circle piece lands on a ladder part.
-- Done when: the tests pass, and in Play (computer and the iPhone 14) a carrier halfway up a boot ladder while he is awake shows the circle on the grass or boot top (screenshots compared with `ladder-slam-desktop.png` and `ladder-slam-phone.png`), and is caught when the fist lands. The whoosh is not checked here (plan 7 Task 10).
+  - **One filter:** `SlamSurface` keeps one filter (through ladders and anything steeper than 70°) that both `below` and plan 6 Task 3's `under` use.
+  - Being caught: plan 6 Task 3's `Slams.underHand`, with `SlamSurface.under` on this filter.
+- Failing tests first (fake worlds): with a truss and a visible ladder model over a pad, the surface point is on the pad, not the truss or the rungs; no circle piece lands on a ladder part; a target over a 75° slope above a flat pad gets the circle on the pad.
+- Done when: the tests pass.
+- Stands on: Task 3 (`readLadders`: the ladder models and their `Climb`).
+
+**Task 15b: The ladder grace and the slam warning on a ladder in Play**
+- Spec rules: Check C4 (the circle on real ladders, in Play). Rule 60 (Carriers first): the ladder grace (`wake-up.md`, added 2026-11-04). Check C4b.
+- Files: `src/server/Giant/LadderGrace.luau` (new, pure: each player's first ladder touch in this wake-up and that ladder's grace, cleared at each new wake-up), `src/server/Giant/Slams.luau` (the target picker, `Slams.pickTarget` and `Slams.plan`: `Slams.Player` gains `inLadderGrace`, and a player in their grace is skipped), `src/server/Giant/GiantDirector.luau` (passes each player's grace to the picker), `src/shared/Config.luau` (`Config.Wake.LadderGraceSeconds`, one value per `Ladder` attribute of Task 3's ladder boxes), and the tests `src/tests/server/Giant/LadderGrace.spec.luau`, `src/tests/server/Giant/Slams.spec.luau`, `src/tests/server/Giant/GiantDirector/Slams.spec.luau`, `Config.spec`.
+- What changes:
+  - **The ladder grace:** the server keeps, per player, the time of their first ladder touch in this wake-up (from Task 3's ladder boxes). A new slam skips a player whose grace hasn't run out and takes the next match in Rule 60's order, or a show slam (plan 6 Task 4's `pickShow`, with the player in their grace counted as protected). The grace is that ladder's end-to-end climb time + 1 s, starting at 4 s for the boot ladders (spec 6, Numbers, "Ladder grace"; not measured). These starting values are replaced by the climb times measured in this task's Play check, on computer and phone, for each real ladder; code_lead checks them and writes them in the task's report. The clock is cleared at each new wake-up.
+- Failing tests first: a player on a ladder for less than the grace isn't picked, and the next player is; a solo player in their grace gets a show slam; past the grace they are picked; grab, drop off and grab again: the grace isn't restarted; a new wake-up starts a fresh grace; a slam aimed before they stepped on keeps its circle.
+- Done when: the tests pass, and in Play (computer and the iPhone 14) a carrier halfway up a boot ladder while he is awake (the slam aimed before they stepped on, or after their grace ran out) shows the circle on the grass or boot top (screenshots compared with `ladder-slam-desktop.png` and `ladder-slam-phone.png`), and is caught when the fist lands. The whoosh is not checked here (plan 7 Task 10). Check C4b passes with two players, on computer and the iPhone 14, and the measured climb time of each real ladder is in the report.
+- Stands on: Task 15a, Task 3, Task 4a (☑ before this task starts), Task 7, and plan 6 (`docs/plans/v2/wake-up.md`) Task 2 "Who can be a target", Task 4 "Show slams near a protected player" and Task 8 "The director hunts everyone", checked in `docs/progress/v2/wake-up.md`.
 
 ### Part 6: Analytics, a whole session, and the Play proof
 
@@ -448,7 +461,8 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 | Rule 44 (Your way up is in view from home) | 4e2, 4e3, 4f, 4g, 19 |
 | Rule 45 (One way onto the belly) | 5, 6, 7, 8, 9, 10, 18 |
 | Rule 102 (Props never swallow the camera) | 13b |
-| Check C4 (slam warning on a ladder) | 15 (the circle), plan 7 Task 10 (the whoosh) |
+| Check C4 (slam warning on a ladder) | 15a (the circle), 15b (the circle on real ladders in Play), plan 7 Task 10 (the whoosh) |
+| Check C4b (the ladder grace; spec 6's Rule 60) | 15b |
 | Section 10 (Success signals) | 16 |
 
 **Built in later plans** (they need spec 5's nests): Rule 41 for the beard–belly fold and the Epic cuff front pocket, and per rank once nests are on both halves of the belly (plan 5); Check D5, which needs a Rare on each side of his belly (plan 5); Rule 36 condition 3, the grab prompts for the knee pocket and the lap fold (plan 5); "no heist to a Rare nest reaches 100" for nests other than Rare egg 1 (plan 4).

@@ -187,7 +187,8 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 - Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes `playSound` to `SlamFx`, `BonkFx` and `Celebrations`), their tests.
 - What it does: `SlamCircle` plays the rising whoosh at the circle; `SlamThud` the fist thud at the circle (speed 0.8, heard across the valley); `Bonk` the bonk and the twinkle together at the player; `Caught` the caught whoosh, only on the caught player's own device.
 - Failing tests first: one circle and one landing give one whoosh and one thud at the circle's point; a bonk gives one bonk and one twinkle at that player; a catch of this player gives one whoosh with no place, and a catch of someone else gives nothing; with the music off, every slam sound still plays.
-- Done when: the tests pass.
+- Done when: the tests pass, and a slam aimed at a player halfway up a boot ladder (aimed before they stepped on): the whoosh is heard from the ladder (spec 3, Check C4).
+- Stands on: plan 3 Task 15b (the circle under a player on a real ladder, and the ladder grace that decides when a slam aims at a climber).
 
 **Task 11: Grabbing and bringing eggs home**
 - Spec rules: Rule 95 (Egg sounds, grander for rarer eggs): the grab and the egg home.

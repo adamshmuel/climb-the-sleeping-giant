@@ -9,7 +9,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ◐ in progress (built; one test fix left, then designer's before and after check) | builder |
+| Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ☑ done (committed ec95c9b; designer: before and after same or better, 2026-11-04) | builder, code_lead, designer |
 | Gardens and ways up (V2 spec 3) | Task 4b: World prep: the two side ladders and their side pads | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4c: World prep: the two thigh planks | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4d: World prep: the beard and cap ladders get a Look model | ☐ not started | |
@@ -30,7 +30,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 12: Every way up is equally loud | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 14: The ladder glows on your screen | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 15: A slam warning on a ladder | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 15a: The slam circle skips ladders and steep surfaces | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 15b: The ladder grace and the slam warning on a ladder in Play | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 16: Which way up players climb | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 17: A whole session through every garden | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 18: The bot walk on the new ways up | ☐ not started | |

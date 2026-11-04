@@ -13,7 +13,7 @@
 - [Checked only by playing](#checked-only-by-playing)
 - [Answers (2026-10-19)](#answers-2026-10-19)
 
-**Status: written** (2026-10-19). Not started. Updated the same day with product's check of its two build decisions and designer's answers (`docs/specs/v2/research/decisions-plans.md`); nothing waits any more. It is built after plans 1 to 5, because it changes pieces they build: the ladder warning (plan 3, Task 15), the stuck rescue's red-circle guard (plan 2, Task 12) and his right arm with the cuff that rides it (plan 5, Task 9).
+**Status: written** (2026-10-19). Not started. Updated the same day with product's check of its two build decisions and designer's answers (`docs/specs/v2/research/decisions-plans.md`); nothing waits any more. It is built after plans 1 to 5, because it changes pieces they build: the ladder warning (plan 3, Tasks 15a and 15b), the stuck rescue's red-circle guard (plan 2, Task 12) and his right arm with the cuff that rides it (plan 5, Task 9).
 
 How `docs/specs/v2/wake-up.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`.
 
@@ -33,7 +33,7 @@ Words used here (the spec's own words, such as carrier, slam, target, bonk and r
 | No arm twitch at the 85% warning | Plan 1, Task 8 |
 | The solo drain of 1.5 a second | Plan 1, Task 1 |
 | Who is on a ladder (the server's own check) | Plan 3, Task 3 |
-| The circle's ray going through ladders to the first standable surface, and the red ladder glow | Plan 3, Task 15. This plan only adds tests for a player with no egg and for a sliding player (Task 6) |
+| The circle's ray going through ladders to the first standable surface | Plan 3, Task 15a (the ladder and steep skip). This plan adds the `RightArmRest` skip and the no-egg-on-a-ladder test (Task 6). `under` uses Task 15a's filter (Task 3) |
 | The right cuff riding his arm (`RidesRightArm`), its lock, and its unlock once he has left Awake and his arm is down (`Config.Nests.ArmReturnSeconds`) | Plan 5, Tasks 6, 7 and 9. This plan keeps the arm's return inside `ArmReturnSeconds` (0.5 s) and doesn't raise it (Task 12) |
 | Floating a player out of his arm's resting space | Plan 5, Task 24 (built only if a Play check finds a trapped player; Task 23 here can also trigger it) |
 | All sounds and music | Plan 7 (audio). This plan leaves the sound hooks listed in "Sound hooks for plan 7" |
@@ -51,7 +51,7 @@ Words used here (the spec's own words, such as carrier, slam, target, bonk and r
 | Where a show slam lands near a protected player | Pick a centre whose distance from that player (across the ground) is 35 to 45 studs. It must: stand at least 1 stud outside every garden (as V1); cover no player and no landing spot; and stay at least 1 stud clear of the straight line from every protected player to their own garden's Safe Gate: its centre at least **half the circle's width plus 1** (16 studs today, from `Config` so it follows the 30-stud width) from that line. Only the stretch from the player to their gate counts, never the line past the gate. Among the spots that fit, a random one. If none fits, the fitting spot nearest to that player out to 60 studs. If none again, V1's empty-meadow pick. **Accepted by product on 2026-10-19,** with both conditions | Rule 60 point 3 and section 8, "A show slam near a protected player can't find a clear spot". Product's conditions: the way home is the player-to-gate stretch only, and the margin is worked out from the circle's width, not typed in |
 | Which protected player a show slam lands near | The one bonked by the slam before, if any; otherwise the protected player nearest to his face | Rule 60 |
 | The meadow spots a show slam can use | `Giant/ShowSpots` builds them once when the server starts: a grid every 4 studs over the meadow, keeping each point whose straight-down ray (the same filter as `SlamSurface`) hits dry ground (Terrain that isn't water, or a solid meadow part), is in the Meadow zone and is clear of every garden. Built once, never while players play | The V1 meadow route points are only 18, too few to find one 35 to 45 studs from any player. Measured in Studio on 2026-10-19: the meadow has a pond (Terrain water) and lily pads, so the ray's material must be checked |
-| The circle under a player on a ladder, sliding, or near his raised arm | Plan 3 Task 15's ray already goes through ladders and through anything steeper than 70°, so a sliding player's circle lies on the first standable surface below them (spec 5, section 8). While he's awake, the ray also passes through his right arm's resting solid shape, and so do `SlamFx`'s circle pieces | Spec 5 section 8 keeps the arm's solid shape in its resting place while the arm is raised. A circle drawn on that invisible shape would hang in the air. The spec 5 Play check asks that no circle lies on it (Task 23) |
+| The circle under a player on a ladder, sliding, or near his raised arm | Plan 3 Task 15a's ray already goes through ladders and through anything steeper than 70°, so a sliding player's circle lies on the first standable surface below them (spec 5, section 8). While he's awake, the ray also passes through his right arm's resting solid shape, and so do `SlamFx`'s circle pieces | Spec 5 section 8 keeps the arm's solid shape in its resting place while the arm is raised. A circle drawn on that invisible shape would hang in the air. The spec 5 Play check asks that no circle lies on it (Task 23) |
 | How the bonk stops a player (Rule 61: The bonk is harmless) | The server sets the player attribute `Bonked` to `"Ground"` or `"Ladder"` for 1.0 s, then clears it. While it is set, `Carry` sets walking speed to 0 and turns jumping off. A ladder climber then holds still, because Roblox climbs at 70% of walking speed (Roblox docs, `Humanoid.Climbing`, checked 2026-10-19) | The server decides, so a cheater's device can't skip it (and gains nothing by trying). One attribute reaches every device, including players who join late, with no new remote |
 | How the tumble is drawn | Every device draws it for every bonked character it can see: it turns the joint between the root part and the body (`LowerTorso.Root` on R15 characters, `HumanoidRootPart.RootJoint` on R6) by changing that joint's `C0` (Roblox docs, `JointInstance.C0`), so the body tips back about the heels and lies on the ground: 0.15 s down, 0.6 s still, 0.25 s up. The root part never moves | No animation asset is needed (an animation would have to be uploaded to Roblox by hand). The root part stays put, so nobody is pushed and the server's position checks see no move. Animations change the joint's `Transform`, not its `C0`, so they don't fight it |
 | Who sees the fist see-through (Rule 13, fourth bullet) | Each device decides for its own character only: at the landing, if its own middle is under the hand (the same shape as above), its own copy of the fist is drawn 90% see-through until the fist's bottom has lifted above the top of its own head. The fall is always solid | Every device already makes its own fist (`SlamFx`), so this is a look on one screen, with no network message |
@@ -126,6 +126,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   6. In a garden, floating, or touched down 1.4 s ago: never hit. Touched down 1.5 s ago: hit.
   7. The stuck rescue's guard blocks a player 30 studs over a circle that hasn't landed (plan 2's test, with the new shape).
 - Done when: the tests pass.
+- Stands on: plan 3 (`docs/plans/v2/gardens-and-ways-up.md`) Task 15a (the ladder and steep skip that `SlamSurface.under` uses).
 
 **Task 4: Show slams near a protected player**
 - Spec rules: Rule 60 (Carriers first), point 3; Rule 63 (A bonk gives a breather), the "lands for show near them" part; Check A1 ("lands for show 35 to 45 studs away ... never on their way home ... Every slam lands where the solo player can see it"); section 8, "A show slam near a protected player can't find a clear spot" and "A solo player is in a garden when he wakes".
@@ -152,9 +153,10 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 **Task 6: The circle under anyone, on the first walkable surface**
 - Spec rules: Rule 13, second bullet ("the first walkable surface straight below the target ... never on ladder rungs and never stands upright"); section 8, "A player with no egg is the target on a ladder"; spec 5, section 8, "The red slam circle under a sliding player" and "A player stands where his arm rests while it is raised" (no circle on the resting shape).
 - Files: `src/server/Giant/SlamSurface.luau`, `src/client/Fx/SlamFx.luau`, their tests.
-- What changes: plan 3 Task 15's ray already does ladders and steep surfaces. While he's awake, the server's ray and `SlamFx`'s piece rays also pass through the pieces marked `RightArmRest` (his right arm's resting solid shape, marked in Task 10).
-- Failing tests first (fake worlds): a player with no egg on a ladder gets the circle on the pad below and `SlamWarning` names the ladder; a target over a 75° slope above a flat pad gets the circle on the pad (a sliding player); a target standing on a `RightArmRest` piece while he's awake gets the circle on the ground under it; while he's asleep the same piece counts (it is his real arm then); no circle piece sits on a `RightArmRest` piece while he's awake.
+- What changes: plan 3 Task 15a's ray already does ladders and steep surfaces. While he's awake, the server's ray (`SlamSurface.below`, and `SlamSurface.under` too) and `SlamFx`'s piece rays also pass through the pieces marked `RightArmRest` (his right arm's resting solid shape, marked in Task 10).
+- Failing tests first (fake worlds): a player with no egg on a ladder gets the circle on the pad below and `SlamWarning` names the ladder; a target standing on a `RightArmRest` piece while he's awake gets the circle on the ground under it; while he's asleep the same piece counts (it is his real arm then); no circle piece sits on a `RightArmRest` piece while he's awake; `SlamSurface.under` at a player's spot over a `RightArmRest` piece while he's awake finds the ground under it. (The 75° slope test moved to plan 3 Task 15a.)
 - Done when: the tests pass.
+- Stands on: plan 3 Task 15a (the ladder and steep skip), Task 3 (`SlamSurface.under`), Task 10 (the `RightArmRest` marks).
 
 **Task 7: The bonk on the server**
 - Spec rules: Rule 61 (The bonk is harmless): can't move, keeps everything, not pushed, not sent home, holds on a ladder; section 5, "Tumble time"; edge cases "A player farms bonks on purpose", "A player is bonked on his belly near an edge".
@@ -319,7 +321,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 |---|---|
 | Rule 12 (Waking bounces everyone off) | 14, 18, 23 |
 | Rule 13 (Hand slams hunt everyone outside a garden) | 1, 2, 3, 6, 8, 16, 22, 23 |
-| Rule 60 (Carriers first) | 2, 4, 5, 8, 22 |
+| Rule 60 (Carriers first) | 2, 4, 5, 8, 22; the ladder grace: plan 3 Task 15b |
 | Rule 61 (The bonk is harmless) | 3, 7, 15, 22, 23 |
 | Rule 62 (No bonk at the door) | 2, 8, 22 |
 | Rule 63 (A bonk gives a breather) | 2, 4, 8, 22 |

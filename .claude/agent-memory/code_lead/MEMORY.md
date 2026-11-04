@@ -5,4 +5,4 @@
 - [Play jobs](play-jobs.md) - this game's noise trials
 - [Measuring](measuring.md) - meshes, look-only parts, slopes, new pieces
 - [Task review](task-review.md) - stuck scan and git at task close
-- [Handoff check](handoff-check.md) - wording that `job-check.sh` misreads, zones
+- [Handoff check](handoff-check.md) - wording `job-check.sh` misreads, bold task lines it skips, zones
