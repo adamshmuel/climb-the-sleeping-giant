@@ -44,11 +44,10 @@ Follow red, green, refactor from `luau.md` ("Test first") for every behavior. Ru
 
 ## Code rules (from `luau.md` and `rojo.md`)
 
-- Follow `luau.md` (strict mode, `task.*`, server checks, DataStores, cleanup) and `rojo.md` (edit `src/`, never `multi_edit`). Never use Studio Script Sync; for player data use ProfileStore.
+- Follow `luau.md` and `rojo.md`, and use only the libraries `docs/architecture.md` approves.
 - **Reuse before you write.** Before adding a function, search `src/` and the module list in `docs/architecture.md` for one that already does the job, and use it. If the same logic ends up in two places (code or tests), move it into one shared module or test helper in the Refactor step.
 - **Keep files small.** No file you write goes over the project's line limit (`agent-workflow.md`, "No big files"). When a file nears it, split it by topic in the Refactor step before adding more.
 - **Keep it fast.** No `FindFirstChild`, `GetDescendants` or `Instance.new` every frame; use events instead of polling loops; reuse params objects such as `RaycastParams`.
-- Banned: Knit, ProfileService and deprecated APIs.
 
 The `roblox-dev-skill` skill has deeper Roblox guidance; it isn't preloaded (it's large), so load it with the Skill tool when a task needs new Roblox systems, not for world fitting or test work. Where it suggests `multi_edit` or Script Sync, ignore that part: this project uses Rojo.
 

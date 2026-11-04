@@ -37,7 +37,7 @@ Never guess about these. If a spec is unclear or seems wrong, reply with `QUESTI
 Write `docs/architecture.md`, in plain English with a short "why" for each choice:
 - **Folders and modules:** what goes in `src/shared`, `src/server` and `src/client`. Logic lives in ModuleScripts; `init.*.luau` only wires things up.
 - **Networking:** which remotes exist, and what the server checks on each.
-- **Data saving:** ProfileStore for player data.
+- **Data saving:** how player data is saved, with the approved library below.
 - **UI:** how the HUD is built.
 - **Testing:** the test tool and how tests are run. Decide this first:
   1. Read Roblox's built-in `rbx-unit-test` skill through the Studio `skill` tool.
