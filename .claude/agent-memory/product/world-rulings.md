@@ -8,3 +8,4 @@
 - Real-play tests run before the route/footprint tasks only test V1: check which tasks are built before ruling on trail findings; check the tester held E before calling a grab broken.
 - Before ruling a climb gap a world gap, check the job walked the spec's own route (World.Route points, Rule 79's strip north end); 6a3 pushed into a drawn edge instead.
 - A measuring task's pass list ends on the last layer its "Stands on" can change; 6a3 ran past 6a2 up to the cap and grew 3 rounds.
+- Before ruling a moved way-up foot, check Rule 43's 5-stud landing-spot gap (spot 7 sat exactly at 5.0 from the right boot ladder) and keep mirrored ladders mirrored (move both by the larger side).

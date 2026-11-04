@@ -26,10 +26,12 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 6a2: The belly ramps get a visible plank walk (restarted at Step 6: cover boards, after 6d) | ☑ done (designer pass; code_lead approved after 1 changes round; full run 2936 passed, the 7 accepted reds) | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 6a3: From the belly ramp top up to the nose (split 2026-11-04: the cap ladder is 6a3c) | ☑ done 2026-11-04, pass both sides on the computer (`beard` 3 of 3 each; measuring only, no world change) | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 6a3c: The cap ladder, from the nose to the cap | ☑ done 2026-11-04, pass: computer 3 + 3 on the cap, phone 1 per side (tp 0, no drop); result table to product (`work/t6/6a3-stepback-product.md`) | builder, code_lead |
-| Gardens and ways up (V2 spec 3) | Task 5b: Visible parts laid on him, not sunk (lap planks, lap landing, boot ladders) | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 6b: V1's left crossing ramps removed, the gap under the left plank closed, both boot climbs again | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Ladder pick: how the boot ladders stand off the boot (options a, b, c; stands on Task 4a) | ☑ done 2026-11-04: option (b), 1.6 studs straight out (`work/t5b/code-lead-price.md`) | designer |
+| Gardens and ways up (V2 spec 3) | Task 5b1: Plank, deck and meadow flowers laid on him (stands on 6d, Task 5, Task 4a, the bush ruling: decided) | ☑ done 2026-11-04: 5 parts fixed or accepted, rerun "already done", climbs both sides no jump, compare 0.00-0.05; review changes fixed (`work/t5b/review-fix-note.md`) | builder / code_lead |
+| Gardens and ways up (V2 spec 3) | Task 5b2: The boot ladders stand off the boot (stands on the ladder pick (b), product's addendum, spec 3, 5b1) | ☐ not started, can't start until 5b1 is built (planned: 5 steps, about 60 min, about 37 Studio calls) | |
+| Gardens and ways up (V2 spec 3) | Task 6b: V1's left crossing ramps removed, the gap under the left plank closed, both boot climbs again (stands on 5b1 and 5b2) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 6c: His skin closed between each boot top and the belly, mockups moved | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 7: World prep: ladder boxes and zone boxes | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 7: World prep: ladder boxes and zone boxes (also stands on 5b2) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 8: World prep: the footprint route and 12 landing spots | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 9: The new pieces pass the stuck scan, on one walk map per run | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 10: One way onto the belly, and nothing invisible overhead | ☐ not started | |

@@ -2,6 +2,12 @@
 
 About handing work between agents, agent memory, and task sizes. The map is `docs/problems-log/index.md`. Newest rows at the bottom.
 
+## Contents
+- [October 2026](#october-2026)
+- [November 2026](#november-2026)
+
+## October 2026
+
 | Date | Kind | What happened | Time lost | Fixed by |
 |---|---|---|---|---|
 | 2026-10-26 to 10-27 | Over memory limit | Builders ended at 176k to 253k against the 150k limit in Tasks 29, 32, 35 and 36 | extra fresh builders | Partly |
@@ -50,6 +56,11 @@ About handing work between agents, agent memory, and task sizes. The map is `doc
 | 2026-10-29 | Task over its size | Task 12 step 4 (write the Play job only): 36 tool calls against the 30 cap, 149k memory, and again no hand-back; the state note and report were written in work/. Cause: `agent-memory-cap.py` denied every tool but a work/ note once over the cap, so the hand-back itself was blocked (same in Task 11 step 4) | +6 tool calls, 0 extra Studio (3 of 3) | Same kind again: the hook now always lets the hand-back through; StyLua grew the job 280 to 425 lines (two pastes), see the step 4 lesson |
 | 2026-10-29 | Task over its size | Task 12 step 5 rerun ran to the end but failed: grab after a real-key respawn gave no egg again (probe: prompt shown, Enabled, 1.6 studs, new-player hint showing); walled-in box B x2 rescued but the meter rose 1.5 (Rule 31, Being stuck is silent); pillow box C 0 of 3 (body slid out 2.8-4.1 studs). D (real-key Reset on the pillow) passed. Second failed run of the same step | 14 Studio calls, Task 12 at 47 of 47 | Stuck on one problem: fresh code_lead measures the 3 causes, then product picks the path |
 | 2026-10-29 | Script failed | Task 12e step 3 (first Haiku runner, full run): its `sleep 60` was refused as a standalone sleep, so it waited with background shells; its note said 5 Studio calls, the real count was 4. Result itself was right (2840 passed, 0 failed) | 0 extra Studio calls (4 of 6) | First time: runner.md now waits by pasting the fetch again (it waits inside Studio), and the runner's shell has no sleep |
+
+## November 2026
+
+| Date | Kind | What happened | Time lost | Fixed by |
+|---|---|---|---|---|
 | 2026-11-01 | A task went past its planned size | Task 13b: 9 Studio calls, planned 3. Its red step had 0 Studio calls (tests run only in Studio, same as Task 13 step 6b), and its three full runs ran on the builder (Sonnet), not the runner (Haiku) | 9 of 3 Studio calls | Fixed the cause: job-check --handoff fails both; rule in agent-workflow.md "Model per job"; a red step needs Studio, and a full run goes to the runner |
 | 2026-11-01 | A pass rule worded differently from the real error | Task 15 step 2 (Haiku runner, red run): 2872 passed, 13 failed (exactly the 13 new tests), but the runner stopped "not a pass". The handoff said the tests fail "on the missing `unstuck`"; the real error is "attempt to index nil with 'Connect'" (spec line 25, `rig.recovery.unstuck:Connect`). The report shows only 4 failed names, then "and 9 more" (Studio cuts a result at 1024 characters) | 0 extra Studio calls (3 of 4) | First time: the main chat ruled it a pass by the count (13 = 8 + 5 new tests, old total 2872 all passed). Next time a red pass rule quotes the exact error text and counts the failures |
 | 2026-11-01 | A new test hidden by the red break | Task 16 step 4 (green run): 2885 passed, 1 failed. The new session test fails its meter check (Rule 31, within 0.001; got 0.1). The red run (step 2) hid it, because the test already failed earlier on the planned break | 3 Studio calls (7 of 38) | First time: code_lead finds the cause from the code (test or game code), and the builder fixes it before a second green run |
@@ -107,3 +118,4 @@ About handing work between agents, agent memory, and task sizes. The map is `doc
 - 2026-11-03, Task 5 restart: **Haiku runner wasted calls** on a read-only job by retrying a require that fails on cloned modules with relative requires. Fix: run-only prompts that read server modules require the originals (`require(SSS.Server.World.WorldIndex)`), never a `:Clone()`.
 - 2026-11-04, Tasks 6a2 and 6a3: **A card step capped below its real call count** (second time, after 2026-11-03). 6a2 review fix: 5 script_grep vs a 4-call cap. 6a3: first Play try hit its 28 cap after 1 try; steered try 33 of 30 (25 Studio of 22); route Step 1 writer 15 of 8 (job-check rejected a direct WaitForChild, so a rewrite and recheck). The first 6a3 builder also stopped caffeinate (restarted by the main chat; later prompts say leave it running). Cause fix due at the 6a3 close: caps counted from a numbered call list that includes a job-check retry and a fix-up read.
 - 2026-11-04, Task 6a3c: the same kind again, 27 of 25 (computer Play) and 21 of 19 (phone Play); in both the extra calls were reads of pasted snippets that the call list left out. **Cause fixed:** `writing-handoffs` skill, every file a step pastes or reads gets its own numbered `Read` line, and the cap is the count of that list.
+- 2026-11-04, Task 5b1: the same kind again. The review fix builder used 22 tool calls against a 14-call cap, and its note gives no reason (not checked). The cause fix for this kind is already in `writing-handoffs` (a numbered call list), so code_lead checks its next card's list against what this step really did.

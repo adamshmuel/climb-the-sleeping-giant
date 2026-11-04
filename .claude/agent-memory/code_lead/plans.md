@@ -7,3 +7,4 @@
 - At a task close, its review, result and close notes go to `docs/progress/v2/history/<plan-part>.md` under `## Task N`; the plan keeps rulings plus a one-line `- History: [..](..#task-n)` link. Never make a bold task line a heading (job-check reads headings).
 - A ruling's "Stands on" list for a grace or skip in the target picker misses the show slam and director tasks it also reads (plan 6 Tasks 4, 8): grep the plan for every task touching the same function before copying the list.
 - A job that runs a spec's body in Edit with a Jest stub (to read rows the fetch cuts) is budgeted as the spec's length plus 40 lines and 14 calls (6a2 broke job-check's 300 lines and went 2 calls over, 2026-11-04).
+- A part placed by an earlier task to hide a pocket (R-141 bush, stuck safety Task 48) can show as a sink row: grep tools/world for its position before planning a move (5b, 2026-11-04).

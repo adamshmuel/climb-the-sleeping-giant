@@ -23,7 +23,8 @@ local SinkDepth = require(ServerStorage.Tools.checks.SinkDepth)
 --   BootLadder_*.Look.Peg: designer's ruling, 2026-11-04: pegs are nailed in. Rails, rungs and hooks keep the limit.
 --   World.GiantsThings.Pillow: stuck safety Task 41: the pillow is sunk under his head by design.
 --   World.Nature.Inno_Yellow_Flowers: designer's ruling, 2026-11-04: 0.22 studs is fine.
--- Not accepted (they stay red until Task 5b): Inno_White_Flowers and Nature_GrassTuft.
+--   World.Nature.Nature_FloweringBush: R-141 bush, designer and product, 2026-11-04 (stuck safety Task 48).
+-- Not accepted: the BootLadder_* rows stay red until Task 5b2.
 describe("the real world, no part sinks into a main character", function()
 	local MAIN_CHARACTER_TAG = "MainCharacter"
 	local NEAR = 6 -- studs: a candidate's box, grown this much, meets a character part's box
@@ -33,6 +34,15 @@ describe("the real world, no part sinks into a main character", function()
 		"%.BootLadder_[^.]+%.Look%.Peg%.$", -- designer: pegs are nailed in
 		"^Workspace%.World%.GiantsThings%.Pillow%.", -- stuck safety Task 41
 		"^Workspace%.World%.Nature%.Inno_Yellow_Flowers%.", -- designer: 0.22 studs is fine
+		"^Workspace%.World%.Nature%.Nature_FloweringBush%.", -- R-141 bush, stuck safety Task 48: designer and product, 2026-11-04: it reads as a plant, and moving it reopens a stuck pocket
+	}
+
+	type AcceptedFace = { axis: number, sign: number, limit: number }
+
+	-- By full path: one face of one part, up to its own limit. Every other face of the part keeps the normal limit.
+	local ACCEPTED_FACES: { [string]: AcceptedFace } = {
+		-- product, 2026-11-04, Task 5b1: body-side face only, up to 0.3 (spec Rule 103, line 257); measured 0.21 on 3 of 9 points, behind the rope rail
+		["Workspace.World.WalkSurfaces.LapPlank_Left.Deck"] = { axis = 1, sign = -1, limit = 0.3 },
 	}
 
 	local function isAccepted(part: BasePart): boolean
@@ -64,7 +74,16 @@ describe("the real world, no part sinks into a main character", function()
 	local function checkPart(characters: { SinkDepth.CharacterPart }, part: BasePart): Failure?
 		local failure: Failure =
 			{ path = part:GetFullName(), position = part.Position, worst = 0, failing = 0, total = 0 }
+		local acceptedFace = ACCEPTED_FACES[failure.path]
 		for _, face in SinkDepth.faceDepths(part.CFrame, part.Size, characters) do
+			if
+				acceptedFace ~= nil
+				and face.axis == acceptedFace.axis
+				and face.sign == acceptedFace.sign
+				and face.worst <= acceptedFace.limit
+			then
+				continue
+			end
 			failure.total += face.total
 			failure.failing += face.failing
 			failure.worst = math.max(failure.worst, face.worst)

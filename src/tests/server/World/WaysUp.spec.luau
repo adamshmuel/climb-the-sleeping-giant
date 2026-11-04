@@ -563,11 +563,11 @@ describe("the lap planks, landing and apron (task five)", function()
 	)
 
 	it(
-		"makes the landing 11.2 by 7 and the apron 11.2 wide, both with the top at 33.2, and each plank end lies on them",
+		"makes the landing 11.2 by 5.8 and the apron 11.2 wide, both with the top at 33.2, and each plank end lies on them",
 		function()
 			local landing = deckOf("LapLanding")
-			expect(math.abs(landing.Size.X - 11.2) <= 0.05 and math.abs(landing.Size.Z - 7) <= 0.05).toBe(true)
-			expect(math.abs(landing.Position.X) <= 0.05 and math.abs(landing.Position.Z + 50) <= 0.05).toBe(true)
+			expect(math.abs(landing.Size.X - 11.2) <= 0.05 and math.abs(landing.Size.Z - 5.8) <= 0.05).toBe(true)
+			expect(math.abs(landing.Position.X) <= 0.05 and math.abs(landing.Position.Z + 50.6) <= 0.05).toBe(true) -- spec line 88 (landing 11.2 x 5.8, centre z -50.6; Rule 103 skin line)
 			expect(math.abs(landing.Position.Y + landing.Size.Y / 2 - DECK_TOP) <= 0.05).toBe(true)
 			local apron = deckOf("LapApron")
 			expect(math.abs(apron.Size.X - 11.2) <= 0.05).toBe(true)
