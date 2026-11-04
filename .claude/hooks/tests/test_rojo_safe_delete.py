@@ -33,6 +33,11 @@ class RojoSafeDelete(unittest.TestCase):
     def test_naming_the_safe_script_does_not_unlock_rm(self):
         self.assertTrue(self.blocked("echo rojo-safe-rm.sh && rm -r src/a"))
 
+    def test_a_synced_folder_inside_a_worktree_is_blocked(self):
+        # Desktop worktree sessions set CLAUDE_PROJECT_DIR to the main checkout.
+        os.makedirs(os.path.join(self.project, ".claude", "worktrees", "w1", "src", "b"))
+        self.assertTrue(self.blocked("rm -r .claude/worktrees/w1/src/b"))
+
     def test_deleting_one_file_passes(self):
         self.assertFalse(self.blocked("rm src/a/x.luau"))
 

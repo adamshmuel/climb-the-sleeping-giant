@@ -15,6 +15,14 @@ import sys
 
 CARD = re.compile(r"(handoff|card)[^/]*\.md$")
 WORD_CAP = 800
+# In a desktop worktree session CLAUDE_PROJECT_DIR is the main checkout, so a file
+# inside a worktree is checked against that worktree (code.claude.com/docs/en/worktrees).
+WORKTREE = re.compile(r"^(.*?/\.claude/worktrees/[^/]+)(?:/|$)")
+
+
+def root_of(path, project):
+    match = WORKTREE.match(path)
+    return match.group(1) if match else project
 
 
 def main():
@@ -29,7 +37,8 @@ def main():
     project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
     # A relative path is the project's, not this hook's working folder.
     path = os.path.abspath(os.path.join(project, path))
-    work = os.path.join(project, "work") + os.sep
+    project = root_of(path, project)
+    work =os.path.join(project, "work") + os.sep
     if not path.startswith(work):
         return
     name = os.path.basename(path)

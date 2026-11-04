@@ -60,6 +60,10 @@ class DocsCheck(unittest.TestCase):
         self.assertIn("says TBD", self.run_on("docs/specs/v2/a.md", "# A\n\nSpeed: TBD\n"))
         self.assertEqual(self.run_on("docs/reviews/a.md", "# A\n\nSpeed: TBD\n"), "")
 
+    def test_a_doc_inside_a_worktree_is_checked(self):
+        # Desktop worktree sessions set CLAUDE_PROJECT_DIR to the main checkout.
+        self.assertIn("doesn't exist", self.run_on(".claude/worktrees/w1/docs/a.md", "# A\n\n[b](b.md)\n"))
+
     def test_files_outside_docs_are_skipped(self):
         self.assertEqual(self.run_on("work/t5/notes.md", "# A\n\n[b](missing.md)\n" + "x\n" * 120), "")
 
