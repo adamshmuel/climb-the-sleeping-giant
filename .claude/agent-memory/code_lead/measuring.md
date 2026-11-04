@@ -4,3 +4,4 @@
 - A look-only part (CanQuery off) can't be hit by rays: measure it from `CFrame` and `Size`. When a task makes a part look-only, check every test and script that rays it first.
 - Compare two sides of a slope at the same x (or the same distance along), and leave the new part out of a measure of the ground under it.
 - Before ruling a check onto a new kind of piece, measure what its ray really hits on the built piece (one read-only call). Where the piece has a stricter test of its own, reuse it and skip the old one, with a comment.
+- A reach check for an invisible walk part also prints its gap above the visible surface; a gap over 0.5 goes to designer before the build (Task 6a hover, 2026-11-04). Check each look word in a spec against its mockup at plan time.

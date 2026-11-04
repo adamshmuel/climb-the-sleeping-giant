@@ -263,10 +263,15 @@ describe("the real world, egg spots", function()
 		return nil
 	end
 
+	-- A piece (or fill) of a belly ramp counts as a walk surface (plan 3 Task 6a).
+	local function isBellyRampPiece(part: Instance): boolean
+		return part:FindFirstAncestor("BellyRamp_Left") ~= nil or part:FindFirstAncestor("BellyRamp_Right") ~= nil
+	end
+
 	-- How far the spot is from the nearest place a character can stand, and what that place is.
 	-- A character can stand on: the meadow's grass (Terrain with a flat top, not water), or the top face of a walk
-	-- surface (a part named *_Walk, which is solid and no steeper than the project's slope limit of 70 degrees,
-	-- the same limit Humanoids use). The distance goes from the top of the spot's Base to the nearest point of
+	-- surface (a part named *_Walk, or a piece of a belly ramp (plan 3 Task 6a), which is solid and no steeper than the
+	-- project's slope limit of 70 degrees, the same limit Humanoids use). The distance goes from the top of the spot's Base to the nearest point of
 	-- that top face, so a spot ON a walk surface is 0 away and a spot beside it is as far as the gap.
 	local function nearestStandingPlace(top: Vector3): (number, string)
 		local best, kind = math.huge, "nowhere"
@@ -294,7 +299,7 @@ describe("the real world, egg spots", function()
 			if
 				part:IsA("BasePart")
 				and part.CanCollide
-				and string.match(part.Name, "_Walk$")
+				and (string.match(part.Name, "_Walk$") ~= nil or isBellyRampPiece(part))
 				and part.CFrame.UpVector.Y >= limit
 			then
 				local local_ = part.CFrame:PointToObjectSpace(top)

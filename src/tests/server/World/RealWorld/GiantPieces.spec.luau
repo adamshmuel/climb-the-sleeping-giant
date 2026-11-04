@@ -242,14 +242,14 @@ describe("the real world, slam surface", function()
 		expect(problems).toEqual({})
 	end)
 
-	-- Measured in the place: the ray from y = 50 first meets his belly (body_and_cushion) at y = 40.64. Players stand on
-	-- the invisible Belly_Walk 0.005 lower, so the circle is drawn where they stand, within a small margin.
+	-- Measured in the place (code_lead, 2026-11-04): the ray from y = 49 now meets BellyRamp_Left.Piece15 at y = 41.46,
+	-- where players stand since plan 3 Task 6a, so the circle is drawn where they stand, within a small margin.
 	it("finds the belly's surface, about 8 studs under the belly standing spot", function()
 		realWorld()
 		local hit = SlamSurface.below(Workspace, BELLY_SPOT, {})
 		expect(hit.Y).toBeGreaterThan(40)
 		expect(hit.Y).toBeLessThan(49)
-		expect(math.abs(hit.Y - 40.64) <= 0.5).toBe(true)
+		expect(math.abs(hit.Y - 41.46) <= 0.5).toBe(true)
 		expect(hit.X).toBeCloseTo(BELLY_SPOT.X, 1)
 		expect(hit.Z).toBeCloseTo(BELLY_SPOT.Z, 1)
 	end)
@@ -260,12 +260,14 @@ describe("the real world, slam surface", function()
 		expect(SlamSurface.below(Workspace, centre, {})).toEqual(centre - Vector3.new(0, 3, 0))
 	end)
 
-	it("skips what is in the ignore list: without the giant the belly spot's ray lands lower", function()
+	it("without the ramp and the giant, the belly spot's ray lands lower", function()
 		local world = realWorld()
 		local giant = (world :: any).Giant :: Model
-		local withGiant = SlamSurface.below(Workspace, BELLY_SPOT, {})
-		local withoutGiant = SlamSurface.below(Workspace, BELLY_SPOT, { giant })
-		expect(withoutGiant.Y).toBeLessThan(withGiant.Y)
+		local ramp = ((world :: any).WalkSurfaces :: Instance):FindFirstChild("BellyRamp_Left")
+		expect(ramp).never.toBeNil()
+		local withoutRamp = SlamSurface.below(Workspace, BELLY_SPOT, { ramp :: Instance })
+		local withoutBoth = SlamSurface.below(Workspace, BELLY_SPOT, { ramp :: Instance, giant })
+		expect(withoutBoth.Y).toBeLessThan(withoutRamp.Y)
 	end)
 
 	it("falls to the meadow when the giant and the walk surfaces are both ignored", function()

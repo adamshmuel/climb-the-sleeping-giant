@@ -12,16 +12,19 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ☑ done (committed ec95c9b; designer: before and after same or better, 2026-11-04) | builder, code_lead, designer |
 | Gardens and ways up (V2 spec 3) | Task 4b: World prep: the two side ladders and their side pads | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4c: World prep: the two thigh planks | removed 2026-11-03 (Adam dropped them) | product |
-| Gardens and ways up (V2 spec 3) | Task 4d: World prep: the beard and cap ladders get a Look model | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 4d: World prep: the beard and cap ladders get a Look model | removed 2026-11-04 (no rule needs `Look`; nothing built) | code_lead |
 | Gardens and ways up (V2 spec 3) | Task 4e: The outer gardens' walk to their boot ladder (the measurement; result FAIL, recorded) | ☑ done | builder |
 | Gardens and ways up (V2 spec 3) | Task 4e1: Meadow plants never block a walk (dropped: every short plant was already walk-through) | removed | builder |
-| Gardens and ways up (V2 spec 3) | Task 4e2: designer picks new spots for the Sock and the Teacup | ◐ in progress | |
-| Gardens and ways up (V2 spec 3) | Task 4e3: Move the Sock | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 4f: Move the teacup out of the gate 7 view | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 4e4: Walk again, then even out the mirror pairs | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 4g: Move the bush out of the gate 8 view | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 5: World prep: lap planks, lap landing, front apron and rail guards (closes with the Rule 82 re-check: the jump check with the lap planks and the lap landing as gateways; 2 Studio calls plus 1 spare, added 2026-10-28) | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 6: World prep: the two belly ramps, their edge guards and his skin | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 4e2: designer picks new spots for the Sock and the Teacup | ☑ done 2026-11-03 (`work/t4e2/spots.md`) | designer, game_creator |
+| Gardens and ways up (V2 spec 3) | Task 4e3: Move the Sock | ☑ done 2026-11-03 (committed e67ab373, with 4f) | builder, runner, designer |
+| Gardens and ways up (V2 spec 3) | Task 4f: Move the teacup out of the gate 7 view | ☑ done 2026-11-03 (committed e67ab373, with 4e3) | builder, runner, designer |
+| Gardens and ways up (V2 spec 3) | Task 4e4: Walk again, then even out the mirror pairs | ☑ done 2026-11-03, pass, no spawn moved (committed 7ab02138) | builder, game_creator |
+| Gardens and ways up (V2 spec 3) | Task 4g: Move the bush and the rock out of the gate 8 and gate 1 views | ☑ done 2026-11-03 (committed ceb32713) | builder, designer |
+| Gardens and ways up (V2 spec 3) | Task 5: World prep: lap planks, lap landing, front apron and rail guards (closes with the Rule 82 re-check: the jump check with the lap planks and the lap landing as gateways; 2 Studio calls plus 1 spare, added 2026-10-28; the re-check moved to plan 5 Task 18) | ☑ done 2026-11-04 (committed 5086ceec; accepted reds in `work/t5/decision.md`) | builder, runner, designer, code_lead |
+| Gardens and ways up (V2 spec 3) | Task 6a: The belly ramps and their edge guards | ☑ done 2026-11-04, 6 wide (full run 2934 passed, 6 accepted reds: CrossingGuards 2 → Task 6b, Route 2 → Task 8, Zones 1 → Task 7, EggSpots 1 → egg-nests Task 12) | builder, runner, designer, product, code_lead |
+| Gardens and ways up (V2 spec 3) | Task 6a2: The belly ramps get a visible plank walk | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 6b: V1's left crossing ramps removed, the gap under the left plank closed, both boot climbs again | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 6c: His skin closed between each boot top and the belly, mockups moved | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 7: World prep: ladder boxes and zone boxes | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 8: World prep: the footprint route and 12 landing spots | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 9: The new pieces pass the stuck scan, on one walk map per run | ☐ not started | |
@@ -29,7 +32,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 11: The heist replay | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 12: Every way up is equally loud | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 14: The ladder glows on your screen | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 14: The ladder glows on your screen | removed 2026-11-03 (Adam dropped it; nothing built) | product |
 | Gardens and ways up (V2 spec 3) | Task 15a: The slam circle skips ladders and steep surfaces | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 15b: The ladder grace and the slam warning on a ladder in Play | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 16: Which way up players climb | ☐ not started | |

@@ -4,3 +4,4 @@
 - When a world test turns red, first compare the live parts it reads with their build script's values (for example `tools/world/02-zones.luau`), before blaming the newest change.
 - A moved part is put back with the math of the world script that built it (for example `tools/world/01-gardens.luau`), never a guessed rule such as a mirror.
 - Before naming a world script as the fix for a red test, list the attribute and property names the test checks and confirm the script writes those exact names. Read the test and count every kind of object it checks (parts, effects, avatars) in one read-only call.
+- A red on one side of a mirrored build: check the scan grid is mirrored too (2-stud grid origin x ≡ 1.2 mod 2 is not); build a small map at the mirrored columns before blaming the world (6a, 2026-11-04).
