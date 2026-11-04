@@ -369,7 +369,7 @@ describe("the real world, route and landing spots", function()
 			{ 48, -80 },
 			{ -58, -64 },
 			{ -50, -54 },
-			{ 54, -64 },
+			{ 56, -62 }, -- 5b2 moved: product's addendum, spec 3 line 93
 			{ 49, -54 },
 		}
 		local spots = loadLandingSpots()

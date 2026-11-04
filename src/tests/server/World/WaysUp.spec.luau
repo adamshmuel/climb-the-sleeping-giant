@@ -8,9 +8,9 @@ local Workspace = game:GetService("Workspace")
 -- These tests only READ the real world. The world is built by tools/world/19-ways-up-ladders.luau.
 
 local TOP_HEIGHT = 30.4 -- the outer toe nest height (spec 5's table): the ladder top is level with it
-local FOOT_X = 49
+local FOOT_X = 50.6 -- 5b2 moved: product's addendum, spec 3 line 86
 local FOOT_Z = -64
-local TOP_X = 32
+local TOP_X = 33.6
 local NEST_X = 28.5
 local NEST_Z = -64.5
 local SIDES = { -1, 1 }
@@ -107,10 +107,10 @@ describe("the boot ladders (Task 4a)", function()
 			local part = pad :: BasePart
 			expect(part.CanCollide).toBe(true)
 			expect(math.abs(part.Position.Y + part.Size.Y / 2 - TOP_HEIGHT) <= 0.05).toBe(true)
-			local outerX = side * 32.5
+			local outerX = side * 34.1
 			local innerX = side * 29
 			expect(math.abs(part.Position.X - (outerX + innerX) / 2) <= 0.1).toBe(true)
-			expect(math.abs(part.Size.X - 3.5) <= 0.1).toBe(true)
+			expect(math.abs(part.Size.X - 5.1) <= 0.1).toBe(true)
 			expect(math.abs(part.Position.Z - FOOT_Z) <= 0.1).toBe(true)
 			expect(math.abs(part.Size.Z - 5) <= 0.1).toBe(true)
 			-- the boot next to the pad's inner edge is at most 0.3 below it
@@ -123,12 +123,12 @@ describe("the boot ladders (Task 4a)", function()
 		end
 	end)
 
-	it("the ladder top is 3 to 4.5 studs from the outer toe nest spot (Rule 37)", function()
+	it("the ladder top is 5 to 6 studs from the outer toe nest spot (Rule 37)", function()
 		for _, side in SIDES do
 			local top = ends(climbOf(side))
 			local distance = (top - Vector3.new(side * NEST_X, TOP_HEIGHT, NEST_Z)).Magnitude
-			expect(distance >= 3).toBe(true)
-			expect(distance <= 4.5).toBe(true)
+			expect(distance >= 5).toBe(true)
+			expect(distance <= 6).toBe(true)
 		end
 	end)
 

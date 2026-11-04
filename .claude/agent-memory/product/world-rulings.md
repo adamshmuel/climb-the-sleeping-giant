@@ -9,3 +9,4 @@
 - Before ruling a climb gap a world gap, check the job walked the spec's own route (World.Route points, Rule 79's strip north end); 6a3 pushed into a drawn edge instead.
 - A measuring task's pass list ends on the last layer its "Stands on" can change; 6a3 ran past 6a2 up to the cap and grew 3 rounds.
 - Before ruling a moved way-up foot, check Rule 43's 5-stud landing-spot gap (spot 7 sat exactly at 5.0 from the right boot ladder) and keep mirrored ladders mirrored (move both by the larger side).
+- A ladder or plank move changes every distance a spec quotes from its ends: grep the spec for the old figure when ruling the move, and judge it against the grab reach (8 studs), not a bare number.

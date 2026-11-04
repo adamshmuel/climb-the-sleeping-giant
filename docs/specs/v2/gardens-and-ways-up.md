@@ -1,6 +1,6 @@
 # Spec: Gardens and ways up (V2, spec 3)
 
-Status: `approved` by Adam (2026-10-18). Changes Rules 8 and 15. New Rules 34 to 45. Changed 2026-11-04 (ladder glow dropped, Rule 42; red ladder flash dropped, Check C4; ladder grace, Check C4b; new Rule 102, see the change note below).
+Status: `approved` by Adam (2026-10-18). Changes Rules 8 and 15. New Rules 34 to 45. Changed 2026-11-04 (ladder glow dropped, Rule 42; red ladder flash dropped, Check C4; ladder grace, Check C4b; new Rule 102, see the change note below; Rule 37's ladder top to nest distance about 5.5 studs, Task 5b2).
 
 **Contents**
 - [1. Goal and why](#1-goal-and-why)
@@ -32,7 +32,7 @@ Status: `approved` by Adam (2026-10-18). Changes Rules 8 and 15. New Rules 34 to
 **Changed again on 2026-10-18** (designer's and game_creator's round 2 reviews, in `research/review-specs-3-5-round2.md`):
 - **V2 starts with the solo drain at 1.5 per second** (section 5), because every Rare egg 1 estimate was already over 77%. With 2 or more players the drain stays 1 per player.
 - **V1's Rare eggs 2 to 4 are gone** (spec 5 removes every V1 spot except Rare egg 1). The fairness checks now use spec 5's beard–belly fold and the Epic cuff front pocket (Rule 41: Every way up is equally loud).
-- **The boot ladder top** is about 4 studs from the outer boot toe nest (spec 5).
+- **The boot ladder top** is about 4 studs from the outer boot toe nest (spec 5). **Changed 2026-11-04** (Task 5b2): about 5.5 studs, because the ladder moved 1.6 out (section 1).
 - **The slam circle** lies on the first walkable surface straight below, following its shape. Three ways-up mockups are retaken on the moved build.
 
 **Changed on 2026-10-19** (designer's retakes, in `research/decisions-gardens-and-ways-up.md`, last section):
@@ -83,7 +83,7 @@ Every way up ends the same way: boot top → lap plank → lap landing → share
 
 | Piece | Spot |
 |---|---|
-| Boot ladders | Foot (±50.6, 1, −64), top (±33.6, 31, −64), with wooden hooks over the boot rim. The top is level with the boot top, about 4 studs from the outer boot toe nest (spec 5; measured about 3.6). **Changed 2026-11-04** (Task 5b2, designer's option b, product's ruling `work/t5b/code-lead-price.md`): the whole ladder (climb, look and hooks) moved 1.6 studs straight out from the boot, both sides the same, so its rails stand 0.3 off his boot (Rule 103: Nothing sinks into a main character). It was foot (±49, 1, −64), top (±32, 31, −64). The lean (60.3°), the top height and the climb top level with the boot top stay; the hooks get longer to reach the boot rim |
+| Boot ladders | Foot (±50.6, 1, −64), top (±33.6, 31, −64), with wooden hooks over the boot rim. The top is level with the boot top, about 5.5 studs from the outer boot toe nest (spec 5; measured 5.5 after the move, 3.9 before). **Changed 2026-11-04** (Task 5b2, designer's option b, product's ruling `work/t5b/code-lead-price.md`): the whole ladder (climb, look and hooks) moved 1.6 studs straight out from the boot, both sides the same, so its rails stand 0.3 off his boot (Rule 103: Nothing sinks into a main character). It was foot (±49, 1, −64), top (±32, 31, −64). The lean (60.3°), the top height and the climb top level with the boot top stay; the hooks get longer to reach the boot rim |
 | Lap planks | From each boot top to the lap landing: boot end (±20.5, 30, −55.5) → landing end (±5.05, 33.2, −54.5), 15.8 long. Moved 2026-10-18: the landing end slid 4 studs toward the gardens (it was at (±5.05, 33.19, −50.52)); the boot end stays |
 | Lap landing | Centre (0, 32.9, −50.6), top 33.2, 11.2 × 5.8 (x ±5.6, 0.6 wider on each side, so each plank's end lies fully on it; z −47.7 to −53.5), no egg. **Changed 2026-11-04** (Task 5b1, Rule 103: Nothing sinks into a main character): its belly end now stops at his skin line, z −47.7. It was 11.2 × 7, centre (0, 32.9, −50); the cut strip lay under his skin, where the belly ramps and his skin carry the walk. Its open edges have invisible guards, no visible rail |
 | Front apron | In front of the landing, toward the gardens: centre (0, 32.9, −56.3), top 33.2, z −53.5 to −59.1, 11.2 wide like the landing, so landing and apron read as one deck with straight sides (designer). code_lead's test piece is 10 wide; code_lead confirms 11.2 in the plan |
@@ -102,7 +102,7 @@ A new player joins an empty server. They get garden 3, 4, 5 or 6 at random (Rule
 | 0–5 s | Rule 1 (Spawn facing the giant) as in V1: his sleeping face, the Z Z Z, the meter. New: a rope ladder hangs on the outer side of the left boot, ahead and to the left. In the very first frame their own avatar hides most of it; once the camera eases back it is in full view (Rule 44: Your way up is in view from home). | Look around. | The footprints lead to the Common egg by their bridge, as in V1. |
 | 5–20 s | The Common egg, then home. | Grab it, walk home. | "Safe! Common egg is home". The footprints now lead to the nearest waiting egg: the Uncommon on the left boot. |
 | 20–30 s | The footprints run over the bridge to the foot of the boot ladder (about 3.2 seconds' walk, Rule 35: Every garden has a way up close by). The trail comes in straight at the rungs and stops on the grass right in front of them, so they end facing the ladder (Rule 42: Footprints take the quickest way). | Keep pressing forward. The avatar climbs. | The meter ticks up a little as they climb (Rule 39: Ladders are a little louder). |
-| 30–45 s | They step off the top onto the flat boot top, about 4 studs from the outer boot toe nest and its Uncommon egg. The trail starts again here. | Hold to grab. Walk back onto the ladder and press back (or walk off its top): they let go and drop to the grass by its foot, the egg still on their back. | The meter rises faster while carrying. The drop makes no thud, just a small tick on the meter. The footprints lead home. |
+| 30–45 s | They step off the top onto the flat boot top, about 5.5 studs from the outer boot toe nest and its Uncommon egg, close enough that its grab prompt already shows. The trail starts again here. | Hold to grab. Walk back onto the ladder and press back (or walk off its top): they let go and drop to the grass by its foot, the egg still on their back. | The meter rises faster while carrying. The drop makes no thud, just a small tick on the meter. The footprints lead home. |
 | 45–60 s | Home again. From the ladder top they saw the left lap plank, the lap landing and, above it, Rare egg 1's light beam on the belly. | Plan the next heist. | The footprints now lead back up the same ladder, over the lap plank to the landing. On its back edge the trail turns sharply back up the left belly ramp to Rare egg 1. |
 
 **Compared with the top games:** in Steal a Brainrot and Don't Steal the Bobo every base sits the same distance from the shared field, so no base starts ahead. In Climb For Animals Eggs (the new rival, 28,054 playing on 2026-10-14) the way up is a big, plain climbable tower you can see from anywhere. We copy both ideas: a way up close to every garden, and one look for "this is a way up" (wood: rope ladders and planks), seen from home.
@@ -206,7 +206,7 @@ Changed: off-route edges are tested by the bot walk (Rule 24: A bot walks every 
 - A jump into a guard thuds +20, like any jump on him (Rule 8: Steps make noise).
 - Both lap planks, the landing and the apron count as the Boots zone.
 
-**Rule 37: Rope ladders on the boots.** The outer side of each boot (the left boot facing garden 3, the right boot facing garden 6) must have a rope ladder in the same look as the beard ladder, at the spots in section 1, with wooden hooks over the boot rim. Its top must end level with the flat boot top, about 4 studs from that boot's outer boot toe nest (spec 5's Uncommon nest; measured about 3.6).
+**Rule 37: Rope ladders on the boots.** The outer side of each boot (the left boot facing garden 3, the right boot facing garden 6) must have a rope ladder in the same look as the beard ladder, at the spots in section 1, with wooden hooks over the boot rim. Its top must end level with the flat boot top, about 5.5 studs from that boot's outer boot toe nest (spec 5's Uncommon nest; measured 5.5), so the nest's grab prompt shows from the ladder top. **Changed 2026-11-04** (Task 5b2): it was about 4 (measured 3.9); the ladder moved 1.6 out for Rule 103 (Nothing sinks into a main character), product's ruling in `work/t5b2/rule37-question.md`.
 
 **Rule 38: Rope ladders up his sides.** Removed on 2026-11-03 by Adam ("let's drop those ladders and keep only the ones that go on the giant feet"). Gardens 1 and 2 use the left boot ladder and gardens 7 and 8 the right one (section 1). The number stays unused.
 

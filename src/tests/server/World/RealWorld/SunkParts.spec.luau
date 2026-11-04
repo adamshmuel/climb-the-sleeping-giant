@@ -24,7 +24,7 @@ local SinkDepth = require(ServerStorage.Tools.checks.SinkDepth)
 --   World.GiantsThings.Pillow: stuck safety Task 41: the pillow is sunk under his head by design.
 --   World.Nature.Inno_Yellow_Flowers: designer's ruling, 2026-11-04: 0.22 studs is fine.
 --   World.Nature.Nature_FloweringBush: R-141 bush, designer and product, 2026-11-04 (stuck safety Task 48).
--- Not accepted: the BootLadder_* rows stay red until Task 5b2.
+-- BootLadder_* rows: Task 5b2 moved both whole ladders 1.6 out (5b2 moved).
 describe("the real world, no part sinks into a main character", function()
 	local MAIN_CHARACTER_TAG = "MainCharacter"
 	local NEAR = 6 -- studs: a candidate's box, grown this much, meets a character part's box
@@ -93,6 +93,45 @@ describe("the real world, no part sinks into a main character", function()
 		end
 		return nil
 	end
+
+	it("every boot ladder rail, rung and hook stands off him at points every 0.85 studs (Rule 103)", function()
+		local characters = SinkDepth.characterParts(MAIN_CHARACTER_TAG)
+		local walkSurfaces = Workspace.World.WalkSurfaces
+		local lines: { string } = {}
+		for _, name in { "BootLadder_Left", "BootLadder_Right" } do
+			local ladder = walkSurfaces:FindFirstChild(name)
+			expect(ladder).never.toBeNil()
+			local look = (ladder :: Instance):FindFirstChild("Look")
+			expect(look).never.toBeNil()
+			local checked = 0
+			for _, part in (look :: Instance):GetChildren() do
+				if part:IsA("BasePart") and part.Name ~= "Peg" then
+					checked += 1
+					local row = { worst = 0, failing = 0, total = 0 }
+					for _, face in SinkDepth.faceDepths(part.CFrame, part.Size, characters, 0.85) do
+						row.failing += face.failing
+						row.total += face.total
+						row.worst = math.max(row.worst, face.worst)
+					end
+					if row.failing > 0 then
+						table.insert(
+							lines,
+							string.format(
+								"%s @ %s: worst %.2f, %d of %d points",
+								part:GetFullName(),
+								roundedPosition(part.Position),
+								row.worst,
+								row.failing,
+								row.total
+							)
+						)
+					end
+				end
+			end
+			expect(checked).toBe(25) -- 21 Rung, 2 Rail, 2 Hook
+		end
+		expect(table.concat(lines, "\n")).toBe("")
+	end)
 
 	it("no visible part sinks into a main character", function()
 		local tagged: { Model } = {}

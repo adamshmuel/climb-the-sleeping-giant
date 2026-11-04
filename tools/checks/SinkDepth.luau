@@ -7,8 +7,9 @@
 -- box holds it. Against one such part: 26 outward rays (20 studs) hit nothing, and at least 20 of 26 inward rays hit it =
 -- the point is INSIDE that part, and its depth is the shortest inward hit (the distance to his skin). The point's depth is
 -- the largest over those parts. (Rays are filtered to one part because a point sunk in one part is often near another,
--- and that other part would hide it.) A face is tested at 3 x 3 points, 0.95 studs in from its edges. The limit is 0.3
--- studs on a part's two end faces (across its longest axis), 0.1 on every other face (Rule 103). A face whose world normal
+-- and that other part would hide it.) A face is tested at 3 x 3 points, 0.95 studs in from its edges, or, when faceDepths
+-- is given a spacing, at points that far apart along each in-face axis (at least 3 each, from edge to edge of the reach).
+-- The limit is 0.3 studs on a part's two end faces (across its longest axis), 0.1 on every other face (Rule 103). A face whose world normal
 -- points down (Y under -0.7) rests on him and is skipped.
 -- Reads the world only (rays); changes nothing.
 
@@ -126,8 +127,8 @@ function SinkDepth.depth(characters: { CharacterPart }, point: Vector3): number
 	return deepest
 end
 
--- Every non-down face of a box (its frame and size), each with its 3 x 3 points measured against the limit.
-function SinkDepth.faceDepths(cf: CFrame, size: Vector3, characters: { CharacterPart }): { Face }
+-- Every non-down face of a box (its frame and size), each with its 3 x 3 points (or points `spacing` apart, when given) measured against the limit.
+function SinkDepth.faceDepths(cf: CFrame, size: Vector3, characters: { CharacterPart }, spacing: number?): { Face }
 	local longest = 1
 	if size.Y > size.X and size.Y >= size.Z then
 		longest = 2
@@ -150,10 +151,17 @@ function SinkDepth.faceDepths(cf: CFrame, size: Vector3, characters: { Character
 				end
 				local reachA = math.max(0, sizes[others[1]] / 2 - SinkDepth.FACE_INSET)
 				local reachB = math.max(0, sizes[others[2]] / 2 - SinkDepth.FACE_INSET)
+				local countA, countB = 3, 3
+				if spacing ~= nil then
+					countA = math.max(3, math.ceil(2 * reachA / spacing) + 1)
+					countB = math.max(3, math.ceil(2 * reachB / spacing) + 1)
+				end
 				local middle = cf.Position + normal * (sizes[axis] / 2)
 				local face: Face = { axis = axis, sign = sign, limit = limit, worst = 0, failing = 0, total = 0 }
-				for a = -1, 1 do
-					for b = -1, 1 do
+				for indexA = 0, countA - 1 do
+					for indexB = 0, countB - 1 do
+						local a = -1 + 2 * indexA / (countA - 1)
+						local b = -1 + 2 * indexB / (countB - 1)
 						local point = middle + axes[others[1]] * (a * reachA) + axes[others[2]] * (b * reachB)
 						local depth = SinkDepth.depth(characters, point)
 						face.total += 1
