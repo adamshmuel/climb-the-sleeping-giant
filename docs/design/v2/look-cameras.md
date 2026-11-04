@@ -9,7 +9,7 @@ Measured in Studio (Edit mode) on 2026-11-02.
 | Screen | How |
 |---|---|
 | Computer | Studio window at 1280 x 720. Field of view (how wide the camera sees) 70, which is the game's own value: never change it. In Edit mode, `screen_capture` with the camera position and look-at point below. |
-| Phone | Play with the device simulator on a landscape phone of 844 x 390 (for example iPhone 14). Field of view stays 70. On the client, set `workspace.CurrentCamera.CameraType` to `Scriptable` and its `CFrame` to `CFrame.lookAt(position, lookAt)` from the table, take `screen_capture`, then set `CameraType` back to `Custom`. |
+| Phone | Use the ready-made job `.claude/skills/look-check/shots-job.md` (steps 3 to 8). Start Play, then on the client turn on the device simulator with `StudioDeviceSimulatorService` and a device named `Phone_844x390` (844 x 390). Field of view stays 70. Take `screen_capture` with the camera position and look-at point below as its own `camera_position` and `look_at_position`. Never set the camera by script: it doesn't show in the shot. Then turn the simulator off and stop Play. |
 
 - Same camera, same screen size, same time of day for "before" and "after". Hide mockup folders (`Workspace.Mockup_*`) in both shots or in neither.
 - Save the shots in `work/<task>/look-before/` and `work/<task>/look-after/`, named `<camera>-computer.jpg` and `<camera>-phone.jpg`.
@@ -31,6 +31,7 @@ Measured in Studio (Edit mode) on 2026-11-02.
 | `gate-8` | Spawn view from garden gate 8 (far right): the side of his head and his right arm | (142.2, 3.9, 11.7) | (38.0, 44.2, -1.3) |
 | `tie-top-side` | Close-up of the left cap tie's top rows and the fold, from outside his left ear and a little behind. It shows a climber halfway up the leaning rows (about y 100) and one standing at the top. The sight lines were measured clear. For the right tie, use x 52 and look at x 32 | (-52, 107, 42) | (-32, 105, 32) |
 | `tie-top-front` | The same rows seen from the ear side, so you see the climber's side view: is the climber close to the strap or floating beside it, and does anything stick out toward the ear? The sight lines were measured clear. For the right tie, use x 46 and look at x 32 | (-46, 106, 14) | (-32, 105, 32) |
+| `view-plank` | **Player's spot on the lap plank** (taken in Play, from the player's own follow camera). The player stands on the landing between the boots and looks along the right lap plank toward the right boot. You see the wooden deck, its rope rail on the meadow side, his blue trousers as the wall on the leg side, an Uncommon egg on the boot, and the gardens beyond. Measured 2026-11-03 (Task 5) | Play camera behind the player. Player's root part at (2.0, 36.4, -50.5), feet at y 33.4 on `LapLanding.Deck`, facing +x (reached by walking up `LapPlank_Left` from the left boot ladder top) | Along +x, down the right lap plank |
 
 ### How the gate cameras were worked out
 
@@ -43,7 +44,7 @@ Measured in Studio (Edit mode) on 2026-11-02.
 | What changes | Cameras |
 |---|---|
 | Anything on his face, beard, nose, forehead or cap (for example the face ladders) | `meadow-wide`, `meadow-front`, `face`, `gate-4`, `gate-5` |
-| His belly, boots or the ways up to the belly | `meadow-wide`, `meadow-front`, and the gate cameras that face that side |
+| His belly, boots or the ways up to the belly | `meadow-wide`, `meadow-front`, and the gate cameras that face that side. Add `view-plank` for anything on the lap planks or the landing |
 | His sides, arms or cuffs | `meadow-wide`, plus `gate-1` to `gate-3` (left) or `gate-6` to `gate-8` (right) |
 | The meadow, the gardens or the light | `meadow-wide`, plus every gate camera |
 | How a climber looks on a cap tie (taken in Play, with the climber held in place) | `tie-top-side`, `tie-top-front` |
