@@ -37,10 +37,11 @@ Other documents point to `build-check.md` by section name. Every old section is 
 
 | Image | Latest row (history section) |
 |---|---|
-| `wayup-boot-*` | "Egg ranks retake: the rank glow" (retaken with the glow). All 4s |
+| `wayup-boot-*` | "Boot ladder and climb without the yellow glow" (2026-11-04). All 4s |
 | `wayup-gate1-*`, `wayup-gate2-*` | "Boot ladder from gardens 1 and 2" (2026-11-03). They replace `wayup-side-*`. Not re-scored side by side |
 | `wayup-plank-*`, `ladder-top-*`, `plank-*` | "Studio session 2026-10-19 (fifth)" (retaken on the moved build) |
-| `climb-*`, `ladder-slam-*` | First table (2026-10-14). All 4s |
+| `climb-*` | "Boot ladder and climb without the yellow glow" (2026-11-04). All 4s |
+| `ladder-slam-*` | "Ladder slam without the red flash" (2026-11-04). All 4s; the circle shows only as a sliver from the ladder |
 | `view-lapfork-own`, `view-lapfork-cross`, `view-lapfold` (and phone) | "Studio session 2026-10-18 (second)". All 4s, no Buttons score |
 | `wayup-side-*` | Replaced by `wayup-gate1/2`; its old row stays in the history's first table |
 

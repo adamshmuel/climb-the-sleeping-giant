@@ -452,3 +452,47 @@ The side ladders were dropped, so gardens 1 and 2 now use the left boot ladder. 
 | `mockups/wayup-gate2-desktop.png`, `mockups/wayup-gate2-phone.png` | Garden 2 at first spawn: the left boot ladder above the sock, its top half clear | Built world only | Easy (nothing new) | Ladder clearly on screen; the sock hides its foot |
 
 Not re-scored side by side: same cameras, world and light as the earlier `wayup-side` check (all 4s), with a smaller ladder than the side ladder had.
+
+## Ladder slam without the red flash (2026-11-04)
+
+Adam dropped the red ladder flash (and the yellow ladder glow before it). `view-ladder-slam.png`, `view-phone-ladder-slam.png`, `ladder-slam-desktop.png` and `ladder-slam-phone.png` were retaken from the same spot (avatar from `ArtLibrary.MockupAvatars.Mockup_LadderSlam`, feet about 20.5 studs up the left boot ladder, camera 12.5 studs behind the head, 20° down; Studio field of view widened so the HTML crop shows Roblox's 70°). The ladder is now the built `World.WalkSurfaces.BootLadder_Left` (plain wood), the circle the same `Mockup_LadderSlam.Circle`, the screen layer `wake-hud.html?state=slam`. Everything was hidden again afterwards.
+
+| Image | Shows | Art used | Difficulty | World | Light | Life | Buttons | Phone | Below the top games? |
+|---|---|---|---|---|---|---|---|---|---|
+| `mockups/ladder-slam-desktop.png`, `mockups/ladder-slam-phone.png` (backgrounds `view-ladder-slam.png`, `view-phone-ladder-slam.png`) | He is awake and a slam targets a carrier climbing down the left boot ladder with an Uncommon egg. Plain wooden ladder, the red circle on the grass below, red meter, "RUN HOME!", red edges, the tip "Dodge the red circles!" | Real world, plain avatar, the Uncommon egg, the built ladder, the game's circle | Easy (nothing new) | 4 | 4 | 4 | 4 | 4 | No on the scores. **Weak spot:** from the ladder the circle shows only as a red-and-gold sliver at the bottom edge, partly under the tip; on the phone even less. A climber sees the slam coming only from the wake cues (red edges, meter, "RUN HOME!") and, once built, the whoosh from below (plan 7 Task 10). Spec 3 section 5's trigger covers it if climbers keep getting caught |
+
+Compared with the same three wake-up shots as before: `steal-animal-egg/shot-06.jpg`, `break-and-steal-an-egg/shot-06.jpg`, `doors/shot-06.jpg`.
+
+## Boot ladder and climb without the yellow glow (2026-11-04)
+
+The yellow ladder glow was dropped (Adam, 2026-11-03). `wayup-boot-*` and `climb-*` (and their `view-*` backgrounds) were retaken in edit mode on the built plain-wood `World.WalkSurfaces.BootLadder_Left`. The side ladders are gone from the world, so they no longer show. `wayup-boot`: avatar on garden 3's `SpawnSpot`, facing his face, camera 12.5 studs behind the head, 15° down, with the rank-glow eggs of `Mockup_EggRanks`. `climb`: avatar halfway down the ladder (root part at (−45.1, 12, −64)) with the Uncommon egg, camera at (−56, 15, −68) looking at (−43, 12.5, −63). Screen layer `wayup-hud.html` (`state=boot`, `state=climb`). Everything was hidden again afterwards.
+
+| Image | Shows | Art used | Difficulty | World | Light | Life | Buttons | Phone | Below the top games? |
+|---|---|---|---|---|---|---|---|---|---|
+| `mockups/wayup-boot-desktop.png`, `mockups/wayup-boot-phone.png` | Garden 3 after the spawn camera eases back: the plain-wood boot ladder up the left boot, the thigh plank, the Common eggs in the meadow, the rank glow on the boot and belly eggs | Real world, plain avatar, egg models | Easy | 4 | 4 | 4 | 4 | 4 | No. The ladder is less bright than the yellow one was, but it stands out against the dark boot. Weak spot: the two near Common eggs' words touch ("Common Common"), as V1's labels would from this spot |
+| `mockups/climb-desktop.png`, `mockups/climb-phone.png` | Climbing down the left boot ladder with the Uncommon egg on the back; carry pill "Uncommon egg! Get it home" | Same, plus the Uncommon egg | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. The egg covers most of the avatar, as before |
+
+Compared with `adopt-me/shot-01.jpg`, `ride-a-pet/shot-03.jpg` and `steal-an-egg/shot-08.jpg`, as in the first ways-up check.
+
+
+
+## Task 4a (judged 2026-11-04)
+
+Look check for plan 3 Task 4a, the two boot ladders (commit ec95c9b, 2026-11-03). Before shots `work/t4a/look-before/`, after shots `work/t4a/look-after/`, taken minutes apart on 2026-11-03 from the fixed cameras in `look-cameras.md`. The wide mockup ramps (`Mockup_WaysUp`) stand in both sets and are not judged here. Framing note: the after computer shots came out narrower (1488x1080 against 1879x1080), so their left and right edges are cut; same cameras, nothing in the world differs because of it.
+
+| Pair | Verdict | What I see |
+|---|---|---|
+| meadow-wide, computer | Same | Two thin plain-wood ladders on the outer sides of the boots, small next to the ramps; same wood and rope as the ramps, nothing clashes |
+| meadow-wide, phone | Same | Same two thin ladders, barely visible at phone size; the giant and his face read as before |
+| meadow-front, computer | Same | Ladders sit on the outer boot sides beside each ramp, symmetric, read as part of the same wood set |
+| meadow-front, phone | Same | Thin lines beside the ramps; nothing covers the giant, the eggs area or the centre |
+| gate-3, computer | Better | A clear ladder now runs up the near boot beside the belly: from garden 3's gate the way up is readable at once |
+| gate-3, phone | Better | Same ladder, still readable at phone size against the dark boot |
+| gate-6, computer | Better | A ladder now stands on the near boot's front, in the middle of the view; garden 6 sees its own way up |
+| gate-6, phone | Better | Same ladder, clearly visible next to the teacup |
+
+Climb shot (`look-after/climb-left-boot-top-player-camera.jpg`, Play, player camera): the avatar stands on the flat boot top with the ladder's top rungs and rail beside him, not inside the boot; the meter, Tiptoe button and tip stay clear of him. The carried Uncommon egg sits close behind the head, as in the earlier climb mockups.
+
+Verdict: no pair worse; 4 same, 4 better. Approve.
+
+Viral test: yes. The ladders are plain wood that matches the world and gives gardens 3 and 6 a way up that shows from spawn, so nothing here would make a kid pick the game next door instead.

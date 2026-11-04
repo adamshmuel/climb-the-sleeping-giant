@@ -11,7 +11,7 @@ This file is the index. The guide is split into one file per spec, in `docs/desi
 | 1: New-player safety | [`style-guide/warning-85.md`](style-guide/warning-85.md) | The 85% warning without the arm twitch: the snort, the moved bubble, their tested values, the eyelids |
 | 1: New-player safety | [`style-guide/egg-ranks.md`](style-guide/egg-ranks.md), "Your own carried egg never hides you" | The carried egg fading for its carrier |
 | 2: Stuck safety | [`style-guide/rescue-puff.md`](style-guide/rescue-puff.md) | The rescue puff |
-| 3: Gardens and ways up | [`style-guide/ways-up.md`](style-guide/ways-up.md) | Ladders, planks, the lap landing, ramps, footprints on a ladder, the fork, the slam warning on a ladder |
+| 3: Gardens and ways up | [`style-guide/ways-up.md`](style-guide/ways-up.md) | Ladders, planks, the lap landing, ramps, footprints on a ladder, the fork |
 | 4: Egg reachability | [`style-guide/egg-ranks.md`](style-guide/egg-ranks.md) | Rank colours and placement, the rank glow, beams |
 | 5: Egg nests and the seam | [`style-guide/nests-map.md`](style-guide/nests-map.md) | How to read the map, the seam, the 38 nests |
 | 5: Egg nests and the seam | [`style-guide/nests-pockets.md`](style-guide/nests-pockets.md) | The Epic cuff pockets, the Rare belly pockets, the lap fold and knee pocket |
@@ -34,7 +34,7 @@ Other documents point to sections by name, for example `style-guide.md`, "The wa
 | Section or named part | File |
 |---|---|
 | The rescue puff | `style-guide/rescue-puff.md` |
-| Ways up; Footprints on a ladder; The plank and the fork; Spawn view; Landing spots; Slam warning on a ladder | `style-guide/ways-up.md` |
+| Ways up; Footprints on a ladder; The plank and the fork; Spawn view; Landing spots | `style-guide/ways-up.md` |
 | Egg ranks; Egg ranks: values checked in the mockups (2026-10-14); The rank glow; Beams from eggs on his body; Beams on his body hide up close; Your own carried egg never hides you; Tried second and dropped (the stronger beam) | `style-guide/egg-ranks.md` |
 | The wake-up; His face wakes; The screen while he hunts; Red edges; "RUN HOME!"; Egg words near "RUN HOME!"; Wake banner; The bonk; The fist on your own screen; The world reacts to a slam; Flower shake | `style-guide/wake-up.md` |
 | The 85% warning without the arm twitch (changes V1); The 85% warning: tested values (2026-10-19); The bubble; The snort; Bubble limits; Can anyone stand on his eyelids? | `style-guide/warning-85.md` |
