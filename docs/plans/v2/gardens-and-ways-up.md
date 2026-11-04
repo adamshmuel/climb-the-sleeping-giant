@@ -1,5 +1,18 @@
 # Plan: Gardens and ways up (V2, spec 3)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump). Finished tasks' results: [docs/progress/v2/history/gardens-and-ways-up.md](../../progress/v2/history/gardens-and-ways-up.md).
+- [Already built elsewhere, not built again here](#already-built-elsewhere-not-built-again-here)
+- [Decisions for the build](#decisions-for-the-build)
+- [Tasks](#tasks)
+  - [Part 1: Random gardens](#part-1-random-gardens) (Task 1)
+  - [Part 2: Ladders are a little louder](#part-2-ladders-are-a-little-louder) (Tasks 2, 3)
+  - [Part 3: World prep](#part-3-world-prep) (Tasks 4a, 4b, 4c, 4d removed, 4e, 4e1, 4e2, 4e3, 4f, 4e4, 4g, 5, 6, 7, 8)
+  - [Part 4: Checks on the walk map](#part-4-checks-on-the-walk-map) (Tasks 9, 10, 11, 12)
+  - [Part 5: What the player sees](#part-5-what-the-player-sees) (Tasks 13, 13b, 15; 14 dropped)
+  - [Part 6: Analytics, a whole session, and the Play proof](#part-6-analytics-a-whole-session-and-the-play-proof) (Tasks 16, 17, 18, 19)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+
 **Status: written** (2026-10-19). Not started. It is built after plans 1 and 2. Updated the same day with product's answers (`docs/specs/v2/research/decisions-plans.md`, "product: answers to code_lead #1" and "#2"): the walk check is the game's own walk map, and Rule 41 uses the quietest walk-map route, with the Rare egg 1 window also checked along the footprint route. Nothing waits any more.
 
 **Changed on 2026-11-03** (Adam: "I can see that the player is falling in your tests, don't waste any more time, let's drop those ladders and keep only the ones that go on the giant feet"; product's changes in `work/t4c/product-drop-report.md`): the side ladders, side pads and thigh planks are dropped. Tasks 4b and 4c are removed (numbers kept). There are now **four ways up**: the two boot ramps and the two boot ladders (Task 4a, built). Gardens 1 and 2 use the left boot ladder, gardens 7 and 8 the right one. Tasks 5, 7, 8, 9, 10, 12, 13, 18 and 19 and `Config.WaysUp` are changed to match.
@@ -28,7 +41,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 |---|---|---|
 | Where do the new world pieces come from? | From designer's tested pieces in `Workspace.Mockup_WaysUp` (the boot ladders and the lap planks) and code_lead's ramp build in `Workspace.Mockup_Nests.RampBuild_CodeLead` (moved planks, apron, rail guards, belly ramps). Each world script copies them into `World.WalkSurfaces`, fixes them to the spec's spots, and makes them solid | They are the look designer approved in the mockups. Copying keeps it the same |
 | The mockup boot ladders climb with a plain `Part` | Each real ladder climbs with an invisible `TrussPart` named `Climb`, like the beard ladder | The walk map turns every `TrussPart` into a climb link on its own (plan 2, Task 3) |
-| What the ladder glow lights up | Each ladder model keeps its visible pieces (rungs, rope rails, hooks, pegs) in a child model `Look`. The glow (a Roblox `Highlight`) is pointed at `Look` only. The world script does the same for V1's beard and cap ladders | Rule 42 (Footprints take the quickest way): the glow covers only the visible ladder, never the invisible truss or the ladder box |
+| Rays through ladders | The slam circle's rays skip every ladder part: the `Climb` truss and every visible piece of the ladder model (Task 15). No rule reads a `Look` model any more | Check C4 |
 | The apron's width | **11.2 studs**, like the landing. The Studio mockup apron is 10.2 wide and code_lead's test piece 10; the game builds 11.2 | The spec's section 1, and designer's note: landing and apron read as one deck with straight sides |
 | How the server knows who climbs | A player is on a ladder when their root part (the body's middle) is inside a ladder box **and** they aren't standing on standable ground (the server's own ground ray, `PlayerTracker.groundedByRay`) | The box alone would catch a player on the grass at the ladder's foot or on the top pad. The ground ray is the server's own, so a cheater's device can't change it (Rule 40) |
 | Which zone a climber is in | The higher of the zone boxes' zone and the ladder box's own `Zone` attribute. The new ladders' boxes say `Boots`. The beard and cap ladders' boxes say the zone their V1 zone boxes already give | Today the lower half of each new ladder is in no zone box, so it would count as the silent Meadow (measured in Studio: `Boots_Legs` starts 12 studs up and ends at x ±40). Rule 39 says the new ladders count as Boots |
@@ -74,20 +87,20 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 3: The server knows who is on a ladder**
 - Spec rules: Rule 40 (The server knows who is on a ladder), Rule 39 (Ladders are a little louder). Check C2. Edge cases "A player jumps off a ladder halfway", "A player stands at a ladder's foot in the meadow", "A cheater's device says it isn't climbing".
-- Files: `src/server/Giant/Zones.luau` (pure: `Zones.ladderAt(position, ladderBoxes)`), `src/server/World/WorldIndex.luau` (`readLadders`: every part in `World.LadderBoxes`, with its `Ladder` and `Zone` attributes, and its ladder model in `WalkSurfaces` with a `Look` and a `TrussPart` named `Climb`), `src/server/Players/PlayerTracker.luau` (each sample gets `onLadder` and `ladder`), `src/server/Giant/GiantDirector.luau` (passes `onLadder` to `Noise`), `src/server/init.server.luau`, their tests.
+- Files: `src/server/Giant/Zones.luau` (pure: `Zones.ladderAt(position, ladderBoxes)`), `src/server/World/WorldIndex.luau` (`readLadders`: every part in `World.LadderBoxes`, with its `Ladder` and `Zone` attributes, and its ladder model in `WalkSurfaces` with a `TrussPart` named `Climb`; no `Look` needed since the glow and the red flash were dropped, 2026-11-04), `src/server/Players/PlayerTracker.luau` (each sample gets `onLadder` and `ladder`), `src/server/Giant/GiantDirector.luau` (passes `onLadder` to `Noise`), `src/server/init.server.luau`, their tests.
 - What changes: see "How the server knows who climbs" and "Which zone a climber is in" above. The climber's zone is also the zone `LandingDetector` gets, so a jump off a new ladder thuds as Boots: 20.
 - Failing tests first:
   1. A root inside a ladder box and not on standable ground is on that ladder, and its zone is the box's zone when that is higher.
   2. Check C2: a root inside the box but standing on the grass is not on a ladder, and is in the Meadow: no noise while walking about.
   3. A player standing on the top pad is not on a ladder, and counts as the pad's zone.
   4. A jump off a new ladder halfway up thuds 20 (Boots).
-  5. `readLadders` on a fake world: a missing ladder model, `Look`, `Climb` or attribute is each its own problem line.
+  5. `readLadders` on a fake world: a missing ladder model, `Climb` or attribute is each its own problem line.
   6. The director: a climber on a Boots ladder adds 4.8 a second to the meter.
 - Done when: the tests pass. The real world has no ladder boxes yet, so the server reads an empty list until Task 7 (the world contract asks for them from Task 7).
 
 ### Part 3: World prep
 
-**Task 4 is split into 4a to 4d** (code_lead, 2026-11-03; 4b and 4c removed the same day, see below), so no task goes past the Speed rules' 1 hour for a new part. They share one world script, `tools/world/19-ways-up-ladders.luau` (new; 15 and 16 are taken by stuck safety's `15-real-shape` and `16-meadow-bush`), one section per task, and one test file, `src/tests/server/World/WaysUp.spec.luau` (new: the fast checks of this plan's world pieces, so `RealWorld.spec` doesn't grow). The script copies each piece from `Mockup_WaysUp` into `World.WalkSurfaces` as described in "Decisions" (a `Climb` truss, a `Look` model, see-through rails that players walk through as on the ramps), and a second run says "already done".
+**Task 4 is split into 4a to 4d** (code_lead, 2026-11-03; 4b and 4c removed the same day, 4d removed 2026-11-04, see below), so no task goes past the Speed rules' 1 hour for a new part. They share one world script, `tools/world/19-ways-up-ladders.luau` (new; 15 and 16 are taken by stuck safety's `15-real-shape` and `16-meadow-bush`), one section per task, and one test file, `src/tests/server/World/WaysUp.spec.luau` (new: the fast checks of this plan's world pieces, so `RealWorld.spec` doesn't grow). The script copies each piece from `Mockup_WaysUp` into `World.WalkSurfaces` as described in "Decisions" (a `Climb` truss, a `Look` model, see-through rails that players walk through as on the ramps), and a second run says "already done".
 
 **Task 4a: World prep: the two boot ladders**
 - Stands on: his body (never reshaped), the 10-22 ladders put back on 2026-11-03, the Safe Gates, and the reach check just before this task (build order step 2, `docs/plans/v2/index.md`).
@@ -110,16 +123,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 4c: World prep: the two thigh planks.** Removed on 2026-11-03, for the same reason as Task 4b. Its tests 1 and 2 (the plank's spots, and no step at the pad and the boot top), which the main chat had edited, go with it.
 
-**Task 4d: World prep: the beard and cap ladders get a Look model**
-- Stands on: the 10-22 ladders (the beard and cap ladders, put back on 2026-11-03), Task 4a (the `Look` rule the two boot ladders already follow) (build order step 2).
-- Before: reach check: none needed, because no new spot is made (it only regroups the visible parts of two built ladders); back up the parts into `ServerStorage.WorldBackups.T4d` in the same call as the change (and the main chat copies the place file to `work/place-backups/`).
-- After: one climb with normal player controls, in Play, up the beard ladder, to show nothing changed.
-- Planned hours: 0.5.
-- Spec rules: Rule 42 (Footprints take the quickest way): the glow covers only the visible ladder ("Decisions", "What the ladder glow lights up").
-- Files: `tools/world/19-ways-up-ladders.luau` (section 4d), `WaysUp.spec.luau`.
-- What the script does: moves the beard and cap ladders' visible pieces into a `Look` model, changing nothing else about them.
-- Failing tests first (real world): every ladder (the two boot ladders, the beard and the cap) has a `Climb` truss and a `Look` model, and `Look` holds only visible parts; every beard and cap ladder part is where it was (within 0.01 studs).
-- Done when: the tests pass, the second run says "already done", and the fixed-camera shots of his face show no change.
+**Task 4d: World prep: the beard and cap ladders get a Look model.** Removed on 2026-11-04 by code_lead, nothing built. No spec rule needs `Look` any more: the ladder glow (Task 14) and the red ladder flash (Task 15) were both dropped by Adam, and Task 15's rays skip the whole ladder model, found by its `Climb` truss (`work/t5/drop-ladder-flash.md`, item 4). The number stays unused.
 
 **Task 4e: The outer gardens' walk to their boot ladder** (done 2026-11-03 as the measurement: **result FAIL**, recorded in `work/t4e/walk-times.md`. Gardens 1, 2 and 7 missed their limits, and the Sock, the Teacup and small plants block the walk lines. No spawn spot moved. product's ruling `work/t4e/product-ruling.md` puts the fixes in Tasks 4e1 to 4e4. Added 2026-11-03 by product's decision on designer's Rule 44 check; a small fix under the Speed rules)
 - Stands on: Task 4a (the boot ladders, committed ec95c9b), the side ladders' removal (Tasks 4b and 4c, committed), the ground players walk on.
@@ -136,16 +140,16 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 **Task 4e1: Meadow plants never block a walk.** Dropped on 2026-11-03, with nothing built: its builder measured that every short plant (228 models) is already walk-through (`CanCollide` off). The first raycast had hit them only because it ignored `CanCollide`. A walk-only raycast shows the real blocks: the Sock on gardens 1 and 2, the Teacup on gardens 7 and 8. Its test and world script were deleted, so number 29 is free again.
 
 **Task 4e2: designer picks new spots for the Sock and the Teacup** (added 2026-11-03 by product's ruling; no world change)
-- **Done 2026-11-03:** Sock (-78, 22) at a 96 degree turn, Teacup (76, 30); game_creator approved the landmarks (`work/t4e2/spots.md`).
+- History: [docs/progress/v2/history/gardens-and-ways-up.md, "Task 4e2"](../../progress/v2/history/gardens-and-ways-up.md#task-4e2)
 - Stands on: nothing (a choice of spots, measured read-only against the built world).
 - Planned hours: 0.25 (Step 1: 15 min, Opus, designer).
 - Spec rules: Rule 35 (Every garden has a way up close by), Rule 44 (Your way up is in view from home).
-- What: one spot each for `GiantsThings.Sock` and `GiantsThings.Teacup`. Each spot keeps both props clear of a **corridor 10 studs wide** from each outer spawn spot (gardens 1, 2, 7 and 8) to its boot ladder foot. The walk line and the view line nearly match, so one clear corridor serves both rules, even if Task 4e4 later moves a spawn along it. Each spot is measured clear of every nest, landing spot, route point and ladder foot (Lessons 219 and 221). Mockups from meadow-wide and from the gates that show each prop; game_creator checks that the props still work as story landmarks.
+- What: one spot each for `GiantsThings.Sock` and `GiantsThings.Teacup`. Each spot keeps both props clear of a **corridor 10 studs wide** from each outer spawn spot (gardens 1, 2, 7 and 8) to its boot ladder foot. The walk line and the view line nearly match, so one clear corridor serves both rules, even if Task 4e4 later moves a spawn along it. Each spot is measured clear of every nest, landing spot, route point and ladder foot. Mockups from meadow-wide and from the gates that show each prop; game_creator checks that the props still work as story landmarks.
 - Output: `work/t4e2/spots.md`: each prop's measured spot (the `SOCK_CENTRE` and `TEACUP_CENTRE` values for `tools/world/02b-garden-extras.luau`), and the list of fixed cameras that show it, old spot or new.
 - Step 1 (15 min, Opus, designer): measure, mock up, and write the spots. Cap: 20 tool calls, read-only Studio only.
 
 **Task 4e3: Move the Sock** (added 2026-11-03 by product's ruling; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
-- **Done 2026-11-03 (with 4f, one commit, about 25 min):** Sock and its 34 helper parts moved by (-2, 0, +80); old test spots moved by the real shift (Lesson 341). Full run 2921 passed, 1 accepted red. Designer: every pair same or better (`work/t4e3/designer-look.md`).
+- **Done 2026-11-03 (with 4f, one commit, about 25 min):** Sock and its 34 helper parts moved by (-2, 0, +80); old test spots moved by the real shift. Full run 2921 passed, 1 accepted red. Designer: every pair same or better (`work/t4e3/designer-look.md`).
 - Stands on: Task 4e2 (the Sock's spot, picked and measured).
 - Planned hours: 0.17 (Step 1: 5 min; Step 2: 2 min; Step 3: 3 min).
 - Spec rules: Rule 35 (Every garden has a way up close by), Rule 44 (Your way up is in view from home).
@@ -157,7 +161,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 3 (3 min, Haiku, runner): the full test run (`scripts/studio/full-run-start.luau`, then `full-run-fetch.luau`). Cap: 6 tool calls, 3 of them Studio.
 
 **Task 4f: Move the teacup out of the gate 7 view** (added 2026-11-03 by product's decision: gate 7's teacup hides the right boot ladder, and product's ruling on Task 4e puts it on garden 7's walk line too. A small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
-- **Done 2026-11-03 (with 4e3):** Teacup moved by (-0.497, 0, +87.713); shots are in `work/t4e3/` with the Sock's.
+- History: [docs/progress/v2/history/gardens-and-ways-up.md, "Task 4f"](../../progress/v2/history/gardens-and-ways-up.md#task-4f)
 - Stands on: Task 4e2 (the Teacup's spot, picked and measured), Task 4a (the boot ladders, built).
 - Planned hours: 0.17 (Step 1: 5 min; Step 2: 2 min; Step 3: 3 min).
 - Spec rules: Rule 44 (Your way up is in view from home), Rule 35 (Every garden has a way up close by).
@@ -179,43 +183,50 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Step 1 (6 min, Sonnet, builder): the walk, the spawn moves and the walks again. Cap: 14 tool calls, 10 of them Studio.
 - Step 2 (1 min, Opus, game_creator): checks the times table. Cap: 4 tool calls, no Studio.
 - Step 3 (3 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
-- Done 2026-11-03: **pass**, no spawn spot moved (`work/t4e4/walk-times.md`). Garden 1 6.97 s, garden 8 6.93 s, garden 2 4.50 s, garden 7 4.53 s; pairs 0.04 s and 0.03 s apart. game_creator approved (`work/t4e4/game_creator-check.md`). Step 3 skipped: nothing in the world or the code changed since the last full run (2921 passed, 1 accepted red).
+- History: [docs/progress/v2/history/gardens-and-ways-up.md, "Task 4e4"](../../progress/v2/history/gardens-and-ways-up.md#task-4e4)
 
 **Task 4g: Move the bush and the rock out of the gate 8 and gate 1 views** (added 2026-11-03 by product's split of Task 4f; a small fix under the Speed rules: 10 minutes, one agent plus one runner check; at the limit work stops, finished or not)
 - Stands on: Task 4e4 (the spawn spots, final), and through it Tasks 4e3 and 4f (the Sock and the Teacup moved).
 - Planned hours: 0.17 (Step 1: 1 min; Step 2: 5 min; Step 3: 2 min; Step 4: 2 min).
 - Spec rules: Rule 44 (Your way up is in view from home).
 - Files: a new `tools/world/30-clear-gate-views.luau` that moves `Workspace.World.Nature.Nature_Bush` (at (132.7, 5.9, -1.3), it hides 6 of 11 rays from gate 8 to `BootLadder_Right`) and the `Nature_MediumRock` that hides 6 of 11 rays from gate 1 to `BootLadder_Left`, the bush the least distance sideways and the rock out of the meadow into `ServerStorage.ArtLibrary.RemovedNature` (designer's pick: a sideways move ends in the stream or 2.7 studs from `EggSpot_Common_1`), and says "already done" on a second run. Not `16-meadow-bush.luau`: that bush covers the invisible `Block_R141_1`, so moving it would leave an invisible wall (read-only raycast, 2026-11-03).
-- The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path, and of the teacup's new spot (measured: Lessons 219 and 221).
+- The new spot must be clear of every built nest, egg spot, landing spot, route point, ladder foot and the bridge path, and of the teacup's new spot (measured).
 - Look shots: gate-8 before and after, computer and phone, in `work/t4g/look-before/` and `work/t4g/look-after/`. Gates 1, 2 and 7 after only (computer and phone): with gate 8 they are the Rule 44 check from the final spawn spots.
 - Pass: gate 8 shows at least as much of its ladder as gate 1, and gate 7 shows the top half of its ladder, like gate 2.
 - Step 1 (1 min, Sonnet, builder): one read-only Edit call measures the new spot. Cap: 3 tool calls: 1 read of `16-meadow-bush.luau`, 1 Studio measure, 1 spare.
 - Step 2 (5 min, Sonnet, builder, same agent): the before shots, then one call that backs the bush up into `ServerStorage.WorldBackups.T4g` and runs the changed script, then the after shots. Cap: 17 tool calls, 15 of them Studio: 1 before shot on computer, 2 phone set, 3 before shot on phone, 4 phone reset, 5 the one-value script edit, 6 the backup and run, 7-10 after shots on computer (gates 8, 1, 2, 7), 11 phone set, 12-15 after shots on phone, 16 phone reset, 17 spare.
 - Step 3 (2 min, Opus, designer): judges the gate-8 pairs (same or better, or worse) and the Rule 44 views of gates 1, 2, 7 and 8. Cap: 8 tool calls, no Studio.
 - Step 4 (2 min, Haiku, runner): the full test run. Cap: 6 tool calls, 3 of them Studio.
-- Done 2026-11-03: **pass**. The bush moved (3.8, 0, -4.7); the gate-1 rock went to `ServerStorage.ArtLibrary.RemovedNature` (backup `ServerStorage.WorldBackups.T4g`). View rays clear out of 11: gate 1 3 → 8, gate 8 3 → 8, gates 2 and 7 stay 7. Designer: all four pairs better, Rule 44 passes at gates 1, 2, 7 and 8 (`work/t4g/compare/`). Full run 2922 passed, 1 accepted red. About 11 min against 10 (09:52 to 10:03): the card's Step 2 cap was too small (problems log, `teamwork.md`).
+- History: [docs/progress/v2/history/gardens-and-ways-up.md, "Task 4g"](../../progress/v2/history/gardens-and-ways-up.md#task-4g)
 
 **Task 5: World prep: lap planks, lap landing, front apron and rail guards**
-- Stands on: Task 4a (the boot ladders and their climb, built), Task 4d (the `Look` model on the beard and cap ladders), his body, the Safe Gates, the ray grid under each lap plank's boot end, and the reach check just before this task (build order step 2).
-- Before: the **ray grid** (one read-only Edit call): rays straight down every 0.5 studs over each lap plank's boot-end footprint (9 wide, 2 deep, round (±20.5, 30, −55.5)), giving the boot top's real height and any step under it, so test 5b checks measured ground (Lessons 219 and 221). Then the reach check from what exists (each boot top, reached up Task 4a's boot ladders, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan3Task5` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- Stands on: Task 4a (the boot ladders and their climb, built), his body, the Safe Gates, the ray grid under each lap plank's boot end, and the reach check just before this task (build order step 2).
+- Before: the **ray grid** (one read-only Edit call): rays straight down every 0.5 studs over each lap plank's boot-end footprint (9 wide, 2 deep, round (±21.5, 29.6, −55.56)), giving the boot top's real height and any step under it, so test 5b checks measured ground. Then the reach check from what exists (each boot top, reached up Task 4a's boot ladders, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan3Task5` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 36 (The lap planks): the landing and apron, the rail guards and conditions 1, 2 and 6 of Rule 45 (One way onto the belly). Check D1.
 - Files: `tools/world/27-lap-landing.luau` (new), `WaysUp.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
-- What the script does: puts both lap planks at their moved spots (boot end (±20.5, 30, −55.5), landing end (±5.05, 33.2, −54.5)); builds the landing 11.2 × 7 at (0, 33, −50) and the apron 11.2 wide, top 33.2, from z −53.5 to −59.1; guards every open edge of both, including the front edge over the gap, with only the plank and belly ramp joins left open; builds the two rail guards, 12 studs tall with a steep wedge top, exactly on the inner rope rail of each lap plank, from its boot end to where it meets the landing (lap planks only: no thigh plank to join since 2026-11-03).
+- What the script does: puts both lap planks at their moved spots (boot end (±21.5, 29.6, −55.56), landing end (±5.05, 33.2, −54.5): the moved line 1 stud further out, so each end's outer half rests on the boot top (code_lead's ray grid, 2026-11-03)), with an invisible end guard where each end hangs over the boot front drop (z −56.5 to −51); builds the landing 11.2 × 7 at (0, 33, −50) and the apron 11.2 wide, top 33.2, from z −53.5 to −59.1; guards every open edge of both, including the front edge over the gap, with only the plank and belly ramp joins left open; builds the two rail guards, 12 studs tall with a steep wedge top, exactly on the inner rope rail of each lap plank, from its boot end to where it meets the landing (lap planks only: no thigh plank to join since 2026-11-03). Added 2026-11-04 (`work/t5/stepC-ruling.md`, idea A): `ToeGuard_Left` and `ToeGuard_Right`, invisible solid walls with their boot-top face at x ±17.5, 1 thick, 12 tall, from z −69 (over `SteepGuards.BootFront_*`) to z −59.8 (the plank's outer rope line), so a player stepping off a boot top can't walk down the toe slope between his legs.
 - Failing tests first (real world):
-  1. Each lap plank's ends are within 0.2 studs of their spots, it is at least 9 wide, climbs about 11° (9° to 13°), and seen from above is about 4° off straight across his lap.
+  1. Each lap plank's ends are within 0.2 studs of their spots, it is at least 9 wide, climbs about 12.4° (9° to 13°), and seen from above is about 4° off straight across his lap.
   2. The landing is 11.2 × 7 at (0, 33, −50); the apron is 11.2 wide, top 33.2, z −53.5 to −59.1; each plank's end lies fully on the landing and the apron (rays down at the end's corners hit one of them).
   3. Every open edge of the landing and the apron has a guard; the only openings are where the planks and the two belly ramps join.
   4. Each rail guard stands within 0.2 studs of its plank's inner rope rail, is 12 tall, has no flat top, and ends within 0.5 studs of where its lap plank meets the landing.
   5. V1's Uncommon egg spots 2 and 4 (moved by stuck safety Task 24 to (−19.5, −62) and (19.5, −62), on the toe side of each lap plank's boot end) are not covered by a plank, a guard or the landing, and a player still reaches each from its boot top with no jump. The test names the spot if not (code_lead, 2026-10-20).
-  5b. Each lap plank's boot end rests on the boot top with no step over 0.3 studs where a player steps off it. On the left boot it meets stuck safety Task 24's fitted step piece (a `Boots_Walk` at x −25 to −21, z −61.6 to −58.8, over a 1-stud step in the boot top at z −60.4). If the plank end lands on it or beside it with a step, this task's script refits or removes that piece and the report says so; the right boot top has no step piece (code_lead, 2026-10-20).
+  5b. Each lap plank's boot end rests on the boot top with no step over 0.3 studs where a player steps off it. On the left boot it meets stuck safety Task 24's fitted step piece (a `Boots_Walk` at x −25 to −21, z −61.6 to −58.8, over a 1-stud step in the boot top at z −60.4). If the plank end lands on it or beside it with a step, this task's script refits or removes that piece and the report says so; the right boot top has no step piece (code_lead, 2026-10-20). Measured 2026-11-03: the step-off strip is z −58.6 to −56.5 on both boots, and the script trims `Boots_Walk`'s +x edge to x −21.5, where it overlaps the deck corner 0.8 above it.
   6. The planks, the landing and the apron are solid, and their decks are visible wood.
+  7. (Added 2026-11-04) A toe guard walls each boot top off from the toe slope and meets its neighbours (the `BootFront_*` guard and the plank's outer rope, no gap over 1 stud).
 - Done when: the tests pass, the second run says "already done", and screenshots match `plank-desktop.png` and `view-plank.png` (camera 5° down, turned 42° toward his belly).
-- **At the close: the Rule 82 re-check** (added by code_lead on 2026-10-28 by product's ruling "after step 1b stopped", item 2, `work/t28/product-ruling.md`; stuck safety's Rule 82 (No new way onto the belly) and this spec's Rule 45 (One way onto the belly)). Stuck safety Task 28 step 1b ran the jump check against the world before these pieces existed. Now that Task 4a (the boot ladders) and this task are built, the same check runs again with **the lap planks and the lap landing added as gateway sources**, next to the meadow exits and boot tops. Same limits: gateway first; the walk limit (12 above, nothing below within fall reach), the egg limit (eggs off every meadow route, prompt reach 8) and the climbable limit (15 above, now with the two boot ladders too) only for guards with a gateway; seam limit dropped. Guards: the 11 slide guards, the 4 forehead plates and this task's rail guards. If Task 28's jump check did not finish, this is where it runs in full (Task 28's "Done when" then drops it).
-  - Steps and calls (Lesson 60): (a) **Shell, 0 Studio calls:** move the jump part of `work/t28/jump-1b.luau` into a module in `tools/checks/` with a failing test first (Lesson 40); re-check its world names table against the new pieces (Lesson 61). (b) **Edit, 2 Studio calls plus 1 spare fetch:** one background job (the module's test filter, a fresh walk map, the check), one fetch, the spare only if it says "running". At most 30 tool calls.
-  - Done when: every guard row is "no gateway" or passes every limit, each with its closest case; a failing guard goes to product.
+- The Rule 82 (No new way onto the belly) re-check is not in this task: it runs once, on the finished ground, in plan 5 Task 18 (product's ruling, 2026-11-03).
+- **Accepted reds at close** (red flag, product and game_creator, 2026-11-03, `work/t5/decision.md`). Each names its exact rows, so any new row still fails. Every row pairs a Task 5 part with a V1 part that a later task removes (spec `gardens-and-ways-up.md` section 1, "V1's left belly path": Removed; Rule 45 (One way onto the belly)):
+  | Test | Exact rows | Turns green in |
+  |---|---|---|
+  | `CrossingGuards.spec` "each crossing ramp's sides are guarded where they cross" and "finds a missing guard beside the ankle ramp's steep ..." | `CrossingRamp_Ankle`: no guard at 3 and 4.2 studs over the ramp (`Ankle_Guard_1` trimmed to top 29.5 so it no longer pokes through the left plank) | Task 6 (removes the ramp and `CrossingGuards`) |
+  | `Route.spec` "every route point stands on ground a player walks on" | `RoutePoint_Belly_AnkleTop` (-21.1, 29.3, -56.1) | Task 8 (route rewrite) |
+  | `Route.spec` "every link is walkable" | `Belly_1` -> `Belly_AnkleTop` (`LapPlank_Left.Deck` in the way); `Belly_1` -> `Belly_KneeFoot` (`LapPlank_Left.Deck`); `Belly_AnkleTop` -> `Belly_BootStep` (`LapPlank_Left.EndGuard`) | Task 8 |
+  | `EggSpots.spec` "no egg stands inside a prop" | `EggSpot_Uncommon_2` touches `LapPlank_Left.Deck`; `EggSpot_Uncommon_4` touches `LapPlank_Right.Deck` | egg-nests plan Task 12 (V1 spots removed) |
+  | `Zones.spec` "every place a player can stand on the giant is in a giant zone" | missed 4 of 787, all on the boot ladders: (-43, 15.1, -63) and (-40, 22.1, -63) `BootLadder_Left.Climb`; (40, 22.1, -63) and (43, 15.1, -63) `BootLadder_Right.Climb` (the Task 4a accepted red, unchanged; none on the new decks) | Task 7 (ladder and zone boxes) |
 
 **Task 6: World prep: the two belly ramps, their edge guards and his skin**
 - Stands on: Task 5 (the lap landing and apron, and their climb), his body, the Safe Gates, and the reach check just before this task (build order step 2).
@@ -239,9 +250,13 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   5. The walk from the landing to Rare egg 1 along the new route is at most 3 studs longer than V1's (measured: +1.4).
   6. Every guard is invisible, solid and has no flat top.
 - Done when: the tests pass, every other world test still passes (V1's belly path tests updated for the removed pieces, listed in the report), the second run says "already done", and screenshots of the fork match `view-lapfork-own.png` and `view-lapfork-cross.png`.
+- **Turns green here:** Task 5's two `CrossingGuards.spec` rows (`CrossingRamp_Ankle`: no guard at 3 and 4.2 studs), because the ramp and `CrossingGuards` are removed (test 4). The Route rows this removal adds (links into the removed pieces) are written into this task's handoff before the build, as accepted reds until Task 8.
+- **Added by the Task 5 red flag** (`work/t5/decision.md`, 2026-11-03), after the removal above:
+  7. **Close and hide the left gap under the left plank's boot end.** Once `CrossingRamp_Ankle` goes, a dark gap shows under `LapPlank_Left`'s boot end (today the end rests partly on the ramp: 32 ray hits). A plank-wood board (designer's look) closes it from view, and an invisible solid block under it carries the end. Test first: rays down over the boot-end footprint all hit the boot top, the block or the board, with no gap a player could see into or step into. Stands on: this task's removal of `CrossingRamp_Ankle` (built in this task, before this step), Task 5's `LapPlank_Left` (built), and designer's board look (decided before this step starts).
+  8. **Rerun test 5b and the climb on both boots** (Task 5's "each lap plank's boot end rests on the boot top with no step over 0.3 studs", then the Play climb boot ladder -> lap plank -> `LapLanding.Deck` with no jump, left and right). Stands on: step 7 (built) and Task 5's right-boot climb (passed).
 
 **Task 7: World prep: ladder boxes and zone boxes**
-- Stands on: Task 4a, Task 4d, Task 5 and Task 6 (every way up and the belly ramps, built), plan 5's (egg nests and climbing) Tasks 13, 14, 15 and 16 (the cuff straps, walk layer and seam, built), and the reach check just before this task (build order step 4).
+- Stands on: Task 4a, Task 5 and Task 6 (every way up and the belly ramps, built), plan 5's (egg nests and climbing) Tasks 13, 14, 15 and 16 (the cuff straps, walk layer and seam, built), and the reach check just before this task (build order step 4).
 - Before: reach check from what exists (every walk surface built in steps 2 and 3), back up the parts into `ServerStorage.WorldBackups.Plan3Task7` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
@@ -256,16 +271,17 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   5. A point on the grass at each ladder's foot is in the Meadow.
   6. Every V1 egg spot and route point keeps its zone (no change from before).
 - Done when: the tests pass and the second run says "already done".
+- **Turns green here:** `Zones.spec` "every place a player can stand on the giant is in a giant zone": the 4 misses of 787 on `BootLadder_Left.Climb` (-43, 15.1, -63), (-40, 22.1, -63) and `BootLadder_Right.Climb` (40, 22.1, -63), (43, 15.1, -63), the Task 4a accepted red that Task 5 also closes with.
 
 **Task 8: World prep: the footprint route, 10 landing spots and the walk-limit measure**
 - Stands on: Task 4e4 (the final walk times and spawn spots), Task 4f (the teacup moved), Task 4g (the bush moved), Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), game_creator's walk-limit ruling of 2026-11-03 (`work/t4c/game-creator-walk.md`, decided), and the reach check just before this task (build order step 4). Task 4e4 owns the final walk times; this task reuses them (test 2b).
 - Before: reach check from what exists (each garden's spawn spot to its way up's foot, over what steps 2 and 3 built), back up the parts into `ServerStorage.WorldBackups.Plan3Task8` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
-- Spec rules: Rule 42 (Footprints take the quickest way): the route. Rule 43 (Landing spots on every side). Rule 35 (Every garden has a way up close by). Rule 45 (One way onto the belly), point 3: the fork.
+- Spec rules: Rule 42 (Footprints take the quickest way): the route, and the trail end at a ladder (the run-in point). Rule 43 (Landing spots on every side). Rule 35 (Every garden has a way up close by). Rule 45 (One way onto the belly), point 3: the fork.
 - Files: `tools/world/08-route.luau`, `src/shared/RouteData.luau` (reads `Ladder`, `WayUpFoot` and `WayUpTop`), `src/shared/Config.luau` (`Config.WaysUp`), `src/server/World/WorldIndex.luau` (10 landing spots; `readWaysUp` from the route points), `RouteData.spec`, `WorldIndex.spec`, `RealWorld.spec.luau`.
 - What changes:
-  - **Route:** new points at each boot ladder's foot and top, along each lap plank, on the landing, and up each belly ramp. The landing's back-edge point links to both ramp bottoms, so the trail forks there. `Belly_1` to `Belly_3` go (the old left path), and so do the hand points stuck safety Task 24 added at its crossing ramps (named `Belly_` plus a place word, such as `Belly_KneeFoot`; listed in its report).
+  - **Route:** new points at each boot ladder's foot and top, along each lap plank, on the landing, and up each belly ramp. The landing's back-edge point links to both ramp bottoms, so the trail forks there. `Belly_1` to `Belly_3` go (the old left path), and so do the hand points stuck safety Task 24 added at its crossing ramps (named `Belly_` plus a place word, such as `Belly_KneeFoot`; listed in its report). Each ladder foot point gets a run-in point straight out from the rungs on the climbing side, 2 to 4 studs in front of the bottom rung (it feeds Task 13's trail-end test; spec 3 section 5, "Trail end at a ladder").
   - **Landing spots:** 5 and 7 already moved to (−58, −64) and (54, −64) in Task 4a, because the boot ladders sit on them; 9 and 10 are new, one near each boot ladder's foot (Rule 43, 10 in all). No route points or landing spots for side ladders or thigh planks (dropped 2026-11-03).
   - **The route test** checks a ladder link as a climb (a `Climb` truss joins its two points; the foot is on the grass, the top on the pad or boot top) instead of with the walk check, and checks every other link as today.
   - **Plan 2's stuck scan** names V1's old belly spots by position, not by route point name, because `Belly_1` to `Belly_3` are gone.
@@ -277,6 +293,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   4. (Real world) Rule 43: 10 landing spots; each at least 10 studs from every other spot and every egg spot, at least 5 studs from every ladder foot, with a 5×6×5 player box above it touching nothing (the V1 box check grows from 4×6×4), and outside every garden, plus V1's landing-spot checks.
   5. (Real world) The landing's back-edge point links to both belly ramps' first points.
 - Done when: the tests pass, `08-route` run twice says "already done" the second time, and Play shows the trail from garden 3 running to the boot ladder's foot (screenshot).
+- **Turns green here:** Task 5's `Route.spec` rows: "every route point stands on ground a player walks on" (`RoutePoint_Belly_AnkleTop`) and "every link is walkable" (`Belly_1` -> `Belly_AnkleTop`, `Belly_1` -> `Belly_KneeFoot`, `Belly_AnkleTop` -> `Belly_BootStep`), plus the Route rows Task 6 adds, because the old left path points go.
 
 ### Part 4: Checks on the walk map
 
@@ -332,33 +349,42 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 ### Part 5: What the player sees
 
 **Task 13: Footprints take the quickest way**
-- Spec rules: Rule 42 (Footprints take the quickest way): the route part. Check A2. Edge case "Two players whose trails use different ladders".
+- Spec rules: Rule 42 (Footprints take the quickest way): the route and the trail end at a ladder. Check A2. Edge case "Two players whose trails use different ladders".
 - Files: `src/client/World/RouteGraph.luau` (pure), `src/client/World/Footprints.luau`, their tests, `RealWorld.spec.luau` ("the real world, footprints").
-- What changes: `RouteGraph` costs each link in seconds (see "The quickest footprint way" above), and each way it finds says which ladder link comes first on it (`ladder`, or nil). `Footprints` lays no footprints along a ladder link: the trail stops at the foot and starts again at the top. It tells the ladder glow (Task 14) which ladder that is.
+- What changes: `RouteGraph` costs each link in seconds (see "The quickest footprint way" above). `Footprints` lays no footprints along a ladder link: the trail stops at the foot and starts again at the top.
 - Failing tests first:
   1. A 20-stud ladder and a 26-stud walk to the same place: the walk wins (20 ÷ 11.2 = 1.8 s against 1.6 s).
-  2. A way over a ladder names the ladder; a way with no ladder names none.
-  3. No footprint lies between a ladder's foot and top points.
+  2. No footprint lies between a ladder's foot and top points.
+  3. The last footprint before a ladder foot is 2 to 4 studs in front of the bottom rung, on the climbing side, and the last 8 studs of trail are within 30° of straight at the rungs (spec 3 section 5, "Trail end at a ladder").
   4. (Real world) Check A2: from garden 8's spawn point, with every meadow and boot egg taken, the way to Rare egg 1 goes up the right boot ladder (spec check A2, 2026-11-03). From each garden, the way to Rare egg 1 goes up that garden's own way up.
-- Done when: the tests pass.
+- Done when: the tests pass, and a Play walk with the player's controls only (computer and iPhone 14) from gardens 1, 2, 3, 6, 7 and 8 after banking the Common egg shows: the next footprints are on screen at every step, the trail ends facing the rungs, and holding forward climbs. Shots go to designer.
 
-**Task 14: The ladder glows on your screen**
-- Spec rules: Rule 42 (Footprints take the quickest way): the glow. Check C1 (the glow part).
-- Files: `src/client/World/LadderGlow.luau` (new), `src/client/init.client.luau`, `src/tests/client/World/LadderGlow.spec.luau` (new).
-- What it does: one `Highlight`, made by the player's own device (so nobody else sees it), pointed at the `Look` of the ladder the trail names, with the style guide's values ("Footprints on a ladder": footprint yellow, fill 55% see-through, outline 35% see-through, `DepthMode` Occluded so it never shows through his body). Only one ladder glows at a time; no ladder glows when the trail has none. It also takes the red slam glow (Task 15), which wins while it lasts.
-- Failing tests first: the glow points at the named ladder's `Look`; it moves when the trail names another; it goes when the trail names none; its colours and depth mode match the style guide; while a red glow is on that ladder, the yellow one is off, and it comes back after.
-- Done when: the tests pass, and in Play from garden 3 (computer and the iPhone 14) screenshots match `wayup-boot-desktop.png` and `wayup-boot-phone.png`, and a climb shot matches `climb-desktop.png` and `climb-phone.png`. The main chat sends them to designer.
+**Task 13b: Props fade in front of the camera** (a new feature, approved by Adam on 2026-11-04; product's ruling `work/t5/real-play-ruling.md`, finding 3a, and `work/t5/drop-task14.md`)
+- Stands on: designer's answer to question 1 in `work/t5/real-play-ruling.md` (fade values, which prop families count, his body excluded); for Step B also Step A and Tasks 4e4 and 4g (the final prop spots, built).
+- Status: can't start
+- What it's for: core play. A player must always see themselves (a kid who loses his character in a sunflower leaves). Size: 3 steps, 51 min, 18 Studio calls.
+- Spec rules: Rule 102 (Props never swallow the camera); section 5, "Prop fade"; the edge case "The camera passes into a sunflower, the Sock or another prop".
+- Files: `src/client/World/PropFade.luau` (new), `src/client/World/EggFade.luau` (its camera-line check and fade timing move into one shared helper that both use: no copies), `src/client/init.client.luau`, `src/tests/client/World/PropFade.spec.luau` (new).
+- Before Step A: one read-only Studio call lists visible walk-through props taller than about 4 studs near the walk lines (product's evidence call). Stands on: nothing.
+- Step A (30 min, Sonnet, builder), code and fake-world tests: a prop players walk through fades on the player's own screen only (`LocalTransparencyModifier`; 70% see-through, 0.15 s in, 0.3 s back, starting values) when the camera is inside it or it hides the player's head or body middle; his body never fades. Failing tests first: a prop the camera sits in fades; a prop between the camera and the head fades; a prop beside the line stays solid; it goes back over 0.3 s; a part of the giant's body never fades; a prop not in the named families never fades; the egg fade tests still pass on the shared helper. Cap: 22 tool calls, 5 Studio (red start and fetch, green start and fetch, 1 spare).
+  - Stands on: designer's answer to question 1.
+- Step B (15 min, Sonnet, builder), Play proof on computer and iPhone 14, player's controls only: walk past the sunflowers and the Sock (at the spots of the `work/t5/real-play/` shots); the player is always in view in every shot. Cap: 16 tool calls, 10 Studio.
+  - Stands on: Step A, Task 4e4, Task 4g.
+- Step C (6 min, Haiku, runner): the full test run. Cap: 13 tool calls, 3 Studio.
+  - Stands on: Step B.
+- Done when: the tests pass, the shots show the player through each faded prop, and designer judges them.
+
+**Task 14: The ladder glows on your screen.** Dropped on 2026-11-03 by Adam ("drop the "ladder glow" we don't need it"), nothing built. The number stays unused. The trail now ends facing the rungs instead (Rule 42, Tasks 8 and 13).
 
 **Task 15: A slam warning on a ladder**
-- Spec rules: Check C4. Section 8, "A red circle under a player on a ladder" (the behaviour this spec builds for ladders; spec 6 rewrites Rule 13's words).
-- Files: `src/server/Giant/SlamSurface.luau`, `src/server/Giant/GiantDirector.luau`, `src/shared/Net.luau` (`SlamWarning` gets a fourth value: the ladder name, or nil), `src/client/Fx/SlamFx.luau`, `src/client/World/LadderGlow.luau`, their tests.
+- Spec rules: Check C4 (the circle part; the whoosh is plan 7 Task 10). Section 8, "A red circle under a player on a ladder" (the behaviour this spec builds for ladders; spec 6 rewrites Rule 13's words). The red ladder flash was dropped by Adam on 2026-11-04 (`work/t5/drop-ladder-flash.md`).
+- Files: `src/server/Giant/SlamSurface.luau`, `src/server/Giant/GiantDirector.luau`, `src/client/Fx/SlamFx.luau`, their tests. `SlamWarning` keeps its 3 values.
 - What changes:
-  - **The circle's point:** the server's ray goes through every ladder (its truss and its `Look`) and stops at the first surface a player could stand on (no steeper than 70°): the grass or the boot top.
-  - **The circle's pieces:** `SlamFx`'s rays also go through the ladders, so no piece sits on the rungs.
-  - **The red ladder:** when the slam's target is on a ladder (Task 3), `SlamWarning` names it, and every device turns that ladder's `Look` red for the 1.5-second warning (`#E0233A`, fill 15% see-through, solid outline, Occluded), then puts it back.
+  - **The circle's point:** the server's ray skips every ladder part (the `Climb` truss and every visible piece of the ladder model) and stops at the first surface a player could stand on (no steeper than 70°): the grass or the boot top.
+  - **The circle's pieces:** `SlamFx`'s rays also skip the ladders, so no piece sits on the rungs.
   - Being caught is unchanged (V1: within 15 studs across and 10 above or below the target's middle).
-- Failing tests first: on a fake world with a truss over a pad, the surface point is on the pad, not the truss; a target on a ladder sends its name; the red glow lasts 1.5 seconds and then the yellow trail glow returns; a target on the grass sends no ladder.
-- Done when: the tests pass, and in Play (computer and the iPhone 14) a carrier halfway up a boot ladder while he is awake shows the circle on the grass or boot top and the red ladder (screenshots compared with `ladder-slam-desktop.png` and `ladder-slam-phone.png`), and is caught when the fist lands.
+- Failing tests first: on a fake world with a truss and a visible ladder model over a pad, the surface point is on the pad, not the truss or the rungs; no circle piece lands on a ladder part.
+- Done when: the tests pass, and in Play (computer and the iPhone 14) a carrier halfway up a boot ladder while he is awake shows the circle on the grass or boot top (screenshots compared with `ladder-slam-desktop.png` and `ladder-slam-phone.png`), and is caught when the fist lands. The whoosh is not checked here (plan 7 Task 10).
 
 ### Part 6: Analytics, a whole session, and the Play proof
 
@@ -417,10 +443,12 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 | Rule 39 (Ladders are a little louder) | 2, 3, 7, 17 |
 | Rule 40 (The server knows who is on a ladder) | 3, 7 |
 | Rule 41 (Every way up is equally loud) | 11, 12, 17, 18 |
-| Rule 42 (Footprints take the quickest way) | 8, 13, 14 |
+| Rule 42 (Footprints take the quickest way) | 8, 13 |
 | Rule 43 (Landing spots on every side) | 8, 9, 19 |
 | Rule 44 (Your way up is in view from home) | 4e2, 4e3, 4f, 4g, 19 |
 | Rule 45 (One way onto the belly) | 5, 6, 7, 8, 9, 10, 18 |
+| Rule 102 (Props never swallow the camera) | 13b |
+| Check C4 (slam warning on a ladder) | 15 (the circle), plan 7 Task 10 (the whoosh) |
 | Section 10 (Success signals) | 16 |
 
 **Built in later plans** (they need spec 5's nests): Rule 41 for the beard–belly fold and the Epic cuff front pocket, and per rank once nests are on both halves of the belly (plan 5); Check D5, which needs a Rare on each side of his belly (plan 5); Rule 36 condition 3, the grab prompts for the knee pocket and the lap fold (plan 5); "no heist to a Rare nest reaches 100" for nests other than Rare egg 1 (plan 4).
@@ -434,5 +462,4 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 | The real meter peaks on every way up, computer and phone | Rule 41 | builder (Task 18), code_lead |
 | Each garden's way up in view from home | Rule 44 | builder (Task 19), designer |
 | Climbing with the phone thumbstick only | Check C3 | The Studio tools walk the character with `MoveTo`, not the thumbstick, so this is checked as close as Studio allows and listed as untested on a real thumbstick. A real phone is spec 10 |
-| The ladder glow shows only on its own player's screen, with two players | Rule 42 | qa, with Studio's two-player test |
 | Players in gardens 1, 2, 7 and 8 bank enough Rares; climbs use their own way up; no way up wakes him too often | Section 10 | Only a published game sends analytics |
