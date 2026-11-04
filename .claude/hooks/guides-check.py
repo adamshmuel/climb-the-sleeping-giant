@@ -28,7 +28,7 @@ CODE = "https://code.claude.com/docs/en/"
 PLATFORM = "https://platform.claude.com/docs/en/"
 PROMPTING = PLATFORM + "build-with-claude/prompt-engineering/"
 PAGES = {
-    **{name: CODE + name + ".md" for name in ["best-practices", "memory", "sub-agents", "skills", "hooks", "settings", "costs"]},
+    **{name: CODE + name + ".md" for name in ["best-practices", "memory", "sub-agents", "skills", "hooks", "settings", "settings-reference", "costs"]},
     "skill-authoring": PLATFORM + "agents-and-tools/agent-skills/best-practices.md",
     "prompting": PROMPTING + "claude-prompting-best-practices.md",
     **{model: PROMPTING + f"prompting-claude-{model}.md" for model in ["opus-5-5", "sonnet-5-5", "haiku-5-5"]},

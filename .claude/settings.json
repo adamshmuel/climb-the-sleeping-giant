@@ -65,6 +65,10 @@
 						{
 							"type": "command",
 							"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/work-tidy.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/setup-lint.py"
 					}
 				]
 			}
@@ -130,7 +134,8 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-clock.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-clock.py",
+						"onFailure": "continue"
 					}
 				]
 			},
@@ -154,7 +159,8 @@
 					},
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-osascript.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-osascript.py",
+							"onFailure": "block"
 					},
 					{
 						"type": "command",
@@ -168,7 +174,8 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/luau-paren-line.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/luau-paren-line.py",
+							"onFailure": "block"
 					}
 				]
 			}
