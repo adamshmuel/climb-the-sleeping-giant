@@ -83,6 +83,14 @@ Then ask right away, one question at a time, with a recommendation. Never park a
 
 When the user asks why an agent decided something, send the question to that owner and reply with its answer, naming the agent. Only questions about tools, setup and agent configuration are answered by the main chat.
 
+## Sessions
+
+One Studio, one Rojo and one world serve the main folder, so the game has one session at a time.
+- **Game work** (code, tools, game docs, Studio, every agent in the flow) runs in the one main-folder session, worktree off. Never start a second one: message the one that runs.
+- **Setup work** that never touches Studio may run in its own worktree session on a `setup/` branch (https://code.claude.com/docs/en/best-practices, "Run sessions in parallel"). The game session merges it between tasks with `git merge --no-ff`.
+- Hooks and settings take effect only once merged into the main folder's branch (https://code.claude.com/docs/en/worktrees).
+- `.claude/hooks/session-place.py` tells each session which kind it is, and refuses game edits and Studio changes from a worktree.
+
 ## Files
 
 - **No big files.** No file in `src/`, `tools/`, `scripts/`, `docs/`, `.claude/` or `work/` goes over 1000 lines. Split a file near the limit by topic, listed in its folder's index. `.claude/hooks/file-size.py` warns at 900 on every edit and sends the edit back over 1000.

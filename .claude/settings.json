@@ -126,6 +126,15 @@
 						"timeout": 10
 					}
 				]
+			},
+			{
+				"matcher": "startup|resume|compact",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-place.py"
+					}
+				]
 			}
 		],
 		"PreToolUse": [
@@ -176,6 +185,16 @@
 						"type": "command",
 						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/luau-paren-line.py",
 							"onFailure": "block"
+					}
+				]
+			},
+			{
+				"matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__Roblox_Studio__.*|mcp__ccd_session__start_session",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-place.py",
+						"onFailure": "block"
 					}
 				]
 			}
