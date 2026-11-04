@@ -8,3 +8,4 @@
 - A full-run step line holding "Pass" fails job-check if it has a quote mark or the words line/scan/print: put test names on the next line, without "Pass" (Task 6a, 2026-11-04).
 - job-check --handoff reads prose: "room"/"body fits" asks for StartCheck, the word "Play" asks for a session hold; name `PathCheck.roomToStand` and avoid "Play" in non-Play cards.
 - job-check --handoff treats a heading that says "Step N" (even in brackets) as a step needing its own Stands on; refer to old steps by what they did ("the trial").
+- job-check: "nearest" in a card reads as an unnamed pick; a full-run pass line may name only spec files that already exist.
