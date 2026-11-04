@@ -38,6 +38,7 @@ GUIDES = [
     (re.compile(r"(^|/)\.claude/skills/.+/SKILL\.md$"), "https://code.claude.com/docs/en/skills", 500),
     (re.compile(r"(^|/)\.claude/skills/"), "https://code.claude.com/docs/en/skills", None),
     (re.compile(r"(^|/)\.claude/agents/"), f"https://code.claude.com/docs/en/sub-agents and the agent's model page {MODEL_GUIDES}", None),
+    (re.compile(r"(^|/)\.claude/agent-memory/"), "https://code.claude.com/docs/en/sub-agents (persistent memory)", None),
     (re.compile(r"(^|/)\.claude/hooks/"), "https://code.claude.com/docs/en/hooks", None),
     (re.compile(r"(^|/)\.claude/commands/"), "https://code.claude.com/docs/en/skills", None),
     (re.compile(r"(^|/)\.claude/settings(\.local)?\.json$"), "https://code.claude.com/docs/en/settings", None),
