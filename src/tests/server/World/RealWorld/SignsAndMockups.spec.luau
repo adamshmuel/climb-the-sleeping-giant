@@ -383,6 +383,48 @@ describe("the real world, no mockup avatar stands in a player's way", function()
 		table.sort(without)
 		expect(without).toEqual({})
 	end)
+
+	-- Task 6c: tools/world/36-mockups-to-library.luau moves the ways-up mockups out of the Workspace. Every lookup is a
+	-- direct child, because ArtLibrary.MockupAvatars also holds a folder called Mockup_WaysUp (the avatar only).
+	it("the ways-up mockups wait in ServerStorage.ArtLibrary, none left in the world", function()
+		local library = game:GetService("ServerStorage"):FindFirstChild("ArtLibrary")
+		expect(library).never.toBeNil()
+
+		local function folderIn(parent: Instance?, name: string): Folder?
+			local child = if parent then parent:FindFirstChild(name) else nil
+			if child and child:IsA("Folder") then
+				return child
+			end
+			return nil
+		end
+
+		local problems: { string } = {}
+		local libraryNests = folderIn(library, "Mockup_Nests")
+		if not folderIn(library, "Mockup_WaysUp") then
+			table.insert(problems, "missing ArtLibrary.Mockup_WaysUp")
+		end
+		if not folderIn(libraryNests, "LapBuild_Designer") then
+			table.insert(problems, "missing ArtLibrary.Mockup_Nests.LapBuild_Designer")
+		end
+		local rampBuild = folderIn(libraryNests, "RampBuild_CodeLead")
+		if not rampBuild then
+			table.insert(problems, "missing ArtLibrary.Mockup_Nests.RampBuild_CodeLead")
+		elseif typeof(rampBuild:GetAttribute("LeftStations")) ~= "string" then
+			table.insert(problems, "RampBuild_CodeLead lost its LeftStations attribute")
+		end
+
+		local worldNests = Workspace:FindFirstChild("Mockup_Nests")
+		if Workspace:FindFirstChild("Mockup_WaysUp") then
+			table.insert(problems, "still in Workspace: Mockup_WaysUp")
+		end
+		if worldNests and worldNests:FindFirstChild("LapBuild_Designer") then
+			table.insert(problems, "still in Workspace: Mockup_Nests.LapBuild_Designer")
+		end
+		if worldNests and worldNests:FindFirstChild("RampBuild_CodeLead") then
+			table.insert(problems, "still in Workspace: Mockup_Nests.RampBuild_CodeLead")
+		end
+		expect(problems).toEqual({})
+	end)
 end)
 
 -- The 85% warning's world pieces (V2 new-player safety, Task 7). tools/world/12-warning85.luau moves designer's tested

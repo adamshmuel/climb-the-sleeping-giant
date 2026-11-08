@@ -45,10 +45,8 @@ local function run4a(): string
 	local surfaces = if world ~= nil then world:FindFirstChild("WalkSurfaces") else nil
 	local giant = if world ~= nil then world:FindFirstChild("Giant") else nil
 	local mockups = Workspace:FindFirstChild("Mockup_WaysUp")
-	if surfaces == nil or giant == nil or mockups == nil then
-		error(
-			"nothing was changed. Workspace.World.WalkSurfaces, Workspace.World.Giant or Workspace.Mockup_WaysUp is missing"
-		)
+	if surfaces == nil or giant == nil then
+		error("nothing was changed. Workspace.World.WalkSurfaces or Workspace.World.Giant is missing")
 	end
 	local beard = surfaces:FindFirstChild("BeardLadder")
 	local beardClimb = if beard ~= nil then beard:FindFirstChild("Climb") else nil
@@ -66,6 +64,9 @@ local function run4a(): string
 		return "already done: both boot ladders are in WalkSurfaces"
 	elseif existing ~= 0 then
 		error("nothing was changed. only one boot ladder is in WalkSurfaces, expected 0 or 2")
+	end
+	if mockups == nil then
+		error("nothing was changed. Workspace.Mockup_WaysUp is missing")
 	end
 
 	-- Checks before any change.
