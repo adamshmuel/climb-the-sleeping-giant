@@ -9,3 +9,4 @@
 - A job that runs a spec's body in Edit with a Jest stub (to read rows the fetch cuts) is budgeted as the spec's length plus 40 lines and 14 calls (6a2 broke job-check's 300 lines and went 2 calls over, 2026-11-04).
 - A part placed by an earlier task to hide a pocket (R-141 bush, stuck safety Task 48) can show as a sink row: grep tools/world for its position before planning a move (5b, 2026-11-04).
 - A move that shifts a ladder's top also shifts every spec rule measured from that end (5b2: Rule 37's nest distance went 3.9 to 5.5): grep the spec and tests for distances from the moved end before writing the card (2026-11-04).
+- A "decided" re-fit in a ruling is not "built": before writing a card that stands on art, read the art in Edit (one call). p5t13b: designer's strap re-fit was priced, not built (2026-11-08).

@@ -15,3 +15,7 @@
 - A walk-map count for 'closed' or 'no route' uses the Play walk-off slope (78°, spec 5 2026-10-20), not the 70° Humanoid limit; 6c's first count used 70 (2026-11-08).
 - A height-gap check (Rule 82) must include walk parts the same task builds (cuff ledges at 32.3 were missed by a y>=36 filter) and jump-only tops (ray scan, solid only), not just a walk-link flood from the meadow (2026-11-08).
 - A walk piece copied from mockup art gets a two-ray end check (cloth under its top-end middle, low end touches the ledge) before the task that builds on it; the cuff strap sat 2.2 out for 3 weeks (2026-11-08).
+- On a main character, spec a walk piece and its art as one shape that lies on him, from a full both-sides ray grid of the footprint; one level band for walk and look missed 3 times on the cuff tab (2026-11-08).
+- Before ruling an edge fix on a walk piece, ring every walk piece's whole outline (flaps and tabs too) with rays 0.3 out, both sides; the 2-curb picks missed the flap's own uphill edge (2026-11-08).
+- Edge-drop rays start well above the edge (20 up), never 0.3 up: beside the cuff strap the arm sits above the edge, so a low ray starts inside it and reads a fake 26 drop; that error put a curb on a safe edge and shrank the door to 1 stud vs a 2-wide body (2026-11-08).
+- A Rule 22 rare-spot claim is checked against condition 2's full need list (walk pieces and Rule 79's walk area, cuff ledges included), not PlayerNeeds.fromWorld's nearest point; a spot under BackLedge_Right was offered as 38.6 from needs while 5 under the ledge (2026-11-08).

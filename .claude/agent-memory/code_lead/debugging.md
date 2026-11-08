@@ -5,3 +5,4 @@
 - A moved part is put back with the math of the world script that built it (for example `tools/world/01-gardens.luau`), never a guessed rule such as a mirror.
 - Before naming a world script as the fix for a red test, list the attribute and property names the test checks and confirm the script writes those exact names. Read the test and count every kind of object it checks (parts, effects, avatars) in one read-only call.
 - A red on one side of a mirrored build: check the scan grid is mirrored too (2-stud grid origin x ≡ 1.2 mod 2 is not); build a small map at the mirrored columns before blaming the world (6a, 2026-11-04).
+- A test report keeps only 150 characters of each failure message (BackgroundRun WHY_LIMIT), so a narrow run never shows a whole stuck list: run `work/p5t13b/stuck-dump.luau` (deferred scan, then its fetch) to get every unlisted spot with its roof (p5t13b, 2026-11-08).

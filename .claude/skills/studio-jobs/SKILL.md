@@ -28,6 +28,7 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - The job writes its expected end time into `shared` at the start, one short line after every try, a heartbeat count, and a `done` flag.
 - Wait until the job's own end time (`python3 -c "import time; time.sleep(N)"`; a hook blocks Bash `sleep`), then fetch once. The fetch waits inside for `done` for up to 30 s. A fetch that shows no progress: stop and report the last line.
 - A fetch reads the saved state with a short call and the same `shared` name its job writes. It never pastes the job again.
+- A test-run report keeps only about 150 characters of each failure message. To read a long message (for example every stuck spot), run the check's own logic in a dump job that saves the whole list, like `work/p5t13b/stuck-dump.luau` (p5t13b, 2026-11-08).
 - Take shots inside the job's own hold, not after it.
 - Keep each job small: one spot or one kind of walk. Store anything slow to build (a walk map, a list) in `shared` before using it.
 - Play records go to the server before Play stops. The fetch writes the whole list to a file in `work/` and checks every label is there.
