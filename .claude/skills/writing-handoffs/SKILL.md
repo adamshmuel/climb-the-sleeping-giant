@@ -50,6 +50,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 
 ## Before the builder starts
 
+- **Files line checked.** Before writing a card from a plan's Files line, check that each file exists and each planned change is still needed. A file a later task creates, or a change already met, is rewritten on the card with the reason (p5t14, 2026-11-08).
 - **World table.** Every world name, position and part kind the handoff relies on is in one table. `code_lead` checks it against the running world in one read-only Studio call (a `runner` job) and marks each row "exists in Edit", "made at Play by <script>" (the Play job's Server paste picks it; an Edit dry run reports it "not found (made at Play)" and doesn't fail), or "built by <plan and task>; spec positions used" (the spec's numbers, never a search). For a part whose look a script copies, the check also prints its ClassName, Shape, Size and turn. A Cylinder's length is its X axis.
 - **A re-run or a fix is a handoff too:** no paster starts until every name in every job file is checked and the state note says "names checked".
 - **Names check** measures and prints. It stops only on a missing part or module, never on an expected value. It runs `nearSpot` on every start row, and the row says "open in Edit" or "held N in <task> dry start".
