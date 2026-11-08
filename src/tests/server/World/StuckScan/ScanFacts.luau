@@ -3,6 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
+local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Collisions = require(ServerScriptService.Server.Players.Collisions)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
@@ -269,7 +270,7 @@ end
 -- Built once, on first use (it takes a few seconds).
 local WALK_AREA_PIECES: { [string]: boolean } = { body_and_cushion = true, left_arm = true, right_arm = true }
 
-local WALK_AREA_MAX_DEGREES = 65
+local WALK_AREA_MAX_DEGREES = WalkAreaCheck.SEAM_DEGREES
 
 local SEED_STEPS = 2 -- a free spot within this many grid steps of a place players need starts the reach search
 

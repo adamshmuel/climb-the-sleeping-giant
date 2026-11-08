@@ -2,10 +2,14 @@
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Helpers = require(script.Parent.Helpers)
+local WalkAreaFacts = require(ServerStorage.Tests.server.World.StuckScan.WalkAreaFacts)
+local artFolder = WalkAreaFacts.artFolder
+local visibleArt = WalkAreaFacts.visibleArt
 
 -- Plan 5 (docs/plans/v2/egg-nests-and-climbing.md) Task 13: the solid, invisible cuff straps and ledges in World.CuffWalk
 -- and the two Belly boxes round the cuffs. Spec 5, section 5: "Cuff strap and ledge (Epic)" and "Belly zone around each
@@ -183,49 +187,6 @@ end
 -- A ray straight down onto the parts in `params` (his cloth), from high above.
 local function cloth(params: RaycastParams, x: number, z: number): RaycastResult?
 	return Workspace:Raycast(Vector3.new(x, RAY_ABOVE, z), Vector3.new(0, -RAY_LENGTH, 0), params)
-end
-
-local function artFolder(): Instance
-	local nests = Workspace:FindFirstChild("Mockup_Nests")
-	expect(nests).never.toBeNil()
-	local art = (nests :: Instance):FindFirstChild("Art")
-	expect(art).never.toBeNil()
-	return art :: Instance
-end
-
--- The art parts a top is measured against: the visible strap (Strap, StrapFoot...) and the visible pocket parts of one
--- side, never the walk pieces (StrapWalk, LedgeWalk*) and never the stitches.
-local function visibleArt(side: string): { BasePart }
-	local models: { Instance } = {}
-	local straps = artFolder():FindFirstChild("Straps")
-	local pockets = artFolder():FindFirstChild("Pockets")
-	expect(straps).never.toBeNil()
-	expect(pockets).never.toBeNil()
-	for _, found in
-		{
-			(straps :: Instance):FindFirstChild(`CuffStrap_{side}`),
-			(pockets :: Instance):FindFirstChild(`CuffPocketFront_{side}`),
-			(pockets :: Instance):FindFirstChild(`CuffPocketBack_{side}`),
-		}
-	do
-		expect(found).never.toBeNil()
-		table.insert(models, found :: Instance)
-	end
-	local parts: { BasePart } = {}
-	for _, model in models do
-		for _, child in model:GetChildren() do
-			local name = child.Name
-			local isWalk = name == "StrapWalk"
-				or name == "CuffTabWalk"
-				or name == "StrapFootWalk"
-				or string.sub(name, 1, 9) == "LedgeWalk"
-				or string.find(name, "Curb", 1, true) ~= nil
-			if child:IsA("BasePart") and not isWalk and child.Name ~= "Stitch" then
-				table.insert(parts, child)
-			end
-		end
-	end
-	return parts
 end
 
 local function allPieces(): { BasePart }

@@ -10,3 +10,4 @@
 - A part placed by an earlier task to hide a pocket (R-141 bush, stuck safety Task 48) can show as a sink row: grep tools/world for its position before planning a move (5b, 2026-11-04).
 - A move that shifts a ladder's top also shifts every spec rule measured from that end (5b2: Rule 37's nest distance went 3.9 to 5.5): grep the spec and tests for distances from the moved end before writing the card (2026-11-04).
 - A "decided" re-fit in a ruling is not "built": before writing a card that stands on art, read the art in Edit (one call). p5t13b: designer's strap re-fit was priced, not built (2026-11-08).
+- Before writing a card from a plan's Files line, check each file exists and each "change" is still needed: p5 Task 14 named `WalkMap.spec.luau` (made later by plan 3 Task 9; the real map is in `StuckScan/OnTheGiant.spec.luau`) and a PathCheck area change already met (x ±68.8 measured), 2026-11-08.

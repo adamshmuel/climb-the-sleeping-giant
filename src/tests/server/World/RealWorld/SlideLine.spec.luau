@@ -1,6 +1,8 @@
 --!strict
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local ServerScriptService = game:GetService("ServerScriptService")
+local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
 local Helpers = require(script.Parent.Helpers)
 local bodyMesh = Helpers.bodyMesh
 local bodySizeSlopeAt = Helpers.bodySizeSlopeAt
@@ -20,7 +22,7 @@ describe("the real world, his slide line is the seam", function()
 	-- Cloth up to this steep is cloth a character still walks on in Play. The steepest body-size slope a character still
 	-- walked on in Play (stuck safety Task 21 round 3, 2026-10-20): the highest slope at the last walking frame before
 	-- the slip, over the six side walk-offs, rounded up (77.6 became 78). Plan 5's steep layer lists the places up to here.
-	local SLIP_DEGREES = 78
+	local SLIP_DEGREES = WalkAreaCheck.SLIP_DEGREES
 
 	-- The style guide's seam line (docs/design/v2/style-guide.md, "The seam: where walking ends", the table "Along his
 	-- side"): (x, y, z) of each point on his left and on his right, from z -38 to z -14.

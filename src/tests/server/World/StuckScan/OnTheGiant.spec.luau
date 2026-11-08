@@ -31,6 +31,7 @@ local rareFacts = ScanFacts.rareFacts
 local PillowWayUp = require(script.Parent.PillowWayUp)
 local closedFacts = ScanFacts.closedFacts
 local WalkFacts = require(script.Parent.WalkFacts)
+local WalkAreaFacts = require(script.Parent.WalkAreaFacts)
 local walkTowardCave = WalkFacts.walkTowardCave
 local ladderEndSpots = WalkFacts.ladderEndSpots
 local hasClimbLink = WalkFacts.hasClimbLink
@@ -831,5 +832,18 @@ describe("the stuck scan on the real world", function()
 			end,
 		}
 		expect(PillowWayUp.problems(map :: any, rules)).toEqual({})
+	end, SCAN_TIMEOUT_MS)
+
+	-- Plan 5 Task 14 (spec 5 "Walk anywhere down to the seam"): the scan area holds both arms out to x 64 each side. The
+	-- area is the giant's box plus Config.Stuck.ScanMargin, so no change to scanArea is needed.
+	it("the scan area reaches both arms, out to x -64 and x 64", function()
+		expect(area.min.X <= -64).toBe(true)
+		expect(area.max.X >= 64).toBe(true)
+	end)
+
+	-- Plan 5 Task 14: red until plan 5 Tasks 15 and 16 (steep layer, seam). The message counts each kind of problem.
+	it("the walk area passes the walk-area check", function()
+		local found, areaSpots = WalkAreaFacts.problems(world, map)
+		expect(WalkAreaFacts.message(found, areaSpots)).toBe(WalkAreaFacts.message({}, areaSpots))
 	end, SCAN_TIMEOUT_MS)
 end)
