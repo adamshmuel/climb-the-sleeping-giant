@@ -63,37 +63,6 @@ describe("the real world, zones and extras", function()
 		end
 	end)
 
-	-- Stuck safety Task 24, Ruling 5: a player standing on a crossing ramp is in the Boots zone, as on V1's path there
-	-- (the ankle ramp, the knee ramp and the steep-band ramp all stand on his left leg below Rare egg 1).
-	it("a player standing on each crossing ramp is in the Boots zone", function()
-		local Workspace = game:GetService("Workspace")
-		local world, locate = locator()
-		local walk = (world :: any).WalkSurfaces :: Instance
-		local found: { string } = {}
-		for _, rampName in { "CrossingRamp_Ankle", "CrossingRamp_Knee" } do
-			local ramp = walk:FindFirstChild(rampName)
-			expect({ ramp = rampName, exists = ramp ~= nil }).toEqual({ ramp = rampName, exists = true })
-		end
-		local wrong: { string } = {}
-		for _, ramp in walk:GetChildren() do
-			if ramp:IsA("BasePart") and string.match(ramp.Name, "^CrossingRamp_") then
-				table.insert(found, ramp.Name)
-				-- the middle of its top, then a player's root height above it
-				local params = RaycastParams.new()
-				params.IncludeInstances = { ramp }
-				params.RespectCanCollide = false
-				local top = Workspace:Raycast(ramp.Position + Vector3.new(0, 20, 0), Vector3.new(0, -40, 0), params)
-				expect({ ramp = ramp.Name, topFound = top ~= nil }).toEqual({ ramp = ramp.Name, topFound = true })
-				local zone = locate((top :: RaycastResult).Position + Vector3.new(0, 3, 0)).zone
-				if zone ~= "Boots" then
-					table.insert(wrong, `{ramp.Name}: {zone}`)
-				end
-			end
-		end
-		expect(wrong).toEqual({})
-		expect(#found >= 2).toBe(true)
-	end)
-
 	-- Check B3 (fair for every garden): the walk from a garden to the ramp's foot must be silent. A zone box over a
 	-- meadow path would make one garden's walk louder than another's. The first place along a link that is not in
 	-- the Meadow zone is reported (a garden counts as Meadow here, because a garden always reports the Meadow).
@@ -149,9 +118,9 @@ describe("the real world, zones and extras", function()
 	-- The count that tools/world/15-real-shape.luau section 2 reported it leaves (2026-10-20): the step piece (Boots_Walk 1),
 	-- CrossingRamp_Ankle and CrossingRamp_Knee, the 2 ramp planks, Nose_Walk 1 and Nightcap_Walk 3 (9 in all).
 	-- Stuck safety Task 25 (plan section 2b of tools/world/15-real-shape.luau) took away 4 of them: Nose_Walk and the 3
-	-- Nightcap_Walk pieces. The 5 left are the 2 ramp planks (Ramp_Walk), the step piece (Boots_Walk 1), CrossingRamp_Ankle
-	-- and CrossingRamp_Knee.
-	local ROUTE_SURFACE_COUNT = 5
+	-- Nightcap_Walk pieces. Plan 3 Task 6b took away the 2 crossing ramps (CrossingRamp_Ankle and CrossingRamp_Knee). The 3
+	-- left are the 2 ramp planks (Ramp_Walk) and the step piece (Boots_Walk 1).
+	local ROUTE_SURFACE_COUNT = 3
 
 	it("no walk surface on the route is steeper than 60 degrees", function()
 		local walk = (realWorld() :: any).WalkSurfaces :: Instance
@@ -164,10 +133,7 @@ describe("the real world, zones and extras", function()
 			table.insert(surfaces, planks :: BasePart)
 		end
 		for _, piece in walk:GetChildren() do
-			if
-				piece:IsA("BasePart")
-				and (string.match(piece.Name, "_Walk$") or string.match(piece.Name, "^CrossingRamp_"))
-			then
+			if piece:IsA("BasePart") and string.match(piece.Name, "_Walk$") then
 				table.insert(surfaces, piece)
 			end
 		end

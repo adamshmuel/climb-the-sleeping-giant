@@ -45,6 +45,12 @@ describe("the real world, no part sinks into a main character", function()
 		["Workspace.World.WalkSurfaces.LapPlank_Left.Deck"] = { axis = 1, sign = -1, limit = 0.3 },
 	}
 
+	-- By full path: every face of one part, up to its own limit.
+	local ACCEPTED_PARTS: { [string]: number } = {
+		-- ruling F2: 0.3 studs on any face; measured X+ 0.28 (9 of 9 points), Z- 0.115 (3 of 9)
+		["Workspace.World.WalkSurfaces.PlankEnd_Right.Board_1"] = 0.3,
+	}
+
 	local function isAccepted(part: BasePart): boolean
 		local path = part:GetFullName()
 		for _, pattern in ACCEPTED_PATHS do
@@ -75,7 +81,11 @@ describe("the real world, no part sinks into a main character", function()
 		local failure: Failure =
 			{ path = part:GetFullName(), position = part.Position, worst = 0, failing = 0, total = 0 }
 		local acceptedFace = ACCEPTED_FACES[failure.path]
+		local partLimit = ACCEPTED_PARTS[failure.path]
 		for _, face in SinkDepth.faceDepths(part.CFrame, part.Size, characters) do
+			if partLimit ~= nil and face.worst <= partLimit then
+				continue
+			end
 			if
 				acceptedFace ~= nil
 				and face.axis == acceptedFace.axis

@@ -10,3 +10,4 @@
 - A climb that lets go at the same height in every try: compare the end x with the climbable part's x range first. The cap ladder climbs only on its 2-stud truss; its Look rungs are 5.2 wide (6a3, 2026-11-04).
 - SunkParts 3x3 face points miss sinks on long thin parts: the 34-stud boot rails showed 0 rows but dense points (every 0.85 along) sank 0.70/1.10, rungs 1.00 not 0.74. Price a sink fix from a dense read-only measure, and give long parts a dense test (5b, 2026-11-04).
 - Before ruling a trim or move on a walk surface, grep `src/tests` and the spec for the part name: 5b1 cut a plank to 8.6 (Rule 36 says 9) and the landing off its pinned 11.2 x 7 (2026-11-04).
+- Before closing a gap on one side, measure the mirror side and the whole part: 6b's "left gap under the plank end" was the same on the right, and a body fit under both planks along their whole length (PathCheck.roomToStand, 2026-11-04).

@@ -10,3 +10,5 @@
 - A measuring task's pass list ends on the last layer its "Stands on" can change; 6a3 ran past 6a2 up to the cap and grew 3 rounds.
 - Before ruling a moved way-up foot, check Rule 43's 5-stud landing-spot gap (spot 7 sat exactly at 5.0 from the right boot ladder) and keep mirrored ladders mirrored (move both by the larger side).
 - A ladder or plank move changes every distance a spec quotes from its ends: grep the spec for the old figure when ruling the move, and judge it against the grab reach (8 studs), not a bare number.
+- A pocket under a walk part is scenery: close it whole and mirrored when the cost is the same; keep the fill inside the part's outline and re-check nearby grab prompts.
+- A 'nobody in' walk names every open edge it must press (both long edges, both ends, per side) before it runs; 6b's first walk missed the lap-end knee edge (2026-11-08).

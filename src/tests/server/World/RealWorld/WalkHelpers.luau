@@ -95,16 +95,6 @@ local function walkPieces(): { BasePart }
 	return pieces
 end
 
-local function crossingRamps(): { BasePart }
-	local ramps: { BasePart } = {}
-	for _, piece in walkFolder():GetChildren() do
-		if piece:IsA("BasePart") and string.match(piece.Name, "^CrossingRamp_") then
-			table.insert(ramps, piece)
-		end
-	end
-	return ramps
-end
-
 -- The ladder's centre line is its truss, `Climb`: the longest side of the truss runs up the ladder.
 export type LadderAxis = { foot: Vector3, top: Vector3, up: Vector3, flat: Vector3, back: Vector3 }
 
@@ -191,7 +181,6 @@ return {
 	bodyInstances = bodyInstances,
 	bodyParams = bodyParams,
 	bodySlopeAt = bodySlopeAt,
-	crossingRamps = crossingRamps,
 	ladderAxis = ladderAxis,
 	ladderParts = ladderParts,
 	longSide = longSide,

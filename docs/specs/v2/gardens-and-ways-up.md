@@ -203,6 +203,7 @@ Changed: off-route edges are tested by the bot walk (Rule 24: A bot walks every 
   3. a player on the plank still sees the grab prompts for the knee pocket and the lap fold (spec 5);
   4. the wake bounce-off and the float of Rule 12 (Waking bounces everyone off) never catch on a guard;
   5. the camera doesn't snap in against a guard (proven in Play).
+- **Nothing under the planks** *(added 2026-11-04, Task 6b, product; reworded the same day after the step-back)*: no player may get in under either lap plank, from the meadow or from a boot top, with a walk or a jump. This is checked by walking with the player's controls on both sides. The space under the planks is scenery, so it gets the cheapest fix: if nobody gets in, nothing is added under them. If anybody gets in on either side, both planks get invisible side skirts from the deck down to his skin, mirrored, and nothing fills the inside. Each boot-end face where dark skin shows is hidden with plank wood, mirrored (designer). Condition 3 above still holds.
 - A jump into a guard thuds +20, like any jump on him (Rule 8: Steps make noise).
 - Both lap planks, the landing and the apron count as the Boots zone.
 

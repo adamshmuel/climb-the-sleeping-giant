@@ -32,7 +32,6 @@ local NESTS: { Nest } = {
 local LADDER_NAMES = { "BeardLadder", "CapLadder" }
 local LADDER_TRUSS = "Climb"
 local WALK_PIECE_SUFFIX = "_Walk" -- Boots_Walk, RightBoots_Walk, Belly_Walk, Ramp_Walk: the invisible walk pieces
-local WALK_PIECE_RAMP_PREFIX = "CrossingRamp" -- the crossing ramps are walk pieces too
 -- The seam's stitch parts are World.Seam (plan 5, Task 11). Spec 5's steep invisible layer has no folder name in plan 5
 -- yet, so STEEP_LAYER_FOLDER is a placeholder: while no such folder exists in the world, nothing is checked for it.
 local SEAM_FOLDER = "Seam"
@@ -178,7 +177,6 @@ function PlayerNeeds.build(
 				and (
 					descendant.Name == LADDER_TRUSS
 					or string.sub(descendant.Name, -#WALK_PIECE_SUFFIX) == WALK_PIECE_SUFFIX
-					or string.sub(descendant.Name, 1, #WALK_PIECE_RAMP_PREFIX) == WALK_PIECE_RAMP_PREFIX
 				)
 			then
 				table.insert(needs, PlayerNeeds.boxNeed(`walk piece {descendant.Name}`, descendant))
