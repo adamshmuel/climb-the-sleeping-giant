@@ -1,5 +1,19 @@
 # Plan: Egg nests and the walk-anywhere belly (V2, spec 5)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [What changes, in short](#what-changes-in-short)
+- [Already built elsewhere, not built again here](#already-built-elsewhere-not-built-again-here)
+- [Decisions for the build](#decisions-for-the-build)
+- [Tasks](#tasks)
+  - [Part 1: Slots, nests and refills (code)](#part-1-slots-nests-and-refills-code) (Tasks 1 to 11)
+  - [Part 2: World prep](#part-2-world-prep) (Tasks 12 to 17)
+  - [Part 3: Checks on the walk map](#part-3-checks-on-the-walk-map) (Tasks 18, 19, 20)
+  - [Part 4: A whole session, the bot walk and the Play proof](#part-4-a-whole-session-the-bot-walk-and-the-play-proof) (Tasks 21 to 26)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+- [Product's check of the build decisions](#products-check-of-the-build-decisions)
+- [For designer to confirm](#for-designer-to-confirm)
+
 **Status: written** (2026-10-19). Not started. It is built after plan 4, because its checks run on plan 2's walk map, plan 3's ways up and plan 4's scores. Nothing in it waits for product: product's answers to code_lead #1 and #2 are in `docs/specs/v2/research/decisions-plans.md`. Four build decisions below were new; product checked them the same day (`decisions-plans.md`, "product: check of plan 5's build decisions"), and this plan now follows that check ("Product's check of the build decisions", at the end).
 
 How `docs/specs/v2/egg-nests-and-climbing.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`; the shared walk check is in its section 9.
@@ -193,6 +207,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   6. The belly pocket is at least 6 studs from Rare egg 1; the lap fold at least 6 from every nest; each side has 2 Rare nests at least 6 apart.
   7. No V1 spot and no glow ring is left; every nest has a `NestName`.
 - Done when: the tests pass, the second run says "already done", and every older test that named V1's spots is listed in the report with what replaced it. The place has unsaved world changes (Adam saves it).
+- **Turns green here:** plan 3 (`gardens-and-ways-up.md`) Task 5's accepted red in `EggSpots.spec` "no egg stands inside a prop": `EggSpot_Uncommon_2` touches `LapPlank_Left.Deck` and `EggSpot_Uncommon_4` touches `LapPlank_Right.Deck`. Those V1 spots are removed here (test 7); the new inner boot toe nests (±19.5, 30.5, -64.5) sit 5 studs south of each lap plank deck's edge (z -59.5, measured 2026-11-03), and `EggSpots.spec` "no egg stands inside a prop" runs on the nests as before.
 
 **Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes**
 - Stands on: plan 3's (gardens and ways up) Tasks 4a, 5 and 6 (the boot ladders, the belly ramps and his skin, and their climb), his arm at rest (plan 6 keeps it), the cuff ridge's measured check (below), and the reach check just before this task, from plan 3's pieces (build order step 3, `docs/plans/v2/index.md`).
@@ -283,14 +298,16 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 3: Checks on the walk map
 
 **Task 18: No new way onto the belly**
+- Stands on: plan 3 Task 6 (belly ramps, ramp edge guards, skin closures), plan 3 Task 10 (`WaysUpCheck`, the check's home), this plan's Task 12 (the 38 nests, for the egg limit) and Tasks 13, 14, 15 and 16 (cuff straps, walk-area check, walk layer with Rule 82's fixes 1 to 3, the seam), and product's jump-check limits ruling of 2026-10-28 (decided). Build order step 7b. Plan 3 Task 5's Rule 82 re-check merged here (product's ruling, 2026-11-03): no separate run anywhere else, and stuck safety's Gate 4 proof of Rule 82 comes from this task.
 - Spec rules: Rule 82 (No new way onto the belly), all three points, and spec 3's Rule 45 (One way onto the belly) as Rule 82 (No new way onto the belly) widens it. Section 5: "Seam height", "Climbable-part height". Story E's first case. Section 8: "A player on the side pad jumps at his cuff".
 - Files: `src/server/World/WaysUpCheck.luau` (plan 3, Task 10), `src/tests/server/World/WaysUpCheck.spec.luau`, `WalkMap.spec.luau`.
-- What it adds, from every jump-surface spot (the meadow round him, the boot tops, lap planks, the lap landing's guarded edges, the tops of invisible guards, and the tops of the cave skirt (`World.CaveSkirt`, stuck safety Task 22; product's condition for allowing the reachable step by the ledge)), with the jump reach in "Decisions":
+- What it adds, from every jump-surface spot (the meadow round him, the boot tops, lap planks, the lap landing's guarded edges, the tops of invisible guards (every family by name: the 11 slide guards in `World.WalkSurfaces.SlideGuards`, the forehead plates `ForeheadGuard`, plan 3 Task 5's rail guards `RailGuard_Left` / `_Right` and its landing, apron and end guards, plan 3 Task 6's ramp edge guards and skin closures), and the tops of the cave skirt (`World.CaveSkirt`, stuck safety Task 22; product's condition for allowing the reachable step by the ledge)), with the jump reach in "Decisions":
   - every walk-area spot within jump reach sideways is at least 12 studs above that jump surface, the rounded end of each arm at cuff points 4 and 5 included (product, stuck safety Task 21 round 3);
   - every climbable part (every `TrussPart`) other than the two boot ladders and the beard and cap ladders has its lowest point at least 15 studs above every jump surface within reach; and there is none on him today;
   - no nest reached through the lap landing is within 8 studs of the body anywhere in a jump's reach.
   - The run fails naming the jump surface and the spot.
-- Failing tests first (fake worlds): a walk shelf 10 studs above a pad and 4 across fails; 13 studs above passes; a stray truss 12 studs above a pad fails; a nest 7 studs from a jump's reach fails.
+- Failing tests first (fake worlds), (a) first: the jump part of stuck safety Task 28's jump-1b check is the starting source for the jump part of `WaysUpCheck`, never a second module in `tools/checks/`; names come in from the job. Then: a walk shelf 10 studs above a pad and 4 across fails; 13 studs above passes; a stray truss 12 studs above a pad fails; a nest 7 studs from a jump's reach fails.
+- Then (b): the check runs on the real world. If stuck safety Task 28's jump check never finished, it runs in full here.
 - Done when: the tests pass on the real world.
 
 **Task 19: Every nest scored and ranked**
