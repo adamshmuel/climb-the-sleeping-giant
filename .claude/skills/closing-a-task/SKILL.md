@@ -34,7 +34,7 @@ Ask in one line: what slowed this task down, and could a hook, a rule, a skill o
 
 - **When:** `git.md`, "Commits".
 - What goes in: the task's tests, code, world scripts and docs together. Never a failing test, except reds the plan names as accepted.
-- A task that changed the world runs the full suite before it closes. Its accepted reds are listed from that full run, each with the later task that turns it green.
+- A task that changed the world runs the full suite before it closes. Its accepted reds are listed from that full run, each with the later task that turns it green. The planned list includes reds that a planned removal causes (for example route points left when a ramp goes).
 - **Archive the sessions this task started** once their work is committed or merged (`mcp__ccd_session_mgmt__archive_session`). Check each one's worktree with `git status` first: archiving can drop uncommitted work (https://code.claude.com/docs/en/desktop#archive-a-session).
 - Then go straight to the next task in the plan's order.
 

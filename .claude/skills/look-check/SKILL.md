@@ -15,7 +15,7 @@ Any task that changes something the player can see proves it didn't make the gam
    - each spawn view;
    - a "player's spot" row for anything players walk on or in, taken from where they stand on it and facing the way the approved mockup faces;
    each with its exact camera position and field of view, on computer and phone. It writes the list the first time a task needs it.
-2. **Before shots.** Before the first world change, take every fixed camera that shows the changed area, on computer and phone. Save them in `work/<task>/look-before/`.
+2. **Before shots.** First check that assets load: no "Authentication required" lines in the console, and one shot shows the main character textured. Shots taken while assets fail are invalid (6b, 2026-11-08). Before the first world change, take every fixed camera that shows the changed area, on computer and phone. Save them in `work/<task>/look-before/`.
 3. **After shots.** After the change, take the same shots from the same cameras into `work/<task>/look-after/`. Close-ups may be added, never instead of the fixed shots.
 4. **Designer judges side by side, inside the same task, before `code_lead` approves it.** For each pair: **same or better**, or **worse**, with the reason. One "worse" sends the change back, even if every test passes. Saving time is never a reason to accept a worse look. For a change on or beside a main character, the designer also gets `SunkParts.spec`'s rows (path, position, worst depth) with the shots, and a new row there counts as "worse".
 5. **The plan budgets it.** `code_lead` adds the before shots, after shots and the designer check to the steps and caps of every such task.
