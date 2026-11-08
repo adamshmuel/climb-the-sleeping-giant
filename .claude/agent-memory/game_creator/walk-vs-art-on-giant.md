@@ -12,3 +12,5 @@ On the giant's body, a walk piece gets the step limits and its art gets the look
 **How to apply:** when ruling on any join between a walk piece and his cloth, name the walk shape (wedge if the cloth slopes) and the art treatment (tuck under a hem) separately.
 
 Edges too (2026-11-08, 13b edges): also ring every walk piece's whole outline with rays (every 1 stud, 0.3 out, flag drops over 2), both sides. Checking only the strap's ends missed a 26-stud hidden hole under his arm on the inboard long edge.
+
+Steep feet (2026-11-08, 15a loop): a steep piece's foot is where every slide lands, so a stuck spot there is never left to the rescue. Extend with a new short fitted piece, never by stretching a flat plane over curved cloth; end a layer where the spec's player condition says, not at a list.

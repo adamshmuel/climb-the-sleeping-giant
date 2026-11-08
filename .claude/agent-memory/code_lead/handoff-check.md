@@ -15,3 +15,4 @@
 - A sync check on a test file uses `script_grep`, never `script_read`: dotted `.spec` names fail (`rojo.md`). A world change's narrow run lists every spec that names the changed parts, not only the one the task is about (5b1: SunkParts alone missed 3 WaysUp reds, 2026-11-04).
 - Narrow-run `FILTER` is a plain-text match on the spec module name: no "|" and no folder paths; budget 3 calls per spec, and leave read-only specs to the full run (5b2, 2026-11-04).
 - A full-run pass line may hold no double quotes and none of "line", "scan", "print", and no CamelCase word that isn't a spec name (`RoutePoint_` fails): name failing tests as plain words after a colon. A Stands on line that says "before Step 1" counts as standing on Step 1 (6b, 2026-11-04).
+- Any word "Play" in a card (even a split-off note) asks for the session hold: write "walk-offs" in non-Play cards (p5t15).

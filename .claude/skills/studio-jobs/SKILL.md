@@ -44,6 +44,7 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - A job a later step reuses lives in a tested module in `tools/checks/`. The short wrapper that calls it is kept in `work/`, and every re-run pastes that same file.
 - A measure that repeats a test's check calls the test's own helpers, with its spacing and pass rule.
 - Placing: each part goes in its own `pcall` with its own pass or fail.
+- A world script in `tools/` `return`s its main function; the job calls it inside `pcall` and reads the report from a `shared.<Name>Report` table, not from the console. A Studio script line never starts with `(`. <!-- 15a, 2026-11-08 -->
 - A change to what a report prints is proven in one real run, not only by unit tests.
 
 ## Checks the job runs on itself

@@ -33,6 +33,8 @@ For a ladder, truss or any other way up, also read [climbs.md](climbs.md).
 - Before a spec row, ruling or price sets numbers for a piece that sits on a main character, ray it on a 0.5 grid over its whole footprint, both sides (about 3 min). Two rays and a mirrored side missed the p5t13b cuff tab three times (2026-11-08).
 - Rays hit a mesh's simplified collision shape, not the surface drawn on screen. For a part that ends under a drawn surface, add a top-down shot with the part tinted to see how far it goes under (p5t13b, 2026-11-08).
 - Before designing a fill, map the gap on a grid over the whole area (rays down from above, then up from the skin). Find where it ends and where players get in, and size the fill to that map.
+- A "no X on Y" check casts a ray grid over Y's top and measures the height gap; a box overlap alone misses a piece that sticks up (15a pocket ledges, 2026-11-08).
+- For a crossing, ray-scan the narrowest spot first, with ladders and other climb parts left out of the ray filter. A named list of jump surfaces misses body surfaces: scan the body too.
 
 ## Size and place
 - Sizes follow the part class's own size rules (check with the `roblox-docs` skill; a TrussPart is 2 x 2 x n, n a multiple of 2). A build script that rounds a size says so, and the design table and tests change to the built size.
@@ -61,6 +63,7 @@ For a ladder, truss or any other way up, also read [climbs.md](climbs.md).
 - **Moving a prop:** grep every world script in `tools/` for parts named after it (ramps, walk patches, slide guards) and move them all with the same transform. Spots a test hard-codes near the prop move by its measured shift, not the planned one.
 - **Moving a route point,** or placing a part near one: run `PathCheck.linkProblem` on every link from it, in the names check.
 - **Building on a new footprint:** grep the footprint against every world script in `tools/` and every test in `src/tests/` that reads parts there. Put those test files in the narrow run. Write each expected red into the plan: fixed in this task, or accepted with its exact rows and the task that turns it green.
+- **Building a new folder:** grep `src/tests/` for the folder's name first. A test helper that collects every folder under a parent (like `PlayerNeeds`) may count the new one (15a steep layer, 2026-11-08).
 - **The trial call that places a part** also runs every existing test for its kind and for its folder (the folder's name test too), listed in the handoff. It scores every test that depends on the changed part, not only the red one. A new real-world test runs once, red, before placing, in the same job.
 - **Changing a part's shape:** search the tests for its names and for the old shape's directions (`Size.Z`, `LookVector`, `UpVector`, "along the ladder"). The handoff lists each test found with its old and new direction.
 

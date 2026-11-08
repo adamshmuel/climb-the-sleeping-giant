@@ -1,3 +1,3 @@
 - [Idea file layout](idea-file-layout.md) — idea / research / history split; write docs in the worktree path
 - [Step backs on measuring jobs](step-back-measuring-jobs.md) — check the job's steer and past passing Plays before calling a world gap
-- [Walk vs art on the giant](walk-vs-art-on-giant.md) — separate walk limits from look limits; ray-grid landings and ring the edges
+- [Walk vs art on the giant](walk-vs-art-on-giant.md) — separate walk limits from look limits; ray-grid landings, ring the edges, fitted pieces at steep feet
