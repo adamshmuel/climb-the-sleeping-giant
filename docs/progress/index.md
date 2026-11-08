@@ -37,9 +37,9 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Tests that are red today
 
-7 accepted reds: EggSpots, Route ×2, Zones, CrossingGuards ×2 and SunkParts. Latest full run, Task 6a2 (2026-11-04): 2936 passed, 7 failed, 0 could not run (`work/t6/full-run-6a2-r1.md`).
+5 accepted reds: Route ×2 and DrawnBody (green in plan 3 Task 8), Zones (plan 3 Task 7), EggSpots (plan 5 Task 12). Latest full run, plan 5 Task 13b (2026-11-08): 2940 passed, 5 failed, 0 could not run (`work/p5t13b/step9-full-run.md`).
 
-The stuck scan is green: 117 stuck spots, all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
+The stuck scan is green: 114 stuck spots (plan 5 Task 13b), all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
 
 "ramps on meadow props are walkable and flush" is green again (seen at Task 42's full run, 2026-10-27).
 

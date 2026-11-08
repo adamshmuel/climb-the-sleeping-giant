@@ -162,6 +162,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   3. At rest after he sleeps, every marked piece is back on its start pivot.
   4. The beam is fully see-through 0.3 s after the wake, and back to its own look 0.3 s after the arm is down.
   5. A new egg appearing on a right cuff nest while he's awake rides the arm at once.
+  6. (Real world, added 2026-11-08 at the Task 13b review) `World.CuffFill_Right` (script 22b: the invisible solid fill under `BackLedge_Right`) has `RidesRightArm`, and the same 0.01-stud ride check covers it: if it stayed still while the arm rises, an invisible block would hang over a 20-stud drop.
 - Done when: the tests pass, and in Play a test part marked `RidesRightArm`, made at runtime from a Server `execute_luau` on his right cuff, rides the arm through a wake-up and comes back to rest (screenshots from garden 7, computer and the iPhone 14). The real cuff pieces come in Tasks 12 and 13; their comparison with `view-wake-cuff-g7` and `view-phone-wake-cuff-g8` is in Task 23.
 
 **Task 10: The slide tip**
@@ -234,6 +235,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Status: can't start.
 - Covers: spec 5 "Cuff strap and ledge (Epic)" (the steps onto the strap and the ledge). Failing test first: CuffWalk test 1 (red today). Done when: test 1 green, OnTheGiant green with the 3 stuck spots under the cuff ledges gone (`work/p5t13/step2c-note.md`), script 22 re-copies both straps, and Task 13's old Steps 3-4 (one climb per side with player controls) pass.
 - For: core gameplay (the Epic nests' way down). Size: about 4 steps, 40 min, 25 Studio calls.
+- Result (2026-11-08, code_lead approved): 26 walk pieces from script 22 (flap, foot, edge curbs added by product's rulings), plus `World.CuffFill_Right` from script 22b (product ruled the slot under `BackLedge_Right` fails Rule 22 condition 2, so it is filled, not listed). Card and evidence: `work/p5t13b/card.md`.
 
 **Task 14: The walk-area check**
 - Stands on: Task 13 (the cuff straps and ledges, built), Task 13b (the straps re-fitted), plan 3's Tasks 4a, 5 and 6 (the belly ramps and skin, built), his arm at rest (build order step 3).
@@ -271,7 +273,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - **Rare stuck spots re-measured (added 2026-10-21, product's condition 2 on stuck safety's rare spots, `docs/specs/v2/research/decisions-plans.md`):**
   - **When:** once the real walk area exists, and before this plan's Gate 4.
   - **What:** the 10 rare stuck spots on StuckScan's rare-spot list (stuck safety Task 23; groups 11, 18, 20, 22, 24, 26, 29 and 32) are measured again against the real Rule 79 walk area (Walk anywhere down to the seam).
-  - **How:** the stuck scan's walk-area source is pointed at the real walk layer, then the full run is done.
+  - **How:** the stuck scan's walk-area source is pointed at the real walk layer, then the full run is done. Test first: `PlayerNeeds.fromWorld` (OnTheGiant's rare-spot condition 2) today skips the walk area and the cuff walk pieces (product, Task 13b), so it gains `World.CuffWalk` and the walk layer as needs; a fake world with a stuck spot 10 studs from a cuff ledge must fail. Measured 2026-11-08 against `World.CuffWalk`: nearest rare spots `Rare_RightArm_1` 14.1 and `Rare_G32_1` 23.0, so none is must-fix today.
   - **A spot 12 studs or less from the walk area** becomes must-fix. It comes off the list and is fixed test first, by stuck safety's rules (Rule 22: What counts as stuck), before Gate 4.
   - **Report:** each spot's distance.
 
