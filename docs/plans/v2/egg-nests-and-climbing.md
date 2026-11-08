@@ -228,8 +228,15 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   6. Every solid strap and ledge, and nothing else, has `StitchedEdge`.
 - Done when: the tests pass and the second run says "already done".
 
+**Task 13b: The cuff straps re-fitted, and the climb on each**
+- Split from Task 13 on 2026-11-08 (code_lead ruling in `work/p5t13/card.md`): the strap art sits 2.2 studs outboard of the spec's cuff top, so its top end hangs past the cuff and its low end stops 0.57 short of the ledge. Task 13 closes with CuffWalk test 1 as an accepted red, plus the OnTheGiant stuck-spots test only if every new stuck spot lies inside the cuff boxes (code_lead ruling, Step 5b).
+- Stands on: designer's re-fit of both cuff straps (asked 2026-11-08), Task 13 (built).
+- Status: can't start.
+- Covers: spec 5 "Cuff strap and ledge (Epic)" (the steps onto the strap and the ledge). Failing test first: CuffWalk test 1 (red today). Done when: test 1 green, OnTheGiant green with the 3 stuck spots under the cuff ledges gone (`work/p5t13/step2c-note.md`), script 22 re-copies both straps, and Task 13's old Steps 3-4 (one climb per side with player controls) pass.
+- For: core gameplay (the Epic nests' way down). Size: about 4 steps, 40 min, 25 Studio calls.
+
 **Task 14: The walk-area check**
-- Stands on: Task 13 (the cuff straps and ledges, built), plan 3's Tasks 4a, 5 and 6 (the belly ramps and skin, built), his arm at rest (build order step 3).
+- Stands on: Task 13 (the cuff straps and ledges, built), Task 13b (the straps re-fitted), plan 3's Tasks 4a, 5 and 6 (the belly ramps and skin, built), his arm at rest (build order step 3).
 - No world change: this task adds a check only, so it needs no reach check, backup or climb.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 79 (Walk anywhere down to the seam), Rule 80 (The seam shows where walking ends). Section 5: "Seam angle", "Seam match", "Walk surface over what you see". Section 8: "A player stands right on the seam line".

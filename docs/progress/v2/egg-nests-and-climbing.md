@@ -18,7 +18,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 10: The slide tip | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 11: Analytics for refills and slides | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 12: World prep: 38 nests | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes | ☑ done (2 accepted reds until 13b: CuffWalk test 1, OnTheGiant 3 arm spots) | builder, code_lead |
+| Egg nests and climbing (V2 spec 5) | Task 13b: The cuff straps re-fitted, and the climb on each | ☐ not started (waits on designer's re-fit) | |
 | Egg nests and climbing (V2 spec 5) | Task 14: The walk-area check | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 15: World prep: the walk layer, the steep layer and the three fixes | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 16: World prep: the seam | ☐ not started | |

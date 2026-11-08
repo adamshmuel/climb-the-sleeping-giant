@@ -126,21 +126,10 @@ local function run(): any
 	local ramp = (walk:FindFirstChild("BootRamp") :: Instance):FindFirstChild("Ramp_Walk") :: BasePart
 	makeBox("Boots_Ramp", "Boots", ramp.CFrame * CFrame.new(0, 3.8, 0), Vector3.new(ramp.Size.X + 3, 9, ramp.Size.Z))
 
-	-- BOOTS 2: the left boot top, around the Boots_Walk pieces (5 studs more each side, 4 more along).
-	local bootPieces = partsNamed(walk, "Boots_Walk")
-	if #bootPieces == 0 then
-		error("no Boots_Walk pieces found")
-	end
-	local lo, hi = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
-	for _, piece in bootPieces do
-		for _, corner in cornersOf(piece) do
-			lo = Vector3.new(math.min(lo.X, corner.X), math.min(lo.Y, corner.Y), math.min(lo.Z, corner.Z))
-			hi = Vector3.new(math.max(hi.X, corner.X), math.max(hi.Y, corner.Y), math.max(hi.Z, corner.Z))
-		end
-	end
-	lo = lo - Vector3.new(5, 6, 4)
-	hi = hi + Vector3.new(5, 8, 4)
-	makeBox("Boots_TopLeft", "Boots", CFrame.new((lo + hi) / 2), hi - lo)
+	-- BOOTS 2: the left boot top. Built once around the Boots_Walk pieces (5 studs more each side, 4 more along).
+	-- The literal below is the box as built; the Boots_Walk pieces moved since, so the sum of the pieces is stale.
+	-- Plan 5 Task 13 ruling: keep the world box as it is.
+	makeBox("Boots_TopLeft", "Boots", CFrame.new(-22.6762, 31.2034, -57.9276), Vector3.new(22.6475, 17.5862, 25.0290))
 
 	-- BOOTS 3: the right boot top, around the Uncommon egg on it (Egg_Boot2). Once that egg has moved to the art
 	-- library, the box that was made around it is already there and stays as it is.
@@ -168,33 +157,40 @@ local function run(): any
 		end
 	end
 	if #bellyPieces == 0 then
-		error("no Belly_Walk pieces found on his belly")
-	end
-	table.sort(bellyPieces, function(a, b)
-		return a.Position.Y < b.Position.Y
-	end)
-	local from, to = bellyPieces[1].Position, bellyPieces[#bellyPieces].Position
-	local frame = CFrame.lookAt(Vector3.zero, Vector3.new(to.X - from.X, 0, to.Z - from.Z).Unit)
-	local minX, maxX, minY, maxY, minZ, maxZ = math.huge, -math.huge, math.huge, -math.huge, math.huge, -math.huge
-	for _, piece in bellyPieces do
-		for _, corner in cornersOf(piece) do
-			local inFrame = frame:PointToObjectSpace(corner)
-			minX, maxX = math.min(minX, inFrame.X), math.max(maxX, inFrame.X)
-			minY, maxY = math.min(minY, inFrame.Y), math.max(maxY, inFrame.Y)
-			minZ, maxZ = math.min(minZ, inFrame.Z), math.max(maxZ, inFrame.Z)
+		-- Once the Belly_Walk pieces are gone, the box that was made around them is already there and stays as it is.
+		if zonesFolder:FindFirstChild("Belly_Path") then
+			say("Belly_Path: already done (its pieces are gone, so the box stays as it is)")
+		else
+			error("Belly_Path is missing and no Belly_Walk pieces are left on his belly, so it can't be made")
 		end
+	else
+		table.sort(bellyPieces, function(a, b)
+			return a.Position.Y < b.Position.Y
+		end)
+		local from, to = bellyPieces[1].Position, bellyPieces[#bellyPieces].Position
+		local frame = CFrame.lookAt(Vector3.zero, Vector3.new(to.X - from.X, 0, to.Z - from.Z).Unit)
+		local minX, maxX, minY, maxY, minZ, maxZ = math.huge, -math.huge, math.huge, -math.huge, math.huge, -math.huge
+		for _, piece in bellyPieces do
+			for _, corner in cornersOf(piece) do
+				local inFrame = frame:PointToObjectSpace(corner)
+				minX, maxX = math.min(minX, inFrame.X), math.max(maxX, inFrame.X)
+				minY, maxY = math.min(minY, inFrame.Y), math.max(maxY, inFrame.Y)
+				minZ, maxZ = math.min(minZ, inFrame.Z), math.max(maxZ, inFrame.Z)
+			end
+		end
+		minX, maxX, minY, maxY, minZ, maxZ = minX - 9, maxX + 9, minY - 1, maxY + 8, minZ - 2, maxZ + 2
+		makeBox(
+			"Belly_Path",
+			"Belly",
+			frame * CFrame.new((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2),
+			Vector3.new(maxX - minX, maxY - minY, maxZ - minZ)
+		)
 	end
-	minX, maxX, minY, maxY, minZ, maxZ = minX - 9, maxX + 9, minY - 1, maxY + 8, minZ - 2, maxZ + 2
-	makeBox(
-		"Belly_Path",
-		"Belly",
-		frame * CFrame.new((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2),
-		Vector3.new(maxX - minX, maxY - minY, maxZ - minZ)
-	)
 
 	-- BEARD: the beard ladder, the beard around it, and the nose pad. From the foot of the ladder
 	-- (height 66) up to just above the nose pad (107), along his beard and over the pad (art-list.md, "Walk surfaces").
-	makeBox("Beard_Ladder", "Beard", CFrame.new(0, 86.5, -12), Vector3.new(24, 41, 32))
+	-- as built; the box was raised and grown after this line was written (Plan 5 Task 13 ruling)
+	makeBox("Beard_Ladder", "Beard", CFrame.new(0.0000, 88.5000, -12.0000), Vector3.new(24.0000, 45.0000, 32.0000))
 
 	-- NIGHTCAP: the cap ladder above the nose, the path along the cap and the top of the cap (height 106 up).
 	makeBox("Nightcap_Top", "Nightcap", CFrame.new(6, 118, 13), Vector3.new(40, 24, 34))
@@ -215,6 +211,9 @@ local function run(): any
 	makeBox("Belly_FrontB", "Belly", CFrame.new(0, 39.5, -38), Vector3.new(44, 61, 4))
 	makeBox("Belly_FrontC", "Belly", CFrame.new(0, 39.5, -34), Vector3.new(52, 61, 4))
 	makeBox("Belly_FrontD", "Belly", CFrame.new(0, 39.5, -30), Vector3.new(60, 61, 4))
+	-- Both cuffs, round the straps and ledges of World.CuffWalk (plan 5 Task 13; work/p5t13/p5t13-scripts.md section B).
+	makeBox("Belly_CuffLeft", "Belly", CFrame.new(-57.5, 35, -4), Vector3.new(23, 14, 22))
+	makeBox("Belly_CuffRight", "Belly", CFrame.new(57.5, 35, -4), Vector3.new(23, 14, 22))
 	-- Beard: his head, face and beard, up to height 99 where the nightcap starts. It reaches 12 studs in front of his
 	-- face (z -26) so the steep guards standing there are inside it too.
 	makeBox("Beard_Head", "Beard", CFrame.new(0, 85.5, 5), Vector3.new(100, 27, 62))

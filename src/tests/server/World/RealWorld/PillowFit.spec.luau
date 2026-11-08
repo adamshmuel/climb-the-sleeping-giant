@@ -298,6 +298,9 @@ describe("the real world, the pillow's closer fit", function()
 			position = Vector3.new(-4.951, 57.916, -30.567),
 			size = Vector3.new(29.5653, 34.1960, 27.9457),
 		},
+		-- Plan 5 Task 13: the two cuff boxes (tools/world/02-zones.luau, Belly_CuffLeft and Belly_CuffRight).
+		{ zone = "Belly", position = Vector3.new(-57.5, 35, -4), size = Vector3.new(23, 14, 22) },
+		{ zone = "Belly", position = Vector3.new(57.5, 35, -4), size = Vector3.new(23, 14, 22) },
 		{ zone = "Boots", position = Vector3.new(0, 28, -43.5), size = Vector3.new(80, 32, 53) },
 		{ zone = "Boots", position = Vector3.new(-24, 19.495, -86.721), size = Vector3.new(12, 9, 47.8740) },
 		{ zone = "Boots", position = Vector3.new(24, 19.495, -86.721), size = Vector3.new(12, 9, 47.8740) },
