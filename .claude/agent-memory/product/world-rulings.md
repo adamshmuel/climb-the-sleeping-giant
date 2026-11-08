@@ -13,3 +13,5 @@
 - A pocket under a walk part is scenery: close it whole and mirrored when the cost is the same; keep the fill inside the part's outline and re-check nearby grab prompts.
 - A 'nobody in' walk names every open edge it must press (both long edges, both ends, per side) before it runs; 6b's first walk missed the lap-end knee edge (2026-11-08).
 - A walk-map count for 'closed' or 'no route' uses the Play walk-off slope (78°, spec 5 2026-10-20), not the 70° Humanoid limit; 6c's first count used 70 (2026-11-08).
+- A height-gap check (Rule 82) must include walk parts the same task builds (cuff ledges at 32.3 were missed by a y>=36 filter) and jump-only tops (ray scan, solid only), not just a walk-link flood from the meadow (2026-11-08).
+- A walk piece copied from mockup art gets a two-ray end check (cloth under its top-end middle, low end touches the ledge) before the task that builds on it; the cuff strap sat 2.2 out for 3 weeks (2026-11-08).

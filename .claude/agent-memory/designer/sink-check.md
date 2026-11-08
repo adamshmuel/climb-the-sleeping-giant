@@ -10,3 +10,4 @@ Every look check measures sink depth with rays for parts on or against the giant
 - 6a2 (2026-11-04): boards cut to his skin line, chained 0.05 drops at bends, passed: overlap wedges read as plank joints, a 0.15 lip and a bare half next to skin were not visible as faults.
 - 5b (2026-11-04): before picking a fix for a sunk ladder, measure the sink profile along it; the boot bulge sat near the top, so a swing about the hooks needed 10° and floated the foot. A straight slide out (truss + look together) kept the climb.
 - 5b1 (2026-11-04): phone look shots come out 402x186 and blurred, too small to judge sub-stud fits; judge phone on layout only and rely on ray depths for fit.
+- p5t13 (2026-11-08): my cuff strap top hung 2.2 outboard of the rim; a straight band beside a rounded arm cannot reach the rim without sinking into it. Before handing over a strap or ramp, ray its top end and its middle line against the cloth, and give it a level tab where it joins the limb.

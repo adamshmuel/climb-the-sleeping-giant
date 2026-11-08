@@ -46,6 +46,7 @@ For a ladder, truss or any other way up, also read [climbs.md](climbs.md).
 
 ## Walk floors
 - Every mockup piece players walk on states its biggest step to the surface around it (0.5 studs or less), measured in Studio before handover.
+- A walk piece copied from art gets a two-ray end check before a task builds on it: his cloth under its top end, its low end touching the ledge. A straight piece beside a rounded limb usually needs a level tab where it joins him (p5t13 cuff strap, 2026-11-08).
 - Every look option for something players walk on is also mocked up from the player's own spot. The build test checks the walk floor strip stays clear.
 
 ## Shared checks
