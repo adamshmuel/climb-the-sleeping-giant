@@ -38,7 +38,7 @@ Other documents point to sections by name, for example `style-guide.md`, "The wa
 | Egg ranks; Egg ranks: values checked in the mockups (2026-10-14); The rank glow; Beams from eggs on his body; Beams on his body hide up close; Your own carried egg never hides you; Tried second and dropped (the stronger beam) | `style-guide/egg-ranks.md` |
 | The wake-up; His face wakes; The screen while he hunts; Red edges; "RUN HOME!"; Egg words near "RUN HOME!"; Wake banner; The bonk; The fist on your own screen; The world reacts to a slam; Flower shake | `style-guide/wake-up.md` |
 | The 85% warning without the arm twitch (changes V1); The 85% warning: tested values (2026-10-19); The bubble; The snort; Bubble limits; Can anyone stand on his eyelids? | `style-guide/warning-85.md` |
-| Nests (V2 spec 5: Egg nests and the seam); How to read it; The seam: where walking ends; Three invisible fixes; How the seam looks; Common: 16 meadow nests, 2 per garden; On him: 22 nests; Out of the map | `style-guide/nests-map.md` |
+| Nests (V2 spec 5: Egg nests and the seam); How to read it; The seam: where walking ends; Invisible fixes; How the seam looks; Common: 16 meadow nests, 2 per garden; On him: 22 nests; Out of the map | `style-guide/nests-map.md` |
 | The Epic cuff pockets; Build 1 and Build 2; When he's awake; The new Rare pockets; Plan B check; The lap fold and the knee pocket | `style-guide/nests-pockets.md` |
 | The nest art (made 2026-10-19); The refill pop; The slide tip; Eye limit: what the belly top can hold; Belly top and the walk layer; Studio markers (`NestMarkers`) | `style-guide/nests-art.md` |
 | The music button; Sound and sight together | `style-guide/audio.md` |

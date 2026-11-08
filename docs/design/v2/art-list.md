@@ -92,7 +92,7 @@ Parts on every pocket (all with Fabric material, no collision):
 | Ledge walk (invisible) | The pocket's top, 0.4 thick | Where the solid walk piece goes in the game |
 
 Two pocket details:
-- **Belly pockets** sit just below the lifted seam. The seam's stitches and band stop 3 studs either side of each belly pocket, and the pocket's own band takes over.
+- **Belly pockets** sit just below the seam (his natural seam line; the lift is out). The seam's stitches and band stop 3 studs either side of each belly pocket, and the pocket's own band takes over.
 - **Front cuff pockets:** the solid ledge has its inner front corner cut back by 1.6 × 1.5 studs, so no solid part is within 8 studs of a jump off the side pad (8.34 on his left, 8.26 on his right). The soft pocket shape still shows there. A small invisible join piece fills the 0.3 gap between the two pockets on one cuff.
 
 ## The cuff straps (2)
@@ -118,7 +118,7 @@ Small flat parts laid on his pyjama along the measured seam line (style guide, "
 | Stitch dash | 1.5 long, 0.5 wide, 0.12 thick, 0.09 above his cloth | One every 2.2 (gaps of 0.7) | Cream `#FFF4DC` | 12 on his left, 11 on his right |
 | Hem band | 1.2 wide, 0.1 thick, 0.05 above his cloth. A chain of 0.5-long pieces that meet end to end | Continuous, centred 1 stud below the stitch line (down his side) | Hem blue `#2F7FD0` | 56 pieces on his left, 52 on his right |
 
-- It runs from z −38 (the lifted edge, y 44.5) to z −13 (where his arm starts), on both sides. The measured points were smoothed, so the line has no zigzag.
+- It runs from z −38 to z −13 (where his arm starts) along his natural seam line (the lift is out, 2026-11-08), on both sides. The measured points were smoothed, so the line has no zigzag.
 - On his arms the white cuff's rim is the edge, so there are no stitches there.
 - It stops at each belly pocket (see above).
 

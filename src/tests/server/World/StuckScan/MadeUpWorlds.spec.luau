@@ -132,6 +132,20 @@ describe("the rare-spot check on a made-up world", function()
 		expect(has(problems[1], "studs from a place players need")).toBe(true)
 	end)
 
+	it("a steep-layer piece is not a place players need, and steepLayer still returns it", function()
+		local world = Instance.new("Model")
+		world.Name = "MadeUpSteepWorld"
+		addPiece(folderIn(world, "SteepLayer"), "Steep_Made_Up_1", Vector3.new(0, 50, 0))
+		local needs = PlayerNeeds.build(world, {}, {}, {})
+		local steep = PlayerNeeds.steepLayer(world)
+		world:Destroy()
+		for _, need in needs do
+			expect(has(need.name, "SteepLayer")).toBe(false)
+		end
+		expect(#steep).toBe(1)
+		expect(has(steep[1].name, "SteepLayer Steep_Made_Up_1")).toBe(true)
+	end)
+
 	it("a listed rare spot the walk map reaches from the places fails", function()
 		local spot = Vector3.new(0, 30, 0)
 		local problems = rareBrokenConditions({ listed("Rare_Made_Up_1", spot) }, madeUpFacts({ spot }))

@@ -301,6 +301,23 @@ describe("the accepted-for-now list", function()
 	end)
 end)
 
+-- Spec Rule 22, "Map-only stops at the steep layer's foot": exactly these 6, apart from the rare spots and the wedge.
+describe("the map-only stops list", function()
+	it("holds the 6 named spots, apart from the rare spots and the wedge", function()
+		local names: { string } = {}
+		for _, stop in Helpers.MAP_ONLY_STOPS do
+			table.insert(names, stop.name)
+			expect((stop.position - Helpers.ACCEPTED_FOR_NOW[1].position).Magnitude > Helpers.MAP_ONLY_RADIUS).toBe(
+				true
+			)
+			for _, spot in RARE_SPOTS do
+				expect((spot.position - stop.position).Magnitude > Helpers.MAP_ONLY_RADIUS).toBe(true)
+			end
+		end
+		expect(names).toEqual({ "R-35", "R-33", "L-27", "L-16", "LCuff", "RCuff" })
+	end)
+end)
+
 describe("the stuck scan on the real world", function()
 	local world: Instance
 	local options: PathCheck.Options
@@ -454,13 +471,15 @@ describe("the stuck scan on the real world", function()
 			table.insert(positions, spot.position)
 		end
 		local unlisted: { StuckSpot } = {}
-		for _, index in unlistedStuck(positions, RARE_SPOTS, CLOSED_SPOTS, Helpers.ACCEPTED_FOR_NOW) do
+		for _, index in
+			unlistedStuck(positions, RARE_SPOTS, CLOSED_SPOTS, Helpers.ACCEPTED_FOR_NOW, Helpers.MAP_ONLY_STOPS)
+		do
 			table.insert(unlisted, stuck[index])
 		end
 		if #unlisted > 0 then
 			table.insert(
 				problems,
-				"Stuck spots that are on neither the rare list, the closed list nor the accepted-for-now list:"
+				"Stuck spots that are on neither the rare list, the closed list nor the accepted-for-now list, nor the map-only stops:"
 			)
 			for _, line in stuckReport(unlisted, world) do
 				table.insert(problems, line)

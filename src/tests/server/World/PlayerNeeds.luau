@@ -32,8 +32,8 @@ local NESTS: { Nest } = {
 local LADDER_NAMES = { "BeardLadder", "CapLadder" }
 local LADDER_TRUSS = "Climb"
 local WALK_PIECE_SUFFIX = "_Walk" -- Boots_Walk, RightBoots_Walk, Belly_Walk, Ramp_Walk: the invisible walk pieces
--- The seam's stitch parts are World.Seam (plan 5, Task 11). Spec 5's steep invisible layer has no folder name in plan 5
--- yet, so STEEP_LAYER_FOLDER is a placeholder: while no such folder exists in the world, nothing is checked for it.
+-- The seam's stitch parts are World.Seam (plan 5, Task 11). Spec 5's steep invisible layer is World.SteepLayer; it is
+-- not a place players need (Rule 22 condition 2), so only PlayerNeeds.steepLayer reads it.
 local SEAM_FOLDER = "Seam"
 local STEEP_LAYER_FOLDER = "SteepLayer"
 
@@ -126,9 +126,24 @@ local function trussEnds(truss: BasePart): (Vector3, Vector3)
 	return endA, endB
 end
 
+-- Every part under the folder `folderName` (in the world, or inside WalkSurfaces) as a box need named "<folder> <part>".
+local function folderNeeds(world: Instance, walk: Instance?, folderName: string): { Need }
+	local found: { Need } = {}
+	local folder = world:FindFirstChild(folderName) or (if walk then walk:FindFirstChild(folderName) else nil)
+	if folder ~= nil then
+		local folderParts: { Instance } = folder:GetDescendants()
+		for _, descendant in folderParts do
+			if descendant:IsA("BasePart") then
+				table.insert(found, PlayerNeeds.boxNeed(`{folderName} {descendant.Name}`, descendant))
+			end
+		end
+	end
+	return found
+end
+
 -- Every place players need, as the plan lists them: every route point and link, every egg spot, every landing spot,
--- every ladder's foot and top and truss, every invisible walk piece, spec 5's Legendary nest points, and the seam and
--- the steep layer when they exist. `world` is the model that holds WalkSurfaces (and the seam's folder, which may also be
+-- every ladder's foot and top and truss, every invisible walk piece, spec 5's Legendary nest points, and the seam
+-- when it exists (the steep layer is not a need: see PlayerNeeds.steepLayer). `world` is the model that holds WalkSurfaces (and the seam's folder, which may also be
 -- inside WalkSurfaces). The route, egg spots and landing spots are given, so a made-up world can pass none.
 function PlayerNeeds.build(
 	world: Instance,
@@ -186,18 +201,17 @@ function PlayerNeeds.build(
 	for _, nest in NESTS do
 		table.insert(needs, PlayerNeeds.pointNeed(nest.name, nest.position))
 	end
-	for _, folderName in { SEAM_FOLDER, STEEP_LAYER_FOLDER } do
-		local folder = world:FindFirstChild(folderName) or (if walk then walk:FindFirstChild(folderName) else nil)
-		if folder ~= nil then
-			local folderParts: { Instance } = folder:GetDescendants()
-			for _, descendant in folderParts do
-				if descendant:IsA("BasePart") then
-					table.insert(needs, PlayerNeeds.boxNeed(`{folderName} {descendant.Name}`, descendant))
-				end
-			end
-		end
+	for _, need in folderNeeds(world, walk, SEAM_FOLDER) do
+		table.insert(needs, need)
 	end
 	return needs
+end
+
+-- Spec 5's steep invisible layer (World.SteepLayer) as box needs. It is not a place players need (Rule 22 condition 2: it
+-- is a slide face below the seam), so build() leaves it out; the slide-guard test keeps its guards 2 studs away from it.
+function PlayerNeeds.steepLayer(world: Instance): { Need }
+	local walk = world:FindFirstChild("WalkSurfaces")
+	return folderNeeds(world, walk, STEEP_LAYER_FOLDER)
 end
 
 -- The same, read from the real world (it stops with an error if the route, egg spots or landing spots are missing).

@@ -286,6 +286,21 @@ local ACCEPTED_FOR_NOW: { AcceptedSpot } = {
 	{ name = "Beard wedge", position = Vector3.new(-6.8, 81.5, -11), laterSpec = "Launch polish: Beard wedge" },
 }
 
+export type MapOnlySpot = { name: string, position: Vector3 }
+
+local MAP_ONLY_RADIUS = 0.5 -- studs: a stuck spot is "the listed map-only stop" when it is this close (the grid is 2 apart)
+
+-- Spec Rule 22, "Map-only stops at the steep layer's foot": 6 spots the walk map calls stuck, but a player slides off
+-- the giant from each in Play. Positions are the walk map's spots (plan 5 Task 15, work/p5t15/step3-ruling2.md).
+local MAP_ONLY_STOPS: { MapOnlySpot } = {
+	{ name = "R-35", position = Vector3.new(21.2, 41.0, -35.0) },
+	{ name = "R-33", position = Vector3.new(23.2, 41.7, -33.0) },
+	{ name = "L-27", position = Vector3.new(-28.8, 41.9, -27.0) },
+	{ name = "L-16", position = Vector3.new(-34.8, 41.0, -15.0) },
+	{ name = "LCuff", position = Vector3.new(-52.8, 38.1, -7.0) },
+	{ name = "RCuff", position = Vector3.new(53.2, 38.6, -5.0) },
+}
+
 local function acceptedAsRare(accepted: { AcceptedSpot }): { RareSpot }
 	local asRare: { RareSpot } = {}
 	for _, spot in accepted do
@@ -299,7 +314,8 @@ local function unlistedStuck(
 	positions: { Vector3 },
 	rare: { RareSpot },
 	closed: { ClosedSpot },
-	accepted: { AcceptedSpot }
+	accepted: { AcceptedSpot },
+	mapOnly: { MapOnlySpot }?
 ): { number }
 	local notRare = unlistedSpots(positions, rare)
 	local rest: { Vector3 } = {}
@@ -311,9 +327,20 @@ local function unlistedStuck(
 	for _, restIndex in notClosed do
 		table.insert(last, rest[restIndex])
 	end
+	local mapOnlyStops: { MapOnlySpot } = mapOnly or {}
 	local unlisted: { number } = {}
 	for _, lastIndex in unlistedSpots(last, acceptedAsRare(accepted)) do
-		table.insert(unlisted, notRare[notClosed[lastIndex]])
+		local spotPosition = last[lastIndex]
+		local listed = false
+		for _, stop in mapOnlyStops do
+			if (stop.position - spotPosition).Magnitude <= MAP_ONLY_RADIUS then
+				listed = true
+				break
+			end
+		end
+		if not listed then
+			table.insert(unlisted, notRare[notClosed[lastIndex]])
+		end
 	end
 	return unlisted
 end
@@ -324,6 +351,8 @@ return {
 	CLOSED_SPOTS = CLOSED_SPOTS,
 	CLOSED_TILT_DEGREES = CLOSED_TILT_DEGREES,
 	LADDER_REACH_STEPS = LADDER_REACH_STEPS,
+	MAP_ONLY_RADIUS = MAP_ONLY_RADIUS,
+	MAP_ONLY_STOPS = MAP_ONLY_STOPS,
 	NEST_REACH = NEST_REACH,
 	RARE_MATCH = RARE_MATCH,
 	RARE_PROOF = RARE_PROOF,

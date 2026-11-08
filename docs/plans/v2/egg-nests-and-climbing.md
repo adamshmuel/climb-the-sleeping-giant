@@ -70,7 +70,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 | The Belly boxes round each cuff | One box per cuff: x ±46 to ±63, height 28 to 42, z −15 to 7 | Spec section 5 asks for at least x ±47 to ±61, y 32 to 39, z −13 to 5. Measured in Studio on 2026-10-19: the cuff pockets, straps and ledges span x ±51 to ±61.2, height 28.9 to 38.1, z −14.4 to 5.9. The side pads (x ±32.5) and side ladders (z −26) stay outside, so they keep counting as Boots |
 | Where the walk-map checks run | In `WalkMap.spec.luau` (plan 3, Task 9), on the one walk map. Its area grows to hold both arms out to x ±64. The 2-minute limit stays; if it is broken, spec 4's trigger applies (the grid goes from 2 to 3 studs) | One map per test run (`docs/plans/v2/index.md`) |
 | Sounds | None picked here. Task 8 (the pop) and Task 10 (the slide tip) each leave one named place where plan 7 adds the sound | Spec 5, section 11: the sounds are spec 7's |
-| New world scripts | `21-nests`, `22-cuff-walk`, `23-walk-area`, `24-seam`. `08-route` is updated, not replaced | 12 to 20 are taken by plans 1 to 4 |
+| New world scripts | `21-nests`, `22-cuff-walk`, `23-steep-layer` (15a), `23b-walk-fixes` (15d), `24-seam`. `08-route` is updated, not replaced | 12 to 20 are taken by plans 1 to 4 |
 
 ## Tasks
 
@@ -253,34 +253,61 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the fake-world tests pass, and the real world's failure list is in the task report.
 - Built (2026-11-08): no `PathCheck` change was needed (OnTheGiant's scan area already reaches x ±68.8; a pin test guards x ±64), and `WalkMap.spec.luau` doesn't exist until plan 3 Task 9, so the real-world test is in `StuckScan/OnTheGiant.spec.luau` with its inputs in `StuckScan/WalkAreaFacts.luau`. Full run: 2953 passed, 6 failed (5 old accepted + this check), 0 could not run.
 
-**Task 15: World prep: the walk layer, the steep layer and the three fixes**
-- Stands on: Task 14 (its real-world failure list is this task's failing test), Task 13, plan 3's Tasks 4a, 5 and 6, his arm at rest, the measured check of the crease filler and the low-seam lift (below), and the reach check just before this task (build order step 3).
-- **The crease filler and the low-seam lift (Rule 82's fixes 1 and 2) wait for a measured check that they are still needed** (2026-11-03): one read-only Edit call measures, on each side, how high the natural seam (or the cuff top, for the ridge) stands above every jump surface still within jump reach after 2026-11-03: the meadow, the boot tops, the lap planks, the lap landing and the tops of invisible guards. If every spot is at least the seam height (section 5, 12 studs) above, the fix is not built and the result goes to product; if any spot is lower, the fix is built as written. The side pads and thigh planks these fixes were made for were dropped on 2026-11-03 (Adam), and none of the three fixes is built yet.
-- Before: reach check from what exists (the belly top and each cuff strap built in Task 13, at their measured spots), back up the parts into `ServerStorage.WorldBackups.Plan5Task15` in the same call (and the main chat copies the place file to `work/place-backups/`).
-- After: one climb with normal player controls, in Play.
-- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
-- Spec rules: Rule 79 (Walk anywhere down to the seam). Rule 80 (The seam shows where walking ends): "a smooth invisible steep layer must cover it", "The accidental climbing under his beard near (−14, 67, −14) must be removed". Rule 82 (No new way onto the belly): fixes 1 and 2, the crease filler and the low-seam lift.
-- Files: `tools/world/23-walk-area.luau` (new), `RealWorld.spec.luau`.
-- Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
-- What the script does, on plan 2's chosen collision source, the same on both sides:
-  - **the walk layer:** where the source already sits 0.2 studs below to 0.7 above his pyjama and under 65°, it is used as it is; elsewhere in the walk area, smooth invisible pieces follow his visible surface, joined edge to edge with no step over 0.3 studs, including the beard tip and the sleeve tops;
-  - **the steep layer** (its parts go in the folder `World.SteepLayer`, the name plan 2's slide-guard test already reads; code_lead, 2026-10-21) (designer, 2026-10-20, at plan 2's Task 21 round 2): it starts at the seam line and runs down until his bare cloth makes a character slip by itself: plan 2 Task 21's list (every place up to `SLIP_DEGREES`, about 78° by his body-size slope), and on each cuff only at cuff points 1 to 3 (at points 4 and 5 players step off the rounded end of his arm with no slide; designer and product, stuck safety Task 21 round 3: no steep layer there, don't try to "fix" it). Smooth invisible pieces with no flat top, steep enough that a character really slips in Play (spec 5's "Steep face": at least 75°), at most 1 stud out from his skin and never through it, so a sliding character never visibly hovers;
-  - only if their measured check says they are still needed: **the crease filler** from (±30, 32, −30) to (±19, 35, −42), and **the low-seam lift** (z −39 to −33: the walk area starts at height 44.5, ending at z −39.5 so the belly ramp's top and Rare egg 1 stay open with no step);
-  - solid, invisible ledges for the knee and belly pockets from their `LedgeWalk` parts;
-  - finds which parts let a player climb near (−14, 67, −14) (Task 22's climb probe in Play shows it) and changes them so they can't be climbed.
-- Failing test first: Task 14's real-world list (all but "seam match", which Task 16 finishes), plus the stuck scan with the bigger area: zero stuck spots. Task 14's list on 2026-11-08 (OnTheGiant "the walk area passes the walk-area check", 345 walk-area spots): too steep 22, floating 42, sunk 0, gap 880, zone 0, seam match 1 (no seam yet). **Re-check the gap kind first:** its samples are the skin joined to Rare egg 1 or the strap art by steps under 65°, and they are not yet cut to the plan's "pyjama above the seam's stitches" (no seam exists). Once the walk layer is built, read the gaps left: any that lie below where the seam will run are a sample error, not a world fault, and the samples get cut at the seam line in Task 16.
-- **Play, moved here from plan 2 Task 21** (computer and iPhone 14, sound muted): plan 2 Task 21's 10 walk-offs (his sides at z −36, −28 and −16, each cuff at station 3 and station 4), with Task 21's rule for when the slip starts (the jump in flat speed, with its two round 3 details: the 0.1 s window holds only frames after the 1-stud mark, and a jump on cloth under 65° is not a slip). On his sides and at cuff station 3, each passes when the slip starts within 1 stud of the seam line, either side; on bare cloth today it starts 2.2 to 2.8 studs past the line. At cuff station 4 it passes when there is no slip before the character leaves the end of his arm (today 3.84 to 3.92 studs past the line) and it lands somewhere it can walk from. Also walk onto each face of the crease filler, the low-seam lift and the cuff ridge (Task 13): the character slips at once, and never stands or walks on it. Shots as in Task 21; designer says yes.
-- Done when: those pass, every Rule 45 check (One way onto the belly) of plan 3 (Task 10) still passes, the second run says "already done", and the report names how many new pieces were made.
-- **Rare stuck spots re-measured (added 2026-10-21, product's condition 2 on stuck safety's rare spots, `docs/specs/v2/research/decisions-plans.md`):**
-  - **When:** once the real walk area exists, and before this plan's Gate 4.
-  - **What:** the 10 rare stuck spots on StuckScan's rare-spot list (stuck safety Task 23; groups 11, 18, 20, 22, 24, 26, 29 and 32) are measured again against the real Rule 79 walk area (Walk anywhere down to the seam).
-  - **How:** the stuck scan's walk-area source is pointed at the real walk layer, then the full run is done. Test first: `PlayerNeeds.fromWorld` (OnTheGiant's rare-spot condition 2) today skips the walk area and the cuff walk pieces (product, Task 13b), so it gains `World.CuffWalk` and the walk layer as needs; a fake world with a stuck spot 10 studs from a cuff ledge must fail. Measured 2026-11-08 against `World.CuffWalk`: nearest rare spots `Rare_RightArm_1` 14.1 and `Rare_G32_1` 23.0, so none is must-fix today.
-  - **A spot 12 studs or less from the walk area** becomes must-fix. It comes off the list and is fixed test first, by stuck safety's rules (Rule 22: What counts as stuck), before Gate 4.
-  - **Report:** each spot's distance.
+**Task 15 (split 2026-11-08): the walk layer, the steep layer and the fixes**
+- Split into 15a-15f by product's step-back decision (`work/p5t15/stepback-decision.md`, kept in the history file at close). The old single task bundled 8 pieces before Task 14's counts existed; its 1 hour was wrong. Price: 145 min sure, plus 0-60 in 15d.
+- Out, by that decision (spec Rules 80 and 82, 2026-11-08): the crease filler, the low-seam lift and a centre bridge. The cuff ridge was Task 13's. The beard climb fix is Task 22b.
+- For: core gameplay (players slide off where the seam is, and nobody skips the climb). Every piece is invisible.
+- Spec rules for the split as a whole: Rule 79 (Walk anywhere down to the seam): the belly halves joined at z −27 both ways. Rule 80 (The seam shows where walking ends): "a smooth invisible steep layer must cover it", the crease's flat spots are "not walk area". Rule 82 (No new way onto the belly): thighs and hip crease count as jump surfaces. Rule 28 (stuck rescue) for a player left in the crease.
+- Lesson for every piece (2026-11-08): a named jump-surface list misses body surfaces walkable from it (his thighs and hip crease, reached from each boot top), and a headroom or reach ray must see every solid part (CanCollide on), not only `World.Giant`.
+
+**Task 15a: The steep layer** (card `work/p5t15/card.md`)
+- Stands on: Task 14 (built), Tasks 13 and 13b (built), the style guide's seam line (final), his arm at rest.
+- Size: 5 steps plus Step 3c (tiles: stopped at the dry run, unapplied) and Step 3d (Play the 6 traced spots on the layer as it stands, product `work/p5t15/loop-decision2.md`, 2026-11-08). About 140 min in all: 89 used to 17:59, 51 left (3d 37, full run 6, review 8), plus any fix product rules from the Play results. Models: Sonnet builder, Haiku runner (full run), Opus review.
+- What: `World.SteepLayer` from the seam down to where his bare cloth makes a player slip (plan 2 Task 21's list, `SLIP_DEGREES` about 78°), at cuff points 1 to 3 only; faces at least 75°, no flat top, at most 1 stud out from his skin, never through it. Files and tests: the card.
+- Review adds (product): each belly pocket ledge stays open, with no steep piece on it.
+- Done when: the card's Step 4 pass and code_lead's review.
+
+**Task 15b: Trial walk-offs on the computer**
+- Stands on: Task 15a (built).
+- Size: 25 min, Sonnet builder, about 14 Studio calls (start, hold, 3 case pastes, shots, console, stop, spares).
+- What, with normal player controls, results written down (no fix here): the z −27 crossing between the belly halves, right to left and left to right, 3 tries each; the crease trial: walk from each boot top over his thigh into the crease, then 3 jumps at the belly ramp and 3 at the belly; grab each knee pocket and belly pocket egg, both sides.
+- Done when: every try has its result and a shot from the player's camera; the list of fails goes to code_lead for 15d.
+
+**Task 15c: Walk-area re-read**
+- Stands on: Task 15a (built).
+- Size: 15 min, Opus (code_lead), 2 read-only Edit calls.
+- What (product's ruling 5): re-read Task 14's counts with gap samples cut below the spec's seam line and on the middle strip's sides, and floating counted only where a player can stand still (under 55°). Rays see every solid part. Also, if the check's flood fill misses the 2-stud door at z −27, that is listed. Output: the real work list for 15d.
+- Done when: the list is in `work/p5t15/` with each spot, kind and measured cause.
+
+**Task 15d: Build only what 15b and 15c fail**
+- Stands on: Task 15b (results in), Task 15c (work list in), Task 15a (built).
+- Size: 0-60 min, Sonnet builder, up to 16 Studio calls; over 60 min it stops and goes back to product. A decision table on the card from 15b and 15c, checked once by product and designer before it starts.
+- Before: reach check from what exists, backup into `ServerStorage.WorldBackups.Plan5Task15d` in the same call (and the place-file copy). After: one climb with normal player controls.
+- Builds, one script (`tools/world/23b-walk-fixes.luau`, name checked against `tools/world/` first), the same on both sides:
+  - the wedge at about (−4, 58.7, −27.5), under 45°, only if left to right fails; mirrored only if the right lip fails too;
+  - one invisible plain-box guard on each boot top's thigh edge, only if a crease jump lands on the belly or a ramp (keeps the boot top, its ways up and the lap plank open);
+  - solid invisible pocket ledges from their `LedgeWalk` parts, only for a pocket whose grab failed (mockup pieces get their own `Mockup*` values back, then lose the attributes, and a test checks they arrive solid);
+  - walk pieces for 15c's leftover spots, within 0.2 below to 0.7 above his visible surface, no step over 0.3 studs;
+  - the check's sample cut and flood-fill door fix (test first: a fake gap below the seam isn't counted; a fake 2-stud door joins two halves).
+- Failing test first: one real-world test per piece built, red before the script runs.
+- Done when: those tests pass, the second run says "already done", every Rule 45 check (One way onto the belly) of plan 3 Task 10 still passes, and the report names how many pieces were made.
+
+**Task 15e: Final walk-offs on computer and phone**
+- Stands on: Task 15a (built), Task 15d (built, or nothing to build).
+- Size: 35 min, Sonnet builder, about 20 Studio calls (computer and iPhone 14 sessions, shots).
+- What (sound muted): plan 2 Task 21's 10 walk-offs (his sides at z −36, −28 and −16, each cuff at station 3 and station 4) with Task 21's slip rule (the jump in flat speed; the 0.1 s window holds only frames after the 1-stud mark; a jump on cloth under 65° is not a slip). Sides and cuff station 3 pass when the slip starts within 1 stud of the seam line, either side. Cuff station 4 passes with no slip before the character leaves the end of his arm, landing somewhere it can walk from. Each cuff ridge face: the character slips at once. The z −27 crossing both ways. The crease: a player pressing still in the groove gets the rescue after 3 s. iPhone 14: the left side at z −28, left cuff station 3, the crossing.
+- Done when: every case passes with its shots, and designer says yes.
+
+**Task 15f: Rare stuck spots re-measured** (product's condition 2, stuck safety Task 23)
+- Stands on: Task 15d (built).
+- Size: 15 min: a Sonnet builder step (10 min, 4 Studio calls) only if `PlayerNeeds.fromWorld` still skips the walk layer and `World.CuffWalk` (test first: a fake stuck spot 10 studs from a cuff ledge fails); then a Haiku runner full run (cap from the last run's pages), judged by Opus.
+- What: the 10 rare stuck spots (groups 11, 18, 20, 22, 24, 26, 29 and 32) against the real walk layer, rays seeing every solid part. 2026-11-08 against `World.CuffWalk`: nearest `Rare_RightArm_1` 14.1, `Rare_G32_1` 23.0.
+- A spot 12 studs or less from the walk area becomes must-fix: off the list, fixed test first by stuck safety's Rule 22 (What counts as stuck), before Gate 4.
+- Done when: each spot's distance is in the report.
 
 **Task 16: World prep: the seam**
-- Stands on: Task 15 (the walk layer and steep layer, built), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
-- Before: reach check from what exists (the walk layer's edge built in Task 15, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan5Task16` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- Stands on: Task 15a (the steep layer, built), Task 15d (the walk fixes, built or nothing to build), Task 15e (the final walk-offs passed), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
+- Before: reach check from what exists (the walk area's edge after Tasks 15a and 15d, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan5Task16` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 80 (The seam shows where walking ends): the stitches, "the edge of the walk area must match the seam's stitches", "On his arms the seam is the top rim of his white cuff", "A strap has no marks across it". Section 6, "The seam, seen from the belly top".
@@ -308,15 +335,15 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 3: Checks on the walk map
 
 **Task 18: No new way onto the belly**
-- Stands on: plan 3 Task 6 (belly ramps, ramp edge guards, skin closures), plan 3 Task 10 (`WaysUpCheck`, the check's home), this plan's Task 12 (the 38 nests, for the egg limit) and Tasks 13, 14, 15 and 16 (cuff straps, walk-area check, walk layer with Rule 82's fixes 1 to 3, the seam), and product's jump-check limits ruling of 2026-10-28 (decided). Build order step 7b. Plan 3 Task 5's Rule 82 re-check merged here (product's ruling, 2026-11-03): no separate run anywhere else, and stuck safety's Gate 4 proof of Rule 82 comes from this task.
+- Stands on: plan 3 Task 6 (belly ramps, ramp edge guards, skin closures), plan 3 Task 10 (`WaysUpCheck`, the check's home), this plan's Task 12 (the 38 nests, for the egg limit) and Tasks 13, 14, 15a, 15d, 15e and 16 (cuff straps and the cuff ridge, walk-area check, steep layer, walk fixes and the boot-top thigh guards if built, final walk-offs, the seam; the crease filler and low-seam lift are not built, spec Rule 82 2026-11-08), and product's jump-check limits ruling of 2026-10-28 (decided). Build order step 7b. Plan 3 Task 5's Rule 82 re-check merged here (product's ruling, 2026-11-03): no separate run anywhere else, and stuck safety's Gate 4 proof of Rule 82 comes from this task.
 - Spec rules: Rule 82 (No new way onto the belly), all three points, and spec 3's Rule 45 (One way onto the belly) as Rule 82 (No new way onto the belly) widens it. Section 5: "Seam height", "Climbable-part height". Story E's first case. Section 8: "A player on the side pad jumps at his cuff".
 - Files: `src/server/World/WaysUpCheck.luau` (plan 3, Task 10), `src/tests/server/World/WaysUpCheck.spec.luau`, `WalkMap.spec.luau`.
-- What it adds, from every jump-surface spot (the meadow round him, the boot tops, lap planks, the lap landing's guarded edges, the tops of invisible guards (every family by name: the 11 slide guards in `World.WalkSurfaces.SlideGuards`, the forehead plates `ForeheadGuard`, plan 3 Task 5's rail guards `RailGuard_Left` / `_Right` and its landing, apron and end guards, plan 3 Task 6's ramp edge guards and skin closures), and the tops of the cave skirt (`World.CaveSkirt`, stuck safety Task 22; product's condition for allowing the reachable step by the ledge)), with the jump reach in "Decisions":
+- What it adds, from every jump-surface spot (the meadow round him, the boot tops, lap planks, the lap landing's guarded edges, the tops of invisible guards (every family by name: the 11 slide guards in `World.WalkSurfaces.SlideGuards`, the forehead plates `ForeheadGuard`, plan 3 Task 5's rail guards `RailGuard_Left` / `_Right` and its landing, apron and end guards, plan 3 Task 6's ramp edge guards and skin closures), and the tops of the cave skirt (`World.CaveSkirt`, stuck safety Task 22; product's condition for allowing the reachable step by the ledge)), **plus every body surface a player walks onto from any of those** (today his thighs and hip crease from each boot top, spec Rule 82, 2026-11-08), found by a walk flood from each named surface on the walk map, never by adding names. Every height and reach ray sees every solid part (CanCollide on), not only `World.Giant`. With the jump reach in "Decisions":
   - every walk-area spot within jump reach sideways is at least 12 studs above that jump surface, the rounded end of each arm at cuff points 4 and 5 included (product, stuck safety Task 21 round 3);
   - every climbable part (every `TrussPart`) other than the two boot ladders and the beard and cap ladders has its lowest point at least 15 studs above every jump surface within reach; and there is none on him today;
   - no nest reached through the lap landing is within 8 studs of the body anywhere in a jump's reach.
   - The run fails naming the jump surface and the spot.
-- Failing tests first (fake worlds), (a) first: the jump part of stuck safety Task 28's jump-1b check is the starting source for the jump part of `WaysUpCheck`, never a second module in `tools/checks/`; names come in from the job. Then: a walk shelf 10 studs above a pad and 4 across fails; 13 studs above passes; a stray truss 12 studs above a pad fails; a nest 7 studs from a jump's reach fails.
+- Failing tests first (fake worlds), (a) first: the jump part of stuck safety Task 28's jump-1b check is the starting source for the jump part of `WaysUpCheck`, never a second module in `tools/checks/`; names come in from the job. Then: a walk shelf 10 studs above a pad and 4 across fails; a walk shelf 10 studs above a slope walked onto from a pad (not named) fails; a shelf a ray on `World.Giant` alone sees as 13 above, with another solid part under it at 10, fails; 13 studs above passes; a stray truss 12 studs above a pad fails; a nest 7 studs from a jump's reach fails.
 - Then (b): the check runs on the real world. If stuck safety Task 28's jump check never finished, it runs in full here.
 - Done when: the tests pass on the real world.
 
@@ -326,7 +353,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What it does: plan 4's check (Task 9) now scores all 38 nests on the real world with the walk area, the straps and the ledges built. Each nest whose score is outside its target, or less than 3 points inside its band, is moved by the spec's own fix, in the script's table, never by changing its rank or a number: a Rare nest over 80 slides toward Rare egg 1 (no closer than 6 studs); the back cuff pocket over 127 moves toward the front pocket (no further than z −8); a cap nest under 130 moves up the cap, and one with a Tiptoe peak of 60 or more moves toward the cap ladder top; a nest that scores too low gets a longer walk, never a move toward his face. A move that would break a spot rule, the eye limit or a twin is not made: the report goes to the main chat for game_creator and designer.
 - Failing test first: the check itself on the 38 nests (expected to name some nests the first time).
 - **Slide guards** (game_creator's condition at stuck safety Task 23): plan 2's test "slide guards stay off the walk area and out of players' way" gets every real nest added to its list of places players need, so no guard is within 2 studs of a nest. If one is, that guard becomes a flush patch (plan 2's rules), not a moved nest.
-- **Named step: the guard-top jump check, re-run on the real nests** (product's condition at stuck safety Task 23, step 23-18, `docs/specs/v2/research/decisions-plans.md`). After the nests are placed and moved in this task, Task 18's check (Rule 82: No new way onto the belly) runs again from the top of every slide guard (`World.WalkSurfaces.SlideGuards`), now against the real nests instead of the egg spots that stood in for them. From each guard top: every walk-area spot in jump reach and the seam are at least 12 studs above; every climbable part other than the ways up and the two ladders starts at least 15 studs above; no nest is in grab reach. A guard that fails becomes a flush patch or gets a lower top (plan 2's rules), never a moved nest. It must pass before plan 5's Gate 4.
+- **Named step: the guard-top jump check, re-run on the real nests** (product's condition at stuck safety Task 23, step 23-18, `docs/specs/v2/research/decisions-plans.md`). After the nests are placed and moved in this task, Task 18's check (Rule 82: No new way onto the belly) runs again from the top of every slide guard (`World.WalkSurfaces.SlideGuards`) and every body surface walkable from one (Task 18's walk flood), now against the real nests instead of the egg spots that stood in for them. From each guard top: every walk-area spot in jump reach and the seam are at least 12 studs above; every climbable part other than the ways up and the two ladders starts at least 15 studs above; no nest is in grab reach. A guard that fails becomes a flush patch or gets a lower top (plan 2's rules), never a moved nest. It must pass before plan 5's Gate 4.
 - **game_creator's condition from stuck safety Task 25 (2026-10-20):** the cap stays the hardest zone: every cap nest scores at least as hard as every beard nest. If one doesn't, it moves by the spec's fix (up the cap), never by bringing back V1's middle forehead slab (stuck safety Task 25 removed it). The report names any such nest.
 - Done when: the check passes, every rank has its count by score, the guard-top jump check passes on the real nests, every nest passes Rule 59 (the fold nests lean, their eggs stand upright), `docs/egg-ranks.md` is rewritten from the tool and matches the run, plan 2's slide-guard test passes with the nests in its list, and designer is sent the list of moved nests to re-check the eye limit from all 8 gardens.
 
@@ -352,11 +379,19 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What it adds:
   - walks across the walk area in a star from Rare egg 1, along the seam just above the stitches, over the beard tip, and out along each arm, down each strap to each pocket, a grab (the hold, on the Client), and back up the strap carrying the egg, on both arms;
   - step-offs every 4 studs just past the seam: each must slide off with one Belly thud;
-  - jump tries at his sides, his cuffs and the walk area from points every 3 studs along every jump surface; each must land back where it started or below, never in the walk area;
-  - **the climb probe:** at points every 2 studs under his beard and along both sides, the bot walks into him; any "Climbing" state (`Enum.HumanoidStateType.Climbing`) away from the eight ladders fails, with its place. This is how Task 15 finds the parts at (−14, 67, −14);
-  - **the mid-air grab try:** from each lap plank (the thigh planks were dropped on 2026-11-03), jumps toward Rare egg 1 and the belly pocket while holding the grab key; the result is written down.
+  - jump tries at his sides, his cuffs and the walk area from points every 3 studs along every jump surface, his thighs and hip crease included (reached on foot from each boot top) and every other body surface Task 18's walk flood finds; each must land back where it started or below, never in the walk area;
+  - **the climb probe:** at points every 2 studs under his beard and along both sides, the bot walks into him; any "Climbing" state (`Enum.HumanoidStateType.Climbing`) away from the eight ladders fails, with its place. Task 22b fixes what it finds at (−14, 67, −14);
+  - **the mid-air grab try:** from each lap plank and from his hip crease on each side (the thigh planks were dropped on 2026-11-03), jumps toward Rare egg 1 and the belly pocket while holding the grab key; the result is written down.
 - Failing test first: none (a Play tool). One leg made to fail on purpose (a test step on a strap, made in Play only) proves it can fail.
 - Done when: every leg passes, the climb probe finds nothing, and the results table is in the report. If the mid-air grab worked even once, Task 25 is built before review.
+
+**Task 22b: The beard climb fix** (moved out of Task 15 on 2026-11-08, product's step-back decision)
+- Stands on: Task 22's climb probe (built and run: it names each place a player climbs away from the eight ladders).
+- Spec rules: Rule 80 (The seam shows where walking ends): "The accidental climbing under his beard near (−14, 67, −14) must be removed", "the stuck scan and the bot walk must find no other".
+- Size: priced by code_lead from the probe's result, before the card. If the probe finds nothing there, this task is closed with that result.
+- What: the parts the probe names are changed so they can't be climbed, the same on both sides where mirrored; backup and reach check as every world task. Each spot is measured with rays that see every solid part.
+- Failing test first: a real-world test naming each probe spot, red before the change.
+- Done when: the test passes and the probe re-run finds no climb away from the ladders.
 
 **Task 23: The Play proof**
 - Spec rules: section 6 ("Checks that need Play before the build review"), the Play check of Rule 100 (Nothing you stand on moves while he sleeps), the 3 seconds of Rule 84 (A slide is a fall, and the first one gets a tip), and spec 3's Rule 36 (The lap planks), condition 3, in Play.
@@ -421,9 +456,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 | Rule 76 (When no nest is clear, wait) | 3, 7 |
 | Rule 77 (Empty nests show no timer) | 7, 8 |
 | Rule 78 (A lost egg goes back to its nest) | 5, 7, 21 |
-| Rule 79 (Walk anywhere down to the seam) | 13, 14, 15, 22 |
-| Rule 80 (The seam shows where walking ends) | 14, 15, 16, 22 |
-| Rule 82 (No new way onto the belly) | 13, 15, 18, 22, 25 |
+| Rule 79 (Walk anywhere down to the seam) | 13, 14, 15b-15e, 22 |
+| Rule 80 (The seam shows where walking ends) | 14, 15a, 15c-15e, 16, 22, 22b |
+| Rule 82 (No new way onto the belly) | 13, 15b, 15d, 18, 22, 25 |
 | Rule 84 (A slide is a fall, and the first one gets a tip) | 10, 23 |
 | Rule 100 (Nothing you stand on moves while he sleeps) | 6, 7, 9, 13, 23, 24 |
 | Section 10 (Success signals) | 11 |

@@ -21,7 +21,12 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes | ☑ done (its 2 accepted reds went green in 13b) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 13b: The cuff straps re-fitted, and the climb on each | ☑ done 2026-11-08: 26 walk pieces (flap, foot, edge curbs), `World.CuffFill_Right` (script 22b), 5 of 5 carried round trips pass; full run 2940 passed, 5 accepted reds (`work/p5t13b/step9-full-run.md`) | builder, designer, product, runner, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 14: The walk-area check | ☑ done 2026-11-08: `WalkAreaCheck` (6 kinds) with 12 fake-world tests green; the real-world check is red as planned (steep 22, floating 42, gap 880, seam 1); full run 2953 passed, 6 accepted reds | builder, runner, code_lead |
-| Egg nests and climbing (V2 spec 5) | Task 15: World prep: the walk layer, the steep layer and the three fixes | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 15a: The steep layer | ☑ done 2026-11-08: `World.SteepLayer` 114 pieces (script 23), 6 map-only stops listed in `MAP_ONLY_STOPS`, slide Play 18/18 + 6/6, pocket ledges kept clear; full run 2962 passed, 6 accepted reds (`work/p5t15/step3g-full-run.md`); 107 min from the 16:56 clock, planned ~140 | builder, runner, product, code_lead |
+| Egg nests and climbing (V2 spec 5) | Task 15b: Trial walk-offs on the computer | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 15c: Walk-area re-read | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 15d: Build only what 15b and 15c fail | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 15e: Final walk-offs on computer and phone | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 15f: Rare stuck spots re-measured | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 16: World prep: the seam | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 17: The footprints reach every nest | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 18: No new way onto the belly | ☐ not started | |
@@ -29,6 +34,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 20: Every rank is fair from every way up | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 21: A whole session with nests | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 22: The bot walk on the walk area | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 22b: The beard climb fix (moved out of Task 15, 2026-11-08) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 23: The Play proof | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 24: Floating a player out of his arm's resting space (only if Task 23 finds a trapped player) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 25: A grab needs ground under you (only if Task 22 finds a mid-air grab) | ☐ not started | |
@@ -36,4 +42,4 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Notes for the next V2 review
 
-- **From other plans' notes:** Task 15 checks that players slip within 1 stud of the seam, once the steep layer exists (`stuck-safety.md`, the Task 21 row).
+- **From other plans' notes:** Task 15e checks that players slip within 1 stud of the seam, once the steep layer exists (`stuck-safety.md`, the Task 21 row).

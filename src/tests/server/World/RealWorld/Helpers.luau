@@ -4,6 +4,7 @@ local expect = JestGlobals.expect
 local ServerScriptService = game:GetService("ServerScriptService")
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
+local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local DrawnSkin = require(game:GetService("ServerStorage").Tests.server.World.DrawnSkin)
 local Workspace = game:GetService("Workspace")
 
@@ -21,42 +22,15 @@ local SKIN_SIDE_REACH = 0.3 -- studs: the drawn skin is also read this far sidew
 
 local SKIN_SIDE_STEPS = 3 -- the sideways reads are SKIN_SIDE_REACH / SKIN_SIDE_STEPS = 0.1 studs apart, inside a circle
 
--- His slope at body size (designer's rule), in one place so "his slide line is the seam" and the slide-guard tests
--- (stuck safety Task 23) read it the same way. Moved here from the seam test unchanged (Task 23, decision 6).
-local BODY_SLOPE_REACH = 2 -- 25 rays 1 stud apart on a 4 by 4 stud square around the place
+-- His slope at body size (designer's rule) is read by SlideProfile (plan 5 Task 15a), so "his slide line is the seam",
+-- the slide-guard tests and the steep layer read it the same way.
+local BODY_SLOPE_REACH = SlideProfile.BODY_SLOPE_REACH
 
-local BODY_SLOPE_RAY_ABOVE = 150 -- the rays start this high...
+local BODY_SLOPE_RAY_ABOVE = SlideProfile.BODY_SLOPE_RAY_ABOVE
 
-local BODY_SLOPE_RAY_LENGTH = 250 -- ...and look this far down
+local BODY_SLOPE_RAY_LENGTH = SlideProfile.BODY_SLOPE_RAY_LENGTH
 
--- The steepness in degrees of the flat plane that best fits 25 rays straight down on a 4 by 4 stud square around
--- (x, z). Gives the height of the middle ray too. Nil when a ray misses (the square reaches past what `params` sees).
--- The grid is even, so the best-fit plane comes from two sums.
-local function bodySizeSlopeAt(params: RaycastParams, x: number, z: number): (number?, number?)
-	local sumX, sumZ, middleY = 0, 0, 0
-	for offsetX = -BODY_SLOPE_REACH, BODY_SLOPE_REACH do
-		for offsetZ = -BODY_SLOPE_REACH, BODY_SLOPE_REACH do
-			local hit = game:GetService("Workspace"):Raycast(
-				Vector3.new(x + offsetX, BODY_SLOPE_RAY_ABOVE, z + offsetZ),
-				Vector3.new(0, -BODY_SLOPE_RAY_LENGTH, 0),
-				params
-			)
-			if hit == nil then
-				return nil, nil
-			end
-			sumX += offsetX * hit.Position.Y
-			sumZ += offsetZ * hit.Position.Y
-			if offsetX == 0 and offsetZ == 0 then
-				middleY = hit.Position.Y
-			end
-		end
-	end
-	-- for offsets -2 to 2 the sum of offset squared over the grid is 5 columns of (4 + 1 + 0 + 1 + 4) = 50
-	local squares = (2 * BODY_SLOPE_REACH + 1)
-		* (BODY_SLOPE_REACH * (BODY_SLOPE_REACH + 1) * (2 * BODY_SLOPE_REACH + 1) / 3)
-	local normal = Vector3.new(-sumX / squares, 1, -sumZ / squares).Unit
-	return math.deg(math.acos(math.clamp(normal.Y, -1, 1))), middleY
-end
+local bodySizeSlopeAt = SlideProfile.bodySizeSlopeAt
 
 -- Helpers the describe blocks below share. Each is written once, here.
 local BODY_PIECES = { "legs_and_boots", "body_and_cushion", "left_arm", "right_arm", "head_with_beard", "nightcap" }

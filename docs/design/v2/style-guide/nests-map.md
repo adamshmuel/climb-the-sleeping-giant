@@ -8,7 +8,7 @@ Contents
   - Where it is
   - Can a player stand on his arm? Yes
   - The seam is 12 studs above what a jump can reach (Rule 82)?
-  - Three invisible fixes
+  - Invisible fixes
   - How the seam looks
 - Common: 16 meadow nests, 2 per garden
 - On him: 22 nests (with the counts and "Out of the map")
@@ -70,15 +70,14 @@ Above the seam you can walk anywhere on his belly top, his upper sides and the t
 |---|---|---|
 | Side pads | y 32.2 | Passes from z −33 to −13: the seam is 12.0 to 15.4 above. Fails at z −34 and −35 on his left (11.7 and 11.3) |
 | Thigh planks | y 32.2 | Fails from z −38 to −36 on his left (9.5 to 10.7 above) and at z −38 and −37 on his right (11.2 to 11.6) |
-| His hip crease: the groove where his thigh meets his side, 0.5 to 1.5 studs wide, at y 32 to 36, from (±30, −30) to (±19, −42). A player steps into it from the thigh plank and can stand in it | y 32 to 36 | Fails from z −39 to −25: the seam is only 8 to 10 studs above it |
+| His hip crease: the groove where his thigh meets his side, 0.5 to 1.5 studs wide, at y 32 to 36, from (±30, −30) to (±19, −42). A player walks into it from a boot top over his thigh and can stand in it. Not walk area | y 32 to 36 | Fails from z −39 to −25: the seam is only 8 to 10 studs above it. No filler (2026-11-08): if Play shows a jump from it lands on the belly or a ramp, one invisible guard on each boot top's thigh edge closes it |
 | Boot tops, lap planks | y 30 to 33 | Pass: 11 or more studs away sideways, out of jump reach |
 | His arm (cuff front) | the cuff top is y 36.5 to 39 | Fails: the cuff top is 4 to 7 studs above the side pad and 8.5 studs from it. A player can jump onto it and walk up onto his belly. code_lead saw this in Play |
 | Guard tops | none built yet | Spec 3's guards must have steep tops, never flat ones |
 
-**Three invisible fixes** (smooth, invisible, solid, no flat tops, built the same on both sides). Each face is at least 75°: steep enough that a player slips in Play. The game lets players walk on slopes up to 70°, so anything gentler can be stood on. 75° is a starting value; a Play walk-off onto each fix confirms it:
-1. **Crease filler:** fills his hip crease from the thigh plank's inner edge up his side, from (±30, 32, −30) to (±19, 35, −42), so nobody can stand in the groove.
-2. **Low-seam lift:** from z −39 to −33 the walk area starts at y 44.5 instead of at the natural seam. A steep layer covers the cloth between them. The edge moves in by up to 3.5 studs (at z −38 on his left, from x −16.5 to x −13). It ends at z −39.5, so the ramp top and Rare egg 1 stay open. The stitched seam (its stitch dashes and hem band) follows the lifted edge.
-3. **Cuff ridge:** over the front of each white cuff, x ±35 to ±49, z −17 to −12.5. Both faces are at least 75° (steep enough that a player slips in Play) and its top edge is at y 44.5 (12.3 studs above the side pad). The rest of the cuff top and the sleeve stay walkable.
+**Invisible fixes** (smooth, invisible, solid, no flat tops, built the same on both sides). Each face is at least 75°: steep enough that a player slips in Play. The game lets players walk on slopes up to 70°, so anything gentler can be stood on. 75° is a starting value; a Play walk-off onto each fix confirms it:
+- **Crease filler and low-seam lift: out** (product, 2026-11-08, spec Rules 80 and 82). From z −39 to −33 the walk area and the stitched seam follow his natural seam line.
+- **Cuff ridge:** over the front of each white cuff, x ±35 to ±49, z −17 to −12.5. Both faces are at least 75° (steep enough that a player slips in Play) and its top edge is at y 44.5 (12.3 studs above the side pad). The rest of the cuff top and the sleeve stay walkable.
 
 **How the seam looks:** a stitched hem on his pyjama, like the edge of a sewn panel.
 - A row of cream running stitches `#FFF4DC` along the line above: dashes 1.5 studs long and 0.5 wide, with 0.7-stud gaps, lying flat on his cloth.
@@ -87,9 +86,9 @@ Above the seam you can walk anywhere on his belly top, his upper sides and the t
 - Built from small flat parts placed along the measured line and turned to his surface (no collision, no touch). Built and checked in Studio on 2026-10-19 (`mockups/test-art-seam.png`); the exact pieces are in `art-list.md`, "The seam".
 - **Fabric material** on the dashes and the band. On plain plastic the band washed out to almost the pyjama colour in the sun; Fabric keeps it a clear darker blue.
 - **The band is a chain of short pieces** (0.5 studs each) that meet end to end and follow his surface. Longer 1-stud pieces tilted at different angles and left a jagged, stepped edge up close.
-- **The seam stops at a belly pocket.** Each belly pocket hangs just below the lifted seam, so the stitches and band stop 3 studs either side of it and the pocket's own hem band takes over. It reads as a pocket sewn into the hem.
+- **The seam stops at a belly pocket.** Each belly pocket hangs just below the seam, so the stitches and band stop 3 studs either side of it and the pocket's own hem band takes over. It reads as a pocket sewn into the hem.
 
-Studio markers: `Workspace.Mockup_Nests.SeamLine` shows the measured seam in cyan and the lifted part in orange.
+Studio markers: `Workspace.Mockup_Nests.SeamLine` shows the measured seam in cyan. Its orange part (the old lifted line) is not built.
 
 ## Common: 16 meadow nests, 2 per garden
 
@@ -117,7 +116,7 @@ Each garden's 2 nests sit just past its bridge, about 10 studs apart, about 2 se
 | Lap fold | Uncommon | (−13.5, 27.4, −62.5) | (13.5, 27.6, −62.5) | On the inner slope of his boot top, just outside the lap plank's outer rope rail. Placed 2026-10-18, see "The lap fold and the knee pocket". The name stays so the spec's rules still point at it | leans 38° / 36° (gap 0.20, sink 0.18 / 0.13) | 2.35 |
 | Lower belly (V1 Rare egg 1) | Rare | (−12.5, 41.3, −40.3) | (12.5, 41.2, −40.3) | V1's spot, at the top of each ramp from the lap landing. Leans with the belly | 0.36 / 0.12 | 2.0 |
 | Beard–belly fold | Rare | (−7.5, 46.5, −38.5) | (7.5, 47.0, −38.5) | Beside the tip of his beard, where it lies on his belly | 0.17 / 0.47 | 1.55 |
-| **Belly pocket (new)** | Rare | (−16, 44.6, −36.5) | (16, 45.1, −36.5) | A sewn pocket just above the lifted seam, about 5 studs' walk from the ramp top. 6.1 studs from Rare egg 1 (6.5 on his right) | on the pocket | 1.60 / 1.55 |
+| **Belly pocket (new)** | Rare | (−16, 44.6, −36.5) | (16, 45.1, −36.5) | A sewn pocket just above the seam, about 5 studs' walk from the ramp top. 6.1 studs from Rare egg 1 (6.5 on his right) | on the pocket | 1.60 / 1.55 |
 | **Cuff pocket, front (new)** | Epic | (−55.0, 32.5, −11.0) | (54.9, 32.5, −11.0) | A sewn pocket at the bottom of his white cuff, on the strap's ledge (build 2, measured 2026-10-18) | on the pocket | 1.73 |
 | **Cuff pocket, back (new)** | Epic | (−57.3, 32.5, −6.0) | (57.2, 32.5, −6.0) | The same ledge, 5.5 studs further back | on the pocket | 1.54 |
 | Nightcap brim | Legendary | (−14, 117.1, 14) | (14, 116.7, 14) | On the cap, just past the cap ladder top | 0.32 / 0.28 | above his eyes |

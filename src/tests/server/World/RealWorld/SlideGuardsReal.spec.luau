@@ -67,10 +67,14 @@ describe("the real world, slide guards", function()
 		return geometry :: MeshPart
 	end
 
-	-- Every place players need and the seam: the one list in PlayerNeeds, which the stuck scan's rare-spot check reads too.
+	-- Every place players need and the seam: the one list in PlayerNeeds, which the stuck scan's rare-spot check reads too,
+	-- plus spec 5's steep layer (not a need for the scan, but guards keep 2 studs from it: plan 2c).
 	-- Both ladders' trusses must exist, so a missing ladder can't hide as a shorter list.
 	local function realNeeds(world: Instance): { Need }
 		local needs = PlayerNeeds.fromWorld(world)
+		for _, steep in PlayerNeeds.steepLayer(world) do
+			table.insert(needs, steep)
+		end
 		local names: { [string]: boolean } = {}
 		for _, need in needs do
 			names[need.name] = true
