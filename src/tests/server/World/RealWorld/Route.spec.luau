@@ -13,7 +13,7 @@ local groundRay = Helpers.groundRay
 local loadRoute = Helpers.loadRoute
 local realWorld = Helpers.realWorld
 
--- The footprint route and the landing spots (Task 23). They are built by tools/world/08-route.luau. These tests only
+-- The footprint route and the landing spots (Task 23). They are built by tools/world/08-route/ (run Run.luau). These tests only
 -- READ the real world.
 describe("the real world, route and landing spots", function()
 	local Workspace = game:GetService("Workspace")

@@ -13,3 +13,5 @@
 - Before writing a card from a plan's Files line, check each file exists and each "change" is still needed: p5 Task 14 named `WalkMap.spec.luau` (made later by plan 3 Task 9; the real map is in `StuckScan/OnTheGiant.spec.luau`) and a PathCheck area change already met (x ±68.8 measured), 2026-11-08.
 - A jump or reach check never takes a named list of jump surfaces alone: add every body surface walkable from them (walk flood), and rays see every solid part (p5t15 crease from the boot tops, 2026-11-08).
 - Before a card names a world part from an old world script, grep the tests for "does not ask for <name>": `RightBoots_Walk` was removed in stuck-safety Task 24, yet 03-climb and WalkHelpers still name it (p5t15d, 2026-11-09).
+- Check a coordinator's count against the spec before the card: "12 landing spots" was 10 by Rule 43 (side ladders dropped 2026-11-03), p3t8, 2026-11-10.
+- Before a card says a world script's rerun will print "already done", check that its hand points still stand on built parts (p3t8a: 08-route's Belly_* points sat on ramps removed in Tasks 5 and 6b, so the script couldn't run), 2026-11-10.

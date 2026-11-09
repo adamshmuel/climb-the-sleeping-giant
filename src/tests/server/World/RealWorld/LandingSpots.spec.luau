@@ -29,7 +29,7 @@ describe("the real world, route and landing spots", function()
 	local EGG_LANDING_CLEARANCE = 10 -- studs between a landing spot and every egg spot (the grab reach is 8)
 
 	-- The meadow props a player walks straight through (their CanCollide is off, so the solid-part checks never see
-	-- them). designer owns which props count. The same list and the same circles are in tools/world/08-route.luau.
+	-- them). designer owns which props count. The same list and the same circles are in tools/world/08-route/RoutePlaces.luau.
 	--   * a sunflower: the position of its Stem part;
 	--   * a bush or rock: a circle at the middle of the model's bounding box, as wide as half its smaller side.
 	-- Ground cover (flowers, ferns, grass tufts, clovers, water lilies) is left out: a player may walk over it. Trees

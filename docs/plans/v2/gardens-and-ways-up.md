@@ -315,6 +315,41 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   5. (Real world) The landing's back-edge point links to both belly ramps' first points.
 - Done when: the tests pass, `08-route` run twice says "already done" the second time, and Play shows the trail from garden 3 running to the boot ladder's foot (screenshot).
 - **Turns green here:** Task 5's `Route.spec` rows: "every route point stands on ground a player walks on" (`RoutePoint_Belly_AnkleTop`) and "every link is walkable" (`Belly_1` -> `Belly_AnkleTop`, `Belly_1` -> `Belly_KneeFoot`, `Belly_AnkleTop` -> `Belly_BootStep`), plus the Route rows Task 6 adds, because the old left path points go.
+- **Split into 8a, 8b, 8c and 8d, in that order** (code_lead, 2026-11-10; 8d added after 8a's Step 1 found the route script can't run until 8c). The work above is more than the 1-hour limit, and `08-route.luau` is at 985 lines (the file limit is 1000), so it is split before anything is added. The text above stays the full list of what Task 8 changes; each part below builds its share.
+
+**Task 8a: 08-route split into a folder (no world change)**
+- Stands on: Task 7 (built, committed 0ae7d6b9). Code move only; it reads no world layer.
+- For: keeps the route script under the file limit before 8c and 8d add to it. Size: 1 step plus a finish step, 20 min, about 9 Studio calls.
+- Spec rules: none of its own (it carries Rules 42 and 43 to 8c and 8d).
+- Files: `tools/world/08-route.luau` becomes the folder `tools/world/08-route/` (`Run.luau`, `RoutePlaces.luau`, `RouteChecks.luau`, `LandingChecks.luau`).
+- **Found in Step 1 (2026-11-10):** the script stops at `Belly_3: no ground under (-19.62, -42.44) near height 34.5`. The old left path's points (`Belly_1` to `Belly_3`, `Belly_KneeFoot`, `Belly_KneeTop`) sat on the knee and crossing ramps that Tasks 5 and 6b removed; no knee part is left in `World` (code_lead's read-only check). The unsplit script stops the same way: the moved check is the same code. So no 08-route run can say "already done" until Task 8c replaces those points (ruling: `work/p3t8/belly3-ruling.md`).
+- Failing test first: none (a code move). Proof instead: a text diff of the old file against the new files shows only `require` and export lines changed; the run prints the same `Belly_3` error; the narrow Route run shows only the 2 accepted Route reds.
+- Done when: those three proofs, and each file is under 500 lines.
+
+**Task 8d: Landing spots 9 and 10 by the boot ladders**
+- Stands on: Task 8c (the new route, built: the landing checks measure each spot's distance from every route link, and the script can't run until the old belly points are gone), Task 8a (the split), Tasks 4a and 5b2 (the boot ladder feet, built), Tasks 4e4, 4f and 4g (the meadow props, built), the reach walk (5b2's boot climbs start on the grass at both ladder feet: done). Plan 5 Task 12 places nests, so it stands on this task.
+- For: core gameplay (a player bounced off a boot ladder lands near it, Rule 43). Size: 4 steps, 45 min, about 22 Studio calls.
+- Spec rules: Rule 43 (Landing spots on every side).
+- Files: `tools/world/08-route/RoutePlaces.luau` (`LANDING_PLACES`, `LANDING_BOX`) and `LandingChecks.luau` (the ladder-foot check); `src/server/World/WorldIndex.luau` (`LANDING_SPOT_COUNT` 10); `RealWorld/LandingSpots.spec.luau`, `WorldIndex/RouteAndLanding.spec.luau`, `StuckScan/OnTheGiant.spec.luau` (counts 8 to 10).
+- Spots (measured by code_lead in Edit, 2026-11-10: flat grass at y 2.0, a clear 5×6×5 box, at least 10 studs from every landing spot and egg spot): `LandingSpot_9` at (−48, −69), 5.8 studs from the left boot ladder's foot (−50.8, 0.9, −64.0); `LandingSpot_10` at (48, −69), the mirror. The script's own checks (props, sky, zone, garden, route links) judge them on the dry run.
+- Failing tests first: test 4 above (10 spots, 5×6×5 box, at least 5 studs from every ladder foot); `WorldIndex` reads 10 spots and reports a missing `LandingSpot_10`.
+- Done when: the tests pass, the script's second run says "already done", the full run's only reds are EggSpots and OnTheGiant, and a Play walk with the player's controls reaches each new spot (one shot each).
+
+**Task 8b: The route reads ladders and ways up**
+- Stands on: the "four ways up and their gardens" decision (table at the top of this plan, decided 2026-11-03), Task 7 (built). Code only, fake worlds.
+- For: core gameplay (the footprints know where each way up starts). Size: 3 steps, 30 min, about 6 Studio calls.
+- Spec rules: Rule 42 (Footprints take the quickest way), Rule 35 (Every garden has a way up close by): the data they need.
+- Files: `src/shared/RouteData.luau`, `src/shared/Config.luau` (`Config.WaysUp`), `src/server/World/WorldIndex.luau` (`readWaysUp`), `RouteData.spec`, `WorldIndex.spec`.
+- Failing tests first: test 1 above, and `readWaysUp` finds one foot and one top for each of the 4 ways up in a fake world, and names a missing one.
+- Done when: the tests pass and the full run has only the accepted reds.
+
+**Task 8c: The new route on the ways up**
+- Stands on: Task 8a (the split script, built), Task 8b (the route reads `Ladder`, `WayUpFoot` and `WayUpTop`, built), Task 7 (built), and the reach check just before this task (each garden's spawn to its way up's foot, from the built world).
+- For: core gameplay (the footprints lead every garden up its own way). Size: 6 steps, 60 min, about 30 Studio calls; the card measures the new points first.
+- Spec rules: Rule 42, Rule 35, Rule 45 point 3 (the fork).
+- Files: `tools/world/08-route/RoutePlaces.luau` and `Run.luau`, `RealWorld/Route.spec.luau` (ladder links checked as climbs), `RealWorld.spec.luau` (tests 2, 2b, 3 and 5), the stuck scan files that name `Belly_1` to `Belly_3` (`StuckScan/OnTheGiant.spec.luau`, `StuckScan/ScanFacts.luau`; they name the old spots by position), `LadderBoxes.spec.luau` (its V1 route point list), `scripts/bot-walk/names.luau`.
+- Failing tests first: tests 2, 2b, 3 and 5 above.
+- Done when: as Task 8 above, and the full run's only reds are EggSpots and OnTheGiant (Route ×2 and DrawnBody green). The card's first step checks that DrawnBody's 4 failing spots are all route points; one that isn't goes to code_lead before any build. The script stops at `Belly_3` until `RoutePlaces` drops the old left path, so the card's first dry run comes after that edit. Landing spots stay at 8 here; 8d adds 9 and 10.
 
 ### Part 4: Checks on the walk map
 
