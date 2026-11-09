@@ -18,9 +18,9 @@ Contents
 ## The Epic cuff pockets
 
 "Epic is out along his arms: pockets on his white cuffs" (game_creator, 2026-10-18). How the spot was found: game_creator's first spots, down his sides, don't work:
-- **Chest pair, about (±28, 44–46, −12): fails.** There is no cloth at that spot. At that height his side meets his arm at (±34, 45, −12), and that is only 3.7 studs from a jump off the side pad (8 needed).
+- **Chest pair, about (±28, 44–46, −12): fails.** There is no cloth at that spot. At that height his side meets his arm at (±34, 45, −12), and that is only 3.7 studs from a jump off the side pad (8 needed; the side pads were dropped 2026-11-03).
 - **Shoulder pair, about (±27, 44–46, −4): fails.** That spot is inside his arm. The cloth there, the top of his sleeve at y 53, has an eye space of only 0.6 to 0.7.
-- **Moving them along the seam on his side doesn't help.** The side pads and thigh planks sit under the whole length of his side, so every seam spot from z −39 to −13 is 0 to 3.2 studs from a jump (8 needed). Higher up, toward his face, the eye space drops to 0.5 to 1.3.
+- **Moving them along the seam on his side doesn't help.** The side pads and thigh planks (both dropped 2026-11-03) sat under the whole length of his side, so every seam spot from z −39 to −13 is 0 to 3.2 studs from a jump (8 needed). Higher up, toward his face, the eye space drops to 0.5 to 1.3.
 
 So they moved along the seam onto his arm, where the seam is the cuff's rim. The **cuff pockets** sit on the outside of each white cuff, facing gardens 1 and 2 (and 7 and 8):
 
@@ -28,7 +28,7 @@ So they moved along the seam onto his arm, where the seam is the cuff's rim. The
 |---|---|---|
 | Eye space (worst garden) | 1.71 (gardens 2 and 7) | 1.58 (gardens 1 and 8) |
 | Jump reach (8 needed) | 9.6 / 9.8 | 16.5 |
-| Over a side pad? | No: 11.5 studs past the pad's end, 18 studs out to the side | No |
+| Over a side pad (dropped 2026-11-03)? | No: 11.5 studs past the pad's end, 18 studs out to the side | No |
 | Rule 59 | The nest sits upright on the pocket's flat ledge. The cuff curves 1.4 to 2.8 studs across 5 studs, so the pocket is shaped to the cuff, never a flat board | Same |
 | Twin | 0.2 studs | 0.1 studs |
 
@@ -51,7 +51,7 @@ There are two ways to build it. The Studio designer builds **build 1** if it pas
 - A **sewn strap** joins the cuff's top rim to the pocket ledge. It counts as walk area.
   - Width: at least 5 studs (6 is the target).
   - Slope: 45° is the target, never over 60° (the limit is 65°), so a player carrying an egg walks back up it without slipping.
-  - It runs from the rim down the cuff's outer face toward the back of his arm, away from the side pads and the cuff ridge.
+  - It runs from the rim down the cuff's outer face toward the back of his arm, away from the cuff ridge (and from the side pads, dropped 2026-11-03).
   - Walking off its sides is a slide.
   - The walk layer follows it at most 1 stud above it, with no step where it meets the cuff top or the ledge.
 - **Look:** a band of the darker hem blue `#2F7FD0`, 0.4 studs thick, lying on the white cuff, with the seam's cream running stitches along both long edges.
@@ -80,14 +80,14 @@ How it was measured: the same eye check as 2026-10-14 (the egg's top and bottom 
 | Back pocket egg | (−57.3, 32.5, −6.0), on its nest. Eye space **1.54** (garden 1), whole-outline check 1.45 |
 | Front pocket egg | (−55.0, 32.5, −11.0). Eye space **1.73** (garden 1), whole-outline check 1.64 |
 | Egg to egg | 5.5 studs (two nests never touch: 5 needed) |
-| Jump reach | The closest any part of the strap or ledge gets to a body jumping off the side pad: **8.7 studs** (8 needed), at the front lip's inner corner |
-| Cuff ridge and side pads | Clear. Nothing reaches past z −13 (the ridge starts at z −12.5, x ±49 and in); the side pads are 20 studs away |
+| Jump reach | The closest any part of the strap or ledge got to a body jumping off the side pad (dropped 2026-11-03): **8.7 studs** (8 needed), at the front lip's inner corner |
+| Cuff ridge and side pads | Clear. Nothing reaches past z −13 (the ridge starts at z −12.5, x ±49 and in); the side pads were 20 studs away (dropped 2026-11-03) |
 | Twins | Within 0.15 studs of the mirror spot |
 | Belly zone box | Everything sits inside x ±47 to ±61, y 32 to 39, z −13 to 5. code_lead's suggested box (x ±56 to ±66, height 28 to 58, z −16 to 6) misses the inner part from x ±47 to ±56, which the existing Belly box already covers |
 
 - Walking off the strap's inner side lands on his cloth up to 1 stud lower: a small step down, not a jump.
 - Pocket colours: the ledge is pocket blue `#308ACB` with a hem-blue band along its outer edge; the pocket's body hangs below it on the cuff. The pockets, nests and strap are now the finished art (`art-list.md`); this build's plain parts stay hidden in `Workspace.Mockup_Nests.CuffPockets` for their measured shape.
-- Already true before this change, noticed while measuring: the front of the cuff top near (±48.5, 39.7, −12) is only 6 to 7 studs from a jump off the side pad. The cuff ridge now runs to x ±49 (code_lead's buildability check), so it covers this spot.
+- Already true before this change, noticed while measuring: the front of the cuff top near (±48.5, 39.7, −12) is only 6 to 7 studs from a jump off the side pad (dropped 2026-11-03). The cuff ridge now runs to x ±49 (code_lead's buildability check), so it covers this spot.
 
 **Score, rough:** about 110 to 125, now with no hop. A strap adds about 7 studs of walking. If the back pocket scores over 127, it moves toward the front pocket (z −8 still passes both limits at the low spot).
 
@@ -142,7 +142,7 @@ Placed 2026-10-18 on code_lead's moved lap planks, under game_creator's rules (g
 **Where the lap fold could go.** I searched his skin around both lap planks on a half-stud grid:
 - **Behind the plank** (between the plank and his belly), every spot is within 8 studs of a ramp: its grab prompt would show from the ramp. The old fold spot is under the ramp.
 - **Under or beside the plank's landing end** there is no skin: that's the gap between his legs, and the plank would cover a raised pocket.
-- **The corner where the lap and thigh planks meet** has one spot, (−19.5, 27.7, −47): a groove 2.2 studs from two guards and 6.1 from the knee pocket. Too squeezed.
+- **The corner where the lap and thigh planks met** (thigh planks dropped 2026-11-03) had one spot, (−19.5, 27.7, −47): a groove 2.2 studs from two guards and 6.1 from the knee pocket. Too squeezed.
 - **In front of the plank, on the inner slope of his boot top: passes.** This is the spot.
 
 | Check | Lap fold (his left / right) | Limit |

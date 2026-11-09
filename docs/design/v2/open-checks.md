@@ -12,7 +12,7 @@ Each check points to the style guide file that holds its values (index: `docs/de
 | From a lap plank, whether players jump at the inner guard toward the trail on their own side's ramp (see "Ways up"). | `style-guide/ways-up.md`, "The plank and the fork" |
 | The seam at 65°: players slide off below it and never slip above it. | `style-guide/nests-map.md`, "The seam: where walking ends" |
 | The cuff ridge, and the hip crease (no filler): a jump from the boot tops, his thighs and crease or the lap planks never reaches walkable cloth or a belly ramp (Rule 82). | `style-guide/nests-map.md`, "Invisible fixes" |
-| Whether a player jumping off a thigh plank can grab Rare egg 1 or the belly pocket egg in mid-air. | `style-guide/nests-map.md`, "On him: 22 nests" |
+| No longer needed: the thigh planks were dropped 2026-11-03. (Was: whether a player jumping off a thigh plank can grab Rare egg 1 or the belly pocket egg in mid-air.) | `style-guide/nests-map.md`, "On him: 22 nests" |
 | Walking onto the beard tip's gentle north-west side on the footprint path without tripping, and stopping cleanly against its steep sides (no jitter, hop or half-climb). | `style-guide/nests-art.md`, "Belly top and the walk layer" |
 
 The jump reach numbers are worked out, not tested.

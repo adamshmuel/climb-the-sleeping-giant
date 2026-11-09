@@ -92,7 +92,7 @@ Only the score sets the rank. The time and the ladders are reported, not added i
 - the meter starts at 0, and drains at the solo drain in force, never below 0, so every score always uses the current drain. V2 starts the solo drain at 1.5 points a second (`gardens-and-ways-up.md`, section 5; V1 used 1). If spec 3's trigger later sets it to 1.75, every nest is scored again with 1.75;
 - the player walks at full speed with no Tiptoe and no jumps, so no thuds;
 - they start at the foot of a way up (the meadow is silent, so the walk from a garden adds nothing), climb along the quietest route the walk check can find, stand still 1 second to grab, then carry the egg along the quietest route down to the foot of any way up, which may be a different one from the way they came up;
-- the score is the quietest such heist: the quietest way up of the six (`gardens-and-ways-up.md`, section 1), then the quietest way home;
+- the score is the quietest such heist: the quietest way up of the four (`gardens-and-ways-up.md`, section 1), then the quietest way home;
 - the carried egg weighs what the nest's egg would weigh (Rule 48: The score uses the egg the nest would hold).
 
 The quietest route is any walkable ground, not only the footprints, so a nest can't be scored as harder than a smart player finds it.

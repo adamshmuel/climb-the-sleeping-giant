@@ -100,7 +100,7 @@ This list sorts every real thing in the world by how much it matters to the play
 | His face, his eyelids and the sleep meter (the big "Zzz" bubble), with its warnings: the eyelid flutter, the snoring stopping, the double snort and the "Mmm... my eggs..." bubble | Sneaking is the core loop. These tell every player how close he is to waking |
 | The wake-up: sitting up, the bounce-off, the slam fist and the red slam circles | The shared danger, and the funniest moment of the twist |
 | His boots and knees: the boot tops, the boot toe nests, the knee pockets and the lap fold | Boots and Knees zone, Uncommon eggs |
-| The six ways up: two boot ramps, two boot ladders, two side ladders with their side pads and thigh planks, the two lap planks, the lap landing with its front apron, the two belly ramps and the belly path | The only roads onto him. Every heist uses one, and each garden has its own close by |
+| The four ways up onto the boot tops: two boot ramps and two boot ladders (the side ladders, side pads and thigh planks were dropped on 2026-11-03). Then the two lap planks, the lap landing with its front apron, the two belly ramps and the belly path | The only roads onto him. Every heist uses one, and each garden has its own close by |
 | His belly top and upper sides down to the stitched seam, with the lower belly nests and the 2 belly pockets | Belly zone, Rare eggs, walk anywhere |
 | His arms out to his white cuffs, the 4 cuff pockets and the 2 cuff straps | Epic eggs |
 | The beard–belly fold nests at the foot of his beard | Rare eggs |
@@ -138,7 +138,7 @@ This list sorts every real thing in the world by how much it matters to the play
 
 | Thing | Tier | Does the player play with it? | Would a player notice if it were smaller, simpler or moved? |
 |---|---|---|---|
-| **The Sock** | Scenery | No. No egg, no path, no noise. Players only bump into it in the meadow by his left side, near the ladders gardens 1 to 3 use | No, if it still reads as a giant sock from the gardens. Smaller, with no overhanging edge, or moved a few studs off the walk: nobody would notice |
+| **The Sock** | Scenery | No. No egg, no path, no noise. Players only bump into it in the meadow by his left side (your right as you face him), near the boot ladder gardens 1 to 3 use (`BootLadder_Left`) | No, if it still reads as a giant sock from the gardens. Smaller, with no overhanging edge, or moved a few studs off the walk: nobody would notice |
 | **The pillow** | Scenery | No. No egg and no path. A player only lands on it by stepping or jumping off the back of his nightcap, so it only has to let them slide off safely. (Zone 5 is called "Beard, Pillow and Nightcap", but nothing is played on the pillow) | Half as big, with his head still clearly leaning on it: no. Moved away from his head: yes, because his head would float |
 | **The nightcap** | Core gameplay (the brim, the side stripe, the top of the cap and the cap ladder top) | Yes. The 4 Legendary nests, the Dream Egg in Deep Sleep, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
 | **The beard** | Core gameplay for the fold at its foot only; the rest is scenery | The fold, with its Rare nests, and the middle beard ladder, the way up to his nose (V2, Adam, 2026-11-04) | The fold: yes. The rest: block it, never reshape it |
@@ -230,7 +230,7 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
   - he snores deeper;
   - noise counts half;
   - a glowing **Dream Egg** (Secret rarity) appears on the top of his nightcap, above the cap ladder top.
-- **The race:** the whole server tries for the cap at once, up one ladder on each side, so this is where the funniest wake-ups happen.
+- **The race:** the whole server tries for the cap at once, up the one middle pair of ladders (the beard ladder, then the cap ladder, on his centre line), so this is where the funniest wake-ups happen.
 - **Team Egg:** a giant **Team Egg** also appears on his belly. It needs 2 players holding it to move it, and both carriers get a pet from it, rolled at Epic odds or better.
 
 ### Hatching and pets

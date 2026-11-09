@@ -24,7 +24,7 @@ Climbable patches and button columns are out of V2 (game_creator, accepted by Ad
 - Each nest has a **target rank**. Its real rank comes later from its difficulty score (Rule 50: The score sets the rank). If the score disagrees, the nest moves; it never changes rank by hand.
 - **Fits (Rule 59):** how far his surface bends away under a nest about 5 studs wide. Up to 0.5 studs: the nest sits upright. Up to 1.2 studs: the nest leans with the slope. A nest on a **pocket** sits upright on the pocket's flat ledge, so it always fits; the pocket itself is shaped to follow his cloth.
 - **Eye space:** the space between the egg's top and his closed eyes on screen, in egg heights, from the worst of the 8 spawn views (21° up, 12.5 studs behind the head). It must be at least 1.5. This round's check projects every egg and eyelash with each spawn camera; it reads the same as or lower than the earlier check (side pocket 1.69 against 1.65 before, lower belly 1.98 against 2.1, beard–belly fold 1.55 against 1.8), so it is the stricter one.
-- **Jump reach:** how close a nest gets to anywhere a player's body can reach with one jump from a side pad, a plank, a boot top or the meadow. A jump lifts the feet up to 9 studs (code_lead's Play test) and the body reaches 5 studs above the feet. This is worked out from those numbers, not tested.
+- **Jump reach:** how close a nest gets to anywhere a player's body can reach with one jump from a plank, a ramp, a boot top or the meadow (the side pads were dropped 2026-11-03; some numbers below were measured from them). A jump lifts the feet up to 9 studs (code_lead's Play test) and the body reaches 5 studs above the feet. This is worked out from those numbers, not tested.
 
 ## The seam: where walking ends
 
@@ -39,8 +39,8 @@ Above the seam you can walk anywhere on his belly top, his upper sides and the t
 | −34 | (−20.5, 43.9) | (20.0, 44.7) |
 | −32 | (−22.5, 44.5) | (22.0, 45.3) |
 | −30 | (−24.5, 44.6) | (24.5, 44.8) |
-| −28 (over the side pad) | (−26.0, 45.2) | (26.0, 45.2) |
-| −24 (over the side pad) | (−29.0, 45.4) | (29.0, 45.6) |
+| −28 (over where the side pad was) | (−26.0, 45.2) | (26.0, 45.2) |
+| −24 (over where the side pad was) | (−29.0, 45.4) | (29.0, 45.6) |
 | −20 | (−31.0, 45.6) | (30.5, 46.7) |
 | −16 | (−32.0, 46.8) | (31.5, 47.6) |
 | −14 (where his arm starts) | (−32.5, 47.0) | (31.5, 48.9) |
@@ -68,16 +68,16 @@ Above the seam you can walk anywhere on his belly top, his upper sides and the t
 
 | Surface below | Its top | Result |
 |---|---|---|
-| Side pads | y 32.2 | Passes from z −33 to −13: the seam is 12.0 to 15.4 above. Fails at z −34 and −35 on his left (11.7 and 11.3) |
-| Thigh planks | y 32.2 | Fails from z −38 to −36 on his left (9.5 to 10.7 above) and at z −38 and −37 on his right (11.2 to 11.6) |
+| Side pads (dropped 2026-11-03) | y 32.2 | Passed from z −33 to −13: the seam is 12.0 to 15.4 above. Fails at z −34 and −35 on his left (11.7 and 11.3) |
+| Thigh planks (dropped 2026-11-03) | y 32.2 | Failed from z −38 to −36 on his left (9.5 to 10.7 above) and at z −38 and −37 on his right (11.2 to 11.6) |
 | His hip crease: the groove where his thigh meets his side, 0.5 to 1.5 studs wide, at y 32 to 36, from (±30, −30) to (±19, −42). A player walks into it from a boot top over his thigh and can stand in it. Not walk area | y 32 to 36 | Fails from z −39 to −25: the seam is only 8 to 10 studs above it. No filler (2026-11-08): if Play shows a jump from it lands on the belly or a ramp, one invisible guard on each boot top's thigh edge closes it |
 | Boot tops, lap planks | y 30 to 33 | Pass: 11 or more studs away sideways, out of jump reach |
-| His arm (cuff front) | the cuff top is y 36.5 to 39 | Fails: the cuff top is 4 to 7 studs above the side pad and 8.5 studs from it. A player can jump onto it and walk up onto his belly. code_lead saw this in Play |
+| His arm (cuff front) | the cuff top is y 36.5 to 39 | Fails: the cuff top was 4 to 7 studs above the side pad (dropped 2026-11-03) and 8.5 studs from it. A player can jump onto it and walk up onto his belly. code_lead saw this in Play |
 | Guard tops | none built yet | Spec 3's guards must have steep tops, never flat ones |
 
 **Invisible fixes** (smooth, invisible, solid, no flat tops, built the same on both sides). Each face is at least 75°: steep enough that a player slips in Play. The game lets players walk on slopes up to 70°, so anything gentler can be stood on. 75° is a starting value; a Play walk-off onto each fix confirms it:
 - **Crease filler and low-seam lift: out** (product, 2026-11-08, spec Rules 80 and 82). From z −39 to −33 the walk area and the stitched seam follow his natural seam line.
-- **Cuff ridge:** over the front of each white cuff, x ±35 to ±49, z −17 to −12.5. Both faces are at least 75° (steep enough that a player slips in Play) and its top edge is at y 44.5 (12.3 studs above the side pad). The rest of the cuff top and the sleeve stay walkable.
+- **Cuff ridge:** over the front of each white cuff, x ±35 to ±49, z −17 to −12.5. Both faces are at least 75° (steep enough that a player slips in Play) and its top edge is at y 44.5 (12.3 studs above where the side pad was, dropped 2026-11-03). The rest of the cuff top and the sleeve stay walkable.
 
 **How the seam looks:** a stitched hem on his pyjama, like the edge of a sewn panel.
 - A row of cream running stitches `#FFF4DC` along the line above: dashes 1.5 studs long and 0.5 wide, with 0.7-stud gaps, lying flat on his cloth.

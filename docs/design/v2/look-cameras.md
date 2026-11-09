@@ -43,7 +43,7 @@ Measured in Studio (Edit mode) on 2026-11-02.
 
 | What changes | Cameras |
 |---|---|
-| Anything on his face, beard, nose, forehead or cap (for example the face ladders) | `meadow-wide`, `meadow-front`, `face`, `gate-4`, `gate-5` |
+| Anything on his face, beard, nose, forehead or cap (for example the beard ladder and cap ladder) | `meadow-wide`, `meadow-front`, `face`, `gate-4`, `gate-5` |
 | His belly, boots or the ways up to the belly | `meadow-wide`, `meadow-front`, and the gate cameras that face that side. Add `view-plank` for anything on the lap planks or the landing |
 | His sides, arms or cuffs | `meadow-wide`, plus `gate-1` to `gate-3` (left) or `gate-6` to `gate-8` (right) |
 | The meadow, the gardens or the light | `meadow-wide`, plus every gate camera |
