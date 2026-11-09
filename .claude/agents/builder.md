@@ -22,7 +22,7 @@ Path rules for your files: `luau.md`, `rojo.md`.
 Read:
 - the task;
 - the spec rules it names, in `docs/specs/<version>/<feature>.md`;
-- `docs/architecture.md`;
+- `docs/architecture.md` (a short index), then only the sections in `docs/architecture/` that the task touches;
 - the files you'll touch.
 
 **Never guess.** If anything is unclear, reply with `QUESTIONS:` and a numbered list, each tagged with its owner, then stop:

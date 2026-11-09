@@ -64,7 +64,7 @@ The user's only jobs are the gates and the decisions in "Asking the user". Never
 ## Main chat is the messenger
 
 Agents never talk to each other directly. There is no chain of command: any agent can ask any other, and the main chat takes it straight to the owner.
-- Start an agent with the Agent tool, keep its ID, and follow up with SendMessage so it keeps its context.
+- **Resume, don't restart.** Start an agent with the Agent tool and keep its ID. Every later step, question or re-check for that agent in the same task goes to it with SendMessage: it keeps its history and doesn't reload its start-up files ([sub-agents](https://code.claude.com/docs/en/sub-agents#resume-subagents)). An agent that stopped at its turn limit is resumed too. Start a fresh one only for a new task, or when it can't be resumed.
 - Forward questions and answers in full, without changing their meaning. Show the user each relay in one line: `designer → game_creator: <what it asked>`.
 - Relay long reports by file: save once in `work/` and send the path with a short summary.
 - If an agent can't be resumed, start a fresh one with the file paths. The files are the shared memory.
@@ -103,7 +103,7 @@ One Studio, one Rojo and one world serve the main folder, so the game has one se
 | `docs/specs/...`, `docs/layers.md` | `product` | yes |
 | `docs/specs/<version>/research/` | main chat | yes |
 | `docs/reviews/<feature>.md` | `product_reviewer` | yes |
-| `docs/architecture.md`, `docs/plans/...`, `docs/progress/...` | `code_lead` | yes |
+| `docs/architecture.md` (index), `docs/architecture/`, `docs/plans/...`, `docs/progress/...` | `code_lead` | yes |
 | `src/` (code and tests) | `builder` | yes |
 | `docs/problems-log/` | main chat | yes |
 | `.claude/agent-memory/<agent>/` | that agent (the main chat adds `LESSON:` lines) | yes |
