@@ -25,7 +25,6 @@ local START_STEPS = 2 -- grid steps round the start egg spot where walk-map spot
 local SAMPLE_STEP = 2 -- studs between the gap check's samples
 local SKIP_LIMIT = 12 -- rays that skip invisible parts at one point, at most
 local MARGIN = 1 -- studs a sample ray starts above the zone box, and ends below it
-local KINDS = { "too steep", "floating", "sunk", "gap", "zone", "seam match" }
 local LISTED_PER_KIND = 10
 local ART_RAY_LENGTH = 250 -- studs: the ray down onto the strap and pocket art reaches this far
 local CHEST_SOUTH_Z = -20 -- Q1: north of this z, between x -CHEST_HALF_X and CHEST_HALF_X, his chest is not walk area
@@ -36,6 +35,10 @@ local SLEEVE_X_MIN, SLEEVE_X_MAX = 42, 52 -- Rule 79: gap rows with |x| in this 
 local STEEP_REACH = 1.5 -- studs: a gap sample this close to a steep-layer piece is a slide by design
 
 local WalkAreaFacts = {}
+
+-- Task 15g close (product, 17:13): gaps and too-steep are checked on made-up worlds and by Task 15e's walks.
+-- The real-world check reports only these kinds.
+WalkAreaFacts.ASSERTED = { "floating", "sunk", "zone", "seam match" }
 
 function WalkAreaFacts.artFolder(): Instance
 	local nests = Workspace:FindFirstChild("Mockup_Nests")
@@ -80,14 +83,17 @@ function WalkAreaFacts.visibleArt(side: string): { BasePart }
 	return parts
 end
 
--- The walk-map spots within START_STEPS grid steps of the start egg spot.
-local function startIds(world: Instance, map: PathCheck.WalkMap): { number }
+-- The walk-map spots within START_STEPS grid steps of the start egg spot or of its mirror (x flipped): the Belly's
+-- other side is a start too.
+function WalkAreaFacts.startIds(world: Instance, map: PathCheck.WalkMap): { number }
 	local eggSpot = (world :: any).EggSpots:FindFirstChild(START_EGG_SPOT)
 	expect(eggSpot).never.toBeNil()
 	local at = (eggSpot :: Model):GetPivot().Position
+	local mirror = Vector3.new(-at.X, at.Y, at.Z)
+	local reach = START_STEPS * map.spacing
 	local ids: { number } = {}
 	for _, spot in map.spots do
-		if (spot.position - at).Magnitude <= START_STEPS * map.spacing then
+		if (spot.position - at).Magnitude <= reach or (spot.position - mirror).Magnitude <= reach then
 			table.insert(ids, spot.id)
 		end
 	end
@@ -143,8 +149,9 @@ function WalkAreaFacts.isCutGap(position: Vector3): boolean
 end
 
 -- Task 15g (trace row 4): a ramp spot is not checked against the visible surface when it stands on a BellyRamp_* piece
--- and: it is a curb or a Fill block; or a Cover board (drawn, no collision; `covers`) lies under it by shape, 0.2 below to 0.7 above;
--- or it is a Piece<n> with its own Fill<n> beside it (Piece13 stands on Fill13, ruled not a float).
+-- and: it is a curb; or a Cover board (drawn, no collision; `covers`) lies under it by shape, 0.2 below to 0.7 above;
+-- or it is a Piece<n> with its own Fill<n> beside it, or a Fill<n> with its Piece<n> (Piece13 stands on Fill13, ruled
+-- not a float), and in both cases no Cover board lies under it at any height (a board at the wrong height is a float).
 function WalkAreaFacts.skipRampSpot(spot: PathCheck.Spot, covers: { BasePart }): boolean
 	local part = spot.standsOn
 	local ramp: Instance? = part.Parent
@@ -154,16 +161,19 @@ function WalkAreaFacts.skipRampSpot(spot: PathCheck.Spot, covers: { BasePart }):
 	if ramp == nil then
 		return false
 	end
-	if string.find(part.Name, "Curb", 1, true) ~= nil or string.match(part.Name, "^Fill%d+$") ~= nil then
-		return true -- a curb, or the invisible Fill block a Piece stands on (a spot on its top sits inside the ramp)
+	if string.find(part.Name, "Curb", 1, true) ~= nil then
+		return true
 	end
 	local position = spot.position
 	local top = WalkAreaFacts.artTopUnder(covers, position.X, position.Z, position.Y + COVER_ABOVE)
 	if top ~= nil and position.Y - top >= -COVER_BELOW and position.Y - top <= COVER_ABOVE then
 		return true
 	end
-	local number = string.match(part.Name, "^Piece(%d+)$")
-	return number ~= nil and ramp:FindFirstChild(`Fill{number}`) ~= nil
+	local pieceNumber = string.match(part.Name, "^Piece(%d+)$")
+	local fillNumber = string.match(part.Name, "^Fill(%d+)$")
+	local hasPair = (pieceNumber ~= nil and ramp:FindFirstChild(`Fill{pieceNumber}`) ~= nil)
+		or (fillNumber ~= nil and ramp:FindFirstChild(`Piece{fillNumber}`) ~= nil)
+	return hasPair and WalkAreaFacts.artTopUnder(covers, position.X, position.Z, math.huge) == nil
 end
 
 -- True when `position` is within STEEP_REACH of a steep-layer piece, by shape: a slide by design (Task 15a), never a gap.
@@ -380,7 +390,7 @@ function WalkAreaFacts.inputs(world: Instance, map: PathCheck.WalkMap): Inputs
 	end
 
 	return {
-		starts = startIds(world, map),
+		starts = WalkAreaFacts.startIds(world, map),
 		isBelly = function(position)
 			return zoneOf(position) == "Belly"
 		end,
@@ -405,11 +415,11 @@ function WalkAreaFacts.inputs(world: Instance, map: PathCheck.WalkMap): Inputs
 		end,
 		samples = samples,
 		stitches = stitches,
-		steepLayer = world:FindFirstChild("SteepLayer"),
+		steepLayer = steepLayer,
 	}
 end
 
--- All six checks on the walk area of the real world. Problems, in the order of KINDS.
+-- All six checks on the walk area of the real world. Only the ASSERTED kinds come back, in the order of ASSERTED.
 function WalkAreaFacts.problems(world: Instance, map: PathCheck.WalkMap): ({ Problem }, number)
 	local facts = WalkAreaFacts.inputs(world, map)
 	local area = WalkAreaCheck.walkArea(map, facts.starts, facts.isBelly, facts.alsoIn)
@@ -424,19 +434,27 @@ function WalkAreaFacts.problems(world: Instance, map: PathCheck.WalkMap): ({ Pro
 		}
 	do
 		for _, item in list do
-			table.insert(found, item)
+			if table.find(WalkAreaFacts.ASSERTED, item.kind) ~= nil then
+				table.insert(found, item)
+			end
 		end
 	end
 	return found, #area
 end
 
--- The message for a failing walk-area check: the count of each kind, then up to LISTED_PER_KIND positions of that kind,
--- lowest x first. At most 1 + 6 * 11 lines.
+-- The message for a failing walk-area check: the count of each ASSERTED kind (other kinds are left out, also from the
+-- total), then up to LISTED_PER_KIND positions of that kind, lowest x first. At most 1 + 4 * 11 lines.
 function WalkAreaFacts.message(found: { Problem }, areaSpots: number): string
-	local lines = { `walk area: {areaSpots} spots, {#found} problems` }
-	for _, kind in KINDS do
+	local shown: { Problem } = {}
+	for _, item in found do
+		if table.find(WalkAreaFacts.ASSERTED, item.kind) ~= nil then
+			table.insert(shown, item)
+		end
+	end
+	local lines = { `walk area: {areaSpots} spots, {#shown} problems` }
+	for _, kind in WalkAreaFacts.ASSERTED do
 		local ofKind: { Problem } = {}
-		for _, item in found do
+		for _, item in shown do
 			if item.kind == kind then
 				table.insert(ofKind, item)
 			end

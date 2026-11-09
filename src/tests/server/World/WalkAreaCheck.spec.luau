@@ -426,4 +426,70 @@ describe("WalkAreaCheck", function()
 		fill.Parent = ramp
 		expect(rampFloats(skip)).toEqual({})
 	end)
+
+	-- Task 15g close (review findings 1-2): a pair spot is skipped only when no Cover board lies under it at any height.
+	-- A drawn board 0.9 under the feet is the wrong height (the pass band is 0.7), so the spot floats.
+	local function addWrongHeightBoard(ramp: Folder): Part
+		local cover = Instance.new("Folder")
+		cover.Name = "Cover"
+		cover.Parent = ramp
+		local board = addBox("Board1", Vector3.new(-6, -1.9, -6), Vector3.new(6, -0.9, 6)) -- top 0.9 under the feet
+		board.CanCollide = false
+		board.CanQuery = false
+		board.Parent = cover
+		return board
+	end
+
+	it("a ramp piece on its Fill with a Cover board 0.9 under the feet is a float", function()
+		local ramp = addRamp()
+		addRampPiece(ramp, "Piece13", 0)
+		addInvisibleBox("Fill13", Vector3.new(-6, -3, -6), Vector3.new(6, -0.2, 6)).Parent = ramp
+		local board = addWrongHeightBoard(ramp)
+		expect(countKind(rampFloats(rampSkip({ board })), "floating") > 0).toBe(true)
+	end)
+
+	it("a Fill spot with a Cover board 0.9 under the feet is a float", function()
+		local ramp = addRamp()
+		addInvisibleBox("Fill13", Vector3.new(-6, -3, -6), Vector3.new(6, 0, 6)).Parent = ramp
+		addInvisibleBox("Piece13", Vector3.new(8, -1, -6), Vector3.new(14, 0, 6)).Parent = ramp
+		local board = addWrongHeightBoard(ramp)
+		expect(countKind(rampFloats(rampSkip({ board })), "floating") > 0).toBe(true)
+	end)
+
+	-- Task 15g close (product, 17:13): gaps and too steep are checked on made-up worlds and by Task 15e's walks.
+	it("the real-world message leaves out gap and too steep", function()
+		local found: { WalkAreaCheck.Problem } = {
+			{ kind = "gap", position = Vector3.new(1, 2, 3), detail = "gap" },
+			{ kind = "too steep", position = Vector3.new(4, 5, 6), detail = "steep" },
+		}
+		expect(WalkAreaFacts.message(found, 5)).toBe(WalkAreaFacts.message({}, 5))
+	end)
+
+	it("a map spot at the mirror of the start egg spot is a start", function()
+		local eggSpots = Instance.new("Folder")
+		eggSpots.Name = "EggSpots"
+		eggSpots.Parent = world
+		local eggSpot = Instance.new("Model")
+		eggSpot.Name = "EggSpot_Rare_1"
+		eggSpot.Parent = eggSpots
+		local marker = Instance.new("Part")
+		marker.Anchored = true
+		marker.CanCollide = false
+		marker.Transparency = 1
+		marker.Position = Vector3.new(-12, 0, -6)
+		marker.Parent = eggSpot
+		addWalkFloor(false)
+		local map = PathCheck.buildMap(options, FLOOR_AREA)
+		local mirror = Vector3.new(12, 0, -6) -- WalkAreaFacts.startIds: the start egg spot with x flipped
+		local nearest: PathCheck.Spot? = nil
+		for _, spot in map.spots do
+			if nearest == nil or (spot.position - mirror).Magnitude < (nearest.position - mirror).Magnitude then
+				nearest = spot
+			end
+		end
+		expect(nearest).never.toBeNil()
+		local startIds = (WalkAreaFacts :: any).startIds
+		expect(startIds).never.toBeNil()
+		expect(table.find(startIds(world, map), (nearest :: PathCheck.Spot).id)).never.toBeNil()
+	end)
 end)

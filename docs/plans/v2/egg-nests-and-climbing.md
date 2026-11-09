@@ -296,6 +296,8 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Added by product on 2026-11-09 (`work/p5t15g/stepback-decision.md`), about 6 min more:
   - 2 belly walks: from each belly ramp top, walk across that half of the belly to x ±40 and back, once at about Rare egg 1's height and once at z −28. Pass: no stall and no slip above the stitches. A stall goes to product with its shot.
   - 1 side-view shot at cuff station 4, both arms, over the float spots the walk-area check found. designer judges it against spec 5 section 5 (a float of 0.4 studs or more is visible). Then product accepts the floats or designer picks the fix.
+  - 1 walk-off down the right side of his belly at z −29 to −30, with a side shot (product's close ruling, `work/p5t15g/close-ruling.md`). An invisible steep plate end (`SteepLayer.Steep_Right_z-29/-30/-31_top`) sticks 1.8 studs out of his cloth there, on the right side only. Pass: no stop, catch or stand on the edge, and the slip starts within the seam match.
+  - Only if that walk-off fails: a small fix (10 min, Sonnet builder, about 3 Studio calls, backup into `ServerStorage.WorldBackups.Plan5Task15aLip`) trims the upper end of those 3 plates to sit under his cloth, as on the left. Then the walk-off runs again. Stands on: the walk-off result (it failed).
 - Done when: every case passes with its shots, and designer says yes.
 
 **Task 15f: Rare stuck spots re-measured** (product's condition 2, stuck safety Task 23)
@@ -318,6 +320,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   - A second flood start at the mirror of Rare egg 1 (x flipped), so the right half of the belly is checked too.
   - The ramp skip narrowed: a ramp piece on its Fill block is skipped only when no Cover board lies under it.
   - Done when: the full run's walk-area line names only "seam match" (Task 16) and the arm-end floats past the cuff rim (today 5, at x −60.8, −58.8, −52.8, 55.2, 61.2, plus their mirrors). Any other line goes to product.
+- Closing fix built and run 2026-11-09: 2976 passed, 6 failed (the 5 accepted plus OnTheGiant's walk-area test), 0 could not run. The walk-area test is an accepted red naming exactly 7 lines (product, `work/p5t15g/close-ruling.md`): seam match (Task 16), 5 arm-end floats plus 1 invisible curb (ruled after Task 15e's shots), and the right steep edge at (25.2, 47, −29) (Task 15e walk-off).
 
 **Task 16: World prep: the seam**
 - Stands on: Task 15a (the steep layer, built), Task 15d (the thigh guards, built), Task 15g (the check repair, built), Task 15e (the final walk-offs passed), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
