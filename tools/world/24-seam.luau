@@ -360,9 +360,10 @@ local function run24(): string
 	end
 	local backup = (backups :: Instance):FindFirstChild("p5t16")
 	if backup == nil then
-		backup = Instance.new("Folder")
-		backup.Name = "p5t16"
-		backup.Parent = backups
+		local made = Instance.new("Folder")
+		made.Name = "p5t16"
+		made.Parent = backups
+		backup = made
 	end
 
 	ChangeHistoryService:SetWaypoint("24-seam: before")

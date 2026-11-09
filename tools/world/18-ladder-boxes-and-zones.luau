@@ -263,7 +263,7 @@ local function run(): string
 				stop(`Belly_FrontA is {fmt(box.size.Z)} deep, not deeper than the cut ({fmt(back - CUT_Z)})`)
 			else
 				local depth = back - CUT_Z
-				local cut = {
+				local cut: Box = {
 					name = box.name,
 					zone = box.zone,
 					-- the front edge (lower z) moves back by (size - depth), so the centre moves back by half of it
@@ -576,7 +576,7 @@ local function run(): string
 		box.CastShadow = false
 		box.Size = want.size
 		box.CFrame = want.cframe
-		box:SetAttribute("Ladder", string.gsub(want.name, "^LadderBox_", ""))
+		box:SetAttribute("Ladder", (string.gsub(want.name, "^LadderBox_", "")))
 		box:SetAttribute("Zone", want.zone)
 		box.Parent = folder
 		done = false
