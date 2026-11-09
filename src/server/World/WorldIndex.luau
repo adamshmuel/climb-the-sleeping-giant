@@ -33,6 +33,15 @@ export type EggSpot = {
 -- One point of the footprint route (World.Route), as RouteData reads it.
 export type RoutePoint = RouteData.Point
 
+-- One way up from the gardens (Config.WaysUp): its foot and top points on the route.
+export type WayUp = {
+	name: string,
+	gardens: { number },
+	walkLimitSeconds: { number }, -- one per garden, same order as gardens
+	foot: RoutePoint,
+	top: RoutePoint,
+}
+
 -- One place in the meadow where a player lands after the bounce-off (Rule 12): LandingSpot_1 to LandingSpot_8.
 export type LandingSpot = {
 	index: number, -- 1 to 8
@@ -393,6 +402,61 @@ function WorldIndex.readRoute(world: Instance): ({ RoutePoint }?, { string })
 		return nil, problems
 	end
 	return points, {}
+end
+
+-- Finds, for one kind of end ("WayUpFoot" or "WayUpTop"), the single route point of each way up in Config.WaysUp.
+-- Adds a problem line for a missing one, a second one, and a name that is not in Config.WaysUp.
+local function findWayUpEnds(points: { RoutePoint }, attribute: string, problems: { string }): { [string]: RoutePoint }
+	local known: { [string]: boolean } = {}
+	for _, wayUp in Config.WaysUp do
+		known[wayUp.Name] = true
+	end
+	local found: { [string]: RoutePoint } = {}
+	for _, point in points do
+		local value = if attribute == "WayUpFoot" then point.wayUpFoot else point.wayUpTop
+		if value == nil then
+			continue
+		end
+		if not known[value] then
+			table.insert(problems, `{point.name} has {attribute} "{value}", which is not in Config.WaysUp`)
+		elseif found[value] ~= nil then
+			table.insert(problems, `Route points {found[value].name} and {point.name} both have {attribute} "{value}"`)
+		else
+			found[value] = point
+		end
+	end
+	for _, wayUp in Config.WaysUp do
+		if found[wayUp.Name] == nil then
+			table.insert(problems, `No route point has {attribute} "{wayUp.Name}"`)
+		end
+	end
+	return found
+end
+
+-- Reads the four ways up (Config.WaysUp) from the route: for each one, the point with its WayUpFoot and the point with
+-- its WayUpTop. They come back in Config order. Problems come one per line; with any problem there are no ways up.
+function WorldIndex.readWaysUp(world: Instance): ({ WayUp }?, { string })
+	local points, routeProblems = WorldIndex.readRoute(world)
+	if points == nil then
+		return nil, routeProblems
+	end
+	local problems: { string } = {}
+	local feet = findWayUpEnds(points, "WayUpFoot", problems)
+	local tops = findWayUpEnds(points, "WayUpTop", problems)
+	if #problems > 0 then
+		return nil, problems
+	end
+	local waysUp: { WayUp } = {}
+	for _, wayUp in Config.WaysUp do
+		table.insert(waysUp, {
+			name = wayUp.Name,
+			gardens = wayUp.Gardens,
+			walkLimitSeconds = wayUp.WalkLimitSeconds,
+			foot = feet[wayUp.Name],
+			top = tops[wayUp.Name],
+		})
+	end
+	return waysUp, {}
 end
 
 -- Reads World.LandingSpots: exactly LandingSpot_1 to LandingSpot_8, each a BasePart. They come back in number order.

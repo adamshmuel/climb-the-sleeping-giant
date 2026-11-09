@@ -14,6 +14,13 @@ export type RarityConfig = {
 	CarryNoise: number,
 }
 
+-- One way up from the gardens: its name, the gardens that use it, and each garden's walk limit (same order).
+export type WayUpConfig = {
+	Name: string,
+	Gardens: { number },
+	WalkLimitSeconds: { number },
+}
+
 export type Config = {
 	Movement: {
 		WalkSpeed: number,
@@ -106,6 +113,7 @@ export type Config = {
 	Tick: {
 		Seconds: number,
 	},
+	WaysUp: { WayUpConfig },
 }
 
 -- Freezes a table and every table inside it.
@@ -209,6 +217,16 @@ local config: Config = {
 		PressChangesPerSecond = 10,
 	},
 	Tick = { Seconds = 0.1 },
+	-- The four ways up from the gardens to the first boot top (Rule 35 and section 5, "The four ways up and their
+	-- gardens"), in garden order. Name: the value of the route points' WayUpFoot and WayUpTop attributes. Gardens: the
+	-- gardens that use it. WalkLimitSeconds: the longest walk from each of those gardens to the way up's foot (one number
+	-- per garden, same order).
+	WaysUp = {
+		{ Name = "Left boot ladder", Gardens = { 1, 2, 3 }, WalkLimitSeconds = { 7.5, 5, 4 } },
+		{ Name = "Left ramp", Gardens = { 4 }, WalkLimitSeconds = { 4 } },
+		{ Name = "Right ramp", Gardens = { 5 }, WalkLimitSeconds = { 4 } },
+		{ Name = "Right boot ladder", Gardens = { 6, 7, 8 }, WalkLimitSeconds = { 4, 5, 7.5 } },
+	},
 }
 
 return deepFreeze(config)

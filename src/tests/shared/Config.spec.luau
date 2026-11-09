@@ -173,6 +173,28 @@ describe("Config", function()
 		})
 	end)
 
+	it("the four ways up, in garden order, with their gardens and walk limits", function()
+		expect(Config.WaysUp).toEqual({
+			{ Name = "Left boot ladder", Gardens = { 1, 2, 3 }, WalkLimitSeconds = { 7.5, 5, 4 } },
+			{ Name = "Left ramp", Gardens = { 4 }, WalkLimitSeconds = { 4 } },
+			{ Name = "Right ramp", Gardens = { 5 }, WalkLimitSeconds = { 4 } },
+			{ Name = "Right boot ladder", Gardens = { 6, 7, 8 }, WalkLimitSeconds = { 4, 5, 7.5 } },
+		})
+	end)
+
+	it("every garden 1 to 8 is in exactly one way up, with one walk limit each", function()
+		local counts: { [number]: number } = {}
+		for _, wayUp in Config.WaysUp do
+			expect(#wayUp.WalkLimitSeconds).toBe(#wayUp.Gardens)
+			for _, garden in wayUp.Gardens do
+				counts[garden] = (counts[garden] or 0) + 1
+			end
+		end
+		for garden = 1, 8 do
+			expect(counts[garden]).toBe(1)
+		end
+	end)
+
 	it("the game loop ticks every 0.1 s", function()
 		expect(Config.Tick.Seconds).toBe(0.1)
 	end)

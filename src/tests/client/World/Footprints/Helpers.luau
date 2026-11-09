@@ -3,6 +3,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local expect = JestGlobals.expect
 local Footprints = require(StarterPlayer.StarterPlayerScripts.Client.World.Footprints)
+local RouteGraph = require(StarterPlayer.StarterPlayerScripts.Client.World.RouteGraph)
 
 local UPDATE_SECONDS = 0.25
 
@@ -96,7 +97,7 @@ local function newTemplate(soleTransparency: number?): Model
 	return model
 end
 
-export type Point = { name: string, position: Vector3, neighbours: { string }, target: string? }
+export type Point = RouteGraph.Point
 
 -- The fake route: a spawn point S in the middle with three arms.
 --   E1 is 20 studs along +X (the nearest egg), E2 is 40 studs along -Z, and G3 (Gate_3) is 20 studs along -X.

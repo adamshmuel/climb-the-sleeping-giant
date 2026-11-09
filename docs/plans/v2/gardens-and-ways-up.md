@@ -337,7 +337,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 8b: The route reads ladders and ways up**
 - Stands on: the "four ways up and their gardens" decision (table at the top of this plan, decided 2026-11-03), Task 7 (built). Code only, fake worlds.
-- For: core gameplay (the footprints know where each way up starts). Size: 3 steps, 30 min, about 6 Studio calls.
+- For: core gameplay (the footprints know where each way up starts). Size: 3 steps, 29 min, about 17 Studio calls (3 narrow test runs red, 3 green, then the full run; card `work/p3t8/8b-card.md`).
 - Spec rules: Rule 42 (Footprints take the quickest way), Rule 35 (Every garden has a way up close by): the data they need.
 - Files: `src/shared/RouteData.luau`, `src/shared/Config.luau` (`Config.WaysUp`), `src/server/World/WorldIndex.luau` (`readWaysUp`), `RouteData.spec`, `WorldIndex.spec`.
 - Failing tests first: test 1 above, and `readWaysUp` finds one foot and one top for each of the 4 ways up in a fake world, and names a missing one.

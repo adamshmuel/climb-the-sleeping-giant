@@ -1,6 +1,7 @@
 --!strict
 -- Works out the glowing footprints' way from maths alone (spec Rule 2, "Footprints show the way"). It is given the
--- route's points (RouteData.read) and a position, and touches no services, instances or clocks.
+-- route's points (RouteData.read) and a position, and touches no services, instances or clocks. (Its only require is
+-- the shared RouteData, for the Point type.)
 --
 -- How a way is found:
 --  * Joining: the player joins the route at the nearest spot on any link (the closest place on the straight line
@@ -13,15 +14,14 @@
 --    one `spacing` studs before it, and so on) and stopping at the join spot. Counting from the target means the
 --    footprints ahead of a walking player stay where they are: only the ones behind them go away.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RouteData = require(ReplicatedStorage.Shared.RouteData)
+
 local RouteGraph = {}
 
 -- One route point, as RouteData.read gives it.
-export type Point = {
-	name: string,
-	position: Vector3, -- the point on the ground
-	neighbours: { string }, -- the names of the points it links to
-	target: string?, -- what it stands at (for example "EggSpot_Common_1" or "Gate_3"), or nil
-}
+export type Point = RouteData.Point
 
 -- The route as numbers, built once. Every point has an index (its place in name order).
 export type Graph = {

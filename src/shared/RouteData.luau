@@ -14,7 +14,23 @@ export type Point = {
 	position: Vector3, -- the top centre of the part: the point on the ground that a player stands on
 	neighbours: { string }, -- the names of the points it links to
 	target: string?, -- what it stands at, or nil
+	ladder: string?, -- the name of the ladder this point is an end of (Ladder attribute), or nil
+	wayUpFoot: string?, -- the way up (a Config.WaysUp name) that starts at this point, or nil
+	wayUpTop: string?, -- the way up (a Config.WaysUp name) that ends at this point, or nil
 }
+
+-- Reads an attribute that must be text. Returns the text, or nil with a problem line added when it is another type.
+local function readText(child: Instance, attribute: string, problems: { string }): string?
+	local value = child:GetAttribute(attribute) :: any
+	if value == nil then
+		return nil
+	end
+	if type(value) == "string" then
+		return value
+	end
+	table.insert(problems, `{child.Name} has a {attribute} attribute that is not text`)
+	return nil
+end
 
 -- Splits "RoutePoint_A, RoutePoint_B" into { "RoutePoint_A", "RoutePoint_B" }. Spaces around a name don't count.
 local function splitNames(text: string): { string }
@@ -60,7 +76,6 @@ function RouteData.read(route: Instance): ({ Point }, { string })
 			continue
 		end
 		local neighboursValue = child:GetAttribute("Neighbours") :: any
-		local targetValue = child:GetAttribute("Target") :: any
 		local neighbours: { string } = {}
 		if neighboursValue ~= nil then
 			if type(neighboursValue) == "string" then
@@ -69,19 +84,14 @@ function RouteData.read(route: Instance): ({ Point }, { string })
 				table.insert(problems, `{child.Name} has a Neighbours attribute that is not text`)
 			end
 		end
-		local target: string? = nil
-		if targetValue ~= nil then
-			if type(targetValue) == "string" then
-				target = targetValue
-			else
-				table.insert(problems, `{child.Name} has a Target attribute that is not text`)
-			end
-		end
 		local point: Point = {
 			name = child.Name,
 			position = (child.CFrame * CFrame.new(0, child.Size.Y / 2, 0)).Position,
 			neighbours = neighbours,
-			target = target,
+			target = readText(child, "Target", problems),
+			ladder = readText(child, "Ladder", problems),
+			wayUpFoot = readText(child, "WayUpFoot", problems),
+			wayUpTop = readText(child, "WayUpTop", problems),
 		}
 		table.insert(points, point)
 		byName[child.Name] = point
@@ -116,7 +126,47 @@ function RouteData.read(route: Instance): ({ Point }, { string })
 		end
 	end
 
+	-- Each ladder is on exactly 2 points, and those 2 link to each other.
+	local ladderPoints: { [string]: { Point } } = {}
+	local ladderNames: { string } = {}
+	for _, point in points do
+		local ladder = point.ladder
+		if ladder == nil then
+			continue
+		end
+		if ladderPoints[ladder] == nil then
+			ladderPoints[ladder] = {}
+			table.insert(ladderNames, ladder)
+		end
+		table.insert(ladderPoints[ladder], point)
+	end
+	table.sort(ladderNames)
+	for _, ladder in ladderNames do
+		local ends = ladderPoints[ladder]
+		if #ends ~= 2 then
+			local names: { string } = {}
+			for _, point in ends do
+				table.insert(names, point.name)
+			end
+			local noun = if #ends == 1 then "point" else "points"
+			table.insert(
+				problems,
+				`Ladder "{ladder}" is on {#ends} {noun} ({table.concat(names, ", ")}), but must be on exactly 2`
+			)
+		elseif not table.find(ends[1].neighbours, ends[2].name) or not table.find(ends[2].neighbours, ends[1].name) then
+			table.insert(
+				problems,
+				`Ladder "{ladder}" points {ends[1].name} and {ends[2].name} do not link to each other`
+			)
+		end
+	end
+
 	return points, problems
+end
+
+-- True when the link between two points is a climb: both are ends of the same ladder.
+function RouteData.isClimb(a: Point, b: Point): boolean
+	return a.ladder ~= nil and a.ladder == b.ladder
 end
 
 return RouteData

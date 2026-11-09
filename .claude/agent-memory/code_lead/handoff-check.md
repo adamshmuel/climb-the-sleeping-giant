@@ -27,3 +27,4 @@
 - Re-measure an accepted red's count before a card quotes it: a later world move changes it (p3t7: plan said 4 misses, real 2). A "same as before" test needs plain values read before the change, never a live read (p3t7 test 4).
 - Before ruling any zone-box cut or removal, diff old vs new zone on a 1-stud grid over the whole giant in Edit (boxes in memory, no world change). p3t7 cut by sample points only; 3 rounds and ~60 Meadow holes followed.
 - A card's "tests a world change touches" list = grep the tests for every changed part's NAME and for the folder's whole-list reads (`loadZones`/`readZones` + a count `#boxes`). p3t7 missed PillowFit's pinned ZONE_BOXES list.
+- `--handoff` reads "builder" in a card's title as "build": a title with ladder/ramp/way up then asks for a reach walk. A code-only card's title avoids those words (p3t8b, 2026-11-10).

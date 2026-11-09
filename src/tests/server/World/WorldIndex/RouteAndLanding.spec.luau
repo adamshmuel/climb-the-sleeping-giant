@@ -3,6 +3,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 
 -- Builds a fake world that only has a Route (Task 23) with a few points, with no parent. The route is a Model that
 -- always streams to players, like the real one.
@@ -120,6 +121,111 @@ describe("WorldIndex.loadRoute", function()
 		expect(okMissing).toBe(false)
 		expect(missingMessage).toBe("World is missing Route")
 		noRoute:Destroy()
+	end)
+end)
+
+-- Builds a fake world with a Route that holds a foot point and a top point for each of the four ways up (Task 8b). Each
+-- foot links to its top. The options break one thing at a time.
+type WaysUpOptions = {
+	skipFoot: string?, -- leave out the foot point of this way up
+	secondTopFor: string?, -- add a second point with this way up's WayUpTop
+	unknownFoot: string?, -- add a point whose WayUpFoot is this name (not in Config.WaysUp)
+}
+
+local function makeWaysUpWorld(options: WaysUpOptions?): Folder
+	local opts: WaysUpOptions = options or {}
+	local world = Instance.new("Folder")
+	world.Name = "World"
+	local route = Instance.new("Model")
+	route.Name = "Route"
+	route.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
+	route.Parent = world
+	local function addPoint(name: string, x: number, neighbours: string, attribute: string?, value: string?)
+		local point = Instance.new("Part")
+		point.Name = name
+		point.Size = Vector3.new(1, 0.2, 1)
+		point.CFrame = CFrame.new(Vector3.new(x, 2, 0) - Vector3.new(0, 0.1, 0))
+		if neighbours ~= "" then
+			point:SetAttribute("Neighbours", neighbours)
+		end
+		if attribute ~= nil then
+			point:SetAttribute(attribute, value)
+		end
+		point.Parent = route
+	end
+	for index, wayUp in Config.WaysUp do
+		local foot = `RoutePoint_W{index}_Foot`
+		local top = `RoutePoint_W{index}_Top`
+		local topLinks = foot
+		if opts.secondTopFor == wayUp.Name then
+			topLinks = `{foot},RoutePoint_ExtraTop`
+		end
+		if opts.skipFoot ~= wayUp.Name then
+			addPoint(foot, index * 10, top, "WayUpFoot", wayUp.Name)
+		else
+			topLinks = ""
+		end
+		addPoint(top, index * 10 + 5, topLinks, "WayUpTop", wayUp.Name)
+	end
+	if opts.secondTopFor ~= nil then
+		local topOfIt = 1
+		for index, wayUp in Config.WaysUp do
+			if wayUp.Name == opts.secondTopFor then
+				topOfIt = index
+			end
+		end
+		addPoint("RoutePoint_ExtraTop", 100, `RoutePoint_W{topOfIt}_Top`, "WayUpTop", opts.secondTopFor)
+	end
+	if opts.unknownFoot ~= nil then
+		addPoint("RoutePoint_Mystery", 120, "", "WayUpFoot", opts.unknownFoot)
+	end
+	return world
+end
+
+describe("WorldIndex.readWaysUp", function()
+	it("returns the four ways up in Config order, each with its foot and top point", function()
+		local world = makeWaysUpWorld()
+		local waysUp, problems = WorldIndex.readWaysUp(world)
+		expect(problems).toEqual({})
+		expect(waysUp).never.toBeNil()
+		local list = waysUp :: { WorldIndex.WayUp }
+		expect(#list).toBe(4)
+		for index, wayUp in Config.WaysUp do
+			expect(list[index].name).toBe(wayUp.Name)
+			expect(list[index].gardens).toEqual(wayUp.Gardens)
+			expect(list[index].walkLimitSeconds).toEqual(wayUp.WalkLimitSeconds)
+			expect(list[index].foot.name).toBe(`RoutePoint_W{index}_Foot`)
+			expect(list[index].top.name).toBe(`RoutePoint_W{index}_Top`)
+		end
+		world:Destroy()
+	end)
+
+	it("reports a way up whose foot point is missing", function()
+		local world = makeWaysUpWorld({ skipFoot = "Right ramp" })
+		local waysUp, problems = WorldIndex.readWaysUp(world)
+		expect(waysUp).toBeNil()
+		expect(problems).toEqual({ 'No route point has WayUpFoot "Right ramp"' })
+		world:Destroy()
+	end)
+
+	it("reports a way up with a second top point", function()
+		local world = makeWaysUpWorld({ secondTopFor = "Left ramp" })
+		local waysUp, problems = WorldIndex.readWaysUp(world)
+		expect(waysUp).toBeNil()
+		expect(problems).toEqual({
+			'Route points RoutePoint_ExtraTop and RoutePoint_W2_Top both have WayUpTop "Left ramp"',
+		})
+		world:Destroy()
+	end)
+
+	it("reports a WayUpFoot name that is not in Config.WaysUp", function()
+		local world = makeWaysUpWorld({ unknownFoot = "Mystery ramp" })
+		local waysUp, problems = WorldIndex.readWaysUp(world)
+		expect(waysUp).toBeNil()
+		expect(problems).toEqual({
+			'RoutePoint_Mystery has WayUpFoot "Mystery ramp", which is not in Config.WaysUp',
+		})
+		world:Destroy()
 	end)
 end)
 

@@ -7,7 +7,7 @@ local RouteGraph = require(StarterPlayer.StarterPlayerScripts.Client.World.Route
 
 local SPACING = 3.6
 
-type Point = { name: string, position: Vector3, neighbours: { string }, target: string? }
+type Point = RouteGraph.Point
 
 -- A small fake route on flat ground. `places` gives every point's x and z (y is 0) and its target if it has one;
 -- `links` lists the pairs that are joined, and each link goes both ways, like the real route.

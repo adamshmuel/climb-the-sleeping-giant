@@ -11,6 +11,9 @@ type Entry = {
 	top: Vector3?,
 	neighbours: any?, -- the text written to the Neighbours attribute (any, so a test can write a wrong type)
 	target: any?,
+	ladder: any?, -- the text written to the Ladder attribute (any, so a test can write a wrong type)
+	wayUpFoot: any?,
+	wayUpTop: any?,
 	className: string?, -- what to build instead of a Part
 }
 
@@ -40,6 +43,15 @@ local function makeRoute(entries: { Entry }): Model
 		end
 		if entry.target ~= nil then
 			point:SetAttribute("Target", entry.target)
+		end
+		if entry.ladder ~= nil then
+			point:SetAttribute("Ladder", entry.ladder)
+		end
+		if entry.wayUpFoot ~= nil then
+			point:SetAttribute("WayUpFoot", entry.wayUpFoot)
+		end
+		if entry.wayUpTop ~= nil then
+			point:SetAttribute("WayUpTop", entry.wayUpTop)
 		end
 		point.Parent = route
 	end
@@ -174,5 +186,96 @@ describe("RouteData.read", function()
 			"Route has 2 children named RoutePoint_Twin",
 			"RoutePoint_A lists itself as a neighbour",
 		})
+	end)
+
+	it("reads the Ladder, WayUpFoot and WayUpTop attributes, and leaves them nil when absent", function()
+		local route = makeRoute({
+			{ name = "RoutePoint_A", neighbours = "RoutePoint_B", ladder = "Boot", wayUpFoot = "Left boot ladder" },
+			{ name = "RoutePoint_B", neighbours = "RoutePoint_A", ladder = "Boot", wayUpTop = "Left boot ladder" },
+			{ name = "RoutePoint_C" },
+		})
+		local points, problems = RouteData.read(route)
+		expect(problems).toEqual({})
+		expect(points[1].ladder).toBe("Boot")
+		expect(points[1].wayUpFoot).toBe("Left boot ladder")
+		expect(points[1].wayUpTop).toBeNil()
+		expect(points[2].ladder).toBe("Boot")
+		expect(points[2].wayUpFoot).toBeNil()
+		expect(points[2].wayUpTop).toBe("Left boot ladder")
+		expect(points[3].ladder).toBeNil()
+		expect(points[3].wayUpFoot).toBeNil()
+		expect(points[3].wayUpTop).toBeNil()
+	end)
+
+	it("reports a Ladder, WayUpFoot or WayUpTop attribute that is not text", function()
+		local route = makeRoute({
+			{ name = "RoutePoint_A", ladder = 5 },
+			{ name = "RoutePoint_B", wayUpFoot = true },
+			{ name = "RoutePoint_C", wayUpTop = 7 },
+		})
+		local _, problems = RouteData.read(route)
+		expect(problems).toEqual({
+			"RoutePoint_A has a Ladder attribute that is not text",
+			"RoutePoint_B has a WayUpFoot attribute that is not text",
+			"RoutePoint_C has a WayUpTop attribute that is not text",
+		})
+	end)
+
+	it("reports a ladder that is on only 1 point", function()
+		local route = makeRoute({
+			{ name = "RoutePoint_A", ladder = "Boot" },
+			{ name = "RoutePoint_B" },
+		})
+		local _, problems = RouteData.read(route)
+		expect(problems).toEqual({
+			'Ladder "Boot" is on 1 point (RoutePoint_A), but must be on exactly 2',
+		})
+	end)
+
+	it("reports a ladder that is on 3 points", function()
+		local route = makeRoute({
+			{ name = "RoutePoint_A", ladder = "Boot" },
+			{ name = "RoutePoint_B", ladder = "Boot" },
+			{ name = "RoutePoint_C", ladder = "Boot" },
+		})
+		local _, problems = RouteData.read(route)
+		expect(problems).toEqual({
+			'Ladder "Boot" is on 3 points (RoutePoint_A, RoutePoint_B, RoutePoint_C), but must be on exactly 2',
+		})
+	end)
+
+	it("reports a ladder whose 2 points do not link to each other", function()
+		local route = makeRoute({
+			{ name = "RoutePoint_A", ladder = "Boot" },
+			{ name = "RoutePoint_B", ladder = "Boot" },
+		})
+		local _, problems = RouteData.read(route)
+		expect(problems).toEqual({
+			'Ladder "Boot" points RoutePoint_A and RoutePoint_B do not link to each other',
+		})
+	end)
+end)
+
+describe("RouteData.isClimb", function()
+	local function readPoints(): { RouteData.Point }
+		local route = makeRoute({
+			{ name = "RoutePoint_A", neighbours = "RoutePoint_B,RoutePoint_C", ladder = "Boot" },
+			{ name = "RoutePoint_B", neighbours = "RoutePoint_A", ladder = "Boot" },
+			{ name = "RoutePoint_C", neighbours = "RoutePoint_A,RoutePoint_D" },
+			{ name = "RoutePoint_D", neighbours = "RoutePoint_C" },
+		})
+		local points = RouteData.read(route)
+		return points
+	end
+
+	it("is true when both points are on the same ladder", function()
+		local points = readPoints()
+		expect(RouteData.isClimb(points[1], points[2])).toBe(true)
+	end)
+
+	it("is false for a point on a ladder and one off it, or two points off any ladder", function()
+		local points = readPoints()
+		expect(RouteData.isClimb(points[1], points[3])).toBe(false)
+		expect(RouteData.isClimb(points[3], points[4])).toBe(false)
 	end)
 end)
