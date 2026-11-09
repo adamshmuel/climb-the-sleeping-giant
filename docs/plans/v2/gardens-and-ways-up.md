@@ -86,6 +86,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass.
 
 **Task 3: The server knows who is on a ladder**
+- Stands on: Task 7 (`World.LadderBoxes` and the test helper `RealWorld/LadderZone.luau`, built), because this task deletes that helper and the world contract asks for the boxes.
 - Spec rules: Rule 40 (The server knows who is on a ladder), Rule 39 (Ladders are a little louder). Check C2. Edge cases "A player jumps off a ladder halfway", "A player stands at a ladder's foot in the meadow", "A cheater's device says it isn't climbing".
 - Files: `src/server/Giant/Zones.luau` (pure: `Zones.ladderAt(position, ladderBoxes)`), `src/server/World/WorldIndex.luau` (`readLadders`: every part in `World.LadderBoxes`, with its `Ladder` and `Zone` attributes, and its ladder model in `WalkSurfaces` with a `TrussPart` named `Climb`; no `Look` needed since the glow and the red flash were dropped, 2026-11-04), `src/server/Players/PlayerTracker.luau` (each sample gets `onLadder` and `ladder`), `src/server/Giant/GiantDirector.luau` (passes `onLadder` to `Noise`), `src/server/init.server.luau`, their tests.
 - What changes: see "How the server knows who climbs" and "Which zone a climber is in" above. The climber's zone is also the zone `LandingDetector` gets, so a jump off a new ladder thuds as Boots: 20.
@@ -96,7 +97,8 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   4. A jump off a new ladder halfway up thuds 20 (Boots).
   5. `readLadders` on a fake world: a missing ladder model, `Climb` or attribute is each its own problem line.
   6. The director: a climber on a Boots ladder adds 4.8 a second to the meter.
-- Done when: the tests pass. The real world has no ladder boxes yet, so the server reads an empty list until Task 7 (the world contract asks for them from Task 7).
+- Also (moved from Task 7, 2026-11-09): the world contract in `WorldIndex.luau` asks for `World.LadderBoxes`, which Task 7 has built. `LadderBoxes.spec` and `Zones.spec` switch from the test helper `RealWorld/LadderZone.luau` to `Zones.ladderAt`, and the helper is deleted (no second copy).
+- Done when: the tests pass, the helper is gone, and `readLadders` on the real world finds the 4 boxes.
 
 ### Part 3: World prep
 
@@ -226,7 +228,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   | `Route.spec` "every route point stands on ground a player walks on" | `RoutePoint_Belly_AnkleTop` (-21.1, 29.3, -56.1) | Task 8 (route rewrite) |
   | `Route.spec` "every link is walkable" | `Belly_1` -> `Belly_AnkleTop` (`LapPlank_Left.Deck` in the way); `Belly_1` -> `Belly_KneeFoot` (`LapPlank_Left.Deck`); `Belly_AnkleTop` -> `Belly_BootStep` (`LapPlank_Left.EndGuard`) | Task 8 |
   | `EggSpots.spec` "no egg stands inside a prop" | `EggSpot_Uncommon_2` touches `LapPlank_Left.Deck`; `EggSpot_Uncommon_4` touches `LapPlank_Right.Deck` | egg-nests plan Task 12 (V1 spots removed) |
-  | `Zones.spec` "every place a player can stand on the giant is in a giant zone" | missed 4 of 787, all on the boot ladders: (-43, 15.1, -63) and (-40, 22.1, -63) `BootLadder_Left.Climb`; (40, 22.1, -63) and (43, 15.1, -63) `BootLadder_Right.Climb` (the Task 4a accepted red, unchanged; none on the new decks) | Task 7 (ladder and zone boxes) |
+  | `Zones.spec` "every place a player can stand on the giant is in a giant zone" | missed 2 of 787, both on the boot ladders: (-44, 17.9, -63) `BootLadder_Left.Climb` and (44, 17.9, -63) `BootLadder_Right.Climb` (re-measured 2026-11-09; it was 4 before 5b2 moved the ladders; none on the new decks) | Task 7 (ladder and zone boxes) |
 
 **Task 6: World prep: the two belly ramps, their edge guards and his skin**
 - Stands on: Task 5 (the lap landing and apron, and their climb), his body, the Safe Gates, and the reach check just before this task (build order step 2).
@@ -276,21 +278,21 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 7: World prep: ladder boxes and zone boxes**
 - Stands on: Task 4a, Task 5 and Task 6 (every way up and the belly ramps, built), 5b2 (built: every option moves what the boot ladder boxes fit; product, 2026-11-04), 6a3c (the cap ladder climbed and passed, so its ladder box fits the final ladder; product, 2026-11-04), plan 5's (egg nests and climbing) Tasks 13, 14, 15 and 16 (the cuff straps, walk layer and seam, built), and the reach check just before this task (build order step 4).
-- Before: reach check from what exists (every walk surface built in steps 2 and 3), back up the parts into `ServerStorage.WorldBackups.Plan3Task7` in the same call (and the main chat copies the place file to `work/place-backups/`).
+- Before: reach check from what exists (every walk surface built in steps 2 and 3), back up the parts into `ServerStorage.WorldBackups.p3t7` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
 - Spec rules: Rule 40 (The server knows who is on a ladder): the boxes. Rule 36 (The lap planks): "Both lap planks, the landing and the apron count as the Boots zone". Rule 45 (One way onto the belly): "Zones". Rule 39 (Ladders are a little louder): the beard and cap ladders keep their V1 zones.
-- Files: `tools/world/18-ladder-boxes-and-zones.luau` (new), `WaysUp.spec.luau`, `src/server/World/WorldIndex.luau` (the world contract now asks for `LadderBoxes`).
-- What the script does: makes `World.LadderBoxes` (one box per ladder, four in all: the two boot ladders, the beard and the cap, covering the climbing space from the bottom rung to the top, with its `Ladder` and `Zone`); reshapes the zone boxes (see "Zone boxes on the new pieces" above), mirrored about x = 0 where the ramps and planks are.
+- Files: `tools/world/18-ladder-boxes-and-zones.luau` (new), `src/tests/server/World/RealWorld/LadderBoxes.spec.luau` (new: `WaysUp.spec` is at 997 lines), `RealWorld/LadderZone.luau` (new test helper: `climberZone`, built only from `Zones.zoneAt`, `Zones.isInside` and `Zones.higher`; Task 3 replaces it), `RealWorld/Zones.spec.luau` (its zone read only). `WorldIndex.luau` is not touched here: Task 3 builds `readLadders` and the contract line (Task 3 comes later in the build order, step 5).
+- What the script does: makes `World.LadderBoxes` (one box per ladder, four in all: the two boot ladders, the beard and the cap, covering the climbing space from the bottom rung to the top, with its `Ladder` and `Zone`); reshapes the zone boxes (see "Zone boxes on the new pieces" above), mirrored about x = 0 where the ramps and planks are. `Belly_Path` (left only) is removed first; a cut plus its mirror `Belly_PathMirror` only if test 6 fails without it; if both fail, stop (product, `work/p3t7/zone-ruling.md`).
 - Failing tests first (real world):
   1. Every ladder in `WalkSurfaces` has exactly one box, and every box has a ladder.
   2. Points spread over the lap planks, landing, apron, and each belly ramp's stations up to the one below Rare egg 1 are all Boots; Rare egg 1's spot and its mirror are Belly.
-  3. Every right ramp station is the same zone as its left mirror.
-  4. Points every 2 studs up each new ladder count as Boots for a climber (Task 3's rule); points up the beard and cap ladders give the same zone as before this script.
+  3. Piece1 to Piece16 of each ramp, and every V1 belly route point between Rare egg 1 and the beard ladder foot, read the same zone as their mirror (x turned round). A pair that differs: stop, one `QUESTIONS:` list.
+  4. Points every 2 studs up each new ladder count as Boots for a climber (`climberZone`, the rule Task 3 builds); points up the beard and cap ladders give the same zone as before this script.
   5. A point on the grass at each ladder's foot is in the Meadow.
   6. Every V1 egg spot and route point keeps its zone (no change from before).
 - Done when: the tests pass and the second run says "already done".
-- **Turns green here:** `Zones.spec` "every place a player can stand on the giant is in a giant zone": the 4 misses of 787 on `BootLadder_Left.Climb` (-43, 15.1, -63), (-40, 22.1, -63) and `BootLadder_Right.Climb` (40, 22.1, -63), (43, 15.1, -63), the Task 4a accepted red that Task 5 also closes with.
+- **Turns green here:** `Zones.spec` "every place a player can stand on the giant is in a giant zone": the 2 misses of 787, (-44, 17.9, -63) on `BootLadder_Left.Climb` and (44, 17.9, -63) on `BootLadder_Right.Climb` (measured by code_lead in Edit, 2026-11-09). It was 4 before 5b2 moved the ladders 1.6 studs; the 4-stud test grid now hits each truss once. The test reads through `RealWorld/LadderZone.luau`, which equals the zone boxes alone while `World.LadderBoxes` doesn't exist, so the helper hides nothing.
 
 **Task 8: World prep: the footprint route, 10 landing spots and the walk-limit measure**
 - Stands on: Task 4e4 (the final walk times and spawn spots), Task 4f (the teacup moved), Task 4g (the bush moved), Task 7 (the ladder and zone boxes), every walk surface from build order steps 2 and 3 (plan 5's Tasks 13, 14, 15 and 16 included), game_creator's walk-limit ruling of 2026-11-03 (`work/t4c/game-creator-walk.md`, decided), and the reach check just before this task (build order step 4). Task 4e4 owns the final walk times; this task reuses them (test 2b).

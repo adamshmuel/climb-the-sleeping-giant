@@ -143,6 +143,8 @@ local function run(): any
 		error("Boots_TopRight is missing and the mockup egg Egg_Boot2 is gone, so it can't be made")
 	end
 
+	-- NOTE (plan 3 Task 7): tools/world/18-ladder-boxes-and-zones.luau removes Belly_Path and cuts Belly_FrontA below.
+	-- Never run this script again: it would bring both boxes back as they were.
 	-- BELLY: a box turned along the belly path, tall enough to hold the climb, 9 studs wider each side and 2
 	-- longer each end (and 1 below to 8 above its surface), so stepping off the path is still Belly. The first pieces of the path run over his knees
 	-- (heights 29 to 39), which are Boots ("Boots and Knees"), so the box only holds pieces that lie entirely above height 40.
@@ -207,6 +209,7 @@ local function run(): any
 	makeBox("Belly_Mid", "Belly", CFrame.new(0, 39.5, -21), Vector3.new(68, 61, 14))
 	-- the low edge of the cushion sticks out wider than the legs at this height
 	makeBox("Belly_MidLow", "Belly", CFrame.new(0, 15.5, -21), Vector3.new(88, 13, 14))
+	-- Script 18 (plan 3 Task 7) cuts this box's front edge to z -40.43 (it becomes 0.43 deep). Never run 02-zones again.
 	makeBox("Belly_FrontA", "Belly", CFrame.new(0, 39.5, -42), Vector3.new(28, 61, 4))
 	makeBox("Belly_FrontB", "Belly", CFrame.new(0, 39.5, -38), Vector3.new(44, 61, 4))
 	makeBox("Belly_FrontC", "Belly", CFrame.new(0, 39.5, -34), Vector3.new(52, 61, 4))

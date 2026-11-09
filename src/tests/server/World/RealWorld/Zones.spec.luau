@@ -8,6 +8,7 @@ local Layout = require(game:GetService("StarterPlayer").StarterPlayerScripts.Cli
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local CameraFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.CameraFx)
 local Helpers = require(script.Parent.Helpers)
+local LadderZone = require(script.Parent.LadderZone)
 local BODY_PIECES = Helpers.BODY_PIECES
 local locator = Helpers.locator
 local realWorld = Helpers.realWorld
@@ -435,12 +436,13 @@ describe("the real world, zones and extras", function()
 	end
 
 	it("every place a player can stand on the giant is in a giant zone", function()
-		local world, locate = locator()
+		local world = locator()
 		local spots = standableSpots(world)
 		expect(#spots > 500).toBe(true) -- the grid really found his body
 		local misses = {}
 		for _, spot in spots do
-			if locate(spot).zone == "Meadow" then
+			-- a spot inside a ladder box counts as the climber's zone says (LadderZone, plan 3 Task 7)
+			if LadderZone.climberZone(world, spot) == "Meadow" then
 				table.insert(misses, string.format("(%d, %d, %d)", spot.X, spot.Y, spot.Z))
 			end
 		end

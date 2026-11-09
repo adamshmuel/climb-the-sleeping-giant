@@ -279,7 +279,7 @@ describe("the real world, the pillow's closer fit", function()
 	end)
 
 	-- Task 41, test 7: kept green before and after. The nightcap and the noise zone boxes keep their places and sizes
-	--: as read in step 1 (2026-10-27). The cap ladder is not covered here: no part is named for it.
+	--: as read in step 1 (2026-10-27); plan 3 Task 7 (2026-11-10) removed Belly_Path, cut Belly_FrontA and added 4 front boxes. The cap ladder is not covered here: no part is named for it.
 	local NIGHTCAP_SIZE = Vector3.new(102.5489, 64.1555, 67.5884)
 	local NIGHTCAP_POSITION = Vector3.new(0.0211, 90.9223, 34.5585)
 	local ZONE_BOXES: { { zone: string, position: Vector3, size: Vector3 } } = {
@@ -287,17 +287,21 @@ describe("the real world, the pillow's closer fit", function()
 		{ zone = "Beard", position = Vector3.new(0, 85.5, 5), size = Vector3.new(100, 27, 62) },
 		{ zone = "Beard", position = Vector3.new(0, 88.5, -12), size = Vector3.new(24, 45, 32) },
 		{ zone = "Belly", position = Vector3.new(0, 39.5, 26), size = Vector3.new(120, 61, 84) },
-		{ zone = "Belly", position = Vector3.new(0, 39.5, -42), size = Vector3.new(28, 61, 4) },
+		-- Plan 3 Task 7, script 18: Belly_FrontA cut to z -40.43 (0.43 deep).
+		{ zone = "Belly", position = Vector3.new(0, 39.5, -40.215), size = Vector3.new(28, 61, 0.43) },
+		-- Plan 3 Task 7, script 18: Belly_FrontCentre.
+		{ zone = "Belly", position = Vector3.new(0, 39.5, -42.215), size = Vector3.new(16, 61, 3.57) },
+		-- Plan 3 Task 7, script 18: Boots_RampLeft.
+		{ zone = "Boots", position = Vector3.new(-11.75, 39.5, -42.215), size = Vector3.new(7.5, 61, 3.57) },
+		-- Plan 3 Task 7, script 18: Boots_RampRight.
+		{ zone = "Boots", position = Vector3.new(11.75, 39.5, -42.215), size = Vector3.new(7.5, 61, 3.57) },
+		-- Plan 3 Task 7, script 18: Belly_FrontTip.
+		{ zone = "Belly", position = Vector3.new(0, 46.5, -45), size = Vector3.new(8, 7, 2) },
 		{ zone = "Belly", position = Vector3.new(0, 39.5, -38), size = Vector3.new(44, 61, 4) },
 		{ zone = "Belly", position = Vector3.new(0, 39.5, -34), size = Vector3.new(52, 61, 4) },
 		{ zone = "Belly", position = Vector3.new(0, 39.5, -30), size = Vector3.new(60, 61, 4) },
 		{ zone = "Belly", position = Vector3.new(0, 39.5, -21), size = Vector3.new(68, 61, 14) },
 		{ zone = "Belly", position = Vector3.new(0, 15.5, -21), size = Vector3.new(88, 13, 14) },
-		{
-			zone = "Belly",
-			position = Vector3.new(-4.951, 57.916, -30.567),
-			size = Vector3.new(29.5653, 34.1960, 27.9457),
-		},
 		-- Plan 5 Task 13: the two cuff boxes (tools/world/02-zones.luau, Belly_CuffLeft and Belly_CuffRight).
 		{ zone = "Belly", position = Vector3.new(-57.5, 35, -4), size = Vector3.new(23, 14, 22) },
 		{ zone = "Belly", position = Vector3.new(57.5, 35, -4), size = Vector3.new(23, 14, 22) },
