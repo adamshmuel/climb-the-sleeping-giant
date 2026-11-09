@@ -51,6 +51,7 @@ Each job uses the cheapest model that does it well.
 
 - Every full test run goes to the `runner`, never inside a Sonnet or Opus step. The `builder` writes code and sees its red; `code_lead` judges the result.
 - `code_lead` keeps the thinking and hands its simple jobs to `builder` or `runner` as a short prompt in `work/`.
+- **`code_lead` on Sonnet for simple jobs.** Plans, rulings and reviews stay on Opus. A job with nothing new to decide (a task card copied from a finished plan, a re-check against a written list) starts `code_lead` with the Agent tool's `model: "sonnet"`, which overrides its file ([sub-agents](https://code.claude.com/docs/en/sub-agents#choose-a-model)). A resumed agent keeps its model, so this is a fresh start with the file paths.
 - If a cheaper model fails a step, the step goes up one model, that kind of job moves up in this table, and it is logged in the problems log.
 
 ## Speed rules
