@@ -24,3 +24,6 @@
 - After one failed build fix on a slide-foot stuck spot, Play it next; p5t15's grow and tile both failed because cloth at 72-74° is 'slide' on the map but standable in Play (2026-11-08).
 - A Play stall check ends at first solid ground off the cloth; a bot pressing one way for 12 s logs fence stalls in the meadow that aren't stuck. Ask jobs to log the first landing, not only the cap end (p5t15 3d-2, 2026-11-08).
 - A walk-area sample rule needs every edge named (north too), not only the seam; Task 14's 'pyjama above the seam' climbed his chest and made 552 fake gaps (p5t15c Q1, 2026-11-09).
+- A check may skip a walk piece's floats only after its look-only cover (e.g. BellyRamp Cover boards, CanQuery off) is measured by shape under it; guards and curbs may be skipped outright (p5t15d row 4, 2026-11-09).
+- A new guard near a nest gets the nest's stand spot in its reach pass list (15d thigh guard sat 4 studs from the knee-pocket stop).
+- When confirming a card's decision table, check it splits player fixes from test repairs (order-the-work Step 3), and that a fix is proven by the Play job that found the problem, not a flood model; 15d bundled both and hit the time stop (2026-11-09).

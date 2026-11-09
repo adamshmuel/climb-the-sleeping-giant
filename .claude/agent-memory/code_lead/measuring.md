@@ -20,3 +20,5 @@
 - A card's 'no X on Y' check needs a ray grid over Y's top vs the layer (bounds-box overlap alone can't say above or below); p5t15 found steep pieces 0.65/1.28 above the belly pocket ledges that way.
 - The cuff strap/pocket art (Mockup_Nests.Art) is CanQuery off: an Include-filter ray onto it never hits. WalkAreaFacts' float and seed rays had this bug (30 false floats); measure art by CFrame/Size (p5t15c, 2026-11-09).
 - A check's sample rule names every edge of its area, not only the seam: Task 14's "pyjama above the seam" had no north edge and gave 552 fake chest gaps. Walk area on his body ends at z −20 for |x| < 22 (spec line 83, p5t15c Q1).
+- A reach flood follows every link kind Play allows (Walk+Slide+Climb), and its no-change control must match a Play result before the changed run counts. `roomToStand` at a raw skin sample needs the skin normal as `up`, or every curved spot reads "blocked by itself" (p5t15d Step 2, 2026-11-09).
+- Before choosing a walk's start, ray along its line: 15d W4 started touching the invisible RailGuard and read NO MOVE (rail at z -50.8; start z -51.4). Start 4+ studs before any guard (p5t15d, 2026-11-09).
