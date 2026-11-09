@@ -366,6 +366,10 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What: the 10 rare stuck spots (groups 11, 18, 20, 22, 24, 26, 29 and 32) against the real walk layer, rays seeing every solid part. 2026-11-08 against `World.CuffWalk`: nearest `Rare_RightArm_1` 14.1, `Rare_G32_1` 23.0.
 - A spot 12 studs or less from the walk area becomes must-fix: off the list, fixed test first by stuck safety's Rule 22 (What counts as stuck), before Gate 4.
 - Done when: each spot's distance is in the report.
+- How it ended (closed 2026-11-09, `work/p5t15f/close-review.md`):
+  - `PlayerNeeds.build` skipped `World.CuffWalk`, so the rare-spot check never saw it. It now counts it (curbs too). New test "a listed rare spot within 12 studs of a cuff ledge fails": red, then green.
+  - The 10 distances to the places players need are all over 12: closest Rare_G22_1 21.0, Rare_G32_1 23.0, Rare_G24_1 24.7, the rest 33.3 to 55.8. No must-fix.
+  - Full run: 2982 passed, 6 accepted reds (`work/p5t15f/fullrun.md`).
 
 **Task 15g: Walk-area check repair** (added 2026-11-09, product's step-back decision)
 - Stands on: Task 15d (built). Before Task 16. No Play.

@@ -123,6 +123,19 @@ describe("the rare-spot check on a made-up world", function()
 		expect(rareBrokenConditions({ listed("Rare_Made_Up_2", Vector3.new(0, 71, 0)) }, facts)).toEqual({})
 	end)
 
+	it("a listed rare spot within 12 studs of a cuff ledge fails", function()
+		local facts = factsFromMadeUpWorld(function(world)
+			folderIn(world, "WalkSurfaces")
+			addPiece(folderIn(world, "CuffWalk"), "Ledge_1", Vector3.new(0, 50, 0))
+		end)
+		-- The piece is 1 stud thick, so its top is at 50.5: 10 studs below this spot.
+		local problems = rareBrokenConditions({ listed("Rare_Made_Up_1", Vector3.new(0, 60.5, 0)) }, facts)
+		expect(#problems).toBe(1)
+		expect(has(problems[1], "studs from a place players need")).toBe(true)
+		-- 20 studs from the piece's top is far enough.
+		expect(rareBrokenConditions({ listed("Rare_Made_Up_2", Vector3.new(0, 71, 0)) }, facts)).toEqual({})
+	end)
+
 	it("a listed rare spot within 12 studs of a seam piece fails", function()
 		local facts = factsFromMadeUpWorld(function(world)
 			addPiece(folderIn(world, "Seam"), "Stitch_1", Vector3.new(0, 50, 0))
