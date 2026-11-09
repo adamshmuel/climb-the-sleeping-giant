@@ -212,7 +212,7 @@ describe("Config", function()
 
 	it("has the stuck limits", function()
 		expect(Config.Stuck.StuckSeconds).toBe(3)
-		expect(Config.Stuck.StuckDistance).toBe(1)
+		expect(Config.Stuck.StuckDistance).toBe(2)
 		expect(Config.Stuck.PressChangesPerSecond).toBe(10)
 	end)
 

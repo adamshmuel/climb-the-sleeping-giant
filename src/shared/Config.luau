@@ -204,7 +204,7 @@ local config: Config = {
 		LoopMoves = 3,
 		LoopSeconds = 30,
 		StuckSeconds = 3,
-		StuckDistance = 1,
+		StuckDistance = 2,
 		FallGraceSeconds = 0.25,
 		PressChangesPerSecond = 10,
 	},
