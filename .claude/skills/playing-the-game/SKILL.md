@@ -33,6 +33,18 @@ Nobody approves what they haven't seen in the running game. Reading code and pas
 7. **Judge the whole screen,** not only the part that changed: something covering the main character, text cut off at an edge, or buttons on top of each other are problems even if no rule names them.
 8. **Read the console** for errors and warnings, then stop Play and put back any setup you changed.
 
+## Free play near a change
+
+A scripted walk measures; it is never the proof that a player can't get somewhere or can't get stuck. Every Play check of something players walk, climb or stand on adds one free-play block, kept cheap: <!-- p5t15d, 2026-11-09: scripted W taps missed a stuck pocket Adam found by playing -->
+
+- **Only the changed area** and every way into it: from each route that reaches it (plank, thigh, ground, ledge), not only the planned start.
+- **Kid moves at each edge:** walk straight at it, walk diagonally (W+A, W+D), jump at it, hold a key 3 s. Then try to climb onto anything that looks climbable from there.
+- **Turn like a mouse.** A right-mouse drag doesn't turn the camera and the arrow keys barely do, so paste `scripts/studio/face.luau` (Client) once, then turn with one Client call: `game.Players.LocalPlayer:SetAttribute("FaceTarget", Vector3.new(x, y, z))`. It turns only the camera; W then walks toward that point. Hold keys at least 3 s: a key can start 1 to 2 s late.
+- **Look, don't measure.** Judge from `screen_capture`. Read the position with `execute_luau` only when a shot shows something wrong (stuck, fell, can't see the character), never after every move.
+- **Sonnet plays, Opus judges.** The play run is a `builder` job with a call cap; the reviewer judges its shots.
+
+Report each spot tried, the moves, and stuck yes or no with a shot.
+
 If a tool can't do something (for example, it can't capture the screen), say so in the report. Never mark it as passed, and never push the check to "later".
 
 ## Phone presses
