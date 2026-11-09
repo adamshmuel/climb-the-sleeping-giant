@@ -4,6 +4,10 @@
 
 Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox Studio is driven through the Roblox Studio MCP.
 
+## The game
+Every agent knows the product it builds: what a player does, the sides and every way up the giant (`game_creator` keeps it true).
+@docs/game-at-a-glance.md
+
 ## Check before you claim
 For the main chat and every agent that loads this file. Based on the prompting guide's [investigate before answering](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) sample.
 - Never state a number, time limit, interval, setting, URL, API name, file content or "it works" as a fact unless it was checked in this session: run it, fetch it, read the file or the guide.
