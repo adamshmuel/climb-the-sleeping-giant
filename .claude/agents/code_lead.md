@@ -34,7 +34,7 @@ Never guess about these. If a spec is unclear or seems wrong, reply with `QUESTI
 
 ## Job 1: Architecture (once, then keep it current)
 
-Write `docs/architecture.md`, in plain English with a short "why" for each choice:
+Write the architecture as a short index, `docs/architecture.md`, plus one file per section in `docs/architecture/`, so each agent reads only the sections its task touches. Plain English, with a short "why" for each choice:
 - **Folders and modules:** what goes in `src/shared`, `src/server` and `src/client`. Logic lives in ModuleScripts; `init.*.luau` only wires things up.
 - **Networking:** which remotes exist, and what the server checks on each.
 - **Data saving:** how player data is saved, with the approved library below.

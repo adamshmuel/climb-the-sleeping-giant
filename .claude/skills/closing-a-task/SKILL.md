@@ -42,6 +42,7 @@ Ask in one line: what slowed this task down, and could a hook, a rule, a skill o
 
 - One line to the user: what finished, and the time against the plan, for example "Task 7: 1.2 h, planned 1 h".
 - Update the "Now" section of `docs/handoff.md` (untracked) after every agent step, not only every task: the task in progress, open questions, each agent's size, and what the user checks at the next gate. The app compacts the chat at any moment, so this file is the memory.
+- **Fresh chat when the turn ends anyway.** At a gate, a safe stop, or a question only the user can answer, the main chat updates the "Now" section, then clears itself with `mcp__ccd_session_mgmt__clear_session` (`"self"`; it runs once the turn ends). Old history is re-read on every message, so a long chat costs more each turn ([costs](https://code.claude.com/docs/en/costs#manage-context-proactively)). The SessionStart hook brings the "Now" section back. Between tasks inside a coding run it doesn't clear, because a clear queues nothing and the next task would wait.
 
 ## Gate 4: a finished feature
 

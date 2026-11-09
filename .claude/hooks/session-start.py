@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""SessionStart hook (startup and compact matchers).
+"""SessionStart hook (startup, clear and compact matchers).
 
 - startup: adds the alarms from scripts/health.py, so a new session sees them
   before any work (closing-a-task skill: health check at every session start).
-- compact: adds back the "Now" section of docs/handoff.md, so a compacted chat
-  carries on from where the work stands.
+- compact and clear: add back the "Now" section of docs/handoff.md, so a
+  compacted or cleared chat carries on from where the work stands.
 The hooks guide says SessionStart context is the place for this; written
 "run it at session start" rules were skipped (2026-11-03).
 """
@@ -63,7 +63,7 @@ def main():
         return
     project = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or os.getcwd()
     source = data.get("source")
-    text = alarms(project) if source == "startup" else now_section(project) if source == "compact" else ""
+    text = alarms(project) if source == "startup" else now_section(project) if source in ("compact", "clear") else ""
     if text:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}}))
 
