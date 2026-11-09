@@ -5,13 +5,17 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 HOOK = os.path.join(os.path.dirname(__file__), "..", "git-guard.py")
 
 
-def run(command, agent_id=None):
-    data = {"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}}
+EMPTY = tempfile.mkdtemp()  # not a git folder, so the removed-pieces check is skipped
+
+
+def run(command, agent_id=None, cwd=EMPTY):
+    data = {"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}, "cwd": cwd}
     if agent_id:
         data["agent_id"] = agent_id
         data["agent_type"] = "builder"
@@ -86,6 +90,29 @@ class GitGuard(unittest.TestCase):
 
     def test_other_commands_pass(self):
         self.assertEqual(run("ls -la && echo push"), {})
+
+    def repo_with(self, idea_line):
+        repo = tempfile.mkdtemp()
+        hooks = os.path.join(repo, ".claude", "hooks")
+        os.makedirs(hooks)
+        os.makedirs(os.path.join(repo, "docs"))
+        with open(os.path.join(os.path.dirname(HOOK), "docs-check.py")) as src, open(os.path.join(hooks, "docs-check.py"), "w") as dst:
+            dst.write(src.read())
+        with open(os.path.join(repo, "docs", "removed-pieces.md"), "w") as f:
+            f.write("| Removed piece | Removed on |\n|---|---|\n| side ladder | 2026-11-03 |\n")
+        with open(os.path.join(repo, "docs", "idea.md"), "w") as f:
+            f.write("# Idea\n\n" + idea_line + "\n")
+        subprocess.run(["git", "init", "-q", repo], check=True)
+        subprocess.run(["git", "-C", repo, "add", "docs"], check=True)
+        return repo
+
+    def test_commit_with_a_stale_doc_is_blocked(self):
+        result = run('git commit -m "Add coins"', cwd=self.repo_with("Climb the side ladder."))
+        self.assertTrue(denied(result))
+        self.assertIn("docs/idea.md:3", result["hookSpecificOutput"]["permissionDecisionReason"])
+
+    def test_commit_with_docs_in_step_passes(self):
+        self.assertEqual(run('git commit -m "Add coins"', cwd=self.repo_with("The side ladder was dropped.")), {})
 
 
 if __name__ == "__main__":

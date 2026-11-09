@@ -4,11 +4,14 @@
 Blocks staging everything, commit -a, push, --amend, rebase, reset --hard,
 git clean, any history change from a subagent (only the main chat commits),
 and AI attribution in a commit. Warns when a commit title is over 50 characters.
+Blocks a commit while a doc names a removed piece as if it exists (docs-check.py --removed).
 """
 
 import json
+import os
 import re
 import shlex
+import subprocess
 import sys
 
 SEPARATORS = {";", "&&", "||", "|", "&", "(", ")"}
@@ -107,6 +110,17 @@ def check(command, from_agent):
     return None, warning
 
 
+def stale_docs(cwd):
+    """Lines that name a removed piece as if it exists (docs-check.py --removed), or None."""
+    top = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    # The checker next to this hook, never one taken from the repo (it could be any code).
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs-check.py")
+    if not top or not os.path.isfile(os.path.join(top, "docs", "removed-pieces.md")):
+        return None
+    run = subprocess.run([sys.executable, "-I", script, "--removed", top], capture_output=True, text=True)
+    return run.stdout.strip() if run.returncode else None
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -117,6 +131,13 @@ def main():
     if "git" not in command:
         return
     reason, warning = check(command, bool(data.get("agent_id")))
+    if not reason and any(sub == "commit" for sub, _ in git_commands(words_of(command))):
+        lines = stale_docs(data.get("cwd") or os.getcwd())
+        if lines:
+            reason = (
+                "Docs still name a removed piece as if it exists (docs/removed-pieces.md). Fix these lines "
+                "before the commit, or say on the line that the piece is gone:\n" + lines
+            )
     if reason:
         out = {"permissionDecision": "deny", "permissionDecisionReason": reason}
     elif warning:

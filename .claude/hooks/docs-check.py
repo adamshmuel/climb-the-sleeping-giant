@@ -6,7 +6,13 @@ a doc over 100 lines starts with a contents list, links to other docs and their 
 work, and specs and plans have no "TBD". As a hook it checks the one doc just edited and
 adds a note; nothing is sent back. With --all it checks every tracked doc and prints one
 line per problem (scripts/health.py runs it at every task close).
-Usage: python3 .claude/hooks/docs-check.py --all
+
+Removed pieces (docs/removed-pieces.md): a doc may name a dropped piece only on a line that
+says it is gone. A game_creator check on 2026-11-09 found the idea doc still listing side
+ladders dropped six days before. That problem is sent back (block). With --removed the
+script checks only this and exits 1 on a hit; .claude/hooks/git-guard.py uses it to block
+a commit.
+Usage: python3 .claude/hooks/docs-check.py --all | --removed
 """
 
 import json
@@ -18,6 +24,15 @@ import sys
 LONG = 100
 CONTENTS_WITHIN = 20  # the contents list sits under the title, before the first section
 TBD_FOLDERS = ("docs/specs/", "docs/plans/")
+REMOVED_LIST = "docs/removed-pieces.md"
+# History is allowed to name removed pieces.
+HISTORY = re.compile(r"^docs/(progress|problems-log|reviews)/|/research/|/history/|-history\.md$|^docs/removed-pieces\.md$")
+# Words that say, on the same line, that the piece is gone.
+GONE = re.compile(
+    r"\b(removed|remove|removes|dropped|drop|drops|gone|no longer|was|were|cut|replaced|replaces"
+    r"|deleted|unused|old|instead|used to|until|retired)\b",
+    re.IGNORECASE,
+)
 # In a desktop worktree session CLAUDE_PROJECT_DIR is the main checkout, so a file
 # inside a worktree is checked against that worktree (code.claude.com/docs/en/worktrees).
 WORKTREE = re.compile(r"^(.*?/\.claude/worktrees/[^/]+)(?:/|$)")
@@ -83,6 +98,46 @@ def problems(path, project):
     return found
 
 
+def removed_terms(project):
+    """The first column of each row in docs/removed-pieces.md, lower case."""
+    try:
+        with open(os.path.join(project, REMOVED_LIST), errors="replace") as f:
+            lines = f.read().split("\n")
+    except OSError:
+        return []
+    terms = []
+    for line in lines:
+        if not line.startswith("|"):
+            continue
+        first = line.strip().strip("|").split("|")[0].strip()
+        if not first or set(first) <= set("-: ") or first.startswith("Removed piece"):
+            continue
+        terms.append(first.strip("`").lower())
+    return terms
+
+
+def stale(path, project, terms=None):
+    """Lines that name a removed piece without saying it is gone."""
+    name = os.path.relpath(path, project).replace(os.sep, "/")
+    if HISTORY.search(name):
+        return []
+    terms = removed_terms(project) if terms is None else terms
+    if not terms:
+        return []
+    try:
+        with open(path, errors="replace") as f:
+            lines = f.read().split("\n")
+    except OSError:
+        return []
+    found = []
+    for number, line in enumerate(lines, 1):
+        low = line.lower()
+        hits = [t for t in terms if re.search(r"(?<![a-z])" + re.escape(t), low)]
+        if hits and not GONE.search(line):
+            found.append(f'{name}:{number} names "{hits[0]}", a removed piece ({REMOVED_LIST}), as if it exists')
+    return found
+
+
 def is_doc(path, project):
     return path.endswith(".md") and path.startswith(os.path.join(project, "docs") + os.sep)
 
@@ -102,25 +157,41 @@ def hook():
     project = root_of(path, project)
     if not is_doc(path, project):
         return
+    old = stale(path, project)
+    if old:
+        reason = (
+            "Removed-pieces check: " + "; ".join(old) + ". Rewrite each line for the world as it is now, "
+            "or say on that line that the piece is gone (removed, dropped, no longer)."
+        )
+        print(json.dumps({"decision": "block", "reason": reason}))
+        return
     found = problems(path, project)
     if found:
         note = "Docs check: " + "; ".join(found) + ". Fix it in this edit."
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": note}}))
 
 
-def check_all(project):
+def check_all(project, removed_only=False):
     tracked = subprocess.run(["git", "-C", project, "ls-files", "docs"], capture_output=True, text=True).stdout.split("\n")
+    terms = removed_terms(project)
     found = []
     for name in tracked:
         path = os.path.join(project, name)
         if is_doc(path, project) and os.path.isfile(path):
-            found.extend(problems(path, project))
+            if not removed_only:
+                found.extend(problems(path, project))
+            found.extend(stale(path, project, terms))
     for line in found:
         print(line)
     return 1 if found else 0
 
 
 if __name__ == "__main__":
+    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if "--removed" in sys.argv:
+        # Optional folder to check after --removed (git-guard.py passes the repo it commits in).
+        rest = sys.argv[sys.argv.index("--removed") + 1 :]
+        sys.exit(check_all(os.path.abspath(rest[0]) if rest else here, removed_only=True))
     if "--all" in sys.argv:
-        sys.exit(check_all(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+        sys.exit(check_all(here))
     hook()

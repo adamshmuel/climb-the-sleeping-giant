@@ -305,6 +305,15 @@ if [ "${1:-}" = "--handoff" ]; then
 		echo "Give each spec name its own run, and write \"one spec name per run\" on the line."
 		exit 1
 	fi
+	# A Play check in a half-built world (2026-11-09): free-play reports called
+	# V1 footprints, a missing guard and V1 eggs bugs, though the build order
+	# had not reached them. Every card that talks of Play has a "Not built yet:"
+	# line listing what the build order hasn't built (docs/plans/<version>/index.md), or "nothing".
+	if grep -qE '^[^#].*(^|[^A-Za-z])Play([^A-Za-z]|$)|^Play([^A-Za-z]|$)' "$@" && ! grep -qE '^[-* ]*\**Not built yet:' "$@"; then
+		echo "Handoff check FAILED: this card talks of Play but has no \"Not built yet:\" line."
+		echo "Add one line listing what the build order hasn't built yet (docs/plans/<version>/index.md), or \"Not built yet: nothing\", so the player doesn't report it as a bug."
+		exit 1
+	fi
 	# Red flag 61a, the meter hold: twice a script that held the giant's sleep
 	# meter stopped between runs, the giant woke, and the run looked real but
 	# was void. In a handoff with a Play step, every work/ script it names has

@@ -65,6 +65,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 
 ## Play jobs
 
+- **Not built yet.** Every card that talks of Play has one line `Not built yet: <pieces>` from the build order (`docs/plans/<version>/index.md`), or `Not built yet: nothing`. The player reports those pieces as "not built", never as bugs. `scripts/job-check.sh --handoff` fails a card without it. <!-- 2026-11-09: free play called V1 footprints and eggs bugs -->
 - **Trace before fixing.** A stall or a wrong end with no measured cause gets a read-only trace step first (state, x, y, z, floor and touching parts every 0.1 s), and the fix is built from what the trace shows. Before changing any timing, check whether the character was ever in the air.
 - **Smoke run first.** A builder runs the job's first case once, on one side, with the job's own scripts (about 6-8 calls), and takes one shot from the player's camera. Every script of the job runs at least once, including one that starts only in a later case. Every spot or line a script waits for is measured from a real run. The job starts only if the player moves as expected, no game rule interferes and no loop is left running.
 - **One case per behaviour the player feels.** Each case says what a player would notice if it broke. A mirror side gets its own case only when measurements or code show it differs.
