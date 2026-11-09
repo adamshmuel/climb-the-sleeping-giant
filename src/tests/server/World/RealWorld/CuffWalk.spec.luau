@@ -71,6 +71,9 @@ local SHORT_RAY_ABOVE = 5 -- studs: a ray onto a part starts this high over it
 local SHORT_RAY_LENGTH = 30
 
 -- Edge drops (card work/p5t13b/card.md Step 5): beside the way home, along every top edge of the strap, flap and foot.
+local CURB_MIN_STEEPNESS = 75 -- degrees: each face of a curb's top is at least this steep (spec 5 "Steep face")
+local CURB_GRID = 4 -- rays per side over a curb (a 5 x 5 grid)
+local CURB_RAY_UP = 6 -- studs: a ray onto a curb starts this far over its centre
 local EDGE_STEP = 0.5 -- studs between the points on an edge
 local EDGE_OUT = 0.3 -- studs out from the edge...
 local EDGE_RAY_UP = 20 -- ...and up, where the ray down starts (above the arm beside the edge; a hit no more than 2 below the edge is no drop: product ruling, work/p5t13b/door-ruling.md)
@@ -647,6 +650,45 @@ describe("CuffWalk", function()
 							table.insert(problems, `{part.Name} {Helpers.describePoint(edge.point)} drops {drop}`)
 						end
 					end
+				end
+			end
+		end
+		expectNoProblems(problems)
+	end)
+
+	it("every curb's top faces are at least 75°", function()
+		local problems: { string } = {}
+		local maxNormalY = math.cos(math.rad(CURB_MIN_STEEPNESS)) + 1e-4
+		for _, wallKind in WALL_KINDS do
+			for _, wallSide in SIDES do
+				local curb = maybePiece(wallKind, wallSide)
+				if curb == nil then
+					table.insert(problems, `{pieceName(wallKind, wallSide)} is missing`)
+					continue
+				end
+				local params = onlyParams({ curb })
+				local hits = 0
+				for gx = 0, CURB_GRID do
+					for gz = 0, CURB_GRID do
+						local localX = (gx / CURB_GRID - 0.5) * curb.Size.X * 0.9
+						local localZ = (gz / CURB_GRID - 0.5) * curb.Size.Z * 0.9
+						local start = curb.CFrame:PointToWorldSpace(Vector3.new(localX, 0, localZ))
+							+ Vector3.new(0, CURB_RAY_UP, 0)
+						local hit = Workspace:Raycast(start, Vector3.new(0, -2 * CURB_RAY_UP, 0), params)
+						if hit ~= nil then
+							hits += 1
+							if hit.Normal.Y > maxNormalY then
+								table.insert(
+									problems,
+									`{curb.Name} top face at {Helpers.describePoint(hit.Position)} has Normal.Y {hit.Normal.Y}`
+								)
+								break
+							end
+						end
+					end
+				end
+				if hits == 0 then
+					table.insert(problems, `{curb.Name} was never hit from above`)
 				end
 			end
 		end

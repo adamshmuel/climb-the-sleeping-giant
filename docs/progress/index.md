@@ -4,7 +4,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 
 **V1 (core heist):** done. All 51 tasks were approved, it passed Gate 4, and it is committed. Its rows, its Gate 4 hand-over and its commit list: `docs/progress/v1.md`.
 
-**V2 (Heist update):** 101 of 202 tasks done, setups included.
+**V2 (Heist update):** 108 of 210 tasks done, setups included.
 - New-player safety (plan 1) passed Gate 4 on 2026-10-19 and is committed.
 - Stuck safety (plan 2): all 67 tasks done. Its build review is still to come.
 - Plan 3 (gardens and ways up) is in progress.
@@ -20,10 +20,10 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 13 of 32 | ◐ in progress |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
-| 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 3 of 27 | ◐ in progress (13, 13b, 14 done) |
+| 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 10 of 35 | ◐ in progress (13, 13b, 14, 15a-15e, 15e2 and 15g done; next: the cuff strap and pocket art, task set by product) |
 | 6. Wake-up | `v2/wake-up.md` | 0 of 23 | ☐ not started |
 | 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
-| **All of V2** | | **101 of 202** (setups included) | |
+| **All of V2** | | **108 of 210** (setups included) | |
 
 Removed and dropped tasks are not counted.
 

@@ -8,3 +8,4 @@
 - Review: grep the new module's constants (65, 78...) across src/tests before approving; p5t14 found ScanFacts' own WALK_AREA_MAX_DEGREES = 65 copying WalkAreaCheck.SEAM_DEGREES.
 - Review: a builder's 'extra skip with no test' can widen a ruled skip. Diff each skip against the ruling's exact words and count the real parts it hides (15g: 30 ramp pieces).
 - Skipping a close full run after a world undo: first prove the last run saw the undone world (a test pinning its numbers passed in it); 15e's ThighGuards.spec did (2026-11-09).
+- Float fix (15e2): drop-on passed at ridge middles but the shot still floated on a second invisible floor (Foot/Strap strip) at the corner. Before approving a float fix, down-ray every collidable top within 1 stud of the float spot, not just the ruled piece.

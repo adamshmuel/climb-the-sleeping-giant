@@ -324,6 +324,12 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   4. Review, Opus code_lead, 8 min, 3 Studio calls. The retaken shots go to designer.
 - The walk-area test: curb tops stay skipped by the check (product's earlier ruling), so this task doesn't change its accepted red.
 - Done when: the new test passes, script 23c's second run says "already done", every Play jump slips off and every side walk is blocked on both arms, and designer passes the two retaken shots.
+- How it ended (closed 2026-11-09, `work/p5t15e2/close-review.md`):
+  - Built: the 12 curbs are WedgePart ridges at 75.3 to 81.3°, the wall face outboard, cloned into `ServerStorage.WorldBackups.p5t15eCurbs`. The angle test is green.
+  - The proof changed after a step back (`work/p5t15e2/stepback-decision.md`): one drop-on per ridge, no keys, in place of jumps and side walks. 12 of 12 pass. The full run had 2978 passed and 6 accepted reds.
+  - The two retaken shots still float (`work/p5t15e2/shot-verdict.md`). The curb tops are not the cause. The designer's measure (`work/p5t15e3/edge-measure.md`) found the walk floor exactly on its art, with 0.0 overhang. What is missing is visible ground: the strap and pocket art (`Workspace.Mockup_Nests.Art.Straps` and `.Pockets`, 158 parts) is still hidden. The shots move to the task product names for that art (re-ruling in progress).
+  - **Run order:** script 22 rebuilds flat curbs, so every run of `tools/world/22-cuff-walk.luau` is followed by `23c-curb-tops.luau`.
+  - Time: 34 min before the 21:50 restart, plus about 12 after; planned 50.
 
 **Task 15f: Rare stuck spots re-measured** (product's condition 2, stuck safety Task 23)
 - Stands on: Task 15d (built).
