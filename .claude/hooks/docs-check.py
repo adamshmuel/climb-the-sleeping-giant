@@ -189,7 +189,9 @@ def check_all(project, removed_only=False):
 if __name__ == "__main__":
     here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if "--removed" in sys.argv:
-        sys.exit(check_all(here, removed_only=True))
+        # Optional folder to check after --removed (git-guard.py passes the repo it commits in).
+        rest = sys.argv[sys.argv.index("--removed") + 1 :]
+        sys.exit(check_all(os.path.abspath(rest[0]) if rest else here, removed_only=True))
     if "--all" in sys.argv:
         sys.exit(check_all(here))
     hook()

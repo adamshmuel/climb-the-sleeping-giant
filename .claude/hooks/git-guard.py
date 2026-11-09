@@ -113,10 +113,11 @@ def check(command, from_agent):
 def stale_docs(cwd):
     """Lines that name a removed piece as if it exists (docs-check.py --removed), or None."""
     top = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
-    script = os.path.join(top, ".claude", "hooks", "docs-check.py")
-    if not top or not os.path.isfile(os.path.join(top, "docs", "removed-pieces.md")) or not os.path.isfile(script):
+    # The checker next to this hook, never one taken from the repo (it could be any code).
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs-check.py")
+    if not top or not os.path.isfile(os.path.join(top, "docs", "removed-pieces.md")):
         return None
-    run = subprocess.run([sys.executable, script, "--removed"], capture_output=True, text=True)
+    run = subprocess.run([sys.executable, "-I", script, "--removed", top], capture_output=True, text=True)
     return run.stdout.strip() if run.returncode else None
 
 
