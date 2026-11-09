@@ -51,6 +51,30 @@ describe("the real world, no part sinks into a main character", function()
 		["Workspace.World.WalkSurfaces.PlankEnd_Right.Board_1"] = 0.3,
 	}
 
+	type PatternLimit = { pattern: string, limit: number }
+
+	-- By path pattern: every face of each matching part, up to its own limit (for parts whose names repeat).
+	-- Task 15e3, designer's sink ruling (work/p5t15e3/sink-ruling.md, 2026-11-09): the cuff strap is sewn into his cuff
+	-- by design. Its inner edge runs under the white cuff in one seam. Measured worst: Strap 0.79, RolledEdge 1.03, Stitch 0.29.
+	local ACCEPTED_PATTERN_LIMITS: { PatternLimit } = {
+		{ pattern = "^Workspace%.World%.CuffArt%.CuffStrap_[LR]%a+%.Strap$", limit = 0.85 },
+		{ pattern = "^Workspace%.World%.CuffArt%.CuffStrap_[LR]%a+%.RolledEdge$", limit = 1.1 },
+		{ pattern = "^Workspace%.World%.CuffArt%.CuffStrap_[LR]%a+%.Stitch$", limit = 0.3 },
+	}
+
+	local function partLimitOf(path: string): number?
+		local limit = ACCEPTED_PARTS[path]
+		if limit ~= nil then
+			return limit
+		end
+		for _, entry in ACCEPTED_PATTERN_LIMITS do
+			if string.find(path, entry.pattern) ~= nil then
+				return entry.limit
+			end
+		end
+		return nil
+	end
+
 	local function isAccepted(part: BasePart): boolean
 		local path = part:GetFullName()
 		for _, pattern in ACCEPTED_PATHS do
@@ -81,7 +105,7 @@ describe("the real world, no part sinks into a main character", function()
 		local failure: Failure =
 			{ path = part:GetFullName(), position = part.Position, worst = 0, failing = 0, total = 0 }
 		local acceptedFace = ACCEPTED_FACES[failure.path]
-		local partLimit = ACCEPTED_PARTS[failure.path]
+		local partLimit = partLimitOf(failure.path)
 		for _, face in SinkDepth.faceDepths(part.CFrame, part.Size, characters) do
 			if partLimit ~= nil and face.worst <= partLimit then
 				continue

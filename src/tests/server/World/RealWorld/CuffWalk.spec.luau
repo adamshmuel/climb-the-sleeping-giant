@@ -755,4 +755,148 @@ describe("CuffWalk", function()
 		end
 		expectNoProblems(problems)
 	end)
+
+	-- Plan 5 Task 15e3 (work/p5t15e3/art-decision.md, card 15e3-card.md): the visible strap and cuff pocket art, copied by
+	-- tools/world/23d-cuff-art.luau from Workspace.Mockup_Nests.Art into Workspace.World.CuffArt (one sub-model per source model).
+	describe("cuff art in the world", function()
+		-- Source model path under Mockup_Nests.Art -> its sub-model name in World.CuffArt (the same name).
+		local ART_MODELS = {
+			{ group = "Straps", name = "CuffStrap_Left" },
+			{ group = "Straps", name = "CuffStrap_Right" },
+			{ group = "Pockets", name = "CuffPocketFront_Left" },
+			{ group = "Pockets", name = "CuffPocketBack_Left" },
+			{ group = "Pockets", name = "CuffPocketFront_Right" },
+			{ group = "Pockets", name = "CuffPocketBack_Right" },
+		}
+		local ART_PIECES = 82 -- plan 5 Task 15e3 world table: 17 + 17 + 4 x 12 visible pieces
+
+		local function artRoot(): Instance
+			local found = world():FindFirstChild("CuffArt")
+			if found == nil then
+				error("World.CuffArt is missing", 0)
+			end
+			return found
+		end
+
+		-- The parts of the art sub-model `name` (flat), or an empty list when the model is missing.
+		local function artParts(name: string): { BasePart }
+			local list: { BasePart } = {}
+			local model = artRoot():FindFirstChild(name)
+			if model ~= nil then
+				for _, child in model:GetChildren() do
+					if child:IsA("BasePart") then
+						table.insert(list, child)
+					end
+				end
+			end
+			return list
+		end
+
+		it("every visible strap and pocket piece is in World.CuffArt, visible and not collidable", function()
+			local problems: { string } = {}
+			local total = 0
+			for _, entry in ART_MODELS do
+				local source = (artFolder():FindFirstChild(entry.group) :: Instance):FindFirstChild(entry.name)
+				local wanted = 0
+				if source ~= nil then
+					for _, child in source:GetChildren() do
+						if child:IsA("BasePart") and child:GetAttribute("MockupTransparency") == 0 then
+							wanted += 1
+						end
+					end
+				end
+				local copies = artParts(entry.name)
+				total += #copies
+				if #copies ~= wanted then
+					table.insert(problems, `{entry.name} holds {#copies} pieces, the art has {wanted} visible`)
+				end
+				for _, copy in copies do
+					if copy.Transparency ~= 0 or copy.CanCollide then
+						table.insert(
+							problems,
+							`{entry.name}.{copy.Name} is not visible and soft (transparency {copy.Transparency}, collide {copy.CanCollide})`
+						)
+					end
+					for attributeName in copy:GetAttributes() do
+						if string.sub(attributeName, 1, 6) == "Mockup" then
+							table.insert(problems, `{entry.name}.{copy.Name} still has {attributeName}`)
+						end
+					end
+				end
+			end
+			if total ~= ART_PIECES then
+				table.insert(problems, `World.CuffArt holds {total} pieces, wanted {ART_PIECES}`)
+			end
+			expectNoProblems(problems)
+		end)
+
+		it("every right-arm art piece rides his right arm and no left-arm art piece does", function()
+			local problems: { string } = {}
+			local seen = 0
+			for _, entry in ART_MODELS do
+				local right = string.sub(entry.name, -6) == "_Right"
+				for _, copy in artParts(entry.name) do
+					seen += 1
+					local rides = copy:GetAttribute("RidesRightArm") == true
+					if rides ~= right then
+						table.insert(problems, `{entry.name}.{copy.Name} RidesRightArm is {rides}`)
+					end
+				end
+			end
+			if seen == 0 then
+				table.insert(problems, "World.CuffArt holds no pieces")
+			end
+			expectNoProblems(problems)
+		end)
+
+		it("each cuff walk top sits 0.2 below to 0.7 above a visible piece of World.CuffArt under it", function()
+			local misses: { string } = {}
+			local art: { BasePart } = {}
+			for _, entry in ART_MODELS do
+				for _, copy in artParts(entry.name) do
+					-- The stitches lie on the strap and the walk pieces are not art: as visibleArt (WalkAreaFacts) leaves them out.
+					if copy.Name ~= "Stitch" and string.find(copy.Name, "Curb", 1, true) == nil then
+						table.insert(art, copy)
+					end
+				end
+			end
+			if #art == 0 then
+				error("World.CuffArt holds no pieces", 0)
+			end
+			-- Art has CanQuery off, so rays miss it: WalkAreaFacts.artTopUnder reads each piece's own box (CFrame and Size).
+			-- A piece reaching above maxY is ignored, so maxY is the top of the window (0.2 over the walk top).
+			local function gapAt(x: number, y: number, z: number): number?
+				local top = WalkAreaFacts.artTopUnder(art, x, z, y + TOP_BELOW_ART + 1e-3)
+				if top == nil then
+					return nil
+				end
+				return y - top
+			end
+			for _, walk in cuffFolder():GetChildren() do
+				if not walk:IsA("BasePart") or string.find(walk.Name, "Curb", 1, true) ~= nil then
+					continue
+				end
+				for _, point in Helpers.pointsOver(walk, Helpers.topFaceOf(walk), SAMPLE_STEP) do
+					local gap = gapAt(point.X, point.Y, point.Z)
+					if gap == nil or gap > TOP_ABOVE_ART + 1e-3 then
+						-- The code_lead ruling of Task 13 (EDGE_ALLOWANCE): a crack in the art may be bridged from beside it.
+						for _, offset in { Vector3.xAxis, -Vector3.xAxis, Vector3.zAxis, -Vector3.zAxis } do
+							local near =
+								gapAt(point.X + offset.X * EDGE_ALLOWANCE, point.Y, point.Z + offset.Z * EDGE_ALLOWANCE)
+							if near ~= nil and near <= TOP_ABOVE_ART + 1e-3 then
+								gap = near
+								break
+							end
+						end
+					end
+					if gap == nil then
+						table.insert(misses, `{walk.Name} {Helpers.describePoint(point)} has no art under it`)
+					elseif gap > TOP_ABOVE_ART + 1e-3 then
+						table.insert(misses, `{walk.Name} {Helpers.describePoint(point)} is {gap} over the art`)
+					end
+				end
+			end
+			expectNoProblems(misses)
+		end)
+	end)
 end)

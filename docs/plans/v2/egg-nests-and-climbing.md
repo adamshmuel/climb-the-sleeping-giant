@@ -153,6 +153,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, and in Play (computer and the iPhone 14 in the device simulator) the pop plays on today's egg spots at full speed, with no countdown on the empty ones (screenshots). The comparison with `view-nest-empty`, `view-nest-refill` and `view-meadow-nests` needs the real nests, so it is in Task 23.
 
 **Task 9: The right cuff rides his arm**
+- Stands on: Task 15e3 (the cuff art in the world, built: its right-arm pieces carry `RidesRightArm`), his arm at rest.
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps). Story F. Section 6: "He's awake, right cuff egg raised".
 - Files: `src/client/Fx/GiantFx.luau`, `src/tests/client/Fx/GiantFx.spec.luau`.
 - What it does: every piece with `RidesRightArm` (and any egg inside such a nest, found again each time an egg appears) is placed by the arm's own move each frame (see "Decisions"); the right cuff egg's beam fades out over 0.3 s at the wake and back in over 0.3 s once the arm is down.
@@ -163,7 +164,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   4. The beam is fully see-through 0.3 s after the wake, and back to its own look 0.3 s after the arm is down.
   5. A new egg appearing on a right cuff nest while he's awake rides the arm at once.
   6. (Real world, added 2026-11-08 at the Task 13b review) `World.CuffFill_Right` (script 22b: the invisible solid fill under `BackLedge_Right`) has `RidesRightArm`, and the same 0.01-stud ride check covers it: if it stayed still while the arm rises, an invisible block would hang over a 20-stud drop.
-- Done when: the tests pass, and in Play a test part marked `RidesRightArm`, made at runtime from a Server `execute_luau` on his right cuff, rides the arm through a wake-up and comes back to rest (screenshots from garden 7, computer and the iPhone 14). The real cuff pieces come in Tasks 12 and 13; their comparison with `view-wake-cuff-g7` and `view-phone-wake-cuff-g8` is in Task 23.
+- Done when: the tests pass, and in Play a test part marked `RidesRightArm`, made at runtime from a Server `execute_luau` on his right cuff, rides the arm through a wake-up and comes back to rest (screenshots from garden 7, computer and the iPhone 14). The real cuff pieces come in Tasks 13 and 15e3; their comparison with `view-wake-cuff-g7` and `view-phone-wake-cuff-g8` is in Task 23.
 
 **Task 10: The slide tip**
 - Spec rules: Rule 84 (A slide is a fall, and the first one gets a tip). Story D's third case. Section 8: "A player slides off below the seam while carrying a Rare at 70%", "A player jumps from the walk area to below the seam", "A slide ends on a lower part of him", "A player walks off the outer edge of a strap or cuff ledge", "A rescue during a slide".
@@ -198,7 +199,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What the script does:
   - builds the 38 nest models in `World.EggSpots` at designer's spots (the spec's table and the markers, one stud above each spot), each with the straw nest from `Art.Library.StrawNest_Final` (leaning where the art list says), its `Base`, `PromptAnchor` and attributes (see "Decisions"); `Rarity` is the spec's target rank for now (Task 19 proves it);
   - gives Rare egg 1's nest V1's Rare egg 1 spot, and removes V1's other 15 spots and their glow rings;
-  - copies the lace bows and the 8 pockets from `Art` into `World.NestArt` (no collision) and marks the right cuff's pocket art `RidesRightArm`.
+  - copies the lace bows and the 4 pockets not on his cuffs (the 2 knee pockets and the 2 belly pockets) from `Art` into `World.NestArt` (no collision). The cuff straps and the 4 cuff pockets are already in `World.CuffArt` (Task 15e3), so this task doesn't copy them again.
 - Failing tests first (real world):
   1. 38 nests, and per `Rarity`: Common 16, Uncommon 8, Rare 6, Epic 4, Legendary 4; a wrong count fails naming the rank.
   2. Every nest within 0.5 studs of its spot in the spec's table (the meadow nests: the style guide's table).
@@ -327,9 +328,37 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - How it ended (closed 2026-11-09, `work/p5t15e2/close-review.md`):
   - Built: the 12 curbs are WedgePart ridges at 75.3 to 81.3°, the wall face outboard, cloned into `ServerStorage.WorldBackups.p5t15eCurbs`. The angle test is green.
   - The proof changed after a step back (`work/p5t15e2/stepback-decision.md`): one drop-on per ridge, no keys, in place of jumps and side walks. 12 of 12 pass. The full run had 2978 passed and 6 accepted reds.
-  - The two retaken shots still float (`work/p5t15e2/shot-verdict.md`). The curb tops are not the cause. The designer's measure (`work/p5t15e3/edge-measure.md`) found the walk floor exactly on its art, with 0.0 overhang. What is missing is visible ground: the strap and pocket art (`Workspace.Mockup_Nests.Art.Straps` and `.Pockets`, 158 parts) is still hidden. The shots move to the task product names for that art (re-ruling in progress).
+  - The two retaken shots still float (`work/p5t15e2/shot-verdict.md`). The curb tops are not the cause. The designer's measure (`work/p5t15e3/edge-measure.md`) found the walk floor exactly on its art, with 0.0 overhang. What is missing is visible ground: the strap and pocket art (`Workspace.Mockup_Nests.Art.Straps` and `.Pockets`, 158 parts) is still hidden. The shots move to Task 15e3, which puts that art in the world (product's ruling `work/p5t15e3/art-decision.md`).
   - **Run order:** script 22 rebuilds flat curbs, so every run of `tools/world/22-cuff-walk.luau` is followed by `23c-curb-tops.luau`.
   - Time: 34 min before the 21:50 restart, plus about 12 after; planned 50.
+
+**Task 15e3: The cuff strap and pocket art in the world** (added 2026-11-09, product's ruling `work/p5t15e3/art-decision.md`)
+- Why: the walk floor on each Epic cuff sits exactly on its art (designer's measure `work/p5t15e3/edge-measure.md`: 81 of 81 points, 0.0 overhang), but that art is still hidden in `Workspace.Mockup_Nests.Art`. So a player on the cuff looks like they stand on nothing.
+- Stands on: Task 13b (the re-fitted straps and the CuffWalk floor, built), Task 15e2 (the steep curb tops, built), his arm at rest (plan 6 keeps it), and designer's measure (done, 0.0 overhang).
+- Spec rules: Rule 79 (Walk anywhere down to the seam): a walk surface sits 0.2 below to 0.7 above the visible surface under it. Spec 5 section 5, "Cuff strap and ledge (Epic)" and "Walk surface over what you see". Rule 100 (Nothing you stand on moves while he sleeps): the right-arm pieces get the mark Task 9 moves.
+- For: core gameplay (the Epic cuff, where the best egg is grabbed). Not scenery.
+- What: a new world script copies into a new folder `World.CuffArt` only the visible pieces (`MockupTransparency` 0) of `Art.Straps.CuffStrap_Left`, `CuffStrap_Right` (17 each) and the 4 cuff pockets in `Art.Pockets` (`CuffPocketFront_` / `CuffPocketBack_` `Left` / `Right`, 12 each): 82 pieces. Each gets its values back from its `Mockup*` attributes (V2 setup 1), then loses them, and is CanCollide off. Pieces on his right arm get `RidesRightArm`. Mirrored on both arms.
+- Leaves alone: the CuffWalk pieces and curbs, the door, the egg spots, his arm, and the hidden art in `Mockup_Nests` (Task 12 copies the knee and belly pockets).
+- Files: `tools/world/23d-cuff-art.luau` (new, with CHECK_ONLY and "already done"), `src/tests/server/World/RealWorld/CuffWalk.spec.luau`.
+- Failing tests first (real world):
+  1. Every visible strap and cuff-pocket piece is in `World.CuffArt`, visible and not collidable.
+  2. Right-arm pieces have `RidesRightArm`; left-arm pieces don't.
+  3. Every CuffWalk walk top has a visible CuffArt surface from 0.2 below to 0.7 above it, about every stud. Points it misses are listed for designer; walk pieces are not moved.
+- Backup: a new folder, so nothing is cloned; the place copy is `work/place-backups/p5t15e3-2026-11-09.rbxl`.
+- Size: about 45 min (product's price: 14 Studio calls; the card counts 22 in the builder's steps, with sync checks and Play setup), plus the full run and review:
+  1. Red tests, script 23d, its dry run, its run, its second run "already done", narrow CuffWalk run green. Test 3 measures with ray-box math against each piece's box, because the copied art keeps CanQuery off and world rays miss it. Sonnet builder, 20 min, 10 Studio calls.
+  2. Float-tp proof at `cuff4_L` and `cuff4_R` with `work/p5t15e/float-tp.luau` and the 15e cameras, 2 shots saved. Sonnet builder, 10 min, 12 Studio calls (card `work/p5t15e3/15e3-card.md`).
+  3. Look check: before and after shots from gardens 1, 2, 7 and 8, computer and phone, against `mockups/test-cuff-strap.png` and `view-phone-wake-cuff-g*`. Opus designer, 8 min, 4 Studio calls.
+  4. Full run. Haiku runner, 6 min, 5 Studio calls.
+  5. Review, Opus code_lead, 8 min, 3 Studio calls. Then commit.
+- Results: both shots show the feet on the blue strap foot and the look is "same or better": close. A shot still floats: rays first, then stop and step back before any world change. The look is worse from a garden: designer rules.
+- Done when: the 3 tests pass, script 23d's second run says "already done", designer passes both float-tp shots and the look check.
+- How it ended (closed 2026-11-09, `work/p5t15e3/close-review.md`):
+  - Built: script 23d copied 82 pieces into 6 models in `World.CuffArt` (41 marked `RidesRightArm`); its second run said "already done". The 3 new CuffWalk tests are green, with no missed walk points.
+  - Both float-tp shots pass: the feet stand on the blue strap foot, 0.0 off the floor (`work/p5t15e3/shot-verdict.md`). Look check: better or same from gardens 1, 2, 7 and 8 on computer and phone, nothing worse.
+  - The strap's inner edge sinks into his cuff by design (designer's ruling `work/p5t15e3/sink-ruling.md`). `SunkParts.spec.luau` accepts it by name pattern: Strap 0.85, RolledEdge 1.1, Stitch 0.3. A deeper sink is a new red.
+  - Full run: 2981 passed, 6 accepted reds (`work/p5t15e3/fullrun2.md`).
+  - `CuffWalk.spec.luau` is 901 lines (limit 1000). Not split in this task. The next task that adds a test to it first moves the "cuff art in the world" block into its own `CuffArt.spec.luau`.
 
 **Task 15f: Rare stuck spots re-measured** (product's condition 2, stuck safety Task 23)
 - Stands on: Task 15d (built).
@@ -354,7 +383,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Closing fix built and run 2026-11-09: 2976 passed, 6 failed (the 5 accepted plus OnTheGiant's walk-area test), 0 could not run. The walk-area test is an accepted red naming exactly 7 lines (product, `work/p5t15g/close-ruling.md`): seam match (Task 16), 5 arm-end floats plus 1 invisible curb (ruled after Task 15e's shots), and the right steep edge at (25.2, 47, −29) (Task 15e walk-off).
 
 **Task 16: World prep: the seam**
-- Stands on: Task 15a (the steep layer, built), Task 15d (the thigh guards, built), Task 15g (the check repair, built), Task 15e (the final walk-offs passed), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
+- Stands on: Task 15a (the steep layer, built), Task 15d (the thigh guards, built), Task 15g (the check repair, built), Task 15e (the final walk-offs passed), Task 15e3 (the cuff art in the world, built: no stitch lies across a strap, and moving `Mockup_Nests` away must not take strap art the world needs), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
 - Before: reach check from what exists (the walk area's edge after Tasks 15a and 15d, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan5Task16` in the same call (and the main chat copies the place file to `work/place-backups/`).
 - After: one climb with normal player controls, in Play.
 - Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
@@ -386,7 +415,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 3: Checks on the walk map
 
 **Task 18: No new way onto the belly**
-- Stands on: plan 3 Task 6 (belly ramps, ramp edge guards, skin closures), plan 3 Task 10 (`WaysUpCheck`, the check's home), this plan's Task 12 (the 38 nests, for the egg limit) and Tasks 13, 14, 15a, 15d, 15g, 15e, 15e2 and 16 (cuff straps and the cuff ridge, walk-area check, steep layer, the boot-top thigh guards, the check repair, final walk-offs, the steep curb tops (its jump surfaces include guard and curb tops), the seam; the crease filler and low-seam lift are not built, spec Rule 82 2026-11-08), and product's jump-check limits ruling of 2026-10-28 (decided). Build order step 7b. Plan 3 Task 5's Rule 82 re-check merged here (product's ruling, 2026-11-03): no separate run anywhere else, and stuck safety's Gate 4 proof of Rule 82 comes from this task.
+- Stands on: plan 3 Task 6 (belly ramps, ramp edge guards, skin closures), plan 3 Task 10 (`WaysUpCheck`, the check's home), this plan's Task 12 (the 38 nests, for the egg limit) and Tasks 13, 14, 15a, 15d, 15g, 15e, 15e2, 15e3 and 16 (cuff straps and the cuff ridge, walk-area check, steep layer, the boot-top thigh guards, the check repair, final walk-offs, the steep curb tops (its jump surfaces include guard and curb tops), the cuff art in the world, the seam; the crease filler and low-seam lift are not built, spec Rule 82 2026-11-08), and product's jump-check limits ruling of 2026-10-28 (decided). Build order step 7b. Plan 3 Task 5's Rule 82 re-check merged here (product's ruling, 2026-11-03): no separate run anywhere else, and stuck safety's Gate 4 proof of Rule 82 comes from this task.
 - Spec rules: Rule 82 (No new way onto the belly), all three points, and spec 3's Rule 45 (One way onto the belly) as Rule 82 (No new way onto the belly) widens it. Section 5: "Seam height", "Climbable-part height". Story E's first case. Section 8: "A player on the side pad jumps at his cuff" (the side pad was dropped 2026-11-03, so a boot top now).
 - Files: `src/server/World/WaysUpCheck.luau` (plan 3, Task 10), `src/tests/server/World/WaysUpCheck.spec.luau`, `WalkMap.spec.luau`.
 - What it adds, from every jump-surface spot (the meadow round him, the boot tops, lap planks, the lap landing's guarded edges, the tops of invisible guards (every family by name: the 11 slide guards in `World.WalkSurfaces.SlideGuards`, the forehead plates `ForeheadGuard`, plan 3 Task 5's rail guards `RailGuard_Left` / `_Right` and its landing, apron and end guards, plan 3 Task 6's ramp edge guards and skin closures), and the tops of the cave skirt (`World.CaveSkirt`, stuck safety Task 22; product's condition for allowing the reachable step by the ledge)), **plus every body surface a player walks onto from any of those** (today his thighs and hip crease from each boot top, spec Rule 82, 2026-11-08), found by a walk flood from each named surface on the walk map, never by adding names. The flood follows every link kind Play allows (walk, slide, climb, jump), and its no-guard control must first reach the hip crease the way 15b's Play crease walk did (3 of 6); a control that misses is a broken flood, not a pass. Every height and reach ray sees every solid part (CanCollide on), not only `World.Giant`. With the jump reach in "Decisions":
@@ -425,7 +454,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the test passes.
 
 **Task 22: The bot walk on the walk area**
-- Stands on: Task 7 (the prompts, built), Task 12 (the nests, built), Tasks 15d, 15e, 15e2, 16 and 18 (walk fixes, walk-offs, the steep curb tops its strap and ledge legs walk beside, seam, jump check, built). Its strap and pocket legs take 15b's pocket grab cases.
+- Stands on: Task 7 (the prompts, built), Task 12 (the nests, built), Tasks 15d, 15e, 15e2, 15e3, 16 and 18 (walk fixes, walk-offs, the steep curb tops its strap and ledge legs walk beside, the cuff art in the world, seam, jump check, built). Its strap and pocket legs take 15b's pocket grab cases.
 - Spec rules: the Play proof of Rule 79 (Walk anywhere down to the seam) and Rule 82 (No new way onto the belly) (Rule 24: A bot walks every way). Rule 80: "the stuck scan and the bot walk must find no other" climb. Section 6's Play checks: straps and ledges both arms with an egg, the seam at 65°, the three fixes, the knee pocket area, the beard tip, the mid-air grab.
 - Files: `tools/play/bot-walk-legs.luau`, `tools/play/bot-walk.luau` (plan 2, Task 8).
 - What it adds:

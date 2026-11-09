@@ -38,3 +38,4 @@
 - Perch-exit tries placed by teleport fell before the press 3 of 4 times: a try is valid only if the body is still at its start when the key goes down; a drop by itself counts as the way out (Rule 22), not a failed exit.
 - A Play proof reproduces the bug the way it was found (a placed body for a float), listed with each result's pick; 'one jump onto each curb' on a 0.4 ridge couldn't fail and grew 15e2 to 35 calls (2026-11-09).
 - A float fix checks every collidable top under the body against the drawn art (tinted top-down shot), not only the part that failed; 15e2's steep curb tops passed but the walk floor under them stuck out past the sleeve (2026-11-09).
+- Before ruling a float fix, check the art under the walk piece is in the world and visible (not just in a Mockup_ folder); 15e2/15e3 trimmed and steepened for 3 rounds while the cuff strap art was never copied out (2026-11-09).
