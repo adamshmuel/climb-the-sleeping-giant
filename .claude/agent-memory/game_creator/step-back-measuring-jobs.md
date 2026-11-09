@@ -12,3 +12,5 @@ Before calling a Play-job miss a world gap, check the job steers like a player (
 **How to apply:** in a step back, the smallest piece is often a better measuring try plus one real phone try, with no world change. Never re-open plan 7-style ladder widening without a real player fall.
 
 Price the player's gain first (2026-11-09, 15d): before ruling on a "shortcut", work out its noise, time and grab reach from spec values. The crease jump was a loud +20 gamble (no fix needed); the real hole was a quiet walk-in grab of a Rare (root 5.8 from the pocket, reach 8).
+
+Bands against unbuilt art (2026-11-09, 15e): a ±1 seam band stopped a Play where every walk slipped cleanly, because the stitches (Task 16) weren't built. Ask of each stop row "what does the kid feel?"; when the reference art isn't built yet, move the art to the measured line instead of fixing the world.

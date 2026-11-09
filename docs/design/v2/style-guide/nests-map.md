@@ -30,22 +30,28 @@ Climbable patches and button columns are out of V2 (game_creator, accepted by Ad
 
 Above the seam you can walk anywhere on his belly top, his upper sides and the top of his arms. Below it his side is steeper than 65° and you slide off with one thud (Rule 79, Rule 80).
 
-**Where it is** (the line where his side gets steeper than 65°, measured on both sides):
+**Where it is:** where players really start to slip, drawn the same on both sides (2026-11-09, from Task 15e's six Play walk-offs, `work/p5t15e/step2-result.md`; product's ruling `work/p5t15e/stepback-decision.md`, 4a).
 
-| Along his side (z) | His left (x, y) | His right (x, y) |
-|---|---|---|
-| −38 (near his hip) | (−16.5, 41.7) | (15.0, 43.4) |
-| −36 | (−18.5, 42.9) | (17.5, 44.4) |
-| −34 | (−20.5, 43.9) | (20.0, 44.7) |
-| −32 | (−22.5, 44.5) | (22.0, 45.3) |
-| −30 | (−24.5, 44.6) | (24.5, 44.8) |
-| −28 (over where the side pad was) | (−26.0, 45.2) | (26.0, 45.2) |
-| −24 (over where the side pad was) | (−29.0, 45.4) | (29.0, 45.6) |
-| −20 | (−31.0, 45.6) | (30.5, 46.7) |
-| −16 | (−32.0, 46.8) | (31.5, 47.6) |
-| −14 (where his arm starts) | (−32.5, 47.0) | (31.5, 48.9) |
+| Along his side (z) | x: his left −, his right + |
+|---|---|
+| −38 (near his hip) | ±16.9 |
+| −36 | ±19.1 |
+| −34 | ±21.2 |
+| −32 | ±23.1 |
+| −30 | ±25.2 |
+| −28 (over where the side pad was) | ±26.6 |
+| −24 (over where the side pad was) | ±29.3 |
+| −20 | ±30.8 |
+| −16 | ±31.5 |
+| −14 (where his arm starts) | ±31.8 |
 
-- The two sides match within 0.5 studs across and up to 2 studs in height (his right is a little higher near the arm).
+- **Height (y):** on his skin at that x and z, found by a ray from above when the stitches are built (Task 16). His two sides differ in height by up to 2 studs, so y is not mirrored. For reference, the Play slip points' feet were at y 40.0 to 48.1.
+- **Mirrored:** each row is the same x on both sides. The real slip points mirror within 0.4 studs (left −19.0 / right 18.8 at z about −37, −27.1 / 27.0 at z −28.8, −32.7 / 32.3 at z −16.1), so each left and right pair was averaged.
+- **How the line was made:**
+  1. Each averaged slip point (z −37.15: 18.9; z −28.8: 27.05; z −16.1: 32.5) moved 1 stud in toward his middle. The Play detector marks the slip up to 1.6 studs after it really starts (16 studs a second, 0.1-second window), so the slide starts on or just above the stitches, and the hem band hangs over where the body is already sliding. A kid never slides from above the line.
+  2. Between and beyond those three points, the old 65° line (left and right averaged) shifted by the same amount, straight between the points: +1.2 studs out near his hip, +0.65 at z −28.8, −0.2 at z −16.1.
+- Compared with the old 65° line, the seam moves up to about 1.9 studs out on his right near his hip (z −38 to −34) and stays within 0.7 studs everywhere from z −28 to −14.
+- The walk surfaces don't change: only where the stitches will be drawn. Not checked: whether a belly pocket now sits under the lower line near his hip (the stitches stop 3 studs either side of a pocket, below); Task 16's look shots check it.
 - **On his arm**, the seam is the outer rim of his white cuff, where its top turns down. It runs through five points (moved 2026-10-20 to where his real shape turns steeper than 65°, measured in Play):
 
   | Point on the cuff rim | x (his left −, right +), y, z | Note |

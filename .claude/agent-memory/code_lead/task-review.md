@@ -7,3 +7,4 @@
 - Before approving a world task, check the place file's save date (`ls -l -T *.rbxl`): world parts live only in the open Studio until Adam saves (p5t13b, 2026-11-08).
 - Review: grep the new module's constants (65, 78...) across src/tests before approving; p5t14 found ScanFacts' own WALK_AREA_MAX_DEGREES = 65 copying WalkAreaCheck.SEAM_DEGREES.
 - Review: a builder's 'extra skip with no test' can widen a ruled skip. Diff each skip against the ruling's exact words and count the real parts it hides (15g: 30 ramp pieces).
+- Skipping a close full run after a world undo: first prove the last run saw the undone world (a test pinning its numbers passed in it); 15e's ThighGuards.spec did (2026-11-09).
