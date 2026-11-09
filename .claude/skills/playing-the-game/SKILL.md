@@ -13,7 +13,7 @@ Nobody approves what they haven't seen in the running game. Reading code and pas
 |---|---|
 | Find Studio | `list_roblox_studios`, then `get_studio_state`. If none is connected, stop and say so. |
 | Start and stop | `start_stop_play` |
-| Move and press | `character_navigation` to walk, `user_keyboard_input` and `user_mouse_input` for keys and buttons |
+| Move and press | `character_navigation` to walk, `user_keyboard_input` and `user_mouse_input` for keys and buttons. `character_navigation` pathfinds and jumps, so a "no jump" walk uses `user_keyboard_input` W with a camera bound behind the body. <!-- p5t15b, 2026-11-09 --> |
 | See the real play screen | `screen_capture` (during Play it shows the screen a player sees, buttons included) |
 | Errors | `get_console_output` |
 | Phone screen | Studio's device simulator: the phone calls in the `look-check` skill's [shots job](../look-check/shots-job.md) (steps 5 and 7) |

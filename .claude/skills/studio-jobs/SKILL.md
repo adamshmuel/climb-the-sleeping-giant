@@ -85,6 +85,8 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - **Moves the job didn't make.** Log the position before any move over 8 studs in one frame and label it "moved by the game" (rescue, bounce). It is never a pass or a fail; check it against the game's own rescue and landing spots.
 - Pass or fail comes from the game's own event (for example a Rescued remote). Stop the player's input the moment it fires, and judge every check on it wherever it happened.
 - Listen to change events from the start and keep every change with its time. Never poll afterwards.
+- **Many tries in one call pair.** A job that waits for each try's first move and records it, plus one timed keyboard call (about 6 s per try), runs about 7 tries per pair. Never one call per try. A start spot's ground ray begins just above the spot, not high above it, or it lands on a higher surface. <!-- p5t15b, 2026-11-09: 75 calls, turn cap -->
+
 - A timed action starts from a signal inside the key call itself (for example `GuiService.MenuIsOpen` turning true), never from an earlier call.
 - **Loops and copies.** Every background loop stops on a flag the clean-up script sets; finish one trial loop before starting the next. A walk script reads the walk speed from the game's config, never a saved value. A job that reuses a walk script lists every line that uses its mirror sign before the first paste.
 - A job fix that changes how every leg moves says so, and the next full walk re-checks every leg.

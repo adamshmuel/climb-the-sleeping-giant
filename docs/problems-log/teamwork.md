@@ -129,3 +129,4 @@ About handing work between agents, agent memory, and task sizes. The map is `doc
 - 18:11 2026-11-08 builder 3d-1 (write slide.luau) hit its 40-turn limit with no report, 3rd builder turn cap today (same kind: fix the cause at the 15a close). Resumed for ≤5 calls.
 - 18:41 2026-11-08 builder 3g hit its 40-turn limit with no report (49 tool calls; work done, note written). 4th builder turn cap today: the cause gets fixed at the 15a close (same kind).
   **Cause fixed:** `writing-handoffs` skill: every card file is named `...-card.md` or `...handoff...` so job-check (and its call-list check) runs on it; step3g.md skipped it.
+- 13:02 2026-11-09 builder 15b hit its 40-turn limit with no results file (46 tool calls). 5th of this kind. Cause: the main chat sent the plan block as a prompt, with no card and no call list, so job-check never ran. Resumed: write results first, then the missing tries.
