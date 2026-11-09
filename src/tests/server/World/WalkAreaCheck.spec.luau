@@ -5,10 +5,17 @@ local describe, it, expect, beforeEach, afterEach =
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
+local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
+local WalkAreaFacts = require(ServerStorage.Tests.server.World.StuckScan.WalkAreaFacts)
 
 -- The walk-area checks on small made-up worlds (plan 5 Task 14). Each test builds its world in a WorldModel in
 -- ServerStorage (as PathCheck/WalkMap.spec.luau does) and destroys it afterwards. The ground's top is at y = 0.
+-- Task 15g: the repaired checks (gap filter, floating filter, and WalkAreaFacts.artTopUnder / isCutGap / skipRampSpot).
+type Skip = (Vector3) -> boolean
+local gapsSkipping = WalkAreaCheck.gaps
+local floatSkipping = WalkAreaCheck.floatingOrSunk
+
 describe("WalkAreaCheck", function()
 	local FLOOR_AREA: PathCheck.Area = { min = Vector3.new(-20, -12, -20), max = Vector3.new(20, 12, 20) }
 
@@ -279,5 +286,144 @@ describe("WalkAreaCheck", function()
 		local problems = WalkAreaCheck.seamMatch(world, nil, nil)
 		expect(#problems).toBe(1)
 		expect(countKind(problems, "seam match")).toBe(1)
+	end)
+
+	-- Task 15g B1 (15c row 8): art that rays skip (CanQuery off) is measured by its shape (CFrame and Size).
+	it("art under a walk piece is measured by its shape even when rays skip it", function()
+		local artTopUnder = WalkAreaFacts.artTopUnder
+		local art = addBox("Art", Vector3.new(-6, -1, -6), Vector3.new(6, 0, 6))
+		art.CanCollide = false
+		art.CanQuery = false
+		addInvisibleBox("Piece", Vector3.new(-6, -0.7, -6), Vector3.new(6, 0.3, 6)) -- its top is 0.3 above the art
+		local map = PathCheck.buildMap(options, FLOOR_AREA)
+		expect(#map.spots > 0).toBe(true)
+		expect(artTopUnder({ art }, 0, 0, 1)).toBeCloseTo(0, 2)
+		expect(artTopUnder({ art }, 12, 0, 1)).toBeNil()
+		local function seen(x: number, z: number, maxY: number): number?
+			return artTopUnder({ art }, x, z, maxY)
+		end
+		expect(floatSkipping(map, ids(map), seen, notOnSkin)).toEqual({})
+	end)
+
+	-- A gap needs no walk-area spot near it, so an empty area makes every sample a gap unless the filter cuts it.
+	local function gapCount(samples: { Vector3 }, cut: Skip?): number
+		addInvisibleBox("WalkFloor", Vector3.new(-20, -1, -20), Vector3.new(20, 0, 20))
+		local map = PathCheck.buildMap(options, FLOOR_AREA)
+		return #gapsSkipping(map, {}, samples, cut)
+	end
+
+	-- The seam's own numbers (SlideProfile.SEAM_LEFT / SEAM_RIGHT, style guide "Along his side"); one stud of x is
+	-- `sign` outboard. Only stitches south of z -20, where the body rule ends.
+	local function seamSamples(outboard: boolean): { Vector3 }
+		local samples = {}
+		for _, side in
+			{ { points = SlideProfile.SEAM_LEFT, sign = -1 }, { points = SlideProfile.SEAM_RIGHT, sign = 1 } }
+		do
+			for _, point in side.points do
+				if point.Z < -20 then
+					local shift = if outboard then 3 else -3
+					table.insert(
+						samples,
+						Vector3.new(point.X + side.sign * shift, point.Y - (if outboard then 3 else 0), point.Z)
+					)
+				end
+			end
+		end
+		return samples
+	end
+
+	-- Task 15g B2 (Q1): a gap below the seam is not counted.
+	it("a gap below the seam is not counted", function()
+		local isCutGap = WalkAreaFacts.isCutGap
+		local samples = seamSamples(true)
+		expect(#samples > 0).toBe(true)
+		expect(gapCount(samples, isCutGap)).toBe(0)
+	end)
+
+	it("a gap above the seam is counted", function()
+		local isCutGap = WalkAreaFacts.isCutGap
+		local samples = seamSamples(false)
+		expect(#samples > 0).toBe(true)
+		expect(gapCount(samples, isCutGap)).toBe(#samples)
+	end)
+
+	-- Task 15g B3 (Q1): his chest north of z -20, between x -22 and 22, is not walk area; south of z -20 it still is.
+	it("a gap on his chest north of z -20 is not counted", function()
+		local isCutGap = WalkAreaFacts.isCutGap
+		local chest = { Vector3.new(0, 50, -10), Vector3.new(10, 60, -5), Vector3.new(-10, 60, -12) }
+		expect(gapCount(chest, isCutGap)).toBe(0)
+	end)
+
+	it("a gap on his body south of z -20 is counted", function()
+		local isCutGap = WalkAreaFacts.isCutGap
+		expect(gapCount({ Vector3.new(0, 50, -25) }, isCutGap)).toBe(1)
+	end)
+
+	-- Task 15g B4 (row 4): ramp spots. A BellyRamp_* folder holds Piece<n> walk pieces, Fill<n> blocks and a Cover
+	-- folder of boards that are drawn but have no collision, so the check never sees them as the surface.
+	local function addRamp(): Folder
+		local ramp = Instance.new("Folder")
+		ramp.Name = "BellyRamp_Left"
+		ramp.Parent = world
+		return ramp
+	end
+
+	local function addRampPiece(ramp: Folder, name: string, top: number): Part
+		local piece = addInvisibleBox(name, Vector3.new(-6, top - 1, -6), Vector3.new(6, top, 6))
+		piece.Parent = ramp
+		return piece
+	end
+
+	-- The visible skin 1 stud under the piece: a spot on the piece is 1 stud above what is drawn.
+	local function rampFloats(skip: (PathCheck.Spot) -> boolean): { WalkAreaCheck.Problem }
+		addVisibleFloor(-1)
+		local map = PathCheck.buildMap(options, FLOOR_AREA)
+		expect(#map.spots > 0).toBe(true)
+		return floatSkipping(map, ids(map), visibleHeightAt, notOnSkin, skip)
+	end
+
+	local function rampSkip(covers: { BasePart }): (PathCheck.Spot) -> boolean
+		local skipRampSpot = WalkAreaFacts.skipRampSpot
+		return function(spot: PathCheck.Spot): boolean
+			return skipRampSpot(spot, covers)
+		end
+	end
+
+	it("a ramp spot over its Cover board is not a float", function()
+		local skip = rampSkip({})
+		local ramp = addRamp()
+		addRampPiece(ramp, "Piece1", 0)
+		local cover = Instance.new("Folder")
+		cover.Name = "Cover"
+		cover.Parent = ramp
+		local board = addBox("Board1", Vector3.new(-6, -1.1, -6), Vector3.new(6, -0.1, 6)) -- top 0.1 under the feet
+		board.CanCollide = false
+		board.CanQuery = false
+		board.Parent = cover
+		expect(rampFloats(rampSkip({ board }))).toEqual({})
+		expect(skip).never.toBeNil()
+	end)
+
+	it("a ramp spot over bare skin is a float", function()
+		local skip = rampSkip({})
+		local ramp = addRamp()
+		addRampPiece(ramp, "Piece1", 0)
+		expect(countKind(rampFloats(skip), "floating") > 0).toBe(true)
+	end)
+
+	it("a ramp curb spot is skipped", function()
+		local skip = rampSkip({})
+		local ramp = addRamp()
+		addRampPiece(ramp, "Curb1", 0)
+		expect(rampFloats(skip)).toEqual({})
+	end)
+
+	it("a ramp top piece with no board over it that stands on its Fill piece is not a float", function()
+		local skip = rampSkip({})
+		local ramp = addRamp()
+		addRampPiece(ramp, "Piece13", 0)
+		local fill = addInvisibleBox("Fill13", Vector3.new(-6, -3, -6), Vector3.new(6, -0.2, 6))
+		fill.Parent = ramp
+		expect(rampFloats(skip)).toEqual({})
 	end)
 end)

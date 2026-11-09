@@ -25,9 +25,9 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 15b: Trial walk-offs on the computer | ☑ done 2026-11-09 (13 min of 25): crossing 6/6 pass; crease jumps 3/12 pass (Rule 82); pocket grabs 0/4 (no prompts until Tasks 1-11, knee ledges not solid). Results `work/p5t15b/results.md` | builder |
 | Egg nests and climbing (V2 spec 5) | Task 15c: Walk-area re-read | ☑ done 2026-11-09: work list for 15d in `work/p5t15c/work-list.md` (14 real floats, 14 belly-top gaps; 30 floats were false because the art is CanQuery off; door at z −27 is reached); Q1 (chest north of z −20) to product | code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 15d: The boot-top thigh guards | ☑ done 2026-11-09: `World.ThighGuards` 2 invisible walls (script 23b), proved first with stand-ins in Play (walks 1-5 pass, W5 10/10, camera never zooms in); test B6 red then green; full run 2963 passed, 6 accepted reds (`work/p5t15d/step6-result.md`) | builder, runner, designer, product, code_lead |
-| Egg nests and climbing (V2 spec 5) | Task 15e: Final walk-offs on computer and phone | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 15e: Final walk-offs on computer and phone | ☐ not started (2026-11-09: product added 2 belly walks and a cuff float shot) | |
 | Egg nests and climbing (V2 spec 5) | Task 15f: Rare stuck spots re-measured | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 15g: Walk-area check repair | ☐ not started (added 2026-11-09, after 15d, before 16) | |
+| Egg nests and climbing (V2 spec 5) | Task 15g: Walk-area check repair | ◐ in progress: Steps 1-4 approved for commit (`work/p5t15g/review.md`); closing fix next (real-world test narrowed to floats, sinks, zone and seam; mirror start; ramp skip narrowed). No Task 15h | builder, runner, product, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 16: World prep: the seam | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 17: The footprints reach every nest | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 18: No new way onto the belly | ☐ not started | |

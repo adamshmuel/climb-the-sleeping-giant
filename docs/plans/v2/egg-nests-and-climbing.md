@@ -293,6 +293,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Stands on: Task 15a (built), Task 15d (the thigh guards, built).
 - Size: 35 min, Sonnet builder, about 20 Studio calls (computer and iPhone 14 sessions, shots).
 - What (sound muted, the giant held asleep by the session hold so jump thuds can't wake him; a wake-up float moved the 15b trial 40 studs): plan 2 Task 21's 10 walk-offs (his sides at z −36, −28 and −16, each cuff at station 3 and station 4) with Task 21's slip rule (the jump in flat speed; the 0.1 s window holds only frames after the 1-stud mark; a jump on cloth under 65° is not a slip). Sides and cuff station 3 pass when the slip starts within 1 stud of the seam line, either side. Cuff station 4 passes with no slip before the character leaves the end of his arm, landing somewhere it can walk from. Each cuff ridge face: the character slips at once. The z −27 crossing both ways. The crease: a player pressing still in the groove gets the rescue after 3 s. Task 15d's climb, proved with the Play job that found it (`work/p5t15d/guard-walks.luau`, walks 1-4, with no stand-ins now the real guards exist): from each boot top, walk at the thigh: `ThighGuard_*` stops the player before the crease. iPhone 14: the left side at z −28, left cuff station 3, the crossing.
+- Added by product on 2026-11-09 (`work/p5t15g/stepback-decision.md`), about 6 min more:
+  - 2 belly walks: from each belly ramp top, walk across that half of the belly to x ±40 and back, once at about Rare egg 1's height and once at z −28. Pass: no stall and no slip above the stitches. A stall goes to product with its shot.
+  - 1 side-view shot at cuff station 4, both arms, over the float spots the walk-area check found. designer judges it against spec 5 section 5 (a float of 0.4 studs or more is visible). Then product accepts the floats or designer picks the fix.
 - Done when: every case passes with its shots, and designer says yes.
 
 **Task 15f: Rare stuck spots re-measured** (product's condition 2, stuck safety Task 23)
@@ -309,6 +312,12 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What (details `work/p5t15d/15d-scripts.md` A, B, C): trace Part A fixed (the tilted test box, art measured by its shape, the closest map spot within 3 studs); the check's fixes: art measured by shape (15c row 8), product's Q1 cut, the ramp, curb and cut-gap skip filters, the sleeve gap rows. Rows 4 (ramp floats) and 7 (`Join_*` gap) are closed.
 - Failing tests first: B1-B4 and B8 in `WalkAreaCheck.spec.luau`, red on their own asserts. `OnTheGiant.spec.luau` is not edited.
 - Done when: B1-B4 and B8 pass, and the OnTheGiant walk-area test goes green or stays red naming only spots product ruled on.
+- Steps 1-4 built; review approved the code for commit (`work/p5t15g/review.md`). Stopped at Step 5 (stop-and-step-back). Product decided: no Task 15h.
+- Closing fix (card `work/p5t15g/15g-close-card.md`, about 21 min: Sonnet 13, Haiku 8):
+  - The real-world walk-area test fails only on floating, sunk, zone and seam match. Gaps and too-steep spots keep their made-up-world tests and are walked in Task 15e.
+  - A second flood start at the mirror of Rare egg 1 (x flipped), so the right half of the belly is checked too.
+  - The ramp skip narrowed: a ramp piece on its Fill block is skipped only when no Cover board lies under it.
+  - Done when: the full run's walk-area line names only "seam match" (Task 16) and the arm-end floats past the cuff rim (today 5, at x −60.8, −58.8, −52.8, 55.2, 61.2, plus their mirrors). Any other line goes to product.
 
 **Task 16: World prep: the seam**
 - Stands on: Task 15a (the steep layer, built), Task 15d (the thigh guards, built), Task 15g (the check repair, built), Task 15e (the final walk-offs passed), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).

@@ -6,3 +6,4 @@
 - A world script that moves a part also leaves the older script that placed it holding the old record (5b2: `08-route` LANDING_PLACES still had spot 7 at (54, -64)): grep `tools/world` for the old numbers in every review. Run `scripts/check.sh` myself, because the builder's "checks pass" missed 4 type errors (2026-11-04).
 - Before approving a world task, check the place file's save date (`ls -l -T *.rbxl`): world parts live only in the open Studio until Adam saves (p5t13b, 2026-11-08).
 - Review: grep the new module's constants (65, 78...) across src/tests before approving; p5t14 found ScanFacts' own WALK_AREA_MAX_DEGREES = 65 copying WalkAreaCheck.SEAM_DEGREES.
+- Review: a builder's 'extra skip with no test' can widen a ruled skip. Diff each skip against the ruling's exact words and count the real parts it hides (15g: 30 ramp pieces).

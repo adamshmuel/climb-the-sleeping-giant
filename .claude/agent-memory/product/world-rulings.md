@@ -27,3 +27,4 @@
 - A check may skip a walk piece's floats only after its look-only cover (e.g. BellyRamp Cover boards, CanQuery off) is measured by shape under it; guards and curbs may be skipped outright (p5t15d row 4, 2026-11-09).
 - A new guard near a nest gets the nest's stand spot in its reach pass list (15d thigh guard sat 4 studs from the knee-pocket stop).
 - When confirming a card's decision table, check it splits player fixes from test repairs (order-the-work Step 3), and that a fix is proven by the Play job that found the problem, not a flood model; 15d bundled both and hit the time stop (2026-11-09).
+- A check's flood or sample model is compared with a Play walk across both halves before its counts become a red; 14/15g's Walk-only flood from one left start gave 880 then 289 fake gaps. Narrow the real-world test to what Play can't prove (2026-11-09).

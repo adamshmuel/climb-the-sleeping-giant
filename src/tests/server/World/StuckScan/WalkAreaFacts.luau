@@ -9,6 +9,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
+local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
@@ -27,6 +28,12 @@ local MARGIN = 1 -- studs a sample ray starts above the zone box, and ends below
 local KINDS = { "too steep", "floating", "sunk", "gap", "zone", "seam match" }
 local LISTED_PER_KIND = 10
 local ART_RAY_LENGTH = 250 -- studs: the ray down onto the strap and pocket art reaches this far
+local CHEST_SOUTH_Z = -20 -- Q1: north of this z, between x -CHEST_HALF_X and CHEST_HALF_X, his chest is not walk area
+local CHEST_HALF_X = 22
+local COVER_BELOW = 0.2 -- studs: a ramp spot passes when it is this far below its Cover board...
+local COVER_ABOVE = 0.7 -- ...to this far above it
+local SLEEVE_X_MIN, SLEEVE_X_MAX = 42, 52 -- Rule 79: gap rows with |x| in this range are the sleeves
+local STEEP_REACH = 1.5 -- studs: a gap sample this close to a steep-layer piece is a slide by design
 
 local WalkAreaFacts = {}
 
@@ -87,6 +94,94 @@ local function startIds(world: Instance, map: PathCheck.WalkMap): { number }
 	return ids
 end
 
+-- The top of the highest of `parts` under (x, z) at or below maxY, by the parts' shape (CFrame and Size, turned boxes
+-- too), so art that rays skip (CanQuery off) still counts; nil when none. A part that reaches above maxY is ignored.
+function WalkAreaFacts.artTopUnder(parts: { BasePart }, x: number, z: number, maxY: number): number?
+	local best: number? = nil
+	for _, part in parts do
+		-- The vertical line through (x, z) in the part's own space: world y = t, local point = origin + up * t.
+		local origin = part.CFrame:PointToObjectSpace(Vector3.new(x, 0, z))
+		local up = part.CFrame:VectorToObjectSpace(Vector3.yAxis)
+		local low, high = -math.huge, math.huge
+		local size = part.Size
+		for _, axis in { "X", "Y", "Z" } do
+			local half = (size :: any)[axis] / 2
+			local o, d = (origin :: any)[axis], (up :: any)[axis]
+			if math.abs(d) < 1e-6 then
+				if math.abs(o) > half then
+					low, high = 1, 0
+				end
+			else
+				local a, b = (-half - o) / d, (half - o) / d
+				low, high = math.max(low, math.min(a, b)), math.min(high, math.max(a, b))
+			end
+		end
+		if low <= high and high <= maxY and (best == nil or high > best) then
+			best = high
+		end
+	end
+	return best
+end
+
+-- Q1 (work/p5t15c/q1-ruling.md): a spot on his body that is not walk area. His chest north of z -20 between x -22 and
+-- 22, and everything outboard of the seam line and lower than it (below the seam). Mirrored by the sign of x.
+function WalkAreaFacts.isCutGap(position: Vector3): boolean
+	if position.Z > CHEST_SOUTH_Z and math.abs(position.X) <= CHEST_HALF_X then
+		return true
+	end
+	local points = if position.X < 0 then SlideProfile.SEAM_LEFT else SlideProfile.SEAM_RIGHT
+	local z = math.clamp(position.Z, points[1].Z, points[#points].Z)
+	for index = 1, #points - 1 do
+		local from, to = points[index], points[index + 1]
+		if z >= from.Z and z <= to.Z then
+			local fraction = if to.Z > from.Z then (z - from.Z) / (to.Z - from.Z) else 0
+			local seam = from:Lerp(to, fraction)
+			return math.abs(position.X) > math.abs(seam.X) and position.Y < seam.Y
+		end
+	end
+	return false
+end
+
+-- Task 15g (trace row 4): a ramp spot is not checked against the visible surface when it stands on a BellyRamp_* piece
+-- and: it is a curb or a Fill block; or a Cover board (drawn, no collision; `covers`) lies under it by shape, 0.2 below to 0.7 above;
+-- or it is a Piece<n> with its own Fill<n> beside it (Piece13 stands on Fill13, ruled not a float).
+function WalkAreaFacts.skipRampSpot(spot: PathCheck.Spot, covers: { BasePart }): boolean
+	local part = spot.standsOn
+	local ramp: Instance? = part.Parent
+	while ramp ~= nil and string.sub(ramp.Name, 1, 10) ~= "BellyRamp_" do
+		ramp = ramp.Parent
+	end
+	if ramp == nil then
+		return false
+	end
+	if string.find(part.Name, "Curb", 1, true) ~= nil or string.match(part.Name, "^Fill%d+$") ~= nil then
+		return true -- a curb, or the invisible Fill block a Piece stands on (a spot on its top sits inside the ramp)
+	end
+	local position = spot.position
+	local top = WalkAreaFacts.artTopUnder(covers, position.X, position.Z, position.Y + COVER_ABOVE)
+	if top ~= nil and position.Y - top >= -COVER_BELOW and position.Y - top <= COVER_ABOVE then
+		return true
+	end
+	local number = string.match(part.Name, "^Piece(%d+)$")
+	return number ~= nil and ramp:FindFirstChild(`Fill{number}`) ~= nil
+end
+
+-- True when `position` is within STEEP_REACH of a steep-layer piece, by shape: a slide by design (Task 15a), never a gap.
+local function nearSteep(position: Vector3, pieces: { BasePart }): boolean
+	for _, piece in pieces do
+		local local_ = piece.CFrame:PointToObjectSpace(position)
+		local half = piece.Size / 2
+		if
+			math.abs(local_.X) <= half.X + STEEP_REACH
+			and math.abs(local_.Y) <= half.Y + STEEP_REACH
+			and math.abs(local_.Z) <= half.Z + STEEP_REACH
+		then
+			return true
+		end
+	end
+	return false
+end
+
 -- The first visible hit of a ray straight down onto `parts` (parts with Transparency 1 are skipped), or nil.
 local function visibleHitDown(
 	params: RaycastParams,
@@ -139,6 +234,8 @@ export type Inputs = {
 	alsoIn: (PathCheck.Spot) -> boolean,
 	onSkin: (BasePart) -> boolean,
 	visibleHeightAt: (number, number, number) -> number?,
+	skipSpot: (PathCheck.Spot) -> boolean,
+	skipGap: (Vector3) -> boolean,
 	samples: { Vector3 },
 	stitches: { Vector3 }?,
 	steepLayer: Instance?,
@@ -171,6 +268,10 @@ function WalkAreaFacts.inputs(world: Instance, map: PathCheck.WalkMap): Inputs
 	artParams.FilterDescendantsInstances = art
 	local function visibleHeightAt(x: number, z: number, maxY: number): number?
 		local best = skin.heightAt(x, z, maxY)
+		local byShape = WalkAreaFacts.artTopUnder(art :: any, x, z, maxY)
+		if byShape ~= nil and (best == nil or byShape > best) then
+			best = byShape
+		end
 		local hit = Workspace:Raycast(Vector3.new(x, maxY, z), Vector3.new(0, -ART_RAY_LENGTH, 0), artParams)
 		if hit ~= nil and (best == nil or hit.Position.Y > best) then
 			best = hit.Position.Y
@@ -258,6 +359,26 @@ function WalkAreaFacts.inputs(world: Instance, map: PathCheck.WalkMap): Inputs
 		end
 	end
 
+	-- The Cover boards of the belly ramps (drawn, no collision) and the steep layer's pieces.
+	local covers: { BasePart } = {}
+	for _, item in world:GetDescendants() do
+		if item:IsA("BasePart") and item.Parent ~= nil and item.Parent.Name == "Cover" then
+			local ramp = item.Parent.Parent
+			if ramp ~= nil and string.sub(ramp.Name, 1, 10) == "BellyRamp_" then
+				table.insert(covers, item)
+			end
+		end
+	end
+	local steepPieces: { BasePart } = {}
+	local steepLayer = world:FindFirstChild("SteepLayer")
+	if steepLayer ~= nil then
+		for _, item in steepLayer:GetDescendants() do
+			if item:IsA("BasePart") then
+				table.insert(steepPieces, item)
+			end
+		end
+	end
+
 	return {
 		starts = startIds(world, map),
 		isBelly = function(position)
@@ -271,6 +392,17 @@ function WalkAreaFacts.inputs(world: Instance, map: PathCheck.WalkMap): Inputs
 			return part:IsDescendantOf(giant)
 		end,
 		visibleHeightAt = visibleHeightAt,
+		skipSpot = function(spot)
+			return WalkAreaFacts.skipRampSpot(spot, covers)
+		end,
+		-- Rule 79: sleeves are walk area; checked in Task 15e and Task 22 walk-offs. So gap rows with |x| 42 to 52 are
+		-- left out here (gaps only, never floats).
+		skipGap = function(position)
+			local x = math.abs(position.X)
+			return WalkAreaFacts.isCutGap(position)
+				or (x >= SLEEVE_X_MIN and x <= SLEEVE_X_MAX)
+				or nearSteep(position, steepPieces)
+		end,
 		samples = samples,
 		stitches = stitches,
 		steepLayer = world:FindFirstChild("SteepLayer"),
@@ -285,8 +417,8 @@ function WalkAreaFacts.problems(world: Instance, map: PathCheck.WalkMap): ({ Pro
 	for _, list in
 		{
 			WalkAreaCheck.tooSteep(map, area),
-			WalkAreaCheck.floatingOrSunk(map, area, facts.visibleHeightAt, facts.onSkin),
-			WalkAreaCheck.gaps(map, area, facts.samples),
+			WalkAreaCheck.floatingOrSunk(map, area, facts.visibleHeightAt, facts.onSkin, facts.skipSpot),
+			WalkAreaCheck.gaps(map, area, facts.samples, facts.skipGap),
 			WalkAreaCheck.zones(map, area, facts.zoneOf),
 			WalkAreaCheck.seamMatch(Workspace, facts.stitches, facts.steepLayer),
 		}

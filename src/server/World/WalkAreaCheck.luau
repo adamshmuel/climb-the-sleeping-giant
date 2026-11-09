@@ -88,17 +88,19 @@ function WalkAreaCheck.tooSteep(map: PathCheck.WalkMap, area: { number }): { Pro
 	return found
 end
 
--- The visible surface under the feet against the feet. Spots on his skin are left out (the skin is what is drawn).
+-- The visible surface under the feet against the feet. Spots on his skin are left out (the skin is what is drawn), and
+-- so is every spot `skipSpot` says yes to (the ramp and curb spots whose cover the rays cannot see; Task 15g).
 function WalkAreaCheck.floatingOrSunk(
 	map: PathCheck.WalkMap,
 	area: { number },
 	visibleHeightAt: (number, number, number) -> number?,
-	onSkin: (BasePart) -> boolean
+	onSkin: (BasePart) -> boolean,
+	skipSpot: ((PathCheck.Spot) -> boolean)?
 ): { Problem }
 	local found: { Problem } = {}
 	for _, id in area do
 		local spot = map.spots[id]
-		if not onSkin(spot.standsOn) then
+		if not onSkin(spot.standsOn) and not (skipSpot ~= nil and skipSpot(spot)) then
 			local position = spot.position
 			local seen = visibleHeightAt(position.X, position.Z, position.Y + LOOK_ABOVE)
 			if seen == nil then
@@ -117,8 +119,14 @@ function WalkAreaCheck.floatingOrSunk(
 end
 
 -- A visible walk surface point with no walk-area spot within GAP_REACH (3D). Walk-area spots are put in buckets
--- GAP_REACH wide first, so each sample looks at nine buckets, not at the whole area.
-function WalkAreaCheck.gaps(map: PathCheck.WalkMap, area: { number }, samples: { Vector3 }): { Problem }
+-- GAP_REACH wide first, so each sample looks at nine buckets, not at the whole area. A sample `skip` says yes to is
+-- not counted (the cut parts of the body and the sleeves; Task 15g).
+function WalkAreaCheck.gaps(
+	map: PathCheck.WalkMap,
+	area: { number },
+	samples: { Vector3 },
+	skip: ((Vector3) -> boolean)?
+): { Problem }
 	local buckets: { [string]: { Vector3 } } = {}
 	for _, id in area do
 		local position = map.spots[id].position
@@ -130,7 +138,7 @@ function WalkAreaCheck.gaps(map: PathCheck.WalkMap, area: { number }, samples: {
 	local found: { Problem } = {}
 	for _, sample in samples do
 		local bx, bz = math.floor(sample.X / GAP_REACH), math.floor(sample.Z / GAP_REACH)
-		local covered = false
+		local covered = skip ~= nil and skip(sample)
 		for dx = -1, 1 do
 			for dz = -1, 1 do
 				local bucket: { Vector3 } = buckets[`{bx + dx},{bz + dz}`] or NO_POSITIONS
