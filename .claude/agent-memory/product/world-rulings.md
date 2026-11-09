@@ -38,4 +38,8 @@
 - Perch-exit tries placed by teleport fell before the press 3 of 4 times: a try is valid only if the body is still at its start when the key goes down; a drop by itself counts as the way out (Rule 22), not a failed exit.
 - A Play proof reproduces the bug the way it was found (a placed body for a float), listed with each result's pick; 'one jump onto each curb' on a 0.4 ridge couldn't fail and grew 15e2 to 35 calls (2026-11-09).
 - A float fix checks every collidable top under the body against the drawn art (tinted top-down shot), not only the part that failed; 15e2's steep curb tops passed but the walk floor under them stuck out past the sleeve (2026-11-09).
+- When a task "copies art" from a Mockup_ folder, check the art still matches the latest table: the 2026-11-09 seam redraw left `Art.Seam` up to 3.9 off, so Task 16 lays stitches from the table (p5t16).
+- Don't carry a Play check forward onto look-only parts built on a line drawn from that same Play; cite the rows (p5t16: T16 re-walked 15e's 4 passed rows, about 15 min).
+- A cleanup step inside a building task (moving a mockup folder) is its own piece after its last reader; grep tests and world scripts for readers (p5t16: 5 tests, 2 scripts, Task 12).
 - Before ruling a float fix, check the art under the walk piece is in the world and visible (not just in a Mockup_ folder); 15e2/15e3 trimmed and steepened for 3 rounds while the cuff strap art was never copied out (2026-11-09).
+- Before adding a check to a task in a step back, grep the spec's section 6 and the plan for where it already lives; p5t16 pulled Task 23's "sees the seam" check forward and looped twice (a hem on a round belly is hidden from its flat top).

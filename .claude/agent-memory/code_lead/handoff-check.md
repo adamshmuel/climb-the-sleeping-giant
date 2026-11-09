@@ -20,4 +20,7 @@
 - `--handoff` fails a line that picks "the spot nearest" with no path or position, and every job file needs "(no hold: Edit only)" in its first 5 lines unless it holds the session; put measured positions on their own line (p5t15d, 2026-11-09).
 - A job never requires a test-side module that requires JestGlobals (WalkAreaFacts, RealWorld/Helpers): it errors outside Jest. Copy the needed function into its own job file that stores it in `shared`, pasted first; `--handoff` checks every named job alone, so joined parts that share locals fail it (p5t15d, 2026-11-09).
 - A step heading with the word "Play" (even "Write the Play job files") needs a dry start; every Play step must start with one (group D in the job). Step headings also need the model name, even "resume Step N's builder".
+- A "can a kid see X" shot needs an Edit sight-line ray check first (eye and phone camera to each target); never pick the spot from old walk starts (p5t16 see check failed twice: seam below the belly rim).
+- Sum a card's minutes against the task's plan time before writing steps; phone = shots only, never walks; before shots go in the build step as builder calls (p5t16 grew to 73 of 60 min).
+- `--plan` rejects waiting/open/pending words on a Stands on line, even inside a name ("Waiting..."): reword (p5t16, 2026-11-09).
 - A Play card that avoids the word "Play" skips the Play-script checks (hold, CHECK_ONLY, dry run in Edit); 15d Step 2 ran that way. Write "Play" and pass them; reused sources go to `-<step>` copies "written in Step N" (p5t15d, 2026-11-09).

@@ -14,3 +14,5 @@ Before calling a Play-job miss a world gap, check the job steers like a player (
 Price the player's gain first (2026-11-09, 15d): before ruling on a "shortcut", work out its noise, time and grab reach from spec values. The crease jump was a loud +20 gamble (no fix needed); the real hole was a quiet walk-in grab of a Rare (root 5.8 from the pocket, reach 8).
 
 Bands against unbuilt art (2026-11-09, 15e): a ±1 seam band stopped a Play where every walk slipped cleanly, because the stitches (Task 16) weren't built. Ask of each stop row "what does the kid feel?"; when the reference art isn't built yet, move the art to the measured line instead of fixing the world.
+
+Look-only art on unchanged surfaces (2026-11-09, p5t16): ask "what does this Play tell us that the last Play didn't?" Usually only "can a kid see it": one phone shot per side, not repeat walk-offs. Plans must price look-check (about 22 min) in. A "can a kid see it" check on his curved body is a walk toward it with shots, never a still shot from the top: first check the stand spot can see the target at all (p5t16 looped twice on this).

@@ -77,6 +77,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 1: Slots, nests and refills (code)
 
 **Task 1: Egg slots and nests in the game numbers**
+- Stands on: spec 5's section 5 numbers (approved at Gate 3, final).
 - Spec rules: Rule 71 (How many eggs and nests), section 5 (every number).
 - Files: `src/shared/Config.luau`, `src/tests/shared/Config.spec.luau`.
 - What changes: each rank in `Config.Rarity` gets `Slots` (Common 8, Uncommon 4, Rare 4, Epic 2, Legendary 1) and `Nests` (16, 8, 6, 4, 4), replacing V1's `Spots`. A new `Config.Nests` holds: egg spacing on him 6, meadow spacing 8, player distance 15, retry 1 s, twin distance 2, eye distance 10, seam angle 65°, seam match 1, walk surface over what you see 1, seam height 12, climbable-part height 15, beam fade 0.3 s, unlock after 0.5 s, the arm's return 0.5 s (`ArmReturnSeconds`, plan 6 may raise it), slide tip 3 s and the 5-stud slide drop, the jump reach (9 up, 10 across, body 5 tall), and `RareEggOne`.
@@ -84,6 +85,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, and every older test that read `Spots` is listed in the report with what replaced it.
 
 **Task 2: Eggs come from slots, not spots**
+- Stands on: Task 1 (the slot and nest numbers in `Config`, built).
 - Spec rules: Rule 71 (How many eggs and nests): "a rank never has more eggs out than its slots". Rule 74 (Refills pick a random nest of the same rank): the countdown. Section 5, "Refill time".
 - Files: `src/server/Eggs/EggSlots.luau` (new, pure; replaces `EggSpots.luau`), `src/tests/server/Eggs/EggSlots.spec.luau` (new; replaces `EggSpots.spec.luau`).
 - What it does: `new(nests, slotsPerRank)` puts each slot's first egg on a nest of its rank (no two on one nest, spaced as Task 3 says); `take(state, nest, player, now)` gives the egg to the player and starts that slot's countdown; `bank`, `carrying` and `nest(state, name)` as V1's.
@@ -95,6 +97,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass. `Grab` still uses the old module until Task 7.
 
 **Task 3: A random nest of the same rank, or wait**
+- Stands on: Task 2 (`EggSlots` with `new` and `take`, built).
 - Spec rules: Rule 74 (Refills pick a random nest of the same rank), Rule 76 (When no nest is clear, wait). Story B. Section 8: "Two slots of the same rank finish ... in the same second", "The Legendary egg is taken and all 3 other Legendary nests have a player within 15 studs", "One Epic egg waits on the left cuff", "A player stands on an empty nest".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: when a countdown ends, the allowed nests are those of the slot's rank with no egg waiting, not the nest this slot's egg was just taken from, at least 6 studs from every waiting egg, at least 15 studs from every player, and not locked. `pick(n)` chooses one. If none is allowed, the slot tries again every second with the same checks, and keeps the time it first became due (for "EggRefill").
@@ -107,6 +110,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass.
 
 **Task 4: Meadow eggs stay by their garden**
+- Stands on: Task 3 (the refill pick in `EggSlots`, built).
 - Spec rules: Rule 75 (Meadow eggs stay by their garden). Story B's third case. Section 8: "A garden's player takes the neighbour's Common egg", "An empty garden".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: each garden has one Common slot and its 2 meadow nests. When its egg is taken, the new one appears on the garden's other meadow nest after 10 seconds, every time: no spacing check, no player check, never a wait. Anyone may take it.
@@ -114,6 +118,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass.
 
 **Task 5: A lost egg goes back to its nest**
+- Stands on: Task 4 (the meadow refill in `EggSlots`, built).
 - Spec rules: Rule 78 (A lost egg goes back to its nest). Story C. Section 8: "A carrier is caught after their slot's egg has already refilled".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: `returnEgg(state, player)` gives back "back" (the egg waits on its nest again and the slot's countdown stops) or "gone" (the egg disappears with V1's pop) and the nest's name. "Gone" happens when the slot's countdown already ended (its new egg is out), or when another slot's egg now sits on that nest; in the second case this slot's countdown keeps running. The 15-stud limit doesn't apply, and a locked nest takes its egg back.
@@ -121,6 +126,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass.
 
 **Task 6: Locked nests**
+- Stands on: Task 5 (`returnEgg` in `EggSlots`, built).
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps): "the server must keep the right cuff nests at their resting spots and lock them: no grab prompt, any grab refused, and no refill picks them". Section 8: "A carrier of a right cuff Epic egg is caught while he's awake", "A right cuff Epic slot's countdown ends while he's awake".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: `setLocked(state, nestNames, locked)`. A take on a locked nest fails with "locked"; a refill never picks it; a lost egg still goes back to it and waits there.
@@ -128,6 +134,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass.
 
 **Task 7: The server runs the nests**
+- Stands on: Tasks 2 to 6 (all of `EggSlots`, built), his arm at rest (plan 6 keeps it).
 - Spec rules: Rule 70 (Every egg waits in a nest): the world contract. Rule 74 (Refills pick a random nest of the same rank), Rule 75 (Meadow eggs stay by their garden), Rule 76 (When no nest is clear, wait) and Rule 78 (A lost egg goes back to its nest) together on the server. Rule 77 (Empty nests show no timer): no `RefillAt`, no ring. Rule 100 (Nothing you stand on moves while he sleeps): locking from the giant's phase.
 - Files: `src/server/Eggs/Grab.luau`, `src/server/Eggs/SpotModels.luau`, `src/server/World/WorldIndex.luau` (`readEggSpots` reads nests), `src/server/Giant/GiantDirector.luau` (says when each fist lands, for the unlock), `src/server/init.server.luau`, `src/shared/Net.luau` (`SlideTip`, used in Task 10), `src/shared/Config.luau` (`Config.Nests.ArmReturnSeconds`), their tests, and `src/tests/client/Fx/GiantFx.spec.luau` (test 5). `Banking`, `Catcher` and `Recovery` keep calling `grab:returnEgg` and `grab:bank`.
 - What changes:
@@ -146,6 +153,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, the whole test run passes on today's world (V1's 16 spots are read as nests with `Nest` parts missing only until Task 12: until then `readEggSpots` treats a spot with no `Nest` part as a bare spot, and that allowance is removed in Task 12), and in Play the Common egg refills on the other meadow nest.
 
 **Task 8: Empty nests show no timer, and the refill pop**
+- Stands on: Task 7 (`SpotModels` writes each nest's egg and lock attributes, built), the style guide's refill pop values (final).
 - Spec rules: Rule 77 (Empty nests show no timer). Section 6: "An empty nest on him", "A new egg appears", "A meadow garden with its 2 nests".
 - Files: `src/client/World/SpotLabels.luau` (no countdown; a label only over a waiting egg), `src/client/Fx/NestPop.luau` (new: the stars and the grow-in), `src/client/init.client.luau`, `tools/world/21-nests.luau` (new here, with its first step only: it copies the emitter template from `Art.RefillPop` to `ReplicatedStorage.Assets.RefillPop`; Task 12 adds the nests), their tests.
 - What it does: the values in the style guide, "The refill pop": 30 gold stars in one burst on an invisible 7-stud ball 3.2 studs above the rim, the egg growing to 110% in 0.15 s and settling to 100% in 0.1 s with its bottom in the nest; with Reduce Motion on, 14 still stars and no grow-in. A locked egg shows no label prompt. The pop has one marked place for plan 7's sound.
@@ -167,6 +175,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, and in Play a test part marked `RidesRightArm`, made at runtime from a Server `execute_luau` on his right cuff, rides the arm through a wake-up and comes back to rest (screenshots from garden 7, computer and the iPhone 14). The real cuff pieces come in Tasks 13 and 15e3; their comparison with `view-wake-cuff-g7` and `view-phone-wake-cuff-g8` is in Task 23.
 
 **Task 10: The slide tip**
+- Stands on: Task 7 (`Net.SlideTip`, built), Task 13 (`StitchedEdge` on the strap edges, built). Its real-world seam points come from Task 16's `World.Seam.SeamLine`; the tests here use a fake seam line.
 - Spec rules: Rule 84 (A slide is a fall, and the first one gets a tip). Story D's third case. Section 8: "A player slides off below the seam while carrying a Rare at 70%", "A player jumps from the walk area to below the seam", "A slide ends on a lower part of him", "A player walks off the outer edge of a strap or cuff ledge", "A rescue during a slide".
 - Files: `src/server/Players/LandingDetector.luau` (each finished fall says where it began and ended, the part it began on, and whether it passed below the seam line on any tick), `src/server/Players/SlideWatch.luau` (new, pure: is a point below the seam line, is this fall a slide, and is it this player's first), `src/server/World/WorldIndex.luau` (`readSeamLine`: the seam points and their downhill directions, from Task 16's `World.Seam.SeamLine`; an empty list until Task 16, when the world contract asks for it), `src/server/init.server.luau`, `src/client/Hud/Messages.luau`, their tests.
 - What it does: a slide (see "Decisions") still makes one thud by the highest zone it left, as today. The first slide in a visit fires `SlideTip` to that player. The device shows "💥 Too steep! Slipping is loud." for 3 seconds at the bottom centre, in the carry pill's place for a carrier, then the pill comes back; if another tip is showing, it waits until that one ends. The tip has one marked place for plan 7's sound.
@@ -184,6 +193,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, and in Play screenshots of the tip with and without an egg match `slide-tip-*` and `slide-tip-carry-*` (computer and the iPhone 14).
 
 **Task 11: Analytics for refills and slides**
+- Stands on: Task 7 (the `refilled` Signal, built), Task 10 (`SlideWatch` says when a slide ends, built).
 - Spec rules: section 10 ("Success signals").
 - Files: `src/server/Analytics.luau`, `src/server/init.server.luau`, `Analytics.spec`.
 - What it logs: **"EggRefill"** (new), every refill, with the rank, the wait past the countdown ("0 s", "1–30 s", "over 30 s") and the server size ("1", "2-4", "5-8"); **"SlideOff"** (new), every slide that ends, with "Carrying" or "Empty" and "First", "Second" or "Later".
@@ -193,6 +203,8 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 2: World prep
 
 **Task 12: World prep: 38 nests**
+- Stands on: build order steps 2, 3 and 4 (plan 3's ways up; plan 5 Tasks 13 to 16, the seam included; plan 3 Tasks 7 and 8, the zone boxes and the footprint route), plan 5 Tasks 1 to 3 (slots and nests in code, built), Task 15e3 (the cuff pockets already in `World.CuffArt`, built), and the 38 spots in spec 5's table and the style guide's nest map (final).
+- Status: can't start until each of those is built (product's ruling, `work/p5t16/stands-on-ruling.md`).
 - Spec rules: Rule 70 (Every egg waits in a nest): the spots, "never within 10 studs of his eyes", "V1's 16 egg spots are removed, with one exception". Rule 71 (How many eggs and nests). Rule 72 (Nests come in mirror pairs). Rule 75 (Meadow eggs stay by their garden): spacing and the 3-second walk. Spot rules: "Belly pocket", "Rare on each side", "Lap fold", "Knee pocket". Section 6, "Art changes".
 - Files: `tools/world/21-nests.luau` (new), `src/server/World/WorldIndex.luau` (the bare-spot allowance from Task 7 goes), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
@@ -208,8 +220,18 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   5. Each garden has exactly 2 meadow nests, at least 8 studs apart and at least 8 from every other garden's; each is at most a 3.5-second walk (56 studs) from that garden's spawn spot along the footprint route.
   6. The belly pocket is at least 6 studs from Rare egg 1; the lap fold at least 6 from every nest; each side has 2 Rare nests at least 6 apart.
   7. No V1 spot and no glow ring is left; every nest has a `NestName`.
+  8. Each belly pocket piece copied into `World.NestArt` sits within 0.1 studs of where its source piece sits (Task 16 cut the stitches 3 studs short of the pockets where they stand today, so a moved pocket would open a gap or cover a stitch).
 - Done when: the tests pass, the second run says "already done", and every older test that named V1's spots is listed in the report with what replaced it. The place has unsaved world changes (Adam saves it).
 - **Turns green here:** plan 3 (`gardens-and-ways-up.md`) Task 5's accepted red in `EggSpots.spec` "no egg stands inside a prop": `EggSpot_Uncommon_2` touches `LapPlank_Left.Deck` and `EggSpot_Uncommon_4` touches `LapPlank_Right.Deck`. Those V1 spots are removed here (test 7); the new inner boot toe nests (±19.5, 30.5, -64.5) sit 5 studs south of each lap plank deck's edge (z -59.5, measured 2026-11-03), and `EggSpots.spec` "no egg stands inside a prop" runs on the nests as before.
+
+**Task 16b: `Mockup_Nests` leaves the Workspace** (added 2026-11-09, product's ruling `work/p5t16/stands-on-ruling.md`; build order step 6, right after Task 12, before plan 4 Task 2 and plan 5 Task 17)
+- Stands on: Task 12 (the 38 nests, pocket and bow art copied, built), Task 16 (the seam, built), and every reader of `Workspace.Mockup_Nests` (the 5 tests, scripts 22 and 23d) pointed at `ServerStorage.ArtLibrary.Mockup_Nests` in this same piece.
+- For: scenery (fewer hidden parts sent to every phone). The cheapest fix: no Play, because the folder is invisible, can't be stood on and can't be hit.
+- Spec rules: none of its own. It keeps V2 setup 1 (`docs/plans/v2/index.md`): mockups leave the world once copied.
+- Files: `tools/world/36-mockups-to-library.luau` (one more step, as it did for plan 3) or a short new step in `tools/world/24-seam.luau`; the readers `src/tests/server/World/StuckScan/WalkAreaFacts.luau`, `SteepLayer.spec`, `CuffWalk.spec`, `BellyRamps.spec`, `SignsAndMockups.spec`; world scripts `22-cuff-walk.luau` and `23d-cuff-art.luau` and the 23c re-run chain; `SlideProfile.luau` (its comment only).
+- What it does: moves `Workspace.Mockup_Nests` to `ServerStorage.ArtLibrary.Mockup_Nests`, and in the same piece points every reader above at the new home.
+- Failing test first: `SignsAndMockups.spec` says no `Mockup_Nests` is left in the Workspace and it is in `ServerStorage.ArtLibrary`.
+- Done when: the test passes, the full run stays at its accepted reds, and a re-run of scripts 22, 23c and 23d still says "already done".
 
 **Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes**
 - Stands on: plan 3's (gardens and ways up) Tasks 4a, 5 and 6 (the boot ladders, the belly ramps and his skin, and their climb), his arm at rest (plan 6 keeps it), the cuff ridge's measured check (below), and the reach check just before this task, from plan 3's pieces (build order step 3, `docs/plans/v2/index.md`).
@@ -387,16 +409,42 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Closing fix built and run 2026-11-09: 2976 passed, 6 failed (the 5 accepted plus OnTheGiant's walk-area test), 0 could not run. The walk-area test is an accepted red naming exactly 7 lines (product, `work/p5t15g/close-ruling.md`): seam match (Task 16), 5 arm-end floats plus 1 invisible curb (ruled after Task 15e's shots), and the right steep edge at (25.2, 47, −29) (Task 15e walk-off).
 
 **Task 16: World prep: the seam**
-- Stands on: Task 15a (the steep layer, built), Task 15d (the thigh guards, built), Task 15g (the check repair, built), Task 15e (the final walk-offs passed), Task 15e3 (the cuff art in the world, built: no stitch lies across a strap, and moving `Mockup_Nests` away must not take strap art the world needs), Task 14 (the walk-area check), his arm at rest, and the reach check just before this task (build order step 3).
-- Before: reach check from what exists (the walk area's edge after Tasks 15a and 15d, at its measured spot), back up the parts into `ServerStorage.WorldBackups.Plan5Task16` in the same call (and the main chat copies the place file to `work/place-backups/`).
-- After: one climb with normal player controls, in Play.
-- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not).
+- Stands on: Task 15a (the steep layer, built), Task 15d (the thigh guards, built), Task 15g (the check repair, built), Task 15e (the final walk-offs passed), Task 15e3 (the cuff art in the world, built: no stitch lies across a strap), Task 14 (the walk-area check, built), the style guide's seam table and Rule 80's wording (final, 2026-11-09), the belly pocket art `Mockup_Nests.Art.Pockets.BellyPocket_Left/_Right` (built at spec 5's spot; Task 12 copies it unchanged), his arm at rest (plan 6 keeps it), and the reach walk: Task 15e's BL36, BL28, BR36 and BR28 from each belly ramp top to the seam (passed, `work/p5t15e/play-result.md`).
+- Before: the reach walk is done (Task 15e's four belly walks above; nothing on his belly sides changed since). No measuring job. Back up every part the script changes into `ServerStorage.WorldBackups.p5t16` in the same call; the place copy is `work/place-backups/p5t16-2026-11-09.rbxl`.
+- After: no new walk. Task 15e's Play slips drew the seam table, and the stitches can't be stood on or touched (product, `work/p5t16/stepback-decision.md`).
+- Planned hours: 1 (the Speed rules' limit for a new part: at 1 hour all work stops, done or not). After the step back: 14 min spent plus 41 min left, about 55 min.
+- Ruling: product, `work/p5t16/stands-on-ruling.md` (2026-11-09). The folder move left this task for Task 16b. Step back: product, `work/p5t16/stepback-decision.md`.
+- Steps (card `work/p5t16/16-card.md`):
+
+  | Step | Model | Min | Studio calls | What |
+  |---|---|---|---|---|
+  | A | Sonnet builder | 18 | about 10 | Before shots in Edit, red tests, script 24 (check-only run, real run with backup, second run), narrow runs Seam and OnTheGiant |
+  | B | Sonnet builder | 10 | about 10 | After shots and seam close-ups in Edit (phone see shots taken too, kept as a record only) |
+  | C | Opus designer | 6 | 0 | Look verdict on the shots |
+  | D | Haiku runner | 7 | 4 | Full run |
 - Spec rules: Rule 80 (The seam shows where walking ends): the stitches, "the edge of the walk area must match the seam's stitches", "On his arms the seam is the top rim of his white cuff", "A strap has no marks across it". Section 6, "The seam, seen from the belly top".
-- Files: `tools/world/24-seam.luau` (new), `RealWorld.spec.luau`.
-- Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
-- What the script does: copies the seam's stitch dashes and hem band from `Art.Seam` into `World.Seam` (no collision, no shadow, not queryable), stopping 3 studs either side of each belly pocket; makes `World.Seam.SeamLine`, invisible point parts every 2 studs along each side's stitches and along the top rim of each white cuff, each with a `Down` attribute (the downhill direction across the seam), for Task 10's slide test; moves the whole `Mockup_Nests` folder to `ServerStorage.ArtLibrary` once nothing reads it.
-- Failing tests first: Task 14's "seam match" on the real world; and real-world tests: no seam part can be hit or stood on; the stitches run from z −38 to z −13 on both sides, within 0.5 studs across and 2 in height of their mirror; no stitch lies across a strap; `SeamLine` has a point every 2 studs (within 0.5) along both sides and both cuff rims, and each `Down` points downhill (a ray along it from 1 stud up finds the surface lower).
-- Done when: the whole Task 14 check passes, the second run says "already done", no `Mockup_Nests` is left in the Workspace, and screenshots match `view-seam` and `view-belly-top` (each also `view-phone-*`). The main chat sends them to designer.
+- Files: `tools/world/24-seam.luau` (new), `src/tests/server/World/RealWorld/Seam.spec.luau` (new; `CuffWalk.spec` is already 901 lines), `src/tests/server/World/StuckScan/WalkAreaFacts.luau` (reads only the stitch dashes).
+- What the script does:
+  - **Lays the stitches along the style guide's seam table** (`nests-map.md`, "Where it is": z −38 to −14, x ±16.9 to ±31.8, the same x on both sides). The height comes from a ray down onto his skin at each piece, so y is not mirrored. The old `Art.Seam` pieces are up to 3.9 studs off the redrawn line, so they are used only as the pattern, never for their places:
+    - stitch dash: a Part 0.5 × 0.12 × 1.55, colour `#FFF4DC`, Fabric; dashes 1.5 long with 0.7 gaps;
+    - hem band: pieces 1.2 × 0.1 × 0.56, colour `#2F7FD0`, Fabric, 0.5 long, end to end, centred 1 stud below the stitches;
+    - every piece: no collision, no shadow, not queryable, not touchable.
+  - **Stops 3 studs from the outline of each belly pocket** (`Mockup_Nests.Art.Pockets.BellyPocket_Left/_Right`, where it stands today). The line runs through each pocket, so the stitches run from about z −30 to −13 on each side; the pocket's own band carries the line past it.
+  - Puts the dashes in `World.Seam.Stitches`, the band in `World.Seam.HemBand`, and makes `World.Seam.SeamLine`: invisible points every 2 studs along both sides and both cuff rims (cuff points 1 to 5 in the style guide), each with a `Down` attribute (the downhill direction across the seam), for Task 10.
+  - The second run says "already done".
+- Failing tests first (real world, `Seam.spec`):
+  1. No seam part can be hit, stood on or touched.
+  2. The stitches follow the table within 0.5 studs across, from the pocket gap to z −13, on both sides, and none lies within 3 studs of a belly pocket's outline.
+  3. Each stitch sits on his skin (a ray down from 2 studs above finds skin within 0.3 studs under it).
+  4. No stitch lies across a strap.
+  5. `SeamLine` has a point every 2 studs (within 0.5) along both sides and both cuff rims, and each `Down` points downhill (a ray along it from 1 stud up finds the surface lower).
+  6. Task 14's walk-area test (`OnTheGiant`) reads only `World.Seam.Stitches` as the seam: its "no seam built yet" line turns into stitch rows.
+- Done when:
+  - the tests pass and the second run says "already done";
+  - the walk-area test's accepted red no longer names "seam match". Its other accepted lines stay as product ruled (`work/p5t15g/close-ruling.md`): the 5 arm-end floats, 1 curb, and the right steep edge at (25.2, 47, −29);
+  - look-check before and after shots, plus shots compared with `view-seam` and `view-belly-top` (each also `view-phone-*`), judged by designer.
+- Seam match method (product, `work/p5t16/stepback-decision.md`; spec 5 section 5 now says the match is proven by Task 15e's Play slips plus the 0.5-stud table check): every built stitch lies within 0.5 studs of the seam table (test 2). The Edit probe (1 stud uphill under 65°, 1 stud downhill over 65°) still runs. A line it names is listed in `PLAY_PROVEN` in `WalkAreaFacts.luau` only with a 15e slip row on the same side within 7 studs along z (SL36, SR36, SL28, SR28, SL16, SR16 in `work/p5t15e/step2-result.md`; BL36, BL28, BR36, BR28 in `work/p5t15e/play-result.md`). A line with no such row goes to product, with no walk. A stitch is never moved off the table.
+- The see check ("can a kid see the seam before stepping past it") is not part of Task 16 (product, `work/p5t16/stepback2-decision.md`). It runs once in Task 23, item 2, after Task 12's pocket art. Step B's phone shots `see_L` and `see_R` are kept as a record only.
 
 **Task 17: The footprints reach every nest**
 - Stands on: Task 7 (the prompts, built), Task 12 (the 38 nests, built), Tasks 13b and 15d (the straps and the thigh guards, built). It takes 15b's pocket grab cases (test 4).
@@ -432,6 +480,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass on the real world.
 
 **Task 19: Every nest scored and ranked**
+- Stands on: Task 12 (the 38 nests, built), Tasks 13 to 16 (straps, ledges, walk area, steep layer and seam, built), Task 18 (the jump check, built: this task re-runs it on the real nests), Task 26 (the quiet ladder ways down, built: it changes the noise a heist scores), and plan 4 Task 9 (the difficulty check, built).
 - Spec rules: Rule 70 (Every egg waits in a nest): "pass every check of Rule 46 (Every nest gets a difficulty score)" and "rest on a visible surface". Rule 71 (How many eggs and nests): "a nest is placed, scored, and moved until each rank has its count". Spot rules: the cuff back pocket, "Sliding toward Rare egg 1", the Legendary cap nests. Spec 4's Rule 59 (Eggs sit on something you can see) on the real nests. Section 5: "Rank targets when placing".
 - Files: `tools/world/21-nests.luau` (its spot table), `docs/egg-ranks.md` (from `tools/report/egg-ranks.luau`), `WalkMap.spec.luau`.
 - What it does: plan 4's check (Task 9) now scores all 38 nests on the real world with the walk area, the straps and the ledges built. Each nest whose score is outside its target, or less than 3 points inside its band, is moved by the spec's own fix, in the script's table, never by changing its rank or a number: a Rare nest over 80 slides toward Rare egg 1 (no closer than 6 studs); the back cuff pocket over 127 moves toward the front pocket (no further than z −8); a cap nest under 130 moves up the cap, and one with a Tiptoe peak of 60 or more moves toward the cap ladder top; a nest that scores too low gets a longer walk, never a move toward his face. A move that would break a spot rule, the eye limit or a twin is not made: the report goes to the main chat for game_creator and designer.
@@ -442,6 +491,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the check passes, every rank has its count by score, the guard-top jump check passes on the real nests, every nest passes Rule 59 (the fold nests lean, their eggs stand upright), `docs/egg-ranks.md` is rewritten from the tool and matches the run, plan 2's slide-guard test passes with the nests in its list, and designer is sent the list of moved nests to re-check the eye limit from all 8 gardens.
 
 **Task 20: Every rank is fair from every way up**
+- Stands on: Task 19 (every nest at its final, scored spot, built) and plan 3 Task 12 (`FairnessCheck`, built).
 - Spec rules: Rule 73 (Every rank is fair from every way up). Spec 3's Rule 41 (Every way up is equally loud): the beard–belly fold and the Epic cuff front pocket heists through all four ways up, and "a solo walking heist to any Rare nest must not wake him". Story E's second case. Spec 3's Check A1 (the parts left to this plan).
 - Files: `src/server/World/FairnessCheck.luau` (plan 3, Task 12), its test, `WalkMap.spec.luau`.
 - What it adds: for each rank on him (Uncommon to Legendary), the quietest heist to a nest of that rank through each way up, compared: no way up more than 5 points quieter than another (Epic and Legendary on the meter with no 100 cap). For the beard–belly fold and the Epic cuff front pocket, each nest's six peaks within 5 points (the left nest for gardens on his left, its twin for his right). No heist to any Rare nest reaches 100 through any way up. The peak table is printed for the report.
@@ -451,6 +501,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 4: A whole session, the bot walk and the Play proof
 
 **Task 21: A whole session with nests**
+- Stands on: Tasks 1 to 11 (every piece of nest and slide code, built). It uses fake nests, so it needs no world task.
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests").
 - Files: `src/tests/server/Sessions/NestsSession.spec.luau` (new).
 - The test: a brand-new solo player with the real `Config`, `EggSlots`, `Grab`, `Banking`, `Catcher`, `GiantDirector`, `Noise` and `SleepMeter`, stand-ins for the tracker and the prompts, a fake clock and a fixed "random". They join, bank the meadow Common (the next one pops on the garden's other nest 10 s later), then an Uncommon, then a Rare (it refills 60 s later on a different Rare nest, never within 15 studs of them), then keep going: walk to an Epic cuff nest (every step there counts as Belly), wake him while carrying it, get caught (the egg goes back to its nest, locked if it is on the right cuff), wait out the wake-up (the nest unlocks once he sleeps and his arm is down, at least 0.5 s after he sleeps), take it again and bank it. Checks: each banked egg's rank is its nest's rank; no rank ever has more eggs out than slots; no empty nest's prompt is on; "EggRefill" is logged once per refill.
@@ -482,11 +533,15 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the test passes and the probe re-run finds no climb away from the ladders.
 
 **Task 23: The Play proof**
+- Stands on: Tasks 8, 9 and 10 (the pop, the riding cuff, the slide tip, built), Task 12 (the nests, built), Task 16 (the seam, built), Task 17 (the footprints to every nest, built), Task 19 (nests at their final spots, built) and Task 22 (the bot walk passed).
 - Spec rules: section 6 ("Checks that need Play before the build review"), the Play check of Rule 100 (Nothing you stand on moves while he sleeps), the 3 seconds of Rule 84 (A slide is a fall, and the first one gets a tip), and spec 3's Rule 36 (The lap planks), condition 3, in Play.
 - Files: none (a Play check). Screenshots go in the report.
 - What is checked, sound muted, on a computer and the iPhone 14 in the device simulator:
   1. Grabbing the lap fold from the lap plank on both sides; its prompt never shows from a belly ramp (and the knee pocket's too).
-  2. A new player wandering the belly top at the normal camera zoom: whether the seam is on screen before they cross it (screenshots just before each crossing).
+  2. Players see the seam before they cross it (spec 5 section 6, "Seeing the seam before stepping past it"; product, `work/p5t16/stepback2-decision.md`).
+     - Stands on: Task 12 (belly pocket art, built), so the line is whole from z −39 to −13.
+     - Method (game_creator's walk-down): on each side, on the computer and the phone, walk from the belly top over the curve and down toward the seam, in pushes of about 1 second, with a shot from the player's camera after each push. A shot from the flat belly top never counts, because his round belly hides the seam from there.
+     - One walk per side. If no shot before the slide shows the line, the shots go to product once. The answer comes from section 6's fallback (the first-slide tip and "SlideOff") or a look change designer has proven first. Nobody retakes from another spot.
   3. The real camera during a slide on both sides, and the slide tip's 3 seconds with the carry pill coming back.
   4. The refill pop at full speed, and the egg's grow-in.
   5. Walking on the pocket ledges, the straps and round the beard–belly fold nests.
@@ -495,6 +550,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: every shot is in the report with what it shows, compared with the mockups. The main chat sends them to designer. If item 6 finds a red circle on the resting shape, a player bumping into it, or a trapped player, Task 24 is built before review.
 
 **Task 24: The fallback: his arm's solid shape moves with the arm, and the float clears its resting space** (built only if Task 23, item 6 finds a red circle on the arm's resting shape, a player bumping into it, or a trapped player; section 8 sets this fix)
+- Stands on: Task 23's item 6 result (run, and it found one of those), Task 9 (the riding cuff, built), his arm at rest (plan 6 keeps it).
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps): "no player may ever be left inside his arm when it comes back down". Section 8, "A player stands where his arm rests while it is raised".
 - Files: `tools/world/22-cuff-walk.luau` (one more step: it also marks the solid parts of his right arm, from plan 2's collision source, `RidesRightArm`; no new script, so plan 6's world script numbers don't change), `src/client/Fx/GiantFx.luau` (moves them like every other marked piece), `src/server/Giant/SlamSurface.luau` (its ray skips the arm's resting shape while the arm is raised), `src/server/Giant/GiantDirector.luau`, `src/server/Players/Floater.luau`, `src/server/Giant/BounceOff.luau`, their tests, `RealWorld.spec.luau`.
 - What it does:
@@ -504,6 +560,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, the script's second run says "already done", and Task 23's item 6 is repeated with the screenshots.
 
 **Task 25: A grab needs ground under you** (built only if Task 22 finds a mid-air grab; Rule 82 (No new way onto the belly), third point, sets this fix)
+- Stands on: Task 22's mid-air grab result (run, and a grab worked), Task 7 (the server grab, built).
 - Spec rules: Rule 82 (No new way onto the belly), third point (the old section 8 case "a player jumps off a thigh plank and tries to grab ... in mid-air" is no longer in spec 5; the thigh plank was dropped 2026-11-03, now the lap planks).
 - Files: `src/server/Eggs/Grab.luau`, `src/server/Players/PlayerTracker.luau`, their tests.
 - What it does: the server notes when a hold begins (`ProximityPrompt.PromptButtonHoldBegan`) and refuses the grab if the server's own ground ray found the player off the ground on any tick during the hold.
@@ -511,6 +568,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the test passes and Task 22's mid-air try is repeated.
 
 **Task 26: The ladder ways down are quiet** (added 2026-10-21 at the stuck safety Task 25 review, from game_creator's decisions in `docs/specs/v2/research/decisions-plans.md`, "Getting down the ladders", "Spec 3's four leaning ladders" and "Thuds found in Task 25 Play"; built after Task 10, before Task 19)
+- Stands on: Task 10 (`LandingDetector` says where a fall began and ended and whether it passed below the seam line, built), the boot, beard and cap ladders (plan 3, built), and game_creator's "Getting down the ladders" decisions (final, 2026-10-21).
 - Spec rules: changed Rule 8 (Steps make noise), V1, as written in `docs/specs/core-heist.md`, "The set ways down must not thud": the boot ladders (the side ladders were dropped 2026-11-03), his head, and the belly's raised strip. Rule 84 (A slide is a fall, and the first one gets a tip) stays as Task 10 builds it.
 - **Why.** Roblox can't climb down a leaning ladder, and every ladder leans, so a drop is each ladder's only way down. Today these drops thud. In stuck safety Task 25's Play (iPhone 14, sleep meter held at zero), the thuds were: the right brim nest dropping to the nose top +60.6; letting go of the beard ladder from its top or its middle, sliding about 7.5 studs down his skin, +29.8 (none on the computer); walking off the cap ladder's sides onto the nose top +39.8 (computer too); a run on down the beard face to the belly path +59.8; crossing the nose top through the cap ladder's foot, which grabs it and drops +39.9. The one quiet drop was walking off the cap's front at x 0 (10.4 studs).
 - Files: `src/server/Players/LandingDetector.luau` (a finished fall also says whether it is a set way down), `src/server/Players/PlayerTracker.luau` (passes where the fall began and ended, and whether it began on a ladder), `src/shared/Config.luau` (the starting values below, in `Config.Noise`), `src/server/World/WorldIndex.luau` (a `readLadders`: each ladder's climbing truss and its foot, from the world), and their tests.

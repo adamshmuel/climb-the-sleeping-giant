@@ -5,9 +5,11 @@
 -- only READ the world.
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local expect = JestGlobals.expect
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
+local SeamTable = require(ReplicatedStorage.Shared.SeamTable)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
@@ -39,6 +41,57 @@ local WalkAreaFacts = {}
 -- Task 15g close (product, 17:13): gaps and too-steep are checked on made-up worlds and by Task 15e's walks.
 -- The real-world check reports only these kinds.
 WalkAreaFacts.ASSERTED = { "floating", "sunk", "zone", "seam match" }
+
+-- The style guide's seam table and its line helpers live once in ReplicatedStorage.Shared.SeamTable (Jest-free).
+-- tools/world/24-seam.luau lays the stitches on it, Seam.spec checks them against it; these fields point at it.
+WalkAreaFacts.SEAM_TABLE = SeamTable.TABLE
+WalkAreaFacts.seamLine = SeamTable.seamLine
+WalkAreaFacts.flatDistanceToLine = SeamTable.flatDistanceToLine
+WalkAreaFacts.distanceToBox = SeamTable.distanceToBox
+WalkAreaFacts.marksAlong = SeamTable.marksAlong
+
+-- Task 16 (work/p5t16/stepback-decision.md): a failing seam-match line from the Edit probe that Task 15e's Play slips
+-- already prove. Each entry names the side (-1 his left x, 1 his right x), the z of the slip row and the row's name; a
+-- failing line is dropped when it is on that side within PROVEN_REACH studs along z of the row's z.
+-- Rows: work/p5t15e/play-result.md (BL, BR) and work/p5t15e/step2-result.md (SL, SR); z is the slip's z.
+WalkAreaFacts.PLAY_PROVEN = {
+	{ side = -1, z = -26.4, row = "BL28" }, -- covers the left line at z -22.4
+	{ side = 1, z = -36.5, row = "BR36" }, -- covers the right line at z -33.0
+	{ side = 1, z = -26.4, row = "BR28" }, -- covers the right line at z -22.4
+	{ side = 1, z = -16.1, row = "SR16" }, -- covers the right line at z -16.0
+} :: { { side: number, z: number, row: string } }
+local PROVEN_REACH = 7
+
+-- True when a failing seam-match line has a Play slip row on its side near its z.
+function WalkAreaFacts.playProven(item: Problem): boolean
+	if item.kind ~= "seam match" then
+		return false
+	end
+	local side = if item.position.X < 0 then -1 else 1
+	for _, entry in WalkAreaFacts.PLAY_PROVEN do
+		if entry.side == side and math.abs(entry.z - item.position.Z) <= PROVEN_REACH then
+			return true
+		end
+	end
+	return false
+end
+
+-- The places of the seam stitches: the BaseParts directly under World.Seam.Stitches (not the hem band, not SeamLine).
+-- nil while there is no Seam or no Stitches folder.
+function WalkAreaFacts.stitchPositions(world: Instance): { Vector3 }?
+	local seam = world:FindFirstChild("Seam")
+	local folder = if seam ~= nil then seam:FindFirstChild("Stitches") else nil
+	if folder == nil then
+		return nil
+	end
+	local places: { Vector3 } = {}
+	for _, part in folder:GetDescendants() do
+		if part:IsA("BasePart") then
+			table.insert(places, part.Position)
+		end
+	end
+	return places
+end
 
 function WalkAreaFacts.artFolder(): Instance
 	local nests = Workspace:FindFirstChild("Mockup_Nests")
@@ -358,16 +411,7 @@ function WalkAreaFacts.inputs(world: Instance, map: PathCheck.WalkMap): Inputs
 	end
 
 	-- The seam and the steep layer are built by plan 5 Tasks 16 and 15: until then they are nil (never an error).
-	local seam = world:FindFirstChild("Seam")
-	local stitches: { Vector3 }? = nil
-	if seam ~= nil then
-		stitches = {}
-		for _, part in seam:GetDescendants() do
-			if part:IsA("BasePart") then
-				table.insert(stitches :: { Vector3 }, part.Position)
-			end
-		end
-	end
+	local stitches = WalkAreaFacts.stitchPositions(world)
 
 	-- The Cover boards of the belly ramps (drawn, no collision) and the steep layer's pieces.
 	local covers: { BasePart } = {}
@@ -434,7 +478,7 @@ function WalkAreaFacts.problems(world: Instance, map: PathCheck.WalkMap): ({ Pro
 		}
 	do
 		for _, item in list do
-			if table.find(WalkAreaFacts.ASSERTED, item.kind) ~= nil then
+			if table.find(WalkAreaFacts.ASSERTED, item.kind) ~= nil and not WalkAreaFacts.playProven(item) then
 				table.insert(found, item)
 			end
 		end
