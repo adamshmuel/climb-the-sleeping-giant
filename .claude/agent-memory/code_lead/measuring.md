@@ -19,3 +19,4 @@
 - A walk map over the giant builds in under 1 s in Edit: survey causes with it before pricing a walk-layer fix. Single-ray slope walks from x 0 snag on his centre strip; use `bodySizeSlopeAt` (p5t15, 2026-11-08).
 - A card's 'no X on Y' check needs a ray grid over Y's top vs the layer (bounds-box overlap alone can't say above or below); p5t15 found steep pieces 0.65/1.28 above the belly pocket ledges that way.
 - The cuff strap/pocket art (Mockup_Nests.Art) is CanQuery off: an Include-filter ray onto it never hits. WalkAreaFacts' float and seed rays had this bug (30 false floats); measure art by CFrame/Size (p5t15c, 2026-11-09).
+- A check's sample rule names every edge of its area, not only the seam: Task 14's "pyjama above the seam" had no north edge and gave 552 fake chest gaps. Walk area on his body ends at z −20 for |x| < 22 (spec line 83, p5t15c Q1).

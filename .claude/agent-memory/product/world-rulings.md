@@ -23,3 +23,4 @@
 - When a walk-map scan flags new stuck spots beside a slide layer, Play them with player controls (map stops at 70°, Play walks to 78°) before a second build fix (p5t15 ruling 2 looped, 2026-11-08).
 - After one failed build fix on a slide-foot stuck spot, Play it next; p5t15's grow and tile both failed because cloth at 72-74° is 'slide' on the map but standable in Play (2026-11-08).
 - A Play stall check ends at first solid ground off the cloth; a bot pressing one way for 12 s logs fence stalls in the meadow that aren't stuck. Ask jobs to log the first landing, not only the cap end (p5t15 3d-2, 2026-11-08).
+- A walk-area sample rule needs every edge named (north too), not only the seam; Task 14's 'pyjama above the seam' climbed his chest and made 552 fake gaps (p5t15c Q1, 2026-11-09).
