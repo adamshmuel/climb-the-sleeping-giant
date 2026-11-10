@@ -100,6 +100,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 3: A random nest of the same rank, or wait**
 - Stands on: Task 2 (`EggSlots` with `new` and `take`, built).
+- For: core gameplay (where each new egg appears; campers can't farm it). Size: 3 steps, 34 min, about 11 Studio calls (card `work/p5t3/p5t3-card.md`). The card also moves the first eggs' 6-stud spacing into `new` and returns each refill's wait for Task 11.
 - Spec rules: Rule 74 (Refills pick a random nest of the same rank), Rule 76 (When no nest is clear, wait). Story B. Section 8: "Two slots of the same rank finish ... in the same second", "The Legendary egg is taken and all 3 other Legendary nests have a player within 15 studs", "One Epic egg waits on the left cuff", "A player stands on an empty nest".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: when a countdown ends, the allowed nests are those of the slot's rank with no egg waiting, not the nest this slot's egg was just taken from, at least 6 studs from every waiting egg, at least 15 studs from every player, and not locked. `pick(n)` chooses one. If none is allowed, the slot tries again every second with the same checks, and keeps the time it first became due (for "EggRefill").
