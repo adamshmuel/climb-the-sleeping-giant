@@ -2,6 +2,7 @@
 local StarterPlayer = game:GetService("StarterPlayer")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local Client = StarterPlayer.StarterPlayerScripts.Client
 local GiantFx = require(Client.Fx.GiantFx)
 local Helpers = require(script.Parent.Helpers)
@@ -131,6 +132,14 @@ describe("GiantFx.poseShare", function()
 	it("is smooth: 0.5 at 0.25 seconds, and slow at the start", function()
 		expect(GiantFx.poseShare(0.25)).toBeCloseTo(0.5, 6)
 		expect(GiantFx.poseShare(0.05) < 0.1).toBe(true)
+	end)
+end)
+
+-- Task 7c, test 5: the right cuff nests never unlock before his arm has finished moving (Rule 100).
+describe("Config.Nests unlock times", function()
+	it("are at least as long as the pose and the slam swing the arm takes", function()
+		expect(Config.Nests.UnlockSeconds >= GiantFx.poseSeconds).toBe(true)
+		expect(Config.Nests.ArmReturnSeconds >= GiantFx.slamSwingSeconds).toBe(true)
 	end)
 end)
 

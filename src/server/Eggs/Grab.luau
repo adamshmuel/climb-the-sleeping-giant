@@ -63,6 +63,9 @@ export type Deps = {
 	now: () -> number,
 	-- Makes the prompt on one anchor. Left out, Grab.createPrompt makes the real one; tests pass a fake.
 	createPrompt: ((anchor: Attachment, rarity: Config.RarityName) -> PromptLike)?,
+	-- The giant's phase, read on every step: the right cuff nests lock while it is Awake (Rule 100). Left out, it is
+	-- always "Asleep" (nothing locks).
+	phase: (() -> Config.Phase)?,
 }
 
 export type Grab = {
@@ -82,7 +85,11 @@ export type Grab = {
 	-- Fires once per refill, after the egg shows on its nest: the egg's rarity and how many seconds the refill waited
 	-- after its countdown ended (0 on time, more when no nest was clear).
 	refilled: Signal.Signal<Config.RarityName, number>,
-	-- One refill check. The heartbeat calls it every 0.1 s; tests call it by hand.
+	-- Notes that one of his fists just landed (the director's `slammed`). The right cuff nests stay locked for
+	-- Config.Nests.ArmReturnSeconds after it, while his arm swings back.
+	noteFist: (self: Grab) -> (),
+	-- One refill check, and the lock check of the right cuff nests. The heartbeat calls it every 0.1 s; tests call it by
+	-- hand.
 	step: (self: Grab) -> (),
 	-- Removes the prompts, the eggs on the spots and on backs, and every connection. Safe to call twice.
 	stop: (self: Grab) -> (),
@@ -178,6 +185,22 @@ function Grab.start(deps: Deps): Grab
 	end
 	-- Each nest's prompt by name: on while the nest's egg waits, off while it is empty.
 	local prompts: { [string]: PromptLike } = {}
+	-- The nests on his right cuff, and whether they are locked now. A locked nest keeps its egg but its prompt is off.
+	local cuffSpots: { WorldIndex.EggSpot } = {}
+	for _, spot in deps.spots do
+		if spot.ridesRightArm == true then
+			table.insert(cuffSpots, spot)
+		end
+	end
+	local cuffNames: { string } = {}
+	for _, spot in cuffSpots do
+		table.insert(cuffNames, spot.name)
+	end
+	local cuffLocked = false
+	-- The lock's clock: whether the last step saw him Awake, when a step first saw him leave Awake, and the last fist.
+	local sawAwake = false
+	local leftAwakeAt: number? = nil
+	local lastFistAt: number? = nil
 	local spotModels = SpotModels.new(deps.spots, deps.templates)
 	trove:Add(function()
 		spotModels:destroy()
@@ -202,6 +225,12 @@ function Grab.start(deps: Deps): Grab
 	local limiter = RateLimiter.new(GRABS_PER_SECOND, 1, deps.now)
 	-- Everyone who carries an egg right now, so stop() can take every egg off every back.
 	local carriers: { [number]: PlayerLike } = {}
+
+	-- A nest's prompt is on only while its egg waits and the nest isn't locked.
+	local function refreshPrompt(nestName: string)
+		local view = EggSlots.nest(state, nestName) :: EggSlots.NestView
+		prompts[nestName].Enabled = view.waiting and not view.locked
+	end
 
 	local function takeEggOffBack(player: PlayerLike)
 		carriers[player.UserId] = nil
@@ -285,7 +314,7 @@ function Grab.start(deps: Deps): Grab
 		takeEggOffBack(player)
 		if result == "back" then
 			spotModels:show(spotName)
-			prompts[spotName].Enabled = true
+			refreshPrompt(spotName)
 		end
 		local rarity: Config.RarityName? = rarityOfSpot[spotName]
 		if rarity ~= nil then
@@ -304,7 +333,42 @@ function Grab.start(deps: Deps): Grab
 		return spotName, rarity
 	end
 
+	local function noteFist(_self: Grab)
+		lastFistAt = deps.now()
+	end
+
+	-- Locks or unlocks the right cuff nests (Rule 100): locked while he is Awake, until UnlockSeconds after a step first
+	-- saw him leave Awake, and until ArmReturnSeconds after the last fist. Only a change touches the nests.
+	local function updateCuffLock(now: number)
+		if #cuffNames == 0 then
+			return
+		end
+		local phase: Config.Phase = if deps.phase ~= nil then deps.phase() else "Asleep"
+		if phase == "Awake" then
+			sawAwake = true
+			leftAwakeAt = nil
+		elseif sawAwake then
+			sawAwake = false
+			leftAwakeAt = now
+		end
+		local left = leftAwakeAt
+		local fist = lastFistAt
+		local locked = phase == "Awake"
+			or (left ~= nil and now - left < Config.Nests.UnlockSeconds)
+			or (fist ~= nil and now - fist < Config.Nests.ArmReturnSeconds)
+		if locked == cuffLocked then
+			return
+		end
+		cuffLocked = locked
+		EggSlots.setLocked(state, cuffNames, locked)
+		for _, spot in cuffSpots do
+			spotModels:setLocked(spot.name, locked)
+			refreshPrompt(spot.name)
+		end
+	end
+
 	local function step(_self: Grab)
+		updateCuffLock(deps.now())
 		-- Where everyone stands: a new egg never lands within Config.Nests.PlayerDistance of a player (Rule 76).
 		local playersAt: { Vector3 } = {}
 		for _, player in deps.players:GetPlayers() do
@@ -316,7 +380,7 @@ function Grab.start(deps: Deps): Grab
 		end
 		for _, refill in EggSlots.update(state, deps.now(), playersAt, pick) do
 			spotModels:show(refill.nest)
-			prompts[refill.nest].Enabled = true
+			refreshPrompt(refill.nest)
 			refilled:Fire(refill.rank, refill.waited)
 		end
 	end
@@ -335,6 +399,7 @@ function Grab.start(deps: Deps): Grab
 		grabbed = grabbed,
 		returned = returned,
 		refilled = refilled,
+		noteFist = noteFist,
 		step = step,
 		stop = stop,
 	}

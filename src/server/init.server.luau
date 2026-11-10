@@ -82,6 +82,13 @@ local carriedEggOffset, carriedEggHeight = Carry.readCarriedEggLook(assets)
 -- The remotes and GiantState, which clients wait for.
 local net = Net.setup(ReplicatedStorage)
 
+-- The giant's phase, read from GiantState when asked. Anything unexpected counts as Awake, the safe way: Recovery then
+-- sends a player home, and Grab keeps the right cuff nests locked.
+local function readPhase(): Config.Phase
+	local phase = net.GiantState:GetAttribute("Phase")
+	return if phase == "Asleep" or phase == "HeavySleep" then phase else "Awake"
+end
+
 Collisions.start(Players, PhysicsService)
 Spawning.start(gardens, Players)
 
@@ -108,6 +115,7 @@ local grab = Grab.start({
 	now = function()
 		return Workspace:GetServerTimeNow()
 	end,
+	phase = readPhase,
 })
 
 -- Bringing eggs home: banks a carrier who stands in their own garden, and sends a carried egg back to its spot
@@ -183,11 +191,7 @@ local recovery = Recovery.start({
 			onPillow = ground ~= nil and ground:IsDescendantOf(pillow),
 		}
 	end,
-	phase = function()
-		local phase = net.GiantState:GetAttribute("Phase")
-		-- Anything unexpected counts as Awake, the safe way: a Reset then sends the player home.
-		return if phase == "Asleep" or phase == "HeavySleep" then phase else "Awake"
-	end,
+	phase = readPhase,
 	sendHome = function(player)
 		local character = player.Character
 		local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
@@ -329,6 +333,10 @@ local gardenSpots: { Analytics.GardenSpot } = {}
 for _, garden in gardens do
 	table.insert(gardenSpots, { index = garden.index, spawnPosition = garden.spawnSpot.Position })
 end
+-- Each landed hand locks the right cuff nests for ArmReturnSeconds (Rule 100).
+director.slammed:Connect(function()
+	grab:noteFist()
+end)
 analytics = Analytics.start({
 	service = AnalyticsService,
 	players = Players,

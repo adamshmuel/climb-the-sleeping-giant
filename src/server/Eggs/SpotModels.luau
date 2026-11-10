@@ -13,6 +13,8 @@ export type SpotModels = {
 	-- Takes the egg off the spot and sets Waiting to false. An empty nest shows no timer, so it writes no RefillAt and
 	-- leaves the glow ring as it is.
 	hide: (self: SpotModels, spotName: string) -> (),
+	-- Writes the spot's Locked attribute (a right cuff nest locks while he is awake, Rule 100). The egg stays as it is.
+	setLocked: (self: SpotModels, spotName: string, locked: boolean) -> (),
 	-- Takes every egg away.
 	destroy: (self: SpotModels) -> (),
 }
@@ -84,6 +86,9 @@ function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.Egg
 			local spot = find(spotName)
 			removeEgg(spot)
 			spot.model:SetAttribute("Waiting", false)
+		end,
+		setLocked = function(_self, spotName, locked)
+			find(spotName).model:SetAttribute("Locked", locked)
 		end,
 		destroy = function(_self)
 			for _, spot in spots do
