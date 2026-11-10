@@ -611,7 +611,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: every leg passes, the probe's result (Task 22p, re-run in Task 22b) is copied into the results table, and the results table is in the report. If the mid-air grab worked even once, Task 25 is built before review.
 
 **Task 22b: The beard climb fix** (moved out of Task 15 on 2026-11-08, product's step-back decision; built before Tasks 19, 20 and 22 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
-- Stands on: Task 22p (run: it names each place a player climbs away from the eight ladders), and plan 3 Task 9q's result (the right boot-top check; a ground fix from it is built first).
+- Stands on: Task 22p (run: it names each place a player climbs away from the eight ladders), and plan 3 Task 9q (done 2026-11-10: "the map", so no ground fix comes from it).
 - Spec rules: Rule 80 (The seam shows where walking ends): "The accidental climbing under his beard near (−14, 67, −14) must be removed", "the stuck scan and the bot walk must find no other".
 - Size: priced by code_lead from the probe's result, before the card. If the probe finds nothing there, this task is closed with that result.
 - What: the parts the probe names are changed so they can't be climbed, the same on both sides where mirrored; backup and reach check as every world task. Each spot is measured with rays that see every solid part.
