@@ -611,7 +611,16 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: every leg passes, the probe's result (Task 22p, re-run in Task 22b) is copied into the results table, and the results table is in the report. If the mid-air grab worked even once, Task 25 is built before review.
 
 **Task 22b: The beard climb fix** (moved out of Task 15 on 2026-11-08, product's step-back decision; built before Tasks 19, 20 and 22 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
-- Stands on: Task 22p (run: it names each place a player climbs away from the four ladders), and plan 3 Task 9q (done 2026-11-10: "the map", so no ground fix comes from it).
+- Stands on: Task 22p (done 2026-11-10: its climb list is below), and plan 3 Task 9q (done 2026-11-10: "the map", so no ground fix comes from it).
+- **Input: Task 22p's climb list** (`work/p5t22p/22p-result.md`; Play, a 4-stud grid by the main chat's veto, 249 points, 3 lost, 0 void; each row is the root position when "Climbing" started, and the part a wall ray hit). 30 climbs away from the four ladders:
+  - **Under the beard, the belly at y about 66 (12):** (−16.2, 66.3, −11.9), (−12.8, 66.3, −15.0) and (−15.0, 66.4, −12.9) (the reported spot (−14, 67, −14)), (−8.1, 65.9, −17.7), (7.9, 66.3, −17.4), (6.0, 66.2, −17.9), (11.3, 66.0, −16.0), (15.9, 65.9, −11.7), (16.3, 65.8, −11.6), (20.6, 64.8, −8.7), all on `head_with_beard`; and (−4.5, 66.9, −18.9) and (4.5, 66.9, −19.9) on `body_and_cushion`. Both sides of his centre line: the fix is mirrored.
+  - **Higher on the beard (3):** (−9.7, 83.4, −9.8) and (14.9, 80.9, −8.5) on `head_with_beard`; (−18.9, 79.5, −6.0) with no part hit.
+  - **His right arm (1):** (39.4, 30.7, −17.4) on `right_arm`.
+  - **His flanks from the meadow, y about 5 (8):** his left side (−56.4, 5.2, −0.4), (−57.5, 5.2, 3.2), (−58.7, 5.2, 8.4), (−59.3, 5.2, 12.4); his right side (57.8, 5.2, 4.7), (58.3, 5.2, 6.9), all on `body_and_cushion`; and (−58.0, 5.2, 32.0) and (58.0, 5.2, 32.0) with no part hit.
+  - **The Teacup and beside it (6):** (58.9, 5.2, 36.2), (58.8, 3.5, 32.4), (67.0, 5.2, 45.3) on `GiantsThings.Teacup.body.body_geom`; (59.3, 3.0, 28.6), (62.0, 5.2, 36.0), (64.8, 3.0, 41.4) with no part hit.
+  - **Not probed (lost):** Beard_25, Beard_69, Beard_76 (the body walked off more than 7 studs). The re-run after the fix covers them.
+  - A "no hit" row is measured first, with rays that see every solid part, before it is fixed.
+- QUESTIONS for product before the card: 1. The Teacup is scenery ("no egg, no path", game at a glance), but a player can climb it: is it made unclimbable here, or kept as a climb that leads nowhere? 2. The 8 flank climbs at y 5: does each lead anywhere a player could stand (onto him, or above the seam)? code_lead measures that in the card's first step; product rules on any that does.
 - Spec rules: Rule 80 (The seam shows where walking ends): "The accidental climbing under his beard near (−14, 67, −14) must be removed", "the stuck scan and the bot walk must find no other".
 - Size: priced by code_lead from the probe's result, before the card. If the probe finds nothing there, this task is closed with that result.
 - What: the parts the probe names are changed so they can't be climbed, the same on both sides where mirrored; backup and reach check as every world task. Each spot is measured with rays that see every solid part.
