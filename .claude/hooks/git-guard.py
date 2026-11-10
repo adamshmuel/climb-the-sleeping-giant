@@ -5,6 +5,8 @@ Blocks staging everything, commit -a, push, --amend, rebase, reset --hard,
 git clean, any history change from a subagent (only the main chat commits),
 and AI attribution in a commit. Warns when a commit title is over 50 characters.
 Blocks a commit while a doc names a removed piece as if it exists (docs-check.py --removed).
+Blocks a game commit when rulings in work/ came since the last commit and no spec,
+design, plan or idea doc is staged, unless the message says "Specs: unchanged".
 """
 
 import json
@@ -121,6 +123,38 @@ def stale_docs(cwd):
     return run.stdout.strip() if run.returncode else None
 
 
+SPEC_DOCS = ("docs/specs/", "docs/design/", "docs/plans/", "docs/ideas/")
+GAME_PATHS = ("src/", "tools/", "docs/")
+UNCHANGED = "Specs: unchanged"
+
+
+def unsynced_rulings(cwd, command):
+    """Rulings written since the last commit when a game commit stages no spec, design, plan or idea doc.
+
+    Adam (2026-11-10): any change by the main chat or an owner that needs a spec update gets it,
+    so the docs are always current. A commit that truly changes no doc says "Specs: unchanged".
+    """
+    if UNCHANGED in command:
+        return None
+    git = ["git", "-C", cwd]
+    top = subprocess.run(git + ["rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    if not top:
+        return None
+    staged = subprocess.run(git + ["diff", "--cached", "--name-only"], capture_output=True, text=True).stdout.split()
+    if not any(p.startswith(GAME_PATHS) for p in staged) or any(p.startswith(SPEC_DOCS) for p in staged):
+        return None
+    last = subprocess.run(git + ["log", "-1", "--format=%ct"], capture_output=True, text=True).stdout.strip()
+    since = int(last) if last.isdigit() else 0
+    found = []
+    for root, _, files in os.walk(os.path.join(top, "work")):
+        for name in files:
+            if name.endswith(".md") and ("ruling" in name or "veto" in name):
+                path = os.path.join(root, name)
+                if os.path.getmtime(path) > since:
+                    found.append(os.path.relpath(path, top))
+    return sorted(found) or None
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -138,6 +172,14 @@ def main():
                 "Docs still name a removed piece as if it exists (docs/removed-pieces.md). Fix these lines "
                 "before the commit, or say on the line that the piece is gone:\n" + lines
             )
+        else:
+            rulings = unsynced_rulings(data.get("cwd") or os.getcwd(), command)
+            if rulings:
+                reason = (
+                    "Rulings were written since the last commit, but no spec, design, plan or idea doc is staged "
+                    "(agent-workflow.md, \"Docs stay current\"). Update and stage the doc lines each ruling changes, or, "
+                    f"if none changes a doc, add \"{UNCHANGED}\" to the commit message body:\n" + "\n".join(rulings)
+                )
     if reason:
         out = {"permissionDecision": "deny", "permissionDecisionReason": reason}
     elif warning:

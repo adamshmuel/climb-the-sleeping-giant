@@ -73,6 +73,8 @@ Agents never talk to each other directly. There is no chain of command: any agen
 
 Owners decide everything in their area, including changes to approved work that fit the game idea. The owner re-checks the change against the idea, the style guide and mockups, the business goals and the project rules, says so, and the main chat tells the user in one line afterwards. If the change touches another owner's area, that owner checks it too. When time runs out or progress stops, the main chat can overrule any owner (`CLAUDE.md`, "The main chat's veto").
 
+**Docs stay current.** A ruling, veto or change by an owner or the main chat that alters what the player sees or does, or the plan's order, updates its idea, spec, style guide or plan line in the same step, and the report names those lines. `.claude/hooks/git-guard.py` blocks a game commit after a new `work/**/*ruling*.md` or `*veto*.md` with no spec, design, plan or idea doc staged, unless the message says "Specs: unchanged".
+
 The user is asked first only for:
 - a new feature, or removing one;
 - anything about money: prices, Robux, game passes, what is sold;
