@@ -169,7 +169,8 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 7b: Grab runs on the nests**
 - Stands on: Task 7a (`readEggSpots` gives each nest's garden, twin and arm, built).
-- For: core gameplay (eggs refill on nests, empty nests can't be grabbed). Size: card written at the Task 7a review, at most 6 steps and 1 hour.
+- For: core gameplay (eggs refill on nests, empty nests can't be grabbed). Size: card `work/p5t7/p5t7b-card.md`, 5 steps, 48 minutes, about 19 Studio calls, two builders (Steps 1-2, 3-4) and a runner.
+- Today's world still has V1's 16 bare spots. A refill never goes back to the nest it just left, so a rank with as many slots as spots would never refill. Until Task 12 builds the nests, `Grab.slotsFor` gives a bare rank at most its spot count minus 1 (Common 7, Uncommon 3, Rare 3; Epic and Legendary 0).
 - Spec rules: Rules 70, 74, 75, 76, 77 and 78 on the server (names above).
 - Files: `Grab.luau`, `SpotModels.luau`, `init.server.luau`, their tests.
 - Failing tests first: tests 2 and 7 above, plus `SpotModels` writes `Waiting` and no `RefillAt`, and `refilled` fires with the rank and the seconds waited.
@@ -237,7 +238,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Stands on: build order steps 2, 3 and 4 (plan 3's ways up; plan 5 Tasks 13 to 16, the seam included; plan 3 Tasks 7 and 8, the zone boxes and the footprint route), plan 5 Tasks 1 to 7 (slots and nests in code, and `WorldIndex.readEggSpots` reading nest models with the bare-spot allowance this task removes, built), Task 8 (`tools/world/21-nests.luau` started with the refill pop copy, built), Task 15e3 (the cuff pockets already in `World.CuffArt`, built), and the 38 spots in spec 5's table and the style guide's nest map (final).
 - Status: can't start until each of those is built (product's ruling, `work/p5t16/stands-on-ruling.md`).
 - Spec rules: Rule 70 (Every egg waits in a nest): the spots, "never within 10 studs of his eyes", "V1's 16 egg spots are removed, with one exception". Rule 71 (How many eggs and nests). Rule 72 (Nests come in mirror pairs). Rule 75 (Meadow eggs stay by their garden): spacing and the 3-second walk. Spot rules: "Belly pocket", "Rare on each side", "Lap fold", "Knee pocket". Section 6, "Art changes".
-- Files: `tools/world/21-nests.luau` (new), `src/server/World/WorldIndex.luau` (the bare-spot allowance from Task 7 goes), `RealWorld.spec.luau`.
+- Files: `tools/world/21-nests.luau` (new), `src/server/World/WorldIndex.luau` and `NestReader.luau` (the bare-spot allowance from Task 7 goes), `src/server/Eggs/Grab.luau` (`slotsFor`'s bare-rank cap from Task 7b goes, and its test), `RealWorld.spec.luau`.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
 - What the script does:
   - builds the 38 nest models in `World.EggSpots` at designer's spots (the spec's table and the markers, one stud above each spot), each with the straw nest from `Art.Library.StrawNest_Final` (leaning where the art list says), its `Base`, `PromptAnchor` and attributes (see "Decisions"); `Rarity` is the spec's target rank for now (Task 19 proves it);

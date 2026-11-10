@@ -281,6 +281,179 @@ describe("WorldIndex.readEggSpots", function()
 	end)
 end)
 
+-- Adds a nest model to the EggSpots folder of a fake world (Rule 70): a Model with a Rarity, a Base with a PromptAnchor
+-- and a Nest child. `attributes` is written on the model as it stands (a key left out stays unset), so a test builds
+-- exactly the NestName, Twin, Garden and RidesRightArm it wants. `nestClass` is the class of the Nest child, or "none".
+type NestOptions = {
+	rarity: string?, -- default "Common"
+	attributes: { [string]: any },
+	nestClass: string?, -- default "Part"
+}
+
+local function addNest(world: Instance, name: string, options: NestOptions): Model
+	local folder = world:FindFirstChild("EggSpots") :: Folder
+	local x = 1000 + #folder:GetChildren() * 10
+	local model = Instance.new("Model")
+	model.Name = name
+	model:SetAttribute("Rarity", options.rarity or "Common")
+	for key, value in options.attributes do
+		model:SetAttribute(key, value)
+	end
+	local base = Instance.new("Part")
+	base.Name = "Base"
+	base.Size = Vector3.new(2, 0.2, 2)
+	base.CFrame = CFrame.new(x, 5, 0)
+	base.Parent = model
+	local anchor = Instance.new("Attachment")
+	anchor.Name = "PromptAnchor"
+	anchor.Parent = base
+	if options.nestClass ~= "none" then
+		local nest = Instance.new((options.nestClass or "Part") :: any)
+		nest.Name = "Nest"
+		if nest:IsA("BasePart") then
+			nest.CFrame = CFrame.new(x, 6, 0)
+		end
+		nest.Parent = model
+	end
+	model.Parent = folder
+	return model
+end
+
+-- A Common meadow nest of garden `garden`, twin of `twin`, with every attribute a good nest needs.
+local function meadowNest(world: Instance, name: string, twin: string, garden: number): Model
+	return addNest(world, name, { attributes = { NestName = name, Twin = twin, Garden = garden } })
+end
+
+describe("WorldIndex.readEggSpots nests", function()
+	it("gives a nest all five new fields and leaves them nil on a bare spot", function()
+		local world = makeSpotsWorld()
+		local first = meadowNest(world, "EggNest_G1A", "EggNest_G1B", 1)
+		meadowNest(world, "EggNest_G1B", "EggNest_G1A", 1)
+		local arm = addNest(world, "EggNest_Rare", {
+			rarity = "Rare",
+			attributes = { NestName = "EggNest_Rare", Twin = "EggNest_Rare", RidesRightArm = true },
+		})
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(problems).toEqual({})
+		local byName: { [string]: WorldIndex.EggSpot } = {}
+		for _, spot in spots :: { WorldIndex.EggSpot } do
+			byName[spot.name] = spot
+		end
+		local nested = byName.EggNest_G1A
+		expect(nested.nest).toBe(first:FindFirstChild("Nest"))
+		expect(nested.nestName).toBe("EggNest_G1A")
+		expect(nested.twin).toBe("EggNest_G1B")
+		expect(nested.garden).toBe(1)
+		expect(nested.ridesRightArm).toBe(false)
+		expect(byName.EggNest_Rare.nest).toBe(arm:FindFirstChild("Nest"))
+		expect(byName.EggNest_Rare.garden).toBeNil()
+		expect(byName.EggNest_Rare.ridesRightArm).toBe(true)
+		-- the bare spot beside them keeps today's fields only (this half already passes before the change)
+		local bare = byName.EggSpot_Common_1
+		expect(bare.nest).toBeNil()
+		expect(bare.nestName).toBeNil()
+		expect(bare.twin).toBeNil()
+		expect(bare.garden).toBeNil()
+		expect(bare.ridesRightArm).toBeNil()
+		world:Destroy()
+	end)
+
+	it("reports a nest with a NestName but no Nest part, and a Nest that is not a BasePart", function()
+		local world = makeSpotsWorld()
+		addNest(world, "EggNest_A", {
+			rarity = "Rare",
+			attributes = { NestName = "EggNest_A", Twin = "EggNest_A" },
+			nestClass = "none",
+		})
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({ "EggSpots.EggNest_A is missing Nest" })
+		world:Destroy()
+
+		local folderWorld = makeSpotsWorld()
+		addNest(folderWorld, "EggNest_A", {
+			rarity = "Rare",
+			attributes = { NestName = "EggNest_A", Twin = "EggNest_A" },
+			nestClass = "Folder",
+		})
+		local _, folderProblems = WorldIndex.readEggSpots(folderWorld)
+		expect(folderProblems).toEqual({ "EggSpots.EggNest_A.Nest must be a BasePart, not a Folder" })
+		folderWorld:Destroy()
+	end)
+
+	it("reports a Common nest with no Garden or Garden 9, and a Rare nest that has a Garden", function()
+		local world = makeSpotsWorld()
+		addNest(world, "EggNest_A", { attributes = { NestName = "EggNest_A", Twin = "EggNest_A" } })
+		addNest(world, "EggNest_B", { attributes = { NestName = "EggNest_B", Twin = "EggNest_B", Garden = 9 } })
+		addNest(world, "EggNest_C", {
+			rarity = "Rare",
+			attributes = { NestName = "EggNest_C", Twin = "EggNest_C", Garden = 1 },
+		})
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({
+			"EggSpots.EggNest_A has no Garden",
+			"EggSpots.EggNest_B has a Garden 9 that is not 1 to 8",
+			"EggSpots.EggNest_C has a Garden but is not Common",
+		})
+		world:Destroy()
+	end)
+
+	it("reports a garden with 3 meadow nests and a garden with 1, and accepts a garden with 2", function()
+		local world = makeSpotsWorld()
+		meadowNest(world, "EggNest_G1A", "EggNest_G1B", 1)
+		meadowNest(world, "EggNest_G1B", "EggNest_G1A", 1)
+		meadowNest(world, "EggNest_G1C", "EggNest_G1A", 1)
+		meadowNest(world, "EggNest_G2A", "EggNest_G2A", 2)
+		meadowNest(world, "EggNest_G3A", "EggNest_G3B", 3)
+		meadowNest(world, "EggNest_G3B", "EggNest_G3A", 3)
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({
+			"garden 1 has 3 meadow nests: EggNest_G1A, EggNest_G1B, EggNest_G1C",
+			"garden 2 has 1 meadow nests: EggNest_G2A",
+		})
+		world:Destroy()
+	end)
+
+	it("reports a nest with no Twin, and a Twin that names no nest", function()
+		local world = makeSpotsWorld()
+		addNest(world, "EggNest_A", { rarity = "Rare", attributes = { NestName = "EggNest_A" } })
+		addNest(world, "EggNest_B", {
+			rarity = "Rare",
+			attributes = { NestName = "EggNest_B", Twin = "Nowhere" },
+		})
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({
+			"EggSpots.EggNest_A has no Twin",
+			'EggSpots.EggNest_B has a Twin "Nowhere" that is not a nest',
+		})
+		world:Destroy()
+	end)
+
+	it("reports RidesRightArm true on a Common nest, and a RidesRightArm that is not a boolean", function()
+		local world = makeSpotsWorld()
+		addNest(world, "EggNest_G1A", {
+			attributes = { NestName = "EggNest_G1A", Twin = "EggNest_G1B", Garden = 1, RidesRightArm = true },
+		})
+		meadowNest(world, "EggNest_G1B", "EggNest_G1A", 1)
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({ "EggSpots.EggNest_G1A is Common and can't ride his arm" })
+		world:Destroy()
+
+		local textWorld = makeSpotsWorld()
+		addNest(textWorld, "EggNest_A", {
+			rarity = "Rare",
+			attributes = { NestName = "EggNest_A", Twin = "EggNest_A", RidesRightArm = "yes" },
+		})
+		local _, textProblems = WorldIndex.readEggSpots(textWorld)
+		expect(textProblems).toEqual({ "EggSpots.EggNest_A RidesRightArm must be true or false" })
+		textWorld:Destroy()
+	end)
+end)
+
 describe("WorldIndex.loadEggSpots", function()
 	it("returns the 16 spots of a good world, and errors with every problem of a bad one", function()
 		local good = makeSpotsWorld()

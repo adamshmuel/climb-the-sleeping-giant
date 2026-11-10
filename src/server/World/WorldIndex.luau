@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local Zones = require(script.Parent.Parent.Giant.Zones)
+local NestReader = require(script.Parent.NestReader)
 
 export type Box = { cframe: CFrame, size: Vector3 }
 
@@ -22,12 +23,19 @@ export type Garden = {
 }
 
 -- One place where an egg waits (Rule 3): a Model in World.EggSpots with a Rarity, a Base and a PromptAnchor.
+-- A nest (Rule 70) also has a Nest part, a NestName, a Twin and, for Common, a Garden. The five nest fields are nil on
+-- a V1 bare spot.
 export type EggSpot = {
 	name: string,
 	rarity: Config.RarityName,
 	cframe: CFrame, -- the top centre of the Base: where the egg's bottom sits
 	promptAnchor: Attachment, -- where the hold prompt goes (about 2 studs above the Base)
 	model: Model,
+	nest: BasePart?, -- the part the egg's nest looks like
+	nestName: string?,
+	twin: string?, -- the name of the other nest of the pair (its own name if it has no partner)
+	garden: number?, -- 1 to 8, on Common nests only: the garden whose meadow it is in
+	ridesRightArm: boolean?, -- true when the nest moves with his right arm (never on Common)
 }
 
 -- One point of the footprint route (World.Route), as RouteData reads it.
@@ -278,9 +286,17 @@ local function withArticle(className: string): string
 	return if string.find("AEIOU", first, 1, true) then `an {className}` else `a {className}`
 end
 
+-- What NestReader needs from this file, so each fact stays written once here.
+local nestContext: NestReader.Context = {
+	plotCount = PLOT_COUNT,
+	rarityNames = RARITY_NAMES,
+	withArticle = withArticle,
+}
+
 -- Reads World.EggSpots: any number of spots (at least one), each a Model with a Rarity attribute (one of the five
--- ranks), a Base part and a PromptAnchor attachment on the Base. The spots come back in name order. Problems come one
--- per line.
+-- ranks), a Base part and a PromptAnchor attachment on the Base. A spot with a Nest child or a NestName is a nest and
+-- also needs the nest fields (`NestReader.readNest`); each garden then needs 2 Common meadow nests, or none (Rule 70).
+-- The spots come back in name order. Problems come one per line.
 function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 	local folder = world:FindFirstChild("EggSpots")
 	if folder == nil then
@@ -292,6 +308,13 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 	table.sort(children, function(a, b)
 		return a.Name < b.Name
 	end)
+	local nestNames: { [string]: boolean } = {}
+	for _, child in children do
+		if child:IsA("Model") and NestReader.isNest(child) then
+			nestNames[child.Name] = true
+		end
+	end
+	local meadowNests: { [number]: { string } } = {} -- garden number -> names of its Common nests
 	for _, child in children do
 		local label = `EggSpots.{child.Name}`
 		if not child:IsA("Model") then
@@ -322,6 +345,16 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 				)
 			end
 		end
+		local nestFields: NestReader.NestFields = {}
+		if NestReader.isNest(child) then
+			nestFields = NestReader.readNest(child, label, rarity, nestNames, problems, nestContext)
+			local garden = nestFields.garden
+			if garden ~= nil then
+				local names = meadowNests[garden] or {}
+				meadowNests[garden] = names
+				table.insert(names, child.Name)
+			end
+		end
 		if #problems == before then
 			local basePart = base :: BasePart
 			table.insert(spots, {
@@ -330,11 +363,23 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 				cframe = basePart.CFrame * CFrame.new(0, basePart.Size.Y / 2, 0),
 				promptAnchor = anchor :: Attachment,
 				model = child,
+				nest = nestFields.nest,
+				nestName = nestFields.nestName,
+				twin = nestFields.twin,
+				garden = nestFields.garden,
+				ridesRightArm = nestFields.ridesRightArm,
 			})
 		end
 	end
 	if #children == 0 then
 		table.insert(problems, "EggSpots has no spots")
+	end
+	-- A garden has 2 Common meadow nests, or none (Rule 70).
+	for garden = 1, PLOT_COUNT do
+		local names = meadowNests[garden]
+		if names ~= nil and #names ~= 2 then
+			table.insert(problems, `garden {garden} has {#names} meadow nests: {table.concat(names, ", ")}`)
+		end
 	end
 	if #problems > 0 then
 		return nil, problems

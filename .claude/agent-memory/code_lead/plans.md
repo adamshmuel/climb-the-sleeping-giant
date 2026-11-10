@@ -25,5 +25,8 @@
 - Card titles: `job-check` reads egg/nest + "goes back"/"place"/"build" in a heading as world placing and asks for a reach walk. Say "returns" in code-only titles. A heading that names another Task needs its own Stands on line.
 - A card's `script_grep` sync check names a query only the changed file holds (a new describe title, "function EggSlots.setLocked"), never a common name: "returnEgg" hit the 50-match cap (p5t5 builder, 2026-11-10).
 - Before carding a plan task, count its modules and tests: p5 Task 7 (6 modules, 7 tests) could not fit 6 steps and 1 hour, so it was split 7a/7b/7c at card time, and a piece only a later task uses (`Net.SlideTip`) moved there (2026-11-10).
+- When a card adds about 100 lines to a file near its line stop, count first and plan the module split on the card (p5t7a: WorldIndex hit 692 of 680, needed a Step 3b, 2026-11-10).
 - A test card's `toThrow()` with no message can pass for the wrong reason (a nil index): name the assert's message (p5t6, 2026-11-10).
+- `script_grep` patterns with parentheses match nothing: a card's sync check greps a plain unique substring (p5t7a 3b lost a Studio call, 2026-11-10).
+- Size a card by turns too: one builder has 40 turns, so a card over about 3 code steps splits between two builders with a step note between them (p5t7a builder hit 40 mid Step 3, 2026-11-10).
 - Progress index counts drift: recount from every `docs/progress/v2/*.md` (task rows minus removed or dropped) at each close, not by adding 1 (2026-11-10: index said 117 of 214, files gave 131 of 221).

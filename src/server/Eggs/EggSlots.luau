@@ -65,9 +65,9 @@ export type State = {
 local EggSlots = {}
 
 -- The nests of a rank where a new egg may land, in the order given (Rules 74, 76 and 100): no egg waiting, not locked,
--- not `lastNest`, at least Config.Nests.EggSpacing studs from every waiting egg, and at least Config.Nests.PlayerDistance studs from
--- every player. A distance equal to the limit is allowed. Distances are 3D. A locked nest's waiting egg still counts
--- for the spacing.
+-- not `lastNest`, at least Config.Nests.EggSpacing studs from every waiting egg, and at least
+-- Config.Nests.PlayerDistance studs from every player. A distance equal to the limit is allowed. Distances are 3D.
+-- A locked nest's waiting egg still counts for the spacing.
 local function allowedNests(state: State, rank: Config.RarityName, lastNest: string?, playersAt: { Vector3 }): { Nest }
 	local allowed: { Nest } = {}
 	for _, name in state.order do
@@ -186,8 +186,8 @@ function EggSlots.setLocked(state: State, nestNames: { string }, locked: boolean
 end
 
 -- The player grabs the egg on a nest. Fails with a reason when the nest is unknown, the player already carries an
--- egg, the nest is locked, or the nest has no egg waiting, checked in that order. On success the nest is empty, its slot's refill countdown starts now, and the
--- player carries the egg.
+-- egg, the nest is locked, or the nest has no egg waiting, checked in that order. On success the nest is empty, its
+-- slot's refill countdown starts now, and the player carries the egg.
 function EggSlots.take(state: State, nestName: string, playerId: number, now: number): (boolean, string?)
 	local nest = state.nests[nestName]
 	if nest == nil then
@@ -212,8 +212,8 @@ function EggSlots.take(state: State, nestName: string, playerId: number, now: nu
 	return true, nil
 end
 
--- The other nest of a meadow slot's garden: the garden's nest of the slot's rank that is not `lastNest` (Rule 75). It is
--- empty, because the garden's one egg was taken from `lastNest`. Another rank may use the same garden number.
+-- The other nest of a meadow slot's garden: the garden's nest of the slot's rank that is not `lastNest` (Rule 75).
+-- It is empty, because the garden's one egg was taken from `lastNest`. Another rank may use the same garden number.
 local function otherGardenNest(state: State, slot: Slot): Nest
 	for _, name in state.order do
 		local nest = state.nests[name]
