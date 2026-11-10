@@ -115,5 +115,40 @@ class GitGuard(unittest.TestCase):
         self.assertEqual(run('git commit -m "Add coins"', cwd=self.repo_with("The side ladder was dropped.")), {})
 
 
+class RulingsNeedDocs(unittest.TestCase):
+    def repo(self, ruling=True, staged=("src/a.luau",)):
+        repo = tempfile.mkdtemp()
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        subprocess.run(["git", "init", "-q", repo], check=True)
+        subprocess.run(["git", "-C", repo, "commit", "-q", "--allow-empty", "-m", "start"], check=True, env=env)
+        os.makedirs(os.path.join(repo, "work", "t1"))
+        if ruling:
+            path = os.path.join(repo, "work", "t1", "order-ruling.md")
+            with open(path, "w") as f:
+                f.write("ruling\n")
+            os.utime(path, (2**31, 2**31))  # later than the commit, whatever the clock
+        for p in staged:
+            os.makedirs(os.path.join(repo, os.path.dirname(p)), exist_ok=True)
+            with open(os.path.join(repo, p), "w") as f:
+                f.write("x\n")
+            subprocess.run(["git", "-C", repo, "add", p], check=True)
+        return repo
+
+    def test_a_code_commit_after_a_ruling_without_docs_is_blocked(self):
+        result = run('git commit -m "Add eggs"', cwd=self.repo())
+        self.assertTrue(denied(result))
+        self.assertIn("work/t1/order-ruling.md", result["hookSpecificOutput"]["permissionDecisionReason"])
+
+    def test_a_staged_spec_passes(self):
+        self.assertEqual(run('git commit -m "Add eggs"', cwd=self.repo(staged=("src/a.luau", "docs/specs/x.md"))), {})
+
+    def test_specs_unchanged_in_the_message_passes(self):
+        self.assertEqual(run('git commit -m "Add eggs" -m "Specs: unchanged"', cwd=self.repo()), {})
+
+    def test_no_ruling_or_a_setup_commit_passes(self):
+        self.assertEqual(run('git commit -m "Add eggs"', cwd=self.repo(ruling=False)), {})
+        self.assertEqual(run('git commit -m "Fix hook"', cwd=self.repo(staged=(".claude/hooks/x.py",))), {})
+
+
 if __name__ == "__main__":
     unittest.main()
