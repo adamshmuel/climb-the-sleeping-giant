@@ -107,9 +107,17 @@ function SpotLabels.text(waiting: boolean?, rarity: string): string?
 	return nil
 end
 
--- True when the two rectangles share some area. Rectangles that only touch edge to edge don't overlap.
-local function overlaps(a: Rect, b: Rect): boolean
-	return a.x < b.x + b.width and b.x < a.x + a.width and a.y < b.y + b.height and b.y < a.y + a.height
+-- Pixels of clear space two rarity labels keep between their words. The measured rectangle can be narrower than what is
+-- drawn (the outline is 3 px thick, and far words are tiny), so two far words 0 to 4 px apart read as one clipped word
+-- ("Uncomm Uncommon") and count as stacked.
+local STACK_GAP = 4
+
+-- True when the two rectangles share some area, or sit closer than `gap` pixels apart.
+local function overlaps(a: Rect, b: Rect, gap: number): boolean
+	return a.x < b.x + b.width + gap
+		and b.x < a.x + a.width + gap
+		and a.y < b.y + b.height + gap
+		and b.y < a.y + a.height + gap
 end
 
 -- True when the rectangles share some area or touch, because a word half under the meter looks broken.
@@ -142,7 +150,7 @@ function SpotLabels.pickShown(candidates: { Candidate }, meter: Rect?): { [numbe
 	for _, candidate in ranked do
 		local clear = true
 		for _, other in showing do
-			if overlaps(candidate.rect, other) then
+			if overlaps(candidate.rect, other, STACK_GAP) then
 				clear = false
 				break
 			end

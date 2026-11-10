@@ -97,6 +97,52 @@ describe("SpotLabels: labels never sit under the meter", function()
 	end)
 end)
 
+describe("SpotLabels: labels never stack", function()
+	-- Spec V1 rule "Egg labels never stack": words that touch or nearly touch read as one clipped word, so only the
+	-- nearer label shows.
+	it("fades the farther of two labels whose words sit 2 px apart, at about the same distance", function()
+		local screen = newScreen()
+		local rig = newRig(screen.view)
+		local nearer = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
+		local farther = rig.addSpot("EggSpot_Uncommon_2", "Uncommon")
+		screen.places["EggSpot_Uncommon_1"] = { rect = rect(300, 200, 60, 20), distance = 60 }
+		screen.places["EggSpot_Uncommon_2"] = { rect = rect(362, 200, 60, 20), distance = 60.5 }
+		rig.set(nearer, "Waiting", true)
+		rig.set(farther, "Waiting", true)
+		rig.advance(0.3)
+		expect(seeThrough(rig, nearer)).toBe(0)
+		expect(seeThrough(rig, farther)).toBeCloseTo(1, 3)
+	end)
+
+	it("fades the farther of two labels whose words touch edge to edge", function()
+		local screen = newScreen()
+		local rig = newRig(screen.view)
+		local nearer = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
+		local farther = rig.addSpot("EggSpot_Uncommon_2", "Uncommon")
+		screen.places["EggSpot_Uncommon_1"] = { rect = rect(300, 200, 60, 20), distance = 60 }
+		screen.places["EggSpot_Uncommon_2"] = { rect = rect(360, 200, 60, 20), distance = 60.5 }
+		rig.set(nearer, "Waiting", true)
+		rig.set(farther, "Waiting", true)
+		rig.advance(0.3)
+		expect(seeThrough(rig, nearer)).toBe(0)
+		expect(seeThrough(rig, farther)).toBeCloseTo(1, 3)
+	end)
+
+	it("keeps both labels when their words sit well apart", function()
+		local screen = newScreen()
+		local rig = newRig(screen.view)
+		local nearer = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
+		local farther = rig.addSpot("EggSpot_Uncommon_2", "Uncommon")
+		screen.places["EggSpot_Uncommon_1"] = { rect = rect(300, 200, 60, 20), distance = 60 }
+		screen.places["EggSpot_Uncommon_2"] = { rect = rect(380, 200, 60, 20), distance = 60.5 }
+		rig.set(nearer, "Waiting", true)
+		rig.set(farther, "Waiting", true)
+		rig.advance(0.3)
+		expect(seeThrough(rig, nearer)).toBe(0)
+		expect(seeThrough(rig, farther)).toBe(0)
+	end)
+end)
+
 describe("SpotLabels: how often it checks", function()
 	it("measures the labels at most every 0.1 s", function()
 		local screen = newScreen()

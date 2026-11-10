@@ -46,22 +46,22 @@ describe("SpotLabels.pickShown: labels never stack", function()
 		expect(shown[2]).toBe(true)
 	end)
 
-	it("shows both labels when they only touch edge to edge, side by side", function()
+	it("hides the farther label when they only touch edge to edge, side by side", function()
 		local shown = SpotLabels.pickShown({
 			candidate(1, rect(100, 100, 60, 20), NEAR),
 			candidate(2, rect(160, 100, 60, 20), FAR),
 		}, nil)
 		expect(shown[1]).toBe(true)
-		expect(shown[2]).toBe(true)
+		expect(shown[2]).toBe(false)
 	end)
 
-	it("shows both labels when they only touch edge to edge, one above the other", function()
+	it("hides the farther label when they only touch edge to edge, one above the other", function()
 		local shown = SpotLabels.pickShown({
 			candidate(1, rect(100, 100, 60, 20), NEAR),
 			candidate(2, rect(100, 120, 60, 20), FAR),
 		}, nil)
 		expect(shown[1]).toBe(true)
-		expect(shown[2]).toBe(true)
+		expect(shown[2]).toBe(false)
 	end)
 
 	it("in a row where only neighbours overlap, shows the nearest and the farthest", function()
@@ -281,13 +281,13 @@ describe("SpotLabels: two overlapping labels", function()
 		expect(seeThrough(rig, far)).toBeCloseTo(1, 3)
 	end)
 
-	it("leaves labels alone that only sit close together", function()
+	it("leaves labels alone that sit 10 px apart", function()
 		local screen = newScreen()
 		local rig = newRig(screen.view)
 		local one = rig.addSpot("EggSpot_Common_3", "Common")
 		local two = rig.addSpot("EggSpot_Common_4", "Common")
 		screen.places["EggSpot_Common_3"] = { rect = rect(300, 200, 60, 20), distance = 10 }
-		screen.places["EggSpot_Common_4"] = { rect = rect(362, 200, 60, 20), distance = 12 }
+		screen.places["EggSpot_Common_4"] = { rect = rect(370, 200, 60, 20), distance = 12 }
 		rig.set(one, "Waiting", true)
 		rig.set(two, "Waiting", true)
 		rig.advance(0.3)
