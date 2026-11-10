@@ -71,7 +71,7 @@ Agents never talk to each other directly. There is no chain of command: any agen
 
 ## Asking the user
 
-Owners decide everything in their area, including changes to approved work that fit the game idea. The owner re-checks the change against the idea, the style guide and mockups, the business goals and the project rules, says so, and the main chat tells the user in one line afterwards. If the change touches another owner's area, that owner checks it too.
+Owners decide everything in their area, including changes to approved work that fit the game idea. The owner re-checks the change against the idea, the style guide and mockups, the business goals and the project rules, says so, and the main chat tells the user in one line afterwards. If the change touches another owner's area, that owner checks it too. When time runs out or progress stops, the main chat can overrule any owner (`CLAUDE.md`, "The main chat's veto").
 
 The user is asked first only for:
 - a new feature, or removing one;

@@ -46,8 +46,22 @@ class TaskClock(unittest.TestCase):
         self.assertEqual(result["hookSpecificOutput"]["hookEventName"], "PreToolUse")
         self.assertIn("Task 6", self.context(result))
 
-    def test_a_task_inside_1_hour_is_quiet(self):
-        self.assertEqual(self.run_with(f"Task 6 | task | {ago(50)}"), {})
+    def test_a_task_inside_30_minutes_is_quiet(self):
+        self.assertEqual(self.run_with(f"Task 6 | task | {ago(25)}"), {})
+
+    def test_the_red_flag_offers_the_veto(self):
+        self.assertIn("Veto check", self.context(self.run_with(f"Task 5 | small | {ago(12)}")))
+
+    def test_30_minutes_with_no_commit_gives_a_veto_check(self):
+        text = self.context(self.run_with(f"Task 6 | task | {ago(40)}"))
+        self.assertIn("No progress", text)
+        self.assertIn("Veto check", text)
+
+    def test_a_recent_commit_keeps_an_open_task_quiet(self):
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        for cmd in (["init", "-q"], ["commit", "-q", "--allow-empty", "-m", "x"]):
+            subprocess.run(["git", "-C", self.project, *cmd], check=True, env=env, capture_output=True)
+        self.assertEqual(self.run_with(f"Task 6 | task | {ago(40)}"), {})
 
     def test_no_clock_or_a_closed_task_is_quiet(self):
         self.assertEqual(self.run_with(None), {})

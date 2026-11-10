@@ -68,6 +68,12 @@ No idea rebuilds a part that a later spec replaces (`making-a-ruling` skill).
 
 Before acting, the main chat checks the decision: does it answer the questions above, is it priced, is it fair to players on every side, does it avoid rebuilding what a later spec replaces, and did someone ask what nobody tried? If not, it goes back to `product`. If the cost jumps while building, the work stops and goes back to the team.
 
+**The main chat's veto** (`CLAUDE.md`, "The main chat's veto"). When going back to `product` would cost more time than the choice is worth, or the owners' pick keeps spending time on something a player won't miss, the main chat decides itself:
+- Read the docs the choice needs first (spec, plan, progress, rulings, idea file). Apply YAGNI: build only what a player needs now.
+- Keep the viral test: a veto never cuts what makes a kid pick our game.
+- Pick one path from the table above. A whole-feature cut or anything about money still goes to the user.
+- Log one line in `docs/problems-log/teamwork.md` (what was vetoed, why, time saved), tell the owners and the user in one line each, then go to Step 5.
+
 ## Step 5: Restart
 
 - `code_lead` rewrites the plan's remaining tasks to match.
