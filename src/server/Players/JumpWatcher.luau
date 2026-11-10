@@ -101,8 +101,13 @@ function JumpWatcher.start(deps: Deps): JumpWatcher
 			if signal == nil or watch.generation ~= generation then
 				return -- no Humanoid, or the player got a newer character, left, or the watcher stopped
 			end
-			watch.stateConnection = signal:Connect(function(_old, new)
-				if new == Enum.HumanoidStateType.Jumping and #watch.takeoffs < MAX_TAKEOFFS then
+			watch.stateConnection = signal:Connect(function(old, new)
+				-- A jump off a ladder's rungs is letting go, not a take-off (plan 5 Task 26a: it makes no thud).
+				if
+					new == Enum.HumanoidStateType.Jumping
+					and old ~= Enum.HumanoidStateType.Climbing
+					and #watch.takeoffs < MAX_TAKEOFFS
+				then
 					local position = deps.rootPosition(character)
 					if position ~= nil then
 						table.insert(watch.takeoffs, position)
