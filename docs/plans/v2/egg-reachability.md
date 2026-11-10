@@ -80,21 +80,25 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: the tests pass, the second run says "already done", and no `Mockup_EggRanks` is left in the Workspace.
 
 **Task 3: The rank shows everywhere**
+- Stands on: Task 1 (built), Task 2 (built), and designer's mockups `epic-egg-*`, `legendary-egg-*`, `carry-epic-*` and `carry-legendary-*` in `docs/design/v2/mockups/` (all present, checked 2026-11-10). A nest's rank is fixed (Rule 53), so plan 5 Task 19 moving nests changes no colour.
+- For: core gameplay (players see the rank first; 8 Epic and Legendary nests are in the world and `Theme.luau` has no colour for them). Size and call counts: in the card, `work/p4t3/`.
 - Spec rules: Rule 52 (The rank shows everywhere). Story B.
 - Files: `src/client/Hud/Theme.luau` (the five rank colours from `docs/design/v1/style-guide.md`, "Rarity colours", and `docs/design/v2/style-guide.md`, "Egg ranks"), `src/client/World/SpotLabels.luau`, `src/client/Hud/Messages.luau`, their tests.
 - What changes: the waiting egg's label shows "Epic" or "Legendary" in its colour, within 75 studs as today; the carry pill says "Epic egg! Get it home" in V1's white outlined words with the egg icon in the rank's colour; the green card says "Safe! Epic egg is home". Carried and home eggs keep V1's no-label look (they already copy the template, so they take its colour).
 - Failing tests first: each of the five ranks gives its word and colour on the label; no two ranks share a colour (Rule 51); the pill and the card say the rank word for Epic and Legendary; the card stays green.
 - Done when: the tests pass, and in Play (computer and the iPhone 14), with one spot set to Epic and one to Legendary at runtime from a Server `execute_luau`, screenshots match `epic-egg-*`, `legendary-egg-*`, `carry-epic-*` and `carry-legendary-*` in `docs/design/v2/mockups/`. The main chat sends them to designer.
 
-**Task 4: The rank glow**
+**Task 4: The rank glow** (code, tests and the fade walk only; its 16 spawn shots and the eye-limit check moved into Task 13 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
+- Stands on: nothing (code; any built Rare-or-higher nest shows the fade).
 - Spec rules: section 6, "Looking at the giant from a garden" (the rank glow and the 10-stud beams). Rule 52 (The rank shows everywhere): the colour readable from the spawn spot. Rule 50 (The score sets the rank): no glow or beam covers his eyes.
 - Files: `src/client/World/RankGlow.luau` (new, pure: the glow's size, strength and fade for a rank and a distance), `src/client/World/SpotLabels.luau` or a new `src/client/World/RankGlowView.luau` (draws it), `src/server/Eggs/SpotModels.luau` (the beam length), tests for each.
 - What it does, with the values in `docs/design/v2/style-guide.md`, "Egg ranks" and "The rank glow": a soft round halo in the rank colour behind every waiting egg above Common, twice the egg's height across; hidden closer than 55 studs, fading in evenly, full from 75 studs; Uncommon with no beam, Rare and up stronger and with a beam, so no lower rank outshines a higher one; only waiting eggs glow. On spots on him, the beam is 10 studs long.
 - Failing tests first (`RankGlow`, pure): no glow at 50 studs, half at 65, full at 80; no glow for Common; each rank's glow is at least as strong as the rank below; (`SpotModels`) a Rare on the belly gets a 10-stud beam, a Rare in the meadow keeps V1's.
 - Keep: V2 setup 5 (`index.md`) already turns off each beam on his body when the camera is within 30 studs of its egg. The 10-stud beams keep that, and its tests stay green.
-- Done when: the tests pass, and in Play: the spawn view from all 8 gardens on a computer and the iPhone 14 (16 shots), compared with `view-ranks.png`, `view-phone-ranks.png`, `ranks-desktop.png` and `ranks-phone.png`; and a walk from a spawn spot up to a glowing egg and back with shots at about 80, 65 and 50 studs, to see the glow fade smoothly (the spec's risk row). The main chat sends them to designer, who checks the eye limit.
+- Done when: the tests pass, and in Play a walk from a spawn spot up to a glowing egg and back with shots at about 80, 65 and 50 studs shows the glow fade smoothly (the spec's risk row). **Moved to Task 13:** the spawn view from all 8 gardens on a computer and the iPhone 14 (16 shots), compared with `view-ranks.png`, `view-phone-ranks.png`, `ranks-desktop.png` and `ranks-phone.png`, and designer's eye-limit check. They judge glows at the nests' final spots, which plan 5 Task 19 may move.
 
-**Task 5: Harder rank, better pets**
+**Task 5: Harder rank, better pets** (moved out of V2 into spec 2, Hatching and pets, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): no V2 code hatches an egg, so no player sees these tables, and Rule 58 lets spec 2 change the numbers. Not a feature cut: the rule stays, only when it is built moves. Spec 4 Rule 58 says so.)
+- Stands on: spec 2 (Hatching and pets), the first code that hatches an egg. Status: not built in V2.
 - Spec rules: Rule 58 (Harder rank, better pets).
 - Files: `src/shared/HatchOdds.luau` (new: the five starting tables from section 5), `src/tests/shared/HatchOdds.spec.luau` (new).
 - What it checks: each rank's table adds up to exactly 100%; for every pet rarity, the chance of that rarity or better is never lower in a higher rank; it is higher for the rank's own rarity than in the rank below; no table has a Secret pet. Hatching itself is spec 2 (Hatching and pets); this only holds the tables.
@@ -104,6 +108,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 ### Part 2: Measuring every nest
 
 **Task 6: Eggs sit on something you can see**
+- Stands on: nothing (code on fake worlds; its real-world run is Task 9).
 - Spec rules: Rule 59 (Eggs sit on something you can see), with the float, sink and egg-in-nest limits in section 5.
 - Files: `src/server/World/NestSeat.luau` (new), `src/tests/server/World/NestSeat.spec.luau` (new, fake worlds), `src/shared/Config.luau` (`Config.Ranks`: the visible-surface limit 0.5 (`VisibleBelow`), the float limit 0.2, the sink limits (upright nest 0.3, leaning nest 1.5, upright bare egg 0.3, leaning bare egg 1), the egg-in-nest limit 0.2).
 - What it does: for one egg spot, a ray straight down under the nest's (or bare egg's) centre that sees only visible surfaces: parts less than half see-through (see "Decisions"). It gives the surface it found (a name for the report: "His skin", "His pyjamas", "Grass", "Boot" ...), the pose ("upright" or "leaning"), the gap or the sink in studs, and for a nest the egg's distance from the nest's bottom, and whether each is within its limit.
@@ -117,6 +122,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: the tests pass. The real world runs it in Task 9.
 
 **Task 7: The difficulty score for every nest**
+- Stands on: plan 3 Task 11 (`HeistScore`, built) and plan 3 Task 12a (`PathCheck.costsFrom`, built). Fake worlds only.
 - Spec rules: Rule 46 (Every nest gets a difficulty score), Rule 47 (How the score is worked out), Rule 48 (The score uses the egg the nest would hold).
 - Files: `src/server/World/ReachCheck.luau` (new), `src/tests/server/World/ReachCheck.spec.luau` (new, fake worlds). It uses plan 3's `HeistScore` and `PathCheck.costsFrom`.
 - What it gives for each nest: its stand spots; whether it can be reached **and** left with walk and climb links only; its score (a nest in the Meadow scores 0; otherwise scored with an Uncommon egg, and again with a Rare egg if that score is 40 or more); its Tiptoe peak on the same route; the way up its quietest trip up uses, and the way up its quietest trip home ends at (they may differ, Rule 47); the seconds on ladders; the quickest and slowest garden's time.
@@ -131,6 +137,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: the tests pass.
 
 **Task 8: The score sets the rank, close calls and drift**
+- Stands on: Task 6 and Task 7 (built; their results are its input). Pure code.
 - Spec rules: Rule 50 (The score sets the rank): the bands and "a score exactly on an edge takes the higher rank". Rule 54 (The check fails when a nest drifts). Rule 56 (Close calls are flagged).
 - Files: `src/server/World/EggRanks.luau` (new, pure), `src/tests/server/World/EggRanks.spec.luau` (new), `src/shared/Config.luau` (`Config.Ranks`: band edges 40, 85 and 130; the edge warning 3; the Tiptoe limit 60).
 - What it does: turns each nest's results (Tasks 6 and 7) into its rank from the score, its "close to the edge" flag, and every reason it fails: the score is outside its world rank's band; it can't be reached and left with no jump; no room to stand; it floats or sinks, or its egg is out of its nest's bottom; its Tiptoe peak is 60 or more. The run fails once, listing every failing nest with its name, score, rank, band and reason.
@@ -138,35 +145,34 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: the tests pass.
 
 **Task 9: The check runs on the real world on every test run**
-- Spec rules: Rule 55 (It runs on every test run), Rule 54 (The check fails when a nest drifts), Rule 46 (Every nest gets a difficulty score), Rule 59 (Eggs sit on something you can see). Rule 41 (Every way up is equally loud, spec 3): its parts that need ranks.
-- Files: `src/tests/server/World/WalkMap.spec.luau`, `src/server/World/FairnessCheck.luau` (plan 3, Task 12).
+- Stands on: plan 3 Task 9 (the stuck scan on the finished ground), plan 3 Task 12b (fairness on the real world), Tasks 6, 7, 8 and 10 (built), and plan 5 Task 12 (the 38 nests, built). Through plan 3 Task 9 and 12b it also stands on plan 5 Task 22b and plan 3 Task 9q (the last ground changes). Its first real-world run is here (Task 10 runs only on fake nests).
+- Spec rules: Rule 55 (It runs on every test run), Rule 54 (The check fails when a nest drifts), Rule 46 (Every nest gets a difficulty score), Rule 59 (Eggs sit on something you can see).
+- Files: `src/tests/server/World/WalkMap.spec.luau`.
 - What changes:
   - `WalkMap.spec` runs `ReachCheck`, `NestSeat` and `EggRanks` on every egg spot of the real world, on the same walk map as the stuck scan, and prints the report (Task 10). The whole file (map, scan, Rule 45 and Rule 41 checks, scores) must finish within 2 minutes; the time is printed.
   - **The cave skirt** (added 2026-10-21, game_creator's check on stuck safety Task 22's visible cave skirt): the report runs the scores twice, with `World.CaveSkirt` in place and with it moved to `ServerStorage` (put back after, and checked). Every nest's score must be identical (0.0 change), and no walk-map link may run from a skirt top to any nest.
   - **No scored route goes past a slide guard** (game_creator's condition at stuck safety Task 23): no step of any nest's scored heist route stands within 2 studs of a part in `World.WalkSurfaces.SlideGuards`. A step that does is named in the report, and that guard becomes a flush patch (plan 2's rules).
-  - `FairnessCheck` adds spec 3's remaining Rule 41 parts that need ranks: no heist to a nest of Rare rank reaches 100 through any way up; and per rank, the quietest nest through one way up is within 5 points of the quietest through any other, with Epic and Legendary compared on the replay with no 100 cap.
-- Failing test first: the check itself. **It is expected to fail on today's world**: V1's ranks are set by zone, so game_creator expects Rare eggs 2 to 4 to score Epic or higher, and Rare egg 4's spot floats about 2.2 studs (designer). That list is the failing test for Task 11. Until Task 11 makes it pass, it is the only accepted failure in the run.
+  - **Moved to plan 5 Task 20** (it already says the same, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`)): "no heist to a nest of Rare rank reaches 100" and "per rank, no way up more than 5 points quieter than another". One check, once.
+- Failing test first: the check itself. **It is expected to fail on today's world**: V1's ranks are set by zone, so game_creator expects Rare eggs 2 to 4 to score Epic or higher, and Rare egg 4's spot floats about 2.2 studs (designer). That list is the failing test for plan 5 Task 19 (Task 11 is merged into it). Until Task 19 makes it pass, it is the only accepted failure in the run.
 - If the whole file takes longer than 2 minutes: the walk map is already built once and shared, so the spec's trigger (section 5, "Check time limit") is the scan grid from 2 to 3 studs (`Config.Stuck.ScanSpacing`). It changes the stuck scan too, so the builder asks code_lead first and the report says so.
 - Done when: the run finishes within 2 minutes, and its full failure list and the report are in the task report.
 
-**Task 10: A report Adam can read**
+**Task 10: A report Adam can read** (the pure report and the tool only; the tool's first real-world run is in Task 9, because a run on today's world would be redone after plan 5 Task 19)
+- Stands on: Task 8 (built).
 - Spec rules: Rule 57 (A report Adam can read), Rule 56 (Close calls are flagged): the note.
 - Files: `src/server/World/EggRanksReport.luau` (new, pure), `src/tests/server/World/EggRanksReport.spec.luau` (new), `tools/report/egg-ranks.luau` (new: runs the check in Edit mode and returns the report text).
 - What it makes: the table in Rule 57, one row per nest, sorted easiest to hardest: the nest's name (`NestName`), the score ("66%"), the rank and colour ("Rare, sky blue"), the Tiptoe peak, the quickest and slowest garden (garden number and seconds), the seconds on ladders, what it sits on (for example "His skin, leaning egg, sinks 0.9"), and the note ("Close to the edge", or why it fails). Under it, one line per rank: how many nests and the lowest and highest score. A short header says the date, the solo drain used, and what the columns mean, in plain words.
 - Failing tests first: three fake nests give exactly the expected text, sorted by score; a nest with no `NestName` is reported as a problem, never as a code; a rank with no nest says "no nests"; no line uses a bare code (only words from `Config` and the nest names).
-- Done when: the tests pass, and the tool's text, run on today's world, is in the task report.
+- Done when: the tests pass, and the tool runs on a fake world and returns its text. Its first real-world run is Task 9's.
 
-**Task 11: World prep: every nest's rank from the first report**
-- Spec rules: Rule 53 (A nest's rank is fixed), Rule 50 (The score sets the rank), Rule 59 (Eggs sit on something you can see): "the spot is lowered onto his skin". Rule 57 (A report Adam can read): the file.
-- Files: `tools/world/20-egg-ranks.luau` (new), `docs/egg-ranks.md` (new, from `tools/report/egg-ranks.luau`).
-- What the script does: gives every egg spot its `NestName`; lowers `EggSpot_Rare_4` straight down onto his skin (stuck safety Task 24 already does this, so this step should find nothing to do; keep it as a check); sets each spot's `Rarity` to the rank its score gives in the Task 9 report. Never a band or a noise number. If a spot is close to an edge, the report says so, and it is not moved (spec 5 places nests away from edges).
-- Failing test first: Task 9's check, red until now.
-- Done when: the check passes, the second run says "already done", `docs/egg-ranks.md` is written from the tool and matches the run's printed report, and the report names how many nests each rank has (game_creator accepts only one Rare-rank nest until spec 5, section 5's worked example). The place has unsaved world changes (Adam saves it). designer is told Rare egg 4's spot was lowered and still fails the eye limit until plan 5 replaces it.
-- **game_creator's condition from stuck safety Task 24:** every Uncommon egg spot still scores easier than every Rare egg spot. If an egg spot that stuck safety Task 24 moved now breaks this, it goes back toward its old place in `tools/world/04-egg-spots.luau`'s table, rather than take a new rank; the report names it.
+**Task 11: World prep: every nest's rank from the first report** (merged into plan 5 Task 19, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`), nothing left of its own)
+- Stands on: plan 5 Task 19.
+- Why merged: `NestName` is set by plan 5 Task 12 (`21b-nest-models.luau`); V1's `EggSpot_Rare_4` was removed by plan 5 Task 12 (its test 7); setting ranks from scores would break spec 5 Rule 71 and spec 4 Rule 53 (nests move, ranks stay), which is Task 19's way; `docs/egg-ranks.md` is written by Task 19. Rules 50, 53, 57 and 59 (the world parts) are covered there. game_creator's condition (every Uncommon spot easier than every Rare spot) is Task 19's report line.
 
 ### Part 3: Analytics, a whole session, and the Play proof
 
 **Task 12: Analytics for ranks**
+- Stands on: plan 6 Task 8 (the director that fires `woke`, built).
 - Spec rules: section 10 ("Success signals").
 - Files: `src/server/Analytics.luau`, `src/server/Eggs/Grab.luau` (its `grabbed` Signal already gives the rarity), `src/server/init.server.luau` (connects "WakeRank" to the director's `woke` Signal, as plan 3 did for "WakeWayUp"), `Analytics.spec`.
 - What it logs:
@@ -177,14 +183,14 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Failing tests first: one per event and breakdown, with a fake AnalyticsService. For "WakeRank": a waker carrying an Epic logs "Epic" with the server size; an empty-handed waker logs "None"; a wake with nobody named logs "None"; the rank is the one carried when he woke, not after the egg goes back; one wake-up logs exactly one "WakeRank", and "GiantWoke"'s breakdowns are the same as before.
 - Done when: the tests pass, and in Play the console shows one "EggGrab" line per grab and one "WakeRank" line per wake-up.
 
-**Task 13: A whole session, and the Play proof**
-- Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests"); Rule 46's Play proof (the bot walk to every nest and back); section 9's risk rows (the bot walk's peaks against the scores; the rank glow from all 8 gardens).
-- Files: `src/tests/server/Sessions/RanksSession.spec.luau` (new), `tools/play/bot-walk-legs.luau` (legs to every nest and back).
-- The test: a brand-new solo player with the real `Config`, `Noise`, `SleepMeter`, `GiantDirector`, `Banking` and `Grab` (with stand-ins for the tracker and the prompts) banks a Common, then an Uncommon, then the Rare-rank nest, then keeps going to an Epic-rank nest: each egg's `Carrying` and banked rank are the nest's rank; the Epic carry is as loud and as slow as a Rare; walking the scored route, each meter peak lands inside its nest's band (an Epic heist may wake him, and then he wakes); after the first Rare home they are no longer new (plan 1).
-- Failing test first: the test itself. The builder sets the Epic carry noise to the Uncommon's once on purpose and shows it fail.
-- Done when the test passes, and the Play proof is in the report (sound muted):
+**Task 13: The Play proof** (the whole-session test is cut, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): banked rank equals nest rank is plan 5 Task 21; an Epic carries like a Rare is Task 1 test 3; peaks inside the band are Task 9's scores and this task's bot-walk peaks; "no longer new after the first Rare" is plan 1)
+- Stands on: plan 5 Tasks 19 and 20 (nests at their final spots, fair), plan 3 Tasks 2 and 3 (the live ladder noise), and plan 4 Tasks 3 and 4 (the labels and the glow, built).
+- Spec rules: Rule 46's Play proof (the bot walk to every nest and back); section 9's risk rows (the bot walk's peaks against the scores; the rank glow from all 8 gardens).
+- Files: `tools/play/bot-walk-legs.luau` (legs to every nest and back). No test file.
+- Done when, with the Play proof in the report (sound muted):
   1. The bot walk reaches every nest and comes back with no jump, along each nest's scored route (up by its quietest trip up, home by its quietest trip home, walk and climb links only), and records each nest's real peak, walking with no Tiptoe. A gap of more than 5 points from its score is written in the build proof and fixed before review (section 9).
   2. Screenshots on a computer and the iPhone 14 of every section 6 state: looking at him from a garden (all five ranks in view), standing by an Epic and a Legendary egg, carrying each, and home with each. The main chat sends them to designer, who checks the eye limit from all 8 spawn spots.
+  3. (from Task 4) The spawn view from all 8 gardens on a computer and the iPhone 14 (16 shots), compared with `view-ranks.png`, `view-phone-ranks.png`, `ranks-desktop.png` and `ranks-phone.png`, and designer's eye-limit check.
 
 ## Every rule is covered
 
@@ -193,17 +199,17 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 | Rule 46 (Every nest gets a difficulty score) | 7, 9, 13 |
 | Rule 47 (How the score is worked out) | 7 (and plan 3, Task 11) |
 | Rule 48 (The score uses the egg the nest would hold) | 7 |
-| Rule 49 (Higher eggs carry like a Rare) | 1, 13 |
-| Rule 50 (The score sets the rank) | 4, 8, 11 |
+| Rule 49 (Higher eggs carry like a Rare) | 1 (and plan 5 Task 21) |
+| Rule 50 (The score sets the rank) | 4, 8, and plan 5 Task 19 (Task 11 merged) |
 | Rule 51 (One colour per rank) | 1, 2, 3 |
 | Rule 52 (The rank shows everywhere) | 2, 3, 4 |
-| Rule 53 (A nest's rank is fixed) | 11 |
+| Rule 53 (A nest's rank is fixed) | plan 5 Task 19 |
 | Rule 54 (The check fails when a nest drifts) | 8, 9 |
 | Rule 55 (It runs on every test run) | 9 |
 | Rule 56 (Close calls are flagged) | 8, 10 |
-| Rule 57 (A report Adam can read) | 10, 11 |
-| Rule 58 (Harder rank, better pets) | 5 |
-| Rule 59 (Eggs sit on something you can see) | 6, 9, 11 |
+| Rule 57 (A report Adam can read) | 10, and plan 5 Task 19 (the file) |
+| Rule 58 (Harder rank, better pets) | 5 (moved to spec 2) |
+| Rule 59 (Eggs sit on something you can see) | 6, 9, and plan 5 Task 19 |
 | Section 10 (Success signals) | 12 |
 
 **Built in a later plan:** Rule 59 on spec 5's real nests, and the nest counts per rank (plan 5). Rare egg 4's spot is replaced in plan 5, which fixes the eye limit there.
@@ -213,7 +219,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 | What | Rule | Who checks |
 |---|---|---|
 | The eye limit: no egg above Common touches his face skin on screen, from all 8 spawn spots and the belly path | Rule 50 | designer (spec section 4: not part of the automatic run) |
-| The rank glow fades in smoothly between 55 and 75 studs, with no flicker or pop | Section 6 | builder (Task 4), designer |
+| The rank glow fades in smoothly between 55 and 75 studs, with no flicker or pop | Section 6 | builder (Task 4), designer; the 8-garden spawn shots in Task 13 |
 | Blue against purple on a small phone screen | Rule 52 | designer; the rank word shows within 75 studs |
 | Every nest's real peak within 5 points of its score | Section 9 | builder (Task 13), code_lead |
 | How often each rank wakes him; Epic and Legendary taken more over a session | Section 10 | Only a published game sends analytics |

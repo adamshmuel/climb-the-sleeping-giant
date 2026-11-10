@@ -547,8 +547,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Then (b): the check runs on the real world.
 - Done when: the tests pass on the real world.
 
-**Task 19: Every nest scored and ranked**
-- Stands on: Task 12 (the 38 nests, built), Tasks 13 to 16 (straps, ledges, walk area, steep layer and seam, built), Task 18a (the jump check, built: this task re-runs it on the real nests), Task 26 (the quiet ladder ways down, built: it changes the noise a heist scores), and plan 4 Task 9 (the difficulty check, built).
+**Task 19: Every nest scored and ranked** (plan 4 Task 11 merged in (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
+- Stands on: Task 12 (the 38 nests, built), Tasks 13 to 16 (straps, ledges, walk area, steep layer and seam, built), Tasks 18a and 18b (the jump check, built: this task re-runs it on the real nests), Task 26a (the quiet ladder ways down, built: it changes the noise a heist scores), and plan 4 Task 9 (the difficulty check on the real world, built). Through plan 4 Task 9 it also stands on plan 3 Tasks 2, 9, 11, 12a, 12b and 13, and on Task 22b (the last ground change, built or closed), and plan 4 Tasks 6, 7, 8 and 10.
+- **Merged from plan 4 Task 11:** it sets no rank from a score (spec 5 Rule 71 and spec 4 Rule 53: nests move, ranks stay). Every nest already has its `NestName` (Task 12) and V1's `EggSpot_Rare_4` is gone (Task 12, its test 7), so only the check stays: every nest has a `NestName`. The report also says whether every Uncommon spot still scores easier than every Rare spot (game_creator's condition from stuck safety Task 24) and how many nests each rank has. `docs/egg-ranks.md` is written here.
 - Spec rules: Rule 70 (Every egg waits in a nest): "pass every check of Rule 46 (Every nest gets a difficulty score)" and "rest on a visible surface". Rule 71 (How many eggs and nests): "a nest is placed, scored, and moved until each rank has its count". Spot rules: the cuff back pocket, "Sliding toward Rare egg 1", the Legendary cap nests. Spec 4's Rule 59 (Eggs sit on something you can see) on the real nests. Section 5: "Rank targets when placing".
 - Files: `tools/world/21-nests.luau` (its spot table), `docs/egg-ranks.md` (from `tools/report/egg-ranks.luau`), `WalkMap.spec.luau`.
 - What it does: plan 4's check (Task 9) now scores all 38 nests on the real world with the walk area, the straps and the ledges built. Each nest whose score is outside its target, or less than 3 points inside its band, is moved by the spec's own fix, in the script's table, never by changing its rank or a number: a Rare nest over 80 slides toward Rare egg 1 (no closer than 6 studs); the back cuff pocket over 127 moves toward the front pocket (no further than z −8); a cap nest under 130 moves up the cap, and one with a Tiptoe peak of 60 or more moves toward the cap ladder top; a nest that scores too low gets a longer walk, never a move toward his face. A move that would break a spot rule, the eye limit or a twin is not made: the report goes to the main chat for game_creator and designer.
@@ -559,25 +560,42 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the check passes, every rank has its count by score, the guard-top jump check passes on the real nests, every nest passes Rule 59 (the fold nests lean, their eggs stand upright), `docs/egg-ranks.md` is rewritten from the tool and matches the run, plan 2's slide-guard test passes with the nests in its list, and designer is sent the list of moved nests to re-check the eye limit from all 8 gardens.
 
 **Task 20: Every rank is fair from every way up**
-- Stands on: Task 19 (every nest at its final, scored spot, built) and plan 3 Task 12 (`FairnessCheck`, built).
+- Stands on: Task 19 (every nest at its final, scored spot, built) and plan 3 Task 12b (`FairnessCheck`, built). It also carries plan 4 Task 9's fairness bullet: no Rare heist reaches 100, and per rank no way up is more than 5 points quieter than another (one check, once). If a fix moves a ladder top, the work goes back to plan 3 Task 9.
 - Spec rules: Rule 73 (Every rank is fair from every way up). Spec 3's Rule 41 (Every way up is equally loud): the beard–belly fold and the Epic cuff front pocket heists through all four ways up, and "a solo walking heist to any Rare nest must not wake him". Story E's second case. Spec 3's Check A1 (the parts left to this plan).
-- Files: `src/server/World/FairnessCheck.luau` (plan 3, Task 12), its test, `WalkMap.spec.luau`.
+- Files: `src/server/World/FairnessCheck.luau` (plan 3, Task 12b), its test, `WalkMap.spec.luau`.
 - What it adds: for each rank on him (Uncommon to Legendary), the quietest heist to a nest of that rank through each way up, compared: no way up more than 5 points quieter than another (Epic and Legendary on the meter with no 100 cap). For the beard–belly fold and the Epic cuff front pocket, each nest's six peaks within 5 points (the left nest for gardens on his left, its twin for his right). No heist to any Rare nest reaches 100 through any way up. The peak table is printed for the report.
 - Failing tests first (fake worlds): a rank whose quietest nest through one way up is 8 points quieter fails, naming the rank and both ways up; the same at 4 points passes; a Rare nest peaking 101 fails.
 - Done when: the tests pass on the real world, and the peak table is in the report. If a pair fails, the fix moves a nest (Task 19's table) or a ladder top (plan 3's scripts), never a noise number.
 
 ### Part 4: A whole session, the bot walk and the Play proof
 
-**Task 21: A whole session with nests**
+**Task 21 is split into 21a and 21b** (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): 21a is the bank-and-refill part (Common, Uncommon, Rare, the refills, its red-first check) and starts now. 21b is the Epic cuff, the wake-up and the catch: it runs the real `GiantDirector` and `Catcher`, which plan 6 Tasks 1, 3 and 8 rewrite (`Slams.caught` goes, the director gets new settings), so it waits for them. Both write the same spec file `NestsSession.spec.luau`. Card: `work/p5t21/21-card.md` (Step 1, 3 and 4 are 21a; Step 2 is 21b).
+
+**Task 21a: A whole session with nests, the meadow and Rare part**
 - Stands on: Tasks 1 to 11 (every piece of nest and slide code, built). It uses fake nests, so it needs no world task.
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests").
 - Files: `src/tests/server/Sessions/NestsSession.spec.luau` (new).
 - The test: a brand-new solo player with the real `Config`, `EggSlots`, `Grab`, `Banking`, `Catcher`, `GiantDirector`, `Noise` and `SleepMeter`, stand-ins for the tracker and the prompts, a fake clock and a fixed "random". They join, bank the meadow Common (the next one pops on the garden's other nest 10 s later), then an Uncommon, then a Rare (it refills 60 s later on a different Rare nest, never within 15 studs of them), then keep going: walk to an Epic cuff nest (every step there counts as Belly), wake him while carrying it, get caught (the egg goes back to its nest, locked if it is on the right cuff), wait out the wake-up (the nest unlocks once he sleeps and his arm is down, at least 0.5 s after he sleeps), take it again and bank it. Checks: each banked egg's rank is its nest's rank; no rank ever has more eggs out than slots; no empty nest's prompt is on; "EggRefill" is logged once per refill.
 - Failing test first: the test itself. The builder makes the refill pick ignore the 15-stud limit once on purpose and shows it fail.
 - Done when: the test passes.
+- **21a covers** the first half of the test (join, bank the Common, the Uncommon and the Rare, each refill, and the checks on rank, slots, prompts and "EggRefill"), and its red-first check. **21b covers** the second half (the walk to the Epic cuff nest, the wake-up, the catch, the locked nest, the take again and the bank).
 
-**Task 22: The bot walk on the walk area**
-- Stands on: Task 7 (the prompts, built), Task 12 (the nests, built), Tasks 15d, 15e, 15e2, 15e3, 16, 18a and 18b (walk fixes, walk-offs, the steep curb tops its strap and ledge legs walk beside, the cuff art in the world, seam, jump check, built). Its strap and pocket legs take 15b's pocket grab cases.
+**Task 21b: A whole session with nests, the Epic cuff, the wake-up and the catch**
+- Stands on: Task 21a (built) and plan 6 Tasks 1, 3 and 8 (the new slam times, the caught rules and the director that hunts everyone, built: the test runs the real `GiantDirector` and `Catcher`).
+- Files: as Task 21a's block above, plus the `GrabRig.newDeps` helper (`src/tests/server/Eggs/GrabRig.luau`, made in 21a; code_lead reviewed it).
+- Spec rules, files, test and done: as Task 21a's block above, its second half. It adds test B to the same file.
+
+**Task 22p: The climb probe (read-only; split from Task 22 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))**
+- Stands on: Tasks 15d, 15e, 15e2, 15e3, 16, 18a and 18b (built: the walk fixes, walk-offs, steep curb tops, cuff art, seam and jump check).
+- For: core gameplay (it decides whether Task 22b changes the ground).
+- Spec rules: Rule 80 (The seam shows where walking ends): "the stuck scan and the bot walk must find no other" climb.
+- Files: `tools/play/bot-walk-legs.luau` (a probe leg).
+- What it does: at points every 2 studs under his beard and along both sides, the bot walks into him; any "Climbing" state (`Enum.HumanoidStateType.Climbing`) away from the eight ladders is listed with its place. It changes nothing in the world. The result decides Task 22b: parts named, or "nothing found".
+- Failing test first: none (a Play tool). One probe point made to fail on purpose (a test truss, made in Play only) proves it can fail.
+- Done when: the list of climb places, or "nothing found", is in the report, with each place's coordinates.
+
+**Task 22: The bot walk on the walk area** (everything but the climb probe, which is Task 22p; split (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
+- Stands on: Task 22b (the beard climb fix, built or closed), Tasks 19 and 20 (the nests at their final spots, fair: the strap and pocket legs walk to them), Task 7 (the prompts, built), Task 12 (the nests, built), Tasks 15d, 15e, 15e2, 15e3, 16, 18a and 18b (walk fixes, walk-offs, the steep curb tops its strap and ledge legs walk beside, the cuff art in the world, seam, jump check, built). Its strap and pocket legs take 15b's pocket grab cases.
 - Spec rules: the Play proof of Rule 79 (Walk anywhere down to the seam) and Rule 82 (No new way onto the belly) (Rule 24: A bot walks every way). Rule 80: "the stuck scan and the bot walk must find no other" climb. Section 6's Play checks: straps and ledges both arms with an egg, the seam at 65°, the three fixes, the knee pocket area, the beard tip, the mid-air grab.
 - Files: `tools/play/bot-walk-legs.luau`, `tools/play/bot-walk.luau` (plan 2, Task 8).
 - What it adds:
@@ -585,23 +603,25 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   - step-offs every 4 studs just past the seam: each must slide off with one Belly thud. They take Task 15e's moved cases (`work/p5t15e/time-decision.md`): the seam slides D3, and the hip slides G at z −36 on both sides (SR36, SL36). A slide that lands on the leg band below his hip (x ±30 to ±34, z −56 to −49, y 18 to 26) passes if the body walks off, falls off, or is rescued within 4 s of pressing (`work/p5t15e/pocket-decision.md`);
   - every belly crossing uses product's crossing pass rule (`work/p5t15e/xk-decision.md`): the body ends on the other half (the sign of x flips and x is at least 6 studs from the middle), on his body above the seam, with no stall (under 2 studs a second for 1 s or more);
   - jump tries at his sides, his cuffs and the walk area from points every 3 studs along every jump surface, his thighs and hip crease included (reached on foot from each boot top) and every other body surface Task 18's walk flood finds; each must land back where it started or below, never in the walk area;
-  - **the climb probe:** at points every 2 studs under his beard and along both sides, the bot walks into him; any "Climbing" state (`Enum.HumanoidStateType.Climbing`) away from the eight ladders fails, with its place. Task 22b fixes what it finds at (−14, 67, −14);
+  - **the climb probe:** moved to Task 22p, which runs first. Task 22b re-runs it after its fix, and the result is copied here;
   - **the belly-pocket grab starts on the belly top, inside the walk area** (15b started it from the crease, below the seam, where no player route goes);
   - **the cuff join recheck (designer, 2026-11-09):** with the pocket art built, `CuffWalk.Join_Left/_Right` (skipped by 15d's check, accepted by designer) must show a notch under about 1.6 studs at the top; the result is written down.
   - **the mid-air grab try:** from each lap plank and from his hip crease on each side (the thigh planks were dropped on 2026-11-03), jumps toward Rare egg 1 and the belly pocket while holding the grab key; the result is written down.
 - Failing test first: none (a Play tool). One leg made to fail on purpose (a test step on a strap, made in Play only) proves it can fail.
-- Done when: every leg passes, the climb probe finds nothing, and the results table is in the report. If the mid-air grab worked even once, Task 25 is built before review.
+- Done when: every leg passes, the probe's result (Task 22p, re-run in Task 22b) is copied into the results table, and the results table is in the report. If the mid-air grab worked even once, Task 25 is built before review.
 
-**Task 22b: The beard climb fix** (moved out of Task 15 on 2026-11-08, product's step-back decision)
-- Stands on: Task 22's climb probe (built and run: it names each place a player climbs away from the eight ladders).
+**Task 22b: The beard climb fix** (moved out of Task 15 on 2026-11-08, product's step-back decision; built before Tasks 19, 20 and 22 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
+- Stands on: Task 22p (run: it names each place a player climbs away from the eight ladders), and plan 3 Task 9q's result (the right boot-top check; a ground fix from it is built first).
 - Spec rules: Rule 80 (The seam shows where walking ends): "The accidental climbing under his beard near (−14, 67, −14) must be removed", "the stuck scan and the bot walk must find no other".
 - Size: priced by code_lead from the probe's result, before the card. If the probe finds nothing there, this task is closed with that result.
 - What: the parts the probe names are changed so they can't be climbed, the same on both sides where mirrored; backup and reach check as every world task. Each spot is measured with rays that see every solid part.
 - Failing test first: a real-world test naming each probe spot, red before the change.
-- Done when: the test passes, the probe re-run finds no climb away from the ladders, and one `WaysUpCheck` run on the real world passes.
+- Done when: the test passes, the probe (Task 22p) re-run finds no climb away from the ladders, and one `WaysUpCheck` run on the real world passes.
 
-**Task 23: The Play proof**
-- Stands on: Tasks 8, 9 and 10 (the pop, the riding cuff, the slide tip, built), Task 12 (the nests, built), Task 16 (the seam, built), Task 17 (the footprints to every nest, built), Task 19 (nests at their final spots, built) and Task 22 (the bot walk passed).
+**Task 23 is split into 23a and 23b** (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): 23a is items 1 to 5, 7, 7b, 7c and 7d. 23b is items 6 and 6b (the wake-ups, the arm, the red circles), which need plan 6's arm, slam circle and director. What is checked, and the done line, are below.
+
+**Task 23a: The Play proof, items 1 to 5, 7, 7b, 7c and 7d**
+- Stands on: Tasks 8, 9 and 10 (the pop, the riding cuff, the slide tip, built), Task 12 (the nests, built), Task 16 (the seam, built), Task 17 (the footprints to every nest, built), Tasks 19 and 20 (nests at their final spots, fair), Task 22 (the bot walk passed) and Task 22b.
 - Spec rules: section 6 ("Checks that need Play before the build review"), the Play check of Rule 100 (Nothing you stand on moves while he sleeps), the 3 seconds of Rule 84 (A slide is a fall, and the first one gets a tip), and spec 3's Rule 36 (The lap planks), condition 3, in Play.
 - Files: none (a Play check). Screenshots go in the report.
 - What is checked, sound muted, on a computer and the iPhone 14 in the device simulator:
@@ -619,9 +639,13 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   7b. (Task 10 veto, 2026-11-10) The slide tip on screen: walk off the belly seam with a client `hum:Move` loop (not `character_navigation`), and shoot "💥 Too steep! Slipping is loud." at the bottom centre within its 3 s, empty-handed and carrying (the pill comes back after), computer and phone, from Task 10's camera (CAM (-11.55, 56.87, -18.20), LOOK (-23.92, 52.87, -28.35)). Task 10 proved the remote fires on a real slide and the text in unit tests; `screen_capture` timed out twice in Play.
   7c. (Task 11, accepted for now by product, 2026-11-10) The analytics hookup: first check in one call that the nest's prompt fires `PromptShown`, then grab one meadow nest egg in Play and count exactly one new `LogCustomEvent` line when it refills (the console never prints event names). Task 11's Play job and code_lead's own try could not grab from 4.5 studs: the prompt (on, 8 studs, line of sight off) never showed, so EggRefill was proven only in unit tests. code_lead's trace found the cause in the session, not the nests: a fresh default prompt 2 studs away also never showed. So the first call makes a fresh test prompt; if it shows 0 times, restart Play before the grab. This item is also the first Play grab from a Task 12 nest.
   7d. (Task 26b veto, 2026-11-10) The quiet drops on the phone and the belly ramp. On the iPhone 14, in a fresh Play session (no `hum:Move` loop left bound), climb each of the 4 ladders once with the thumbstick and the game's own camera, and let go where the ladder's let-go may land: no thud (biggest single meter step under 2). Then walk down each belly ramp to the lap landing on the computer: no thud. Task 26b's Play once saw one 30.3 step on the left belly ramp walk and a quiet redo (0.6), cause not found. If it shows again, code_lead traces it before review. Task 26b proved on the computer: every let-go case (cap 1.1, beard top 0.7, beard middle 0.7 to 0.8), the boot ladder let-go (0.7) and the side falls (one thud each).
-- Done when: every shot is in the report with what it shows, compared with the mockups. The main chat sends them to designer. If item 6 finds a red circle on the resting shape, a player bumping into it, or a trapped player, Task 24 is built before review.
+- Done when (23a): every shot of items 1 to 5, 7, 7b, 7c and 7d is in the report with what it shows, compared with the mockups. The main chat sends them to designer.
 
-**Task 24: The fallback: his arm's solid shape moves with the arm, and the float clears its resting space** (built only if Task 23, item 6 finds a red circle on the arm's resting shape, a player bumping into it, or a trapped player; section 8 sets this fix)
+**Task 23b: The Play proof, items 6 and 6b (the wake-ups, the arm, the red circles)**
+- Stands on: Task 23a (built), plan 6 Tasks 5, 6, 10 and 12 (build step 7a: the show-slam spots, the slam circles, the arm and the shakes) and plan 6 Task 8 (the director). Items 6 and 6b are written above.
+- Done when (23b): every shot of items 6 and 6b is in the report with what it shows. If item 6 finds a red circle on the resting shape, a player bumping into it, or a trapped player, Task 24 is built before review.
+
+**Task 24: The fallback: his arm's solid shape moves with the arm, and the float clears its resting space** (built only if Task 23b, item 6 finds a red circle on the arm's resting shape, a player bumping into it, or a trapped player; section 8 sets this fix)
 - Stands on: Task 23's item 6 result (run, and it found one of those), Task 9 (the riding cuff, built), his arm at rest (plan 6 keeps it).
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps): "no player may ever be left inside his arm when it comes back down". Section 8, "A player stands where his arm rests while it is raised".
 - Files: `tools/world/22-cuff-walk.luau` (one more step: it also marks the solid parts of his right arm, from plan 2's collision source, `RidesRightArm`; no new script, so plan 6's world script numbers don't change), `src/client/Fx/GiantFx.luau` (moves them like every other marked piece), `src/server/Giant/SlamSurface.luau` (its ray skips the arm's resting shape while the arm is raised), `src/server/Giant/GiantDirector.luau`, `src/server/Players/Floater.luau`, `src/server/Giant/BounceOff.luau`, their tests, `RealWorld.spec.luau`.

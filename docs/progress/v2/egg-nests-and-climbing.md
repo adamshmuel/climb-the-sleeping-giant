@@ -41,12 +41,15 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 17c: The footprints reach the cap nests | ☑ done `bab793ef` | code_lead approved 2026-11-10; full run 3142/1 (only the standing walk-area red); Play shots PASS on computer and phone, phone cap view HIDDEN: designer and game_creator ruled accept (the trail shows the way; the gold egg appears after 2-3 steps; the phone shot's camera faced sideways) |
 | Egg nests and climbing (V2 spec 5) | Task 18a: No new way onto the belly (the walk part, the jump limits, and the new `WaysUpCheck`; plan 3 Task 10 merged here) | ☑ done (walk control 103 per side, 0 with the landing out; real-world jump check 0 problems, 1 accepted beside the left ramp top; ~95 min vs 87 planned) | |
 | Egg nests and climbing (V2 spec 5) | Task 18b: Nothing invisible overhead (plan 3 Task 10's second check, same file) | ☑ done | 2026-11-10, about 10 min. `WaysUpCheck.overheadProblems` casts up 15 studs from each of the 95 ways-up spots (lap planks, landing, apron, belly ramps); 0 invisible solid parts overhead. |
-| Egg nests and climbing (V2 spec 5) | Task 19: Every nest scored and ranked | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 20: Every rank is fair from every way up | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 21: A whole session with nests | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 22: The bot walk on the walk area | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 22b: The beard climb fix (moved out of Task 15, 2026-11-08) | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 23: The Play proof | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 19: Every nest scored and ranked (plan 4 Task 11 merged in; stands on plan 4 Task 9, Task 26a, Tasks 12 to 18b) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 20: Every rank is fair from every way up (takes plan 4 Task 9's fairness bullet; stands on Task 19 and plan 3 Task 12b) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 21a: A whole session, meadow and Rare part (cards `work/p5t21/`, Steps 1, 3, 4; stands on Tasks 1 to 11) | ☑ done 2026-11-10, commit `aa898c49`: test A (Common, Uncommon, Rare banked, refills at 10 s, 30 s and 60 s, 15-stud player rule proven red first); full run 3256 passed and 1 failed (the standing walk-area red); about 20 min | builder, runner, code_lead |
+| Egg nests and climbing (V2 spec 5) | Task 21b: A whole session, Epic cuff, wake-up and catch (card Step 2; stands on 21a and plan 6 Tasks 1, 3, 8) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 22p: The climb probe (read-only; stands on Tasks 15d to 18b) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 22: The bot walk on the walk area, without the probe (stands on 22b, 19, 20) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 22b: The beard climb fix (moved out of Task 15, 2026-11-08; stands on 22p and plan 3 Task 9q; built before 19, 20, 22) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 23a: The Play proof, items 1 to 5, 7, 7b, 7c, 7d (stands on 19, 20, 22) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 23b: The Play proof, items 6 and 6b (stands on 23a, plan 6 Tasks 5, 6, 10, 12 and 8) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 24: Floating a player out of his arm's resting space (only if Task 23 finds a trapped player) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 25: A grab needs ground under you (only if Task 22 finds a mid-air grab) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 26a: The ladder ways down are quiet, code (58 min; cards in `work/p5t26/`; added 2026-10-21 at the stuck safety Task 25 review; built after Task 10, before Task 19) | ☑ done | 2026-11-10, about 15 min. `WayDown` judges a drop, `QuietDrops` clears the thud before the slide watch: cap and beard let-go onto his body and boot-ladder drops near the foot are quiet; jumps and slides still thud. Full run 3254/1 (only the standing walk-area red). |

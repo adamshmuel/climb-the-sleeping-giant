@@ -7,7 +7,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
 | Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier (stands on nothing) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ☑ done (committed ec95c9b; designer: before and after same or better, 2026-11-04) | builder, code_lead, designer |
 | Gardens and ways up (V2 spec 3) | Task 4b: World prep: the two side ladders and their side pads | removed 2026-11-03 (Adam dropped them) | product |
@@ -39,11 +39,13 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 8d: Landing spots 9 and 10 by the boot ladders (10 in all, **Rule 43 (Landing spots on every side)**) | ☑ done 2026-11-10: spots 9 (−48, −69) and 10 (48, −69), 5×6×5 box, ladder-foot check (5 studs); full run 3025 passed, 2 accepted reds; both Play walks ARRIVED (7.90 s, 8.02 s); `check.sh` "All checks passed."; close review approved, rerun after the type fix "already done". Steps 1 and 2 went over their Studio caps (5 and 6 calls against 3 and 2). Card `work/p3t8/8d-card.md` | builder, runner, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 8e: A bigger Z Z Z on phones, and the dark-box check (**Rule 1 (Spawn facing the giant)**) | ☑ done (2026-11-10): world Zs unchanged; dark box listed on the real phone: only Roblox's thumbstick, none of ours; after product's Rule 1 edit the Zs-and-meter checks are removed from the Zones spec; full run 3023 passed, 2 failed (the accepted EggSpots and OnTheGiant). About 125 min in all against 25; cause: an unmeasured pass bar, then faults in the measure job | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 8f: Zs on the meter (**Rule 1 (Spawn facing the giant)**, as edited) | ✓ done 2026-11-10, checked by code_lead: full test run 3055 passed, 2 accepted reds; computer and phone screen checks passed (phone 0 of 3 Zs fail); designer: same as the mockup. About 40 min vs 55 planned, after a step back at 04:33 | builder, code_lead |
-| Gardens and ways up (V2 spec 3) | Task 9: The new pieces pass the stuck scan, on one walk map per run | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 9q: The right boot top's step to the right lap plank (read-only check, split from Task 9 on 2026-11-10 by product's order ruling; about 10 min, 3 Studio calls; stands on Tasks 5, 6, 6c: built; card `work/p3t9q/`) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 9: The new pieces pass the stuck scan, on one walk map per run (stands on plan 5 Task 22b and Task 9q with its fix; runs once, late) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 10: One way onto the belly, and nothing invisible overhead | merged into plan 5 Task 18a/18b (2026-11-10) | |
-| Gardens and ways up (V2 spec 3) | Task 11: The heist replay | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 12: Every way up is equally loud | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 11: The heist replay (stands on Task 2) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 12a: `costsFrom` and `routeFrom` on fake maps (split from Task 12 on 2026-11-10; stands on nothing; plan 4 Task 7 needs it) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 12b: Every way up is equally loud, real world (stands on Tasks 9, 11, 12a, 13 and plan 5 Task 22b) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way (stands on Task 8, built; built before Task 12b) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 14: The ladder glows on your screen | removed 2026-11-03 (Adam dropped it; nothing built) | product |
 | Gardens and ways up (V2 spec 3) | Task 15a: The slam circle skips ladders and steep surfaces | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 15b: The ladder grace and the slam warning on a ladder in Play | ☐ not started | |

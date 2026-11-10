@@ -8,17 +8,17 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 |---|---|---|---|
 | Egg reachability (V2 spec 4) | Task 1: Five ranks in the game numbers | ☑ done (2026-11-10) | builder, runner (full run 3060 passed, 2 accepted), code_lead |
 | Egg reachability (V2 spec 4) | Task 2: World prep: Epic and Legendary eggs | ☑ done (2026-11-10, 12 min, planned 55) | builder, runner (full run 3122 passed, 2 accepted), code_lead. Both eggs scaled to the Rare's 7 studs (style guide). Epic tint on a phone goes to designer in plan 5 Task 12's shots. Process gain: the main chat answered the builder's height question from the style guide instead of a ruling round |
-| Egg reachability (V2 spec 4) | Task 3: The rank shows everywhere | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 4: The rank glow | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 5: Harder rank, better pets | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 6: Eggs sit on something you can see | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 7: The difficulty score for every nest | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 8: The score sets the rank, close calls and drift | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 9: The check runs on the real world on every test run | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 10: A report Adam can read | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 11: World prep: every nest's rank from the first report | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 12: Analytics for ranks | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 13: A whole session, and the Play proof | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 3: The rank shows everywhere (stands on Tasks 1, 2: built, and designer's rank mockups: present; card `work/p4t3/`) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 4: The rank glow (code, tests and the fade walk; its 16 spawn shots and the eye-limit check moved into Task 13 on 2026-11-10; stands on nothing) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 5: Harder rank, better pets | moved to spec 2 (Hatching and pets) 2026-11-10 by product: no V2 code hatches an egg | product |
+| Egg reachability (V2 spec 4) | Task 6: Eggs sit on something you can see (stands on nothing) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 7: The difficulty score for every nest (stands on plan 3 Tasks 11 and 12a) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 8: The score sets the rank, close calls and drift (stands on Tasks 6, 7) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 9: The check runs on the real world on every test run (its fairness bullet moved to plan 5 Task 20; stands on plan 3 Tasks 9 and 12b, plan 4 Tasks 6, 7, 8, 10, plan 5 Task 12) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 10: A report Adam can read (pure report and the tool; its first real-world run is Task 9's; stands on Task 8) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 11: World prep: every nest's rank from the first report | merged into plan 5 Task 19 on 2026-11-10 by product (nothing left of its own) | product |
+| Egg reachability (V2 spec 4) | Task 12: Analytics for ranks (stands on plan 6 Task 8) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 13: The Play proof (session test cut 2026-11-10 by product; plus Task 4's 16 spawn shots; stands on plan 5 Tasks 19, 20, plan 3 Tasks 2, 3, plan 4 Tasks 3, 4) | ☐ not started | |
 
 ## Notes for the next V2 review
 

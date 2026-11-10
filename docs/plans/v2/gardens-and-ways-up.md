@@ -79,6 +79,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 ### Part 2: Ladders are a little louder
 
 **Task 2: The ladder multiplier**
+- Stands on: nothing (spec 3 approved, code only; product's order ruling 2026-11-10, `work/p5t19/order-ruling.md`).
 - Spec rules: Rule 39 (Ladders are a little louder). Edge case "A player stands still on a ladder".
 - Files: `src/shared/Config.luau` (`Config.Noise.LadderMultiplier = 1.2`), `src/server/Giant/Noise.luau` (pure), `Noise.spec`, `Config.spec`.
 - What changes: `Noise.perSecond` takes a new `onLadder` input. When it is true and the player moves, the noise is multiplied by 1.2, on top of the zone, the carried egg and Tiptoe.
@@ -415,10 +416,19 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Before Task 9:** these tasks use plan 2's walk map (product accepted it instead of Roblox's pathfinder, `docs/specs/v2/research/decisions-plans.md`, question 1). The stuck scan counts walk, climb and slide links; the heist checks count walk and climb links only.
 
+**Task 9q: The right boot top's step to the right lap plank (read-only check; split from Task 9 by product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`)**
+- Stands on: Tasks 5, 6 and 6c (built: the lap planks, the belly ramps, the skin closed between each boot top and the belly).
+- For: core gameplay (it decides whether a ground fix is needed before every whole-play check). Size: 1 runner job in Edit plus 1 Studio call and 1 screen shot for code_lead, about 10 min, 3 Studio calls. It changes nothing.
+- Spec rules: Rule 15 (The climb needs no jump), the walk-and-climb route from each boot top to the lap landing.
+- Files: none (a read-only measure; the script and result go in `work/p3t9q/`).
+- **The check:** Task 6c's count (`work/t6c/6c-scripts.md`, section A2) found that the right boot top reaches the right lap plank only by a slide link (a drop the player can't climb back up). With walk and climb links only it reaches nothing on the plank, while the left side reaches the belly. That may fail Rule 15's walk-and-climb route below. Not checked yet: is it the real step in the world, or the walk map? The check rebuilds the 6c A2 walk map (`work/t6c/a2-count78.luau` settings, at the game's own 70° and at 78°), prints every link between the right boot top and the right plank with its kind and the height step, and code_lead looks at that spot in one screen shot. If it is the real step, the fix goes in Task 6's world script before the tests below. If it is the map, the fix goes in `PathCheck` as this task's first red test.
+- Result: "real step" means the fix goes in Task 6's world script (a new numbered world task, before Task 9). "The map" means the fix is `PathCheck`'s first red test in Task 9 and no world change. "Nothing found" closes it. Task 9 stands on this result.
+
 **Task 9: The new pieces pass the stuck scan, on one walk map per run**
+- Stands on: plan 5 Task 22b (the beard climb fix, or its "nothing found" close), Task 9q and its fix if any (built or closed), and Task 8 (the route, built). It reads the ground, so it runs once after the last open ground change.
 - Spec rules: Rule 15 (The climb needs no jump): "every new ladder, pad, plank ... must pass the stuck scan with zero stuck spots", and the four ways up with no jump. Rule 43 (Landing spots on every side): all 10 count as meadow exits. Rule 45 (One way onto the belly), its first proof. Check C3 (the walk part).
 - Files: `src/tests/server/World/StuckScan.spec.luau` renamed `WalkMap.spec.luau` (it builds the map once in `beforeAll`), `src/server/World/PathCheck.luau` (the scan area grows to hold every new piece).
-- **First, a read-only check (1 runner call in Edit, plus 1 Studio call and 1 screen shot for code_lead; about 10 min):** Task 6c's count (`work/t6c/6c-scripts.md`, section A2) found that the right boot top reaches the right lap plank only by a slide link (a drop the player can't climb back up). With walk and climb links only it reaches nothing on the plank, while the left side reaches the belly. That may fail Rule 15's walk-and-climb route below. Not checked yet: is it the real step in the world, or the walk map? The check rebuilds the 6c A2 walk map (`work/t6c/a2-count78.luau` settings, at the game's own 70° and at 78°), prints every link between the right boot top and the right plank with its kind and the height step, and code_lead looks at that spot in one screen shot. If it is the real step, the fix goes in Task 6's world script before the tests below. If it is the map, the fix goes in `PathCheck` as this task's first red test.
+- If Task 9q found that the walk map is wrong (not the world), its fix is this task's first red test, in `PathCheck`.
 - Failing tests first:
   1. The scan with all 10 landing spots as exits, over an area holding the boot ladders, lap planks, landing, apron and belly ramps, counting walk, climb and slide links: zero stuck spots. If it finds any, the fix goes in the world script of Task 4a, 5 or 6, not in the scan.
   2. Rule 15: from each way up's foot, a route with walk and climb links only reaches Rare egg 1's spot (four routes). Each route passes through the landing.
@@ -434,6 +444,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass.
 
 **Task 11: The heist replay**
+- Stands on: Task 2 (the ladder multiplier, built: the replay uses the real `Noise.perSecond` with `onLadder`). Nothing else open (product's order ruling 2026-11-10).
 - Spec rules: Rule 41 (Every way up is equally loud): "replays the meter rules along each route". Shared with spec 4, Rule 47 (How the score is worked out).
 - Files: `src/server/World/HeistScore.luau` (new, pure), `src/tests/server/World/HeistScore.spec.luau` (new), `src/server/Giant/SleepMeter.luau` only if `drainPerSecond` isn't public yet.
 - What it does: given a route's steps (each with its length, its kind and the zone and ladder at its middle), the egg carried on the way back, and Tiptoe on or off, it works out the seconds of each step (walk speed 16, less the egg's slowdown; 70% of that on a climb), the noise of each step with the real `Noise.perSecond`, and the drain with the real `SleepMeter.drainPerSecond(1)`. The meter starts at 0, never goes below 0, has no 100 cap, and the grab is 1 second standing still. It returns the peak, the seconds on ladders and the total seconds.
@@ -445,9 +456,19 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   5. A Rare egg's slowdown makes the trip home longer and louder than an Uncommon's.
 - Done when: the tests pass.
 
-**Task 12: Every way up is equally loud**
+**Task 12 is split into 12a and 12b** (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): 12a is `PathCheck.costsFrom` and `routeFrom` on fake maps, code only, which plan 4 Task 7 needs. 12b is `FairnessCheck` on the real world; it reads the finished ground and the footprint route, and its fix may move a ladder top, so it waits for them. Plan 4 Task 7 stands on 12a only.
+
+**Task 12a: `costsFrom` and `routeFrom`**
+- Stands on: nothing (plan 2's walk map, built; fake maps only).
+- Spec rules: Rule 41 (Every way up is equally loud), the one-search-per-way-up part.
+- Files: `src/server/World/PathCheck.luau` (`costsFrom` and `routeFrom`: one search from a spot to every spot, then the route to any spot from it), `PathCheck.spec`.
+- Failing test first (fake worlds): `costsFrom` gives the same costs as `route` for every spot on a small map; `routeFrom` gives the same route as `route`.
+- Done when: the tests pass.
+
+**Task 12b: Every way up is equally loud (real world)**
+- Stands on: Task 9 (the stuck scan, built), Task 11 (`HeistScore`, built), Task 12a (`costsFrom`, built), Task 13 (the footprints count seconds, built: this check runs on its trail), and plan 5 Task 22b (the last ground change, built or closed).
 - Spec rules: Rule 41 (Every way up is equally loud), the test-run proof, for Rare egg 1 and the Uncommon rank, on the quietest route and, for the Rare egg 1 window, also on the footprint route. Check A1 (the parts that exist before spec 5).
-- Files: `src/server/World/PathCheck.luau` (`costsFrom` and `routeFrom`: one search from a spot to every spot, then the route to any spot from it), `src/server/World/FairnessCheck.luau` (new), `src/tests/server/World/FairnessCheck.spec.luau` (new, fake worlds), `WalkMap.spec.luau`, `PathCheck.spec`.
+- Files: `src/server/World/FairnessCheck.luau` (new), `src/tests/server/World/FairnessCheck.spec.luau` (new, fake worlds), `WalkMap.spec.luau`. `PathCheck.costsFrom` comes from Task 12a.
 - What it does:
   - **Quietest route:** for each way up, one search from its foot per egg weight, with walk and climb links only (see "One search per way up" above), then for each nest the trip up that way up, the 1-second grab and the trip back down it, replayed with `HeistScore`.
   - **Footprint route:** for each way up, the trail from its foot to Rare egg 1's route point, as `RouteGraph` (the footprints' own route finder, `src/client/World/RouteGraph.luau`) picks it, and back the same way carrying a Rare. `WalkMap.spec` builds each trail's steps from the real route points (`RouteData`: a link between two points with the same `Ladder` is a climb, Task 8) with the zone and ladder at each step's middle from `Zones`, and hands them to `FairnessCheck`. `FairnessCheck` itself never needs a client module. The real-world test may require `RouteGraph`, as `RealWorld.spec` already requires client modules.
@@ -456,9 +477,8 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
     - any of Rare egg 1's four footprint-route peaks is under 60 or over 80;
     - the quietest Uncommon nest through one way up is more than 5 points quieter than the quietest through another.
   - It prints a table of every peak, both routes side by side, so the report can show it.
-  - Task 13 later makes `RouteGraph` count seconds, not studs. Above a way-up foot the trail never has to choose between a ladder and a walk, so it shouldn't change; this check runs again then and must still pass.
-- Two triggers from section 5 are **reported, never fixed by the build**: Rare egg 1 over 77% through any way up (the solo drain becomes 1.75), and every ladder more than 3 points quieter or louder than the ramps (the multiplier moves by 0.1). If one fires, the report says so and the main chat takes it to game_creator. If a way up fails the 5-point gap, the fix is to move its ladder top or a plank (Rule 41), in that way up's world script.
-- Failing tests first (fake worlds): two ways up to one nest, one 10 points louder, fails naming both; the same pair 3 points apart passes; a nest peaking 85 fails the 60–80 window; a footprint route peaking 82 fails the window even when the quietest route through the same way up peaks 75; `costsFrom` gives the same costs as `route` for every spot on a small map.
+  - Two triggers from section 5 are **reported, never fixed by the build**: Rare egg 1 over 77% through any way up (the solo drain becomes 1.75), and every ladder more than 3 points quieter or louder than the ramps (the multiplier moves by 0.1). If one fires, the report says so and the main chat takes it to game_creator. If a way up fails the 5-point gap, the fix is to move its ladder top or a plank (Rule 41), in that way up's world script.
+- Failing tests first (fake worlds): two ways up to one nest, one 10 points louder, fails naming both; the same pair 3 points apart passes; a nest peaking 85 fails the 60–80 window; a footprint route peaking 82 fails the window even when the quietest route through the same way up peaks 75.
 - **The cave skirt** (added 2026-10-21, game_creator's check on stuck safety Task 22's visible cave skirt): the report runs this check twice, with `World.CaveSkirt` in place and with it moved to `ServerStorage` (put back after, and checked). Every peak must be identical (0.0 change), and no route may use a spot on a skirt top.
 - Also deletes `SleepMeter.spec`'s "spec worked example 1" (V1's legs, kept in plan 1, Task 1 only as a no-wake check): this check takes over the Rare egg 1 window on the real routes.
 - Done when: the tests pass on the real world, and the peak table is in the report (gardens, way up, quietest-route peak, footprint-route peak).
@@ -466,6 +486,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 ### Part 5: What the player sees
 
 **Task 13: Footprints take the quickest way**
+- Stands on: Task 8 (the route points and `RouteData`, built). Built before Task 12b, whose footprint-route peaks read it (product's order ruling, 2026-11-10).
 - Spec rules: Rule 42 (Footprints take the quickest way): the route and the trail end at a ladder. Check A2. Edge case "Two players whose trails use different ladders".
 - Files: `src/client/World/RouteGraph.luau` (pure), `src/client/World/Footprints.luau`, their tests, `RealWorld.spec.luau` ("the real world, footprints").
 - What changes: `RouteGraph` costs each link in seconds (see "The quickest footprint way" above). `Footprints` lays no footprints along a ladder link: the trail stops at the foot and starts again at the top.
