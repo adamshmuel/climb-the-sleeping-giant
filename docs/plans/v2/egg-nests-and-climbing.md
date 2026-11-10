@@ -169,7 +169,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 7b: Grab runs on the nests**
 - Stands on: Task 7a (`readEggSpots` gives each nest's garden, twin and arm, built).
-- For: core gameplay (eggs refill on nests, empty nests can't be grabbed). Size: card `work/p5t7/p5t7b-card.md`, 5 steps, 48 minutes, about 19 Studio calls, two builders (Steps 1-2, 3-4) and a runner.
+- For: core gameplay (eggs refill on nests, empty nests can't be grabbed). Size: card `work/p5t7/p5t7b-card.md`, 6 steps, 60 minutes, about 31 Studio calls, one builder per step from Step 2b on, and a runner. Step 2b (added 2026-11-10) moves the new tests to `GrabNests.spec.luau`, with shared helpers in `GrabRig.luau`, because `Grab.spec` passed its line stop.
 - Today's world still has V1's 16 bare spots. A refill never goes back to the nest it just left, so a rank with as many slots as spots would never refill. Until Task 12 builds the nests, `Grab.slotsFor` gives a bare rank at most its spot count minus 1 (Common 7, Uncommon 3, Rare 3; Epic and Legendary 0).
 - Spec rules: Rules 70, 74, 75, 76, 77 and 78 on the server (names above).
 - Files: `Grab.luau`, `SpotModels.luau`, `init.server.luau`, their tests.
@@ -178,9 +178,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 7c: The right cuff nests lock while he's awake**
 - Stands on: Task 7b (`Grab` on `EggSlots`, built), his arm at rest (plan 6 keeps it).
-- For: core gameplay (no grab on his raised arm). Size: card written at the Task 7b review, at most 6 steps and 1 hour.
+- For: core gameplay (no grab on his raised arm). Size: card `work/p5t7/p5t7c-card.md`, 4 steps, 40 min, about 19 Studio calls. `GiantDirector.luau` and `Config.luau` don't change: the director's `slammed` signal already fires once per landed hand, and both times are in `Config.Nests`.
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps).
-- Files: `Grab.luau`, `GiantDirector.luau`, `Config.luau` (`Config.Nests.ArmReturnSeconds`), `SpotModels.luau` (`Locked`), their tests, `GiantFx.spec.luau`.
+- Files: `Grab.luau`, `SpotModels.luau` (`Locked`), `init.server.luau` (the phase and each fist), their tests, `GiantFx/Plans.spec.luau`.
 - Failing tests first: tests 3 to 6 above.
 - Done when: the tests pass and the full run fails only the 2 accepted reds.
 

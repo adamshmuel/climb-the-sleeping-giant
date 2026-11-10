@@ -7,6 +7,16 @@ local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, Je
 local Config = require(ReplicatedStorage.Shared.Config)
 local Grab = require(ServerScriptService.Server.Eggs.Grab)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
+local GrabRig = require(script.Parent.GrabRig)
+
+type FakePlayer = GrabRig.FakePlayer
+
+local newSignal = GrabRig.newSignal
+local newTemplate = GrabRig.newTemplate
+local newSpot = GrabRig.newSpot
+local newPlayer = GrabRig.newPlayer
+local eggOnBack = GrabRig.eggOnBack
+local START_TIME = GrabRig.START_TIME
 
 describe("Grab.check", function()
 	it("accepts a living player close to the egg who carries nothing", function()
@@ -45,19 +55,10 @@ describe("Grab.check", function()
 end)
 
 -- Everything a test makes is destroyed afterwards, so the real place is never changed.
-local madeInstances: { Instance } = {}
-local stops: { () -> () } = {}
+local madeInstances = GrabRig.madeInstances
+local stops = GrabRig.stops
 
-afterEach(function()
-	for _, stop in stops do
-		stop()
-	end
-	table.clear(stops)
-	for _, instance in madeInstances do
-		instance:Destroy()
-	end
-	table.clear(madeInstances)
-end)
+afterEach(GrabRig.cleanUp)
 
 describe("Grab.createPrompt", function()
 	it("makes a one second, 8 stud, E key hold prompt that says what it grabs", function()
@@ -79,112 +80,7 @@ describe("Grab.createPrompt", function()
 	end)
 end)
 
--- A tiny stand-in for a Roblox event: Connect, Fire and Disconnect, all in plain Luau.
-local function newSignal()
-	local handlers: { (...any) -> () } = {}
-	return {
-		Connect = function(_self: any, callback: (...any) -> ())
-			table.insert(handlers, callback)
-			return {
-				Disconnect = function()
-					local at = table.find(handlers, callback)
-					if at then
-						table.remove(handlers, at)
-					end
-				end,
-			}
-		end,
-		Fire = function(_self: any, ...: any)
-			for _, handler in table.clone(handlers) do
-				handler(...)
-			end
-		end,
-		count = function(_self: any): number
-			return #handlers
-		end,
-	}
-end
-
-local function newTemplate(rarity: string): Model
-	local model = Instance.new("Model")
-	model.Name = rarity
-	local part = Instance.new("Part")
-	part.Name = "body_geom"
-	part.Size = Vector3.new(3, 5, 3)
-	part.CFrame = CFrame.new(0, 2.5, 0)
-	part.Anchored = true
-	part.Parent = model
-	model.WorldPivot = CFrame.new(0, 0, 0)
-	table.insert(madeInstances, model)
-	return model
-end
-
--- A fake egg spot: a model with a Base part holding the prompt anchor 2 studs above it, as in the real world.
-local function newSpot(name: string, rarity: Config.RarityName, x: number): WorldIndex.EggSpot
-	local model = Instance.new("Model")
-	model.Name = name
-	model:SetAttribute("Rarity", rarity)
-	local base = Instance.new("Part")
-	base.Name = "Base"
-	base.Size = Vector3.new(2, 0.2, 2)
-	base.Anchored = true
-	base.CFrame = CFrame.new(x, 0, 0)
-	base.Parent = model
-	local anchor = Instance.new("Attachment")
-	anchor.Name = "PromptAnchor"
-	anchor.Position = Vector3.new(0, 2, 0)
-	anchor.Parent = base
-	table.insert(madeInstances, model)
-	return {
-		name = name,
-		rarity = rarity,
-		cframe = CFrame.new(x, 0.1, 0),
-		promptAnchor = anchor,
-		model = model,
-	}
-end
-
-type FakePlayer = {
-	UserId: number,
-	Name: string,
-	Character: Model?,
-	attributes: Folder,
-	root: BasePart,
-	humanoid: Humanoid,
-	SetAttribute: (self: any, name: string, value: any) -> (),
-	GetAttribute: (self: any, name: string) -> any,
-}
-
--- A fake player with a living character standing at `position`. Its attributes live on a Folder.
-local function newPlayer(userId: number, position: Vector3): FakePlayer
-	local attributes = Instance.new("Folder")
-	table.insert(madeInstances, attributes)
-	local character = Instance.new("Model")
-	local humanoid = Instance.new("Humanoid")
-	humanoid.Health = 100
-	humanoid.Parent = character
-	local root = Instance.new("Part")
-	root.Name = "HumanoidRootPart"
-	root.Position = position
-	root.Parent = character
-	table.insert(madeInstances, character)
-	return {
-		UserId = userId,
-		Name = `Player{userId}`,
-		Character = character,
-		attributes = attributes,
-		root = root,
-		humanoid = humanoid,
-		SetAttribute = function(_self: any, name: string, value: any)
-			attributes:SetAttribute(name, value)
-		end,
-		GetAttribute = function(_self: any, name: string): any
-			return attributes:GetAttribute(name)
-		end,
-	}
-end
-
-type FakePrompt = { Triggered: any, destroyed: boolean, Destroy: (self: any) -> () }
+type FakePrompt = { Triggered: any, Enabled: boolean, destroyed: boolean, Destroy: (self: any) -> () }
 
 type Rig = {
 	grab: Grab.Grab,
@@ -199,16 +95,17 @@ type Rig = {
 	playerAt: (userId: number, spotName: string) -> FakePlayer,
 }
 
-local START_TIME = 1000
-
--- Starts Grab on fake spots (Common_1 and Common_2, Uncommon_1, Rare_1), fake prompts, a fake clock, a fake
--- Players service and a fake GrabMissed remote.
+-- Starts Grab on fake spots (two of each rank: Common_1/2, Uncommon_1/2, Rare_1/2), fake prompts, a fake clock, a
+-- fake Players service and a fake GrabMissed remote. Bare spots get one slot fewer than they have spots, so each
+-- rank has one egg, on its _1 spot; the _2 spot starts empty and is where the refill lands.
 local function newRig(): Rig
 	local spotList = {
 		newSpot("Common_1", "Common", 0),
 		newSpot("Common_2", "Common", 50),
 		newSpot("Uncommon_1", "Uncommon", 100),
+		newSpot("Uncommon_2", "Uncommon", 200),
 		newSpot("Rare_1", "Rare", 150),
+		newSpot("Rare_2", "Rare", 250),
 	}
 	local spots: { [string]: WorldIndex.EggSpot } = {}
 	for _, spot in spotList do
@@ -217,7 +114,12 @@ local function newRig(): Rig
 	local prompts: { [string]: FakePrompt } = {}
 	local missed: { any } = {}
 	local time = START_TIME
-	local players: any = { PlayerRemoving = newSignal() }
+	local players: any = {
+		PlayerRemoving = newSignal(),
+		GetPlayers = function()
+			return {}
+		end,
+	}
 	local heartbeat: any = newSignal()
 	local grab = Grab.start({
 		spots = spotList,
@@ -235,6 +137,7 @@ local function newRig(): Rig
 		createPrompt = function(anchor: Attachment, _rarity: Config.RarityName): any
 			local prompt: FakePrompt = {
 				Triggered = newSignal(),
+				Enabled = true,
 				destroyed = false,
 				Destroy = function(self: any)
 					self.destroyed = true
@@ -273,8 +176,15 @@ local function eggOnSpot(rig: Rig, spotName: string): Instance?
 	return rig.spots[spotName].model:FindFirstChild("Egg")
 end
 
-local function eggOnBack(player: FakePlayer): Instance?
-	return (player.Character :: Model):FindFirstChild("CarriedEgg")
+-- How many nests of `rarity` show a waiting egg (their model's Waiting attribute is true).
+local function waitingCount(rig: Rig, rarity: string): number
+	local count = 0
+	for _, spot in rig.spots do
+		if spot.model:GetAttribute("Rarity") == rarity and spot.model:GetAttribute("Waiting") == true then
+			count += 1
+		end
+	end
+	return count
 end
 
 describe("Grab.start", function()
@@ -284,7 +194,7 @@ describe("Grab.start", function()
 		for _ in rig.prompts do
 			count += 1
 		end
-		expect(count).toBe(4)
+		expect(count).toBe(6)
 	end)
 
 	it("makes a real hold prompt on every anchor when no prompt maker is given", function()
@@ -298,7 +208,12 @@ describe("Grab.start", function()
 			},
 			carriedOffset = CFrame.new(0, 0.8, 1.9),
 			carriedHeight = 4.2,
-			players = { PlayerRemoving = newSignal() } :: any,
+			players = {
+				PlayerRemoving = newSignal(),
+				GetPlayers = function()
+					return {}
+				end,
+			} :: any,
 			heartbeat = newSignal() :: any,
 			grabMissed = function() end,
 			now = function()
@@ -312,11 +227,12 @@ describe("Grab.start", function()
 		expect(spot.promptAnchor:FindFirstChildOfClass("ProximityPrompt")).toBeNil()
 	end)
 
-	it("shows an egg on every spot at the start, with Waiting true", function()
+	it("shows an egg on each rank's first spot at the start, with Waiting true, and leaves the others empty", function()
 		local rig = newRig()
 		for name, spot in rig.spots do
-			expect(eggOnSpot(rig, name)).never.toBeNil()
-			expect(spot.model:GetAttribute("Waiting")).toBe(true)
+			local hasEgg = string.sub(name, -2) == "_1"
+			expect(eggOnSpot(rig, name) ~= nil).toBe(hasEgg)
+			expect(spot.model:GetAttribute("Waiting")).toBe(hasEgg)
 			expect(spot.model:GetAttribute("RefillAt")).toBeNil()
 		end
 	end)
@@ -330,22 +246,36 @@ describe("Grab.start", function()
 		expect(#rig.missed).toBe(0)
 	end)
 
-	it("empties the spot and starts its refill countdown", function()
+	it("empties the spot and shows no countdown", function()
 		local rig = newRig()
 		local player = rig.playerAt(1, "Common_1")
 		rig.trigger("Common_1", player)
 		local model = rig.spots.Common_1.model
 		expect(eggOnSpot(rig, "Common_1")).toBeNil()
 		expect(model:GetAttribute("Waiting")).toBe(false)
-		expect(model:GetAttribute("RefillAt")).toBe(START_TIME + 10)
+		expect(model:GetAttribute("RefillAt")).toBeNil()
 	end)
 
 	it("uses the refill time of the egg's rarity", function()
 		local rig = newRig()
+		local uncommonBefore = waitingCount(rig, "Uncommon")
+		local rareBefore = waitingCount(rig, "Rare")
 		rig.trigger("Uncommon_1", rig.playerAt(1, "Uncommon_1"))
 		rig.trigger("Rare_1", rig.playerAt(2, "Rare_1"))
-		expect(rig.spots.Uncommon_1.model:GetAttribute("RefillAt")).toBe(START_TIME + 30)
-		expect(rig.spots.Rare_1.model:GetAttribute("RefillAt")).toBe(START_TIME + 60)
+		local uncommonSeconds = Config.Rarity.Uncommon.RefillSeconds
+		local rareSeconds = Config.Rarity.Rare.RefillSeconds
+		rig.setTime(START_TIME + uncommonSeconds - 0.1)
+		rig.grab:step()
+		expect(waitingCount(rig, "Uncommon")).toBe(uncommonBefore - 1)
+		rig.setTime(START_TIME + uncommonSeconds)
+		rig.grab:step()
+		expect(waitingCount(rig, "Uncommon")).toBe(uncommonBefore)
+		rig.setTime(START_TIME + rareSeconds - 0.1)
+		rig.grab:step()
+		expect(waitingCount(rig, "Rare")).toBe(rareBefore - 1)
+		rig.setTime(START_TIME + rareSeconds)
+		rig.grab:step()
+		expect(waitingCount(rig, "Rare")).toBe(rareBefore)
 	end)
 
 	it("carries the rarity of the spot that was grabbed", function()
@@ -370,12 +300,14 @@ describe("Grab.start", function()
 		expect(eggOnBack(second)).toBeNil()
 		expect(first:GetAttribute("Carrying")).toBe("Common")
 		expect(eggOnBack(first)).never.toBeNil()
-		expect(rig.spots.Common_1.model:GetAttribute("RefillAt")).toBe(START_TIME + 10)
+		expect(rig.spots.Common_1.model:GetAttribute("RefillAt")).toBeNil()
 	end)
 
 	it("lets the player who missed grab another egg", function()
 		local rig = newRig()
 		rig.trigger("Common_1", rig.playerAt(1, "Common_1"))
+		rig.setTime(START_TIME + Config.Rarity.Common.RefillSeconds)
+		rig.grab:step() -- the refill puts the egg on Common_2
 		local second = rig.playerAt(2, "Common_2")
 		rig.trigger("Common_1", second) -- too far: second stands at Common_2, 50 studs away
 		rig.trigger("Common_2", second)
@@ -394,8 +326,8 @@ describe("Grab.start", function()
 		dead.humanoid.Health = 0
 		rig.trigger("Common_1", dead)
 
-		local carrier = rig.playerAt(4, "Common_2")
-		rig.trigger("Common_2", carrier)
+		local carrier = rig.playerAt(4, "Uncommon_1")
+		rig.trigger("Uncommon_1", carrier)
 		carrier.root.Position = rig.spots.Common_1.promptAnchor.WorldPosition
 		rig.trigger("Common_1", carrier)
 
@@ -415,11 +347,11 @@ describe("Grab.start", function()
 		rig.trigger("Common_1", dead)
 		expect(dead:GetAttribute("Carrying")).toBeNil()
 
-		local carrier = rig.playerAt(3, "Common_2")
-		rig.trigger("Common_2", carrier)
+		local carrier = rig.playerAt(3, "Uncommon_1")
+		rig.trigger("Uncommon_1", carrier)
 		carrier.root.Position = rig.spots.Common_1.promptAnchor.WorldPosition
 		rig.trigger("Common_1", carrier)
-		expect(carrier:GetAttribute("Carrying")).toBe("Common")
+		expect(carrier:GetAttribute("Carrying")).toBe("Uncommon") -- still the Uncommon egg, not a second one
 		expect(eggOnSpot(rig, "Common_1")).never.toBeNil() -- nothing was taken from Common_1
 		expect(rig.spots.Common_1.model:GetAttribute("Waiting")).toBe(true)
 	end)
@@ -491,18 +423,19 @@ describe("Grab.start", function()
 end)
 
 describe("Grab refills", function()
-	it("shows a taken Common spot's egg again 10 seconds later, and not before", function()
+	it("shows the taken Common egg again 10 seconds later on the other Common nest, and not before", function()
 		local rig = newRig()
 		rig.trigger("Common_1", rig.playerAt(1, "Common_1"))
 		rig.setTime(START_TIME + 9.9)
 		rig.grab:step()
-		expect(eggOnSpot(rig, "Common_1")).toBeNil()
-		expect(rig.spots.Common_1.model:GetAttribute("Waiting")).toBe(false)
+		expect(eggOnSpot(rig, "Common_2")).toBeNil()
+		expect(rig.spots.Common_2.model:GetAttribute("Waiting")).toBe(false)
 		rig.setTime(START_TIME + 10)
 		rig.grab:step()
-		expect(eggOnSpot(rig, "Common_1")).never.toBeNil()
-		expect(rig.spots.Common_1.model:GetAttribute("Waiting")).toBe(true)
-		expect(rig.spots.Common_1.model:GetAttribute("RefillAt")).toBeNil()
+		expect(eggOnSpot(rig, "Common_2")).never.toBeNil()
+		expect(rig.spots.Common_2.model:GetAttribute("Waiting")).toBe(true)
+		expect(rig.spots.Common_2.model:GetAttribute("RefillAt")).toBeNil()
+		expect(eggOnSpot(rig, "Common_1")).toBeNil() -- the taken nest stays empty
 	end)
 
 	it("lets the next player grab a refilled spot", function()
@@ -510,8 +443,8 @@ describe("Grab refills", function()
 		rig.trigger("Common_1", rig.playerAt(1, "Common_1"))
 		rig.setTime(START_TIME + 10)
 		rig.grab:step()
-		local second = rig.playerAt(2, "Common_1")
-		rig.trigger("Common_1", second)
+		local second = rig.playerAt(2, "Common_2")
+		rig.trigger("Common_2", second)
 		expect(second:GetAttribute("Carrying")).toBe("Common")
 		expect(#rig.missed).toBe(0)
 	end)
@@ -521,9 +454,9 @@ describe("Grab refills", function()
 		rig.trigger("Common_1", rig.playerAt(1, "Common_1"))
 		rig.setTime(START_TIME + 10)
 		rig.heartbeat:Fire(0.05) -- not yet 0.1 seconds
-		expect(eggOnSpot(rig, "Common_1")).toBeNil()
+		expect(eggOnSpot(rig, "Common_2")).toBeNil()
 		rig.heartbeat:Fire(0.05)
-		expect(eggOnSpot(rig, "Common_1")).never.toBeNil()
+		expect(eggOnSpot(rig, "Common_2")).never.toBeNil()
 	end)
 end)
 
@@ -553,12 +486,15 @@ describe("Grab returnEgg", function()
 		expect(eggOnBack(player)).toBeNil()
 		expect(player:GetAttribute("Carrying")).toBeNil()
 		local eggs = 0
-		for _, child in rig.spots.Common_1.model:GetChildren() do
-			if child.Name == "Egg" then
-				eggs += 1
+		for _, spotName in { "Common_1", "Common_2" } do
+			for _, child in rig.spots[spotName].model:GetChildren() do
+				if child.Name == "Egg" then
+					eggs += 1
+				end
 			end
 		end
-		expect(eggs).toBe(1)
+		expect(eggs).toBe(1) -- the refill's egg on Common_2; the returned one is gone
+		expect(eggOnSpot(rig, "Common_1")).toBeNil()
 	end)
 
 	it("does nothing for a player who carries nothing", function()
@@ -592,14 +528,22 @@ describe("Grab bank", function()
 		expect(player:GetAttribute("Carrying")).toBeNil()
 	end)
 
-	it("leaves the spot empty and still counting down", function()
+	it("leaves the spot empty with no countdown, and the egg still comes back", function()
 		local rig = newRig()
+		local before = waitingCount(rig, "Uncommon")
 		local player = rig.playerAt(1, "Uncommon_1")
 		rig.trigger("Uncommon_1", player)
 		rig.grab:bank(player)
 		expect(eggOnSpot(rig, "Uncommon_1")).toBeNil()
 		expect(rig.spots.Uncommon_1.model:GetAttribute("Waiting")).toBe(false)
-		expect(rig.spots.Uncommon_1.model:GetAttribute("RefillAt")).toBe(START_TIME + 30)
+		expect(rig.spots.Uncommon_1.model:GetAttribute("RefillAt")).toBeNil()
+		local seconds = Config.Rarity.Uncommon.RefillSeconds
+		rig.setTime(START_TIME + seconds - 0.1)
+		rig.grab:step()
+		expect(waitingCount(rig, "Uncommon")).toBe(before - 1)
+		rig.setTime(START_TIME + seconds)
+		rig.grab:step()
+		expect(waitingCount(rig, "Uncommon")).toBe(before)
 	end)
 
 	it("does nothing for a player who carries nothing", function()
@@ -615,6 +559,8 @@ describe("Grab bank", function()
 		local player = rig.playerAt(1, "Common_1")
 		rig.trigger("Common_1", player)
 		rig.grab:bank(player)
+		rig.setTime(START_TIME + Config.Rarity.Common.RefillSeconds)
+		rig.grab:step() -- the refill puts the egg on Common_2
 		player.root.Position = rig.spots.Common_2.promptAnchor.WorldPosition
 		rig.trigger("Common_2", player)
 		expect(player:GetAttribute("Carrying")).toBe("Common")

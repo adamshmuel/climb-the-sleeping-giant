@@ -13,8 +13,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 5: A lost egg goes back to its nest | ☑ done 2026-11-10: code approved by code_lead (narrow run EggSlots 36/0); full run 3107 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 6: Locked nests | ☑ done 2026-11-10: code approved by code_lead (narrow run EggSlots 43/0); full run 3114 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area). Its assert test is tightened in Task 7a | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 7a: The world contract reads nest models (Task 7 split in 3 on 2026-11-10) | ☑ done 2026-11-10: code approved by code_lead (Steps 1 to 3b; ClimbAndEggs 29/0; nest reading moved to `NestReader.luau`, 90 lines; `WorldIndex.luau` now 625); full run 3120 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area) | builder, code_lead |
-| Egg nests and climbing (V2 spec 5) | Task 7b: Grab runs on the nests | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 7c: The right cuff nests lock while he's awake | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 7b: Grab runs on the nests | ☑ done 2026-11-10: Grab and SpotModels run on egg slots, old EggSpots module removed, Grab tests split into GrabRig and GrabNests (narrow runs Grab 108/0, Banking 36/0); full run 3098 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area); in-game check PASS (a Common egg taken at spot A came back on Common spot B, 187 studs away, 10.0 s later); about 34 min, planned 48 then 60 | builder, runner, code_lead |
+| Egg nests and climbing (V2 spec 5) | Task 7c: The right cuff nests lock while he's awake | ☐ not started (card `work/p5t7/p5t7c-card.md`) | |
 | Egg nests and climbing (V2 spec 5) | Task 8: Empty nests show no timer, and the refill pop | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 9: The right cuff rides his arm | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 10: The slide tip | ☐ not started | |

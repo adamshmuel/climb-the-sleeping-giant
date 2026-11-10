@@ -1,17 +1,18 @@
 --!strict
--- Shows the egg on each egg spot and takes it away again, and writes the spot's Waiting and RefillAt attributes so
--- every client can read them. RefillAt is a time on the shared server clock (Workspace:GetServerTimeNow()).
--- The spot decides nothing here: EggSpots says when an egg is there, and this module only draws it.
--- A meadow spot also has a flat glow ring (GlowRing) under the egg: it is fainter when the spot is empty. The labels
--- and the countdowns are drawn by each player's own client (SpotLabels), from the Waiting and RefillAt attributes.
+-- Shows the egg on each egg spot and takes it away again, and writes the spot's Waiting attribute so every client can
+-- read it. Nothing writes RefillAt any more (Task 7b: an empty nest shows no timer); show clears an old one.
+-- The spot decides nothing here: Grab says when an egg is there, and this module only draws it.
+-- A meadow spot also has a flat glow ring (GlowRing) under the egg: show sets it to the waiting look. The labels are
+-- drawn by each player's own client (SpotLabels), from the Waiting attribute.
 
 local WorldIndex = require(script.Parent.Parent.World.WorldIndex)
 
 export type SpotModels = {
 	-- Puts a copy of the spot's egg on it (the only one), and sets Waiting to true and RefillAt to nothing.
 	show: (self: SpotModels, spotName: string) -> (),
-	-- Takes the egg off the spot, and sets Waiting to false and RefillAt to the time it comes back (nil: unknown).
-	hide: (self: SpotModels, spotName: string, refillAt: number?) -> (),
+	-- Takes the egg off the spot and sets Waiting to false. An empty nest shows no timer, so it writes no RefillAt and
+	-- leaves the glow ring as it is.
+	hide: (self: SpotModels, spotName: string) -> (),
 	-- Takes every egg away.
 	destroy: (self: SpotModels) -> (),
 }
@@ -79,12 +80,10 @@ function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.Egg
 			spot.model:SetAttribute("Waiting", true)
 			spot.model:SetAttribute("RefillAt", nil)
 		end,
-		hide = function(_self, spotName, refillAt)
+		hide = function(_self, spotName)
 			local spot = find(spotName)
 			removeEgg(spot)
-			setRing(spot, SpotModels.EMPTY_RING_TRANSPARENCY)
 			spot.model:SetAttribute("Waiting", false)
-			spot.model:SetAttribute("RefillAt", refillAt)
 		end,
 		destroy = function(_self)
 			for _, spot in spots do

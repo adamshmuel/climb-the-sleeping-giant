@@ -29,4 +29,6 @@
 - A test card's `toThrow()` with no message can pass for the wrong reason (a nil index): name the assert's message (p5t6, 2026-11-10).
 - `script_grep` patterns with parentheses match nothing: a card's sync check greps a plain unique substring (p5t7a 3b lost a Studio call, 2026-11-10).
 - Size a card by turns too: one builder has 40 turns, so a card over about 3 code steps splits between two builders with a step note between them (p5t7a builder hit 40 mid Step 3, 2026-11-10).
+- Count the spec file too: a card that adds 5 tests with a rig adds about 170 lines; if that crosses the stop, plan a new `<Name><Topic>.spec` plus a `<Name>Rig.luau` helper on the card (p5t7b Grab.spec hit 945, 2026-11-10). Budget 3 fetch pages for a narrow run over 3 spec files.
+- An Edit job that `require`s game modules gets Edit's old cached copy (p5t7b today-slots: `Config` had no `Slots`). A check of new module code runs on the Server in Play, or inside a test run (2026-11-10).
 - Progress index counts drift: recount from every `docs/progress/v2/*.md` (task rows minus removed or dropped) at each close, not by adding 1 (2026-11-10: index said 117 of 214, files gave 131 of 221).
