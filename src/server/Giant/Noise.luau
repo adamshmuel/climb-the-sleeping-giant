@@ -12,6 +12,7 @@ export type NoiseInput = {
 	moving: boolean,
 	tiptoe: boolean,
 	carrying: Config.RarityName?,
+	onLadder: boolean?, -- on a climbing ladder; a little louder (spec 3 Rule 39)
 }
 
 local Noise = {}
@@ -28,7 +29,15 @@ function Noise.perSecond(input: NoiseInput): number
 	if input.tiptoe then
 		tiptoeFactor = Config.Noise.TiptoeFactor
 	end
-	return Config.Noise.WalkPerSecond * Config.Noise.ZoneMultiplier[input.zone] * carryFactor * tiptoeFactor
+	local ladderFactor = 1
+	if input.onLadder == true then
+		ladderFactor = Config.Noise.LadderMultiplier
+	end
+	return Config.Noise.WalkPerSecond
+		* Config.Noise.ZoneMultiplier[input.zone]
+		* carryFactor
+		* tiptoeFactor
+		* ladderFactor
 end
 
 -- The one-off burst (a thud) when a jump or fall ends. `zone` is the highest zone the fall left, not where it

@@ -72,6 +72,80 @@ describe("Noise.perSecond", function()
 		local noise = Noise.perSecond({ zone = "Belly", garden = 3, moving = true, tiptoe = false, carrying = "Rare" })
 		expect(noise).toBe(0)
 	end)
+
+	it("a mover on a Boots ladder makes 4.8 a second", function()
+		local noise = Noise.perSecond({
+			zone = "Boots",
+			garden = nil,
+			moving = true,
+			tiptoe = false,
+			carrying = nil,
+			onLadder = true,
+		})
+		expect(noise).toBeCloseTo(4.8)
+	end)
+
+	it("carrying a Rare on a Boots ladder makes 12 a second", function()
+		local noise = Noise.perSecond({
+			zone = "Boots",
+			garden = nil,
+			moving = true,
+			tiptoe = false,
+			carrying = "Rare",
+			onLadder = true,
+		})
+		expect(noise).toBeCloseTo(12)
+	end)
+
+	it("Tiptoe on a Boots ladder makes 0.96 a second", function()
+		local noise = Noise.perSecond({
+			zone = "Boots",
+			garden = nil,
+			moving = true,
+			tiptoe = true,
+			carrying = nil,
+			onLadder = true,
+		})
+		expect(noise).toBeCloseTo(0.96)
+	end)
+
+	it("standing still on a ladder makes no noise", function()
+		local noise = Noise.perSecond({
+			zone = "Boots",
+			garden = nil,
+			moving = false,
+			tiptoe = false,
+			carrying = nil,
+			onLadder = true,
+		})
+		expect(noise).toBe(0)
+	end)
+
+	it("a ladder inside a garden makes no noise", function()
+		local noise = Noise.perSecond({
+			zone = "Boots",
+			garden = 3,
+			moving = true,
+			tiptoe = false,
+			carrying = nil,
+			onLadder = true,
+		})
+		expect(noise).toBe(0)
+	end)
+
+	it("off a ladder, or with onLadder left out, Boots stay at 4 a second", function()
+		local off = Noise.perSecond({
+			zone = "Boots",
+			garden = nil,
+			moving = true,
+			tiptoe = false,
+			carrying = nil,
+			onLadder = false,
+		})
+		local leftOut = Noise.perSecond({ zone = "Boots", garden = nil, moving = true, tiptoe = false, carrying = nil })
+		expect(off).toBeCloseTo(4)
+		expect(leftOut).toBeCloseTo(4)
+	end)
 end)
 
 describe("Noise.jumpBurst", function()

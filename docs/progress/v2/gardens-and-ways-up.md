@@ -7,7 +7,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
 | Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier (stands on nothing) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier (stands on nothing) | ☑ done | builder / code_lead (full run 3277/1, only the walk-area red) |
 | Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ☑ done (committed ec95c9b; designer: before and after same or better, 2026-11-04) | builder, code_lead, designer |
 | Gardens and ways up (V2 spec 3) | Task 4b: World prep: the two side ladders and their side pads | removed 2026-11-03 (Adam dropped them) | product |
