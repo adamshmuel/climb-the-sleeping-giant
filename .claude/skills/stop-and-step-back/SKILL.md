@@ -1,6 +1,6 @@
 ---
 name: stop-and-step-back
-description: The one stop process for work that is taking too long, looping or making the game look worse. Use the moment a time limit passes (10 min for a small fix, 1 h for a task or new part), two steps in a row bring nothing new, a second task is added for the same object, a plan passes 1.5 times its time, or a main character or the first view looks worse after a change.
+description: The one stop process for work that is taking too long, looping or making the game look worse. Use the moment a time limit passes (10 min for a small fix, 1 h for a task or new part), two steps in a row bring nothing new, a check fails because of its own measuring tool, a second task is added for the same object, a plan passes 1.5 times its time, or a main character or the first view looks worse after a change.
 ---
 
 # Stop and step back
@@ -17,6 +17,7 @@ The main chat checks these at every agent report and every task close. It never 
 | A task or a new part (a ladder, a bridge) passes **1 hour**, or its planned time, or is clearly heading there | task |
 | Two steps in a row bring nothing new: the same failure, the same kind of fix, no new fact, nothing built or passed | loop |
 | A second Play round on the same task ends without a pass, even if the hours look fine | loop |
+| A check fails because of how it measures (the trace, judge or job script), not the game. The first such fail stops the work: the owners ask whether the measure is needed at all before anyone fixes it | measure |
 | A second task is added for the same object or place, even if nothing failed | same object |
 | A plan passes **1.5 times** its planned time, grows by half its first task count, or reaches every 10th committed task | plan |
 | A design pick replaces what the plan is fixing: re-plan and re-price it as a new plan before any task of the new design starts | plan |
@@ -35,7 +36,7 @@ If a cheap check could make the whole problem pointless, run it first and give i
 
 ## Step 3: The same brief to the owners
 
-For a task, a loop, a plan or a look trigger, the main chat sends `game_creator`, `designer`, `product` and `code_lead` the same short brief:
+For a task, a loop, a measure, a plan or a look trigger, the main chat sends `game_creator`, `designer`, `product` and `code_lead` the same short brief:
 
 - the player's problem the work was meant to solve;
 - planned against real time and tasks, what is done and what is still to come;
