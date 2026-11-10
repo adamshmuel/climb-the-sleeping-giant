@@ -17,6 +17,9 @@ export type SignalLike = {
 -- The Warning remote, as far as this module uses it: it fires the mark (60 or 85), and at a free save (85, Net.FreeSaveKind).
 export type WarningLike = { OnClientEvent: SignalLike }
 
+-- What the Zs on the meter should show: the world Z Z Z's look now (`hidden` is the 85 warning and when he is awake).
+export type Sign = "shown" | "faded" | "hidden" | "heavy"
+
 export type Deps = {
 	world: Instance, -- Workspace.World
 	warning: WarningLike, -- the Warning remote
@@ -32,6 +35,8 @@ export type Deps = {
 	isPhone: () -> boolean, -- is this a phone screen? (asked each time, so a new window size counts)
 	cameraRight: () -> Vector3, -- the current camera's RightVector (its Z says which side of his nose the bubble goes)
 	reducedMotion: () -> boolean, -- GuiService.ReducedMotionEnabled: the bubble just appears and goes
+	-- Told the sign at the start and each time it changes, at the moments the world Z Z Z change (the Zs on the meter).
+	onSignsChanged: ((sign: Sign) -> ())?,
 }
 
 -- What start gives back: `stop` puts every piece back as it was and disconnects everything.

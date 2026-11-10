@@ -147,6 +147,23 @@ export type Caught = {
 	secondTextSize: number, -- "The egg went back. You lost nothing else."
 }
 
+-- One Z of the Z Z Z on the sleep meter (style guide: meter-zs.md). `dx` and `dy` are points from the meter's right
+-- edge and its top edge to the corner of the letter's text box; `height` is the letter's own height.
+export type ZLetter = {
+	dx: number,
+	dy: number,
+	height: number,
+}
+
+export type Zs = {
+	calm: { ZLetter },
+	heavy: { ZLetter }, -- Heavy Sleep: bigger, same place
+	letterPerTextSize: number, -- a letter is this much of its TextSize tall (TextSize = height / 0.74)
+	strokeThickness: number, -- the Sleep-blue edge
+	dropOffset: number, -- how far below the Ink copy sits
+	tilt: number, -- degrees each letter is turned
+}
+
 export type Screen = {
 	phone: boolean,
 	meter: Meter,
@@ -157,6 +174,7 @@ export type Screen = {
 	card: Card,
 	banner: Banner,
 	caught: Caught,
+	zs: Zs,
 }
 
 local computerMeter: Meter = {
@@ -431,6 +449,35 @@ table.freeze(phoneBanner)
 table.freeze(computerCaught)
 table.freeze(phoneCaught)
 
+-- The values are the style guide's (meter-zs.md, "Where", "Size" and "Heavy Sleep"): (dx, dy, letter height).
+local function letters(rows: { { number } }): { ZLetter }
+	local result: { ZLetter } = {}
+	for _, row in rows do
+		table.insert(result, table.freeze({ dx = row[1], dy = row[2], height = row[3] }))
+	end
+	return table.freeze(result)
+end
+
+local computerZs: Zs = {
+	calm = letters({ { 8, 30, 30 }, { 40, 4, 36 }, { 78, -12, 42 } }),
+	heavy = letters({ { 8, 22, 40 }, { 52, -4, 46 }, { 102, -12, 52 } }),
+	letterPerTextSize = 0.74,
+	strokeThickness = 4,
+	dropOffset = 3,
+	tilt = -12, -- counter-clockwise, like the mockup's rotate(-12deg)
+}
+
+local phoneZs: Zs = {
+	calm = letters({ { 6, 20, 24 }, { 32, 0, 28 }, { 62, -24, 32 } }),
+	heavy = letters({ { 6, 14, 32 }, { 40, -10, 38 }, { 80, -24, 44 } }),
+	letterPerTextSize = 0.74,
+	strokeThickness = 4,
+	dropOffset = 3,
+	tilt = -12, -- counter-clockwise, like the mockup's rotate(-12deg)
+}
+table.freeze(computerZs)
+table.freeze(phoneZs)
+
 -- True when the screen counts as a phone: its short side is under 500 pixels, held either way up.
 function Layout.isPhone(screenSize: Vector2): boolean
 	return math.min(screenSize.X, screenSize.Y) < PHONE_SHORT_SIDE
@@ -468,6 +515,7 @@ function Layout.forScreen(screenSize: Vector2): Screen
 		card = if phone then phoneCard else computerCard,
 		banner = if phone then phoneBanner else computerBanner,
 		caught = if phone then phoneCaught else computerCaught,
+		zs = if phone then phoneZs else computerZs,
 	}
 end
 

@@ -70,6 +70,7 @@ export type SignalLike = Shared.SignalLike
 export type WarningLike = Shared.WarningLike
 export type Deps = Shared.Deps
 export type Handle = Shared.Handle
+export type Sign = Shared.Sign
 
 GiantFx.flutterSeconds = Shared.flutterSeconds
 GiantFx.flutterCount = Shared.flutterCount
@@ -149,6 +150,26 @@ function GiantFx.start(deps: Deps): Handle
 	local sleepSigns = SleepSigns.new(state, deps, find)
 	local pose = Pose.new(state, find)
 
+	-- The look of the Z Z Z now, told to the Zs on the meter whenever it differs from the last one told.
+	local lastSign: Shared.Sign? = nil
+	local function notifySigns()
+		local sign: Shared.Sign = "shown"
+		if state.quiet or state.awake then
+			sign = "hidden"
+		elseif state.heavy then
+			sign = "heavy"
+		elseif state.fadeAt ~= nil then
+			sign = "faded"
+		end
+		if sign ~= lastSign then
+			lastSign = sign
+			local tell = deps.onSignsChanged
+			if tell ~= nil then
+				tell(sign)
+			end
+		end
+	end
+
 	-- Puts the Z Z Z and the puffs, and the bubble, in the state they should be in now. It is safe to call it again
 	-- and again: a part that streams in later gets the same state.
 	local function applyState()
@@ -179,6 +200,7 @@ function GiantFx.start(deps: Deps): Handle
 				sleepSigns.restoreEnabled(gui)
 			end
 		end
+		notifySigns()
 	end
 
 	-- True when the meter or the phase lets the Z Z Z and puffs come back: Heavy Sleep, or asleep with the meter at 75 or less.
@@ -232,6 +254,7 @@ function GiantFx.start(deps: Deps): Handle
 			if seconds >= Shared.fadeSeconds then
 				state.fadeAt = nil
 				sleepSigns.paintLetters(nil)
+				notifySigns()
 			else
 				sleepSigns.paintLetters(seconds)
 			end
@@ -534,6 +557,8 @@ function GiantFx.start(deps: Deps): Handle
 		state.poseAge = Shared.poseSeconds
 		pose.placePose(state.poseAge, deps.now())
 	end
+
+	notifySigns() -- the Zs on the meter start with the look he has now
 
 	-- A part of GiantFX that streams in later gets the state it should have now.
 	local function onFxAdded(_added: Instance)

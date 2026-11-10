@@ -80,6 +80,7 @@ export type Rig = {
 	setPhone: (phone: boolean) -> (),
 	setCameraRightZ: (z: number) -> (),
 	setReducedMotion: (reduced: boolean) -> (),
+	signs: { string }, -- every look the meter Zs were told to take (onSignsChanged), in order
 	state: Folder,
 	warning: any,
 	slamWarning: any,
@@ -304,6 +305,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 	local onPhone = false
 	local cameraRightZ = 0
 	local reducedMotion = false
+	local signs: { string } = {}
 	-- The stand-in for "is the arm's path clear of his body?": clear unless a test says otherwise. It records its calls.
 	local function clearAlways(_shoulder: Vector3, _direction: Vector3): boolean
 		return true
@@ -352,6 +354,9 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 		reducedMotion = function(): boolean
 			return reducedMotion
 		end,
+		onSignsChanged = function(sign: string)
+			table.insert(signs, sign)
+		end,
 	})
 	table.insert(stops, handle.stop)
 
@@ -386,6 +391,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 		setReducedMotion = function(reduced: boolean)
 			reducedMotion = reduced
 		end,
+		signs = signs,
 		state = state,
 		warning = warning,
 		slamWarning = slamWarning,

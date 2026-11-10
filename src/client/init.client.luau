@@ -23,7 +23,10 @@ local RescueFx = require(script.Fx.RescueFx)
 local GrabPrompt = require(script.Hud.GrabPrompt)
 local Messages = require(script.Hud.Messages)
 local Layout = require(script.Hud.Layout)
+local MeterZs = require(script.Hud.MeterZs)
+local MeterZsView = require(script.Hud.MeterZsView)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
+local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
 local BodyBeams = require(script.World.BodyBeams)
 local EggFade = require(script.World.EggFade)
@@ -122,8 +125,17 @@ if server then
 		cameraWatcher.stop()
 		shaker.stop()
 	end)
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	-- The Z Z Z beside the sleep meter. GiantFx says what they should look like; the meter says where they go.
+	local meterZs = MeterZs.new(Ui.hudTop(playerGui), {
+		reducedMotion = function(): boolean
+			return GuiService.ReducedMotionEnabled
+		end,
+	})
+	script.Destroying:Once(meterZs.destroy)
 	SleepMeterUi.start({
-		parent = Players.LocalPlayer:WaitForChild("PlayerGui"),
+		onLayout = meterZs.place,
+		parent = playerGui,
 		giantState = server.GiantState,
 		warning = { OnClientEvent = server.Warning.OnClientEvent },
 		viewport = SleepMeterUi.workspaceViewport(Workspace),
@@ -205,6 +217,9 @@ if server then
 			reducedMotion = function(): boolean
 				return GuiService.ReducedMotionEnabled
 			end,
+			onSignsChanged = function(sign: GiantFx.Sign)
+				meterZs.setLook(MeterZsView.look(sign))
+			end,
 		})
 		-- When a hand slam catches this player, the server puts them on their own spawn spot and tells every device. Their
 		-- camera snaps behind them there. The spawn spot is a loose part, so with streaming it can be missing for a moment:
@@ -264,7 +279,6 @@ if server then
 		-- overlaps a nearer one, touches the sleep meter or reaches past the top of the screen. The meter's box is read
 		-- in the same pixels the world is projected into: the meter's screen reports positions from just below the top
 		-- bar, so the bar's height is added back.
-		local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 		SpotLabels.start({
 			parent = playerGui,
 			root = eggSpots,
