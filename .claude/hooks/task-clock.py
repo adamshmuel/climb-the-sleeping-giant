@@ -30,6 +30,11 @@ VETO = (
     "docs/problems-log/teamwork.md and tell the user in one line."
 )
 
+PRODUCER = (
+    "Producer check before this agent starts (CLAUDE.md, \"The main chat's veto\"): does a player need this step now "
+    "(YAGNI)? Is this the cheapest agent and model, with a small, sized brief? Can it run in parallel with other work?"
+)
+
 
 def note(event, text):
     print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": text}}))
@@ -71,19 +76,23 @@ def main():
         return
     now = datetime.datetime.now()
     minutes = int((now - started).total_seconds() // 60)
+    text = ""
     if minutes > limit:
-        note(
-            event,
+        text = (
             f"Red flag: {task} has run {minutes} min against its {limit}-min limit. Stop the work at a safe point, "
             "tell the user in one line what is done and what isn't, and follow the stop-and-step-back skill. "
-            "Restart the clock in work/task-clock.txt only when work starts again from the decided way. " + VETO,
+            "Restart the clock in work/task-clock.txt only when work starts again from the decided way. " + VETO
         )
-        return
-    commit = last_commit(project)
-    since = max(started, commit) if commit else started
-    quiet = int((now - since).total_seconds() // 60)
-    if quiet > NO_PROGRESS:
-        note(event, f"No progress: {task} is open and nothing was committed for {quiet} min. " + VETO)
+    else:
+        commit = last_commit(project)
+        since = max(started, commit) if commit else started
+        quiet = int((now - since).total_seconds() // 60)
+        if quiet > NO_PROGRESS:
+            text = f"No progress: {task} is open and nothing was committed for {quiet} min. " + VETO
+    if event == "PreToolUse":
+        text = (text + " " + PRODUCER).strip()
+    if text:
+        note(event, text)
 
 
 if __name__ == "__main__":

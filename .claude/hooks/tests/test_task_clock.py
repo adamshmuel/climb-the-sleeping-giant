@@ -49,6 +49,11 @@ class TaskClock(unittest.TestCase):
     def test_a_task_inside_30_minutes_is_quiet(self):
         self.assertEqual(self.run_with(f"Task 6 | task | {ago(25)}"), {})
 
+    def test_every_agent_start_gets_the_producer_check(self):
+        text = self.context(self.run_with(f"Task 6 | task | {ago(5)}", event="PreToolUse"))
+        self.assertIn("Producer check", text)
+        self.assertNotIn("Red flag", text)
+
     def test_the_red_flag_offers_the_veto(self):
         self.assertIn("Veto check", self.context(self.run_with(f"Task 5 | small | {ago(12)}")))
 
