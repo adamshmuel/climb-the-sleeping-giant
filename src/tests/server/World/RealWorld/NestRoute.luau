@@ -7,34 +7,18 @@ local Helpers = require(script.Parent.Helpers)
 local loadRoute = Helpers.loadRoute
 local realWorld = Helpers.realWorld
 
--- What the nest route tests share (plan 5 Task 17): the 38 nests, which of them the route reaches in 17a, and the route
+-- What the nest route tests share (plan 5 Task 17): the 38 nests and the route
 -- points that name them. Route.spec and WayUpRoute.spec both read it.
 local NestRoute = {}
 
 -- Studs from a nest's route point to its prompt anchor (plan 5 Task 17, test 1).
 NestRoute.ANCHOR_REACH = 8
 
--- The 4 cap nests: the route reaches them in Task 17c, so the tests that name them stay red until then.
-function NestRoute.isCap(nestName: string): boolean
-	return string.match(nestName, "^Nest_Cap") ~= nil
-end
-
 -- Every nest in World.EggSpots, in name order.
 function NestRoute.nests(): { WorldIndex.EggSpot }
 	local spots, problems = WorldIndex.readEggSpots(realWorld())
 	expect(problems).toEqual({})
 	return spots :: { WorldIndex.EggSpot }
-end
-
--- The nests of one group: the 4 cap nests (`caps` true) or the other 34.
-function NestRoute.group(caps: boolean): { WorldIndex.EggSpot }
-	local picked: { WorldIndex.EggSpot } = {}
-	for _, spot in NestRoute.nests() do
-		if NestRoute.isCap(spot.name) == caps then
-			table.insert(picked, spot)
-		end
-	end
-	return picked
 end
 
 -- Every route point that names a target, by target name (a list, so two points on one target show up).

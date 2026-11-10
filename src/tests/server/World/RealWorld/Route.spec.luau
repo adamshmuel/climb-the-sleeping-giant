@@ -102,10 +102,10 @@ describe("the real world, route and landing spots", function()
 
 	-- Plan 5 Task 17, test 1. A nest "has its point" when exactly one route point names it and that point is within
 	-- NestRoute.ANCHOR_REACH studs of the nest's prompt anchor. Returns the nests checked and one line per failure.
-	local function nestPointProblems(caps: boolean): { checked: number, problems: { string } }
+	local function nestPointProblems(): { checked: number, problems: { string } }
 		local byTarget = NestRoute.pointsByTarget()
 		local problems: { string } = {}
-		local nests = NestRoute.group(caps)
+		local nests = NestRoute.nests()
 		for _, spot in nests do
 			local found = byTarget[spot.name] or {}
 			if #found ~= 1 then
@@ -120,15 +120,8 @@ describe("the real world, route and landing spots", function()
 		return { checked = #nests, problems = problems }
 	end
 
-	it(
-		"each of the 34 nests the route reaches has exactly one route point, within 8 studs of its prompt anchor",
-		function()
-			expect(nestPointProblems(false)).toEqual({ checked = 34, problems = {} })
-		end
-	)
-
-	it("ACCEPTED RED until 17c: each of the 4 cap nests has one route point within 8 studs", function()
-		expect(nestPointProblems(true)).toEqual({ checked = 4, problems = {} })
+	it("each of the 38 nests has exactly one route point, within 8 studs of its prompt anchor", function()
+		expect(nestPointProblems()).toEqual({ checked = 38, problems = {} })
 	end)
 
 	it("every Safe Gate has its own target point just outside the arch, and every spawn spot has its own", function()
@@ -254,23 +247,34 @@ describe("the real world, route and landing spots", function()
 				climbs += 1
 				local ladder = walkSurfaces:FindFirstChild(point.ladder :: string) :: Model
 				local truss = ladder:FindFirstChild("Climb") :: TrussPart
-				local pad = ladder:FindFirstChild("TopPad") :: BasePart
 				-- the truss runs along its local Z: its lower end is the one with the lower Y
 				local endA = (truss.CFrame * CFrame.new(0, 0, truss.Size.Z / 2)).Position
 				local endB = (truss.CFrame * CFrame.new(0, 0, -truss.Size.Z / 2)).Position
 				local bottom = if endA.Y < endB.Y then endA else endB
+				local top = if endA.Y < endB.Y then endB else endA
 				local footGap = (flat(point.position) - flat(bottom)).Magnitude
-				local padOffset = pad.CFrame:PointToObjectSpace(other.position)
 				local label = `{point.name} to {neighbourName}`
+				-- a boot ladder starts on the grass and ends on its TopPad; the beard and cap ladders (plan 5 Task 17c)
+				-- have no pad and start up the giant, so they are judged by how near each end is to the truss end
+				local pad = ladder:FindFirstChild("TopPad") :: BasePart?
+				local footOnGrass = true
+				local topOnPad = true
+				if pad ~= nil then
+					local padOffset = pad.CFrame:PointToObjectSpace(other.position)
+					footOnGrass = point.position.Y < CLIMB_FOOT_MAX_HEIGHT
+					topOnPad = math.abs(padOffset.X) <= pad.Size.X / 2 and math.abs(padOffset.Z) <= pad.Size.Z / 2
+				else
+					topOnPad = (flat(other.position) - flat(top)).Magnitude <= CLIMB_FOOT_REACH
+				end
 				expect({
 					label = label,
 					footNearTruss = footGap <= CLIMB_FOOT_REACH,
-					footOnGrass = point.position.Y < CLIMB_FOOT_MAX_HEIGHT,
-					topOnPad = math.abs(padOffset.X) <= pad.Size.X / 2 and math.abs(padOffset.Z) <= pad.Size.Z / 2,
+					footOnGrass = footOnGrass,
+					topOnPad = topOnPad,
 				}).toEqual({ label = label, footNearTruss = true, footOnGrass = true, topOnPad = true })
 			end
 		end
-		expect(climbs).toBe(2) -- the two boot ladders
+		expect(climbs).toBe(4) -- the two boot ladders, the beard ladder and the cap ladder
 	end)
 
 	it(
@@ -383,6 +387,21 @@ describe("the real world, route and landing spots", function()
 		-- 17b Step 5 walk W: Egg_Rare_4 to ArmRight_0, the feet the player stood on at the start and on arrival
 		{ 2.5, -30.5 },
 		{ 5.1, -27.2 },
+		-- 17w cap walks CAP-L and CAP-R (work/p5t17/17w-note.md): the ladder top to the side nests
+		{ 0, 1 },
+		{ -5, 5 },
+		{ -10, 10 },
+		{ -13, 13 },
+		{ -14, 17 },
+		{ -15, 21 },
+		{ -16, 24 },
+		{ -17, 26 },
+		{ 4, 5 },
+		{ 9, 9 },
+		{ 12, 12 },
+		{ 15, 20 },
+		{ 16, 24 },
+		{ 17, 26 },
 	}
 	-- Ends that are not on a traced foot on purpose (RouteData.luau, WALKED_LINKS comment): the cuff nests, which sit 2 to
 	-- 3 studs from the ledge foot the walk crossed. They get the wider limit, not a skip.

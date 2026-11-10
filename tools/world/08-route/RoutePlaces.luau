@@ -163,6 +163,20 @@ local HAND_POINTS: { [string]: { number } } = {
 	ArmRight_10 = { 48, 2, 42 }, -- the last sleeve foot: the next traced foot (50, 3) joins it by a 70 degree patch
 	StrapRight_Top = { 55, -1, 35 }, -- the tab (Strap_Right)
 	StrapRight_Foot = { 56, -4, 33 }, -- the strap's foot (Foot_Right)
+	-- the beard and cap ladders (plan 5 Task 17c), feet from work/t6/6a3-note.md: a ladder's foot and top are the Climb
+	-- truss ends; NoseTop is on the head between them
+	BeardLadder_Foot = { 0, -27.2, 62.0 },
+	BeardLadder_Top = { 0, -10.5, 93.8 },
+	NoseTop = { 0, -8, 94.2 },
+	CapLadder_Foot = { 0, -6.6, 94.1 },
+	CapLadder_Top = { 0, 0.8, 109.1 },
+	-- the cap walks' feet (work/p5t17/17w-note.md, CAP-L and CAP-R), listed by hand: the right walk is not an exact mirror
+	CapLeft_1 = { -5, 5, 113 },
+	CapLeft_2 = { -10, 10, 117 },
+	CapLeft_3 = { -15, 21, 119 },
+	CapRight_1 = { 4, 5, 113 },
+	CapRight_2 = { 9, 9, 117 },
+	CapRight_3 = { 15, 20, 118 },
 }
 
 -- The right side of the ways up: the left points with x turned to -x. Garden 8 mirrors garden 1, 7 mirrors 2 and 6
@@ -200,6 +214,12 @@ local POINT_TAGS: { [string]: Tags } = {
 	Ramp_Left_Top = { wayUpTop = "Left ramp" },
 	Ramp_Right_Foot = { wayUpFoot = "Right ramp" },
 	Ramp_Right_Top = { wayUpTop = "Right ramp" },
+	-- the beard and cap ladders carry a Ladder tag only: they are not ways up from the meadow (no WayUpFoot, so the
+	-- landing spots do not keep clear of them)
+	BeardLadder_Foot = { ladder = "BeardLadder" },
+	BeardLadder_Top = { ladder = "BeardLadder" },
+	CapLadder_Foot = { ladder = "CapLadder" },
+	CapLadder_Top = { ladder = "CapLadder" },
 }
 
 -- The target points of the nests (plan 5 Task 17a): nest name -> x, z, a rough height, and the points it links to. One
@@ -244,10 +264,16 @@ local NEST_POINTS: { [string]: { any } } = {
 	Nest_CuffFront_Left = { -55.73, -10.27, 32.5, "StrapLeft_Foot" },
 	Nest_CuffBack_Right = { 57.4, -5.7, 32.5, "Nest_CuffFront_Right" },
 	Nest_CuffFront_Right = { 55.73, -10.27, 32.5, "StrapRight_Foot" },
+	-- the cap nests (Task 17c): on the cap walks' feet, the brim after the first two cap points and the side after the
+	-- brim (CapLeft_3 and CapRight_3 sit between them)
+	Nest_CapBrim_Left = { -13, 13, 117, "CapLeft_2" },
+	Nest_CapSide_Left = { -17, 26, 119, "CapLeft_3" },
+	Nest_CapBrim_Right = { 12, 12, 117, "CapRight_2" },
+	Nest_CapSide_Right = { 17, 26, 119, "CapRight_3" },
 }
 
--- The nests that get no route point yet: the cap nests (Task 17c).
-local NESTS_WITHOUT_POINT = { "^Nest_Cap" }
+-- The nests that get no route point: none (the cap nests got theirs in Task 17c).
+local NESTS_WITHOUT_POINT: { string } = {}
 
 -- The links, as pairs of point names (without the RoutePoint_ start). Every one is made on both ends.
 local LINKS: { { string } } = {}
@@ -375,6 +401,18 @@ for _, side in { "Left", "Right" } do
 	end
 	link(`Arm{side}_{last}`, `Strap{side}_Top`)
 	link(`Strap{side}_Top`, `Strap{side}_Foot`)
+end
+-- plan 5 Task 17c: up the beard ladder from the belly path, over the nose, up the cap ladder, down the cap to the nests
+link("BeardLadder_Foot", "Belly_Crest")
+link("BeardLadder_Foot", "BeardLadder_Top") -- the climb link
+link("BeardLadder_Top", "NoseTop")
+link("NoseTop", "CapLadder_Foot")
+link("CapLadder_Foot", "CapLadder_Top") -- the climb link
+for _, side in { "Left", "Right" } do
+	link("CapLadder_Top", `Cap{side}_1`)
+	link(`Cap{side}_1`, `Cap{side}_2`)
+	link(`Nest_CapBrim_{side}`, `Cap{side}_3`)
+	-- the brim nest links to Cap<side>_2 and the side nest to Cap<side>_3 in NEST_POINTS
 end
 link("Ramp_Right_Top", "Egg_Uncommon_3")
 link("Egg_Uncommon_3", "Egg_Uncommon_4")

@@ -526,7 +526,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Files: `tools/world/08-route/RoutePlaces.luau`, `RouteChecks.luau`, the RealWorld route tests.
 - What changes: route points up the beard ladder, across the nose top, up the cap ladder and the cap's front slope to each cap nest. Tests 1 and 2 go fully green.
 - Done when: the tests pass, `08-route` run twice says "already done", and the two cap-trail shots and the cap-nest view shots above, on computer and iPhone 14, go to designer and game_creator.
-- Cards: `work/p5t17/17c-card.md` (Steps 1-4) and `17c-play-card.md` (Steps 5-6). Route.spec's climb count goes from 2 to 4. The cap links go in `WALKED_LINKS` the same way, from the 17w cap trace feet; no nightcap skip.
+- Cards: `work/p5t17/17c-card.md` (Steps 1-4) and `17c-play-card.md` (Steps 5-6). Route.spec's climb count goes from 2 to 4. The cap links go in `WALKED_LINKS` the same way, from the 17w cap trace feet; no nightcap skip. Ladder points (code_lead, Edit, 2026-11-10): each ladder point sits on standable ground within 3 studs of its truss end (beard foot on the belly at (0, 62, -27.2), beard top on the head, cap foot in front of the cap truss). One belly link, `Belly_Crest` to the beard foot, leaves only the beard truss out of the body box (walking into it is the ladder grab). The beard foot is in the belly noise zone (x1.5), as the zone boxes already say.
 - For: core gameplay (the Legendary eggs at the top). Size: 6 steps, 59 minutes.
 
 ### Part 3: Checks on the walk map

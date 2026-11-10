@@ -192,13 +192,16 @@ local BODY_BOX_SKIPS: { [string]: { string } } = {
 	["BellyRampRight_4|Nest_BeardFold_Right"] = { BODY },
 	["BellyRampRight_4|Nest_BellyPocket_Right"] = { BODY },
 	["BellyRampRight_4|Nest_LowerBelly_Right"] = { BODY },
+	-- Plan 5 Task 17c: walking into the leaning truss at its foot is the ladder grab (measured 2026-11-10; plan 3 Task 6a3
+	-- climbed it in Play). Only the truss, never the body.
+	["BeardLadder_Foot|Belly_Crest"] = { "WalkSurfaces.BeardLadder.Climb" },
 }
 
--- Links proven by the 17w Play walk (work/p5t17/17w-note.md): a body walked each one in Play with the real controls, so
--- the Edit-mode walk check (body box, ground line, slope) does not judge them. Every other check still does. Each is the
--- belly to a sleeve, the sleeve down to the tab and strap, and the strap to the cuff ledges, on both sides. The arm,
--- strap and Rare 4 points are within 1 stud of a traced foot; the two Nest_Cuff points are 2 to 3 studs from one (the
--- walk crossed the ledge there).
+-- Links proven by the 17w Play walk (work/p5t17/17w-note.md): a body walked each one in Play with the real controls,
+-- so the Edit-mode walk check (body box, ground line, slope) does not judge them. Every other check still does. Each
+-- is the belly to a sleeve, the sleeve down to the tab and strap, the strap to the cuff ledges, and the cap ladder top
+-- to the cap nests, on both sides. The arm, strap, Rare 4 and cap points are within 1 stud of a traced foot; the two
+-- Nest_Cuff points are 2 to 3 studs from one (the walk crossed the ledge there).
 local WALKED_LINKS: { [string]: boolean } = {}
 local WALKED_LIST: { { string } } = {}
 local function sortedKey(a: string, b: string): string
@@ -225,6 +228,13 @@ for _, side in { "Left", "Right" } do
 	walked(`Strap{side}_Top`, `Strap{side}_Foot`)
 	walked(`Strap{side}_Foot`, `Nest_CuffFront_{side}`)
 	walked(`Nest_CuffFront_{side}`, `Nest_CuffBack_{side}`)
+	-- plan 5 Task 17c: the cap walks (CAP-L, CAP-R in 17w-note.md), from the cap ladder's top to the side nest. Every end
+	-- is within 1 stud of a traced foot.
+	walked("CapLadder_Top", `Cap{side}_1`)
+	walked(`Cap{side}_1`, `Cap{side}_2`)
+	walked(`Cap{side}_2`, `Nest_CapBrim_{side}`)
+	walked(`Nest_CapBrim_{side}`, `Cap{side}_3`)
+	walked(`Cap{side}_3`, `Nest_CapSide_{side}`)
 end
 
 local function pointKey(name: string): string
@@ -247,8 +257,8 @@ function RouteData.walkedLinks(): { { string } }
 	return WALKED_LIST
 end
 
--- Plan 5 Task 17b (code_lead ruling): a link passes over a bush or rock when its lowest end is more than this many studs
--- above the prop's top. Sunflower stems are not covered. The world script and the real-world test both call this.
+-- Plan 5 Task 17b (code_lead ruling): a link passes over a bush or rock when its lowest end is more than this many
+-- studs above the prop's top. Sunflower stems are not covered. The world script and the real-world test both call this.
 local PROP_OVER_HEIGHT = 6
 function RouteData.passesOverProp(lowestEndY: number, propTop: number): boolean
 	return lowestEndY > propTop + PROP_OVER_HEIGHT

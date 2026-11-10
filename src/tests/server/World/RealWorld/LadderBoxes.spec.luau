@@ -46,6 +46,7 @@ describe("the real world, ladder boxes and zone boxes", function()
 			"Egg_Rare_2",
 			"Egg_Rare_3",
 			"Egg_Rare_4",
+			"BeardLadder_Foot", -- Plan 5 Task 17c: on the belly at the truss foot (zone read in Edit 2026-11-10, point +3 up)
 			-- Plan 5 Task 17b: the arm and strap points down to the cuffs
 			"ArmLeft_1",
 			"ArmLeft_2",
@@ -100,6 +101,17 @@ describe("the real world, ladder boxes and zone boxes", function()
 			"Ramp_Right_High",
 			"Ramp_Right_Low",
 			"Ramp_Right_Top",
+		},
+		-- Plan 5 Task 17c: the beard top, the nose top and the cap ladder foot (zones read in Edit 2026-11-10, point +3 up)
+		Beard = { "BeardLadder_Top", "NoseTop", "CapLadder_Foot" },
+		Nightcap = {
+			"CapLadder_Top",
+			"CapLeft_1",
+			"CapLeft_2",
+			"CapLeft_3",
+			"CapRight_1",
+			"CapRight_2",
+			"CapRight_3",
 		},
 	}
 
