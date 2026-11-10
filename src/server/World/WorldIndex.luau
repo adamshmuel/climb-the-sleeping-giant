@@ -56,8 +56,8 @@ export type LandingSpot = {
 	position: Vector3, -- the top centre of the spot's part: where a player's feet land
 }
 
--- The egg models in ServerStorage.Assets.Eggs, one per rarity.
-export type EggTemplates = { Common: Model, Uncommon: Model, Rare: Model }
+-- The egg models in ServerStorage.Assets.Eggs, one per rank in Config.RarityOrder.
+export type EggTemplates = { [string]: Model }
 
 -- The zones that must each have at least one box. The Meadow is "in no box", so it has none.
 local ZONE_NAMES = { "Boots", "Belly", "Beard", "Nightcap" }
@@ -67,9 +67,6 @@ local RARITY_NAMES: { [any]: boolean } = {}
 for _, name in Config.RarityOrder do
 	RARITY_NAMES[name] = true
 end
-
--- The rarities the place has an egg template for. Plan 4 Task 2 adds Epic and Legendary eggs and makes this five.
-local TEMPLATE_RARITIES: { Config.RarityName } = { "Common", "Uncommon", "Rare" }
 
 local PLOT_COUNT = 8
 local PET_PAD_COUNT = 6
@@ -388,7 +385,7 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 end
 
 -- Reads the egg models the server copies onto the spots: `assets` is ServerStorage.Assets, and its Eggs folder must
--- hold a Model named Common, Uncommon and Rare. (It takes the Assets folder, not the world, because the egg models
+-- hold a Model for every rank in Config.RarityOrder. (It takes the Assets folder, not the world, because the egg models
 -- do not live in the world.)
 function WorldIndex.readEggTemplates(assets: Instance): (EggTemplates?, { string })
 	local eggs = assets:FindFirstChild("Eggs")
@@ -397,7 +394,7 @@ function WorldIndex.readEggTemplates(assets: Instance): (EggTemplates?, { string
 	end
 	local found: { [string]: Model } = {}
 	local problems: { string } = {}
-	for _, rarity in TEMPLATE_RARITIES do
+	for _, rarity in Config.RarityOrder do
 		local template = eggs:FindFirstChild(rarity)
 		if template == nil then
 			table.insert(problems, `Assets.Eggs is missing {rarity}`)
@@ -410,7 +407,7 @@ function WorldIndex.readEggTemplates(assets: Instance): (EggTemplates?, { string
 	if #problems > 0 then
 		return nil, problems
 	end
-	return { Common = found.Common, Uncommon = found.Uncommon, Rare = found.Rare }, {}
+	return found, {}
 end
 
 -- Reads World.Route: a Model that always streams to players (each client draws its own footprints from it) and holds

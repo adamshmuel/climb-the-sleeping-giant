@@ -1,7 +1,9 @@
 --!strict
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Config = require(ReplicatedStorage.Shared.Config)
 local SpotModels = require(ServerScriptService.Server.Eggs.SpotModels)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
@@ -343,13 +345,13 @@ describe("the real world, egg spots", function()
 	end
 
 	it(
-		"ServerStorage.Assets.Eggs has a fully anchored Common, Uncommon and Rare egg, and only the Common's spot has a glow ring",
+		"ServerStorage.Assets.Eggs has a fully anchored egg for each of the five ranks, and only the Common's spot has a glow ring",
 		function()
 			local assets = ServerStorage:FindFirstChild("Assets")
 			expect(assets).never.toBeNil()
 			local templates, problems = WorldIndex.readEggTemplates(assets :: Instance)
 			expect(problems).toEqual({})
-			for _, rarity in { "Common", "Uncommon", "Rare" } do
+			for _, rarity in Config.RarityOrder do
 				local egg: Model = (templates :: any)[rarity]
 				expect(egg:GetAttribute("Rarity")).toBe(rarity)
 				local parts = 0
@@ -366,13 +368,15 @@ describe("the real world, egg spots", function()
 				expect(parts > 0).toBe(true)
 				-- the glow ring belongs to the spot, not to the egg
 				expect(egg:FindFirstChild("GlowRing", true)).toBeNil()
-				-- the look kept from the mockup: a light, sparkles and the rarity label (and a beam for the Rare only)
+				-- the look kept from the mockup: a light, sparkles and the rarity label (and a beam above Uncommon)
 				expect(egg:FindFirstChildWhichIsA("PointLight", true)).never.toBeNil()
 				expect(egg:FindFirstChildWhichIsA("ParticleEmitter", true)).never.toBeNil()
 				local label = egg:FindFirstChild("Label", true)
 				expect(label).never.toBeNil()
 				expect(((label :: Instance):FindFirstChildWhichIsA("TextLabel") :: TextLabel).Text).toBe(rarity)
-				expect(egg:FindFirstChildWhichIsA("Beam", true) ~= nil).toBe(rarity == "Rare")
+				expect(egg:FindFirstChildWhichIsA("Beam", true) ~= nil).toBe(
+					rarity ~= "Common" and rarity ~= "Uncommon"
+				)
 			end
 			for _, spot in loadSpots() do
 				expect({ spot = spot.name, ring = hasGlowRing(spot.model) }).toEqual({
@@ -385,7 +389,7 @@ describe("the real world, egg spots", function()
 
 	it("each egg model's pivot is at the bottom centre of the egg", function()
 		local templates = WorldIndex.loadEggTemplates(ServerStorage:FindFirstChild("Assets") :: Instance)
-		for _, rarity in { "Common", "Uncommon", "Rare" } do
+		for _, rarity in Config.RarityOrder do
 			local egg: Model = (templates :: any)[rarity]
 			local boxCFrame, boxSize = egg:GetBoundingBox()
 			local pivot = egg:GetPivot()
@@ -404,6 +408,104 @@ describe("the real world, egg spots", function()
 			})
 			-- the model stands straight in its own space, so the spot decides how it leans
 			expect(pivot.Rotation:FuzzyEq(CFrame.new(), 0.001)).toBe(true)
+		end
+	end)
+
+	local function loadTemplates(): { [string]: Model }
+		local templates = WorldIndex.loadEggTemplates(ServerStorage:FindFirstChild("Assets") :: Instance)
+		return templates :: any
+	end
+
+	local function eggHeight(egg: Model): number
+		local _, boxSize = egg:GetBoundingBox()
+		return boxSize.Y
+	end
+
+	it("the Epic and Legendary eggs wear their rank colour (Rule 51)", function()
+		local templates = loadTemplates()
+		local wanted: { [string]: string } = { Epic = "5E3CFF", Legendary = "FFA51F" }
+		for rarity, hex in wanted do
+			local appearance = templates[rarity]:FindFirstChildWhichIsA("SurfaceAppearance", true)
+			expect(appearance).never.toBeNil()
+			local want = Color3.fromHex(hex)
+			local got = (appearance :: SurfaceAppearance).Color
+			expect({
+				egg = rarity,
+				r = math.abs(got.R - want.R) <= 1 / 255,
+				g = math.abs(got.G - want.G) <= 1 / 255,
+				b = math.abs(got.B - want.B) <= 1 / 255,
+			}).toEqual({ egg = rarity, r = true, g = true, b = true })
+		end
+	end)
+
+	it("the Epic and Legendary eggs are as tall as the Rare egg, within 5 percent", function()
+		local templates = loadTemplates()
+		local rare = eggHeight(templates.Rare)
+		for _, rarity in { "Epic", "Legendary" } do
+			local height = eggHeight(templates[rarity])
+			expect({ egg = rarity, close = math.abs(height - rare) <= rare * 0.05 }).toEqual({
+				egg = rarity,
+				close = true,
+			})
+		end
+	end)
+
+	it("no egg template keeps a Halo or a Mockup attribute, and the Epic and Legendary eggs show", function()
+		local templates = loadTemplates()
+		for _, rarity in Config.RarityOrder do
+			local egg = templates[rarity]
+			local everything: { Instance } = egg:GetDescendants()
+			table.insert(everything, egg)
+			for _, item in everything do
+				expect({ item = item:GetFullName(), halo = item.Name == "Halo" }).toEqual({
+					item = item:GetFullName(),
+					halo = false,
+				})
+				for name in item:GetAttributes() do
+					expect({ item = item:GetFullName(), mockup = string.sub(name, 1, 6) == "Mockup" }).toEqual({
+						item = item:GetFullName(),
+						mockup = false,
+					})
+				end
+			end
+		end
+		for _, rarity in { "Epic", "Legendary" } do
+			local largest: BasePart? = nil
+			for _, item in templates[rarity]:GetDescendants() do
+				if item:IsA("BasePart") then
+					local size = item.Size
+					if
+						largest == nil
+						or size.X * size.Y * size.Z > largest.Size.X * largest.Size.Y * largest.Size.Z
+					then
+						largest = item
+					end
+				end
+			end
+			expect(largest).never.toBeNil()
+			expect({ egg = rarity, shows = (largest :: BasePart).Transparency < 0.5 }).toEqual({
+				egg = rarity,
+				shows = true,
+			})
+		end
+	end)
+
+	it("the Epic and Legendary lights, sparkles and beams are on like the Rare's", function()
+		local templates = loadTemplates()
+		for _, className in { "PointLight", "ParticleEmitter", "Beam" } do
+			local rareItem = templates.Rare:FindFirstChildWhichIsA(className, true)
+			expect(rareItem).never.toBeNil()
+			local rareEnabled = (rareItem :: any).Enabled
+			for _, rarity in { "Epic", "Legendary" } do
+				for _, item in templates[rarity]:GetDescendants() do
+					if item:IsA(className) then
+						expect({ item = item:GetFullName(), enabled = (item :: any).Enabled }).toEqual({
+							item = item:GetFullName(),
+							enabled = rareEnabled,
+						})
+					end
+				end
+			end
 		end
 	end)
 

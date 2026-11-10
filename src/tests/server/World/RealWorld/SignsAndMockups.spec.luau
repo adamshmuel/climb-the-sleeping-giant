@@ -425,6 +425,20 @@ describe("the real world, no mockup avatar stands in a player's way", function()
 		end
 		expect(problems).toEqual({})
 	end)
+
+	-- Plan 4 Task 2: tools/world/28-rank-eggs.luau turns the Epic and Legendary mockup eggs into templates and sends the
+	-- rest of Mockup_EggRanks to the library. ArtLibrary.MockupAvatars holds another Mockup_EggRanks (the avatar only),
+	-- so the lookup is a direct child.
+	it("the egg-ranks mockup waits in ServerStorage.ArtLibrary, none left in the world", function()
+		local library = game:GetService("ServerStorage"):FindFirstChild("ArtLibrary")
+		expect(library).never.toBeNil()
+		local inLibrary = (library :: Instance):FindFirstChild("Mockup_EggRanks")
+		local inWorld = Workspace:FindFirstChild("Mockup_EggRanks")
+		expect({ inLibrary = inLibrary ~= nil and inLibrary:IsA("Folder"), inWorld = inWorld ~= nil }).toEqual({
+			inLibrary = true,
+			inWorld = false,
+		})
+	end)
 end)
 
 -- The 85% warning's world pieces (V2 new-player safety, Task 7). tools/world/12-warning85.luau moves designer's tested

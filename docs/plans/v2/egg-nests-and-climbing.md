@@ -235,7 +235,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 2: World prep
 
 **Task 12: World prep: 38 nests**
-- Stands on: build order steps 2, 3 and 4 (plan 3's ways up; plan 5 Tasks 13 to 16, the seam included; plan 3 Tasks 7 and 8, the zone boxes and the footprint route), plan 5 Tasks 1 to 7 (slots and nests in code, and `WorldIndex.readEggSpots` reading nest models with the bare-spot allowance this task removes, built), Task 8 (`tools/world/21-nests.luau` started with the refill pop copy, built), Task 15e3 (the cuff pockets already in `World.CuffArt`, built), and the 38 spots in spec 5's table and the style guide's nest map (final).
+- Stands on: build order steps 2, 3 and 4 (plan 3's ways up; plan 5 Tasks 13 to 16, the seam included; plan 3 Tasks 7 and 8, the zone boxes and the footprint route), plan 5 Tasks 1 to 7 (slots and nests in code, and `WorldIndex.readEggSpots` reading nest models with the bare-spot allowance this task removes, built), Task 8 (`tools/world/21-nests.luau` started with the refill pop copy, built), plan 4 Task 2 (`ServerStorage.Assets.Eggs` has Epic and Legendary, and `readEggTemplates` reads all five; product's ruling `work/p5t12/order-ruling.md`), Task 15e3 (the cuff pockets already in `World.CuffArt`, built), and the 38 spots in spec 5's table and the style guide's nest map (final).
 - Status: can't start until each of those is built (product's ruling, `work/p5t16/stands-on-ruling.md`).
 - Spec rules: Rule 70 (Every egg waits in a nest): the spots, "never within 10 studs of his eyes", "V1's 16 egg spots are removed, with one exception". Rule 71 (How many eggs and nests). Rule 72 (Nests come in mirror pairs). Rule 75 (Meadow eggs stay by their garden): spacing and the 3-second walk. Spot rules: "Belly pocket", "Rare on each side", "Lap fold", "Knee pocket". Section 6, "Art changes".
 - Files: `tools/world/21-nests.luau` (new), `src/server/World/WorldIndex.luau` and `NestReader.luau` (the bare-spot allowance from Task 7 goes), `src/server/Eggs/Grab.luau` (`slotsFor`'s bare-rank cap from Task 7b goes, and its test), `RealWorld.spec.luau`.
@@ -681,7 +681,7 @@ product checked the four build decisions on 2026-10-19 (`docs/specs/v2/research/
 
 - The sideways jump reach (10 studs, from 16 studs a second for the 0.6 s of a 9-stud jump). The style guide's "Jump reach" gives the 9 and 5 studs but no sideways number. If designer used another, Task 18's numbers and designer's will differ by that much.
 
-## Notes for egg fix 2 and its shots (added 2026-11-10, Task 8 review)
+## Notes for egg fix 2 and its shots (added 2026-11-10, at the review of the nests' first look)
 
 - The refill shot (Task 8 shot 3) failed in round 4 because the camera hold on nest B came before the E hold on nest A, so the prompt shown was B's. In fix 2's shots card: aim the camera at the egg on A first, keep it there through the E hold, and move it to B only after the take.
 - Two far "Uncommon" words on the boot clip each other in shot 1 (designer's finding). Small fix before fix 2's shots: see the Task 8 review reply (stack check in `SpotLabels.pickShown`).

@@ -7,7 +7,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
 | Egg reachability (V2 spec 4) | Task 1: Five ranks in the game numbers | ☑ done (2026-11-10) | builder, runner (full run 3060 passed, 2 accepted), code_lead |
-| Egg reachability (V2 spec 4) | Task 2: World prep: Epic and Legendary eggs | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 2: World prep: Epic and Legendary eggs | ☑ done (2026-11-10, 12 min, planned 55) | builder, runner (full run 3122 passed, 2 accepted), code_lead. Both eggs scaled to the Rare's 7 studs (style guide). Epic tint on a phone goes to designer in plan 5 Task 12's shots. Process gain: the main chat answered the builder's height question from the style guide instead of a ruling round |
 | Egg reachability (V2 spec 4) | Task 3: The rank shows everywhere | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 4: The rank glow | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 5: Harder rank, better pets | ☐ not started | |

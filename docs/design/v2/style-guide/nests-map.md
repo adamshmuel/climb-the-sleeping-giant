@@ -119,7 +119,7 @@ Each garden's 2 nests sit just past its bridge, about 10 studs apart, about 2 se
 |---|---|---|---|---|---|---|
 | Boot toe, outer | Uncommon | (−28.5, 30.4, −64.5) | (28.5, 30.4, −64.5) | On the boot top, beside the laces, 4 studs from the boot ladder top | 0.52 / 0.42 | 9+ |
 | Boot toe, inner | Uncommon | (−19.5, 30.5, −64.5) | (19.5, 30.7, −64.5) | On the boot top, inner side of the laces | 0.50 / 0.45 | 1.8 |
-| Knee pocket | Uncommon | (−15, 29.6, −48) | (15, 29.6, −48) | A sewn pocket on top of his thigh, 2.5 studs behind the lap plank's inner rope rail. Moved 2026-10-18, see "The lap fold and the knee pocket" | on the pocket | 3.3 |
+| Knee pocket | Uncommon | (−15, 30.2, −48) | (15, 30.2, −48) | A sewn pocket on top of his thigh, 2.5 studs behind the lap plank's inner rope rail. Moved 2026-10-18, raised to its ledge at y 30.2 on 2026-10-19 (was 29.6), see "The lap fold and the knee pocket" | on the pocket | 3.17 |
 | Lap fold | Uncommon | (−13.5, 27.4, −62.5) | (13.5, 27.6, −62.5) | On the inner slope of his boot top, just outside the lap plank's outer rope rail. Placed 2026-10-18, see "The lap fold and the knee pocket". The name stays so the spec's rules still point at it | leans 38° / 36° (gap 0.20, sink 0.18 / 0.13) | 2.35 |
 | Lower belly (V1 Rare egg 1) | Rare | (−12.5, 41.3, −40.3) | (12.5, 41.2, −40.3) | V1's spot, at the top of each ramp from the lap landing. Leans with the belly | 0.36 / 0.12 | 2.0 |
 | Beard–belly fold | Rare | (−7.5, 46.5, −38.5) | (7.5, 47.0, −38.5) | Beside the tip of his beard, where it lies on his belly | 0.17 / 0.47 | 1.55 |

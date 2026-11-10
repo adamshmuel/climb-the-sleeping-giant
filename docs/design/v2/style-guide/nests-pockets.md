@@ -162,10 +162,10 @@ Placed 2026-10-18 on code_lead's moved lap planks, under game_creator's rules (g
 - **One reading to confirm:** it sits beside the plank's middle stretch (x 13.5; the plank runs from x 4.9 to 20.6). I read "not the middle of the plank" as "not on the plank's deck", which it isn't. If game_creator meant "not beside the middle either", the only other spot is the squeezed groove above.
 - **Look:** a green egg leaning out from the boot's inner slope, just outside the rope rail. From the plank it's the egg at the rail's foot; from gardens 4 and 5 it's the third egg along the boot's front edge, after the two boot toes. In the leg gap it shows against his blue trousers and the red cushion.
 
-**The knee pocket moved 1 stud out and 3 up** to (∓15, 29.6, −48):
+**The knee pocket moved 1 stud out and 3.6 up** to (∓15, 30.2, −48), the top of its pocket ledge, level with his skin there (2026-10-19; 2026-10-18 had it at 29.6):
 - Its old spot (−14, 26.6, −48) is 3.6 studs inside his thigh: his skin there is at y 30.2.
 - At x 14 its prompt also showed from the ramp's outer edge (7.4 studs). At x 15 it's 8.3, so it follows the same "never from a ramp" rule as the lap fold.
-- From the plank it's 4.5 studs; eye space 3.3; 14.6 from the lap fold; twin exact. It stays on its pocket ledge.
+- From the plank it's 4.5 studs; eye space 3.17; 14.6 from the lap fold; twin exact. It stays on its pocket ledge.
 - It sits in the area closed in by the rail guards, which a player can only reach from the landing's side. From there a jump reaches the ramp's edge, which skips nothing (they came over the landing), but Play should check it isn't a spot where players get stuck.
 
 **Both eggs show from the plank past the invisible guard:** the guard is see-through, and the prompt ignores walls (`RequiresLineOfSight` off), so the prompt appears whenever the player is in reach (`mockups/view-lapfold.png`, `view-phone-lapfold.png`).

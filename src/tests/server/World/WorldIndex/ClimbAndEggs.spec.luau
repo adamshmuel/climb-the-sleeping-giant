@@ -488,8 +488,8 @@ local function makeAssets(names: { string }, skipEggs: boolean?, wrongClass: str
 end
 
 describe("WorldIndex.readEggTemplates", function()
-	it("reads the Common, Uncommon and Rare egg models", function()
-		local assets = makeAssets({ "Rare", "Common", "Uncommon" })
+	it("reads the five egg models, one per rank", function()
+		local assets = makeAssets({ "Rare", "Legendary", "Common", "Epic", "Uncommon" })
 		local templates, problems = WorldIndex.readEggTemplates(assets)
 		expect(problems).toEqual({})
 		expect(templates).never.toBeNil()
@@ -497,6 +497,8 @@ describe("WorldIndex.readEggTemplates", function()
 		expect(found.Common).toBe((assets :: any).Eggs.Common)
 		expect(found.Uncommon).toBe((assets :: any).Eggs.Uncommon)
 		expect(found.Rare).toBe((assets :: any).Eggs.Rare)
+		expect(found.Epic).toBe((assets :: any).Eggs.Epic)
+		expect(found.Legendary).toBe((assets :: any).Eggs.Legendary)
 		assets:Destroy()
 	end)
 
@@ -515,6 +517,8 @@ describe("WorldIndex.readEggTemplates", function()
 		expect(problems).toEqual({
 			"Assets.Eggs is missing Uncommon",
 			"Assets.Eggs.Rare must be a Model, not a Part",
+			"Assets.Eggs is missing Epic",
+			"Assets.Eggs is missing Legendary",
 		})
 		assets:Destroy()
 	end)
@@ -522,13 +526,16 @@ end)
 
 describe("WorldIndex.loadEggTemplates", function()
 	it("returns the templates of good assets, and errors with every problem of bad ones", function()
-		local good = makeAssets({ "Common", "Uncommon", "Rare" })
+		local good = makeAssets({ "Common", "Uncommon", "Rare", "Epic", "Legendary" })
 		expect(WorldIndex.loadEggTemplates(good).Rare.Name).toBe("Rare")
+		expect(WorldIndex.loadEggTemplates(good).Legendary.Name).toBe("Legendary")
 		good:Destroy()
 		local bad = makeAssets({ "Uncommon" })
 		local ok, message = pcall(WorldIndex.loadEggTemplates, bad)
 		expect(ok).toBe(false)
-		expect(message).toBe("Assets.Eggs is missing Common\nAssets.Eggs is missing Rare")
+		expect(message).toBe(
+			"Assets.Eggs is missing Common\nAssets.Eggs is missing Rare\nAssets.Eggs is missing Epic\nAssets.Eggs is missing Legendary"
+		)
 		bad:Destroy()
 	end)
 end)
