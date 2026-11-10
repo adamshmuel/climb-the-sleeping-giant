@@ -16,6 +16,7 @@ local Net = require(ReplicatedStorage.Shared.Net)
 local CameraFx = require(script.Fx.CameraFx)
 local Celebrations = require(script.Fx.Celebrations)
 local GiantFx = require(script.Fx.GiantFx)
+local NestPop = require(script.Fx.NestPop)
 local SlamFx = require(script.Fx.SlamFx)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local Recovery = require(script.Player.Recovery)
@@ -275,7 +276,7 @@ if server then
 			end,
 			onPinned = messagesHandle.setPillPinned,
 		})
-		-- The rarity names over waiting eggs and the refill countdowns over empty spots. A rarity name fades while it
+		-- The rarity names over waiting eggs (an empty spot shows nothing, Rule 77). A rarity name fades while it
 		-- overlaps a nearer one, touches the sleep meter or reaches past the top of the screen. The meter's box is read
 		-- in the same pixels the world is projected into: the meter's screen reports positions from just below the top
 		-- bar, so the bar's height is added back.
@@ -304,6 +305,23 @@ if server then
 				}
 			end),
 		})
+		-- When an empty nest gets its egg back, the egg grows in and gold stars rise (Rule 77). The stars are the
+		-- RefillPop part the place holds; without it only the grow-in plays. Reduce Motion drops the grow-in and
+		-- keeps still stars.
+		local refillPop = if assets then assets:WaitForChild("RefillPop", NET_WAIT_SECONDS) else nil
+		local nestPop = NestPop.start({
+			root = eggSpots,
+			template = if refillPop and refillPop:IsA("BasePart") then refillPop else nil,
+			reducedMotion = function(): boolean
+				return GuiService.ReducedMotionEnabled
+			end,
+			step = RunService.RenderStepped,
+			now = os.clock,
+			emit = function(emitter: ParticleEmitter, count: number)
+				emitter:Emit(count)
+			end,
+		})
+		script.Destroying:Once(nestPop)
 		-- An egg between the camera and this player's own character turns 70% see-through on this screen only. The egg this
 		-- player carries on their back fades when it covers their head or body (a box at 75% of its size), to 60%, and
 		-- waits 0.2 s with no line crossing before it starts back to solid.

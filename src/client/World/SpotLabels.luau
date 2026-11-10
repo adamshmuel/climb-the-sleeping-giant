@@ -1,24 +1,22 @@
 --!strict
--- The words over the egg spots (spec Rule 3, "Eggs wait in three zones", and the "Egg labels" and "Empty egg spot"
--- rows of section 6), drawn on this player's own screen:
+-- The words over the egg spots (spec Rule 3, "Eggs wait in three zones", Rule 77 and the "Egg labels" row of
+-- section 6), drawn on this player's own screen:
 --   * an egg waits: its rarity name ("Common", "Uncommon", "Rare") in the rarity's colour, just above the egg;
---   * the egg was taken: the refill countdown ("0:42") in white, on the spot, counting down live;
---   * nothing is known yet: nothing.
+--   * the egg was taken, or nothing is known yet: nothing (an empty nest shows no timer).
 -- Each label is a BillboardGui sized in studs, so it shrinks with distance like a sign in the world. Up close it
 -- would grow without end, so the text label inside it is never bigger than 130 x 36 px and its text is never bigger
 -- than 30 px. It is hidden past 75 studs, and the giant can hide it (it is not drawn on top of the world).
--- The server only writes each spot's attributes (Waiting, RefillAt on the shared server clock); see SpotModels.
+-- The server only writes each spot's attributes (Waiting); see SpotModels.
 --
 -- Two screen rules keep the words readable (style guide rows "Egg labels never stack" and "Egg labels never sit under
 -- the meter"). About ten times a second, every rarity label that is drawn gets a rectangle on this screen (the drawn
 -- words). A rarity label fades out over 0.15 s, and back in over 0.15 s once it is clear, when:
 --   * its words overlap the words of a nearer rarity label that is showing (only the nearest egg's label shows);
 --   * its words touch the sleep meter's box, or reach past the top edge of the screen.
--- The eggs themselves are never touched, and countdowns over empty spots always show and take no part.
+-- The eggs themselves are never touched.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Format = require(ReplicatedStorage.Shared.Format)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Theme = require(script.Parent.Parent.Hud.Theme)
 local Ui = require(script.Parent.Parent.Hud.Ui)
@@ -62,8 +60,8 @@ export type View = {
 export type Deps = {
 	parent: Instance, -- the player's screen (PlayerGui): the labels go on its WorldPrompts layer
 	root: Instance, -- holds the egg spots (Workspace.World.EggSpots)
-	now: () -> number, -- the shared server clock in seconds (Workspace:GetServerTimeNow)
-	step: SignalLike, -- once per frame, for the countdowns (RunService.RenderStepped)
+	now: () -> number, -- a clock in seconds (Workspace:GetServerTimeNow), for the fade
+	step: SignalLike, -- once per frame, for the fades (RunService.RenderStepped)
 	view: View?, -- the screen, for the two screen rules; without it labels are never hidden
 }
 
@@ -90,24 +88,21 @@ local CLOCK_TOLERANCE = 1e-6
 -- A fade this close to clear or to fully hidden counts as there, so rounding never leaves a speck of see-through behind.
 local SNAP = 1e-6
 
--- How far the bottom of the words sits above the egg's top, and above the top of the Base of an empty spot (studs).
+-- How far the bottom of the words sits above the top of the nest base (studs), for an egg short enough (spec Rule 85).
+local WORD_BOTTOM_STUDS = 8
+-- The least the bottom of the words sits above the egg's top (studs): a taller egg lifts the words to keep this gap.
 local GAP_ABOVE_EGG = 1
-local GAP_ABOVE_BASE = 1.5
 -- The egg's height until its model is there to measure (the templates: Common 5.5, Uncommon 6.2, Rare 7.0 studs).
 local DEFAULT_EGG_HEIGHT = 5.5
 
 local EGG_NAME = "Egg"
 local BASE_NAME = "Base"
 
--- What the label says. `waiting`: the spot's Waiting attribute (nil when it is not set). `refillAt`: the time the egg
--- comes back, on the same clock as `now`. A part of a second is rounded up, so the countdown never shows 0:00 before
--- the egg is back.
-function SpotLabels.text(waiting: boolean?, rarity: string, refillAt: number?, now: number): string?
+-- What the label says. `waiting`: the spot's Waiting attribute (nil when it is not set). Only a waiting egg has words:
+-- an empty nest shows no timer and no label (spec Rule 77).
+function SpotLabels.text(waiting: boolean?, rarity: string): string?
 	if waiting == true then
 		return rarity
-	end
-	if waiting == false and refillAt ~= nil then
-		return Format.countdown(math.ceil(refillAt - now))
 	end
 	return nil
 end
@@ -225,10 +220,9 @@ type Entry = {
 	gui: BillboardGui,
 	text: TextLabel,
 	outline: UIStroke,
-	fade: number, -- 0 clear to 1 fully see-through (rarity labels only; a countdown stays at 0)
+	fade: number, -- 0 clear to 1 fully see-through
 	hide: boolean, -- where the fade is heading: true when the last check said this label must hide
 	faded: number, -- the value last written to the words and the outline
-	refillAt: number?, -- set while the label counts down
 	shown: string?, -- the words on the label now, so the text is only set when it changes
 	cleanup: () -> (),
 }
@@ -266,20 +260,19 @@ local function buildLabel(layer: ScreenGui): (BillboardGui, TextLabel, UIStroke)
 end
 
 -- The value to write into StudsOffsetWorldSpace so the label's middle ends up where it belongs. The label's bottom edge
--- is GAP_ABOVE_EGG straight up from the top of the egg (which leans with the spot), or GAP_ABOVE_BASE straight up
--- from the top of an empty spot's Base. Roblox's docs say the offset is read along the world's axes, but it is read
--- along the Adornee's own axes (measured in Play on the tilted belly spots). So the offset is worked out in world
--- directions first, then turned into the Base's directions, and Roblox's turn puts the label back on the intended spot.
-local function offsetFor(spot: Model, base: BasePart, waiting: boolean): Vector3
+-- is WORD_BOTTOM_STUDS above the top of the base, or GAP_ABOVE_EGG straight up from the top of the egg when that is
+-- higher (the egg leans with the spot). Roblox's docs say the offset is
+-- read along the world's axes, but it is read along the Adornee's own axes (measured in Play on the tilted belly
+-- spots). So the offset is worked out in world directions first, then turned into the Base's directions, and
+-- Roblox's turn puts the label back on the intended spot.
+local function offsetFor(spot: Model, base: BasePart): Vector3
 	local baseTop = base.CFrame * CFrame.new(0, base.Size.Y / 2, 0)
-	local bottom: Vector3
-	if waiting then
-		local egg = spot:FindFirstChild(EGG_NAME)
-		local height = if egg ~= nil and egg:IsA("Model") then egg:GetExtentsSize().Y else DEFAULT_EGG_HEIGHT
-		bottom = baseTop:PointToWorldSpace(Vector3.new(0, height, 0)) + Vector3.new(0, GAP_ABOVE_EGG, 0)
-	else
-		bottom = baseTop.Position + Vector3.new(0, GAP_ABOVE_BASE, 0)
-	end
+	local egg = spot:FindFirstChild(EGG_NAME)
+	local height = if egg ~= nil and egg:IsA("Model")
+		then egg:GetExtentsSize().Y / egg:GetScale()
+		else DEFAULT_EGG_HEIGHT
+	local gap = math.max(GAP_ABOVE_EGG, WORD_BOTTOM_STUDS - height)
+	local bottom = baseTop:PointToWorldSpace(Vector3.new(0, height, 0)) + Vector3.new(0, gap, 0)
 	local worldOffset = bottom + Vector3.new(0, HEIGHT_STUDS / 2, 0) - base.Position
 	return base.CFrame:VectorToObjectSpace(worldOffset)
 end
@@ -303,7 +296,7 @@ function SpotLabels.start(deps: Deps): () -> ()
 		end
 	end
 
-	-- A label that is not a rarity label (a countdown, or nothing) shows normally at once.
+	-- A label that has no words (an empty or unknown spot) starts clear at once.
 	local function clearFade(entry: Entry)
 		entry.fade = 0
 		entry.hide = false
@@ -321,32 +314,24 @@ function SpotLabels.start(deps: Deps): () -> ()
 	local function refresh(entry: Entry)
 		local spot = entry.spot
 		local waitingValue: any = spot:GetAttribute("Waiting")
-		local refillValue: any = spot:GetAttribute("RefillAt")
 		local rarityValue: any = spot:GetAttribute("Rarity")
 		local waiting: boolean? = if type(waitingValue) == "boolean" then waitingValue else nil
-		local refillAt: number? = if type(refillValue) == "number" then refillValue else nil
 		local rarity: string = if type(rarityValue) == "string" then rarityValue else ""
 
 		local foundBase = spot:FindFirstChild(BASE_NAME)
 		local base: BasePart? = if foundBase ~= nil and foundBase:IsA("BasePart") then foundBase else nil
 		-- Adornee may be empty (the Base is not there yet), which Roblox's type list does not show.
 		entry.gui.Adornee = base :: any
-		local words = SpotLabels.text(waiting, rarity, refillAt, deps.now())
-		if words == nil or waiting == nil or base == nil then
-			entry.refillAt = nil
+		local words = SpotLabels.text(waiting, rarity)
+		if words == nil or base == nil then
 			entry.gui.Enabled = false
 			clearFade(entry)
 			return
 		end
-		if not waiting then
-			clearFade(entry)
-		end
 
-		entry.gui.StudsOffsetWorldSpace = offsetFor(spot, base, waiting)
+		entry.gui.StudsOffsetWorldSpace = offsetFor(spot, base)
 		local look = Theme.rarity[rarity]
-		entry.text.TextColor3 = if waiting and look ~= nil then look.main else Theme.white
-		-- Only an empty spot counts down; the frames leave a waiting label alone.
-		entry.refillAt = if waiting then nil else refillAt
+		entry.text.TextColor3 = if look ~= nil then look.main else Theme.white
 		setText(entry, words)
 		entry.gui.Enabled = true
 	end
@@ -367,7 +352,6 @@ function SpotLabels.start(deps: Deps): () -> ()
 			fade = 0,
 			hide = false,
 			faded = 0,
-			refillAt = nil,
 			shown = nil,
 			cleanup = function()
 				spotTrove:Destroy()
@@ -406,9 +390,9 @@ function SpotLabels.start(deps: Deps): () -> ()
 		for _, entry in entries do
 			-- Adornee may be empty (the Base is not there yet), which Roblox's type list does not show.
 			local adornee: Instance? = entry.gui.Adornee
-			if entry.gui.Enabled and entry.refillAt == nil and adornee ~= nil and adornee:IsA("BasePart") then
+			if entry.gui.Enabled and adornee ~= nil and adornee:IsA("BasePart") then
 				-- Roblox reads StudsOffsetWorldSpace along the Base's own axes, so this turns the written offset back
-				-- into the world. It is the same point the label was placed at: straight above its egg (or countdown).
+				-- into the world. It is the same point the label was placed at: straight above its egg.
 				local drawnAt = adornee.Position + adornee.CFrame:VectorToWorldSpace(entry.gui.StudsOffsetWorldSpace)
 				local words, distance = view.words(entry.gui, entry.text, drawnAt)
 				if words ~= nil and distance ~= nil then
@@ -422,39 +406,27 @@ function SpotLabels.start(deps: Deps): () -> ()
 		end
 	end
 
-	-- Moves every rarity label's fade toward where its last check sent it, at 0.15 s from clear to hidden.
+	-- Moves every label's fade toward where its last check sent it, at 0.15 s from clear to hidden.
 	local function fadeLabels(seconds: number)
 		local amount = seconds / FADE_SECONDS
 		for _, entry in entries do
-			if entry.refillAt == nil then
-				if entry.hide then
-					entry.fade = math.min(1, entry.fade + amount)
-				else
-					entry.fade = math.max(0, entry.fade - amount)
-				end
-				if entry.fade < SNAP then
-					entry.fade = 0
-				elseif entry.fade > 1 - SNAP then
-					entry.fade = 1
-				end
-				writeFade(entry, entry.fade)
+			if entry.hide then
+				entry.fade = math.min(1, entry.fade + amount)
+			else
+				entry.fade = math.max(0, entry.fade - amount)
 			end
+			if entry.fade < SNAP then
+				entry.fade = 0
+			elseif entry.fade > 1 - SNAP then
+				entry.fade = 1
+			end
+			writeFade(entry, entry.fade)
 		end
 	end
 
-	-- The countdowns follow the clock on every frame; the words are set only when the second changes. The two screen
-	-- rules are checked every CHECK_SECONDS, and the fades move on every frame.
+	-- The two screen rules are checked every CHECK_SECONDS, and the fades move on every frame.
 	local function onStep()
 		local now = deps.now()
-		for _, entry in entries do
-			local refillAt = entry.refillAt
-			if refillAt ~= nil then
-				local words = SpotLabels.text(false, "", refillAt, now)
-				if words ~= nil then
-					setText(entry, words)
-				end
-			end
-		end
 		local view = deps.view
 		if view == nil then
 			return

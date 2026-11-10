@@ -16,63 +16,25 @@ local seeThrough = Helpers.seeThrough
 
 afterEach(cleanUp)
 
-describe("SpotLabels: countdowns", function()
-	it("are never hidden, and never hide a rarity label", function()
+describe("SpotLabels: empty spots", function()
+	-- Spec Rule 77: an empty nest shows no timer and no words.
+	it("an empty spot never shows a label, and never hides a rarity label", function()
 		local screen = newScreen()
 		local rig = newRig(screen.view)
-		local countdown = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
+		local empty = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
 		local waiting = rig.addSpot("EggSpot_Rare_1", "Rare")
-		-- the countdown is the nearer one and sits right on the rarity label
+		-- the empty spot is the nearer one and sits right on the rarity label, with a RefillAt left over
 		screen.places["EggSpot_Uncommon_1"] = { rect = rect(300, 200, 80, 30), distance = 5 }
 		screen.places["EggSpot_Rare_1"] = { rect = rect(310, 205, 80, 30), distance = 20 }
-		countdown:SetAttribute("RefillAt", 150)
-		rig.set(countdown, "Waiting", false)
+		empty:SetAttribute("RefillAt", 150)
+		rig.set(empty, "Waiting", false)
 		rig.set(waiting, "Waiting", true)
 		rig.advance(0.3)
 		rig.advance(0.3)
-		expect(seeThrough(rig, countdown)).toBe(0)
-		expect(outlineSeeThrough(rig, countdown)).toBe(0)
+		expect((rig.labelOf(empty) :: BillboardGui).Enabled).toBe(false)
+		expect(screen.measured["EggSpot_Uncommon_1"]).toBeNil()
 		expect(seeThrough(rig, waiting)).toBe(0)
 		expect(outlineSeeThrough(rig, waiting)).toBe(0)
-	end)
-
-	it("are not measured at all, even when the screen has a place for them", function()
-		local screen = newScreen()
-		local rig = newRig(screen.view)
-		local countdown = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
-		screen.places["EggSpot_Uncommon_1"] = { rect = rect(300, -50, 80, 30), distance = 5 }
-		countdown:SetAttribute("RefillAt", 150)
-		rig.set(countdown, "Waiting", false)
-		rig.advance(0.3)
-		expect(screen.measured["EggSpot_Uncommon_1"]).toBeNil()
-		-- not even the top edge or the meter touch it
-		expect(seeThrough(rig, countdown)).toBe(0)
-	end)
-
-	it("show at once when a hidden label's egg is taken", function()
-		local screen = newScreen()
-		local rig, _near, far = overlappingRares(screen)
-		rig.advance(0.075)
-		rig.advance(0.075)
-		expect(seeThrough(rig, far)).toBeCloseTo(1, 3)
-		far:SetAttribute("RefillAt", 150)
-		rig.set(far, "Waiting", false)
-		expect(rig.textOf(far).Text).toBe("0:50")
-		expect(seeThrough(rig, far)).toBe(0)
-		expect(outlineSeeThrough(rig, far)).toBe(0)
-		-- and it stays shown through the next checks
-		rig.advance(0.3)
-		expect(seeThrough(rig, far)).toBe(0)
-	end)
-
-	it("show at once when a hidden label's spot stops waiting and has no countdown yet", function()
-		local screen = newScreen()
-		local rig, _near, far = overlappingRares(screen)
-		rig.advance(0.075)
-		rig.advance(0.075)
-		rig.set(far, "Waiting", nil)
-		expect(seeThrough(rig, far)).toBe(0)
-		expect(outlineSeeThrough(rig, far)).toBe(0)
 	end)
 end)
 
@@ -115,18 +77,6 @@ describe("SpotLabels: labels never sit under the meter", function()
 		local spot = rig.addSpot("EggSpot_Common_1", "Common")
 		screen.places["EggSpot_Common_1"] = { rect = rect(560, 50, 60, 20), distance = 5 }
 		rig.set(spot, "Waiting", true)
-		rig.advance(0.3)
-		expect(seeThrough(rig, spot)).toBe(0)
-	end)
-
-	it("never hides a countdown for being under the meter", function()
-		local screen = newScreen()
-		screen.meter = meter
-		local rig = newRig(screen.view)
-		local spot = rig.addSpot("EggSpot_Common_1", "Common")
-		screen.places["EggSpot_Common_1"] = { rect = rect(560, 50, 60, 20), distance = 5 }
-		spot:SetAttribute("RefillAt", 150)
-		rig.set(spot, "Waiting", false)
 		rig.advance(0.3)
 		expect(seeThrough(rig, spot)).toBe(0)
 	end)

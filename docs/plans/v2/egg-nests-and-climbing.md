@@ -680,3 +680,8 @@ product checked the four build decisions on 2026-10-19 (`docs/specs/v2/research/
 ## For designer to confirm
 
 - The sideways jump reach (10 studs, from 16 studs a second for the 0.6 s of a 9-stud jump). The style guide's "Jump reach" gives the 9 and 5 studs but no sideways number. If designer used another, Task 18's numbers and designer's will differ by that much.
+
+## Notes for egg fix 2 and its shots (added 2026-11-10, Task 8 review)
+
+- The refill shot (Task 8 shot 3) failed in round 4 because the camera hold on nest B came before the E hold on nest A, so the prompt shown was B's. In fix 2's shots card: aim the camera at the egg on A first, keep it there through the E hold, and move it to B only after the take.
+- Two far "Uncommon" words on the boot clip each other in shot 1 (designer's finding). Small fix before fix 2's shots: see the Task 8 review reply (stack check in `SpotLabels.pickShown`).

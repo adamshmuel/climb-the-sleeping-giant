@@ -325,7 +325,10 @@ describe("SpotLabels: where the screen is told the label is", function()
 		local gui = rig.labelOf(spot) :: BillboardGui
 		local base = gui.Adornee :: BasePart
 		local tip = (tilted * CFrame.new(0, 0.1, 0)).Position + tilted.UpVector * 4
-		local intended = tip + Vector3.new(0, 1 + gui.Size.Y.Scale / 2, 0)
+		-- the word's bottom is WORD_BOTTOM_STUDS (8) above the base top, or GAP_ABOVE_EGG (1) over the egg when taller
+		-- (SpotLabels.offsetFor); this egg is 4 tall, so the gap over its tip is 8 - 4
+		local gap = math.max(1, 8 - 4)
+		local intended = tip + Vector3.new(0, gap + gui.Size.Y.Scale / 2, 0)
 		local told = screen.centres["EggSpot_Rare_1"]
 		expect(told.X).toBeCloseTo(intended.X, 3)
 		expect(told.Y).toBeCloseTo(intended.Y, 3)

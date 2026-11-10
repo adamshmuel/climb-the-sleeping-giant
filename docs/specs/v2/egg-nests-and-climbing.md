@@ -250,6 +250,13 @@ The Rule 45 check must fail the test run, naming the spot, if any walk or single
 
 **Rule 84: A slide is a fall, and the first one gets a tip.** A slide down his side below the seam must count as one fall that thuds by the highest zone it left (Rule 8: Steps make noise). The first time in a session that a player's slide ends, the bottom tip "Too steep! Slipping is loud." must show for 3 seconds. For a carrier, it shows in the carry pill's place, then the pill comes back (like V1's "Stand still or tiptoe!"). If another tip is showing, this one waits until it ends. It never shows for a bounce-off float, a rescue or a catch.
 
+**Rule 85: Meadow eggs stop you, eggs on him don't.** *(Added on 2026-11-10, product's ruling `work/p5t8/egg-inside-ruling.md`, after Adam saw a player standing inside a meadow egg.)* A waiting egg in a meadow nest must stop a player's body at about its shell, so nobody stands inside it or on top of it. It does this with an invisible solid post:
+- about 0.8 of the egg's width and as tall as the egg;
+- with a top steep enough (at least 75°) that a player who lands on it slides off;
+- off while the egg is carried, and back on only once no player stands where the post goes.
+
+When a meadow egg refills (Rule 75: Meadow eggs stay by their garden) and a player stands on the nest it would appear on, it must appear on the garden's other meadow nest instead. Only when players stand on both nests does it appear in place, with the post off until that nest is clear. A waiting egg on him must stay walk-through, so it never blocks, narrows or adds a step to a way up (Rule 82: No new way onto the belly). On every egg, the rank word must sit above the head of a player standing in or beside the egg, at the height designer's style guide sets (`style-guide/nests-art.md`, "Rank word height").
+
 ### His arm
 
 **Rule 100: Nothing you stand on moves while he sleeps.** While he sleeps, nothing a player can stand on may move: not his arms, not the cuff pockets, not his nightcap. So his right arm must no longer twitch at the 85% warning (this changes V1 Rule 10: He warns before he wakes, and `new-player-safety.md` Rule 17: A free save replays the 85% warning). His eyelids still flutter at 60%, because they are not solid and can't be stood on. While he's awake:
