@@ -4,6 +4,7 @@
 local Shared = require(script.Parent.Shared)
 local Motion = require(script.Parent.Motion)
 local Find = require(script.Parent.Find)
+local Ride = require(script.Parent.Ride)
 
 local SHOULDER_ATTRIBUTE = Shared.SHOULDER_ATTRIBUTE
 local RAISE_ATTRIBUTE = Shared.RAISE_ATTRIBUTE
@@ -19,7 +20,7 @@ local SHOWN_WHEN_AWAKE = "ShownWhenAwake"
 
 local Pose = {}
 
-function Pose.new(state: Shared.State, find: Find.Finders)
+function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 	-- The pivot a model had before any motion of this module, saved the first time.
 	local function startPivotOf(model: Model): CFrame
 		local saved: CFrame? = state.startPivots[model]
@@ -86,8 +87,8 @@ function Pose.new(state: Shared.State, find: Find.Finders)
 
 	-- Puts the right arm `share` of the way into the waking pose (0 is at rest, 1 is the full raise), swung toward the
 	-- slam that is in progress, if any, at `now`. The swing is scaled by `share`, so as the pose goes back to rest the
-	-- swing goes with it. At share 0 the arm is exactly on its start pivot. If the giant's numbers are missing, the arm
-	-- stays where it is.
+	-- swing goes with it. At share 0 the arm is exactly on its start pivot. Whatever rides the arm (Ride) moves with
+	-- it. If the giant's numbers are missing, the arm stays where it is.
 	local function placeRightArm(share: number, now: number)
 		local model = find.giant()
 		local rightArm = find.arm()
@@ -99,17 +100,20 @@ function Pose.new(state: Shared.State, find: Find.Finders)
 		local start = startPivotOf(rightArm)
 		if share <= 0 or typeof(shoulder) ~= "Vector3" or typeof(raise) ~= "Vector3" then
 			rightArm:PivotTo(start)
+			ride.place(nil)
 			return
 		end
 		local raised = Motion.armRaise(shoulder, raise, share)
 		local swing = if state.slamAt ~= nil then Motion.slamShare(now - state.slamAt) else 0
 		local target = state.slamPoint
 		local from = raisedDirection(rightArm, shoulder, raise)
+		local placed = raised * start
 		if swing > 0 and target ~= nil and from ~= nil then
-			rightArm:PivotTo(Motion.slamTurn(shoulder, from, target, swing * share) * raised * start)
-		else
-			rightArm:PivotTo(raised * start)
+			placed = Motion.slamTurn(shoulder, from, target, swing * share) * placed
 		end
+		rightArm:PivotTo(placed)
+		-- Whatever rides the arm moves by exactly what the arm moved (Rule 100).
+		ride.place(placed * start:Inverse())
 	end
 
 	-- Puts the head pieces and the right arm `age` seconds into the pose, each from its start pivot. At 0 they are

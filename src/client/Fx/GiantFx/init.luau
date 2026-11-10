@@ -55,6 +55,7 @@ local Find = require(script.Find)
 local BubbleLook = require(script.BubbleLook)
 local SleepSigns = require(script.SleepSigns)
 local Pose = require(script.Pose)
+local Ride = require(script.Ride)
 
 local FLUTTER = Shared.FLUTTER
 local FADE_LETTERS = Shared.FADE_LETTERS
@@ -148,7 +149,9 @@ function GiantFx.start(deps: Deps): Handle
 	local find = Find.new(deps)
 	local bubbleLook = BubbleLook.new(state, deps, find)
 	local sleepSigns = SleepSigns.new(state, deps, find)
-	local pose = Pose.new(state, find)
+	local ride = Ride.new(state, deps)
+	state.trove:Add(ride.destroy)
+	local pose = Pose.new(state, find, ride)
 
 	-- The look of the Z Z Z now, told to the Zs on the meter whenever it differs from the last one told.
 	local lastSign: Shared.Sign? = nil
@@ -305,6 +308,7 @@ function GiantFx.start(deps: Deps): Handle
 			state.slamAt = nil
 			state.slamPoint = nil
 		end
+		ride.update(now)
 		if
 			state.flutterAt == nil
 			and state.snortAt == nil
@@ -315,6 +319,7 @@ function GiantFx.start(deps: Deps): Handle
 			and state.poseDirection == 0
 			and state.slamAt == nil
 			and state.shrinkAt == nil
+			and not ride.busy()
 		then
 			disconnectStep()
 		end
@@ -440,6 +445,7 @@ function GiantFx.start(deps: Deps): Handle
 		pose.setEyes(true)
 		applyState()
 		startPose(1)
+		ride.update(deps.now())
 	end
 
 	-- He is no longer awake: the eyes swap back at once and the pose goes back.
@@ -448,6 +454,7 @@ function GiantFx.start(deps: Deps): Handle
 		pose.setEyes(false)
 		applyState()
 		startPose(-1)
+		ride.update(deps.now())
 	end
 
 	-- The Z Z Z and puffs come back when the meter has fallen to 75 while he sleeps, or when he is in Heavy Sleep.
@@ -556,6 +563,7 @@ function GiantFx.start(deps: Deps): Handle
 		applyState()
 		state.poseAge = Shared.poseSeconds
 		pose.placePose(state.poseAge, deps.now())
+		ride.snap()
 	end
 
 	notifySigns() -- the Zs on the meter start with the look he has now

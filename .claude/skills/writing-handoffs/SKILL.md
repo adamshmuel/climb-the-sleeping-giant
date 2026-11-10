@@ -83,6 +83,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 - **Phone checks** rerun only what the phone screen changes (shots, on-screen buttons and text), never walks.
 - **A shot of an effect is checked against how long it lasts.** If the effect ends before the capture, prove it with the game's own signal and ask for no shot. The handoff says up front whether the task changes what the player sees; if not, it budgets no look shots.
 - **A proof camera** is placed and aimed the `look-check` skill's way ("Shots"), set off the player's facing line.
+- **Every shot on a card has its own `camera_position` and `look_at_position`.** "The player's view" alone fails: turning the character doesn't turn the follow camera (Task 9, 2026-11-10). The Studio cap counts watcher calls and the console read.
 - **A gap proof** aims the camera at a right angle to the line between the two edges (about 10 studs away, 3 up), with both edges and the gap in the frame. Zoom the shot before naming what blocks it.
 - **Choose the shot and the pass rule together.** A "feet on the floor" proof is shot from behind the player along their path, at their own zoom distance, never from a high side camera where a wall can hide their legs.
 
