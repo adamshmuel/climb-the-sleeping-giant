@@ -37,21 +37,27 @@ describe("the real world, ladder boxes and zone boxes", function()
 	local ROUTE_ZONES: { [string]: { string } } = {
 		Belly = {
 			"Belly_4",
-			"Belly_BandTop",
+			"BellyRampRight_4",
 			"Belly_Crest",
-			"Belly_KneeTop",
 			"Egg_Rare_1",
 			"Egg_Rare_2",
 			"Egg_Rare_3",
 			"Egg_Rare_4",
 		},
 		Boots = {
-			"Belly_1",
-			"Belly_2",
-			"Belly_3",
-			"Belly_AnkleTop",
-			"Belly_BootStep",
-			"Belly_KneeFoot",
+			"BellyRampLeft_1",
+			"BellyRampLeft_2",
+			"BellyRampLeft_3",
+			"BellyRampRight_1",
+			"BellyRampRight_2",
+			"BellyRampRight_3",
+			"Landing_Back",
+			"LadderLeft_Top",
+			"LadderRight_Top",
+			"PlankLeft_In",
+			"PlankLeft_Out",
+			"PlankRight_In",
+			"PlankRight_Out",
 			"Bridge4_Giant",
 			"Bridge5_Giant",
 			"Egg_Uncommon_1",
@@ -313,11 +319,14 @@ describe("the real world, ladder boxes and zone boxes", function()
 				end
 			end
 		end
+		-- route points are judged by the zone boxes only (8c ruling, 2026-11-10)
+		local zoneBoxes = WorldIndex.readZones(realWorld()) :: { Zones.ZoneBox }
 		for _, point in WorldIndex.readRoute(realWorld()) :: { WorldIndex.RoutePoint } do
 			local short = string.gsub(point.name, "^RoutePoint_", "")
 			local want = listedZone(ROUTE_ZONES, short, "Meadow")
-			if zoneOf(point.position + UP) ~= want then
-				table.insert(changed, `{short} {want}>{zoneOf(point.position + UP)}`)
+			local zone = Zones.zoneAt(point.position + UP, zoneBoxes)
+			if zone ~= want then
+				table.insert(changed, `{short} {want}>{zone}`)
 			end
 		end
 		table.sort(changed)

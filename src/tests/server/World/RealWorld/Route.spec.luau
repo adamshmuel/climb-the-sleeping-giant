@@ -2,6 +2,7 @@
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ServerScriptService = game:GetService("ServerScriptService")
+local RouteData = require(game:GetService("ReplicatedStorage").Shared.RouteData)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Helpers = require(script.Parent.Helpers)
@@ -21,6 +22,9 @@ describe("the real world, route and landing spots", function()
 	local GATE_OUTSIDE = 5.5 -- studs from the middle of a Safe Gate toward its spawn spot: just outside the arch
 	local TARGET_REACH = 3 -- studs, across the ground, between a target point and the thing it stands at
 	local MAX_LINK_LENGTH = 25 -- studs: short links follow the walk surfaces, with no corner-cutting
+
+	local CLIMB_FOOT_REACH = 3 -- studs (flat): a ladder foot point is this close to the bottom of its ladder's Climb truss
+	local CLIMB_FOOT_MAX_HEIGHT = 5 -- studs: a ladder foot point stands on the grass, not up the ladder
 
 	local POINT_SIZE = Vector3.new(1, 0.2, 1)
 
@@ -202,6 +206,10 @@ describe("the real world, route and landing spots", function()
 		end
 		for _, point in points do
 			for _, neighbourName in point.neighbours do
+				-- A climb link is a ladder: it runs the ladder's whole height, so the length limit is for walks only.
+				if RouteData.isClimb(point, byName[neighbourName]) then
+					continue
+				end
 				local length = (byName[neighbourName].position - point.position).Magnitude
 				local label = `{point.name} to {neighbourName}`
 				expect({ label = label, short = length <= MAX_LINK_LENGTH, length = length }).toEqual({
@@ -211,6 +219,43 @@ describe("the real world, route and landing spots", function()
 				})
 			end
 		end
+	end)
+
+	it("each climb link joins a foot on the grass at its ladder's truss to a top on that ladder's top pad", function()
+		local walkSurfaces = (realWorld() :: any).WalkSurfaces
+		local byName: { [string]: WorldIndex.RoutePoint } = {}
+		local points = loadRoute()
+		for _, point in points do
+			byName[point.name] = point
+		end
+		local climbs = 0
+		for _, point in points do
+			for _, neighbourName in point.neighbours do
+				local other = byName[neighbourName]
+				-- each climb link once, from the lower end
+				if not RouteData.isClimb(point, other) or point.position.Y > other.position.Y then
+					continue
+				end
+				climbs += 1
+				local ladder = walkSurfaces:FindFirstChild(point.ladder :: string) :: Model
+				local truss = ladder:FindFirstChild("Climb") :: TrussPart
+				local pad = ladder:FindFirstChild("TopPad") :: BasePart
+				-- the truss runs along its local Z: its lower end is the one with the lower Y
+				local endA = (truss.CFrame * CFrame.new(0, 0, truss.Size.Z / 2)).Position
+				local endB = (truss.CFrame * CFrame.new(0, 0, -truss.Size.Z / 2)).Position
+				local bottom = if endA.Y < endB.Y then endA else endB
+				local footGap = (flat(point.position) - flat(bottom)).Magnitude
+				local padOffset = pad.CFrame:PointToObjectSpace(other.position)
+				local label = `{point.name} to {neighbourName}`
+				expect({
+					label = label,
+					footNearTruss = footGap <= CLIMB_FOOT_REACH,
+					footOnGrass = point.position.Y < CLIMB_FOOT_MAX_HEIGHT,
+					topOnPad = math.abs(padOffset.X) <= pad.Size.X / 2 and math.abs(padOffset.Z) <= pad.Size.Z / 2,
+				}).toEqual({ label = label, footNearTruss = true, footOnGrass = true, topOnPad = true })
+			end
+		end
+		expect(climbs).toBe(2) -- the two boot ladders
 	end)
 
 	it(
@@ -234,19 +279,43 @@ describe("the real world, route and landing spots", function()
 				byName[point.name] = point
 			end
 			local checked = 0
+			local skipOptions: { [string]: any } = {}
 			local problems: { [string]: string } = {}
 			for _, point in points do
 				for _, neighbourName in point.neighbours do
 					if point.name < neighbourName then -- each link once
-						checked += 1
-						local problem = PathCheck.linkProblem(options, point.position, byName[neighbourName].position)
-						if problem ~= nil then
-							problems[`{point.name} to {neighbourName}`] = problem
+						-- A climb link is a ladder, not a walk: the climb test above checks it instead.
+						if not RouteData.isClimb(point, byName[neighbourName]) then
+							checked += 1
+							-- RouteData.bodyBoxSkip names the parts a link leaves out of the body box
+							local linkOptions = options
+							local skipList = RouteData.bodyBoxSkip(point.name, neighbourName)
+							if #skipList > 0 then
+								local skipKey = table.concat(skipList, ",")
+								if skipOptions[skipKey] == nil then
+									local made = PathCheck.defaults(Workspace)
+									local ignores: { Instance } = { rampPlanks[1], rampPlanks[2] }
+									for _, part in RouteData.skipInstances(world, point.name, neighbourName) do
+										table.insert(ignores, part)
+									end
+									made.boxIgnores = ignores
+									skipOptions[skipKey] = made
+								end
+								linkOptions = skipOptions[skipKey]
+							end
+							local problem =
+								PathCheck.linkProblem(linkOptions, point.position, byName[neighbourName].position)
+							if problem ~= nil then
+								problems[`{point.name} to {neighbourName}`] = problem
+							end
 						end
 					end
 				end
 			end
 			PathCheck.cleanup(options) -- takes the body probe out of the Workspace, whatever the result
+			for _, skipped in skipOptions do
+				PathCheck.cleanup(skipped)
+			end
 			expect(problems).toEqual({}) -- every link that fails, with why
 			expect(checked > 50).toBe(true)
 		end

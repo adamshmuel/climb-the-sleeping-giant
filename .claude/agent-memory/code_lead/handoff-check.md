@@ -28,3 +28,4 @@
 - Before ruling any zone-box cut or removal, diff old vs new zone on a 1-stud grid over the whole giant in Edit (boxes in memory, no world change). p3t7 cut by sample points only; 3 rounds and ~60 Meadow holes followed.
 - A card's "tests a world change touches" list = grep the tests for every changed part's NAME and for the folder's whole-list reads (`loadZones`/`readZones` + a count `#boxes`). p3t7 missed PillowFit's pinned ZONE_BOXES list.
 - `--handoff` reads "builder" in a card's title as "build": a title with ladder/ramp/way up then asks for a reach walk. A code-only card's title avoids those words (p3t8b, 2026-11-10).
+- `--handoff` reads "Step N" in a Stands-on line as the card's own Step N: name earlier work by its note file ("the route as built, 8c-step4-note.md"), not "8c Step 4" (p3t8c 4b, 2026-11-10).

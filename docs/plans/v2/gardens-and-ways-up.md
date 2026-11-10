@@ -309,7 +309,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Failing tests first:
   1. `RouteData` reads `Ladder`, `WayUpFoot` and `WayUpTop`, and reports a `Ladder` on only one end of a link.
   2. (Real world) Rule 35: for each garden, the route distance from its spawn point to the foot of its own way up (`Config.WaysUp`) ÷ 16 is within its walk limit: 4 s for gardens 3 to 6, 5 s for 2 and 7, 7.5 s for 1 and 8 (spec, 2026-11-03). The times go in the report.
-  2b. (Real world) Task 4e4 owns the final walk times (game_creator's condition, 2026-11-03). This test reads Task 4e4's times (`work/t4e4/walk-times.md`) and checks that the route built here gives each of gardens 1, 2, 7 and 8 the same walk within 0.3 s. It doesn't measure again or move a spawn spot: a miss goes back to Task 4e4's fix.
+  2b. (Real world) Rule 35's fairness pairs: by route distance ÷ 16, gardens 1 and 8 are within 0.3 s of each other, and so are gardens 2 and 7. (Changed 2026-11-10: the old check compared a route distance with Task 4e4's walked times, but a walking player cuts corners by 2% to 5%, so the two never match. Ruling: `work/p3t8/8c-walktime-ruling.md`.)
   3. (Real world) Every way up in `Config.WaysUp` has exactly one foot and one top point.
   4. (Real world) Rule 43: 10 landing spots; each at least 10 studs from every other spot and every egg spot, at least 5 studs from every ladder foot, with a 5×6×5 player box above it touching nothing (the V1 box check grows from 4×6×4), and outside every garden, plus V1's landing-spot checks.
   5. (Real world) The landing's back-edge point links to both belly ramps' first points.
@@ -334,6 +334,26 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Spots (measured by code_lead in Edit, 2026-11-10: flat grass at y 2.0, a clear 5×6×5 box, at least 10 studs from every landing spot and egg spot): `LandingSpot_9` at (−48, −69), 5.8 studs from the left boot ladder's foot (−50.8, 0.9, −64.0); `LandingSpot_10` at (48, −69), the mirror. The script's own checks (props, sky, zone, garden, route links) judge them on the dry run.
 - Failing tests first: test 4 above (10 spots, 5×6×5 box, at least 5 studs from every ladder foot); `WorldIndex` reads 10 spots and reports a missing `LandingSpot_10`.
 - Done when: the tests pass, the script's second run says "already done", the full run's only reds are EggSpots and OnTheGiant, and a Play walk with the player's controls reaches each new spot (one shot each).
+- Lessons from 8c's step back (2026-11-10):
+  - The card's measure step runs every landing check on both spots in one read-only call and lists all the problems. The fix step is priced from that list.
+  - If a check says a spot can't be reached or a body doesn't fit, first look up the last Play at that spot. If a player has walked there, suspect the check before moving the spot.
+  - Every stop row on the card gets a call cap.
+  - From step back 2 (8c2): spot 10 is the mirror of spot 9, so the measure step checks the props around both. The meadow's props are not mirrored. The dry run lists every failure of every check, never only the first.
+
+**Task 8e: A bigger Z Z Z on phones, and the dark-box check**
+- Stands on: Task 8c Step 4b (garden 8's spawn spot, moved and built: the spawn view is what gets judged); the Z Z Z and Heavy Sleep code (built). It does not stand on the queued phone bubble resize: the bubble shows only at 85%, when the Zs are hidden. Product's ruling: `work/p3t8/8c-stepback2-decision.md`, addendum points 1 and 2.
+- Order: any time after 8c closes; nothing else stands on it.
+- For: core gameplay (Rule 1 (Spawn facing the giant): the Zs tell a new player "he's asleep, sneak", and most players are on phones). Size: 4 steps, about 25 min, about 6 Studio calls, one designer verdict.
+- Spec rules: Rule 1 (Spawn facing the giant), Rule 44 (Your way up is in view from home: the Zs must not hide his face or the cap ladder).
+- Files: where the Z size lives is not checked yet. The candidates are the `FloatingZ` BillboardGui in the world (its `StudsOffset` is tested in `RealWorld/Zones.spec.luau` line 101), `src/client/Fx/GiantFx/SleepSigns.luau` and its spec, and `HeavySleep.spec.luau` (the growth factor). The card's first step greps them and names the one place.
+- Steps:
+  1. Designer measures in phone Play at the spawns of gardens 1, 4 and 8 and on the nose top, and confirms whether the Zs float. Designer sets the new size (about 1.5x is the starting value).
+  2. Builder: the test that reads the Z size expects the designer's size and fails first; then the size changes on all 8 gates.
+  3. Look-check: before and after shots, phone (`Phone_844x390`) and computer, from the same 4 spots. These phone shots are also the dark-box check.
+  4. Designer judges the pair.
+- Pass: the Zs are clearly readable on a phone from every spawn; on the nose top they don't cover his face or the cap ladder; Heavy Sleep still grows them by its own factor from the new size, and they still don't cover his face.
+- Dark-box check (point 2): no phone shot shows the dark see-through box. If one does, one read-only call lists every visible PlayerGui item over that area (about 5 min). None of ours: it's Roblox's or the simulator's, and out. Ours: it's a HUD bug fixed inside 8e, priced by code_lead then, before spec 3's build review.
+- Viral test (product): yes, but only with this change. The giant has to read as asleep on a phone in the first frame.
 
 **Task 8b: The route reads ladders and ways up**
 - Stands on: the "four ways up and their gardens" decision (table at the top of this plan, decided 2026-11-03), Task 7 (built). Code only, fake worlds.
@@ -345,11 +365,38 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 8c: The new route on the ways up**
 - Stands on: Task 8a (the split script, built), Task 8b (the route reads `Ladder`, `WayUpFoot` and `WayUpTop`, built), Task 7 (built), and the reach check just before this task (each garden's spawn to its way up's foot, from the built world).
-- For: core gameplay (the footprints lead every garden up its own way). Size: 6 steps, 60 min, about 30 Studio calls; the card measures the new points first.
+- For: core gameplay (the footprints lead every garden up its own way). Size: 6 steps, 60 min, about 35 Studio calls; the card measures the new points first (card `work/p3t8/8c-card.md`, detail `work/p3t8/8c-points.md`).
 - Spec rules: Rule 42, Rule 35, Rule 45 point 3 (the fork).
-- Files: `tools/world/08-route/RoutePlaces.luau` and `Run.luau`, `RealWorld/Route.spec.luau` (ladder links checked as climbs), `RealWorld.spec.luau` (tests 2, 2b, 3 and 5), the stuck scan files that name `Belly_1` to `Belly_3` (`StuckScan/OnTheGiant.spec.luau`, `StuckScan/ScanFacts.luau`; they name the old spots by position), `LadderBoxes.spec.luau` (its V1 route point list), `scripts/bot-walk/names.luau`.
+- Files: `tools/world/08-route/RoutePlaces.luau`, `RouteChecks.luau` and `Run.luau`, `RealWorld/Route.spec.luau` (ladder links checked as climbs), new `RealWorld/WayUpRoute.spec.luau` (tests 2, 2b, 3 and 5; `RealWorld.spec` is now a folder and `WaysUp.spec` is at 997 lines), `StuckScan/ScanFacts.luau` (its named belly points become the new belly-ramp points: the V1 spots have no ground left, so a check by position would read a false stuck spot; `OnTheGiant.spec` names only `Belly_4`, which stays), `LadderBoxes.spec.luau` (its V1 route point list), `scripts/bot-walk/names.luau`; since the step back also `src/shared/RouteData.luau` and `src/tests/shared/RouteData.spec.luau` (`bodyBoxSkip`).
+- Trail end: each ladder's run-in point gets two approach points 8 studs out at 25°, one per side the gardens come from, so Task 13's "last 8 studs within 30°" test needs no route change (one straight approach cost garden 1 about 0.33 s against test 2b's 0.3).
 - Failing tests first: tests 2, 2b, 3 and 5 above.
 - Done when: as Task 8 above, and the full run's only reds are EggSpots and OnTheGiant (Route ×2 and DrawnBody green). The card's first step checks that DrawnBody's 4 failing spots are all route points; one that isn't goes to code_lead before any build. The script stops at `Belly_3` until `RoutePlaces` drops the old left path, so the card's first dry run comes after that edit. Landing spots stay at 8 here; 8d adds 9 and 10.
+- **Step back, 2026-11-10** (time limit: projected 69 min against 60; product's decision `work/p3t8/8c-stepback-decision.md`, code_lead's ruling `work/p3t8/8c-rare1-ruling.md`):
+  - **What stopped it:** the walk check called the last link of the left belly ramp, `BellyRampLeft_3` to `Egg_Rare_1`, not walkable, because the check's body box leans 45° with the ramp and brushes his skin. Players already walk it: 6a2's Play reached the egg with no jump, on ramp wood at 45° with no skin overhead.
+  - **The fix (rest of Step 3):** `RouteData.bodyBoxSkip` (new, in `src/shared/RouteData.luau`, red first in `RouteData.spec`) names the one part left out of the body box for that one link. `RouteChecks` and `Route.spec` both use it (no copies), and every other check on the link still runs. `RouteChecks` now lists every failing link before it stops, so one dry run shows them all. 14 min, 6 Studio calls.
+  - **Caps:** at most 10 Studio calls for the rest of Step 3. Any other failing link gets table F's one move, then stop. At the cap or the first stop, the builder writes the note and stops. No probe grids.
+  - **The right side:** `BellyRampRight_3` to `BellyRampRight_4` is judged by the ruling's three-part table. If it fails the same way, it gets the same exception with its own measured numbers. A link that fails on one side only goes to product.
+  - **Step 6 plays both trails:** left to Rare egg 1, right to `BellyRampRight_4` (the twin's spot; its nest comes in plan 5 Task 12), each to its ramp top. +4 Studio calls.
+  - **New size:** about 73 min and 42 Studio calls in all (29 min spent).
+- **Step back 2, 2026-11-10** (product's decision `work/p3t8/8c-stepback2-decision.md`, code_lead's ruling `work/p3t8/8c-props-ruling.md`):
+  - **What happened:** Rare egg 1's spot needed a second part left out (`BellyRamp_Left.Piece16`, ruling `8c-rare1-ruling2.md`). The dry run then stopped on prop clearance. All 6 prop failures are on the right (gardens 8 and 6). The card had mirrored the meadow walk points, but the meadow's props are not mirrored.
+  - **Real size:** about 88 min against 60, once Steps 4 to 6 finish.
+  - **Steps 4 to 6 stand on Task 8c2** (the final right-side points). Step 6 adds a Play walk from garden 8 to its ladder (+3 min, +1 Studio call).
+
+**Task 8c2: Right-side walk points**
+- Stands on:
+  - 8c Steps 1 to 3's code (route checks, rare-egg part list): built, RouteData 23/0.
+  - The meadow props, `PlankBridge_6` and `PlankBridge_8` (posts included), and the right boot ladder's foot: built. A grep of the plan files on 2026-11-10 found no task that moves them.
+- For: core gameplay. Every garden's trail leads to its way up without running into a rock or a bush. Size: 2 steps, 25 min, 4 Studio calls. Hard limit: 30 min or 4 calls, then the note goes to product. No second search.
+- Spec rules: Rule 42 (Footprints take the quickest way). Rule 35 (Every garden has a way up close by): each trail ends at the same way-up foot as now.
+- Files: `tools/world/08-route/RoutePlaces.luau` (`HAND_POINTS`: `Walk8_1` to `_3`, `LadderRight_InSouth`, and one garden 6 point only if the search needs it); `tools/world/08-route/RouteChecks.luau` (the dry run lists every failure of every check).
+- Steps:
+  1. code_lead's search job, 1 call, `work/p3t8/8c2-search.luau`: a step grid within 10 studs of each point, prop clearance plus 0.5, `linkProblem` on every link, bridge posts in the walk check.
+  2. Builder (card `work/p3t8/8c2-card.md`): add the points, make the dry run collect every failure, and run it once. 3 calls at most.
+- Failing test first: none new. The proof is the collect-all dry run, which today lists the 6 prop failures and must then list none.
+- Fairness (product): every garden's trail to its way-up foot is at most 5% longer than its mirror's (8 against 1, 7 against 2, 6 against 3, 5 against 4).
+- Done when: the dry run lists no failure, and the search's 8 trail lengths (measured on the same points) are within the 5% bar. Then 8c's Steps 4 to 6 go on.
+- Search result (2026-11-10, 1 call): `Walk8_1` (89.89, 1.20), `Walk8_2` (80.11, -18.08), `Walk8_3` (70.33, -39.35), and a new `Walk6_1` (71.35, -78.75) between `Bridge6_Giant` and `LadderRight_InSouth`, which stays. Trail lengths: 116.7, 77.1, 50.6, 26.2, 26.2, 52.4, 77.1, 120.7 studs (gardens 1 to 8). Against the mirror: +3.4%, 0%, +3.5%, 0%.
 
 ### Part 4: Checks on the walk map
 
@@ -414,7 +461,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   2. No footprint lies between a ladder's foot and top points.
   3. The last footprint before a ladder foot is 2 to 4 studs in front of the bottom rung, on the climbing side, and the last 8 studs of trail are within 30° of straight at the rungs (spec 3 section 5, "Trail end at a ladder").
   4. (Real world) Check A2: from garden 8's spawn point, with every meadow and boot egg taken, the way to Rare egg 1 goes up the right boot ladder (spec check A2, 2026-11-03). From each garden, the way to Rare egg 1 goes up that garden's own way up.
-- Done when: the tests pass, and a Play walk with the player's controls only (computer and iPhone 14) from gardens 1, 2, 3, 6, 7 and 8 after banking the Common egg shows: the next footprints are on screen at every step, the trail ends facing the rungs, and holding forward climbs. Shots go to designer.
+- Done when: the tests pass, and a Play walk with the player's controls only (computer and iPhone 14) from gardens 1, 2, 3, 6, 7 and 8 after banking the Common egg shows: the next footprints are on screen at every step, the trail ends facing the rungs, and holding forward climbs. One more shot (designer, Task 8c step back, 2026-11-10): from the player's camera on the left belly ramp, the last footprints and Rare egg 1 at the ramp top, where prints could show running into his skin (+1 Studio call). Shots go to designer.
 
 **Task 13b: Props fade in front of the camera** (a new feature, approved by Adam on 2026-11-04; product's ruling `work/t5/real-play-ruling.md`, finding 3a, and `work/t5/drop-task14.md`)
 - Stands on: designer's answer to question 1 in `work/t5/real-play-ruling.md` (fade values, which prop families count, his body excluded); for Step B also Step A and Tasks 4e4 and 4g (the final prop spots, built).

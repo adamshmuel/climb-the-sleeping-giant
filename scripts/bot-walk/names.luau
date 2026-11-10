@@ -28,11 +28,23 @@ end
 -- 1. Every lookup, by full path, counted.
 local WALK = "Workspace.World.WalkSurfaces."
 local ROUTE = "Workspace.World.Route.RoutePoint_"
-local POINTS =
-	{ "Belly_BootStep", "Belly_AnkleTop", "Belly_1", "Belly_KneeFoot", "Belly_2", "Belly_3", "Belly_KneeTop" }
-for _, name in { "Belly_BandTop", "Egg_Rare_1", "Egg_Rare_2", "Egg_Rare_3", "Belly_4", "Belly_Crest", "Egg_Rare_4" } do
-	table.insert(POINTS, name)
-end
+-- Plan 3 Task 8c: the left way up (boot ladder, lap plank, belly ramp), then the belly points that stay.
+local POINTS = {
+	"LadderLeft_Foot",
+	"LadderLeft_Top",
+	"PlankLeft_Out",
+	"PlankLeft_In",
+	"Landing_Back",
+	"BellyRampLeft_1",
+	"BellyRampLeft_2",
+	"BellyRampLeft_3",
+	"Egg_Rare_1",
+	"Egg_Rare_2",
+	"Egg_Rare_3",
+	"Belly_4",
+	"Belly_Crest",
+	"Egg_Rare_4",
+}
 local PATHS: { string } = {
 	"Workspace.World.Giant",
 	"Workspace.World.WalkSurfaces",
@@ -142,7 +154,7 @@ local function snap(label: string, near: Vector3)
 		table.insert(short, label .. "!" .. v(near))
 	end
 end
-local LABELS = { "BS", "AT", "B1", "KF", "B2", "B3", "KT", "BT", "R1", "R2", "R3", "B4", "CR", "R4" }
+local LABELS = { "LF", "LT", "PO", "PI", "LB", "M1", "M2", "M3", "R1", "R2", "R3", "B4", "CR", "R4" }
 for index, name in POINTS do
 	local point = (at(ROUTE .. name) :: BasePart).Position
 	local skin = under(point, 12, 2) -- route points sit under his skin (Task 7 "Also")

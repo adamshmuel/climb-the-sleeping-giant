@@ -32,6 +32,7 @@ export type Context = {
 	flowerParts: { BasePart },
 	groundAt: (x: number, z: number, heightHint: number, label: string) -> RaycastResult,
 	flat: (vector: Vector3) -> Vector3,
+	problem: (line: string) -> (), -- RouteChecks collects every line and stops once at the end
 }
 
 -- True if `point` is inside the box of `part` (a zone box or a garden volume).
@@ -49,9 +50,9 @@ local function distanceToPart(part: BasePart, x: number, z: number): number
 end
 
 -- Checks every landing place and returns the spots (ground tops) and the report lines about the nearest flower clumps.
--- Stops with an error that names the problem.
+-- Every failed check goes to context.problem (a line starting "landing:") and the checks go on; a missing world part stops at once.
 local function planLanding(context: Context): ({ Vector3 }, { string })
-	local groundAt, flat = context.groundAt, context.flat
+	local groundAt, flat, problem = context.groundAt, context.flat, context.problem
 	local eggPlaces, stems, circles, flowerParts =
 		context.eggPlaces, context.stems, context.circles, context.flowerParts
 
@@ -78,55 +79,55 @@ local function planLanding(context: Context): ({ Vector3 }, { string })
 		local label = `LandingSpot_{number}`
 		local ground = groundAt(place[1], place[2], 2, label)
 		if ground.Instance ~= Workspace.Terrain then
-			error(`{label}: not on the grass (found {ground.Instance:GetFullName()})`)
+			problem(`landing: {label}: not on the grass (found {ground.Instance:GetFullName()})`)
 		end
 		if ground.Normal.Y < LANDING_MIN_NORMAL_Y then
-			error(`{label}: the grass is not flat enough here`)
+			problem(`landing: {label}: the grass is not flat enough here`)
 		end
 		local spot = ground.Position
 		for _, height in { 0, 3 } do -- its feet and its root
 			local probe = spot + Vector3.new(0, height, 0)
 			for _, box in zoneBoxes do
 				if insideBox(box, probe) then
-					error(`{label}: inside the zone box {box.Name}, so not Meadow`)
+					problem(`landing: {label}: inside the zone box {box.Name}, so not Meadow`)
 				end
 			end
 			for _, box in gardenBoxes do
 				if insideBox(box, probe) then
-					error(`{label}: inside a garden ({box.Parent and box.Parent.Name})`)
+					problem(`landing: {label}: inside a garden ({box.Parent and box.Parent.Name})`)
 				end
 			end
 		end
 		local boxCFrame = CFrame.new(spot + Vector3.new(0, LANDING_BOX_LIFT + LANDING_BOX.Y / 2, 0))
 		local touching = Workspace:GetPartBoundsInBox(boxCFrame, LANDING_BOX, boxParams)
 		if #touching > 0 then
-			error(`{label}: a standing player would touch {touching[1]:GetFullName()}`)
+			problem(`landing: {label}: a standing player would touch {touching[1]:GetFullName()}`)
 		end
 		if (flat(spot) - giantMiddle).Magnitude > LANDING_REACH then
-			error(`{label}: more than {LANDING_REACH} studs from the giant's middle`)
+			problem(`landing: {label}: more than {LANDING_REACH} studs from the giant's middle`)
 		end
 		for other, otherSpot in landing do
 			if (flat(spot) - flat(otherSpot)).Magnitude < LANDING_SPACING then
-				error(`{label} is closer than {LANDING_SPACING} studs to LandingSpot_{other}`)
+				problem(`landing: {label} is closer than {LANDING_SPACING} studs to LandingSpot_{other}`)
 			end
 		end
 		if Workspace:Raycast(spot + Vector3.new(0, LANDING_BOX_LIFT, 0), Vector3.new(0, SKY_RAY_LENGTH, 0)) then
-			error(`{label}: something is over it (no open sky)`)
+			problem(`landing: {label}: something is over it (no open sky)`)
 		end
 		for _, egg in eggPlaces do
 			local distance = (flat(spot) - flat(egg.position)).Magnitude
 			if distance < EGG_LANDING_CLEARANCE then
-				error(
-					`{label}: only {string.format("%.1f", distance)} studs from {egg.name} (the least is {EGG_LANDING_CLEARANCE})`
+				problem(
+					`landing: {label}: only {string.format("%.1f", distance)} studs from {egg.name} (the least is {EGG_LANDING_CLEARANCE})`
 				)
 			end
 		end
 		for _, stem in stems do
 			local distance = (flat(spot) - Vector3.new(stem.x, 0, stem.z)).Magnitude
 			if distance < PROP_LANDING_CLEARANCE then
-				error(
+				problem(
 					string.format(
-						"%s: only %.1f studs from a sunflower stem at (%.1f, %.1f) (the least is %g)",
+						"landing: %s: only %.1f studs from a sunflower stem at (%.1f, %.1f) (the least is %g)",
 						label,
 						distance,
 						stem.x,
@@ -139,9 +140,9 @@ local function planLanding(context: Context): ({ Vector3 }, { string })
 		for _, circle in circles do
 			local gap = (flat(spot) - Vector3.new(circle.x, 0, circle.z)).Magnitude - circle.radius
 			if gap < PROP_LANDING_CLEARANCE then
-				error(
+				problem(
 					string.format(
-						"%s: only %.1f studs from the edge of a %s at (%.1f, %.1f) (the least is %g)",
+						"landing: %s: only %.1f studs from the edge of a %s at (%.1f, %.1f) (the least is %g)",
 						label,
 						gap,
 						circle.name,

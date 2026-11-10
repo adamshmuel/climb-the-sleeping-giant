@@ -75,29 +75,84 @@ local HAND_POINTS: { [string]: { number } } = {
 	Ramp_Right_Low = { 24, -90.3, 12.2 },
 	Ramp_Right_High = { 24, -78.2, 22 },
 	Ramp_Right_Top = { 24, -65.5, 32 },
-	-- the belly path (its flat start at the boot, the bend, the steep run, and the top turn)
-	-- (stuck safety Task 24: V1's invisible belly boards are gone, so these stand on his skin, or on a crossing ramp's
-	-- middle line. The rough heights are the ground now. Belly_1 moved (-0.6, -0.45) in x and z, just past the foot of
-	-- the ankle ramp; Belly_2 moved (-2.47, +1.5) onto the long knee ramp (Ruling 10) and then stayed; Belly_3 moved
-	-- (-3.62, +2.28) from V1's place onto the long knee ramp's middle line, 9 studs up from its foot; Belly_4 stayed. The
-	-- Belly_<place> points have no target.)
-	Belly_1 = { -21.1, -51.7, 25.5 },
-	Belly_2 = { -19.97, -45.25, 32 }, -- on the long knee ramp, 6.5 studs up from its foot, 1.3 studs off the middle line
-	Belly_3 = { -19.62, -42.44, 34.5 }, -- on the long knee ramp's middle line, 9.0 studs up from its foot
+	-- the ways up (plan 3 Task 8c): the two boot ladders, measured 2026-11-10 (work/p3t8/8c-step1-note.md); the right side
+	-- is the left side with x turned to -x, so only the left side is listed and the right side is made below. A ladder's
+	-- Foot is 1 stud out from its bottom rung's outer face, RunIn 3 studs out (spec 3: 2 to 4), and the two In points are
+	-- 8 studs from RunIn at 25 degrees to the line, one on the side each group of gardens comes from. The Walk points
+	-- split the straight line from a bridge's giant end to InNorth into parts under 25 studs. The Top is the middle of
+	-- the ladder's TopPad. The plank points are 1.5 studs onto a lap plank's deck from each end, Landing_Back is 3.3 in
+	-- from the landing's back edge (moved from 1.3 in: the deck's back edge blocked the walk to ramp piece 3), and the BellyRamp points are the top middles of ramp pieces 3, 9, 13 and 16.
+	LadderLeft_Foot = { -51.30, -64.00, 2.09 },
+	LadderLeft_RunIn = { -53.30, -64.00, 2.0 },
+	LadderLeft_InNorth = { -60.55, -60.62, 2.0 },
+	LadderLeft_InSouth = { -60.55, -67.38, 2.0 },
+	LadderLeft_Top = { -31.55, -64.00, 30.40 },
+	-- listed by hand, not mirrored: from the pad middle (31.55, -64) the walk to Egg_Uncommon_3 hits the pad's edge
+	-- (probed 2026-11-10); this spot is on the same pad, 1.5 studs north and 0.55 in
+	LadderRight_Top = { 31.00, -62.50, 30.40 },
+	Walk1_1 = { -95.89, -8.80, 2 },
+	Walk1_2 = { -84.11, -26.08, 2 },
+	Walk1_3 = { -72.33, -43.35, 2 },
+	Walk2_1 = { -80.17, -50.98, 2 },
+	-- listed by hand: the right meadow props are not a mirror of the left (8c2, 2026-11-10)
+	Walk8_1 = { 89.89, 1.20, 2 },
+	Walk8_2 = { 80.11, -18.08, 2 },
+	Walk8_3 = { 70.33, -39.35, 2 },
+	Walk6_1 = { 71.35, -78.75, 2 },
+	PlankLeft_Out = { -19.0, -57.5, 30.3 },
+	PlankLeft_In = { -6.51, -54.59, 32.88 },
+	-- listed by hand, not mirrored: the right boot's mesh and thigh guard are not a mirror of the left, and the only
+	-- spot that links to the deck from Egg_Uncommon_4 is this one (probed 2026-11-10; a 0.2 stud move breaks it)
+	PlankRight_Out = { 20.0, -59.0, 29.87 },
+	BellyRampLeft_1 = { -3.21, -48.05, 35.08 },
+	BellyRampLeft_2 = { -9.50, -46.20, 35.92 }, -- moved 0.9 off the piece-9 middle: the edge guard blocked the link
+	BellyRampLeft_3 = { -11.38, -42.55, 39.12 },
+	-- the lap landing's back point, on its middle line (x 0): where the way forks onto both belly ramps (Rule 45)
+	Landing_Back = { 0, -51.0, 33.2 },
+	-- the right ramp that has no egg yet: a dead end until plan 5 Task 12 puts the twin nest there
+	BellyRampRight_4 = { 12.61, -40.07, 41.89 },
 	-- Belly_4 moved (-0.83, +4.67) in x and z, 4.7 studs north, to the gentle north end of the raised strip on his belly
 	-- (stuck safety Task 26, Rulings 10 and 11; product and game_creator both said yes). The closer fit shows the strip's
 	-- sides as steep walls (70 to 80 degrees), so the footprints go round its north end, not straight into a side.
 	Belly_4 = { -5.5, -26.0, 58.7 },
-	Belly_BootStep = { -22.6, -59.9, 30.2 }, -- on the step piece over the 1 stud step in the left boot top
-	Belly_AnkleTop = { -21.1, -56.1, 29.3 }, -- the top of the ankle ramp, on its middle line, at the boot's top edge
-	-- Belly_KneeFoot moved (-0.57, -0.82) in x and z, 1.0 stud back down the long knee ramp, to 0.2 studs up from its foot
-	-- edge (Ruling 11): from 0.6 studs up, the link from Belly_1 (beside the ramp's east edge) cuts across the ramp's side.
-	Belly_KneeFoot = { -24.631, -49.674, 25.7 }, -- the long knee ramp's foot, on its middle line, 0.2 studs up from the foot edge
-	Belly_KneeTop = { -17.68, -39.64, 37.9 }, -- the long knee ramp's top, on its middle line, 12.4 studs up (the tip is at 13.3)
-	-- Belly_BandTop (Ruling 11): on his skin 2.85 studs past the ramp's tip and 1 stud east of its middle line. A straight
-	-- link from Belly_KneeTop to Rare egg 1 touches Knee_Guard_2's end, so the way goes round it through this point.
-	Belly_BandTop = { -14.724, -37.134, 44.7 },
 	Belly_Crest = { -1.1, -30.1, 61.8 }, -- on the crest between Belly_4 and Rare egg 4 (a straight link is 1.2 studs off it)
+}
+
+-- The right side of the ways up: the left points with x turned to -x. Garden 8 mirrors garden 1, 7 mirrors 2 and 6
+-- mirrors 3. Landing_Back (x 0) and BellyRampRight_4 are listed above and are not mirrored.
+do
+	local mirrored: { [string]: { number } } = {}
+	for name, place in HAND_POINTS do
+		local right: string? = nil
+		if string.find(name, "Left", 1, true) ~= nil and name ~= "BellyRampLeft_4" then
+			right = (string.gsub(name, "Left", "Right"))
+		elseif string.match(name, "^Walk1_%d$") then
+			right = (string.gsub(name, "^Walk1", "Walk8"))
+		elseif string.match(name, "^Walk2_%d$") then
+			right = (string.gsub(name, "^Walk2", "Walk7"))
+		end
+		if right ~= nil and HAND_POINTS[right] == nil then
+			mirrored[right] = { -place[1], place[2], place[3] }
+		end
+	end
+	for name, place in mirrored do
+		HAND_POINTS[name] = place
+	end
+end
+
+-- The tags the route points of the ways up carry (the Ladder, WayUpFoot and WayUpTop attributes that
+-- RouteData.readRoute reads): point name -> tags. The way names are Config.WaysUp names. A ladder is on exactly two
+-- points, its foot and its top, which link to each other.
+export type Tags = { ladder: string?, wayUpFoot: string?, wayUpTop: string? }
+local POINT_TAGS: { [string]: Tags } = {
+	LadderLeft_Foot = { ladder = "BootLadder_Left", wayUpFoot = "Left boot ladder" },
+	LadderLeft_Top = { ladder = "BootLadder_Left", wayUpTop = "Left boot ladder" },
+	LadderRight_Foot = { ladder = "BootLadder_Right", wayUpFoot = "Right boot ladder" },
+	LadderRight_Top = { ladder = "BootLadder_Right", wayUpTop = "Right boot ladder" },
+	Ramp_Left_Foot = { wayUpFoot = "Left ramp" },
+	Ramp_Left_Top = { wayUpTop = "Left ramp" },
+	Ramp_Right_Foot = { wayUpFoot = "Right ramp" },
+	Ramp_Right_Top = { wayUpTop = "Right ramp" },
 }
 
 -- The links, as pairs of point names (without the RoutePoint_ start). Every one is made on both ends.
@@ -154,15 +209,61 @@ for _, side in { "Left", "Right" } do
 end
 link("Ramp_Left_Top", "Egg_Uncommon_1")
 link("Egg_Uncommon_1", "Egg_Uncommon_2")
-link("Egg_Uncommon_2", "Belly_BootStep")
-link("Belly_BootStep", "Belly_AnkleTop")
-link("Belly_AnkleTop", "Belly_1")
-link("Belly_1", "Belly_KneeFoot")
-link("Belly_KneeFoot", "Belly_2")
-link("Belly_2", "Belly_3")
-link("Belly_3", "Belly_KneeTop")
-link("Belly_KneeTop", "Belly_BandTop")
-link("Belly_BandTop", "Egg_Rare_1")
+-- Plan 3 Task 8c: the walk from each garden to its way up, the two boot ladders, the lap planks, the landing and the
+-- belly ramps. `sides` lists, per boot, the ladder side name, the gardens (north one, middle one, south one), the walk
+-- point names that garden uses, its boot-top egg and its plank's first egg.
+local BOOT_SIDES = {
+	{
+		side = "Left",
+		north = 1,
+		middle = 2,
+		south = 3,
+		northWalk = "Walk1",
+		middleWalk = "Walk2",
+		topEgg = 1,
+		plankEgg = 1,
+	},
+	{
+		side = "Right",
+		north = 8,
+		middle = 7,
+		south = 6,
+		northWalk = "Walk8",
+		middleWalk = "Walk7",
+		southWalk = "Walk6",
+		topEgg = 3,
+		plankEgg = 4,
+	},
+}
+for _, boot in BOOT_SIDES do
+	local ladder = `Ladder{boot.side}`
+	local northChain = { `Bridge{boot.north}_Giant`, `{boot.northWalk}_1`, `{boot.northWalk}_2`, `{boot.northWalk}_3` }
+	for index = 1, #northChain - 1 do
+		link(northChain[index], northChain[index + 1])
+	end
+	link(northChain[#northChain], `{ladder}_InNorth`)
+	link(`Bridge{boot.middle}_Giant`, `{boot.middleWalk}_1`)
+	link(`{boot.middleWalk}_1`, `{ladder}_InNorth`)
+	if boot.southWalk then
+		link(`Bridge{boot.south}_Giant`, `{boot.southWalk}_1`)
+		link(`{boot.southWalk}_1`, `{ladder}_InSouth`)
+	else
+		link(`Bridge{boot.south}_Giant`, `{ladder}_InSouth`)
+	end
+	link(`{ladder}_InNorth`, `{ladder}_RunIn`)
+	link(`{ladder}_InSouth`, `{ladder}_RunIn`)
+	link(`{ladder}_RunIn`, `{ladder}_Foot`)
+	link(`{ladder}_Foot`, `{ladder}_Top`) -- the climb link
+	link(`{ladder}_Top`, `Egg_Uncommon_{boot.topEgg}`)
+	link(`Egg_Uncommon_{boot.plankEgg}`, `Plank{boot.side}_Out`)
+	link(`Plank{boot.side}_Out`, `Plank{boot.side}_In`)
+	link(`Plank{boot.side}_In`, "Landing_Back")
+	link("Landing_Back", `BellyRamp{boot.side}_1`) -- the fork: both ramps start at the landing
+	link(`BellyRamp{boot.side}_1`, `BellyRamp{boot.side}_2`)
+	link(`BellyRamp{boot.side}_2`, `BellyRamp{boot.side}_3`)
+end
+link("BellyRampLeft_3", "Egg_Rare_1")
+link("BellyRampRight_3", "BellyRampRight_4") -- the right ramp's end is a dead end
 link("Egg_Rare_1", "Egg_Rare_2")
 link("Egg_Rare_2", "Egg_Rare_3")
 link("Egg_Rare_3", "Belly_4")
@@ -209,6 +310,7 @@ return {
 	SOLID_LOOKING_PROPS = SOLID_LOOKING_PROPS,
 	FLOWER_CLUMPS = FLOWER_CLUMPS,
 	HAND_POINTS = HAND_POINTS,
+	POINT_TAGS = POINT_TAGS,
 	LINKS = LINKS,
 	LANDING_PLACES = LANDING_PLACES,
 }

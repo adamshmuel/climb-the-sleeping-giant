@@ -4,8 +4,24 @@
 -- error that names it, and nothing is changed. The numbers are in RoutePlaces.luau; the run is in Run.luau, which
 -- describes every check.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 
+-- Loads a module fresh on every run: a clone placed next to the original (so its script.Parent requires still work),
+-- removed again as soon as it is loaded. A copy this Studio session loaded before the module's last change is not reused.
+local function loadFresh(original: ModuleScript): any
+	local clone = original:Clone()
+	clone.Parent = original.Parent
+	local loaded, result = pcall(require, clone)
+	clone:Destroy()
+	if not loaded then
+		error(`{original.Name} did not load: {result}`)
+	end
+	return result
+end
+
+local RouteData = loadFresh(ReplicatedStorage.Shared.RouteData :: ModuleScript)
 local Places = require(script.Parent.RoutePlaces)
 local LandingChecks = require(script.Parent.LandingChecks)
 
@@ -22,7 +38,14 @@ local LINKS = Places.LINKS
 
 type Stem = LandingChecks.Stem
 type Circle = LandingChecks.Circle
-export type PointPlan = { name: string, position: Vector3, target: string? }
+export type PointPlan = {
+	name: string,
+	position: Vector3,
+	target: string?,
+	ladder: string?,
+	wayUpFoot: string?,
+	wayUpTop: string?,
+}
 export type Plan = {
 	points: { PointPlan },
 	byName: { [string]: PointPlan },
@@ -61,20 +84,8 @@ local function topOf(part: BasePart): Vector3
 	return (part.CFrame * CFrame.new(0, part.Size.Y / 2, 0)).Position
 end
 
--- The one shared walk check (src/server/World/PathCheck), loaded fresh on every run: a clone of the module, placed next
--- to the original (the clone is removed again as soon as it is loaded). This file is itself cloned on every run.
-local PathCheck: any
-do
-	local original = game:GetService("ServerScriptService").Server.World.PathCheck :: ModuleScript
-	local clone = original:Clone()
-	clone.Parent = original.Parent
-	local loaded, result = pcall(require, clone)
-	clone:Destroy()
-	if not loaded then
-		error(`PathCheck did not load: {result}`)
-	end
-	PathCheck = result
-end
+-- The one shared walk check (src/server/World/PathCheck), loaded fresh on every run. This file is itself cloned on every run.
+local PathCheck: any = loadFresh(ServerScriptService.Server.World.PathCheck :: ModuleScript)
 
 -- What PathCheck.linkProblem needs to walk-check the real world, the same as RealWorld.spec: the shared defaults (the
 -- slope limit, the spacing and the meadow ground, Rule 23: One walk check for everything), then the two ramp planks.
@@ -161,11 +172,18 @@ local function planWorld(world: Instance): Plan
 
 	local points: { PointPlan } = {}
 	local byName: { [string]: PointPlan } = {}
+	-- Every check after the points are made adds its lines here and goes on, so one run lists everything that is wrong.
+	-- The run stops once, before anything is built, if this is not empty.
+	local problems: { string } = {}
 	local function add(name: string, position: Vector3, target: string?)
 		if byName[name] then
 			error(`two route points are named {name}`)
 		end
+		local tags = Places.POINT_TAGS[name]
 		local plan: PointPlan = { name = name, position = position, target = target }
+		if tags then
+			plan.ladder, plan.wayUpFoot, plan.wayUpTop = tags.ladder, tags.wayUpFoot, tags.wayUpTop
+		end
 		table.insert(points, plan)
 		byName[name] = plan
 	end
@@ -245,16 +263,20 @@ local function planWorld(world: Instance): Plan
 	for _, point in points do
 		neighbourSets[point.name] = {}
 	end
+	local usable: { { string } } = {} -- the links whose two points exist and which are listed once
 	for _, pair in LINKS do
 		local first, second = pair[1], pair[2]
 		if byName[first] == nil or byName[second] == nil then
-			error(`link {first} to {second}: there is no point with that name`)
+			table.insert(problems, `links: link {first} to {second}: there is no point with that name`)
+			continue
 		end
 		if neighbourSets[first][second] then
-			error(`link {first} to {second} is listed twice`)
+			table.insert(problems, `links: link {first} to {second} is listed twice`)
+			continue
 		end
 		neighbourSets[first][second] = true
 		neighbourSets[second][first] = true
+		table.insert(usable, pair)
 	end
 	local neighbours: { [string]: { string } } = {}
 	for name, set in neighbourSets do
@@ -264,25 +286,48 @@ local function planWorld(world: Instance): Plan
 		end
 		table.sort(list)
 		if #list == 0 then
-			error(`{name} has no links`)
+			table.insert(problems, `links: {name} has no links`)
 		end
 		neighbours[name] = list
 	end
 
-	-- every link is short and walkable
+	-- every link is short and walkable (a ladder's climb link is neither: it is climbed, and RouteData.isClimb names it)
 	local longest, longestName = 0, ""
-	for _, pair in LINKS do
+	local climbs = 0
+	local baseOptions = walkOptions(world)
+	local skipOptions: { [string]: any } = {} -- one options table per giant part a link may leave out (RouteData.bodyBoxSkip)
+	for _, pair in usable do
+		if RouteData.isClimb(byName[pair[1]] :: any, byName[pair[2]] :: any) then
+			climbs += 1
+			continue
+		end
 		local from, to = byName[pair[1]].position, byName[pair[2]].position
 		local length = (to - from).Magnitude
 		if length > MAX_LINK_LENGTH then
-			error(`link {pair[1]} to {pair[2]} is {length} studs long (the most is {MAX_LINK_LENGTH})`)
+			table.insert(
+				problems,
+				`walk: link {pair[1]} to {pair[2]} is {length} studs long (the most is {MAX_LINK_LENGTH})`
+			)
 		end
 		if length > longest then
 			longest, longestName = length, `{pair[1]} to {pair[2]}`
 		end
-		local problem = PathCheck.linkProblem(walkOptions(world), from, to)
-		if problem then
-			error(`link {pair[1]} to {pair[2]} is not walkable: {problem}`)
+		local options = baseOptions
+		local skipList = RouteData.bodyBoxSkip(pair[1], pair[2])
+		if #skipList > 0 then
+			local skipKey = table.concat(skipList, ",")
+			if skipOptions[skipKey] == nil then
+				local made = walkOptions(world)
+				for _, part in RouteData.skipInstances(world, pair[1], pair[2]) do
+					table.insert(made.boxIgnores, part)
+				end
+				skipOptions[skipKey] = made
+			end
+			options = skipOptions[skipKey]
+		end
+		local walkProblem = PathCheck.linkProblem(options, from, to)
+		if walkProblem then
+			table.insert(problems, `walk: link {pair[1]} to {pair[2]} is not walkable: {walkProblem}`)
 		end
 	end
 
@@ -291,14 +336,18 @@ local function planWorld(world: Instance): Plan
 	if #stems == 0 or #circles == 0 then
 		error("no sunflowers or no bushes and rocks found under World: the prop check would see nothing")
 	end
-	for _, pair in LINKS do
+	for _, pair in usable do
+		if RouteData.isClimb(byName[pair[1]] :: any, byName[pair[2]] :: any) then
+			continue
+		end
 		local from, to = byName[pair[1]].position, byName[pair[2]].position
 		for _, stem in stems do
 			local distance = distanceToLink(stem.x, stem.z, from, to)
 			if distance < STEM_LINK_CLEARANCE then
-				error(
+				table.insert(
+					problems,
 					string.format(
-						"link %s to %s passes %.1f studs from a sunflower stem at (%.1f, %.1f) (the least is %g)",
+						"props: link %s to %s passes %.1f studs from a sunflower stem at (%.1f, %.1f) (the least is %g)",
 						pair[1],
 						pair[2],
 						distance,
@@ -312,9 +361,10 @@ local function planWorld(world: Instance): Plan
 		for _, circle in circles do
 			local gap = distanceToLink(circle.x, circle.z, from, to) - circle.radius
 			if gap < EDGE_LINK_CLEARANCE then
-				error(
+				table.insert(
+					problems,
 					string.format(
-						"link %s to %s passes %.1f studs from the edge of a %s at (%.1f, %.1f) (the least is %g)",
+						"props: link %s to %s passes %.1f studs from the edge of a %s at (%.1f, %.1f) (the least is %g)",
 						pair[1],
 						pair[2],
 						gap,
@@ -344,7 +394,10 @@ local function planWorld(world: Instance): Plan
 	end
 	for _, point in points do
 		if not seen[point.name] then
-			error(`{point.name} cannot be reached from {points[1].name}: the route is not one connected piece`)
+			table.insert(
+				problems,
+				`reach: {point.name} cannot be reached from {points[1].name}: the route is not one connected piece`
+			)
 		end
 	end
 
@@ -359,16 +412,20 @@ local function planWorld(world: Instance): Plan
 		flowerParts = flowerParts,
 		groundAt = groundAt,
 		flat = flat,
+		problem = function(line: string)
+			table.insert(problems, line)
+		end,
 	})
 
-	-- for the report: does the right boot top join the belly path? (It does not: his legs have a gap between them.)
-	local rightToBelly =
-		PathCheck.linkProblem(walkOptions(world), byName.Egg_Uncommon_4.position, byName.Belly_1.position)
+	-- everything that failed, in one error, before anything is built
+	if #problems > 0 then
+		error(`{#problems} route problems:\n{table.concat(problems, "\n")}`)
+	end
+
 	local info: { string } = {
 		string.format("longest link: %.1f studs (%s)", longest, longestName),
 		string.format("props checked: %d sunflower stems, %d bush and rock circles", #stems, #circles),
-		"right boot top (Uncommon_4) to the belly path start (Belly_1): "
-			.. (if rightToBelly then `not walkable: {rightToBelly}` else "walkable"),
+		`climb links (not length or walk checked): {climbs}`,
 	}
 	for _, line in flowerReport do
 		table.insert(info, line)

@@ -222,6 +222,11 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   7. No V1 spot and no glow ring is left; every nest has a `NestName`.
   8. Each belly pocket piece copied into `World.NestArt` sits within 0.1 studs of where its source piece sits (Task 16 cut the stitches 3 studs short of the pockets where they stand today, so a moved pocket would open a gap or cover a stitch).
 - Done when: the tests pass, the second run says "already done", and every older test that named V1's spots is listed in the report with what replaced it. The place has unsaved world changes (Adam saves it).
+- Lessons from plan 3 Task 8c's step back (2026-11-10):
+  - The card's measure step runs failing tests 1 to 8 on all 38 planned spots in one read-only call and lists every problem. The fix step is priced from that list, not from one problem at a time.
+  - A spot a check calls unreachable, or with no room for a body, first gets its last Play looked up. If a player has walked there, suspect the check before moving the nest.
+  - Every stop row on the card gets a call cap.
+  - From step back 2 (8c2): before any nest is mirrored from its twin, check that the scenery around both is mirrored. The meadow's props are not. The dry run lists every failure of every check, never only the first.
 - **Turns green here:** plan 3 (`gardens-and-ways-up.md`) Task 5's accepted red in `EggSpots.spec` "no egg stands inside a prop": `EggSpot_Uncommon_2` touches `LapPlank_Left.Deck` and `EggSpot_Uncommon_4` touches `LapPlank_Right.Deck`. Those V1 spots are removed here (test 7); the new inner boot toe nests (±19.5, 30.5, -64.5) sit 5 studs south of each lap plank deck's edge (z -59.5, measured 2026-11-03), and `EggSpots.spec` "no egg stands inside a prop" runs on the nests as before.
 
 **Task 16b: `Mockup_Nests` leaves the Workspace** (added 2026-11-09, product's ruling `work/p5t16/stands-on-ruling.md`; build order step 6, right after Task 12, before plan 4 Task 2 and plan 5 Task 17)
@@ -232,6 +237,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What it does: moves `Workspace.Mockup_Nests` to `ServerStorage.ArtLibrary.Mockup_Nests`, and in the same piece points every reader above at the new home.
 - Failing test first: `SignsAndMockups.spec` says no `Mockup_Nests` is left in the Workspace and it is in `ServerStorage.ArtLibrary`.
 - Done when: the test passes, the full run stays at its accepted reds, and a re-run of scripts 22, 23c and 23d still says "already done".
+- Every stop row on its card gets a call cap (plan 3 Task 8c's step back, 2026-11-10). It adds no links or spots, so the other lessons (also the mirror and collect-all lessons from 8c2) don't apply.
 
 **Task 13: World prep: the cuff straps, ledges, ridge and Belly boxes**
 - Stands on: plan 3's (gardens and ways up) Tasks 4a, 5 and 6 (the boot ladders, the belly ramps and his skin, and their climb), his arm at rest (plan 6 keeps it), the cuff ridge's measured check (below), and the reach check just before this task, from plan 3's pieces (build order step 3, `docs/plans/v2/index.md`).

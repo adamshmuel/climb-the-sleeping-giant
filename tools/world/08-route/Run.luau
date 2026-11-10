@@ -24,6 +24,10 @@
 --   * Neighbours: the names of the points it links to, separated by commas. Every link is listed on both ends.
 --   * Target (only where it stands at something): the egg spot's model name ("EggSpot_Rare_2"), "Gate_<n>" or
 --     "Spawn_<n>".
+--   * Ladder, WayUpFoot, WayUpTop (Plan 3 Task 8c, only on the ends of a way up): the ladder part's name on both ends
+--     of a boot ladder ("BootLadder_Left"), and the Config.WaysUp name on a way's foot and on its top. The numbers are
+--     POINT_TAGS in RoutePlaces.luau. The link between a ladder's two ends is a climb (RouteData.isClimb): it is not
+--     length or walk checked.
 -- The points, in the order a player meets them:
 --   * Spawn_n, Gate_n (5.5 studs outside the arch, toward the spawn spot) and the two ends of PlankBridge_n, for
 --     each garden n;
@@ -31,17 +35,18 @@
 --     the sock and the teacup, never over water or through props), with a way past the ramp feet;
 --   * each ramp: Foot, Low, High, Top (the top is on the boot);
 --   * the boot tops: the two Uncommon egg spots of each boot;
---   * the belly path: Belly_1 .. Belly_4 on its middle, the six Belly_<place> points of stuck safety Task 24
---     (Belly_BootStep on the step piece, Belly_AnkleTop, Belly_KneeFoot and Belly_KneeTop on the middle lines of the
---     crossing ramps, Belly_BandTop on his skin just past the long knee ramp's tip, and Belly_Crest), and the four
---     Rare egg spots. (The right boot top does not join the belly path:
---     there is a gap between his legs. The right ramp only leads to Uncommon_3 and _4.)
+--   * the walk to each boot ladder: Walk<n>_<k> and Ladder<Side>_InNorth / _InSouth / _RunIn / _Foot on the grass,
+--     Ladder<Side>_Top on the boot (spec Rule 42: footprints take the quickest way; Rule 35);
+--   * the lap: Plank<Side>_Out and _In on each lap plank, Landing_Back on the lap landing, then the fork (spec Rule 45
+--     point 3): BellyRamp<Side>_1 .. _3 on each belly ramp. The left ramp goes on to Egg_Rare_1; the right one ends at
+--     BellyRampRight_4 (a dead end);
+--   * the belly path: Egg_Rare_1 .. Egg_Rare_3, Belly_4, Belly_Crest and Egg_Rare_4.
 -- Workspace.World.LandingSpots is a Folder of LandingSpot_1 .. LandingSpot_<n>, the same kind of part, with its top
 -- centre on the meadow grass around his feet.
 --
 -- Before it changes anything, the script checks (the same checks as the real-world tests in RealWorld.spec):
 --   * every point has ground a player walks on under it, not water;
---   * every link is at most 25 studs long and walkable (the shared check, src/server/World/PathCheck): sampled
+--   * every link (but a ladder's climb link) is at most 25 studs long and walkable (the shared check, src/server/World/PathCheck): sampled
 --     every 2 studs, a ray from 3 studs above the line finds a solid, non-water surface within 4 studs, no steeper
 --     than StarterPlayer.CharacterMaxSlopeAngle and no more than 1 stud from the line; and room for a player's body
 --     (Config.Stuck: a box held 0.5 studs above the ground, tilted with it and turned to face the way it walks)
@@ -92,7 +97,20 @@ end
 
 -- What is in the place now, in the same terms as the plan: every route point (by its part name) with its top, its
 -- neighbours (sorted) and its target, and the landing spots by number.
-type ExistingPoint = { top: Vector3, neighbours: { string }, target: string? }
+type ExistingPoint = {
+	top: Vector3,
+	neighbours: { string },
+	target: string?,
+	ladder: string?,
+	wayUpFoot: string?,
+	wayUpTop: string?,
+}
+
+-- A text attribute, or nil when it is missing or not text.
+local function textAttribute(part: Instance, name: string): string?
+	local value: any = part:GetAttribute(name)
+	return if type(value) == "string" then value else nil
+end
 type Existing = {
 	points: { [string]: ExistingPoint },
 	landing: { [number]: Vector3 },
@@ -122,6 +140,9 @@ local function readExisting(route: Instance, landingFolder: Instance): Existing
 			top = topOf(child),
 			neighbours = neighbours,
 			target = if type(targetValue) == "string" then targetValue else nil,
+			ladder = textAttribute(child, "Ladder"),
+			wayUpFoot = textAttribute(child, "WayUpFoot"),
+			wayUpTop = textAttribute(child, "WayUpTop"),
 		}
 	end
 	for _, child in landingFolder:GetChildren() do
@@ -182,14 +203,21 @@ local function differences(plan: Plan, existing: Existing): { string }
 			table.insert(names, `RoutePoint_{other}`)
 		end
 		table.sort(names)
-		planned[full] = { top = point.position, neighbours = names, target = point.target }
+		planned[full] = {
+			top = point.position,
+			neighbours = names,
+			target = point.target,
+			ladder = point.ladder,
+			wayUpFoot = point.wayUpFoot,
+			wayUpTop = point.wayUpTop,
+		}
 		plannedNeighbours[full] = names
 	end
 	for name, point in existing.points do
 		existingNeighbours[name] = point.neighbours
 	end
 
-	local added, moved, removed, retargeted, relisted = {}, {}, {}, {}, {}
+	local added, moved, removed, retargeted, relisted, retagged = {}, {}, {}, {}, {}, {}
 	for name, point in planned do
 		local old = existing.points[name]
 		if old == nil then
@@ -204,6 +232,9 @@ local function differences(plan: Plan, existing: Existing): { string }
 		end
 		if table.concat(old.neighbours, ",") ~= table.concat(point.neighbours, ",") then
 			table.insert(relisted, bare(name))
+		end
+		if old.ladder ~= point.ladder or old.wayUpFoot ~= point.wayUpFoot or old.wayUpTop ~= point.wayUpTop then
+			table.insert(retagged, bare(name))
 		end
 	end
 	for name in existing.points do
@@ -252,6 +283,7 @@ local function differences(plan: Plan, existing: Existing): { string }
 	add("points removed", removed)
 	add("points whose Target changed", retargeted)
 	add("points whose Neighbours changed", relisted)
+	add("points whose way-up tags changed", retagged)
 	add("links added", linksAdded)
 	add("links removed", linksRemoved)
 	if #landingMoved > 0 then
@@ -276,6 +308,15 @@ local function buildNew(plan: Plan): (Model, Folder, number)
 		if point.target then
 			part:SetAttribute("Target", point.target)
 			targets += 1
+		end
+		if point.ladder then
+			part:SetAttribute("Ladder", point.ladder)
+		end
+		if point.wayUpFoot then
+			part:SetAttribute("WayUpFoot", point.wayUpFoot)
+		end
+		if point.wayUpTop then
+			part:SetAttribute("WayUpTop", point.wayUpTop)
 		end
 		part.Parent = model
 	end

@@ -33,7 +33,10 @@ describe("the real world", function()
 		local gardens = loadRealGardens()
 		for _, garden in gardens do
 			local distance = (flat(garden.spawnSpot.Position) - flat(garden.gate:GetPivot().Position)).Magnitude
-			expect(math.abs(distance - 18) <= 0.5).toBe(true)
+			-- garden 8 moved 2 studs toward its ladder by Rule 35 (product, 2026-11-10)
+			local want = if garden.index == 8 then 19 else 18
+			local allowed = if garden.index == 8 then 1.5 else 0.5
+			expect(math.abs(distance - want) <= allowed).toBe(true)
 			expect(isInside(garden.box, garden.spawnSpot.Position)).toBe(false)
 		end
 	end)

@@ -34,9 +34,12 @@ local DROP_FROM_ABOVE = 3 -- a named point with no spot near it is checked by ca
 local DROP_LENGTH = 6 -- ...this far down
 
 local ROUTE_NAMES = {
-	"RoutePoint_Belly_1",
-	"RoutePoint_Belly_2",
-	"RoutePoint_Belly_3",
+	"RoutePoint_BellyRampLeft_1",
+	"RoutePoint_BellyRampLeft_2",
+	"RoutePoint_BellyRampLeft_3",
+	"RoutePoint_BellyRampRight_1",
+	"RoutePoint_BellyRampRight_2",
+	"RoutePoint_BellyRampRight_3",
 	"RoutePoint_Belly_4",
 	"RoutePoint_Egg_Rare_1",
 	"RoutePoint_Egg_Rare_2",

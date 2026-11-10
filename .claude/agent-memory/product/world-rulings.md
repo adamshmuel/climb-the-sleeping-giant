@@ -43,3 +43,5 @@
 - A cleanup step inside a building task (moving a mockup folder) is its own piece after its last reader; grep tests and world scripts for readers (p5t16: 5 tests, 2 scripts, Task 12).
 - Before ruling a float fix, check the art under the walk piece is in the world and visible (not just in a Mockup_ folder); 15e2/15e3 trimmed and steepened for 3 rounds while the cuff strap art was never copied out (2026-11-09).
 - Before adding a check to a task in a step back, grep the spec's section 6 and the plan for where it already lives; p5t16 pulled Task 23's "sees the seam" check forward and looped twice (a hem on a round belly is hidden from its flat top).
+- Before ruling on a strange thing in one shot, compare 2-3 other shots from the same device; the p3t8 dark box was in only 1 of 3 phone shots, so a check, not a fix (2026-11-10).
+- After an Edit to a decision file, grep for the new heading before reporting it as written; a failed Edit was once reported as added (p3t8, 2026-11-10).

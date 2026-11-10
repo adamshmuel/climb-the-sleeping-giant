@@ -169,4 +169,56 @@ function RouteData.isClimb(a: Point, b: Point): boolean
 	return a.ladder ~= nil and a.ladder == b.ladder
 end
 
+local BODY = "Giant.body_and_cushion"
+local RAMP_PIECE_16 = "WalkSurfaces.BellyRamp_Left.Piece16"
+
+-- Links whose walk check leaves parts out of the body box (each part is a path under Workspace.World). The check
+-- tilts its body box 45 degrees with the ramp, and at the ramp tip the front corner brushes the giant's skin ahead
+-- and the ramp's next plank. A player stands upright. Measured by code_lead 2026-11-10 (work/p3t8/8c-rare1-ruling.md
+-- and 8c-rare1-ruling2.md): ramp wood at 45 degrees under every step to the ramp top (Pieces 13 to 16), no skin
+-- overhead, skin ahead at 61 degrees (a slope, not a wall). Every problem is at the Rare 1 end point, which sits on
+-- Piece15 at the edge of Piece16 (ramp wood, left out like the ramp-foot planks). Rare 1 to Rare 2 fails only at its
+-- Rare 1 end (Piece16 and the body corner), so it gets the same skip; its middle samples are clean (skin on 20 of 22
+-- samples, steepest 61 degrees, nothing overhead).
+-- Played: 6a2 (2026-11-04) walked the ramp to Rare 1 with no jump; Rare 1 to Rare 2 was walked in 8c Step 6d
+-- (2026-11-10, work/p3t8/8c-step6d-note.md).
+local BODY_BOX_SKIPS: { [string]: { string } } = {
+	["BellyRampLeft_3|Egg_Rare_1"] = { BODY, RAMP_PIECE_16 },
+	["Egg_Rare_1|Egg_Rare_2"] = { BODY, RAMP_PIECE_16 },
+	-- Right twin: 45 degree ramp wood (Pieces 13 to 16), nothing overhead; only the body mesh blocks.
+	["BellyRampRight_3|BellyRampRight_4"] = { BODY },
+}
+
+local function pointKey(name: string): string
+	local stripped = string.gsub(name, "^RoutePoint_", "")
+	return stripped
+end
+
+-- The paths (under World) of the parts to leave out of the body box for the link between two points (either order).
+-- An empty list for any other link.
+function RouteData.bodyBoxSkip(a: string, b: string): { string }
+	local first, second = pointKey(a), pointKey(b)
+	if second < first then
+		first, second = second, first
+	end
+	return BODY_BOX_SKIPS[`{first}|{second}`] or {}
+end
+
+-- The parts bodyBoxSkip names for a link, found under `world`. Errors when a named part is missing.
+function RouteData.skipInstances(world: Instance, a: string, b: string): { Instance }
+	local found: { Instance } = {}
+	for _, path in RouteData.bodyBoxSkip(a, b) do
+		local part: Instance = world
+		for step in string.gmatch(path, "[^.]+") do
+			local child = part:FindFirstChild(step)
+			if child == nil then
+				error(`World part "{path}" is missing (RouteData.bodyBoxSkip names it for {a} to {b})`)
+			end
+			part = child
+		end
+		table.insert(found, part)
+	end
+	return found
+end
+
 return RouteData

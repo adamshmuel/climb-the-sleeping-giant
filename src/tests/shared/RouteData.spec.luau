@@ -279,3 +279,71 @@ describe("RouteData.isClimb", function()
 		expect(RouteData.isClimb(points[3], points[4])).toBe(false)
 	end)
 end)
+
+describe("RouteData.bodyBoxSkip", function()
+	local LEFT_PARTS = { "Giant.body_and_cushion", "WalkSurfaces.BellyRamp_Left.Piece16" }
+
+	it("names the body mesh and ramp Piece16 for the left belly ramp top and Rare egg 1, in either order", function()
+		expect(RouteData.bodyBoxSkip("RoutePoint_Egg_Rare_1", "RoutePoint_BellyRampLeft_3")).toEqual(LEFT_PARTS)
+		expect(RouteData.bodyBoxSkip("BellyRampLeft_3", "Egg_Rare_1")).toEqual(LEFT_PARTS)
+	end)
+
+	it("names the same two parts for Rare egg 1 to Rare egg 2", function()
+		expect(RouteData.bodyBoxSkip("RoutePoint_Egg_Rare_1", "RoutePoint_Egg_Rare_2")).toEqual(LEFT_PARTS)
+	end)
+
+	it("names only the body mesh for the right belly ramp top link", function()
+		expect(RouteData.bodyBoxSkip("RoutePoint_BellyRampRight_4", "RoutePoint_BellyRampRight_3")).toEqual({
+			"Giant.body_and_cushion",
+		})
+	end)
+
+	it("names nothing for any other link", function()
+		expect(RouteData.bodyBoxSkip("RoutePoint_BellyRampLeft_2", "RoutePoint_BellyRampLeft_3")).toEqual({})
+	end)
+end)
+
+describe("RouteData.skipInstances", function()
+	-- A fake World with Giant.body_and_cushion and WalkSurfaces.BellyRamp_Left.Piece16 (left empty on request).
+	local function makeWorld(withPiece: boolean): Folder
+		local world = Instance.new("Folder")
+		local giant = Instance.new("Model")
+		giant.Name = "Giant"
+		giant.Parent = world
+		local body = Instance.new("Part")
+		body.Name = "body_and_cushion"
+		body.Parent = giant
+		local walk = Instance.new("Folder")
+		walk.Name = "WalkSurfaces"
+		walk.Parent = world
+		local ramp = Instance.new("Model")
+		ramp.Name = "BellyRamp_Left"
+		ramp.Parent = walk
+		if withPiece then
+			local piece = Instance.new("Part")
+			piece.Name = "Piece16"
+			piece.Parent = ramp
+		end
+		table.insert(madeRoutes, world)
+		return world
+	end
+
+	it("finds each named part under the world", function()
+		local world = makeWorld(true)
+		local found = RouteData.skipInstances(world, "Egg_Rare_1", "BellyRampLeft_3")
+		expect(#found).toBe(2)
+		expect(found[1]).toBe((world :: any).Giant.body_and_cushion)
+		expect(found[2]).toBe((world :: any).WalkSurfaces.BellyRamp_Left.Piece16)
+	end)
+
+	it("errors when a named part is missing", function()
+		local world = makeWorld(false)
+		expect(function()
+			RouteData.skipInstances(world, "Egg_Rare_1", "BellyRampLeft_3")
+		end).toThrow("Piece16")
+	end)
+
+	it("gives an empty list for a link with no skip", function()
+		expect(#RouteData.skipInstances(makeWorld(true), "BellyRampLeft_2", "BellyRampLeft_3")).toBe(0)
+	end)
+end)
