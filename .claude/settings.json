@@ -79,6 +79,10 @@
 					{
 						"type": "command",
 						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-idle-stop.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/failures-to-owners.py"
 					}
 				]
 			}
