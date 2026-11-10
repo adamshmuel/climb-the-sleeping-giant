@@ -11,10 +11,19 @@ export type NestDefinition = { name: string, rank: Config.RarityName, position: 
 -- What a caller may read about one nest. There is no refill time: an empty nest shows no timer (Rule 77).
 export type NestView = { waiting: boolean, rank: Config.RarityName }
 
--- One egg of a rank. While it waits it sits on a nest; after a take it counts down to a refill (refillAt).
+-- What `update` reports for each egg it placed: the nest, its rank, and how many seconds after the countdown ended it
+-- landed (0 on time, more when no nest was allowed at first).
+export type Refill = { nest: string, rank: Config.RarityName, waited: number }
+
+-- One egg of a rank. While it waits it sits on a nest; after a take it counts down to a refill.
 type Slot = {
 	rank: Config.RarityName,
+	-- When the slot next tries to place its egg: the countdown's end, then every retry. nil while the egg waits.
 	refillAt: number?,
+	-- When the countdown ended. Stays the same across retries, so `waited` can be worked out. nil while the egg waits.
+	dueAt: number?,
+	-- The nest the egg was last taken from. The new egg never lands there. nil before the first take.
+	lastNest: string?,
 }
 
 type Nest = {
@@ -44,7 +53,40 @@ export type State = {
 
 local EggSlots = {}
 
--- Every slot starts with its egg waiting: slot i of a rank sits on that rank's i-th nest, in the order given.
+-- The nests of a rank where a new egg may land, in the order given (Rules 74 and 76): no egg waiting, not `lastNest`,
+-- at least Config.Nests.EggSpacing studs from every waiting egg, and at least Config.Nests.PlayerDistance studs from
+-- every player. A distance equal to the limit is allowed. Distances are 3D.
+local function allowedNests(state: State, rank: Config.RarityName, lastNest: string?, playersAt: { Vector3 }): { Nest }
+	local allowed: { Nest } = {}
+	for _, name in state.order do
+		local nest = state.nests[name]
+		local clear = nest.rank == rank and nest.slot == nil and name ~= lastNest
+		if clear then
+			for _, other in state.nests do
+				if other.slot ~= nil and (other.position - nest.position).Magnitude < Config.Nests.EggSpacing then
+					clear = false
+					break
+				end
+			end
+		end
+		if clear then
+			for _, playerAt in playersAt do
+				if (playerAt - nest.position).Magnitude < Config.Nests.PlayerDistance then
+					clear = false
+					break
+				end
+			end
+		end
+		if clear then
+			table.insert(allowed, nest)
+		end
+	end
+	return allowed
+end
+
+-- Every slot starts with its egg waiting: slot i of a rank sits on the next nest of that rank, in the order given,
+-- that is at least Config.Nests.EggSpacing studs from every egg already placed. A rank that can't fit all its slots
+-- asserts.
 function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityName]: number }): State
 	local state: State = { nests = {}, order = {}, slots = {}, carried = {} }
 	local byRank: { [string]: { Nest } } = {}
@@ -72,8 +114,10 @@ function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityN
 		local rankNests = byRank[rank] or {}
 		assert(#rankNests >= count, `{rank} has {count} slots but only {#rankNests} nests`)
 		for i = 1, count do
-			local slot: Slot = { rank = rank, refillAt = nil }
-			rankNests[i].slot = slot
+			local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil }
+			local first = allowedNests(state, rank, nil, {})[1]
+			assert(first ~= nil, `{rank} has {#rankNests} nests but only room for {i - 1} of {count} slots`)
+			first.slot = slot
 			table.insert(state.slots, slot)
 		end
 	end
@@ -97,37 +141,33 @@ function EggSlots.take(state: State, nestName: string, playerId: number, now: nu
 	end
 	nest.slot = nil
 	slot.refillAt = now + Config.Rarity[nest.rank].RefillSeconds
+	slot.dueAt = slot.refillAt
+	slot.lastNest = nestName
 	state.carried[playerId] = { nest = nestName, rank = nest.rank, slot = slot }
 	return true, nil
 end
 
--- Refills every slot whose countdown has ended and returns the nest names, in slot order. A slot refills even if the
--- player who took its egg is still carrying it. Its allowed nests are its rank's nests with no egg waiting, in the
--- order given; pick(count) chooses one (1 to count). With no allowed nest the slot stays due. _playersAt is unused
--- until Task 3.
-function EggSlots.update(
-	state: State,
-	now: number,
-	_playersAt: { Vector3 },
-	pick: (count: number) -> number
-): { string }
-	local refilled: { string } = {}
+-- Refills every slot whose countdown has ended and returns the eggs it placed, in slot order. A slot refills even if
+-- the player who took its egg is still carrying it. Its allowed nests are described at `allowedNests`; pick(count)
+-- chooses one (1 to count). Eggs placed earlier in the same call count as waiting eggs. With no allowed nest the slot
+-- stays due and tries again at now + Config.Nests.RetrySeconds, never sooner; the checks never relax.
+function EggSlots.update(state: State, now: number, playersAt: { Vector3 }, pick: (count: number) -> number): { Refill }
+	local refilled: { Refill } = {}
 	for _, slot in state.slots do
 		local refillAt = slot.refillAt
-		if refillAt ~= nil and now >= refillAt then
-			local allowed: { Nest } = {}
-			for _, name in state.order do
-				local nest = state.nests[name]
-				if nest.rank == slot.rank and nest.slot == nil then
-					table.insert(allowed, nest)
-				end
-			end
+		local dueAt = slot.dueAt
+		if refillAt ~= nil and dueAt ~= nil and now >= refillAt then
+			local allowed = allowedNests(state, slot.rank, slot.lastNest, playersAt)
 			if #allowed > 0 then
 				local index = pick(#allowed)
-				assert(allowed[index] ~= nil, `pick returned {index} for {#allowed} nests`)
-				allowed[index].slot = slot
+				local chosen = allowed[index]
+				assert(chosen ~= nil, `pick returned {index} for {#allowed} nests`)
+				chosen.slot = slot
 				slot.refillAt = nil
-				table.insert(refilled, allowed[index].name)
+				slot.dueAt = nil
+				table.insert(refilled, { nest = chosen.name, rank = slot.rank, waited = now - dueAt })
+			else
+				slot.refillAt = now + Config.Nests.RetrySeconds
 			end
 		end
 	end

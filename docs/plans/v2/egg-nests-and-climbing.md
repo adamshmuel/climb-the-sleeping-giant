@@ -206,7 +206,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 2: World prep
 
 **Task 12: World prep: 38 nests**
-- Stands on: build order steps 2, 3 and 4 (plan 3's ways up; plan 5 Tasks 13 to 16, the seam included; plan 3 Tasks 7 and 8, the zone boxes and the footprint route), plan 5 Tasks 1 to 3 (slots and nests in code, built), Task 15e3 (the cuff pockets already in `World.CuffArt`, built), and the 38 spots in spec 5's table and the style guide's nest map (final).
+- Stands on: build order steps 2, 3 and 4 (plan 3's ways up; plan 5 Tasks 13 to 16, the seam included; plan 3 Tasks 7 and 8, the zone boxes and the footprint route), plan 5 Tasks 1 to 7 (slots and nests in code, and `WorldIndex.readEggSpots` reading nest models with the bare-spot allowance this task removes, built), Task 8 (`tools/world/21-nests.luau` started with the refill pop copy, built), Task 15e3 (the cuff pockets already in `World.CuffArt`, built), and the 38 spots in spec 5's table and the style guide's nest map (final).
 - Status: can't start until each of those is built (product's ruling, `work/p5t16/stands-on-ruling.md`).
 - Spec rules: Rule 70 (Every egg waits in a nest): the spots, "never within 10 studs of his eyes", "V1's 16 egg spots are removed, with one exception". Rule 71 (How many eggs and nests). Rule 72 (Nests come in mirror pairs). Rule 75 (Meadow eggs stay by their garden): spacing and the 3-second walk. Spot rules: "Belly pocket", "Rare on each side", "Lap fold", "Knee pocket". Section 6, "Art changes".
 - Files: `tools/world/21-nests.luau` (new), `src/server/World/WorldIndex.luau` (the bare-spot allowance from Task 7 goes), `RealWorld.spec.luau`.
