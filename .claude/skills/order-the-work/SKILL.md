@@ -90,6 +90,7 @@ If any reason below is why a piece goes early, it doesn't go early. Look for the
 2. For every piece placed before the decision's build, read its row again: does it change or read a layer that the decision changes? If yes, move it after the build.
 3. Run the project's plan check on the written order (the workflow rules name it).
 4. Before writing "before Task X" or "after Task X", read Task X's progress row. A task that is done can't have work put before it.
+5. Trace each "Stands on" through every plan's progress file, not only this plan's: a piece another plan builds is final only when its own progress row says done (p5t19, 2026-11-10).
 
 ## Output
 

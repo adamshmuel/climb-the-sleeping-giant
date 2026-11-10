@@ -16,6 +16,7 @@ Most of an agent's cost is rereading its memory before every step, so every extr
 | Others | Resume them; start a fresh one at the next natural break once they have been compacted |
 
 - Each agent file sets `autoCompactWindow` (when its memory is compacted) and `maxTurns` (how many turns it gets before its report comes back marked partial). These are the [official subagent settings](https://code.claude.com/docs/en/sub-agents); no hook counts calls.
+- **One job per brief.** A brief with two jobs (copy a ruling across plans, then write cards) ran a `code_lead` out of turns (2026-11-10). Each job is its own brief.
 - A fresh agent starts at about 50k tokens; each tool call adds about 2.4k.
 - **Every step lists its tool calls** (Studio, shell and reads together), numbered under the step heading: `list_roblox_studios`, session hold, phone set and reset, console read, one fetch per expected report page. The list plus one spare per Play session stays under the agent's `maxTurns`. Where one call fails without another, the handoff gives their order.
 - **A card whose steps add up to more than the agent's `maxTurns` goes one step per message.** The first prompt names the card and says "Step 1 only, then report"; each next step is a SendMessage to the same agent, which keeps its history ([resume subagents](https://code.claude.com/docs/en/sub-agents#resume-subagents)). <!-- 2026-11-10: p4t2 (55 min) and p5t12 (~46 Studio calls) builders both stopped at 40 turns, p5t12 with no step notes -->
@@ -63,7 +64,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 - **Walks a saved job does.** When the handoff names a walk or check a saved job must do, its author reads the job file and names the lines that do it.
 - **Decision table.** For many cases of one kind, a table says which kind gets which fix, plus stop rules. Each row names its cause as measured. The builder applies it without asking per case and collects anything it doesn't cover into one `QUESTIONS:` list at the end of the step.
 - **Parts beside a walk floor** give each part's inward reach from the wall, checked against half the measured walk width.
-- **Stands on.** Every task and step has a "Stands on:" line (the `order-the-work` skill). Run `scripts/job-check.sh --handoff <file>`.
+- **Stands on.** Every task and step has a "Stands on:" line (the `order-the-work` skill). Run `scripts/job-check.sh --handoff <file>`. It wants a "Dry run in Edit" line before any "dry start" or "start Play" line, and a full run's Pass line must not hold the words "scan", "line" or "print": put the standing red's exact name on its own line.
 
 ## Play jobs
 
@@ -89,6 +90,7 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 
 ## Plans
 
+- **Files and counts checked when the plan is written.** `ls` every file on a task's Files line, and count any "the N ladders" or "the N parts" in the world, before the plan is saved (p5t22p: a file that never existed, and "eight ladders" where the world has four).
 - **Count before sizing.** A task that works through a list (spots, parts, files) first counts it in one read-only call, and is sized from that count.
 - **Every step and every size has a Studio-call count** from the start, even a shots-only step or a size in a ruling, including its test runs (red run, full run and fetch). Every call counts, whoever makes it; `code_lead`'s own calls are their own lines.
 - **Stand-in numbers** name the recorded run that replaces them, in a named task step.
