@@ -1,6 +1,6 @@
 # code_lead memory
 
-- [Plans](plans.md) - shared checks, spawn moves, climb rules, script numbers
+- [Plans](plans.md) - shared checks, spawn moves, climb rules, script numbers, new-name grep
 - [Debugging](debugging.md) - red world tests and naming the fix
 - [Play jobs](play-jobs.md) - noise trials, wake-up float moves, grab cases, slip-band lag, jump-onto tries need W+drop-on, 45 s key calls, screen-projection jobs
 - [Measuring](measuring.md) - meshes, look-only parts, slopes, new pieces, walk-map controls at 78°, flood link kinds, roomToStand up

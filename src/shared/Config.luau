@@ -11,6 +11,10 @@ export type RarityConfig = {
 	RefillSeconds: number,
 	CarrySlowdown: number,
 	CarryNoise: number,
+	-- Eggs of this rank waiting at once, and the nests they can sit on (spec 5 section 5, rows "Egg slots per rank"
+	-- and "Nests per rank"; Rule 71).
+	Slots: number,
+	Nests: number,
 }
 
 -- One way up from the gardens: its name, the gardens that use it, and each garden's walk limit (same order).
@@ -115,6 +119,28 @@ export type Config = {
 		Seconds: number,
 	},
 	WaysUp: { WayUpConfig },
+	-- Egg nests: every number of spec 5 section 5 that the nest placement and its checks read (Rules 71 to 82).
+	Nests: {
+		EggSpacing: number,
+		MeadowSpacing: number,
+		PlayerDistance: number,
+		RetrySeconds: number,
+		TwinDistance: number,
+		EyeDistance: number,
+		SeamDegrees: number,
+		SeamMatch: number,
+		WalkSurfaceBelow: number,
+		WalkSurfaceAbove: number,
+		SeamHeight: number,
+		ClimbableHeight: number,
+		BeamFadeSeconds: number,
+		UnlockSeconds: number,
+		ArmReturnSeconds: number,
+		SlideTipSeconds: number,
+		SlideDrop: number,
+		Jump: { Up: number, Across: number, BodyHeight: number },
+		RareEggOne: string,
+	},
 }
 
 -- Freezes a table and every table inside it.
@@ -133,12 +159,12 @@ local config: Config = {
 	Grab = { HoldSeconds = 1, ReachStuds = 8, ReachToleranceStuds = 2 },
 	RarityOrder = { "Common", "Uncommon", "Rare", "Epic", "Legendary" },
 	Rarity = {
-		Common = { RefillSeconds = 10, CarrySlowdown = 0, CarryNoise = 1.25 },
-		Uncommon = { RefillSeconds = 30, CarrySlowdown = 0.05, CarryNoise = 1.5 },
-		Rare = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
+		Common = { RefillSeconds = 10, CarrySlowdown = 0, CarryNoise = 1.25, Slots = 8, Nests = 16 },
+		Uncommon = { RefillSeconds = 30, CarrySlowdown = 0.05, CarryNoise = 1.5, Slots = 4, Nests = 8 },
+		Rare = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5, Slots = 4, Nests = 6 },
 		-- Epic and Legendary carry like a Rare (spec 4, Rule 49).
-		Epic = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
-		Legendary = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
+		Epic = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5, Slots = 2, Nests = 4 },
+		Legendary = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5, Slots = 1, Nests = 4 },
 	},
 	Noise = {
 		WalkPerSecond = 4,
@@ -230,6 +256,28 @@ local config: Config = {
 		{ Name = "Left ramp", Gardens = { 4 }, WalkLimitSeconds = { 4 } },
 		{ Name = "Right ramp", Gardens = { 5 }, WalkLimitSeconds = { 4 } },
 		{ Name = "Right boot ladder", Gardens = { 6, 7, 8 }, WalkLimitSeconds = { 4, 5, 7.5 } },
+	},
+	Nests = {
+		EggSpacing = 6, -- studs between a new egg on him and every waiting egg (row "Egg spacing")
+		MeadowSpacing = 8, -- studs between a garden's 2 meadow nests and other gardens' meadow nests (row "Egg spacing")
+		PlayerDistance = 15, -- studs between a new egg on him and every player (row "Player distance")
+		RetrySeconds = 1, -- seconds between tries when no nest is allowed (row "Retry when no nest is allowed")
+		TwinDistance = 2, -- studs a twin may be from the exact mirror spot (row "Twin distance")
+		EyeDistance = 10, -- studs a nest keeps from his eyes (row "Spacing from his eyes")
+		SeamDegrees = 65, -- the walk area is under this many degrees from level (row "Seam angle")
+		SeamMatch = 1, -- studs the walk area's edge may be from the seam's stitches (row "Seam match")
+		WalkSurfaceBelow = 0.2, -- studs the walk surface may sit below the visible surface (row "Walk surface over what you see")
+		WalkSurfaceAbove = 0.7, -- studs the walk surface may sit above the visible surface (row "Walk surface over what you see")
+		SeamHeight = 12, -- studs the walk area's edge sits above every jump surface in reach (row "Seam height")
+		ClimbableHeight = 15, -- studs a climbable part's lowest point sits above every jump surface (row "Climbable-part height")
+		BeamFadeSeconds = 0.3, -- seconds the right cuff beam fades out and back in (row "Right cuff beam while he's awake")
+		UnlockSeconds = 0.5, -- seconds after the phase leaves Awake before the right cuff nests unlock (plan 5 Decisions)
+		ArmReturnSeconds = 0.5, -- seconds his arm takes to swing back; plan 6 may raise it (plan 5 Decisions)
+		SlideTipSeconds = 3, -- seconds the slide tip shows, once per session (row "Slide tip")
+		SlideDrop = 5, -- studs a fall must end lower than it began to count as a slide (Rule 84; plan 5 Decisions)
+		-- A jump reaches 9 studs up and 10 across, from a body 5 studs tall (plan 5 Decisions row "The jump reach").
+		Jump = { Up = 9, Across = 10, BodyHeight = 5 },
+		RareEggOne = "Nest_LowerBelly_Left", -- the nest of Rare egg 1 (Rule 45; plan 5 Decisions)
 	},
 }
 

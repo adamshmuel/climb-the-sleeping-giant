@@ -5,6 +5,9 @@
 --
 -- The walk area is a list of spot ids. Each check returns a list of problems, empty when the check passes.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 local PathCheck = require(script.Parent.PathCheck)
 
 export type Problem = { kind: string, position: Vector3, detail: string }
@@ -12,15 +15,15 @@ export type Problem = { kind: string, position: Vector3, detail: string }
 local WalkAreaCheck = {}
 
 -- Spec 5 "Seam angle": a walk surface is under this many degrees from level.
-WalkAreaCheck.SEAM_DEGREES = 65
+WalkAreaCheck.SEAM_DEGREES = Config.Nests.SeamDegrees
 -- The steepness at which a player slips off (the slide line's number; SlideLine.spec.luau reads it from here).
 WalkAreaCheck.SLIP_DEGREES = 78
 
-local FLOAT_LIMIT = 0.7 -- studs: the visible surface this far below the feet or more is "floating"
-local SUNK_LIMIT = 0.2 -- studs: the visible surface this far above the feet or more is "sunk"
+local FLOAT_LIMIT = Config.Nests.WalkSurfaceAbove -- studs: the visible surface this far below the feet or more is "floating"
+local SUNK_LIMIT = Config.Nests.WalkSurfaceBelow -- studs: the visible surface this far above the feet or more is "sunk"
 local LOOK_ABOVE = 1 -- studs: the look for the visible surface starts this far above the feet
 local GAP_REACH = 1.5 -- studs: a sample with no walk-area spot this close is a gap
-local STITCH_REACH = 1 -- studs: the seam match looks this far uphill and downhill of a stitch
+local STITCH_REACH = Config.Nests.SeamMatch -- studs: the seam match looks this far uphill and downhill of a stitch
 local STITCH_RAY_ABOVE = 3 -- studs: the seam match's ray down starts this far above the stitch...
 local STITCH_RAY_LENGTH = 200 -- ...and reaches this far down
 

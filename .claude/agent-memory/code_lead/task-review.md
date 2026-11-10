@@ -13,3 +13,4 @@
 - A tool file that loads a shared module as `require((X :: ModuleScript):Clone())` fails luau-lsp ("Unknown require"), though the full run passes: in 8c only my `check.sh` caught it. Point the card at the file's own `pcall(require, clone)` loader (2026-11-10).
 - A tool edit made after its world run (a type fix) is proven by one `script_grep` plus one rerun: 08-route's `planWorld` runs every check before "already done", so the new code really runs (p3t8d, 2026-11-10).
 - Copying hidden mockup art into the world (15e3) makes it visible to the real-world sink and float tests: plan a SunkParts check in the narrow run of any art-copy task, not only the task's own spec (the 7th red showed only at the full run).
+- Never start Play in a review while a runner job (full run) runs in the same Studio: ask the main chat first, or check the server load after its fetch. p5t1: I started Play mid-run; it was luckily undisturbed (3071 = 3060 + 11), 2026-11-10.

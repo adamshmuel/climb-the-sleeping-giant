@@ -238,6 +238,78 @@ describe("Config", function()
 		expect(Config.Stuck.PressChangesPerSecond).toBe(10)
 	end)
 
+	it("the egg slots add up to 19", function()
+		local total = 0
+		for _, rank in Config.RarityOrder do
+			total += Config.Rarity[rank].Slots
+		end
+		expect(total).toBe(19)
+	end)
+
+	it("the nests add up to 38", function()
+		local total = 0
+		for _, rank in Config.RarityOrder do
+			total += Config.Rarity[rank].Nests
+		end
+		expect(total).toBe(38)
+	end)
+
+	it("every rank has more nests than slots", function()
+		for _, rank in Config.RarityOrder do
+			expect(Config.Rarity[rank].Nests).toBeGreaterThan(Config.Rarity[rank].Slots)
+		end
+	end)
+
+	it("slots are 8, 4, 4, 2 and 1", function()
+		expect(Config.Rarity.Common.Slots).toBe(8)
+		expect(Config.Rarity.Uncommon.Slots).toBe(4)
+		expect(Config.Rarity.Rare.Slots).toBe(4)
+		expect(Config.Rarity.Epic.Slots).toBe(2)
+		expect(Config.Rarity.Legendary.Slots).toBe(1)
+	end)
+
+	it("nests are 16, 8, 6, 4 and 4", function()
+		expect(Config.Rarity.Common.Nests).toBe(16)
+		expect(Config.Rarity.Uncommon.Nests).toBe(8)
+		expect(Config.Rarity.Rare.Nests).toBe(6)
+		expect(Config.Rarity.Epic.Nests).toBe(4)
+		expect(Config.Rarity.Legendary.Nests).toBe(4)
+	end)
+
+	it("the nest spacing and distance numbers match spec 5 section 5", function()
+		expect(Config.Nests.EggSpacing).toBe(6)
+		expect(Config.Nests.MeadowSpacing).toBe(8)
+		expect(Config.Nests.PlayerDistance).toBe(15)
+		expect(Config.Nests.RetrySeconds).toBe(1)
+		expect(Config.Nests.TwinDistance).toBe(2)
+		expect(Config.Nests.EyeDistance).toBe(10)
+	end)
+
+	it("the nest seam and walking-surface numbers match spec 5 section 5", function()
+		expect(Config.Nests.SeamDegrees).toBe(65)
+		expect(Config.Nests.SeamMatch).toBe(1)
+		expect(Config.Nests.WalkSurfaceBelow).toBe(0.2)
+		expect(Config.Nests.WalkSurfaceAbove).toBe(0.7)
+		expect(Config.Nests.SeamHeight).toBe(12)
+		expect(Config.Nests.ClimbableHeight).toBe(15)
+	end)
+
+	it("the nest timing and slide numbers match spec 5 section 5", function()
+		expect(Config.Nests.BeamFadeSeconds).toBe(0.3)
+		expect(Config.Nests.UnlockSeconds).toBe(0.5)
+		expect(Config.Nests.ArmReturnSeconds).toBe(0.5)
+		expect(Config.Nests.SlideTipSeconds).toBe(3)
+		expect(Config.Nests.SlideDrop).toBe(5)
+	end)
+
+	it("the nest jump reach is 9 up, 10 across and a 5 stud body", function()
+		expect(Config.Nests.Jump).toEqual({ Up = 9, Across = 10, BodyHeight = 5 })
+	end)
+
+	it("rare egg one is the lower belly left nest", function()
+		expect(Config.Nests.RareEggOne).toBe("Nest_LowerBelly_Left")
+	end)
+
 	it("Config can't be changed while the game runs", function()
 		expect(function()
 			(Config.Meter :: any).Max = 5

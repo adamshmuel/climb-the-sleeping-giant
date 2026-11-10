@@ -2,8 +2,10 @@
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect, beforeEach, afterEach =
 	JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.beforeEach, JestGlobals.afterEach
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local Config = require(ReplicatedStorage.Shared.Config)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
@@ -80,6 +82,10 @@ describe("WalkAreaCheck", function()
 		end
 		return all
 	end
+
+	it("the seam angle is the one number in Config.Nests", function()
+		expect(WalkAreaCheck.SEAM_DEGREES).toBe(Config.Nests.SeamDegrees)
+	end)
 
 	local function countKind(problems: { WalkAreaCheck.Problem }, kind: string): number
 		local count = 0
