@@ -157,6 +157,31 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   6. Phase `Awake` and the last player leaves: once the phase leaves `Awake`, the nests unlock.
   7. A refill waits while a fake player stands 10 studs away, and happens once they move 20 studs away.
 - Done when: the tests pass, the whole test run passes on today's world (V1's 16 spots are read as nests with `Nest` parts missing only until Task 12: until then `readEggSpots` treats a spot with no `Nest` part as a bare spot, and that allowance is removed in Task 12), and in Play the Common egg refills on the other meadow nest.
+- Split (code_lead, 2026-11-10, at the Task 6 review): this is too big for one task of at most 6 steps and 1 hour (6 modules, 7 tests). It is built as Tasks 7a, 7b and 7c below, in that order. "Task 7" in other tasks' Stands on lines means all three. `Net.SlideTip` moves to Task 10, the only task that uses it.
+
+**Task 7a: The world contract reads nest models**
+- Stands on: Task 6 (`EggSlots` finished, built). Today's `World.EggSpots` (V1's 16 bare spots, built; Task 12 replaces them later, and this task keeps them readable).
+- For: core gameplay (the server knows each nest's garden, twin and arm). Size: 4 steps, 49 min, about 16 Studio calls (card `work/p5t7/p5t7a-card.md`). The card also removes the `RarityOrder` casts (a type fix in `Config.luau`) and tightens Task 6's assert test.
+- Spec rules: Rule 70 (Every egg waits in a nest): the world contract.
+- Files: `src/server/World/WorldIndex.luau`, `src/tests/server/World/WorldIndex/ClimbAndEggs.spec.luau`, `src/shared/Config.luau` (type only), `src/server/Eggs/EggSlots.luau` and its test (casts and messages only).
+- Failing tests first: test 1 above, plus a twin that names no nest, a `Garden` on a nest that isn't Common, and a garden with 1 meadow nest. A V1 spot with no `Nest` part and no `NestName` is still read as a bare spot.
+- Done when: the tests pass and the full run fails only the 2 accepted reds.
+
+**Task 7b: Grab runs on the nests**
+- Stands on: Task 7a (`readEggSpots` gives each nest's garden, twin and arm, built).
+- For: core gameplay (eggs refill on nests, empty nests can't be grabbed). Size: card written at the Task 7a review, at most 6 steps and 1 hour.
+- Spec rules: Rules 70, 74, 75, 76, 77 and 78 on the server (names above).
+- Files: `Grab.luau`, `SpotModels.luau`, `init.server.luau`, their tests.
+- Failing tests first: tests 2 and 7 above, plus `SpotModels` writes `Waiting` and no `RefillAt`, and `refilled` fires with the rank and the seconds waited.
+- Done when: the tests pass, the full run fails only the 2 accepted reds, and in Play the Common egg refills on the other meadow nest.
+
+**Task 7c: The right cuff nests lock while he's awake**
+- Stands on: Task 7b (`Grab` on `EggSlots`, built), his arm at rest (plan 6 keeps it).
+- For: core gameplay (no grab on his raised arm). Size: card written at the Task 7b review, at most 6 steps and 1 hour.
+- Spec rules: Rule 100 (Nothing you stand on moves while he sleeps).
+- Files: `Grab.luau`, `GiantDirector.luau`, `Config.luau` (`Config.Nests.ArmReturnSeconds`), `SpotModels.luau` (`Locked`), their tests, `GiantFx.spec.luau`.
+- Failing tests first: tests 3 to 6 above.
+- Done when: the tests pass and the full run fails only the 2 accepted reds.
 
 **Task 8: Empty nests show no timer, and the refill pop**
 - Stands on: Task 7 (`SpotModels` writes each nest's egg and lock attributes, built), the style guide's refill pop values (final).
@@ -181,9 +206,9 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, and in Play a test part marked `RidesRightArm`, made at runtime from a Server `execute_luau` on his right cuff, rides the arm through a wake-up and comes back to rest (screenshots from garden 7, computer and the iPhone 14). The real cuff pieces come in Tasks 13 and 15e3; their comparison with `view-wake-cuff-g7` and `view-phone-wake-cuff-g8` is in Task 23.
 
 **Task 10: The slide tip**
-- Stands on: Task 7 (`Net.SlideTip`, built), Task 13 (`StitchedEdge` on the strap edges, built). Its real-world seam points come from Task 16's `World.Seam.SeamLine`; the tests here use a fake seam line.
+- Stands on: Task 7 (its `init.server.luau` wiring, which this task adds to, built), Task 13 (`StitchedEdge` on the strap edges, built). Its real-world seam points come from Task 16's `World.Seam.SeamLine`; the tests here use a fake seam line.
 - Spec rules: Rule 84 (A slide is a fall, and the first one gets a tip). Story D's third case. Section 8: "A player slides off below the seam while carrying a Rare at 70%", "A player jumps from the walk area to below the seam", "A slide ends on a lower part of him", "A player walks off the outer edge of a strap or cuff ledge", "A rescue during a slide".
-- Files: `src/server/Players/LandingDetector.luau` (each finished fall says where it began and ended, the part it began on, and whether it passed below the seam line on any tick), `src/server/Players/SlideWatch.luau` (new, pure: is a point below the seam line, is this fall a slide, and is it this player's first), `src/server/World/WorldIndex.luau` (`readSeamLine`: the seam points and their downhill directions, from Task 16's `World.Seam.SeamLine`; an empty list until Task 16, when the world contract asks for it), `src/server/init.server.luau`, `src/client/Hud/Messages.luau`, their tests.
+- Files: `src/server/Players/LandingDetector.luau` (each finished fall says where it began and ended, the part it began on, and whether it passed below the seam line on any tick), `src/server/Players/SlideWatch.luau` (new, pure: is a point below the seam line, is this fall a slide, and is it this player's first), `src/server/World/WorldIndex.luau` (`readSeamLine`: the seam points and their downhill directions, from Task 16's `World.Seam.SeamLine`; an empty list until Task 16, when the world contract asks for it), `src/server/init.server.luau`, `src/shared/Net.luau` (the new `SlideTip` remote, moved here from Task 7 on 2026-11-10), `src/client/Hud/Messages.luau`, their tests.
 - What it does: a slide (see "Decisions") still makes one thud by the highest zone it left, as today. The first slide in a visit fires `SlideTip` to that player. The device shows "💥 Too steep! Slipping is loud." for 3 seconds at the bottom centre, in the carry pill's place for a carrier, then the pill comes back; if another tip is showing, it waits until that one ends. The tip has one marked place for plan 7's sound.
 - Failing tests first (a fake seam line down one side and along one cuff rim):
   1. A fall that passes below the seam and ends in the meadow 20 studs lower is a slide.

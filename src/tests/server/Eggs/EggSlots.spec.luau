@@ -538,6 +538,116 @@ describe("EggSlots.returnEgg (Rule 78)", function()
 	end)
 end)
 
+local setLocked = EggSlots.setLocked
+
+local function lockedOf(state: EggSlots.State, nestName: string): boolean
+	local view = EggSlots.nest(state, nestName)
+	assert(view ~= nil, "no such nest: " .. nestName)
+	return view.locked
+end
+
+-- Epic: 2 right cuff nests (R) and 2 left cuff nests (L), far apart. Nest order R1, L1, R2, L2, so the 2 slots start on
+-- EpicR1 and EpicL1.
+local function lockedWorld(): EggSlots.State
+	local nests: { EggSlots.NestDefinition } = {
+		{ name = "EpicR1", rank = "Epic", position = Vector3.new(200, 0, 0) },
+		{ name = "EpicL1", rank = "Epic", position = Vector3.new(0, 0, 0) },
+		{ name = "EpicR2", rank = "Epic", position = Vector3.new(300, 0, 0) },
+		{ name = "EpicL2", rank = "Epic", position = Vector3.new(100, 0, 0) },
+	}
+	return EggSlots.new(nests, { Epic = 2 })
+end
+
+local EPIC_REFILL = Config.Rarity.Epic.RefillSeconds
+
+describe("EggSlots locked nests", function()
+	it("refuses a take on a locked nest with 'locked', and takes it after the nest is unlocked", function()
+		local state = lockedWorld()
+		setLocked(state, { "EpicR1" }, true)
+		local ok, reason = EggSlots.take(state, "EpicR1", 1, 0)
+		expect(ok).toBe(false)
+		expect(reason).toBe("locked")
+		expect(isWaiting(state, "EpicR1")).toBe(true)
+		setLocked(state, { "EpicR1" }, false)
+		expect((EggSlots.take(state, "EpicR1", 1, 0))).toBe(true)
+	end)
+
+	it("lands a right cuff egg on a left cuff nest when its countdown ends with both right nests locked", function()
+		local state = lockedWorld()
+		EggSlots.take(state, "EpicR1", 1, 0)
+		setLocked(state, { "EpicR1", "EpicR2" }, true)
+		local refills = EggSlots.update(state, EPIC_REFILL, {}, pickFirst)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("EpicL2")
+		expect(refills[1].waited).toBe(0)
+		expect(isWaiting(state, "EpicR2")).toBe(false)
+	end)
+
+	it(
+		"lands nothing while every right nest is locked and the left nests are crowded, then lands after unlocking",
+		function()
+			local state = lockedWorld()
+			EggSlots.take(state, "EpicR1", 1, 0)
+			setLocked(state, { "EpicR1", "EpicR2" }, true)
+			local crowd = { Vector3.new(100, 0, 0) } -- on EpicL2, the only free left nest
+			expect(#EggSlots.update(state, EPIC_REFILL, crowd, pickFirst)).toBe(0)
+			setLocked(state, { "EpicR1", "EpicR2" }, false)
+			expect(#EggSlots.update(state, EPIC_REFILL + 0.5, {}, pickFirst)).toBe(0)
+			local refills = EggSlots.update(state, EPIC_REFILL + Config.Nests.RetrySeconds, {}, pickFirst)
+			expect(#refills).toBe(1)
+			expect(refills[1].nest).toBe("EpicR2")
+			expect(refills[1].waited).toBe(Config.Nests.RetrySeconds)
+		end
+	)
+
+	it(
+		"puts a carried egg back on its locked nest: it waits, shows locked, can't be taken, then can after unlocking",
+		function()
+			local state = lockedWorld()
+			EggSlots.take(state, "EpicR1", 1, 0)
+			setLocked(state, { "EpicR1" }, true)
+			local result, nest = EggSlots.returnEgg(state, 1)
+			expect(result).toBe("back")
+			expect(nest).toBe("EpicR1")
+			expect(isWaiting(state, "EpicR1")).toBe(true)
+			expect(lockedOf(state, "EpicR1")).toBe(true)
+			local ok, reason = EggSlots.take(state, "EpicR1", 2, 10)
+			expect(ok).toBe(false)
+			expect(reason).toBe("locked")
+			setLocked(state, { "EpicR1" }, false)
+			expect((EggSlots.take(state, "EpicR1", 2, 10))).toBe(true)
+		end
+	)
+
+	it("keeps a waiting egg on a nest that locks", function()
+		local state = lockedWorld()
+		expect(isWaiting(state, "EpicR1")).toBe(true)
+		setLocked(state, { "EpicR1" }, true)
+		expect(isWaiting(state, "EpicR1")).toBe(true)
+		expect(#EggSlots.update(state, 1000, {}, pickFirst)).toBe(0)
+		expect(isWaiting(state, "EpicR1")).toBe(true)
+	end)
+
+	it("asserts on a nest name that does not exist and on a meadow nest", function()
+		local state = lockedWorld()
+		expect(function()
+			setLocked(state, { "Nowhere" }, true)
+		end).toThrow()
+		local meadow = meadowState()
+		expect(function()
+			setLocked(meadow, { "G4A" }, true)
+		end).toThrow()
+	end)
+
+	it("shows locked false by default and true after locking", function()
+		local state = lockedWorld()
+		expect(lockedOf(state, "EpicR1")).toBe(false)
+		setLocked(state, { "EpicR1" }, true)
+		expect(lockedOf(state, "EpicR1")).toBe(true)
+		expect(lockedOf(state, "EpicL1")).toBe(false)
+	end)
+end)
+
 describe("EggSlots over a long random run", function()
 	it("never has more eggs waiting plus carried from a live countdown than slots", function()
 		local rng = Random.new(7)

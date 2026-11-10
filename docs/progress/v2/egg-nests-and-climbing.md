@@ -11,8 +11,10 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 3: A random nest of the same rank, or wait | ☑ done (2026-11-10; narrow run EggSlots 15/0; full run 3086 passed, 2 failed, the accepted EggSpots and OnTheGiant reds) | builder, runner, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 4: Meadow eggs stay by their garden | ☑ done 2026-11-10: code approved by code_lead (narrow run EggSlots 26/0); full run 3097 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 5: A lost egg goes back to its nest | ☑ done 2026-11-10: code approved by code_lead (narrow run EggSlots 36/0); full run 3107 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area) | builder, code_lead |
-| Egg nests and climbing (V2 spec 5) | Task 6: Locked nests | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 7: The server runs the nests | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 6: Locked nests | ☑ done 2026-11-10: code approved by code_lead (narrow run EggSlots 43/0); full run 3114 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area). Its assert test is tightened in Task 7a | builder, code_lead |
+| Egg nests and climbing (V2 spec 5) | Task 7a: The world contract reads nest models (Task 7 split in 3 on 2026-11-10) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 7b: Grab runs on the nests | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 7c: The right cuff nests lock while he's awake | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 8: Empty nests show no timer, and the refill pop | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 9: The right cuff rides his arm | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 10: The slide tip | ☐ not started | |

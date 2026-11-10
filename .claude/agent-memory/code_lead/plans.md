@@ -24,4 +24,6 @@
 - A "lost item returns" rule needs a take counter per slot: "countdown still running" alone lets a stale egg come back after its slot refilled and was taken again (p5t5 card, 2026-11-10).
 - Card titles: `job-check` reads egg/nest + "goes back"/"place"/"build" in a heading as world placing and asks for a reach walk. Say "returns" in code-only titles. A heading that names another Task needs its own Stands on line.
 - A card's `script_grep` sync check names a query only the changed file holds (a new describe title, "function EggSlots.setLocked"), never a common name: "returnEgg" hit the 50-match cap (p5t5 builder, 2026-11-10).
+- Before carding a plan task, count its modules and tests: p5 Task 7 (6 modules, 7 tests) could not fit 6 steps and 1 hour, so it was split 7a/7b/7c at card time, and a piece only a later task uses (`Net.SlideTip`) moved there (2026-11-10).
+- A test card's `toThrow()` with no message can pass for the wrong reason (a nil index): name the assert's message (p5t6, 2026-11-10).
 - Progress index counts drift: recount from every `docs/progress/v2/*.md` (task rows minus removed or dropped) at each close, not by adding 1 (2026-11-10: index said 117 of 214, files gave 131 of 221).

@@ -10,7 +10,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 export type NestDefinition = { name: string, rank: Config.RarityName, position: Vector3, garden: number? }
 
 -- What a caller may read about one nest. There is no refill time: an empty nest shows no timer (Rule 77).
-export type NestView = { waiting: boolean, rank: Config.RarityName }
+-- `locked` is true while the nest is on his raised arm: no grab and no refill (Rule 100).
+export type NestView = { waiting: boolean, rank: Config.RarityName, locked: boolean }
 
 -- What `update` reports for each egg it placed: the nest, its rank, and how many seconds after the countdown ended it
 -- landed (0 on time, more when no nest was allowed at first).
@@ -36,6 +37,8 @@ type Nest = {
 	rank: Config.RarityName,
 	position: Vector3,
 	garden: number?,
+	-- True while the nest is locked (see `setLocked`).
+	locked: boolean,
 	-- The slot whose egg waits here, or nil when the nest is empty.
 	slot: Slot?,
 }
@@ -61,14 +64,15 @@ export type State = {
 
 local EggSlots = {}
 
--- The nests of a rank where a new egg may land, in the order given (Rules 74 and 76): no egg waiting, not `lastNest`,
--- at least Config.Nests.EggSpacing studs from every waiting egg, and at least Config.Nests.PlayerDistance studs from
--- every player. A distance equal to the limit is allowed. Distances are 3D.
+-- The nests of a rank where a new egg may land, in the order given (Rules 74, 76 and 100): no egg waiting, not locked,
+-- not `lastNest`, at least Config.Nests.EggSpacing studs from every waiting egg, and at least Config.Nests.PlayerDistance studs from
+-- every player. A distance equal to the limit is allowed. Distances are 3D. A locked nest's waiting egg still counts
+-- for the spacing.
 local function allowedNests(state: State, rank: Config.RarityName, lastNest: string?, playersAt: { Vector3 }): { Nest }
 	local allowed: { Nest } = {}
 	for _, name in state.order do
 		local nest = state.nests[name]
-		local clear = nest.rank == rank and nest.slot == nil and name ~= lastNest
+		local clear = nest.rank == rank and nest.slot == nil and not nest.locked and name ~= lastNest
 		if clear then
 			for _, other in state.nests do
 				if other.slot ~= nil and (other.position - nest.position).Magnitude < Config.Nests.EggSpacing then
@@ -131,6 +135,7 @@ function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityN
 			rank = definition.rank,
 			position = definition.position,
 			garden = definition.garden,
+			locked = false,
 			slot = nil,
 		}
 		state.nests[definition.name] = nest
@@ -169,8 +174,19 @@ function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityN
 	return state
 end
 
+-- Locks or unlocks each named nest (Rule 100). Only nests on him lock: asserts on an unknown name or a meadow nest
+-- (one with a garden). A waiting egg stays on its nest when it locks.
+function EggSlots.setLocked(state: State, nestNames: { string }, locked: boolean)
+	for _, name in nestNames do
+		local nest = state.nests[name]
+		assert(nest ~= nil, `unknown egg nest: {name}`)
+		assert(nest.garden == nil, `meadow nest {name} can't lock`)
+		nest.locked = locked
+	end
+end
+
 -- The player grabs the egg on a nest. Fails with a reason when the nest is unknown, the player already carries an
--- egg, or the nest has no egg waiting. On success the nest is empty, its slot's refill countdown starts now, and the
+-- egg, the nest is locked, or the nest has no egg waiting, checked in that order. On success the nest is empty, its slot's refill countdown starts now, and the
 -- player carries the egg.
 function EggSlots.take(state: State, nestName: string, playerId: number, now: number): (boolean, string?)
 	local nest = state.nests[nestName]
@@ -179,6 +195,9 @@ function EggSlots.take(state: State, nestName: string, playerId: number, now: nu
 	end
 	if state.carried[playerId] ~= nil then
 		return false, "already carrying"
+	end
+	if nest.locked then
+		return false, "locked"
 	end
 	local slot = nest.slot
 	if slot == nil then
@@ -299,7 +318,7 @@ function EggSlots.nest(state: State, nestName: string): NestView?
 	if nest == nil then
 		return nil
 	end
-	return { waiting = nest.slot ~= nil, rank = nest.rank }
+	return { waiting = nest.slot ~= nil, rank = nest.rank, locked = nest.locked }
 end
 
 return EggSlots
