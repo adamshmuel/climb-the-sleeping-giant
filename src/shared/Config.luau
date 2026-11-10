@@ -150,6 +150,15 @@ export type Config = {
 		RareEggOne: string,
 		PostClear: { HalfBase: number, Sideways: number, Vertical: number },
 	},
+	Ranks: {
+		VisibleBelow: number,
+		FloatLimit: number,
+		SinkNestUpright: number,
+		SinkNestLeaning: number,
+		SinkEggUpright: number,
+		SinkEggLeaning: number,
+		EggInNest: number,
+	},
 }
 
 -- Freezes a table and every table inside it.
@@ -293,6 +302,16 @@ local config: Config = {
 		-- or down (Rule 85; fix 2 Decisions "Clear check"). HalfBase is the post's half base: 0.4 of the Common egg's
 		-- width (measured 5.46 studs in Step 3, so 2.185, rounded to 2.2). tools/world/21-nests.luau builds the posts from it.
 		PostClear = { HalfBase = 2.2, Sideways = 1.5, Vertical = 6 },
+	},
+	-- What an egg or nest sits on (spec 4 Rule 59 and section 5 rows "Visible surface", "Float limit", "Sink limit").
+	Ranks = {
+		VisibleBelow = 0.5, -- a part at or above this see-through share (0 to 1) is not a visible surface
+		FloatLimit = 0.2, -- studs an egg or nest may sit above its visible surface
+		SinkNestUpright = 0.3, -- studs an upright nest may sink into its surface
+		SinkNestLeaning = 1.5, -- studs a leaning nest may sink into its surface
+		SinkEggUpright = 0.3, -- studs an upright bare egg may sink into its surface
+		SinkEggLeaning = 1, -- studs a leaning bare egg may sink into its surface
+		EggInNest = 0.2, -- studs an egg's bottom may be off its nest's seat (checked in Step 6b)
 	},
 }
 
