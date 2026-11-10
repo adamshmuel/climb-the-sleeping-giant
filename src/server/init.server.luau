@@ -13,6 +13,7 @@ local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
+local Signal = require(ReplicatedStorage.Packages.Signal)
 local Analytics = require(script.Analytics)
 local Banking = require(script.Eggs.Banking)
 local Carry = require(script.Eggs.Carry)
@@ -142,8 +143,12 @@ HomeDisplay.start({
 local floater = Floater.start({ players = Players, facePoint = facePoint, now = os.clock })
 
 -- The first slide a player has gets a tip on their screen (Rule 84). The judge is SlideWatch; this only wires it.
+local slideEnded = Signal.new() :: Signal.Signal<number, number>
 local slides = SlideWatch.new({
 	seam = seamLine,
+	onSlide = function(userId: number, slideNumber: number)
+		slideEnded:Fire(userId, slideNumber)
+	end,
 	floating = function(userId: number): boolean
 		return floater:isFloating(userId)
 	end,
@@ -385,6 +390,8 @@ analytics = Analytics.start({
 	saved = director.saved,
 	returned = grab.returned,
 	unstuck = recovery.unstuck,
+	refilled = grab.refilled,
+	slideEnded = slideEnded,
 	gardens = gardenSpots,
 	now = os.clock,
 	newId = function()

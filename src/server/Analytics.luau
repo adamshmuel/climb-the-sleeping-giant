@@ -76,6 +76,8 @@ export type Deps = {
 	saved: SignalLike, -- the director's signal: (UserId, zone) when a player's free save is spent
 	returned: SignalLike, -- Grab's signal: (player, rarity, "Caught" or "Lost") when a carried egg goes back
 	unstuck: SignalLike, -- Recovery's signal: (player, how, zone) just before a rescue, a Reset on the giant or a loop send home
+	refilled: SignalLike, -- Grab's signal: (rank, seconds waited past the countdown) when a new egg appears
+	slideEnded: SignalLike, -- (UserId, slide number this session) when a slide ends
 	gardens: { GardenSpot },
 	now: () -> number, -- os.clock; it tells who has been in the server longest
 	newId: () -> string, -- makes the session id of one heist (HttpService:GenerateGUID(false))
@@ -130,6 +132,9 @@ local LEFT_GARDEN_STUDS = 10
 --                     seconds since the save (no other slot).
 --   "Unstuck":        CustomField01 = how ("Rescue", "Reset on giant" or "Loop home"), CustomField02 = the zone the player
 --                     was in, CustomField03 = "Carrying" or "Empty".
+--   "EggRefill":      CustomField01 = the rank, CustomField02 = the wait past the countdown ("0 s", "1–30 s" or "over 30 s"),
+--                     CustomField03 = the server size.
+--   "SlideOff":       CustomField01 = "Carrying" or "Empty", CustomField02 = "First", "Second" or "Later".
 -- So never read one chart's slot as another's.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
@@ -141,8 +146,21 @@ local EVENT_SLAM = "Slam" -- one per hand slam, valued at the number of players 
 local EVENT_FREE_SAVE_USED = "FreeSaveUsed" -- one per free save
 local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, valued at the seconds since the save
 local EVENT_UNSTUCK = "Unstuck" -- one per rescue, Reset on the giant or loop send home
+local EVENT_EGG_REFILL = "EggRefill" -- one per egg that appears again, logged on the player longest in the server
+local EVENT_SLIDE_OFF = "SlideOff" -- one per slide off the giant, on the sliding player
 local CARRYING = "Carrying"
 local EMPTY = "Empty"
+-- "EggRefill" wait bands, in seconds waited past the countdown: under WAIT_NONE_UNDER, up to and including WAIT_LONG_OVER,
+-- and longer.
+local WAIT_NONE_UNDER = 1
+local WAIT_LONG_OVER = 30
+local WAIT_NONE = "0 s"
+local WAIT_SHORT = "1–30 s"
+local WAIT_LONG = "over 30 s"
+-- "SlideOff" slide numbers: the 1st, the 2nd, and every later one.
+local SLIDE_FIRST = "First"
+local SLIDE_SECOND = "Second"
+local SLIDE_LATER = "Later"
 -- Every event of these counts once, so the value is 1 (except "GiantWoke", valued at the number of players, "Slam",
 -- valued at the number of players it caught, and "FreeSaveResult", valued at the seconds since the save).
 local EVENT_VALUE = 1
@@ -219,6 +237,16 @@ function Analytics.serverSize(playerCount: number): string
 		return SIZE_SMALL
 	end
 	return SIZE_ONE
+end
+
+-- The "EggRefill" wait band for this many seconds waited past the countdown.
+function Analytics.waitBand(waited: number): string
+	if waited < WAIT_NONE_UNDER then
+		return WAIT_NONE
+	elseif waited <= WAIT_LONG_OVER then
+		return WAIT_SHORT
+	end
+	return WAIT_LONG
 end
 
 -- A number from a player's attribute, or nil if it holds anything else.
@@ -549,6 +577,44 @@ function Analytics.start(deps: Deps): Analytics
 		logCustom(logOn, EVENT_SLAM, #caught, {
 			[FIELD_ONE] = result,
 			[FIELD_TWO] = Analytics.serverSize(count),
+		})
+	end))
+
+	-- A refill has no player, so it is logged on the player longest in the server (none: no line).
+	trove:Add(deps.refilled:Connect(function(rank: string, waited: number)
+		if stopped then
+			return
+		end
+		local count = #players:GetPlayers()
+		local logOn = longestInServer()
+		if count == 0 or logOn == nil then
+			return
+		end
+		logCustom(logOn, EVENT_EGG_REFILL, EVENT_VALUE, {
+			[FIELD_ONE] = rank,
+			[FIELD_TWO] = Analytics.waitBand(waited),
+			[FIELD_THREE] = Analytics.serverSize(count),
+		})
+	end))
+
+	-- A slide ends: logged on the sliding player, with whether they carried an egg and which slide it was.
+	trove:Add(deps.slideEnded:Connect(function(userId: number, slideNumber: number)
+		if stopped then
+			return
+		end
+		local record = records[userId]
+		if record == nil then
+			return
+		end
+		local which = SLIDE_LATER
+		if slideNumber == 1 then
+			which = SLIDE_FIRST
+		elseif slideNumber == 2 then
+			which = SLIDE_SECOND
+		end
+		logCustom(record.player, EVENT_SLIDE_OFF, EVENT_VALUE, {
+			[FIELD_ONE] = if carries(record.player) then CARRYING else EMPTY,
+			[FIELD_TWO] = which,
 		})
 	end))
 

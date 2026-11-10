@@ -51,6 +51,8 @@ export type Harness = {
 	saved: Signal.Signal<number, Config.ZoneName>,
 	returned: Signal.Signal<any, any, string>,
 	unstuck: Signal.Signal<any, string, string>, -- (player, how, zone)
+	refilled: Signal.Signal<any, number>, -- (rank, waited seconds)
+	slideEnded: Signal.Signal<number, number>, -- (userId, slideNumber)
 	idsMade: number,
 }
 
@@ -73,6 +75,8 @@ local function cleanUp()
 		harness.saved:Destroy()
 		harness.returned:Destroy()
 		harness.unstuck:Destroy()
+		harness.refilled:Destroy()
+		harness.slideEnded:Destroy()
 	end
 	table.clear(made)
 	for _, player in players do
@@ -116,6 +120,8 @@ local function newHarness(present: { FakePlayer }?): Harness
 		saved = Signal.new(),
 		returned = Signal.new(),
 		unstuck = Signal.new(),
+		refilled = Signal.new(),
+		slideEnded = Signal.new(),
 		idsMade = 0,
 	}
 	local function record(method: string, call: Call)
@@ -187,6 +193,8 @@ local function newHarness(present: { FakePlayer }?): Harness
 		saved = harness.saved,
 		returned = harness.returned,
 		unstuck = harness.unstuck,
+		refilled = harness.refilled,
+		slideEnded = harness.slideEnded,
 		gardens = gardens,
 		now = function()
 			return harness.clock
@@ -252,6 +260,16 @@ local function catch(harness: Harness, player: FakePlayer)
 	harness.caught:Fire(player, rarity)
 end
 
+-- A nest refilled an egg of this rank after this many seconds of waiting (Grab.refilled).
+local function refill(harness: Harness, rank: any, waited: number)
+	harness.refilled:Fire(rank, waited)
+end
+
+-- A player's slide ended; `number` is the player's 1st, 2nd, ... slide (SlideWatch's onSlide).
+local function slide(harness: Harness, userId: number, number: number)
+	harness.slideEnded:Fire(userId, number)
+end
+
 -- Where a player is for the tick: `garden` is the garden box they stand in (nil in the meadow), and `x`, `z` and `y`
 -- the position.
 local function sampleOf(player: FakePlayer, garden: number?, x: number, z: number, y: number?): PlayerTracker.Sample
@@ -314,7 +332,9 @@ return {
 	makePlayer = makePlayer,
 	newHarness = newHarness,
 	players = players,
+	refill = refill,
 	sampleOf = sampleOf,
 	serverOf = serverOf,
+	slide = slide,
 	spawnCharacter = spawnCharacter,
 }

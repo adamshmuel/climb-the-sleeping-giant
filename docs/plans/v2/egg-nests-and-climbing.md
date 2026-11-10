@@ -226,12 +226,13 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, and in Play screenshots of the tip with and without an egg match `slide-tip-*` and `slide-tip-carry-*` (computer and the iPhone 14).
 
 **Task 11: Analytics for refills and slides**
-- Stands on: Task 7 (the `refilled` Signal, built), Task 10 (`SlideWatch` says when a slide ends, built).
+- Stands on: Task 7 (the `refilled` Signal, built), Task 10 (`SlideWatch`'s `onSlide(userId, slideNumber)`, built, commit a3a2b7cb).
 - Spec rules: section 10 ("Success signals").
-- Files: `src/server/Analytics.luau`, `src/server/init.server.luau`, `Analytics.spec`.
+- For: business measure, not what the player sees. Size: 3 code steps, about 21 min, no shots (cards in `work/p5t11/`).
+- Files: `src/server/Analytics.luau`, `src/server/init.server.luau` (hands `grab.refilled` and a new `slideEnded` Signal, fired from `SlideWatch`'s `onSlide`), `src/tests/server/Analytics/Helpers.luau`, new `src/tests/server/Analytics/RefillAndSlide.spec.luau` (there is no `Analytics.spec`). A refill has no player, so "EggRefill" is logged on the player longest in the server, like "Slam"; "0 s" means under 1 s.
 - What it logs: **"EggRefill"** (new), every refill, with the rank, the wait past the countdown ("0 s", "1–30 s", "over 30 s") and the server size ("1", "2-4", "5-8"); **"SlideOff"** (new), every slide that ends, with "Carrying" or "Empty" and "First", "Second" or "Later".
 - Failing tests first: one per event and breakdown, with a fake AnalyticsService; a Common refill that never waits logs "0 s"; a Rare refill that waited 31 s logs "over 30 s".
-- Done when: the tests pass, and in Play the console shows one "EggRefill" line per refill.
+- Done when: the tests pass, and in Play the console shows one "EggRefill" line per refill. "SlideOff" has no Play case (a real slide in Play was unreliable in Task 10): its wiring is checked by the type check, its values by the tests.
 
 ### Part 2: World prep
 
@@ -615,6 +616,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   6b. (Task 9 review, 2026-11-10) A lost egg that goes back to a right cuff nest while he is awake: it must sit on the raised nest, not at the rest spot (`NestPop` grows it in with `ScaleTo` and `PivotTo` from its rest bottom, and `Ride` only re-places parts while the step loop runs). Check first whether the server returns an egg to a locked nest at all; if it never does, write "not reachable" and skip it.
   7. Every section 6 state against its mockup, from the gardens named there.
   7b. (Task 10 veto, 2026-11-10) The slide tip on screen: walk off the belly seam with a client `hum:Move` loop (not `character_navigation`), and shoot "💥 Too steep! Slipping is loud." at the bottom centre within its 3 s, empty-handed and carrying (the pill comes back after), computer and phone, from Task 10's camera (CAM (-11.55, 56.87, -18.20), LOOK (-23.92, 52.87, -28.35)). Task 10 proved the remote fires on a real slide and the text in unit tests; `screen_capture` timed out twice in Play.
+  7c. (Task 11, accepted for now by product, 2026-11-10) The analytics hookup: first check in one call that the nest's prompt fires `PromptShown`, then grab one meadow nest egg in Play and count exactly one new `LogCustomEvent` line when it refills (the console never prints event names). Task 11's Play job and code_lead's own try could not grab from 4.5 studs: the prompt (on, 8 studs, line of sight off) never showed, so EggRefill was proven only in unit tests.
 - Done when: every shot is in the report with what it shows, compared with the mockups. The main chat sends them to designer. If item 6 finds a red circle on the resting shape, a player bumping into it, or a trapped player, Task 24 is built before review.
 
 **Task 24: The fallback: his arm's solid shape moves with the arm, and the float clears its resting space** (built only if Task 23, item 6 finds a red circle on the arm's resting shape, a player bumping into it, or a trapped player; section 8 sets this fix)
