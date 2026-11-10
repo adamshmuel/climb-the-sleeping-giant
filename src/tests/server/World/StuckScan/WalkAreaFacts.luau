@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
+local Config = require(ReplicatedStorage.Shared.Config)
 local SeamTable = require(ReplicatedStorage.Shared.SeamTable)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
@@ -22,7 +23,7 @@ local StuckHelpers = require(script.Parent.Helpers)
 type Problem = WalkAreaCheck.Problem
 
 local SIDES = { "Left", "Right" }
-local START_EGG_SPOT = "EggSpot_Rare_1" -- on the Belly (Zones.zoneAt), the walk area's start
+local START_EGG_SPOT = Config.Nests.RareEggOne -- Rare egg 1's nest, on the Belly (Zones.zoneAt), the walk area's start
 local START_STEPS = 2 -- grid steps round the start egg spot where walk-map spots are starts
 local SAMPLE_STEP = 2 -- studs between the gap check's samples
 local SKIP_LIMIT = 12 -- rays that skip invisible parts at one point, at most

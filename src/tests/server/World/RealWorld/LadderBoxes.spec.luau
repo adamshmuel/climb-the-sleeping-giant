@@ -2,6 +2,8 @@
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Config = require(ReplicatedStorage.Shared.Config)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 local Helpers = require(script.Parent.Helpers)
@@ -18,22 +20,23 @@ describe("the real world, ladder boxes and zone boxes", function()
 	-- the grass at a boot ladder's foot is at y 2 (table B)
 	local FOOT_GRASS_Y = 2
 
-	-- The zones before this task, plain values (work/p3t7/before-zones.md, read in Edit 2026-11-09). The 16 V1 egg
-	-- spots, and the route points that were not Meadow; every other route point (56 of 84) was Meadow.
+	-- The zones before this task, plain values (work/p3t7/before-zones.md, read in Edit 2026-11-09), now by nest name
+	-- (plan 5 Task 12): the 16 meadow nests were V1's 8 Common spots, the boot-toe nests V1's Uncommon boot spots, and
+	-- Rare egg 1 (Config.Nests.RareEggOne) V1's EggSpot_Rare_1. The other nests are new: this check leaves them alone.
 	local EGG_SPOT_ZONES: { [string]: { string } } = {
-		Meadow = {
-			"EggSpot_Common_1",
-			"EggSpot_Common_2",
-			"EggSpot_Common_3",
-			"EggSpot_Common_4",
-			"EggSpot_Common_5",
-			"EggSpot_Common_6",
-			"EggSpot_Common_7",
-			"EggSpot_Common_8",
+		Meadow = {},
+		Boots = {
+			"Nest_BootToeInner_Left",
+			"Nest_BootToeInner_Right",
+			"Nest_BootToeOuter_Left",
+			"Nest_BootToeOuter_Right",
 		},
-		Boots = { "EggSpot_Uncommon_1", "EggSpot_Uncommon_2", "EggSpot_Uncommon_3", "EggSpot_Uncommon_4" },
-		Belly = { "EggSpot_Rare_1", "EggSpot_Rare_2", "EggSpot_Rare_3", "EggSpot_Rare_4" },
+		Belly = { Config.Nests.RareEggOne },
 	}
+	for garden = 1, 8 do
+		table.insert(EGG_SPOT_ZONES.Meadow, `Nest_Meadow_{garden}a`)
+		table.insert(EGG_SPOT_ZONES.Meadow, `Nest_Meadow_{garden}b`)
+	end
 	local ROUTE_ZONES: { [string]: { string } } = {
 		Belly = {
 			"Belly_4",
@@ -222,7 +225,7 @@ describe("the real world, ladder boxes and zone boxes", function()
 			local spots = WorldIndex.readEggSpots(realWorld()) :: { WorldIndex.EggSpot }
 			local rare1: Vector3? = nil
 			for _, spot in spots do
-				if spot.name == "EggSpot_Rare_1" then
+				if spot.name == Config.Nests.RareEggOne then
 					rare1 = spot.cframe.Position
 				end
 			end
@@ -249,7 +252,7 @@ describe("the real world, ladder boxes and zone boxes", function()
 			local spots = WorldIndex.readEggSpots(realWorld()) :: { WorldIndex.EggSpot }
 			local rareY = 0
 			for _, spot in spots do
-				if spot.name == "EggSpot_Rare_1" then
+				if spot.name == Config.Nests.RareEggOne then
 					rareY = spot.cframe.Position.Y
 				end
 			end
@@ -312,9 +315,9 @@ describe("the real world, ladder boxes and zone boxes", function()
 		local changed: { string } = {}
 		for _, spot in WorldIndex.readEggSpots(realWorld()) :: { WorldIndex.EggSpot } do
 			local base = spot.model:FindFirstChild("Base") :: BasePart
-			local want = listedZone(EGG_SPOT_ZONES, spot.name, "?")
+			local want = listedZone(EGG_SPOT_ZONES, spot.name, "new")
 			for _, point in { spot.cframe.Position, base.Position } do
-				if zoneOf(point) ~= want then
+				if want ~= "new" and zoneOf(point) ~= want then
 					table.insert(changed, `{spot.name} {want}>{zoneOf(point)}`)
 				end
 			end

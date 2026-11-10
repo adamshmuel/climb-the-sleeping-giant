@@ -3,6 +3,8 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local Workspace = game:GetService("Workspace")
 local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Config = require(ReplicatedStorage.Shared.Config)
 
 -- Plan 3, Task 6a (docs/plans/v2/gardens-and-ways-up.md, "Task 6" and its split lines): the two belly ramps and their
 -- edge guards. Spec Rule 45 (One way onto the belly), Rule 15 (The climb needs no jump). These tests only READ the real
@@ -11,7 +13,7 @@ describe("the belly ramps (task six a)", function()
 	local WALK_WIDTH = 6
 	local THICK = 0.6
 	local DECK_TOP = 33.2
-	local EGG_X, EGG_Z = -12.48, -40.25
+	local EGG_X, EGG_Z = -12.5, -40.3 -- NestTable LowerBelly (left)
 	local V1_EXTRA = 1.4 -- V1's walk to Rare egg 1 was this much longer than code_lead's line
 	local LINE_LENGTH = 18.8 -- code_lead's measured line, station 1 to station 16
 
@@ -215,7 +217,9 @@ describe("the belly ramps (task six a)", function()
 			end
 			print("T3 cross-slope", side.label, table.concat(crossSlope, ", "))
 		end
-		local spot = (world():FindFirstChild("EggSpots") :: Instance):FindFirstChild("EggSpot_Rare_1") :: Instance
+		local spot = (world():FindFirstChild("EggSpots") :: Instance):FindFirstChild(
+				Config.Nests.RareEggOne
+			) :: Instance
 		local base = spot:FindFirstChild("Base") :: BasePart
 		expect(math.abs(base.Position.X - EGG_X) <= 0.05).toBe(true)
 		expect(math.abs(base.Position.Z - EGG_Z) <= 0.05).toBe(true)
@@ -225,8 +229,9 @@ describe("the belly ramps (task six a)", function()
 		include.FilterDescendantsInstances = piecesOf(ramp) :: { any }
 		local hit = Workspace:Raycast(base.Position + Vector3.new(0, 5, 0), Vector3.new(0, -10, 0), include)
 		expect(hit).never.toBeNil()
-		local bottom = base.Position.Y - base.Size.Y / 2
-		expect(math.abs(bottom - (hit :: RaycastResult).Position.Y) <= 0.1).toBe(true)
+		-- 21b stands every nest with its Base TOP on the surface
+		local top = base.Position.Y + base.Size.Y / 2
+		expect(math.abs(top - (hit :: RaycastResult).Position.Y) <= 0.1).toBe(true)
 	end)
 
 	it("walks from the deck centre to Rare egg 1 at most 3 studs further than V1 did (T5)", function()

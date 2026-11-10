@@ -21,7 +21,7 @@ local stops = GrabRig.stops
 
 afterEach(GrabRig.cleanUp)
 
--- Task 7b: Grab runs on the nests. Bare spots (no nest part, no garden) get one slot fewer than they have spots.
+-- Task 7b: Grab runs on the nests.
 type NestRig = {
 	grab: Grab.Grab,
 	spots: { WorldIndex.EggSpot },
@@ -32,7 +32,7 @@ type NestRig = {
 	setPhase: (phase: Config.Phase) -> (), -- what the `phase` dep reads (Task 7c); starts at "Asleep"
 }
 
--- `slots` is the slotsPerRank dep; left out, Grab works it out from the spots.
+-- `slots` is the slotsPerRank dep; left out, one nest of every rank starts empty (GrabRig.oneFreeSlots).
 local function newNestRig(spots: { WorldIndex.EggSpot }, slots: { [Config.RarityName]: number }?): NestRig
 	local prompts: { [string]: any } = {}
 	local standers: { FakePlayer } = {}
@@ -41,7 +41,7 @@ local function newNestRig(spots: { WorldIndex.EggSpot }, slots: { [Config.Rarity
 	local phase: Config.Phase = "Asleep"
 	local deps: Grab.Deps = {
 		spots = spots,
-		slotsPerRank = slots,
+		slotsPerRank = slots or GrabRig.oneFreeSlots(spots),
 		templates = { Common = newTemplate("Common"), Uncommon = newTemplate("Uncommon"), Rare = newTemplate("Rare") },
 		carriedOffset = CFrame.new(0, 0.8, 1.9),
 		carriedHeight = 4.2,
@@ -189,7 +189,7 @@ describe("Grab on the nests", function()
 		expect(fired[1].eggs).toBe("Common_2")
 	end)
 
-	it("slotsFor caps a rank of bare spots at its spot count minus one, and never above its Config slots", function()
+	it("slotsFor gives a rank its Config slots, never more than it has spots, and 0 with no spots", function()
 		local slots: any = Grab.slotsFor({ -- read by name; the type checker can't index its rank-keyed map
 			newSpot("Common_1", "Common", 0),
 			newSpot("Common_2", "Common", 50),
@@ -200,9 +200,10 @@ describe("Grab on the nests", function()
 			newSpot("Epic_3", "Epic", 300),
 			newSpot("Epic_4", "Epic", 350),
 		})
-		expect(slots.Common).toBe(2) -- 3 spots, Config allows 8
-		expect(slots.Uncommon).toBe(0) -- 1 spot
-		expect(slots.Epic).toBe(Config.Rarity.Epic.Slots) -- 4 spots allow 3, Config allows 2
+		expect(slots.Common).toBe(3) -- 3 spots, Config allows 8
+		expect(slots.Uncommon).toBe(1) -- 1 spot, Config allows 4
+		expect(slots.Epic).toBe(Config.Rarity.Epic.Slots) -- 4 spots, Config allows 2
+		expect(slots.Rare).toBe(0) -- no spots
 	end)
 
 	it("makes a returned egg's post solid only once the player standing on the nest moves away (Rule 85)", function()

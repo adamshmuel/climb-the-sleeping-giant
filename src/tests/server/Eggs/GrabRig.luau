@@ -132,7 +132,19 @@ local function eggOnBack(player: FakePlayer): Instance?
 	return (player.Character :: Model):FindFirstChild("CarriedEgg")
 end
 
+-- The slotsPerRank dep that leaves one nest of every rank empty (spots minus one, never below 0), so a refill has
+-- somewhere to land in a test with a few spots. Grab.slotsFor gives a rank its Config slots instead (Task 12).
+local function oneFreeSlots(spots: { WorldIndex.EggSpot }): { [Config.RarityName]: number }
+	local slots: { [Config.RarityName]: number } = {}
+	for _, spot in spots do
+		local before = slots[spot.rarity]
+		slots[spot.rarity] = if before == nil then 0 else before + 1 -- the first spot of a rank is the free one
+	end
+	return slots
+end
+
 return {
+	oneFreeSlots = oneFreeSlots,
 	madeInstances = madeInstances,
 	stops = stops,
 	cleanUp = cleanUp,

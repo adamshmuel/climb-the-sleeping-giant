@@ -23,8 +23,7 @@ export type Garden = {
 }
 
 -- One place where an egg waits (Rule 3): a Model in World.EggSpots with a Rarity, a Base and a PromptAnchor.
--- A nest (Rule 70) also has a Nest part, a NestName, a Twin and, for Common, a Garden. The five nest fields are nil on
--- a V1 bare spot.
+-- A nest (Rule 70) also has a Nest part, a NestName, a Twin and, for Common, a Garden. Every spot is a nest.
 export type EggSpot = {
 	name: string,
 	rarity: Config.RarityName,
@@ -342,15 +341,13 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 				)
 			end
 		end
-		local nestFields: NestReader.NestFields = {}
-		if NestReader.isNest(child) then
-			nestFields = NestReader.readNest(child, label, rarity, nestNames, problems, nestContext)
-			local garden = nestFields.garden
-			if garden ~= nil then
-				local names = meadowNests[garden] or {}
-				meadowNests[garden] = names
-				table.insert(names, child.Name)
-			end
+		-- Every spot is a nest (Rule 70): a bare V1 spot now reports "missing Nest" and "no NestName".
+		local nestFields = NestReader.readNest(child, label, rarity, nestNames, problems, nestContext)
+		local garden = nestFields.garden
+		if garden ~= nil then
+			local names = meadowNests[garden] or {}
+			meadowNests[garden] = names
+			table.insert(names, child.Name)
 		end
 		if #problems == before then
 			local basePart = base :: BasePart

@@ -105,31 +105,31 @@ Each garden's 2 nests sit just past its bridge, about 10 studs apart, about 2 se
 |---|---|---|---|
 | 1 | (−99.0, 2, 3.8) | (−98.3, 2, 12.8) | 8 |
 | 2 | (−89.6, 2, −42.5) | (−93.4, 2, −33.3) | 7 |
-| 3 | (−61.6, 2, −82.9) | (−70.0, 2, −79.0) | 6 |
+| 3 | (−61.6, 2, −82.9) | (−68.7, 2, −77.5) | 6 |
 | 4 | (−15.5, 2, −101.3) | (−32.5, 2, −99.0) | 5 |
 | 5 to 8 | the same spots with x turned positive | | |
 
 - **Garden 4 and 5 nests moved 2026-10-19.** At (∓19.2, −101.3) and (∓28.9, −99.0) each nest's centre sat on the edge of the boot ramp, so a 5-stud nest lay half on the ramp's planks. Now they sit 1 stud clear of the ramp on each side, 17.2 studs apart (8 needed), and still just past the bridge.
-- Small flower clumps sit under garden 3's nests A and B, garden 4's nest A and garden 6's nest B. Move those flowers about 3 studs away when the nests are built. Every other meadow nest is on clear grass (checked 2026-10-19 by looking down at a 3.4-stud circle round each nest).
+- Small flower clumps sit under garden 3's nests A and B, garden 4's nest A and garden 6's nest B. Move those flowers about 3 studs away when the nests are built. Three more props touch a nest (measured 2026-11-10) and move too: the sunflower at (57.2, −80.4) by (−1.3, 0, +0.7), the sunflower at (66.9, −79.8) by (−3.0, 0, +1.8), clear of garden 6's white flowers' new spot, and the mossy boulder at (95.9, −5.1) by (+4.5, 0, 0). Those moves pushed the second sunflower and 3 white flowers into garden 6's nest A and the boulder into garden 8's nest A, so `tools/world/21c-nest-fixes.luau` moves each of them again, the shortest distance that clears every egg (code_lead ruling 2026-11-10). Garden 3's and 6's nest B moved about 2 studs further off the bridge (2.5 past the last plank was too close). Every other meadow nest is on clear grass (checked 2026-10-19 by looking down at a 3.4-stud circle round each nest).
 - These replace V1's Common spots.
 
 ## On him: 22 nests
 
 | Nest | Target rank | Where (his left, x negative) | Twin (his right) | Spot | Fits | Eye space |
 |---|---|---|---|---|---|---|
-| Boot toe, outer | Uncommon | (−28.5, 30.4, −64.5) | (28.5, 30.4, −64.5) | On the boot top, beside the laces, 4 studs from the boot ladder top | 0.52 / 0.42 | 9+ |
-| Boot toe, inner | Uncommon | (−19.5, 30.5, −64.5) | (19.5, 30.7, −64.5) | On the boot top, inner side of the laces | 0.50 / 0.45 | 1.8 |
-| Knee pocket | Uncommon | (−15, 30.2, −48) | (15, 30.2, −48) | A sewn pocket on top of his thigh, 2.5 studs behind the lap plank's inner rope rail. Moved 2026-10-18, raised to its ledge at y 30.2 on 2026-10-19 (was 29.6), see "The lap fold and the knee pocket" | on the pocket | 3.17 |
+| Boot toe, outer | Uncommon | (−26.5, 30.75, −62.5) | (26.5, 30.7, −62.5) | On the boot top, 4.3 studs past the boot ramp's top cleat, on the ladder side of the ramp's line. Moved 2026-11-10 from (∓28.5, 30.4, −64.5): the egg overlapped the ramp's cleat and post and the boot ladder's hook and peg | leans (bend 1.03 / 1.09) | not re-measured after the move |
+| Boot toe, inner | Uncommon | (−20.0, 30.5, −62.5) | (20.0, 30.6, −62.5) | On the boot top, 4.3 studs past the boot ramp's top cleat, on the plank side; 6.5 studs from the outer toe. Moved 2026-11-10 from (∓19.5, 30.5, −64.5): the egg overlapped the ramp's cleat, post and walk board. Nests have no collision, so it never blocks the walk to the lap plank | leans (bend 1.15 / 1.15) | not re-measured after the move |
+| Knee pocket | Uncommon | (−15, 27.1, −47.5) | (15, 27.2, −47.5) | A sewn pocket on top of his thigh, its ledge level with his skin at its centre, 3 studs behind the lap plank deck's edge. Moved 2026-11-10 from (∓15, 30.2, −48): his skin there is at 26.98 (the old 30.2 was a thigh plank, dropped 2026-11-03), and the egg touched the lap plank's deck. See "The lap fold and the knee pocket" | on the pocket | not re-measured after the move |
 | Lap fold | Uncommon | (−13.5, 27.4, −62.5) | (13.5, 27.6, −62.5) | On the inner slope of his boot top, just outside the lap plank's outer rope rail. Placed 2026-10-18, see "The lap fold and the knee pocket". The name stays so the spec's rules still point at it | leans 38° / 36° (gap 0.20, sink 0.18 / 0.13) | 2.35 |
 | Lower belly (V1 Rare egg 1) | Rare | (−12.5, 41.3, −40.3) | (12.5, 41.2, −40.3) | V1's spot, at the top of each ramp from the lap landing. Leans with the belly | 0.36 / 0.12 | 2.0 |
 | Beard–belly fold | Rare | (−7.5, 46.5, −38.5) | (7.5, 47.0, −38.5) | Beside the tip of his beard, where it lies on his belly | 0.17 / 0.47 | 1.55 |
 | **Belly pocket (new)** | Rare | (−16, 44.6, −36.5) | (16, 45.1, −36.5) | A sewn pocket just above the seam, about 5 studs' walk from the ramp top. 6.1 studs from Rare egg 1 (6.5 on his right) | on the pocket | 1.60 / 1.55 |
-| **Cuff pocket, front (new)** | Epic | (−55.0, 32.5, −11.0) | (54.9, 32.5, −11.0) | A sewn pocket at the bottom of his white cuff, on the strap's ledge (build 2, measured 2026-10-18) | on the pocket | 1.73 |
-| **Cuff pocket, back (new)** | Epic | (−57.3, 32.5, −6.0) | (57.2, 32.5, −6.0) | The same ledge, 5.5 studs further back | on the pocket | 1.54 |
+| **Cuff pocket, front (new)** | Epic | (−56.1, 32.5, −11.5) | (56.0, 32.5, −11.5) | A sewn pocket at the bottom of his white cuff, on the strap's ledge (build 2, measured 2026-10-18; moved about 1.1 studs out from his arm 2026-11-10, code_lead ruling: the nest's box poked 1 stud into his sleeve) | on the pocket | 1.73 |
+| **Cuff pocket, back (new)** | Epic | (−57.51, 32.5, −5.545) | (57.41, 32.5, −5.545) | The same ledge, 6 studs further back (moved 0.5 along the ledge 2026-11-10, code_lead ruling: the 6-stud rule) | on the pocket | 1.54 |
 | Nightcap brim | Legendary | (−14, 117.1, 14) | (14, 116.7, 14) | On the cap, just past the cap ladder top | 0.32 / 0.28 | above his eyes |
 | Nightcap side | Legendary | (−17, 119.0, 28) | (17, 119.0, 28) | On the cap's side stripe | 0.16 / 0.16 | above his eyes |
 
-Counts: 16 Common, 8 Uncommon, 6 Rare, 4 Epic, 4 Legendary: **38 nests** (Plan B, confirmed by game_creator 2026-10-18; the ramp pocket pair is out). On him, nests are at least 6 studs apart, centre to centre (the two cuff pockets on one arm are 5.5 apart, and only one of them holds an egg at a time); in the meadow, 8. Two nests never touch: 5 studs is the look limit. Every twin is within 0.9 studs of the exact mirror spot (Rule 72 allows 2).
+Counts: 16 Common, 8 Uncommon, 6 Rare, 4 Epic, 4 Legendary: **38 nests** (Plan B, confirmed by game_creator 2026-10-18; the ramp pocket pair is out). On him, nests are at least 6 studs apart, centre to centre, measured to 0.1 stud (the left belly pocket and lower belly nests are 5.95 apart, main chat veto 2026-11-10: a kid can't see 0.05); in the meadow, 8. Two nests never touch: 5 studs is the look limit. Every twin is within 0.9 studs of the exact mirror spot (Rule 72 allows 2).
 
 **Out of the map:** the side pocket, the low button ledge, the hem pocket and the ramp pocket (Rare), the nightcap tail and the pom-pom (Legendary). The pom-pom model and its walk strip leave the art list.
 

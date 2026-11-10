@@ -162,7 +162,9 @@ Placed 2026-10-18 on code_lead's moved lap planks, under game_creator's rules (g
 - **One reading to confirm:** it sits beside the plank's middle stretch (x 13.5; the plank runs from x 4.9 to 20.6). I read "not the middle of the plank" as "not on the plank's deck", which it isn't. If game_creator meant "not beside the middle either", the only other spot is the squeezed groove above.
 - **Look:** a green egg leaning out from the boot's inner slope, just outside the rope rail. From the plank it's the egg at the rail's foot; from gardens 4 and 5 it's the third egg along the boot's front edge, after the two boot toes. In the leg gap it shows against his blue trousers and the red cushion.
 
-**The knee pocket moved 1 stud out and 3.6 up** to (∓15, 30.2, −48), the top of its pocket ledge, level with his skin there (2026-10-19; 2026-10-18 had it at 29.6):
+**2026-11-10 update:** the knee pocket is now at (−15, 27.1, −47.5) / (15, 27.2, −47.5). The 30.2 below was a thigh plank's top, dropped 2026-11-03; his skin at the pocket's centre is 26.98 to 27.17, and at z −48 the egg touched the lap plank's deck (edge at z −50.5). The pocket art moves down 3.1 and back 0.5: its ledge top at the nest's y, its body (3.4 tall) reaching his skin at the front (skin 25.0 to 26.6 at z −49.8) and tucked about 0.8 into his thigh at the back (skin 27.9 at z −45.2).
+
+**The knee pocket moved 1 stud out and 3.6 up** to (∓15, 30.2, −48), the top of its pocket ledge, level with his skin there (2026-10-19; 2026-10-18 had it at 29.6): (history)
 - Its old spot (−14, 26.6, −48) is 3.6 studs inside his thigh: his skin there is at y 30.2.
 - At x 14 its prompt also showed from the ramp's outer edge (7.4 studs). At x 15 it's 8.3, so it follows the same "never from a ramp" rule as the lap fold.
 - From the plank it's 4.5 studs; eye space 3.17; 14.6 from the lap fold; twin exact. It stays on its pocket ledge.

@@ -208,7 +208,9 @@ describe("the boot ladders (Task 4a)", function()
 		local params = RaycastParams.new()
 		params.FilterType = Enum.RaycastFilterType.Include
 		params.FilterDescendantsInstances = { ladderOf(-1), ladderOf(1) }
-		for _, name in { "EggSpot_Uncommon_1", "EggSpot_Uncommon_3" } do
+		for _, name in
+			{ "Nest_BootToeInner_Left", "Nest_BootToeOuter_Left", "Nest_BootToeInner_Right", "Nest_BootToeOuter_Right" }
+		do
 			local spot = spots[name] :: Model
 			local hit =
 				Workspace:Raycast(spot:GetPivot().Position + Vector3.new(0, 3, 0), Vector3.new(0, -10, 0), params)
@@ -658,7 +660,7 @@ describe("the lap planks, landing and apron (task five)", function()
 		end
 	end)
 
-	it("leaves egg spots 2 and 4 uncovered and reachable from each boot top with no jump", function()
+	it("leaves the four boot-toe nests uncovered and reachable from each boot top with no jump", function()
 		local covers: { Instance } = {}
 		for _, name in
 			{ "LapPlank_Left", "LapPlank_Right", "LapLanding", "LapApron", "RailGuard_Left", "RailGuard_Right" }
@@ -667,8 +669,10 @@ describe("the lap planks, landing and apron (task five)", function()
 		end
 		local world = Workspace:FindFirstChild("World") :: Instance
 		local spots = {
-			{ name = "EggSpot_Uncommon_2", side = -1 },
-			{ name = "EggSpot_Uncommon_4", side = 1 },
+			{ name = "Nest_BootToeInner_Left", side = -1 },
+			{ name = "Nest_BootToeOuter_Left", side = -1 },
+			{ name = "Nest_BootToeInner_Right", side = 1 },
+			{ name = "Nest_BootToeOuter_Right", side = 1 },
 		}
 		for _, spot in spots do
 			local part = (world :: any).EggSpots:FindFirstChild(spot.name)

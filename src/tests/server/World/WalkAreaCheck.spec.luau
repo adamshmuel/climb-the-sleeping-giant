@@ -476,7 +476,7 @@ describe("WalkAreaCheck", function()
 		eggSpots.Name = "EggSpots"
 		eggSpots.Parent = world
 		local eggSpot = Instance.new("Model")
-		eggSpot.Name = "EggSpot_Rare_1"
+		eggSpot.Name = Config.Nests.RareEggOne -- the start egg spot (WalkAreaFacts START_EGG_SPOT)
 		eggSpot.Parent = eggSpots
 		local marker = Instance.new("Part")
 		marker.Anchored = true

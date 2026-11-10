@@ -86,7 +86,8 @@ end)
 
 -- Builds a fake world that only has EggSpots, with no parent. The spots are the 16 that the real world has:
 -- 8 Common, 4 Uncommon and 4 Rare (`counts` builds any other mix, a missing rank has none). Each is a Model with a
--- Rarity, a Base and a PromptAnchor.
+-- Rarity, a Base and a PromptAnchor, and is a nest (Rule 70): a Nest part, a NestName, a self Twin and, for Common, a
+-- Garden. The Common ones go to gardens 8 down to 5, two each, so a test can add its own nests to gardens 1 to 3.
 type SpotOptions = {
 	counts: { [string]: number }?, -- rank -> how many spots to build, instead of 8, 4, 4
 	skip: { string }?, -- spot names to leave out
@@ -96,6 +97,7 @@ type SpotOptions = {
 	noAnchor: { string }?,
 	wrongBaseClass: { [string]: string }?, -- spot name -> class to build the Base as
 	wrongAnchorClass: { [string]: string }?,
+	bare: { string }?, -- spot names built as a bare V1 spot: no Nest part, no NestName, no Twin, no Garden
 }
 
 local function contains(list: { string }?, name: string): boolean
@@ -140,6 +142,17 @@ local function makeSpotsWorld(options: SpotOptions?): Folder
 					anchor.Name = "PromptAnchor"
 					anchor.Parent = base
 				end
+			end
+			if not contains(opts.bare, name) then
+				spot:SetAttribute("NestName", name)
+				spot:SetAttribute("Twin", name)
+				if rarity == "Common" then
+					spot:SetAttribute("Garden", 9 - math.ceil(index / 2))
+				end
+				local nestPart = Instance.new("Part")
+				nestPart.Name = "Nest"
+				nestPart.CFrame = CFrame.new(number * 10, 6, 0)
+				nestPart.Parent = spot
 			end
 			spot.Parent = folder
 		end
@@ -248,12 +261,12 @@ describe("WorldIndex.readEggSpots", function()
 		world:Destroy()
 	end)
 
-	it("accepts any number of spots of any rank: 9 Common and 1 Epic give 10 spots", function()
-		local world = makeSpotsWorld({ counts = { Common = 9, Epic = 1 } })
+	it("accepts any number of spots of any rank: 10 Common and 1 Epic give 11 spots", function()
+		local world = makeSpotsWorld({ counts = { Common = 10, Epic = 1 } })
 		local spots, problems = WorldIndex.readEggSpots(world)
 		expect(problems).toEqual({})
 		expect(spots).never.toBeNil()
-		expect(#(spots :: { any })).toBe(10)
+		expect(#(spots :: { any })).toBe(11)
 		world:Destroy()
 	end)
 
@@ -325,7 +338,7 @@ local function meadowNest(world: Instance, name: string, twin: string, garden: n
 end
 
 describe("WorldIndex.readEggSpots nests", function()
-	it("gives a nest all five new fields and leaves them nil on a bare spot", function()
+	it("gives a nest all five new fields", function()
 		local world = makeSpotsWorld()
 		local first = meadowNest(world, "EggNest_G1A", "EggNest_G1B", 1)
 		meadowNest(world, "EggNest_G1B", "EggNest_G1A", 1)
@@ -348,13 +361,18 @@ describe("WorldIndex.readEggSpots nests", function()
 		expect(byName.EggNest_Rare.nest).toBe(arm:FindFirstChild("Nest"))
 		expect(byName.EggNest_Rare.garden).toBeNil()
 		expect(byName.EggNest_Rare.ridesRightArm).toBe(true)
-		-- the bare spot beside them keeps today's fields only (this half already passes before the change)
-		local bare = byName.EggSpot_Common_1
-		expect(bare.nest).toBeNil()
-		expect(bare.nestName).toBeNil()
-		expect(bare.twin).toBeNil()
-		expect(bare.garden).toBeNil()
-		expect(bare.ridesRightArm).toBeNil()
+		world:Destroy()
+	end)
+
+	it("reports a bare V1 spot (no Nest part, no NestName, no Twin) as not a nest", function()
+		local world = makeSpotsWorld({ bare = { "EggSpot_Uncommon_1" } })
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({
+			"EggSpots.EggSpot_Uncommon_1 is missing Nest",
+			"EggSpots.EggSpot_Uncommon_1 has no NestName",
+			"EggSpots.EggSpot_Uncommon_1 has no Twin",
+		})
 		world:Destroy()
 	end)
 

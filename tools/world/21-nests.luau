@@ -18,11 +18,12 @@
 -- width each side), faces at FACE_DEGREES (75 or steeper), no flat top, invisible, anchored, CanCollide false (the server's
 -- SpotModels turns it solid while the egg waits). Each is the Folder "EggPost" inside the spot model.
 -- It adds only: PLANNED_POST_SPOTS Folders with 2 wedge parts each. Before changing anything it clones the spot models to
--- ServerStorage.WorldBackups.p5fix2. A spot that already has an EggPost is skipped; all of them = "already done".
+-- ServerStorage.WorldBackups.p5t12.PostSpots. A spot that already has an EggPost is skipped; all of them = "already done".
 -- STOP (nothing changed): the Common egg template missing; Config HalfBase not within HALF_BASE_MARGIN of 0.4 x the egg
 -- width; the number of spots to change not PLANNED_POST_SPOTS. The CHECK_ONLY pass also builds a test pair at
 -- TEST_HEIGHT, rays it and destroys it in the same call.
--- Task 12 builds the real nests: change PLANNED_POST_SPOTS then and run this again.
+-- Task 12 (2026-11-10): runs after 21b-nest-models (which makes the 38 nest models and WorldBackups.p5t12). BACKUP_NAME is
+-- p5t12 and PLANNED_POST_SPOTS is 16. The backup reuses that folder: the spot models go in its PostSpots child.
 -- Run in Studio EDIT mode: paste this file's text with execute_luau. The place file must be saved afterwards (the
 -- template lives in the place file, not in the Rojo tree).
 
@@ -119,8 +120,8 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local POST_NAME = "EggPost"
 local BACKUP_FOLDER = "WorldBackups"
-local BACKUP_NAME = "p5fix2"
-local PLANNED_POST_SPOTS = 8 -- the 8 Common meadow spots today (code_lead ruling); Task 12 sets 16 for the real nests
+local BACKUP_NAME = "p5t12"
+local PLANNED_POST_SPOTS = 16 -- the 16 Common meadow nests (plan 5 Task 12; 21b builds the models first)
 local PARTS_PER_POST = 2
 local WIDTH_SHARE = 0.8 -- the post's base is this share of the egg's width
 local FACE_DEGREES = 75.2 -- the steepness of each face (the rule says 75 or steeper)
@@ -294,16 +295,22 @@ local function runPosts(): string
 	if backups == nil then
 		return "STOP (posts): ServerStorage.WorldBackups is missing, nothing changed"
 	end
-	if backups:FindFirstChild(BACKUP_NAME) then
-		return `STOP (posts): WorldBackups.{BACKUP_NAME} is already there, nothing changed`
-	end
 	ChangeHistoryService:SetWaypoint("21-nests posts: before")
+	local holder = backups:FindFirstChild(BACKUP_NAME)
+	if holder == nil then
+		holder = Instance.new("Folder")
+		holder.Name = BACKUP_NAME
+		holder.Parent = backups
+	end
+	if holder:FindFirstChild("PostSpots") then
+		return `STOP (posts): WorldBackups.{BACKUP_NAME}.PostSpots is already there, nothing changed`
+	end
 	local backup = Instance.new("Folder")
-	backup.Name = BACKUP_NAME
+	backup.Name = "PostSpots"
 	for _, spot in todo do
 		spot:Clone().Parent = backup
 	end
-	backup.Parent = backups
+	backup.Parent = holder
 	table.insert(lines, `backed up {#backup:GetChildren()} spot models to {backup:GetFullName()}`)
 
 	local firstFolder: Folder? = nil

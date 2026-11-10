@@ -104,29 +104,17 @@ local MAX_CHECKS_PER_FRAME = 3
 
 local Grab = {}
 
--- How many eggs of each rank wait at once: Config.Rarity[rank].Slots. A rank with a bare spot (no nest part yet)
--- gets at most its spot count minus 1, so a refill always has a free nest besides the last one; a rank with no spots
--- gets 0. Task 12 removes the bare-spot allowance.
+-- How many eggs of each rank wait at once: Config.Rarity[rank].Slots, but never more than the rank has nests, and 0 for
+-- a rank with no nests. Every spot is a nest (Task 12), so there is no bare-spot allowance.
 function Grab.slotsFor(spots: { WorldIndex.EggSpot }): { [Config.RarityName]: number }
 	local counts: { [string]: number } = {}
-	local hasBare: { [string]: boolean } = {}
 	for _, spot in spots do
 		counts[spot.rarity] = (counts[spot.rarity] or 0) + 1
-		if spot.nest == nil then
-			hasBare[spot.rarity] = true
-		end
 	end
 	local slots: { [Config.RarityName]: number } = {}
 	local ranks = Config.RarityOrder :: { Config.RarityName }
 	for _, rank: Config.RarityName in ranks do
-		local count = counts[rank] or 0
-		local wanted = Config.Rarity[rank].Slots
-		if count == 0 then
-			wanted = 0
-		elseif hasBare[rank] then
-			wanted = math.min(wanted, count - 1)
-		end
-		slots[rank] = wanted
+		slots[rank] = math.min(Config.Rarity[rank].Slots, counts[rank] or 0)
 	end
 	return slots
 end

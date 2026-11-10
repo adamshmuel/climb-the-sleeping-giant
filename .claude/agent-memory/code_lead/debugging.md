@@ -8,3 +8,4 @@
 - A test report keeps only 150 characters of each failure message (BackgroundRun WHY_LIMIT), so a narrow run never shows a whole stuck list: run `work/p5t13b/stuck-dump.luau` (deferred scan, then its fetch) to get every unlisted spot with its roof (p5t13b, 2026-11-08).
 - A Studio script line may not start with "(": a hook blocks it (Luau reads a call on the line before). Use a local first.
 - A ruling from a trace targets the traced cases by name, never "every pair": p5t15 ruling 2 grew all feet, stopped on 5 untraced cuff pairs and fixed 1 of 6 traced spots (2026-11-08). Dry runs report "fixed N of M targets".
+- Many reds with one cut "Received +N" diff: N is the problem count plus 2 braces; call the reader once in Edit (`require(ServerScriptService.Server.World.WorldIndex).readEggSpots(workspace.World)`, no Clone) to get the whole list. A world script that destroys an object must clone any template taken from it first (p5t12 21b, 2026-11-10).

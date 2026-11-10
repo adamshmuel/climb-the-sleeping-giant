@@ -96,7 +96,7 @@ type Rig = {
 }
 
 -- Starts Grab on fake spots (two of each rank: Common_1/2, Uncommon_1/2, Rare_1/2), fake prompts, a fake clock, a
--- fake Players service and a fake GrabMissed remote. Bare spots get one slot fewer than they have spots, so each
+-- fake Players service and a fake GrabMissed remote. Each rank gets one slot fewer than it has spots (GrabRig.oneFreeSlots), so each
 -- rank has one egg, on its _1 spot; the _2 spot starts empty and is where the refill lands.
 local function newRig(): Rig
 	local spotList = {
@@ -123,6 +123,7 @@ local function newRig(): Rig
 	local heartbeat: any = newSignal()
 	local grab = Grab.start({
 		spots = spotList,
+		slotsPerRank = GrabRig.oneFreeSlots(spotList),
 		templates = { Common = newTemplate("Common"), Uncommon = newTemplate("Uncommon"), Rare = newTemplate("Rare") },
 		carriedOffset = CFrame.new(0, 0.8, 1.9),
 		carriedHeight = 4.2,

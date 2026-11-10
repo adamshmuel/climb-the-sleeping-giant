@@ -19,7 +19,7 @@ export type Context = {
 
 local NestReader = {}
 
--- A nest has a Nest child or a NestName attribute (Rule 70). Anything else is a V1 bare spot.
+-- A nest has a Nest child or a NestName attribute (Rule 70). A spot with neither is not a nest: the reader reports it.
 function NestReader.isNest(model: Instance): boolean
 	return model:FindFirstChild("Nest") ~= nil or model:GetAttribute("NestName") ~= nil
 end

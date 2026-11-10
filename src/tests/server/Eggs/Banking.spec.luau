@@ -9,6 +9,7 @@ local Banking = require(ServerScriptService.Server.Eggs.Banking)
 local Grab = require(ServerScriptService.Server.Eggs.Grab)
 local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
+local GrabRig = require(script.Parent.GrabRig)
 
 describe("Banking.shouldBank", function()
 	it("is true for a carrier inside their own garden", function()
@@ -476,7 +477,7 @@ type Rig = {
 	grabAt: (spotName: string, player: FakePlayer) -> (),
 }
 
--- The real Grab on five fake spots (bare spots give a rank one slot fewer than it has spots, so Common_1 and
+-- The real Grab on five fake spots (each rank gets one slot fewer than it has spots, GrabRig.oneFreeSlots, so Common_1 and
 -- Common_2 hold eggs, Common_3 is empty, Rare_1 holds the Rare and Rare_2 is empty), a fake clock and fake prompts,
 -- with Banking started on top of it. When `before` is given, it runs after Grab starts but before Banking does
 -- (to add players that are already there).
@@ -497,6 +498,7 @@ local function newRig(before: ((rig: Rig) -> ())?): Rig
 	local players = newPlayers()
 	local grab = Grab.start({
 		spots = spotList,
+		slotsPerRank = GrabRig.oneFreeSlots(spotList),
 		templates = { Common = newTemplate("Common"), Uncommon = newTemplate("Uncommon"), Rare = newTemplate("Rare") },
 		carriedOffset = CFrame.new(0, 0.8, 1.9),
 		carriedHeight = 4.2,

@@ -8,3 +8,5 @@
 - p3t8 8e step back: give a screen-size target per element (one Z >= 24 pt), not per box; a box of 3 diagonal Zs makes each Z ~1/3 of it. Measure projected boxes vs HUD AbsolutePosition before shot rounds. Beside-the-head placement = SizeOffset (screen-relative), not StudsOffset (changes with distance). DistanceLower/UpperLimit are deprecated.
 - p3t8 8f: HUD mockups over real phone Play shots: scale the 416x186 shot to 840x368 points (real viewport) and redraw only the changed HUD piece on its measured box. Fredoka One capital Z = 0.74 of font size (Chrome).
 - p3t8 8f step back: a moving HUD piece (rising Zs) needs its highest frame drawn and >= 8 pt margin to every screen edge there; zero margin forced point-exact Play measures. Write limits relative to another HUD piece in the same ScreenGui (no GetGuiInset; phone sim reports 58 but GUI is 20 pt taller than viewport).
+
+- Judging a tint from Play shots: sample real pixel colours (python3 PIL getpixel on the jpg) at the egg in sun and shade; the Epic #5E3CFF tint measured #2500FE in shade vs #832FFF in sun (p5t12, 2026-11-10).
