@@ -9,6 +9,10 @@ local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local Zones = require(script.Parent.Parent.Giant.Zones)
 local NestReader = require(script.Parent.NestReader)
 local SlideWatch = require(script.Parent.Parent.Players.SlideWatch)
+local WayDown = require(script.Parent.Parent.Players.WayDown)
+local PathCheck = require(script.Parent.PathCheck)
+
+export type Ladder = WayDown.Ladder
 
 export type Box = { cframe: CFrame, size: Vector3 }
 
@@ -641,6 +645,60 @@ function WorldIndex.loadSeamLine(world: Instance): { SeamPoint }
 		error(table.concat(problems, "\n"), 0)
 	end
 	return points
+end
+
+-- The four ways down (spec core-heist Rule 8): model name under World.WalkSurfaces, kind, and for a boot ladder the
+-- route point on the grass at its foot.
+local CLIMB_MODELS: { { name: string, kind: "head" | "boot", ground: string? } } = {
+	{ name = "BeardLadder", kind = "head" },
+	{ name = "CapLadder", kind = "head" },
+	{ name = "BootLadder_Left", kind = "boot", ground = "RoutePoint_LadderLeft_Foot" },
+	{ name = "BootLadder_Right", kind = "boot", ground = "RoutePoint_LadderRight_Foot" },
+}
+
+-- Reads the four ladders from World.WalkSurfaces.<model>.Climb (a TrussPart: its ends are the ladder's foot and top)
+-- and, for the boot ladders, the route point on the grass at the foot from World.Route. Problems are listed like
+-- readSeamLine does.
+function WorldIndex.readClimbParts(world: Instance): ({ Ladder }?, { string })
+	local surfaces = world:FindFirstChild("WalkSurfaces")
+	if surfaces == nil then
+		return nil, { "World is missing WalkSurfaces" }
+	end
+	local route = world:FindFirstChild("Route")
+	local ladders: { Ladder } = {}
+	local problems: { string } = {}
+	for _, entry in CLIMB_MODELS do
+		local model = surfaces:FindFirstChild(entry.name)
+		local climb = if model ~= nil then model:FindFirstChild("Climb") else nil
+		if climb == nil or not climb:IsA("TrussPart") then
+			table.insert(problems, `WalkSurfaces is missing {entry.name} with a TrussPart Climb`)
+			continue
+		end
+		local ground: Vector3? = nil
+		if entry.ground ~= nil then
+			local point = if route ~= nil then route:FindFirstChild(entry.ground) else nil
+			if point == nil or not point:IsA("BasePart") then
+				table.insert(problems, `Route is missing {entry.ground}`)
+				continue
+			end
+			ground = point.Position
+		end
+		local foot, top = PathCheck.trussEnds(climb)
+		table.insert(ladders, { name = entry.name, kind = entry.kind, foot = foot, top = top, ground = ground })
+	end
+	if #problems > 0 then
+		return nil, problems
+	end
+	return ladders, {}
+end
+
+-- Same as readClimbParts, but stops the server with every problem listed (one per line) if the world is wrong.
+function WorldIndex.loadClimbParts(world: Instance): { Ladder }
+	local ladders, problems = WorldIndex.readClimbParts(world)
+	if ladders == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return ladders
 end
 
 -- Reads the point bounced players turn to look at: the pivot position of World.Giant.SleepEyes (the centre of his face).

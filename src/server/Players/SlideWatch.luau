@@ -64,6 +64,11 @@ function SlideWatch.belowSeam(point: Vector3, seam: { SeamPoint }, match: number
 	return along > match and sideways <= across
 end
 
+-- True when `point` is below the seam line, by the config's match and this watch's own across limit.
+function SlideWatch.pointBelowSeam(point: Vector3, seam: { SeamPoint }): boolean
+	return SlideWatch.belowSeam(point, seam, Config.Nests.SeamMatch, ACROSS)
+end
+
 local function newState(): PlayerState
 	return {
 		slides = 0,
@@ -119,7 +124,7 @@ function SlideWatch.new(deps: Deps): Watch
 			if reading.moveGrace or deps.floating(userId) then
 				state.thrownAway = true
 			end
-			if SlideWatch.belowSeam(reading.position, deps.seam, Config.Nests.SeamMatch, ACROSS) then
+			if SlideWatch.pointBelowSeam(reading.position, deps.seam) then
 				state.passedBelow = true
 			end
 			if reading.thudFrom ~= nil then

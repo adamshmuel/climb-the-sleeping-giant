@@ -31,6 +31,7 @@ local Recovery = require(script.Players.Recovery)
 local RedCircles = require(script.Giant.RedCircles)
 local Zones = require(script.Giant.Zones)
 local SafeSpots = require(script.Players.SafeSpots)
+local QuietDrops = require(script.Players.QuietDrops)
 local SlideWatch = require(script.Players.SlideWatch)
 local Spawning = require(script.Players.Spawning)
 local PressingHandler = require(script.Remotes.PressingHandler)
@@ -142,6 +143,9 @@ HomeDisplay.start({
 -- the giant's tick, below.
 local floater = Floater.start({ players = Players, facePoint = facePoint, now = os.clock })
 
+-- The set ways down off his head and boots make no thud (Rule 8). The judge is QuietDrops; it runs before slides:check.
+local quietDrops = QuietDrops.new({ ladders = WorldIndex.loadClimbParts(world), seam = seamLine })
+
 -- The first slide a player has gets a tip on their screen (Rule 84). The judge is SlideWatch; this only wires it.
 local slideEnded = Signal.new() :: Signal.Signal<number, number>
 local slides = SlideWatch.new({
@@ -177,6 +181,7 @@ local function slideReadings(samples: { PlayerTracker.Sample }): { SlideWatch.Re
 end
 Players.PlayerRemoving:Connect(function(player: Player)
 	slides:forget(player.UserId)
+	quietDrops:forget(player.UserId)
 end)
 
 -- Jumps: each character's Humanoid tells the server when it jumps, because a jump up the steep belly path is in the air
@@ -289,6 +294,7 @@ local slamRandom = Random.new()
 local director = GiantDirector.new({
 	tick = function()
 		local samples = tracker:tick()
+		quietDrops:check(samples)
 		recovery:step()
 		banking:check(samples)
 		slides:check(slideReadings(samples))

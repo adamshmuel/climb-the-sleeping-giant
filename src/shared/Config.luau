@@ -46,6 +46,13 @@ export type Config = {
 		WalkPerSecond: number,
 		TiptoeFactor: number,
 		JumpBurst: number,
+		-- Quiet ways down (spec core-heist Rule 8, "The set ways down must not thud"): how near a fall must start to a
+		-- ladder, and how near the boot ladder's grass foot it must end. Play confirms them (plan 5 Task 26).
+		QuietDrop: {
+			TrussNear: number,
+			TopNear: number,
+			FootStuds: number,
+		},
 		ZoneMultiplier: {
 			Meadow: number,
 			Boots: number,
@@ -171,6 +178,7 @@ local config: Config = {
 		WalkPerSecond = 4,
 		TiptoeFactor = 0.2,
 		JumpBurst = 20,
+		QuietDrop = { TrussNear = 1.5, TopNear = 2, FootStuds = 8 },
 		ZoneMultiplier = { Meadow = 0, Boots = 1, Belly = 1.5, Beard = 2, Nightcap = 3 },
 	},
 	Meter = {

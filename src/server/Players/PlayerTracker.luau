@@ -48,6 +48,8 @@ export type Sample = {
 	garden: number?,
 	thudFrom: Config.ZoneName?, -- set on the tick a thud is due: the highest zone the fall (or hop) left
 	falling: boolean, -- a fall is under way (the landing detector's state after this tick)
+	jumped: boolean?, -- a jump took off on this tick, or the fall under way began with a jump
+	quiet: boolean?, -- the fall ended a set way down, so its thud was dropped (QuietDrops)
 	moveGrace: boolean, -- true on a tick the server's move still excuses (see `moved`), the last one included
 	onStitchedEdge: boolean, -- standing on a part marked StitchedEdge; asked only on ticks where falling is false
 }
@@ -266,6 +268,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 				local moving = false
 				local thudFrom: Config.ZoneName?
 				local takeoffZones: { Config.ZoneName } = {}
+				local jumped = false
 				local grace = graces[player.UserId]
 				local inGrace = grace ~= nil
 				if grace ~= nil then
@@ -297,6 +300,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 					end
 					thudFrom, memory.landing =
 						LandingDetector.step(memory.landing, grounded, verticalSpeed, place.zone, takeoffZones)
+					jumped = #takeoffZones > 0 or memory.landing.jumped
 				end
 				table.insert(samples, {
 					userId = player.UserId,
@@ -307,6 +311,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 					garden = place.garden,
 					thudFrom = thudFrom,
 					falling = memory.landing.falling,
+					jumped = jumped,
 					moveGrace = inGrace,
 					onStitchedEdge = not memory.landing.falling and onStitchedEdge(character),
 				})

@@ -539,27 +539,32 @@ local function findWalkLinks(options: Options, map: WalkMap)
 	end
 end
 
+-- The two ends of a TrussPart's longest axis, as (foot, top): the lower end first.
+function PathCheck.trussEnds(part: TrussPart): (Vector3, Vector3)
+	local size = part.Size
+	local half = Vector3.zero
+	if size.X >= size.Y and size.X >= size.Z then
+		half = Vector3.new(size.X / 2, 0, 0)
+	elseif size.Y >= size.Z then
+		half = Vector3.new(0, size.Y / 2, 0)
+	else
+		half = Vector3.new(0, 0, size.Z / 2)
+	end
+	local endA = part.CFrame:PointToWorldSpace(half)
+	local endB = part.CFrame:PointToWorldSpace(-half)
+	if endB.Y < endA.Y then
+		return endB, endA
+	end
+	return endA, endB
+end
+
 -- Climb links: each solid TrussPart joins the spot at its foot to the spot at its top (both within two grid steps of
 -- the ends of its longest axis), both ways, at 70% of walking speed.
 local function findClimbLinks(options: Options, map: WalkMap)
 	local reach = CLIMB_REACH_STEPS * map.spacing
 	for _, descendant in options.world:GetDescendants() do
 		if descendant:IsA("TrussPart") and descendant.CanCollide then
-			local size = descendant.Size
-			local half = Vector3.zero
-			if size.X >= size.Y and size.X >= size.Z then
-				half = Vector3.new(size.X / 2, 0, 0)
-			elseif size.Y >= size.Z then
-				half = Vector3.new(0, size.Y / 2, 0)
-			else
-				half = Vector3.new(0, 0, size.Z / 2)
-			end
-			local endA = descendant.CFrame:PointToWorldSpace(half)
-			local endB = descendant.CFrame:PointToWorldSpace(-half)
-			local foot, top = endA, endB
-			if endB.Y < endA.Y then
-				foot, top = endB, endA
-			end
+			local foot, top = PathCheck.trussEnds(descendant)
 			local footSpot = PathCheck.nearestSpot(map, foot, reach)
 			local topSpot = PathCheck.nearestSpot(map, top, reach)
 			if footSpot ~= nil and topSpot ~= nil and footSpot ~= topSpot then
