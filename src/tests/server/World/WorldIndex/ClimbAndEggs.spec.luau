@@ -85,8 +85,10 @@ describe("WorldIndex.loadClimb", function()
 end)
 
 -- Builds a fake world that only has EggSpots, with no parent. The spots are the 16 that the real world has:
--- 8 Common, 4 Uncommon and 4 Rare. Each is a Model with a Rarity, a Base and a PromptAnchor.
+-- 8 Common, 4 Uncommon and 4 Rare (`counts` builds any other mix, a missing rank has none). Each is a Model with a
+-- Rarity, a Base and a PromptAnchor.
 type SpotOptions = {
+	counts: { [string]: number }?, -- rank -> how many spots to build, instead of 8, 4, 4
 	skip: { string }?, -- spot names to leave out
 	noRarity: { string }?, -- spot names built without the Rarity attribute
 	rarity: { [string]: string }?, -- spot name -> Rarity value to write instead of the right one
@@ -107,11 +109,11 @@ local function makeSpotsWorld(options: SpotOptions?): Folder
 	local folder = Instance.new("Folder")
 	folder.Name = "EggSpots"
 	folder.Parent = world
-	local counts = { Common = 8, Uncommon = 4, Rare = 4 }
-	local order = { "Common", "Uncommon", "Rare" }
+	local counts: { [string]: number } = opts.counts or { Common = 8, Uncommon = 4, Rare = 4 }
+	local order = { "Common", "Uncommon", "Rare", "Epic", "Legendary" }
 	local number = 0
 	for _, rarity in order do
-		for index = counts[rarity], 1, -1 do -- built backwards on purpose: the reader must sort by name
+		for index = counts[rarity] or 0, 1, -1 do -- built backwards on purpose: the reader must sort by name
 			number += 1
 			local name = `EggSpot_{rarity}_{index}`
 			if contains(opts.skip, name) then
@@ -197,11 +199,11 @@ describe("WorldIndex.readEggSpots", function()
 		world:Destroy()
 	end)
 
-	it("reports a spot with a Rarity that is not Common, Uncommon or Rare", function()
-		local world = makeSpotsWorld({ rarity = { EggSpot_Uncommon_1 = "Epic" } })
+	it("reports a spot with a Rarity that is not one of the five ranks", function()
+		local world = makeSpotsWorld({ rarity = { EggSpot_Uncommon_1 = "Mythic" } })
 		local spots, problems = WorldIndex.readEggSpots(world)
 		expect(spots).toBeNil()
-		expect(problems).toEqual({ 'EggSpots.EggSpot_Uncommon_1 has an unknown Rarity "Epic"' })
+		expect(problems).toEqual({ 'EggSpots.EggSpot_Uncommon_1 has an unknown Rarity "Mythic"' })
 		world:Destroy()
 	end)
 
@@ -246,11 +248,20 @@ describe("WorldIndex.readEggSpots", function()
 		world:Destroy()
 	end)
 
-	it("reports the wrong number of spots of each rarity", function()
-		local world = makeSpotsWorld({ skip = { "EggSpot_Uncommon_4" } })
+	it("accepts any number of spots of any rank: 9 Common and 1 Epic give 10 spots", function()
+		local world = makeSpotsWorld({ counts = { Common = 9, Epic = 1 } })
+		local spots, problems = WorldIndex.readEggSpots(world)
+		expect(problems).toEqual({})
+		expect(spots).never.toBeNil()
+		expect(#(spots :: { any })).toBe(10)
+		world:Destroy()
+	end)
+
+	it("rejects a folder with no spots", function()
+		local world = makeSpotsWorld({ counts = {} })
 		local spots, problems = WorldIndex.readEggSpots(world)
 		expect(spots).toBeNil()
-		expect(problems).toEqual({ "EggSpots needs 8 Common, 4 Uncommon and 4 Rare spots, found 8, 3, 4" })
+		expect(problems).toEqual({ "EggSpots has no spots" })
 		world:Destroy()
 	end)
 
@@ -265,7 +276,6 @@ describe("WorldIndex.readEggSpots", function()
 		expect(problems).toEqual({
 			"EggSpots.EggSpot_Common_1 is missing PromptAnchor",
 			"EggSpots.EggSpot_Common_3 is missing Base",
-			"EggSpots needs 8 Common, 4 Uncommon and 4 Rare spots, found 8, 4, 2",
 		})
 		world:Destroy()
 	end)

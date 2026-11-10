@@ -2,13 +2,12 @@
 -- Every game number from spec section 5 ("Numbers"), in one place.
 -- The table is frozen all the way down, so nothing can change a number while the game runs.
 
-export type RarityName = "Common" | "Uncommon" | "Rare"
+export type RarityName = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
 export type ZoneName = "Meadow" | "Boots" | "Belly" | "Beard" | "Nightcap"
 -- The giant's phases. The sleep meter only moves while he is Asleep.
 export type Phase = "Asleep" | "Awake" | "HeavySleep"
 
 export type RarityConfig = {
-	Spots: number,
 	RefillSeconds: number,
 	CarrySlowdown: number,
 	CarryNoise: number,
@@ -36,6 +35,8 @@ export type Config = {
 		Common: RarityConfig,
 		Uncommon: RarityConfig,
 		Rare: RarityConfig,
+		Epic: RarityConfig,
+		Legendary: RarityConfig,
 	},
 	Noise: {
 		WalkPerSecond: number,
@@ -130,11 +131,14 @@ end
 local config: Config = {
 	Movement = { WalkSpeed = 16, TiptoeSpeedFactor = 0.6 },
 	Grab = { HoldSeconds = 1, ReachStuds = 8, ReachToleranceStuds = 2 },
-	RarityOrder = { "Common", "Uncommon", "Rare" },
+	RarityOrder = { "Common", "Uncommon", "Rare", "Epic", "Legendary" },
 	Rarity = {
-		Common = { Spots = 8, RefillSeconds = 10, CarrySlowdown = 0, CarryNoise = 1.25 },
-		Uncommon = { Spots = 4, RefillSeconds = 30, CarrySlowdown = 0.05, CarryNoise = 1.5 },
-		Rare = { Spots = 4, RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
+		Common = { RefillSeconds = 10, CarrySlowdown = 0, CarryNoise = 1.25 },
+		Uncommon = { RefillSeconds = 30, CarrySlowdown = 0.05, CarryNoise = 1.5 },
+		Rare = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
+		-- Epic and Legendary carry like a Rare (spec 4, Rule 49).
+		Epic = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
+		Legendary = { RefillSeconds = 60, CarrySlowdown = 0.1, CarryNoise = 2.5 },
 	},
 	Noise = {
 		WalkPerSecond = 4,

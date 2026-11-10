@@ -54,6 +54,15 @@ export type EggTemplates = { Common: Model, Uncommon: Model, Rare: Model }
 -- The zones that must each have at least one box. The Meadow is "in no box", so it has none.
 local ZONE_NAMES = { "Boots", "Belly", "Beard", "Nightcap" }
 
+-- The five rank names an egg spot's Rarity may hold, looked up by text.
+local RARITY_NAMES: { [any]: boolean } = {}
+for _, name in Config.RarityOrder do
+	RARITY_NAMES[name] = true
+end
+
+-- The rarities the place has an egg template for. Plan 4 Task 2 adds Epic and Legendary eggs and makes this five.
+local TEMPLATE_RARITIES: { Config.RarityName } = { "Common", "Uncommon", "Rare" }
+
 local PLOT_COUNT = 8
 local PET_PAD_COUNT = 6
 local HOME_SPOT_COUNT = 12
@@ -269,9 +278,9 @@ local function withArticle(className: string): string
 	return if string.find("AEIOU", first, 1, true) then `an {className}` else `a {className}`
 end
 
--- Reads World.EggSpots: 8 Common, 4 Uncommon and 4 Rare spots, each a Model with a Rarity attribute, a Base part and
--- a PromptAnchor attachment on the Base. The spots come back in name order. Problems come one per line.
--- The count line is left out while a spot has a bad Rarity, because that spot would be counted wrong.
+-- Reads World.EggSpots: any number of spots (at least one), each a Model with a Rarity attribute (one of the five
+-- ranks), a Base part and a PromptAnchor attachment on the Base. The spots come back in name order. Problems come one
+-- per line.
 function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 	local folder = world:FindFirstChild("EggSpots")
 	if folder == nil then
@@ -279,9 +288,6 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 	end
 	local spots: { EggSpot } = {}
 	local problems: { string } = {}
-	local counts: { [string]: number } = { Common = 0, Uncommon = 0, Rare = 0 }
-	local needs = Config.Rarity -- how many spots of each rarity there must be (Config: Common 8, Uncommon 4, Rare 4)
-	local rarityProblem = false
 	local children = folder:GetChildren()
 	table.sort(children, function(a, b)
 		return a.Name < b.Name
@@ -296,12 +302,8 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 		local rarity = child:GetAttribute("Rarity") :: any
 		if rarity == nil then
 			table.insert(problems, `{label} has no Rarity`)
-			rarityProblem = true
-		elseif counts[rarity] == nil then
+		elseif not RARITY_NAMES[rarity] then
 			table.insert(problems, `{label} has an unknown Rarity "{rarity}"`)
-			rarityProblem = true
-		else
-			counts[rarity] += 1
 		end
 		local base = child:FindFirstChild("Base")
 		local anchor: Instance? = nil
@@ -331,19 +333,8 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 			})
 		end
 	end
-	if
-		not rarityProblem
-		and (
-			counts.Common ~= needs.Common.Spots
-			or counts.Uncommon ~= needs.Uncommon.Spots
-			or counts.Rare ~= needs.Rare.Spots
-		)
-	then
-		table.insert(
-			problems,
-			`EggSpots needs {needs.Common.Spots} Common, {needs.Uncommon.Spots} Uncommon and `
-				.. `{needs.Rare.Spots} Rare spots, found {counts.Common}, {counts.Uncommon}, {counts.Rare}`
-		)
+	if #children == 0 then
+		table.insert(problems, "EggSpots has no spots")
 	end
 	if #problems > 0 then
 		return nil, problems
@@ -361,7 +352,7 @@ function WorldIndex.readEggTemplates(assets: Instance): (EggTemplates?, { string
 	end
 	local found: { [string]: Model } = {}
 	local problems: { string } = {}
-	for _, rarity in Config.RarityOrder do
+	for _, rarity in TEMPLATE_RARITIES do
 		local template = eggs:FindFirstChild(rarity)
 		if template == nil then
 			table.insert(problems, `Assets.Eggs is missing {rarity}`)

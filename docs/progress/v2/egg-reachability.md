@@ -6,7 +6,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
-| Egg reachability (V2 spec 4) | Task 1: Five ranks in the game numbers | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 1: Five ranks in the game numbers | ☑ done (2026-11-10) | builder, runner (full run 3060 passed, 2 accepted), code_lead |
 | Egg reachability (V2 spec 4) | Task 2: World prep: Epic and Legendary eggs | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 3: The rank shows everywhere | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 4: The rank glow | ☐ not started | |
@@ -22,4 +22,5 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Notes for the next V2 review
 
-- **From other plans' notes:** Task 4 (the rank glow) must keep `BodyBeams.spec` green (`new-player-safety.md`, "For plan 1's build review (from V2 setup 5)", point 4); Task 1 adds Epic, and its test covers onboarding step 6 for an Epic (`new-player-safety.md`, "Task 10 points for later").
+- **From other plans' notes:** Task 4 (the rank glow) must keep `BodyBeams.spec` green (`new-player-safety.md`, "For plan 1's build review (from V2 setup 5)", point 4); Task 1 adds Epic, and its test covers onboarding step 6 for an Epic (`new-player-safety.md`, "Task 10 points for later"). Met in Task 1: step 6 calls `Rarity.isRareOrRarer`, and `Rarity.spec` checks it is true for Epic and Legendary.
+- **From Task 1 (2026-11-10):** `readEggSpots` now accepts Epic and Legendary spots, but `readEggTemplates` still asks only for Common, Uncommon and Rare eggs. Task 2 must make it five in the same task that adds the eggs, before any Epic spot is placed. The HUD's rank colours (`Theme.luau`) have no Epic or Legendary yet; Task 3 adds them.

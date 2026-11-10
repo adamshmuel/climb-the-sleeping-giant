@@ -61,6 +61,12 @@ describe("Noise.perSecond", function()
 		expect(carryingOnBoots("Rare")).toBeCloseTo(10)
 	end)
 
+	it("an Epic carrier on the boots makes the Rare's 10", function()
+		local noise =
+			Noise.perSecond({ zone = "Boots", garden = nil, moving = true, tiptoe = false, carrying = "Epic" })
+		expect(noise).toBeCloseTo(10)
+	end)
+
 	it("nothing counts inside a garden", function()
 		-- a garden always reports the Meadow, but the rule must hold for any zone
 		local noise = Noise.perSecond({ zone = "Belly", garden = 3, moving = true, tiptoe = false, carrying = "Rare" })

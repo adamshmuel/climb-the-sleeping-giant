@@ -29,6 +29,10 @@ describe("Carry.speed", function()
 	it("is 14.4 when carrying a Rare egg without Tiptoe", function()
 		expect(Carry.speed(false, "Rare")).toBeCloseTo(14.4, 5)
 	end)
+
+	it("is 14.4 when carrying an Epic egg without Tiptoe (the Rare's speed)", function()
+		expect(Carry.speed(false, "Epic")).toBeCloseTo(14.4, 5)
+	end)
 end)
 
 -- A tiny stand-in for a Roblox event: Connect, Fire and Disconnect, all in plain Luau.

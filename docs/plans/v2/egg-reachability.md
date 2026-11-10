@@ -58,12 +58,14 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 ### Part 1: Five ranks
 
 **Task 1: Five ranks in the game numbers**
+- Stands on: nothing (specs 4 and 5 approved, code only).
+- For: core gameplay (Epic and Legendary eggs carry, get caught and count as rare). Size: 3 steps, 40 min, about 29 Studio calls (card `work/p4t1/card.md`).
 - Spec rules: Rule 49 (Higher eggs carry like a Rare), Rule 51 (One colour per rank): the names, Rule 50 (The score sets the rank): "a boot or belly spot's egg is the rank its score gives".
 - Files: `src/shared/Config.luau` (`RarityName` adds "Epic" and "Legendary"; `RarityOrder` has all five; Epic and Legendary use the Rare's carry noise ×2.5, slowdown 10% and refill 60 s; the fixed spot counts go), `src/server/World/WorldIndex.luau` (`readEggSpots` takes any number of spots, each with one of the five ranks, and at least one spot), `src/shared/Rarity.luau` (plan 1, Task 2), their tests, plus `Noise.spec`, `Carry.spec`, `EggSpots.spec` and `Catcher.spec`.
 - Failing tests first:
   1. `Config.RarityOrder` is Common, Uncommon, Rare, Epic, Legendary; Epic and Legendary have the Rare's three numbers.
   2. `readEggSpots` accepts 9 Common and 1 Epic spot, and rejects a spot with the rank "Mythic".
-  3. An Epic carrier makes the Rare's noise and walks at the Rare's speed; an Epic spot refills after 60 s; a caught Epic carrier's egg goes back to its spot.
+  3. An Epic carrier makes the Rare's noise and walks at the Rare's speed; a caught Epic carrier's egg goes back to its spot. (No Epic refill test here: plan 5 Task 2 deletes `EggSpots` and tests the Epic 60 s countdown in `EggSlots`, product's order ruling 2026-11-10.)
   4. `Rarity.isRareOrRarer` is true for Epic and Legendary (spec section 8, "A new player banks an Epic before any Rare").
 - Done when: the tests pass, and every older test that named the fixed 8/4/4 counts is listed in the report with what replaced it.
 

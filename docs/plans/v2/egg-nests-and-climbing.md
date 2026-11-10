@@ -77,10 +77,10 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 ### Part 1: Slots, nests and refills (code)
 
 **Task 1: Egg slots and nests in the game numbers**
-- Stands on: spec 5's section 5 numbers (approved at Gate 3, final).
+- Stands on: spec 5's section 5 numbers (approved at Gate 3, final); plan 4 Task 1 (the five ranks in Config, built).
 - Spec rules: Rule 71 (How many eggs and nests), section 5 (every number).
 - Files: `src/shared/Config.luau`, `src/tests/shared/Config.spec.luau`.
-- What changes: each rank in `Config.Rarity` gets `Slots` (Common 8, Uncommon 4, Rare 4, Epic 2, Legendary 1) and `Nests` (16, 8, 6, 4, 4), replacing V1's `Spots`. A new `Config.Nests` holds: egg spacing on him 6, meadow spacing 8, player distance 15, retry 1 s, twin distance 2, eye distance 10, seam angle 65°, seam match 1, walk surface over what you see 1, seam height 12, climbable-part height 15, beam fade 0.3 s, unlock after 0.5 s, the arm's return 0.5 s (`ArmReturnSeconds`, plan 6 may raise it), slide tip 3 s and the 5-stud slide drop, the jump reach (9 up, 10 across, body 5 tall), and `RareEggOne`.
+- What changes: each rank in `Config.Rarity` gets `Slots` (Common 8, Uncommon 4, Rare 4, Epic 2, Legendary 1) and `Nests` (16, 8, 6, 4, 4), replacing V1's `Spots`. A new `Config.Nests` holds: egg spacing on him 6, meadow spacing 8, player distance 15, retry 1 s, twin distance 2, eye distance 10, seam angle 65°, seam match 1, walk surface over what you see (0.2 below to 0.7 above, spec section 5 since 2026-10-20), seam height 12, climbable-part height 15, beam fade 0.3 s, unlock after 0.5 s, the arm's return 0.5 s (`ArmReturnSeconds`, plan 6 may raise it), slide tip 3 s and the 5-stud slide drop, the jump reach (9 up, 10 across, body 5 tall), and `RareEggOne`.
 - Failing tests first: the slots add up to 19 and the nests to 38; every rank has more nests than slots; each named value equals its section 5 number.
 - Done when: the tests pass, and every older test that read `Spots` is listed in the report with what replaced it.
 
@@ -91,7 +91,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What it does: `new(nests, slotsPerRank)` puts each slot's first egg on a nest of its rank (no two on one nest, spaced as Task 3 says); `take(state, nest, player, now)` gives the egg to the player and starts that slot's countdown; `bank`, `carrying` and `nest(state, name)` as V1's.
 - Failing tests first:
   1. A new state has 4 Rare eggs waiting on 4 different Rare nests, and 2 Rare nests empty.
-  2. A take starts a 60-second countdown for that slot; at 59.9 s no new egg, at 60 s one.
+  2. A take starts a 60-second countdown for that slot; at 59.9 s no new egg, at 60 s one. The test runs for a Rare slot and for an Epic slot (60 s each, spec 5 section 5, "Refill time"; product's order ruling 2026-11-10: plan 4 Task 1 no longer tests the Epic refill).
   3. A take from an empty nest fails with "no egg"; a second take by a carrier fails with "already carrying".
   4. Over 1,000 random takes, banks and refills, no rank ever has more eggs waiting plus carried-from-a-live-countdown than its slots.
 - Done when: the tests pass. `Grab` still uses the old module until Task 7.
