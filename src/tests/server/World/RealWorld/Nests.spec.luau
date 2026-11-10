@@ -7,6 +7,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local NestTable = require(ServerStorage.Tools.checks.NestTable)
 local Helpers = require(script.Parent.Helpers)
 local MockupNests = require(ServerStorage.Tests.server.World.MockupNests)
+local NestRoute = require(script.Parent.NestRoute)
+local boxDistance = NestRoute.boxDistance
 local realWorld = Helpers.realWorld
 
 -- The 38 egg nests (plan 5 Task 12; spec 5 Rules 70, 71, 72 and 75 and the spot rules). Built by
@@ -35,18 +37,6 @@ describe("the real world, the 38 nests", function()
 			return nil
 		end
 		return (base.CFrame * CFrame.new(0, base.Size.Y / 2, 0)).Position
-	end
-
-	-- The nearest point of a part's box to a point, as a distance (0 inside).
-	local function boxDistance(part: BasePart, point: Vector3): number
-		local localPoint = part.CFrame:PointToObjectSpace(point)
-		local half = part.Size / 2
-		local inside = Vector3.new(
-			math.clamp(localPoint.X, -half.X, half.X),
-			math.clamp(localPoint.Y, -half.Y, half.Y),
-			math.clamp(localPoint.Z, -half.Z, half.Z)
-		)
-		return (localPoint - inside).Magnitude
 	end
 
 	local function spots(): { [string]: Vector3 }

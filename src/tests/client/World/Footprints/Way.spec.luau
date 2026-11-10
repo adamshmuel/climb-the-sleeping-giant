@@ -16,6 +16,11 @@ local SPACING = 3.6
 
 local MAX_SHOWN = 100
 
+local function setLocked(rig: Helpers.Rig, spotName: string, locked: boolean)
+	local spot = rig.root:FindFirstChild(spotName) :: Instance
+	spot:SetAttribute("Locked", locked)
+end
+
 describe("Footprints.start: the way to an egg", function()
 	it("shows the way to the nearest waiting egg", function()
 		local rig = newRig()
@@ -64,6 +69,27 @@ describe("Footprints.start: the way to an egg", function()
 			expectNear(pivot.Position, Vector3.new(0, SIT_HEIGHT, -40 + (index - 1) * SPACING))
 			expectNear(pivot.LookVector, Vector3.new(0, 0, -1))
 		end
+	end)
+
+	-- Plan 5 Task 17, test 6: a nest whose Locked attribute is true is never a trail's target, even when it is waiting.
+	it("never leads to a locked nest, and goes to the next waiting one", function()
+		local rig = newRig()
+		-- E1 is the nearest (20 studs along +X) but locked; E2 is 40 studs along -Z.
+		setLocked(rig, "EggSpot_Common_1", true)
+		rig.advance(UPDATE_SECONDS)
+		local pivots = pivotsAlong(rig.shown(), "Z", false)
+		expectNear(pivots[1].Position, Vector3.new(0, SIT_HEIGHT, -40))
+	end)
+
+	it("shows nothing when every waiting nest is locked, and leads to it again when it unlocks", function()
+		local rig = newRig()
+		setLocked(rig, "EggSpot_Common_1", true)
+		setLocked(rig, "EggSpot_Common_2", true)
+		rig.advance(UPDATE_SECONDS)
+		expect(#rig.shown()).toBe(0)
+		setLocked(rig, "EggSpot_Common_1", false)
+		rig.advance(UPDATE_SECONDS)
+		expect(#rig.shown()).toBe(6)
 	end)
 
 	it("goes back to an egg when it is waiting again", function()

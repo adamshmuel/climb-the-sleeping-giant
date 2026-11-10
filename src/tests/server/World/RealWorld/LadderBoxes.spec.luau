@@ -327,8 +327,12 @@ describe("the real world, ladder boxes and zone boxes", function()
 		for _, point in WorldIndex.readRoute(realWorld()) :: { WorldIndex.RoutePoint } do
 			local short = string.gsub(point.name, "^RoutePoint_", "")
 			local want = listedZone(ROUTE_ZONES, short, "Meadow")
+			if string.find(short, "^Nest_") ~= nil then
+				-- Plan 5 Task 17a: a nest point stands where its nest does; the nests with no V1 zone are new and left alone
+				want = listedZone(EGG_SPOT_ZONES, short, "new")
+			end
 			local zone = Zones.zoneAt(point.position + UP, zoneBoxes)
-			if zone ~= want then
+			if want ~= "new" and zone ~= want then
 				table.insert(changed, `{short} {want}>{zone}`)
 			end
 		end

@@ -6,6 +6,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local RouteGraph = require(StarterPlayer.StarterPlayerScripts.Client.World.RouteGraph)
 local Helpers = require(script.Parent.Helpers)
+local NestRoute = require(script.Parent.NestRoute)
 local loadRoute = Helpers.loadRoute
 local realWorld = Helpers.realWorld
 
@@ -152,5 +153,180 @@ describe("the real world, the route to the ways up", function()
 			left = links["RoutePoint_BellyRampLeft_1"] == true,
 			right = links["RoutePoint_BellyRampRight_1"] == true,
 		}).toEqual({ left = true, right = true })
+	end)
+
+	-- Plan 5 Task 17, test 2. The nests of one group that some garden's spawn point has no way to, as "nest (garden n)".
+	local function unreachedNests(cuffAndCap: boolean): { checked: number, unreached: { string } }
+		local graph = RouteGraph.new(loadRoute())
+		local spawns: { [number]: Vector3 } = {}
+		for _, point in loadRoute() do
+			local garden = if point.target then tonumber(string.match(point.target, "^Spawn_([1-8])$")) else nil
+			if garden ~= nil then
+				spawns[garden] = point.position
+			end
+		end
+		local unreached: { string } = {}
+		local nests = NestRoute.group(cuffAndCap)
+		for _, spot in nests do
+			for garden = 1, 8 do
+				if RouteGraph.find(graph, spawns[garden], { spot.name }) == nil then
+					table.insert(unreached, `{spot.name} (garden {garden})`)
+				end
+			end
+		end
+		return { checked = #nests, unreached = unreached }
+	end
+
+	it("from every garden's spawn point the route finds a way to each of the 30 nests the route reaches", function()
+		expect(unreachedNests(false)).toEqual({ checked = 30, unreached = {} })
+	end)
+
+	it(
+		"ACCEPTED RED until 17b and 17c: from every garden's spawn point the route finds a way to the 8 cuff and cap nests",
+		function()
+			expect(unreachedNests(true)).toEqual({ checked = 8, unreached = {} })
+		end
+	)
+
+	-- Check D5 (spec 3): the way from the landing's back point to a lower belly nest goes up that side's belly ramp and
+	-- never touches the other ramp. Returns which ramp points the way passes, e.g. { left = 3, right = 0 }.
+	local function rampPointsPassed(nestName: string): { left: number, right: number }?
+		local points = loadRoute()
+		local byName = pointsByName(points)
+		local back = byName["RoutePoint_Landing_Back"]
+		if back == nil then
+			return nil
+		end
+		local found = RouteGraph.find(RouteGraph.new(points), back.position, { nestName })
+		if found == nil then
+			return nil
+		end
+		local passed = { left = 0, right = 0 }
+		for _, point in points do
+			local side = if string.find(point.name, "^RoutePoint_BellyRampLeft_")
+				then "left"
+				elseif string.find(point.name, "^RoutePoint_BellyRampRight_") then "right"
+				else nil
+			if side ~= nil then
+				for _, step in found.path do
+					if (step - point.position).Magnitude < 0.01 then
+						passed[side] += 1
+						break
+					end
+				end
+			end
+		end
+		return passed
+	end
+
+	it(
+		"Check D5: from the landing's back point the way to the left lower belly nest goes up the left belly ramp only",
+		function()
+			local passed = rampPointsPassed("Nest_LowerBelly_Left")
+			expect(passed ~= nil and passed.left > 0 and passed.right == 0).toBe(true)
+		end
+	)
+
+	it(
+		"Check D5: from the landing's back point the way to the right lower belly nest goes up the right belly ramp only",
+		function()
+			local passed = rampPointsPassed("Nest_LowerBelly_Right")
+			expect(passed ~= nil and passed.right > 0 and passed.left == 0).toBe(true)
+		end
+	)
+
+	-- Rule 36 (The lap planks), condition 3: standing on the deck, the lap fold's prompt and the knee pocket's prompt
+	-- are within reach somewhere along it. The deck's standable top is found with rays every 0.5 studs and measured
+	-- from 3 studs above it (NestRoute.standableTops; code_lead's ruling, 2026-11-10).
+	local function closestDeckGap(side: string, nestName: string): number
+		local anchorAt: Vector3? = nil
+		for _, spot in NestRoute.nests() do
+			if spot.name == nestName then
+				anchorAt = spot.promptAnchor.WorldPosition
+			end
+		end
+		local deck = (realWorld() :: any).WalkSurfaces[`LapPlank_{side}`].Deck
+		if anchorAt == nil then
+			return math.huge
+		end
+		return NestRoute.nearest(NestRoute.standableTops(deck), anchorAt)
+	end
+
+	it(
+		"Rule 36: standing along each lap plank's deck, the lap fold and the knee pocket prompts are within 8 studs",
+		function()
+			local gaps: { [string]: number } = {}
+			for _, side in { "Left", "Right" } do
+				for _, place in { "LapFold", "KneePocket" } do
+					local name = `Nest_{place}_{side}`
+					gaps[name] = closestDeckGap(side, name)
+				end
+			end
+			local over: { string } = {}
+			for name, gap in gaps do
+				if gap > NestRoute.ANCHOR_REACH then
+					table.insert(over, string.format("%s: %.1f from the deck", name, gap))
+				end
+			end
+			table.sort(over)
+			expect({ over = over, count = 4 }).toEqual({ over = {}, count = 4 })
+		end
+	)
+
+	-- Spec 5, belly pocket grab (15b): the pocket's route point stands on the belly top, not in the crease below the seam.
+	-- The crease is 8.5 studs under the pocket (work/p5t15b/results.md, Case 3), so a point this close to the pocket's
+	-- height is on the belly top.
+	local BELLY_TOP_BELOW_POCKET = 5 -- studs: the most a belly-top point stands under the pocket's egg spot
+
+	it("the belly pocket nests' route points stand on the belly top, not in the crease below the seam", function()
+		local byTarget = NestRoute.pointsByTarget()
+		local problems: { string } = {}
+		for _, name in { "Nest_BellyPocket_Left", "Nest_BellyPocket_Right" } do
+			local spot: WorldIndex.EggSpot? = nil
+			for _, candidate in NestRoute.nests() do
+				if candidate.name == name then
+					spot = candidate
+				end
+			end
+			local point = (byTarget[name] or {})[1]
+			if point == nil or spot == nil then
+				table.insert(problems, `{name}: no route point`)
+			elseif point.position.Y < spot.cframe.Position.Y - BELLY_TOP_BELOW_POCKET then
+				table.insert(
+					problems,
+					string.format(
+						"%s: point at y %.1f, pocket at y %.1f",
+						name,
+						point.position.Y,
+						spot.cframe.Position.Y
+					)
+				)
+			end
+		end
+		expect({ problems = problems }).toEqual({ problems = {} })
+	end)
+
+	-- Spot rule 4: a nest grabbed from a plank is more than 8 studs from every belly ramp piece, so a player on the
+	-- plank cannot reach into the belly by the prompt's reach.
+	it("Spot rule 4: the lap fold and knee pocket nests are more than 8 studs from every belly ramp piece", function()
+		local ramps = (realWorld() :: any).WalkSurfaces
+		-- Only the standable tops count (NestRoute.standableTops), not the hidden Fill and Piece sides.
+		local tops: { Vector3 } = {}
+		for _, ramp in { ramps.BellyRamp_Left, ramps.BellyRamp_Right } do
+			for _, spot in NestRoute.standableTops(ramp) do
+				table.insert(tops, spot)
+			end
+		end
+		expect(#tops > 0).toBe(true)
+		local near: { string } = {}
+		for _, spot in NestRoute.nests() do
+			if string.find(spot.name, "^Nest_LapFold_") or string.find(spot.name, "^Nest_KneePocket_") then
+				local gap = NestRoute.nearest(tops, spot.promptAnchor.WorldPosition)
+				if gap <= NestRoute.ANCHOR_REACH then
+					table.insert(near, string.format("%s is %.1f from a belly ramp top", spot.name, gap))
+				end
+			end
+		end
+		expect({ near = near }).toEqual({ near = {} })
 	end)
 end)

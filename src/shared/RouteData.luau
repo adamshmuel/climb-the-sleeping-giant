@@ -185,8 +185,13 @@ local RAMP_PIECE_16 = "WalkSurfaces.BellyRamp_Left.Piece16"
 local BODY_BOX_SKIPS: { [string]: { string } } = {
 	["BellyRampLeft_3|Egg_Rare_1"] = { BODY, RAMP_PIECE_16 },
 	["Egg_Rare_1|Egg_Rare_2"] = { BODY, RAMP_PIECE_16 },
+	["Egg_Rare_1|Nest_LowerBelly_Left"] = { BODY, RAMP_PIECE_16 }, -- Plan 5 Task 17a: the nest point sits at Rare 1
 	-- Right twin: 45 degree ramp wood (Pieces 13 to 16), nothing overhead; only the body mesh blocks.
 	["BellyRampRight_3|BellyRampRight_4"] = { BODY },
+	-- Plan 5 Task 17a: nest points beside the right ramp top, ends that touch the giant's body mesh.
+	["BellyRampRight_4|Nest_BeardFold_Right"] = { BODY },
+	["BellyRampRight_4|Nest_BellyPocket_Right"] = { BODY },
+	["BellyRampRight_4|Nest_LowerBelly_Right"] = { BODY },
 }
 
 local function pointKey(name: string): string

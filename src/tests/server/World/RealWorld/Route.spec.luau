@@ -6,6 +6,7 @@ local RouteData = require(game:GetService("ReplicatedStorage").Shared.RouteData)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Helpers = require(script.Parent.Helpers)
+local NestRoute = require(script.Parent.NestRoute)
 local RAY_START_ABOVE = Helpers.RAY_START_ABOVE
 local STAND_LIMIT = Helpers.STAND_LIMIT
 local describeVector = Helpers.describeVector
@@ -99,26 +100,35 @@ describe("the real world, route and landing spots", function()
 		end
 	end)
 
-	it("every egg spot has its own target point, standing within 3 studs of the top of the spot's Base", function()
-		local spots, problems = WorldIndex.readEggSpots(realWorld())
-		expect(problems).toEqual({})
-		local byTarget: { [string]: WorldIndex.RoutePoint } = {}
-		for _, point in loadRoute() do
-			if point.target then
-				byTarget[point.target] = point
+	-- Plan 5 Task 17, test 1. A nest "has its point" when exactly one route point names it and that point is within
+	-- NestRoute.ANCHOR_REACH studs of the nest's prompt anchor. Returns the nests checked and one line per failure.
+	local function nestPointProblems(cuffAndCap: boolean): { checked: number, problems: { string } }
+		local byTarget = NestRoute.pointsByTarget()
+		local problems: { string } = {}
+		local nests = NestRoute.group(cuffAndCap)
+		for _, spot in nests do
+			local found = byTarget[spot.name] or {}
+			if #found ~= 1 then
+				table.insert(problems, `{spot.name}: {#found} route points name it`)
+			else
+				local distance = (found[1].position - spot.promptAnchor.WorldPosition).Magnitude
+				if distance > NestRoute.ANCHOR_REACH then
+					table.insert(problems, string.format("%s: point %.1f from its anchor", spot.name, distance))
+				end
 			end
 		end
-		expect(#(spots :: { WorldIndex.EggSpot })).toBe(16)
-		for _, spot in spots :: { WorldIndex.EggSpot } do
-			local point = byTarget[spot.name]
-			expect({ spot = spot.name, found = point ~= nil }).toEqual({ spot = spot.name, found = true })
-			local distance = (flat(point.position) - flat(spot.cframe.Position)).Magnitude
-			expect({ spot = spot.name, near = distance <= TARGET_REACH, distance = distance }).toEqual({
-				spot = spot.name,
-				near = true,
-				distance = distance,
-			})
+		return { checked = #nests, problems = problems }
+	end
+
+	it(
+		"each of the 30 nests the route reaches has exactly one route point, within 8 studs of its prompt anchor",
+		function()
+			expect(nestPointProblems(false)).toEqual({ checked = 30, problems = {} })
 		end
+	)
+
+	it("ACCEPTED RED until 17b and 17c: each of the 8 cuff and cap nests has one route point within 8 studs", function()
+		expect(nestPointProblems(true)).toEqual({ checked = 8, problems = {} })
 	end)
 
 	it("every Safe Gate has its own target point just outside the arch, and every spawn spot has its own", function()
@@ -153,21 +163,26 @@ describe("the real world, route and landing spots", function()
 		end
 	end)
 
-	it("the only targets are the 16 egg spots, the 8 gates and the 8 spawn spots", function()
-		local count = 0
-		for _, point in loadRoute() do
-			if point.target then
-				count += 1
-				local isEgg = string.match(point.target, "^EggSpot_%a+_%d+$") ~= nil
-				local isGate = string.match(point.target, "^Gate_[1-8]$") ~= nil
-				local isSpawn = string.match(point.target, "^Spawn_[1-8]$") ~= nil
-				expect({ target = point.target, known = isEgg or isGate or isSpawn }).toEqual({
-					target = point.target,
-					known = true,
-				})
+	it("the only targets are the nests, the 8 gates and the 8 spawn spots, each named by one point", function()
+		local nestNames: { [string]: boolean } = {}
+		for _, spot in NestRoute.nests() do
+			nestNames[spot.name] = true
+		end
+		local unknown: { string } = {}
+		local doubled: { string } = {}
+		for target, points in NestRoute.pointsByTarget() do
+			local isGate = string.match(target, "^Gate_[1-8]$") ~= nil
+			local isSpawn = string.match(target, "^Spawn_[1-8]$") ~= nil
+			if not (nestNames[target] or isGate or isSpawn) then
+				table.insert(unknown, target)
+			end
+			if #points ~= 1 then
+				table.insert(doubled, target)
 			end
 		end
-		expect(count).toBe(32)
+		table.sort(unknown)
+		table.sort(doubled)
+		expect({ unknown = unknown, doubled = doubled }).toEqual({ unknown = {}, doubled = {} })
 	end)
 
 	it("every point can reach every other point: the route is one connected piece", function()

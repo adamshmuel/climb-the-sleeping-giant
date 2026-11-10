@@ -501,6 +501,23 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: the tests pass, `08-route` run twice says "already done" the second time, and Play shows the trail from garden 4 forking to a right-side Rare (screenshot).
 - **From stuck safety Task 25 (designer's condition 9 and game_creator's condition 2, 2026-10-20):** the trail to each cap nest leads across the nose top to the cap ladder's foot, up the ladder and on up the cap's front slope. Play, on computer and phone: a shot on the nose top with the trail leading to the cap ladder's foot, and one at the ladder's top with the trail going on up the slope. The main chat sends them to designer and game_creator.
 - **From stuck safety Task 25 (designer's condition 10, moved here on 2026-10-20 because the nests weren't built yet):** from the cap ladder's top, the Legendary cap nests show as a short walk ahead, like `docs/design/v2/mockups/view-cap-nests.png` and `view-phone-cap-nests.png`. Play, on computer and iPhone 14: stand at the ladder's top with the real game camera looking up the cap's front slope, and take one shot on each screen. If the 60° slope hides the nests until the player is nearly there, that is a change for designer.
+- **Split (code_lead, 2026-11-10):** the whole task does not fit in 1 hour, so it is done as 17a, 17b and 17c. 17a is this block for the 30 nests on the route built today (meadow, boot toes, lap folds, knee pockets, lower belly, beard folds, belly pockets), the locked-nest skip, the LandingSpot_2 move and the garden 4 fork shot (card `work/p5t17/17-card.md`). Built 2026-11-10: LandingSpot_2 is at (-44, -93) (the grass at (-44, -97) slopes too much); Meadow_14, 16 and 18 moved round the props Task 12 placed. The knee pockets stay where they are: tests 4 and 5 measure from the standable deck and ramp tops, 3 studs up (knee pocket 6.0 from the plank, 9.8 from a ramp top; code_lead, 2026-11-10). Tests 1 and 2 keep the 8 cuff and cap nests as named accepted reds until 17b and 17c.
+
+**Task 17b: The footprints reach the cuff nests**
+- Stands on: Task 17a (built), Tasks 13b and 16b (the straps and CuffWalk, built), and the reach walk: Task 15e's cuff walks at station 3 and 4 (passed).
+- Spec rules: Rule 70 (Every egg waits in a nest) for `Nest_CuffFront_*` and `Nest_CuffBack_*`. Rule 72 (Nests come in mirror pairs).
+- Files: `tools/world/08-route/RoutePlaces.luau`, `RouteChecks.luau`, the RealWorld route tests.
+- What changes: route points from the belly top along each sleeve, strap and ledge to a target point beside each cuff nest. Tests 1 and 2 go green for the 4 cuff nests.
+- Done when: the tests pass, `08-route` run twice says "already done", and a Play shot shows the trail on one strap.
+- For: core gameplay. Size: 4 steps, 1 hour.
+
+**Task 17c: The footprints reach the cap nests**
+- Stands on: Task 17b (built), plan 3's beard ladder and cap ladder (built), and the reach walk: plan 3 Tasks 6a3 and 6a3c (the beard and cap ladder climbs, passed 2026-11-04).
+- Spec rules: Rule 70 (Every egg waits in a nest) for `Nest_CapBrim_*` and `Nest_CapSide_*`. Stuck safety Task 25's conditions above (the cap trail and the view of the cap nests).
+- Files: `tools/world/08-route/RoutePlaces.luau`, `RouteChecks.luau`, the RealWorld route tests.
+- What changes: route points up the beard ladder, across the nose top, up the cap ladder and the cap's front slope to each cap nest. Tests 1 and 2 go fully green.
+- Done when: the tests pass, `08-route` run twice says "already done", and the two cap-trail shots and the cap-nest view shots above, on computer and iPhone 14, go to designer and game_creator.
+- For: core gameplay (the Legendary eggs at the top). Size: 5 steps, 1 hour.
 
 ### Part 3: Checks on the walk map
 

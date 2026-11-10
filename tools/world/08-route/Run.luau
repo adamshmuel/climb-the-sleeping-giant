@@ -22,7 +22,7 @@
 -- of route points, RoutePoint_<name>. Each point is an invisible, anchored 1 x 0.2 x 1 part that nothing can touch,
 -- hit or see, level, with its TOP centre on the ground a player walks on. A point has:
 --   * Neighbours: the names of the points it links to, separated by commas. Every link is listed on both ends.
---   * Target (only where it stands at something): the egg spot's model name ("EggSpot_Rare_2"), "Gate_<n>" or
+--   * Target (only where it stands at something): the nest's model name ("Nest_Meadow_4b"), "Gate_<n>" or
 --     "Spawn_<n>".
 --   * Ladder, WayUpFoot, WayUpTop (Plan 3 Task 8c, only on the ends of a way up): the ladder part's name on both ends
 --     of a boot ladder ("BootLadder_Left"), and the Config.WaysUp name on a way's foot and on its top. The numbers are
@@ -31,10 +31,12 @@
 -- The points, in the order a player meets them:
 --   * Spawn_n, Gate_n (5.5 studs outside the arch, toward the spawn spot) and the two ends of PlankBridge_n, for
 --     each garden n;
---   * the meadow: each Common egg spot, and Meadow_1 .. Meadow_18 between them (a ring in front of the giant, round
+--   * the meadow: each Common egg point (no Target), and Meadow_1 .. Meadow_18 between them (a ring in front of the giant, round
 --     the sock and the teacup, never over water or through props), with a way past the ramp feet;
 --   * each ramp: Foot, Low, High, Top (the top is on the boot);
---   * the boot tops: the two Uncommon egg spots of each boot;
+--   * the nests (plan 5 Task 17a): one point each, named like the nest, with the nest as its Target (NEST_POINTS in
+--     RoutePlaces.luau); the cuff and cap nests have none yet;
+--   * the boot tops: the two Uncommon egg points of each boot (no Target);
 --   * the walk to each boot ladder: Walk<n>_<k> and Ladder<Side>_InNorth / _InSouth / _RunIn / _Foot on the grass,
 --     Ladder<Side>_Top on the boot (spec Rule 42: footprints take the quickest way; Rule 35);
 --   * the lap: Plank<Side>_Out and _In on each lap plank, Landing_Back on the lap landing, then the fork (spec Rule 45
@@ -59,7 +61,7 @@
 --   * every point can reach every other point;
 --   * every landing spot is on flat grass, in the Meadow and in no garden, with a clear box above it (LANDING_BOX in
 --     RoutePlaces) and open sky above, at least 10 studs from every other spot, within 110 studs of the giant's
---     middle, at least 10 studs from every egg spot (a bounced player must not land on an egg: the grab reach is 8),
+--     middle, at least 10 studs from every nest (a bounced player must not land on an egg: the grab reach is 8),
 --     and at least 5 studs from every sunflower stem and from the edge of every bush or rock. The nearest flower clump
 --     is reported (designer wants none within 2.5 studs), but it does not stop the script.
 

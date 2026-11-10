@@ -336,10 +336,10 @@ describe("the real world, route and landing spots", function()
 			byName[point.name] = point
 		end
 		local placed: { [string]: { number } } = {
-			Meadow_14 = { 102, -22 },
-			Meadow_16 = { 106, -6 },
+			Meadow_14 = { 104, -22 }, -- Plan 5 Task 17a: moved off the boulder, which Task 12 moved
+			Meadow_16 = { 109, -8 }, -- Plan 5 Task 17a: the boulder at (100.9, -8) is 6.1 studs round
 			Meadow_17 = { 103, 4 },
-			Meadow_18 = { 64, -84 },
+			Meadow_18 = { 63, -84 }, -- Plan 5 Task 17a: 3 studs from the sunflower stem at (63.1, -75.1)
 			Meadow_4 = { -57, -68 },
 			Meadow_6 = { -18, -75 },
 		}
@@ -392,7 +392,7 @@ describe("the real world, route and landing spots", function()
 		-- ways up); the spec's x -62 and 62 touch the sock and the teacup, so they are the nearest clear spots, measured.
 		local approved: { { number } } = {
 			{ -45, -79 },
-			{ -42, -97 },
+			{ -44, -93 }, -- Plan 5 Task 17a: flat grass, 13 studs from the nests (the old place was 9.6 from Nest_Meadow_4b)
 			{ 52, -91 },
 			{ 48, -80 },
 			{ -58, -64 },

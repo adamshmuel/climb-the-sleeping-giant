@@ -228,23 +228,47 @@ local function planWorld(world: Instance): Plan
 		add(`Bridge{index}_Garden`, gardenGround.Position, nil)
 	end
 
-	-- the egg spots: each gets a point standing on the ground at the top of its Base
-	local spotCount = 0
+	-- the nests (plan 5 Task 17a): each one is a Model with a PromptAnchor. A nest with an entry in NEST_POINTS gets a
+	-- point standing on the ground there, with the nest as its Target. The anchors keep every landing spot clear of them.
+	local nestCount, nestPoints = 0, 0
 	local eggPlaces: { { name: string, position: Vector3 } } = {}
+	local nestNames: { string } = {}
 	for _, spot in eggSpots:GetChildren() do
-		local base = spot:FindFirstChild("Base")
-		local rarityAndNumber = string.match(spot.Name, "^EggSpot_(%a+_%d+)$")
-		if base == nil or not base:IsA("BasePart") or rarityAndNumber == nil then
-			error(`EggSpots.{spot.Name} has no Base part or is not named EggSpot_<Rarity>_<n>`)
+		local anchor = spot:FindFirstChild("PromptAnchor", true)
+		if
+			not spot:IsA("Model")
+			or not string.match(spot.Name, "^Nest_")
+			or anchor == nil
+			or not anchor:IsA("Attachment")
+		then
+			error(`EggSpots.{spot.Name} is not a Nest_ Model with a PromptAnchor`)
 		end
-		local top = topOf(base)
-		local ground = groundAt(top.X, top.Z, top.Y, spot.Name)
-		add(`Egg_{rarityAndNumber}`, ground.Position, spot.Name)
-		table.insert(eggPlaces, { name = spot.Name, position = top })
-		spotCount += 1
+		table.insert(eggPlaces, { name = spot.Name, position = anchor.WorldPosition })
+		table.insert(nestNames, spot.Name)
+		nestCount += 1
 	end
-	if spotCount ~= 16 then
-		error(`EggSpots has {spotCount} spots, not 16`)
+	table.sort(nestNames)
+	local nestSet: { [string]: boolean } = {}
+	for _, name in nestNames do
+		nestSet[name] = true
+		local place = Places.NEST_POINTS[name]
+		if place == nil then
+			local waits = false
+			for _, pattern in Places.NESTS_WITHOUT_POINT do
+				waits = waits or string.match(name, pattern) ~= nil
+			end
+			if not waits then
+				table.insert(problems, `nests: {name} has no entry in NEST_POINTS`)
+			end
+			continue
+		end
+		add(name, groundAt(place[1], place[2], place[3], name).Position, name)
+		nestPoints += 1
+	end
+	for name in Places.NEST_POINTS do
+		if not nestSet[name] then
+			table.insert(problems, `nests: NEST_POINTS has {name}, but there is no such nest`)
+		end
 	end
 
 	-- the hand-placed points
@@ -434,6 +458,7 @@ local function planWorld(world: Instance): Plan
 		string.format("longest link: %.1f studs (%s)", longest, longestName),
 		string.format("props checked: %d sunflower stems, %d bush and rock circles", #stems, #circles),
 		`climb links (not length or walk checked): {climbs}`,
+		`nest points: {nestPoints} of {nestCount} nests (the rest wait for Tasks 17b and 17c)`,
 	}
 	for _, line in flowerReport do
 		table.insert(info, line)

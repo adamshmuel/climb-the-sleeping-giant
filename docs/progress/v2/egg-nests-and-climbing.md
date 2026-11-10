@@ -35,7 +35,9 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 15g: Walk-area check repair | ☑ done 2026-11-09: check repaired and narrowed to floats, sinks, zone and seam; second start at Rare egg 1's mirror; ramp skip narrowed. Full run 2976 passed, 6 accepted reds; the walk-area red names exactly 7 lines product ruled on (`work/p5t15g/close-ruling.md`). No Task 15h | builder, runner, product, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 16: the seam stitches (2026-11-09: 20 stitches on the new seam table, worst 0.084 studs off; the stitch table is one shared `SeamTable` module; full run 2988/6 accepted; the phone see check moved to Task 23) | ☑ done | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 16b: Mockup_Nests leaves the Workspace (added 2026-11-09, product's ruling work/p5t16/stands-on-ruling.md) | ☑ done 2026-11-10 | Full run 3129/4 (4 accepted reds). A real re-run of 22 plus Undo lost CuffWalk; rebuilt from 22 and 23c (0 differ). 22's "already done" now matches wedges by name and StitchedEdge. |
-| Egg nests and climbing (V2 spec 5) | Task 17: The footprints reach every nest | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 17a: The footprints reach the 30 nests on today's route | ◐ in progress: code approved by code_lead 2026-11-10; waiting for the full run and the fork shots | builder, code_lead |
+| Egg nests and climbing (V2 spec 5) | Task 17b: The footprints reach the cuff nests | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 17c: The footprints reach the cap nests | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 18: No new way onto the belly | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 19: Every nest scored and ranked | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 20: Every rank is fair from every way up | ☐ not started | |

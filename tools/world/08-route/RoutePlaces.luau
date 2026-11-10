@@ -48,6 +48,24 @@ local FLOWER_CLUMPS: { [string]: boolean } = {
 -- Points that are placed by hand: name -> x, z and a rough height (to tell the ramp from the grass under it, and the
 -- belly path from the belly). The exact height comes from the ground under the point.
 local HAND_POINTS: { [string]: { number } } = {
+	-- the old egg points, now plain route points without a Target (plan 5 Task 17a: the nests carry the Targets). Their
+	-- places are the ones the route had when they stood on the V1 egg spots (read from the built route, 2026-11-10).
+	Egg_Common_1 = { -94, 1, 2 },
+	Egg_Common_2 = { -88, -32, 2 },
+	Egg_Common_3 = { -54, -86, 2 },
+	Egg_Common_4 = { -36, -85, 2 },
+	Egg_Common_5 = { 36, -85, 2 },
+	Egg_Common_6 = { 59, -73, 2 },
+	Egg_Common_7 = { 88, -32, 2 },
+	Egg_Common_8 = { 93, 12, 2 },
+	Egg_Uncommon_1 = { -26, -62.5, 30.8 },
+	Egg_Uncommon_2 = { -19.5, -62, 30.2 },
+	Egg_Uncommon_3 = { 26, -61.5, 30.6 },
+	Egg_Uncommon_4 = { 19.5, -62, 30.4 },
+	Egg_Rare_1 = { -12.5, -40.3, 41.5 },
+	Egg_Rare_2 = { -11.2, -34.8, 49.8 },
+	Egg_Rare_3 = { -8.1, -30.7, 54.3 },
+	Egg_Rare_4 = { 2.5, -30.5, 60.8 },
 	-- the meadow ring, from the west round the front to the east
 	Meadow_1 = { -94, -18, 2 },
 	Meadow_2 = { -70, -36, 2 },
@@ -62,11 +80,11 @@ local HAND_POINTS: { [string]: { number } } = {
 	Meadow_11 = { 52, -58, 2 }, -- these three pass between the giant and the teacup; moved 6 east of the right boot ladder foot (48.6, -64)
 	Meadow_12 = { 54, -40, 2 },
 	Meadow_13 = { 70, -30, 2 },
-	Meadow_14 = { 102, -22, 2 }, -- Meadow_14, 16 and 17 go round the flowering bush and the boulder east of the giant
+	Meadow_14 = { 104, -22, 2 }, -- Meadow_14, 16 and 17 go round the flowering bush and the boulder east of the giant
 	Meadow_15 = { 94, 4, 2 },
-	Meadow_16 = { 106, -6, 2 },
+	Meadow_16 = { 109, -8, 1 }, -- east of the boulder at (100.9, -8), 6.1 studs round (Task 12 moved it)
 	Meadow_17 = { 103, 4, 2 },
-	Meadow_18 = { 64, -84, 2 }, -- bridge 6's way off its end, round the sunflower at (67.1, -79.7) and the bridge's rope
+	Meadow_18 = { 63, -84, 2 }, -- bridge 6's way off its end, round the sunflower at (67.1, -79.7) and the bridge's rope
 	-- the ramps, from the foot (level with the grass) to the top (on the boot)
 	Ramp_Left_Foot = { -24, -102.3, 2 },
 	Ramp_Left_Low = { -24, -90.3, 12.2 },
@@ -155,6 +173,48 @@ local POINT_TAGS: { [string]: Tags } = {
 	Ramp_Right_Foot = { wayUpFoot = "Right ramp" },
 	Ramp_Right_Top = { wayUpTop = "Right ramp" },
 }
+
+-- The target points of the nests (plan 5 Task 17a): nest name -> x, z, a rough height, and the points it links to. One
+-- point per nest, named like the nest, with the nest as its Target and within 8 studs of the nest's PromptAnchor. The
+-- cuff and cap nests have none yet (Tasks 17b and 17c). Where a point stands: a meadow nest on the grass at its anchor;
+-- a boot-toe nest on the boot top beside it; the lap fold and knee pocket nests on the lap plank deck at the deck spot
+-- nearest the anchor (the knee pocket by code_lead's ruling, 2026-11-10); a lower belly nest on its ramp top; a beard
+-- fold or belly pocket nest on the belly top within 8 studs.
+local NEST_POINTS: { [string]: { any } } = {
+	Nest_Meadow_1a = { -99, 3.8, 2, "Egg_Common_1" },
+	Nest_Meadow_1b = { -98.3, 12.8, 2, "Bridge1_Giant" },
+	Nest_Meadow_2a = { -89.6, -42.5, 2, "Bridge2_Giant" },
+	Nest_Meadow_2b = { -93.4, -33.3, 2, "Egg_Common_2" },
+	Nest_Meadow_3a = { -61.6, -82.9, 2, "Egg_Common_3" },
+	Nest_Meadow_3b = { -68.7, -77.5, 2, "Bridge3_Giant" },
+	Nest_Meadow_4a = { -15.5, -101.3, 2, "Ramp_Left_Foot" },
+	Nest_Meadow_4b = { -32.5, -99, 2, "Meadow_5" },
+	Nest_Meadow_5a = { 15.5, -101.3, 2, "Ramp_Right_Foot" },
+	Nest_Meadow_5b = { 32.5, -99, 2, "Meadow_9" },
+	Nest_Meadow_6a = { 61.6, -82.9, 2, "Meadow_18" },
+	Nest_Meadow_6b = { 68.7, -77.5, 2, "Walk6_1" },
+	Nest_Meadow_7a = { 89.6, -42.5, 2, "Bridge7_Giant" },
+	Nest_Meadow_7b = { 93.4, -33.3, 2, "Egg_Common_7" },
+	Nest_Meadow_8a = { 99, 3.8, 2, "Meadow_17" },
+	Nest_Meadow_8b = { 98.3, 12.8, 2, "Egg_Common_8" },
+	Nest_BootToeOuter_Left = { -26.5, -62.5, 30.8, "Egg_Uncommon_1" },
+	Nest_BootToeInner_Left = { -20, -60.5, 30.4, "Egg_Uncommon_2" },
+	Nest_BootToeOuter_Right = { 26.5, -62.5, 30.6, "Egg_Uncommon_3" },
+	Nest_BootToeInner_Right = { 20, -60.5, 30.4, "Egg_Uncommon_4" },
+	Nest_LapFold_Left = { -14, -59.5, 31.2, "PlankLeft_Out", "PlankLeft_In" },
+	Nest_KneePocket_Left = { -15.5, -52, 31, "PlankLeft_Out", "PlankLeft_In" },
+	Nest_LapFold_Right = { 14, -58.5, 31.2, "PlankRight_Out", "PlankRight_In" },
+	Nest_KneePocket_Right = { 15.5, -52, 31, "PlankRight_Out", "PlankRight_In" },
+	Nest_LowerBelly_Left = { -12.5, -40.3, 41.5, "Egg_Rare_1" },
+	Nest_LowerBelly_Right = { 12.5, -40.3, 41.9, "BellyRampRight_4" },
+	Nest_BeardFold_Left = { -7.5, -36.5, 49.3, "Egg_Rare_2" },
+	Nest_BellyPocket_Left = { -16, -34.5, 47.6, "Egg_Rare_2" },
+	Nest_BeardFold_Right = { 7.5, -36.5, 49.6, "BellyRampRight_4" },
+	Nest_BellyPocket_Right = { 16, -34.5, 47.8, "BellyRampRight_4" },
+}
+
+-- The nests that get no route point yet: the cuff nests (Task 17b) and the cap nests (Task 17c).
+local NESTS_WITHOUT_POINT = { "^Nest_Cuff", "^Nest_Cap" }
 
 -- The links, as pairs of point names (without the RoutePoint_ start). Every one is made on both ends.
 local LINKS: { { string } } = {}
@@ -272,6 +332,20 @@ link("Belly_4", "Belly_Crest")
 link("Belly_Crest", "Egg_Rare_4")
 link("Ramp_Right_Top", "Egg_Uncommon_3")
 link("Egg_Uncommon_3", "Egg_Uncommon_4")
+-- the nest points (plan 5 Task 17a)
+do
+	local nestNames: { string } = {}
+	for name in NEST_POINTS do
+		table.insert(nestNames, name)
+	end
+	table.sort(nestNames)
+	for _, name in nestNames do
+		local entry = NEST_POINTS[name]
+		for index = 4, #entry do
+			link(name, entry[index])
+		end
+	end
+end
 
 -- The landing spots: x and z (the grass under them gives the height). Around his feet, in the meadow, and each one at
 -- least 10 studs from every egg spot. Spots 1 and 2 are west of the left ramp, 3 and 4 east of the right ramp, 5 and 6
@@ -281,7 +355,7 @@ link("Egg_Uncommon_3", "Egg_Uncommon_4")
 -- a flower clump was 2.4 studs away.
 local LANDING_PLACES: { { number } } = {
 	{ -45, -79 },
-	{ -42, -97 },
+	{ -44, -93 }, -- Plan 5 Task 17a: moved 4 north-west, flat grass, 13 studs from Nest_Meadow_4b (was 9.6 from its place)
 	{ 52, -91 },
 	{ 48, -80 },
 	{ -58, -64 },
@@ -314,6 +388,8 @@ return {
 	SOLID_LOOKING_PROPS = SOLID_LOOKING_PROPS,
 	FLOWER_CLUMPS = FLOWER_CLUMPS,
 	HAND_POINTS = HAND_POINTS,
+	NEST_POINTS = NEST_POINTS,
+	NESTS_WITHOUT_POINT = NESTS_WITHOUT_POINT,
 	POINT_TAGS = POINT_TAGS,
 	LINKS = LINKS,
 	LANDING_PLACES = LANDING_PLACES,
