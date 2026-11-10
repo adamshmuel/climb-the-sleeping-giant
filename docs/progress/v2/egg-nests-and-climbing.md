@@ -50,7 +50,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 24: Floating a player out of his arm's resting space (only if Task 23 finds a trapped player) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 25: A grab needs ground under you (only if Task 22 finds a mid-air grab) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 26a: The ladder ways down are quiet, code (58 min; cards in `work/p5t26/`; added 2026-10-21 at the stuck safety Task 25 review; built after Task 10, before Task 19) | ☑ done | 2026-11-10, about 15 min. `WayDown` judges a drop, `QuietDrops` clears the thud before the slide watch: cap and beard let-go onto his body and boot-ladder drops near the foot are quiet; jumps and slides still thud. Full run 3254/1 (only the standing walk-area red). |
-| Egg nests and climbing (V2 spec 5) | Task 26b: The quiet drops in Play, computer and phone (47 min) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 26b: The quiet drops in Play, computer and phone (47 min) | ☑ done 2026-11-10 by veto: every let-go is quiet in Play on the computer (cap 1.1, beard top and middle 0.7 to 0.8, boot ladder 0.7), side falls thud once; the jump-off-the-rungs fix c412d0c5. Phone climbs and the belly ramp walk moved to Task 23 item 7d. About 65 min, planned 47 | builder, code_lead, main chat |
 
 ## Notes for the next V2 review
 
