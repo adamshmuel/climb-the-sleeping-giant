@@ -47,7 +47,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 21b: A whole session, Epic cuff, wake-up and catch (card Step 2; stands on 21a and plan 6 Tasks 1, 3, 8) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 22p: The climb probe (read-only; stands on Tasks 15d to 18b) | ☑ done 2026-11-10: 30 climbs away from the ladders (16 beard, 5 left side, 9 right side incl. the Teacup), copied into Task 22b; 249 points, 3 lost, 0 void; grid 4 studs by veto (`work/p5t22p/22p-result.md`, `scripts/bot-walk/climb-probe.luau`) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 22: The bot walk on the walk area, without the probe (stands on 22b, 19, 20) | ☐ not started | |
-| Egg nests and climbing (V2 spec 5) | Task 22b: The beard climb fix (moved out of Task 15, 2026-11-08; stands on 22p and plan 3 Task 9q, both done; built before 19, 20, 22) | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 22b: The beard climb fix (moved out of Task 15, 2026-11-08; stands on 22p and plan 3 Task 9q, both done; built before 19, 20, 22) | ◐ cards written 2026-11-10: 22b1 measure, red test, script (52 min); 22b2 shots, change, checks (57); 22b3 probe re-run (46); 22b4 flank tries (41) (`work/p5t22b/`) | code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 23a: The Play proof, items 1 to 5, 7, 7b, 7c, 7d (stands on 19, 20, 22) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 23b: The Play proof, items 6 and 6b (stands on 23a, plan 6 Tasks 5, 6, 10, 12 and 8) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 24: Floating a player out of his arm's resting space (only if Task 23 finds a trapped player) | ☐ not started | |
