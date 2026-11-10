@@ -98,6 +98,8 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - Wait for the game's own `PromptShown`, then hold. Print shown time, input type, distance, hold start and trigger time.
 - Track whether a prompt is shown now (shown, not hidden since), never "a new shown since the last stage".
 - A leg that should grab something logs whether it did.
+- **First check the session shows prompts at all.** A tool-driven Play session can show none: a fresh default prompt on a plain part 2 studs away fired `PromptShown` 0 times. Make one in the job's first call; 0 means the session is the cause, not the game, so restart Play before the grab. <!-- p5t11, 2026-11-10 -->
+- The console never prints a custom analytics event's name; count `LogCustomEvent` lines.
 
 ## Phone and shots
 - Set the phone exactly as the `look-check` skill's [shots job](../look-check/shots-job.md) does (`Phone_844x390` through `StudioDeviceSimulatorService`, in the Client during Play) and turn it off the same way. Write every Studio call with its full service path.

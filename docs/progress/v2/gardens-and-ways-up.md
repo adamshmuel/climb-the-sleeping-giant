@@ -40,7 +40,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 8e: A bigger Z Z Z on phones, and the dark-box check (**Rule 1 (Spawn facing the giant)**) | ☑ done (2026-11-10): world Zs unchanged; dark box listed on the real phone: only Roblox's thumbstick, none of ours; after product's Rule 1 edit the Zs-and-meter checks are removed from the Zones spec; full run 3023 passed, 2 failed (the accepted EggSpots and OnTheGiant). About 125 min in all against 25; cause: an unmeasured pass bar, then faults in the measure job | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 8f: Zs on the meter (**Rule 1 (Spawn facing the giant)**, as edited) | ✓ done 2026-11-10, checked by code_lead: full test run 3055 passed, 2 accepted reds; computer and phone screen checks passed (phone 0 of 3 Zs fail); designer: same as the mockup. About 40 min vs 55 planned, after a step back at 04:33 | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 9: The new pieces pass the stuck scan, on one walk map per run | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 10: One way onto the belly, and nothing invisible overhead | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 10: One way onto the belly, and nothing invisible overhead | merged into plan 5 Task 18a/18b (2026-11-10) | |
 | Gardens and ways up (V2 spec 3) | Task 11: The heist replay | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 12: Every way up is equally loud | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way | ☐ not started | |

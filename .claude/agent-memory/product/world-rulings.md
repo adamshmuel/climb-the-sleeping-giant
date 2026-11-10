@@ -46,3 +46,4 @@
 - Before ruling on a strange thing in one shot, compare 2-3 other shots from the same device; the p3t8 dark box was in only 1 of 3 phone shots, so a check, not a fix (2026-11-10).
 - After an Edit to a decision file, grep for the new heading before reporting it as written; a failed Edit was once reported as added (p3t8, 2026-11-10).
 - A ray walk-measure must use the game's real slope limit (CharacterMaxSlopeAngle, read in Studio) and spec Rule 79's 65-70 Play pass, never a tighter card rule; a 1.5-per-2-stud rise cap is only 37 degrees and blocked 17w falsely (2026-11-10).
+- A Rule 82 jump red is scoped first: only jump surfaces reached without the lap landing, and only nests behind it (belly, cuffs, head); meadow, boot-toe, lap fold and knee pocket nests are meant to be grabbed from outside. The nest bar is the 1-s hold (a standing spot), not a mid-air apex (p5t18a, 2026-11-10).

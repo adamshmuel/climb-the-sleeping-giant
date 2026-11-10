@@ -39,7 +39,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 17w: Reach walks to the cuff and cap nests | ✅ done | All 4 walks PASS in Play (arms end ±56,32.5,-8.4; caps ±16.5,119,26.3); measure rule fixed to one 65° slope limit (`work/p5t17/17w-note.md`) |
 | Egg nests and climbing (V2 spec 5) | Task 17b: The footprints reach the cuff nests | ☑ done `d00d1f56` | code_lead approved 2026-11-10 (walk W PASS, 3 shots PASS); full run 3142/3, only the 2 cap reds (Task 17c) and the standing walk-area red |
 | Egg nests and climbing (V2 spec 5) | Task 17c: The footprints reach the cap nests | ☑ done `bab793ef` | code_lead approved 2026-11-10; full run 3142/1 (only the standing walk-area red); Play shots PASS on computer and phone, phone cap view HIDDEN: designer and game_creator ruled accept (the trail shows the way; the gold egg appears after 2-3 steps; the phone shot's camera faced sideways) |
-| Egg nests and climbing (V2 spec 5) | Task 18: No new way onto the belly | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 18a: No new way onto the belly (the walk part, the jump limits, and the new `WaysUpCheck`; plan 3 Task 10 merged here) | ☑ done (walk control 103 per side, 0 with the landing out; real-world jump check 0 problems, 1 accepted beside the left ramp top; ~95 min vs 87 planned) | |
+| Egg nests and climbing (V2 spec 5) | Task 18b: Nothing invisible overhead (plan 3 Task 10's second check, same file) | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 19: Every nest scored and ranked | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 20: Every rank is fair from every way up | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 21: A whole session with nests | ☐ not started | |

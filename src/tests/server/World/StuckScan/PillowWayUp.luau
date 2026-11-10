@@ -5,6 +5,9 @@
 -- giant) onto the pillow's top, by walking or by a jump. Only then are the links that leave the top, and the jumps from
 -- any top spot, checked: none may reach the nightcap, his head, his beard or a nest.
 
+local ServerScriptService = game:GetService("ServerScriptService")
+local WaysUpCheck = require(ServerScriptService.Server.World.WaysUpCheck)
+
 export type Spot = { id: number, position: Vector3, standsOn: Instance? }
 export type Link = { to: number, kind: string }
 export type MapLike = { spots: { Spot }, links: { [number]: { Link } } }
@@ -25,30 +28,9 @@ local function at(position: Vector3): string
 	return string.format("(%.1f, %.1f, %.1f)", position.X, position.Y, position.Z)
 end
 
--- Whether a jump from one standing place reaches another (Task 41 ruling 6): up to the jump height, and across as far
--- as walking speed carries the player while in the air, plus 1 stud.
-function PillowWayUp.jumpReaches(
-	from: Vector3,
-	to: Vector3,
-	jumpHeight: number,
-	gravity: number,
-	walkSpeed: number
-): boolean
-	local rise = to.Y - from.Y
-	if rise > jumpHeight then
-		return false
-	end
-	local launch = math.sqrt(2 * gravity * jumpHeight)
-	local airTime = (launch + math.sqrt(math.max(0, launch * launch - 2 * gravity * rise))) / gravity
-	local flat = Vector3.new(to.X - from.X, 0, to.Z - from.Z).Magnitude
-	return flat <= walkSpeed * airTime + 1
-end
-
--- Where the body is at the top of a jump between two places: halfway across, half the jump height above the higher end.
-function PillowWayUp.apexBetween(from: Vector3, to: Vector3, jumpHeight: number): Vector3
-	local middle = (from + to) / 2
-	return middle + Vector3.new(0, math.max(from.Y, to.Y) - middle.Y + jumpHeight * 0.5, 0)
-end
+-- One copy of the jump logic: it lives in WaysUpCheck (plan 5 Task 18a Step 2).
+PillowWayUp.jumpReaches = WaysUpCheck.jumpReaches
+PillowWayUp.apexBetween = WaysUpCheck.apexBetween
 
 function PillowWayUp.problems(map: MapLike, rules: Rules): { string }
 	local found: { string } = {}

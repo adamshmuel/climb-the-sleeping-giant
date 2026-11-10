@@ -183,7 +183,7 @@ Out of the map: the side pocket, the low button ledge, the hem pocket and the ra
 **Pass checks for every new or moved spot.** designer checks each spot from all 8 gardens, and it must pass all of them:
 1. Eye space at least 1.5 (Rule 70: Every egg waits in a nest).
 2. Score inside its target in the table. A spot that scores too low gets a longer walk. It never moves up toward his face.
-3. No nest reached through the lap landing within 8 studs of anywhere a body reaches by one jump from a jump surface (Rule 82: No new way onto the belly).
+3. No nest reached through the lap landing within 8 studs of anywhere a body can stand after one jump from a jump surface (Rule 82: No new way onto the belly). A body in mid-air doesn't count: a grab needs a 1-second hold, which nobody can do at the top of a jump (product, 2026-11-10). Jump surfaces here are only the ones a player reaches without passing the lap landing.
 4. A nest grabbed from a plank (the lap fold, the knee pocket) more than 8 studs from every belly ramp.
 5. The float and sink limits of Rule 59 (Eggs sit on something you can see), and the twin within 2 studs (Rule 72: Nests come in mirror pairs).
 
