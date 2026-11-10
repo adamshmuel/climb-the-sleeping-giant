@@ -44,6 +44,7 @@ Other documents point to `build-check.md` by section name. Every old section is 
 | `ladder-slam-*` | "Ladder slam without the red flash" (2026-11-04). All 4s; the circle shows only as a sliver from the ladder |
 | `view-lapfork-own`, `view-lapfork-cross`, `view-lapfold` (and phone) | "Studio session 2026-10-18 (second)". All 4s, no Buttons score |
 | `wayup-side-*` | Replaced by `wayup-gate1/2`; its old row stays in the history's first table |
+| `hud-desktop-sleepz-*`, `hud-phone-sleepz-*` (plan 3 Task 8f, 2026-11-10) | The Z Z Z on the meter (`style-guide/meter-zs.md`). Art: none new (font letters on the HUD). Easy. Compared with Don't Steal the Bobo, Don't Wake the Kitty and Don't Wake Up for Eggs shots in `references/top-games/`: Bobo shows big blue Zs over its sleepers in the world, Kitty shows a bed-and-Zs icon on its HUD. Ours 4 on readability on a phone (the Zs read at a glance), 4 on button polish; world detail and light are the game's own shots. The phone background is a blurry real Play shot scaled up, so only the HUD in it is sharp |
 
 ## Spec 4: Egg reachability
 

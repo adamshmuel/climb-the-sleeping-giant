@@ -4,7 +4,6 @@ local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.e
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Config = require(ReplicatedStorage.Shared.Config)
-local Layout = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Hud.Layout)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local CameraFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.CameraFx)
 local Helpers = require(script.Parent.Helpers)
@@ -138,47 +137,10 @@ describe("the real world, zones and extras", function()
 		return CameraFx.spawnView(focus, spot.CFrame.LookVector, 12.5, -15 + Config.Spawn.CameraTiltUpDegrees)
 	end
 
-	-- The centre of each Z letter, in the world, for a player looking through `camera`. The billboard is drawn
-	-- facing this camera. Its offset is measured in the camera's own directions, and each letter sits inside the
-	-- billboard (its Scale size is in studs, 16 x 16). Also gives each letter's height in studs.
-	type Letter = { name: string, centre: Vector3, heightStuds: number }
-	local function letterCentres(camera: CFrame, emitter: BasePart, floatingZ: BillboardGui): { Letter }
-		local centreOfBillboard = emitter.Position + camera:VectorToWorldSpace(floatingZ.StudsOffset)
-		local letters: { Letter } = {}
-		for _, letter in floatingZ:GetChildren() do
-			if letter:IsA("TextLabel") then
-				local right = (letter.Position.X.Scale + letter.Size.X.Scale / 2 - 0.5) * floatingZ.Size.X.Scale
-				local up = (0.5 - letter.Position.Y.Scale - letter.Size.Y.Scale / 2) * floatingZ.Size.Y.Scale
-				table.insert(letters, {
-					name = `Z{#letters + 1}`,
-					centre = centreOfBillboard + camera.RightVector * right + camera.UpVector * up,
-					heightStuds = letter.Size.Y.Scale * floatingZ.Size.Y.Scale,
-				})
-			end
-		end
-		return letters
-	end
-
-	-- Pure maths: how many pixels down from the top of a screen `screenHeight` pixels tall a world point appears,
-	-- for a camera at `camera` with Roblox's normal 70 degree vertical field of view.
-	local function screenYOf(camera: CFrame, point: Vector3, screenHeight: number): number
-		local inCamera = camera:PointToObjectSpace(point)
-		local pixelsPerUnitAtOneStud = (screenHeight / 2) / math.tan(math.rad(70 / 2))
-		return screenHeight / 2 - inCamera.Y / -inCamera.Z * pixelsPerUnitAtOneStud
-	end
-
-	it("screenYOf puts the view's middle at half the height and the top of the 70 degree view at 0", function()
-		local camera = CFrame.lookAt(Vector3.zero, Vector3.new(0, 0, -1))
-		expect(screenYOf(camera, Vector3.new(0, 0, -50), 390)).toBeCloseTo(195, 3)
-		local topOfView = Vector3.new(0, 10 * math.tan(math.rad(35)), -10)
-		expect(screenYOf(camera, topOfView, 390)).toBeCloseTo(0, 3)
-	end)
-
 	it("nothing solid blocks the view from any spawn spot to his face", function()
 		local world = realWorld()
 		local giant = (world :: any).Giant :: Model
 		local emitter = (world :: any).GiantFX.SnoreEmitter :: BasePart
-		local floatingZ = emitter:FindFirstChild("FloatingZ") :: BillboardGui
 
 		-- A hit on an invisible or non-colliding part is not solid, so we look past it. His own body is not a
 		-- blocker either: from the side, his head hides his far eye, which is how a side view works. Only things
@@ -217,18 +179,13 @@ describe("the real world, zones and extras", function()
 			local spot = garden.spawnSpot
 			local camera = spawnCameraFor(spot)
 
-			-- what we must see: both eyelids, the nose, the bottom of his beard, and each of the three Z's
+			-- what we must see: both eyelids, the nose and the bottom of his beard
 			local targets: { [string]: Vector3 } = {
 				LeftLid = (giant :: any).SleepEyes.LeftLid:GetPivot().Position,
 				RightLid = (giant :: any).SleepEyes.RightLid:GetPivot().Position,
 				Nose = emitter.Position,
 				BeardBottom = beardBottom,
 			}
-			local letters = letterCentres(camera, emitter, floatingZ)
-			for _, letter in letters do
-				targets[letter.name] = letter.centre
-			end
-			expect(#letters).toBe(3)
 
 			for name, point in targets do
 				local blocker = blockerOnLine(camera.Position, point)
@@ -383,38 +340,6 @@ describe("the real world, zones and extras", function()
 		local covered = pointsCoveredBy(copy, camera, seen)
 		copy:Destroy()
 		expect(covered > 0).toBe(true)
-	end)
-
-	it("the Z Z Z sit below the sleep meter from every spawn spot, on phones and computers", function()
-		local world = realWorld()
-		local emitter = (world :: any).GiantFX.SnoreEmitter :: BasePart
-		local floatingZ = emitter:FindFirstChild("FloatingZ") :: BillboardGui
-
-		-- The meter grows to 110% at its pulse, downward from its top edge (SleepMeterUi's PULSE_SCALE).
-		local PULSE_SCALE = 1.1
-		local screens: { [string]: Vector2 } = { phone = Vector2.new(750, 390), computer = Vector2.new(1280, 720) }
-
-		local tooHigh = {}
-		for screenName, screen in screens do
-			local meter = Layout.forScreen(screen).meter
-			local meterBottom = meter.topOffset + meter.height * PULSE_SCALE
-			for _, garden in WorldIndex.loadGardens(world) do
-				local camera = spawnCameraFor(garden.spawnSpot)
-				for _, letter in letterCentres(camera, emitter, floatingZ) do
-					-- the letter is drawn facing the camera, so its top edge is half its height up the camera's up
-					local top = letter.centre + camera.UpVector * (letter.heightStuds / 2)
-					local y = screenYOf(camera, top, screen.Y)
-					if y <= meterBottom then
-						table.insert(
-							tooHigh,
-							`Plot_{garden.index} {letter.name} at {string.format("%.1f", y)} px ({screenName})`
-						)
-					end
-				end
-			end
-		end
-		table.sort(tooHigh)
-		expect(tooHigh).toEqual({})
 	end)
 
 	-- Every place a player can stand on the giant: straight-down rays on a 4-stud grid onto his body and the

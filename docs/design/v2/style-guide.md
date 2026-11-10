@@ -18,6 +18,7 @@ This file is the index. The guide is split into one file per spec, in `docs/desi
 | 5: Egg nests and the seam | [`style-guide/nests-art.md`](style-guide/nests-art.md) | The nest art, the refill pop, the slide tip, the eye limit, the belly top |
 | 6: Wake-up | [`style-guide/wake-up.md`](style-guide/wake-up.md) | His face, the hunt screen, the bonk, the flower shake |
 | 7: Audio | [`style-guide/audio.md`](style-guide/audio.md) | The music button, sound and sight together |
+| 1: Core heist, Rule 1 (plan 3 Task 8f) | [`style-guide/meter-zs.md`](style-guide/meter-zs.md) | The Z Z Z on the sleep meter: the "he's asleep" sign from the gardens |
 
 Not reference (kept in their own files):
 - [`open-checks.md`](open-checks.md): Play checks still to do.
