@@ -355,3 +355,82 @@ describe("SpotModels.destroy", function()
 		expect(#eggsOn(two)).toBe(0)
 	end)
 end)
+
+-- Rule 85: a meadow spot's invisible EggPost (a folder of parts) is solid only while its egg waits and no player is near.
+local POST_AT = CFrame.new(0, 5, 0)
+local CLEAR = Config.Nests.PostClear
+local NEAR_PLAYER = Vector3.new(CLEAR.HalfBase + CLEAR.Sideways - 0.5, 5, 0) -- inside the clear check's sideways reach
+local FAR_PLAYER = Vector3.new(CLEAR.HalfBase + CLEAR.Sideways + 0.5, 5, 0) -- outside it
+
+-- A spot with an EggPost of 2 parts, both not solid to begin with.
+local function newPostSpot(): (WorldIndex.EggSpot, { BasePart })
+	local spot = newSpot("EggSpot_Common_1", "Common", POST_AT)
+	local post = Instance.new("Folder")
+	post.Name = "EggPost"
+	local parts: { BasePart } = {}
+	for n = 1, 2 do
+		local part = Instance.new("Part")
+		part.Name = `Wedge{n}`
+		part.CanCollide = false
+		part.Parent = post
+		table.insert(parts, part)
+	end
+	post.Parent = spot.model
+	return spot, parts
+end
+
+local function allSolid(parts: { BasePart }, solid: boolean): boolean
+	for _, part in parts do
+		if part.CanCollide ~= solid then
+			return false
+		end
+	end
+	return true
+end
+
+describe("SpotModels EggPost (Rule 85)", function()
+	it("show makes the post solid when no player is close", function()
+		local spot, parts = newPostSpot()
+		SpotModels.new({ spot }, newTemplates(true)):show("EggSpot_Common_1", { FAR_PLAYER })
+		expect(allSolid(parts, true)).toBe(true)
+	end)
+
+	it("show makes the post solid when it is not told where players are", function()
+		local spot, parts = newPostSpot()
+		SpotModels.new({ spot }, newTemplates(true)):show("EggSpot_Common_1")
+		expect(allSolid(parts, true)).toBe(true)
+	end)
+
+	it("show leaves the post not solid while a player is close", function()
+		local spot, parts = newPostSpot()
+		SpotModels.new({ spot }, newTemplates(true)):show("EggSpot_Common_1", { NEAR_PLAYER })
+		expect(allSolid(parts, false)).toBe(true)
+	end)
+
+	it("hide makes a solid post not solid", function()
+		local spot, parts = newPostSpot()
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:show("EggSpot_Common_1")
+		models:hide("EggSpot_Common_1")
+		expect(allSolid(parts, false)).toBe(true)
+	end)
+
+	it("step turns a blocked post solid once the player has moved away, and not before", function()
+		local spot, parts = newPostSpot()
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:show("EggSpot_Common_1", { NEAR_PLAYER })
+		models:step({ NEAR_PLAYER })
+		expect(allSolid(parts, false)).toBe(true)
+		models:step({ FAR_PLAYER })
+		expect(allSolid(parts, true)).toBe(true)
+	end)
+
+	it("step does not make a post solid after hide took its egg away", function()
+		local spot, parts = newPostSpot()
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:show("EggSpot_Common_1", { NEAR_PLAYER })
+		models:hide("EggSpot_Common_1")
+		models:step({})
+		expect(allSolid(parts, false)).toBe(true)
+	end)
+end)

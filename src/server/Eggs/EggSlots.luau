@@ -5,6 +5,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local PostClear = require(script.Parent.PostClear)
 
 -- `garden` is a garden index, set only on meadow nests (Rule 75). A rank is a meadow rank when all its nests have one.
 export type NestDefinition = { name: string, rank: Config.RarityName, position: Vector3, garden: number? }
@@ -212,13 +213,23 @@ function EggSlots.take(state: State, nestName: string, playerId: number, now: nu
 	return true, nil
 end
 
--- The other nest of a meadow slot's garden: the garden's nest of the slot's rank that is not `lastNest` (Rule 75).
--- It is empty, because the garden's one egg was taken from `lastNest`. Another rank may use the same garden number.
-local function otherGardenNest(state: State, slot: Slot): Nest
+-- Where a meadow slot's egg lands (Rules 75 and 85). The garden's other nest of the slot's rank (not `lastNest`) is empty,
+-- because the garden's one egg was taken from `lastNest`. Another rank may use the same garden number. The egg goes
+-- there; if a player stands on it, on `lastNest` (also empty) instead; if players stand on both, on the other nest.
+local function gardenNest(state: State, slot: Slot, playersAt: { Vector3 }): Nest
 	for _, name in state.order do
 		local nest = state.nests[name]
 		if nest.garden == slot.garden and nest.rank == slot.rank and name ~= slot.lastNest then
 			assert(nest.slot == nil, `garden {slot.garden}'s other nest {name} is not empty`)
+			local lastNest = if slot.lastNest ~= nil then state.nests[slot.lastNest] else nil
+			if
+				lastNest ~= nil
+				and PostClear.blocked(nest.position, playersAt)
+				and not PostClear.blocked(lastNest.position, playersAt)
+			then
+				assert(lastNest.slot == nil, `garden {slot.garden}'s nest {lastNest.name} is not empty`)
+				return lastNest
+			end
 			return nest
 		end
 	end
@@ -229,15 +240,16 @@ end
 -- the player who took its egg is still carrying it. Its allowed nests are described at `allowedNests`; pick(count)
 -- chooses one (1 to count). Eggs placed earlier in the same call count as waiting eggs. With no allowed nest the slot
 -- stays due and tries again at now + Config.Nests.RetrySeconds, never sooner; the checks never relax.
--- A meadow slot (it has a garden, Rule 75) skips all that: its egg goes on its garden's other nest at the countdown's
--- end, with no spacing check, no player check, no wait, and `pick` is not called.
+-- A meadow slot (it has a garden, Rule 75) skips all that: its egg lands at the countdown's end, with no spacing check
+-- and no wait, and `pick` is not called. It goes on its garden's other nest, or back on the nest it was taken from when
+-- a player stands on the other one (Rule 85, `gardenNest`).
 function EggSlots.update(state: State, now: number, playersAt: { Vector3 }, pick: (count: number) -> number): { Refill }
 	local refilled: { Refill } = {}
 	for _, slot in state.slots do
 		local refillAt = slot.refillAt
 		local dueAt = slot.dueAt
 		if refillAt ~= nil and dueAt ~= nil and now >= refillAt and slot.garden ~= nil then
-			local chosen = otherGardenNest(state, slot)
+			local chosen = gardenNest(state, slot, playersAt)
 			chosen.slot = slot
 			slot.refillAt = nil
 			slot.dueAt = nil

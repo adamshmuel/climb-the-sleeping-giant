@@ -204,6 +204,28 @@ describe("Grab on the nests", function()
 		expect(slots.Uncommon).toBe(0) -- 1 spot
 		expect(slots.Epic).toBe(Config.Rarity.Epic.Slots) -- 4 spots allow 3, Config allows 2
 	end)
+
+	it("makes a returned egg's post solid only once the player standing on the nest moves away (Rule 85)", function()
+		local spot = newSpot("Common_1", "Common", 0)
+		local post = Instance.new("Folder")
+		post.Name = "EggPost"
+		local postPart = Instance.new("Part")
+		postPart.Parent = post
+		post.Parent = spot.model
+		local rig = newNestRig({ spot, newSpot("Common_2", "Common", 50) })
+		local player = newPlayer(1, spot.promptAnchor.WorldPosition + Vector3.new(3, 0, 0))
+		table.insert(rig.standers, player)
+		rig.prompts.Common_1.Triggered:Fire(player)
+		-- Rule 85's clear check is Config.Nests.PostClear (half-base + Sideways flat): stand inside it, then outside it.
+		local clear = Config.Nests.PostClear
+		local nestAt = spot.cframe.Position
+		player.root.Position = nestAt + Vector3.new(clear.HalfBase + clear.Sideways - 0.5, 0, 0)
+		expect((rig.grab:returnEgg(player, "Lost"))).toBe("back")
+		expect(postPart.CanCollide).toBe(false) -- a player stands where the post goes
+		player.root.Position = nestAt + Vector3.new(clear.HalfBase + clear.Sideways + 0.5, 0, 0)
+		rig.grab:step()
+		expect(postPart.CanCollide).toBe(true)
+	end)
 end)
 
 -- Task 7c: the right cuff nests (ridesRightArm) lock while he is awake. Two Common cuff nests, both with an egg.

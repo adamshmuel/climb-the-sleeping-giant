@@ -140,6 +140,7 @@ export type Config = {
 		SlideDrop: number,
 		Jump: { Up: number, Across: number, BodyHeight: number },
 		RareEggOne: string,
+		PostClear: { HalfBase: number, Sideways: number, Vertical: number },
 	},
 }
 
@@ -278,6 +279,10 @@ local config: Config = {
 		-- A jump reaches 9 studs up and 10 across, from a body 5 studs tall (plan 5 Decisions row "The jump reach").
 		Jump = { Up = 9, Across = 10, BodyHeight = 5 },
 		RareEggOne = "Nest_LowerBelly_Left", -- the nest of Rare egg 1 (Rule 45; plan 5 Decisions)
+		-- A meadow nest is "not clear" when a player root is within HalfBase + Sideways studs flat or Vertical studs up
+		-- or down (Rule 85; fix 2 Decisions "Clear check"). HalfBase is the post's half base: 0.4 of the Common egg's
+		-- width (measured 5.46 studs in Step 3, so 2.185, rounded to 2.2). tools/world/21-nests.luau builds the posts from it.
+		PostClear = { HalfBase = 2.2, Sideways = 1.5, Vertical = 6 },
 	},
 }
 

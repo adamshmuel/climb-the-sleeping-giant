@@ -128,6 +128,36 @@ describe("SpotLabels: labels never stack", function()
 		expect(seeThrough(rig, farther)).toBeCloseTo(1, 3)
 	end)
 
+	-- Spec Rule 52: the word shows up to 75 studs. Roblox culls a billboard by depth along the look, not by real
+	-- distance, so a far word can still be drawn: the picker hides it itself.
+	it("fades both of two overlapping labels that are past 75 studs", function()
+		local screen = newScreen()
+		local rig = newRig(screen.view)
+		local first = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
+		local second = rig.addSpot("EggSpot_Uncommon_2", "Uncommon")
+		screen.places["EggSpot_Uncommon_1"] = { rect = rect(300, 200, 60, 18), distance = 104.6 }
+		screen.places["EggSpot_Uncommon_2"] = { rect = rect(310, 200, 60, 18), distance = 108.4 }
+		rig.set(first, "Waiting", true)
+		rig.set(second, "Waiting", true)
+		rig.advance(0.3)
+		expect(seeThrough(rig, first)).toBeCloseTo(1, 3)
+		expect(seeThrough(rig, second)).toBeCloseTo(1, 3)
+	end)
+
+	it("fades a label at 76 studs and shows one at 75", function()
+		local screen = newScreen()
+		local rig = newRig(screen.view)
+		local past = rig.addSpot("EggSpot_Uncommon_1", "Uncommon")
+		local atTheLimit = rig.addSpot("EggSpot_Uncommon_2", "Uncommon")
+		screen.places["EggSpot_Uncommon_1"] = { rect = rect(100, 200, 60, 20), distance = 76 }
+		screen.places["EggSpot_Uncommon_2"] = { rect = rect(400, 200, 60, 20), distance = 75 }
+		rig.set(past, "Waiting", true)
+		rig.set(atTheLimit, "Waiting", true)
+		rig.advance(0.3)
+		expect(seeThrough(rig, past)).toBeCloseTo(1, 3)
+		expect(seeThrough(rig, atTheLimit)).toBe(0)
+	end)
+
 	it("keeps both labels when their words sit well apart", function()
 		local screen = newScreen()
 		local rig = newRig(screen.view)
@@ -254,15 +284,14 @@ describe("SpotLabels.screenView", function()
 		expect(view.words(gui, text, Vector3.new(0, 0, -5))).toBeNil()
 	end)
 
-	it("gives nothing for a label past 75 studs", function()
+	it("gives the words and real distance for a far label", function()
 		local view = SpotLabels.screenView(fakeCamera, function()
 			return nil
 		end, sizes)
 		local gui, text = makeLabel()
-		local past = view.words(gui, text, Vector3.new(0, 0, 76))
-		local atTheLimit = view.words(gui, text, Vector3.new(0, 0, 75))
-		expect(past).toBeNil()
-		expect(atTheLimit).never.toBeNil()
+		local words, distance = view.words(gui, text, Vector3.new(0, 0, 76))
+		expect(words).never.toBeNil()
+		expect(distance).toBeCloseTo(76, 3)
 	end)
 
 	it("gives nothing for a label that is not drawn yet (no size)", function()

@@ -306,6 +306,20 @@ function Grab.start(deps: Deps): Grab
 		removing:Disconnect()
 	end)
 
+	-- Where everyone stands: a new egg never lands within Config.Nests.PlayerDistance of a player (Rule 76), and a
+	-- nest's post never turns solid on one (Rule 85).
+	local function rootsNow(): { Vector3 }
+		local roots: { Vector3 } = {}
+		for _, player in deps.players:GetPlayers() do
+			local character = player.Character
+			local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+			if root ~= nil and root:IsA("BasePart") then
+				table.insert(roots, root.Position)
+			end
+		end
+		return roots
+	end
+
 	local function returnEgg(_self: Grab, player: PlayerLike, why: ReturnReason?): (("back" | "gone")?, string?)
 		local result: ("back" | "gone")?, spotName: string? = EggSlots.returnEgg(state, player.UserId)
 		if spotName == nil then
@@ -313,7 +327,7 @@ function Grab.start(deps: Deps): Grab
 		end
 		takeEggOffBack(player)
 		if result == "back" then
-			spotModels:show(spotName)
+			spotModels:show(spotName, rootsNow())
 			refreshPrompt(spotName)
 		end
 		local rarity: Config.RarityName? = rarityOfSpot[spotName]
@@ -369,17 +383,10 @@ function Grab.start(deps: Deps): Grab
 
 	local function step(_self: Grab)
 		updateCuffLock(deps.now())
-		-- Where everyone stands: a new egg never lands within Config.Nests.PlayerDistance of a player (Rule 76).
-		local playersAt: { Vector3 } = {}
-		for _, player in deps.players:GetPlayers() do
-			local character = player.Character
-			local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
-			if root ~= nil and root:IsA("BasePart") then
-				table.insert(playersAt, root.Position)
-			end
-		end
+		local playersAt = rootsNow()
+		spotModels:step(playersAt)
 		for _, refill in EggSlots.update(state, deps.now(), playersAt, pick) do
-			spotModels:show(refill.nest)
+			spotModels:show(refill.nest, playersAt)
 			refreshPrompt(refill.nest)
 			refilled:Fire(refill.rank, refill.waited)
 		end

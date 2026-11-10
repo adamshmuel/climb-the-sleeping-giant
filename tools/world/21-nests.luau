@@ -11,6 +11,18 @@
 -- ParticleEmitter; an Assets.RefillPop that is there but is not a BasePart holding a ParticleEmitter.
 -- An Assets.RefillPop that is already right = "already done".
 -- CHECK_ONLY = true looks and prints only. More tasks add their nest parts to this script later.
+--
+-- Second part, plan 5 fix 2 Step 3 (card work/p5fix2/p5fix2-card.md; spec 5 Rule 85): the invisible EggPost on every
+-- Common meadow spot (EggSpots models whose Rarity is Common; eggs on him are never touched).
+-- A post is a roof ridge: 2 WedgeParts back to back, base 2 x Config.Nests.PostClear.HalfBase (0.4 of the Common egg's
+-- width each side), faces at FACE_DEGREES (75 or steeper), no flat top, invisible, anchored, CanCollide false (the server's
+-- SpotModels turns it solid while the egg waits). Each is the Folder "EggPost" inside the spot model.
+-- It adds only: PLANNED_POST_SPOTS Folders with 2 wedge parts each. Before changing anything it clones the spot models to
+-- ServerStorage.WorldBackups.p5fix2. A spot that already has an EggPost is skipped; all of them = "already done".
+-- STOP (nothing changed): the Common egg template missing; Config HalfBase not within HALF_BASE_MARGIN of 0.4 x the egg
+-- width; the number of spots to change not PLANNED_POST_SPOTS. The CHECK_ONLY pass also builds a test pair at
+-- TEST_HEIGHT, rays it and destroys it in the same call.
+-- Task 12 builds the real nests: change PLANNED_POST_SPOTS then and run this again.
 -- Run in Studio EDIT mode: paste this file's text with execute_luau. The place file must be saved afterwards (the
 -- template lives in the place file, not in the Rojo tree).
 
@@ -44,7 +56,7 @@ local function onlyEmitter(part: Instance): ParticleEmitter?
 	return found
 end
 
-local function run(): string
+local function runTemplate(): string
 	local assets = ReplicatedStorage:FindFirstChild("Assets")
 	if assets == nil then
 		return "STOP: ReplicatedStorage.Assets is missing, nothing changed"
@@ -100,7 +112,227 @@ local function run(): string
 	return `added 1 part: {copy:GetFullName()} {emitterLine(emitter)}`
 end
 
-local ok, message = pcall(run)
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Part 2: the EggPost on every Common meadow spot.
+
+local ServerStorage = game:GetService("ServerStorage")
+
+local POST_NAME = "EggPost"
+local BACKUP_FOLDER = "WorldBackups"
+local BACKUP_NAME = "p5fix2"
+local PLANNED_POST_SPOTS = 8 -- the 8 Common meadow spots today (code_lead ruling); Task 12 sets 16 for the real nests
+local PARTS_PER_POST = 2
+local WIDTH_SHARE = 0.8 -- the post's base is this share of the egg's width
+local FACE_DEGREES = 75.2 -- the steepness of each face (the rule says 75 or steeper)
+local MIN_FACE_DEGREES = 74.9
+local HALF_BASE_MARGIN = 0.05
+local TEST_HEIGHT = 5000 -- where the CHECK_ONLY test pair is built (empty sky)
+local GRID = 0.1
+
+local function includeOnly(parts: { Instance }): RaycastParams
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = parts
+	return params
+end
+
+-- +1 when a WedgePart's top rises toward +Z, -1 when it rises toward -Z (tested with a probe, not remembered).
+local function slopeSign(): number
+	local probe = Instance.new("WedgePart")
+	probe.Anchored = true
+	probe.Size = Vector3.new(2, 4, 2)
+	probe.CFrame = CFrame.new(0, TEST_HEIGHT, 0)
+	probe.Parent = Workspace
+	local params = includeOnly({ probe })
+	local function topAt(z: number): number
+		local hit = Workspace:Raycast(Vector3.new(0, TEST_HEIGHT + 10, z), Vector3.new(0, -20, 0), params)
+		return if hit then hit.Position.Y else -math.huge
+	end
+	local sign = if topAt(0.8) > topAt(-0.8) then 1 else -1
+	probe:Destroy()
+	return sign
+end
+
+-- Makes the 2 wedges of one post inside `folder`, standing on `base` (the egg's bottom centre).
+local function buildPost(folder: Folder, base: Vector3, halfBase: number, height: number, sign: number): { WedgePart }
+	local made = {}
+	for index = 1, PARTS_PER_POST do
+		local side = if index == 1 then -sign else sign
+		local wedge = Instance.new("WedgePart")
+		wedge.Name = `Ridge_{index}`
+		wedge.Size = Vector3.new(halfBase * 2, height, halfBase)
+		local at = CFrame.new(base + Vector3.new(0, height / 2, side * halfBase / 2))
+		wedge.CFrame = if index == 1 then at else at * CFrame.Angles(0, math.pi, 0)
+		wedge.Anchored = true
+		wedge.CanCollide = false
+		wedge.CanTouch = false
+		wedge.CastShadow = false
+		wedge.Transparency = 1
+		wedge.Parent = folder
+		table.insert(made, wedge)
+	end
+	return made
+end
+
+-- Rays down over the post's footprint. Prints the apex height over the base, the flattest face found (degrees from
+-- level) and how wide the strip within 0.5 studs of the apex is.
+local function rayReport(root: Instance, base: Vector3, halfBase: number, height: number): string
+	local params = includeOnly({ root })
+	local steps = math.floor(halfBase / GRID)
+	local hits, apex, flattest = 0, -math.huge, math.huge
+	local heights: { [number]: number } = {}
+	for xi = -steps, steps do
+		for zi = -steps, steps do
+			local origin = base + Vector3.new(xi * GRID, height + 5, zi * GRID)
+			local hit = Workspace:Raycast(origin, Vector3.new(0, -(height + 10), 0), params)
+			if hit then
+				hits += 1
+				local up = hit.Position.Y - base.Y
+				apex = math.max(apex, up)
+				flattest = math.min(flattest, math.deg(math.acos(math.clamp(hit.Normal.Y, -1, 1))))
+				if xi == 0 then
+					heights[zi] = up
+				end
+			end
+		end
+	end
+	local strip = 0
+	for _, up in heights do
+		if up >= apex - 0.5 then
+			strip += 1
+		end
+	end
+	return `{hits} hits, apex {string.format("%.2f", apex)} over the base, flattest face {string.format(
+		"%.1f",
+		flattest
+	)} deg, strip within 0.5 of the apex {string.format("%.1f", strip * GRID)} wide`
+end
+
+local function runPosts(): string
+	-- A clone, because in Edit a plain require returns the copy Studio cached first (studio-jobs).
+	local shared = ReplicatedStorage:FindFirstChild("Shared") :: Folder
+	local configModule = shared:FindFirstChild("Config") :: ModuleScript
+	local requireModule: (ModuleScript) -> any = require :: any
+	local config = requireModule(configModule:Clone())
+	local halfBase: number = config.Nests.PostClear.HalfBase
+	local serverAssets = ServerStorage:FindFirstChild("Assets")
+	local eggs = if serverAssets then serverAssets:FindFirstChild("Eggs") else nil
+	local template = if eggs then eggs:FindFirstChild("Common") else nil
+	if template == nil or not template:IsA("Model") then
+		return "STOP (posts): ServerStorage.Assets.Eggs.Common is missing, nothing changed"
+	end
+	local _, size = template:GetBoundingBox()
+	local width = math.max(size.X, size.Z)
+	local wanted = width * WIDTH_SHARE / 2
+	local lines = {
+		`egg width {string.format("%.3f", width)}, wanted half base {string.format("%.3f", wanted)}, Config half base {halfBase}`,
+	}
+	if math.abs(wanted - halfBase) > HALF_BASE_MARGIN then
+		table.insert(
+			lines,
+			`STOP (posts): Config HalfBase {halfBase} is not within {HALF_BASE_MARGIN} of {string.format("%.3f", wanted)}, nothing changed`
+		)
+		return table.concat(lines, "\n")
+	end
+	local height = halfBase * math.tan(math.rad(FACE_DEGREES))
+
+	local spots = Workspace:FindFirstChild("World"):FindFirstChild("EggSpots")
+	local todo: { Model } = {}
+	local have = 0
+	local common = 0
+	for _, spot in spots:GetChildren() do
+		if spot:IsA("Model") and spot:GetAttribute("Rarity") == "Common" then
+			common += 1
+			if spot:FindFirstChild(POST_NAME) then
+				have += 1
+			else
+				table.insert(todo, spot)
+			end
+		end
+	end
+	table.insert(
+		lines,
+		`Common spots {common}, with a post {have}, without {#todo}; apex {string.format("%.2f", height)} over the egg base`
+	)
+	if #todo == 0 then
+		table.insert(lines, `already done: {have} posts`)
+		return table.concat(lines, "\n")
+	end
+
+	local sign = slopeSign()
+	table.insert(lines, `wedge rises toward {if sign > 0 then "+Z" else "-Z"}`)
+	-- The test pair proves the shape in empty sky before anything is added to the world.
+	local testFolder = Instance.new("Folder")
+	testFolder.Name = "PostTest"
+	testFolder.Parent = Workspace
+	local testBase = Vector3.new(0, TEST_HEIGHT, 0)
+	buildPost(testFolder, testBase, halfBase, height, sign)
+	table.insert(lines, `test pair: {rayReport(testFolder, testBase, halfBase, height)}`)
+	testFolder:Destroy()
+	local flatTest = string.match(lines[#lines], "flattest face ([%d%.]+)")
+	if tonumber(flatTest) == nil or (tonumber(flatTest) :: number) < MIN_FACE_DEGREES then
+		table.insert(lines, "STOP (posts): the test pair has a face flatter than 75 degrees, nothing changed")
+		return table.concat(lines, "\n")
+	end
+
+	local willAddParts = #todo * PARTS_PER_POST
+	print(`21-nests: will add {#todo} posts, {willAddParts} parts (plan: {PLANNED_POST_SPOTS} posts)`)
+	if #todo ~= PLANNED_POST_SPOTS then
+		table.insert(lines, `STOP (posts): {#todo} posts to add, the plan is {PLANNED_POST_SPOTS}, nothing changed`)
+		return table.concat(lines, "\n")
+	end
+	if CHECK_ONLY then
+		table.insert(
+			lines,
+			`CHECK_ONLY: would add {#todo} posts ({willAddParts} parts) and back up {#todo} spot models`
+		)
+		return table.concat(lines, "\n")
+	end
+
+	-- Backup first: the spot models, as they are now.
+	local backups = ServerStorage:FindFirstChild(BACKUP_FOLDER)
+	if backups == nil then
+		return "STOP (posts): ServerStorage.WorldBackups is missing, nothing changed"
+	end
+	if backups:FindFirstChild(BACKUP_NAME) then
+		return `STOP (posts): WorldBackups.{BACKUP_NAME} is already there, nothing changed`
+	end
+	ChangeHistoryService:SetWaypoint("21-nests posts: before")
+	local backup = Instance.new("Folder")
+	backup.Name = BACKUP_NAME
+	for _, spot in todo do
+		spot:Clone().Parent = backup
+	end
+	backup.Parent = backups
+	table.insert(lines, `backed up {#backup:GetChildren()} spot models to {backup:GetFullName()}`)
+
+	local firstFolder: Folder? = nil
+	local firstBase = Vector3.zero
+	for _, spot in todo do
+		local base = spot:FindFirstChild("Base") :: BasePart
+		local bottom = (base.CFrame * CFrame.new(0, base.Size.Y / 2, 0)).Position
+		local folder = Instance.new("Folder")
+		folder.Name = POST_NAME
+		buildPost(folder, bottom, halfBase, height, sign)
+		folder.Parent = spot
+		if firstFolder == nil then
+			firstFolder = folder
+			firstBase = bottom
+		end
+	end
+	ChangeHistoryService:SetWaypoint("21-nests posts: after")
+	table.insert(lines, `added {#todo} posts, {willAddParts} parts`)
+	if firstFolder then
+		table.insert(lines, `first post: {rayReport(firstFolder, firstBase, halfBase, height)}`)
+	end
+	return table.concat(lines, "\n")
+end
+
+local function runAll(): string
+	return runTemplate() .. "\n" .. runPosts()
+end
+
+local ok, message = pcall(runAll)
 if not ok then
 	return "STOPPED WITH AN ERROR: " .. tostring(message)
 end

@@ -50,8 +50,10 @@ export type CameraLike = {
 	WorldToViewportPoint: (self: any, point: Vector3) -> (Vector3, boolean),
 }
 
--- What the screen knows. `words`: the rectangle of a label's words and its distance from the camera, or nothing when
--- the label is behind the camera, past the label's range or not drawn yet. `meter`: the sleep meter's box, or nothing.
+-- What the screen knows. `words`: the rectangle of a label's words and its real distance from the camera, or nothing
+-- when the label is behind the camera or not drawn yet. A far label still gets its rectangle: Roblox culls a billboard
+-- by depth along the look, not by real distance, so `pickShown` hides what is past the range. `meter`: the sleep
+-- meter's box, or nothing.
 export type View = {
 	words: (gui: BillboardGui, text: TextLabel, centre: Vector3) -> (Rect?, number?),
 	meter: () -> Rect?,
@@ -125,16 +127,21 @@ local function touches(a: Rect, b: Rect): boolean
 	return a.x <= b.x + b.width and b.x <= a.x + a.width and a.y <= b.y + b.height and b.y <= a.y + a.height
 end
 
--- Which rarity labels show. Each label is hidden when its rectangle touches the meter's box (`meter`, nil when there is
--- none) or reaches past the top edge of the screen (y below 0). Of the others, the nearest to the camera comes first,
--- and a label shows unless it overlaps one that already shows. A label hidden by the meter or the top edge takes no
--- part, so it never hides another. Equal distances go by id, so the answer never depends on the order of the list.
+-- Which rarity labels show. Each label is hidden when it is farther than MAX_DISTANCE (Rule 52), its rectangle touches
+-- the meter's box (`meter`, nil when there is none) or reaches past the top edge of the screen (y below 0). Of the
+-- others, the nearest to the camera comes first, and a label shows unless it overlaps one that already shows. A label
+-- hidden by the range, the meter or the top edge takes no part, so it never hides another. Equal distances go by id,
+-- so the answer never depends on the order of the list.
 -- Returns, for every id given, true when it shows and false when it hides.
 function SpotLabels.pickShown(candidates: { Candidate }, meter: Rect?): { [number]: boolean }
 	local answer: { [number]: boolean } = {}
 	local ranked: { Candidate } = {}
 	for _, candidate in candidates do
-		if candidate.rect.y < 0 or (meter ~= nil and touches(candidate.rect, meter)) then
+		if
+			candidate.distance > MAX_DISTANCE
+			or candidate.rect.y < 0
+			or (meter ~= nil and touches(candidate.rect, meter))
+		then
 			answer[candidate.id] = false
 		else
 			table.insert(ranked, candidate)
@@ -207,9 +214,6 @@ function SpotLabels.screenView(getCamera: () -> CameraLike?, getMeter: () -> Rec
 				return nil, nil
 			end
 			local distance = (camera.CFrame.Position - centre).Magnitude
-			if distance > MAX_DISTANCE then
-				return nil, nil
-			end
 			local sizes = read(gui, text)
 			if sizes == nil then
 				return nil, nil

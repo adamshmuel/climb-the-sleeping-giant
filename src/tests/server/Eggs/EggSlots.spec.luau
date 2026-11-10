@@ -260,14 +260,68 @@ local function pickMustNotRun(_count: number): number
 end
 
 describe("EggSlots meadow eggs (Rule 75)", function()
-	it("puts garden 4's egg on its other nest at 10 s with no wait, even with a player standing on it", function()
+	it("puts garden 4's egg on its other nest at 10 s with no wait when no player is near that nest", function()
 		local state = meadowState()
 		EggSlots.take(state, "G4A", 4, 0)
-		local refills = EggSlots.update(state, COMMON_REFILL, { Vector3.new(8, 0, 0) }, pickFirst)
+		local refills = EggSlots.update(state, COMMON_REFILL, {}, pickFirst)
 		expect(#refills).toBe(1)
 		expect(refills[1].nest).toBe("G4B")
 		expect(refills[1].waited).toBe(0)
 		expect(isWaiting(state, "G4A")).toBe(false)
+	end)
+
+	-- Rule 85: the clear check is Config.Nests.PostClear (half-base + Sideways flat, Vertical up or down).
+	local CLEAR = Config.Nests.PostClear
+	local NEAR = CLEAR.HalfBase + CLEAR.Sideways - 0.5 -- a root this far to the side is not clear
+	local FAR = CLEAR.HalfBase + CLEAR.Sideways + 0.5 -- a root this far to the side is clear
+
+	it("puts the egg back on the nest it was taken from when a player stands on the other nest", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 4, 0)
+		local refills = EggSlots.update(state, COMMON_REFILL, { Vector3.new(8, 0, 0) }, pickMustNotRun)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4A")
+		expect(refills[1].waited).toBe(0)
+		expect(isWaiting(state, "G4A")).toBe(true)
+		expect(isWaiting(state, "G4B")).toBe(false)
+	end)
+
+	it("treats a root within the clear check's sideways and vertical reach as standing on the nest", function()
+		local near = {
+			Vector3.new(8 + NEAR, 0, 0),
+			Vector3.new(8, CLEAR.Vertical - 0.5, 0),
+			Vector3.new(8, -(CLEAR.Vertical - 0.5), 0),
+		}
+		for _, at in near do
+			local state = meadowState()
+			EggSlots.take(state, "G4A", 4, 0)
+			local refills = EggSlots.update(state, COMMON_REFILL, { at }, pickFirst)
+			expect(refills[1].nest).toBe("G4A")
+		end
+	end)
+
+	it("ignores a root outside the clear check's sideways or vertical reach", function()
+		local far = {
+			Vector3.new(8 + FAR, 0, 0),
+			Vector3.new(8, CLEAR.Vertical + 0.5, 0),
+			Vector3.new(8, -(CLEAR.Vertical + 0.5), 0),
+		}
+		for _, at in far do
+			local state = meadowState()
+			EggSlots.take(state, "G4A", 4, 0)
+			local refills = EggSlots.update(state, COMMON_REFILL, { at }, pickFirst)
+			expect(refills[1].nest).toBe("G4B")
+		end
+	end)
+
+	it("puts the egg on the other nest when players stand on both nests", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 4, 0)
+		local players = { Vector3.new(0, 0, 0), Vector3.new(8, 0, 0) }
+		local refills = EggSlots.update(state, COMMON_REFILL, players, pickFirst)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4B")
+		expect(isWaiting(state, "G4B")).toBe(true)
 	end)
 
 	it("refills garden 4's egg on garden 4's other nest when garden 5's player took it", function()
