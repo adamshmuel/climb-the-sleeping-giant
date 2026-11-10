@@ -45,3 +45,4 @@
 - Before adding a check to a task in a step back, grep the spec's section 6 and the plan for where it already lives; p5t16 pulled Task 23's "sees the seam" check forward and looped twice (a hem on a round belly is hidden from its flat top).
 - Before ruling on a strange thing in one shot, compare 2-3 other shots from the same device; the p3t8 dark box was in only 1 of 3 phone shots, so a check, not a fix (2026-11-10).
 - After an Edit to a decision file, grep for the new heading before reporting it as written; a failed Edit was once reported as added (p3t8, 2026-11-10).
+- A ray walk-measure must use the game's real slope limit (CharacterMaxSlopeAngle, read in Studio) and spec Rule 79's 65-70 Play pass, never a tighter card rule; a 1.5-per-2-stud rise cap is only 37 degrees and blocked 17w falsely (2026-11-10).

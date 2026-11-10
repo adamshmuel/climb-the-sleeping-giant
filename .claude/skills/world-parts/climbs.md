@@ -20,6 +20,7 @@ Part of the `world-parts` skill. Use when planning, pricing, mocking up, buildin
 - While Climbing, the engine keeps the character facing the truss: a sideways or turned stick doesn't turn or move him. To get round a truss: climb down, jump to the side, walk round, push into the other face.
 - Pushing away from a TrussPart climbs down it, not off. Before rewriting a climbing job, trace one let-go (state, y and floor every 0.1 s).
 - A fall-end check that uses a downward ray also watches the Humanoid state: entering Climbing cancels the fall. When a ladder top is loud, rule out the noise code before reshaping the ladder.
+- A walk measure uses one slope limit taken from `StarterPlayer.CharacterMaxSlopeAngle` (read in Edit first; 70 in this game), never a "rise per cell" cap: 1.5 studs per 2-stud cell is only 37° and blocked real walks (17w, 2026-11-10).
 
 ## Before a climb Play job
 One read-only call scans:
