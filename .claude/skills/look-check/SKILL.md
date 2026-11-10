@@ -34,3 +34,4 @@ When the choice is between looks or ways to play, `designer` mocks up each optio
 - Judge a shot only with what this version really spawns. A stand-in from a later version is named as such and judged in that version's check. Check a copied library model's `Transparency` before the shot: library copies can be stored hidden.
 - Judge the whole screen (`playing-the-game` skill, step 7).
 - Aim so the target sits at the wanted screen y; a phone sees only about 35° below the view centre. A Play proof recreates the bug shot's camera position and target.
+- A phone shot reuses its computer shot's camera position and target. A different angle makes a "hidden" verdict that the phone didn't cause (17c, 2026-11-10).
