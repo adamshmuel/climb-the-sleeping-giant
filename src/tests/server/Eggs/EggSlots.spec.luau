@@ -231,6 +231,163 @@ describe("EggSlots.new spacing", function()
 	end)
 end)
 
+-- A meadow nest: a Common nest that carries its garden.
+local function meadowNest(name: string, garden: number, x: number): EggSlots.NestDefinition
+	return { name = name, rank = "Common", position = Vector3.new(x, 0, 0), garden = garden }
+end
+
+-- Gardens 4 and 5, 2 Common nests each, 8 studs apart inside a garden and far from the other garden. `xs` moves nests
+-- by name (G4A, G4B, G5A, G5B).
+local function meadowDefs(xs: { [string]: number }?): { EggSlots.NestDefinition }
+	local at: { [string]: number } = if xs ~= nil then xs else {}
+	return {
+		meadowNest("G4A", 4, at.G4A or 0),
+		meadowNest("G4B", 4, at.G4B or 8),
+		meadowNest("G5A", 5, at.G5A or 100),
+		meadowNest("G5B", 5, at.G5B or 108),
+	}
+end
+
+local function meadowState(xs: { [string]: number }?): EggSlots.State
+	return EggSlots.new(meadowDefs(xs), { Common = 2 })
+end
+
+local COMMON_REFILL = Config.Rarity.Common.RefillSeconds
+local GARDEN_NESTS: { [number]: { string } } = { [4] = { "G4A", "G4B" }, [5] = { "G5A", "G5B" } }
+
+local function pickMustNotRun(_count: number): number
+	error("pick was called for a garden refill")
+end
+
+describe("EggSlots meadow eggs (Rule 75)", function()
+	it("puts garden 4's egg on its other nest at 10 s with no wait, even with a player standing on it", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 4, 0)
+		local refills = EggSlots.update(state, COMMON_REFILL, { Vector3.new(8, 0, 0) }, pickFirst)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4B")
+		expect(refills[1].waited).toBe(0)
+		expect(isWaiting(state, "G4A")).toBe(false)
+	end)
+
+	it("refills garden 4's egg on garden 4's other nest when garden 5's player took it", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 5, 0)
+		local refills = EggSlots.update(state, COMMON_REFILL, {}, pickFirst)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4B")
+		expect(isWaiting(state, "G5B")).toBe(false)
+	end)
+
+	it("alternates garden 4's egg between its two nests over three takes: A, B, A, B", function()
+		local state = meadowState()
+		local landed: { string } = {}
+		local now = 0
+		local from = "G4A"
+		for _ = 1, 3 do
+			EggSlots.take(state, from, 1, now)
+			EggSlots.bank(state, 1)
+			now += COMMON_REFILL
+			local refills = EggSlots.update(state, now, {}, pickFirst)
+			expect(#refills).toBe(1)
+			from = refills[1].nest
+			table.insert(landed, from)
+		end
+		expect(landed).toEqual({ "G4B", "G4A", "G4B" })
+	end)
+
+	it("refills garden 4's egg at 10 s although garden 5's egg waits 5 studs from garden 4's other nest", function()
+		-- G4B is at x 8; G5A moves to x 13, 5 studs away, below the 6-stud egg spacing.
+		local state = meadowState({ G5A = 13 })
+		expect(isWaiting(state, "G5A")).toBe(true)
+		EggSlots.take(state, "G4A", 4, 0)
+		local refills = EggSlots.update(state, COMMON_REFILL, {}, pickFirst)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4B")
+		expect(refills[1].waited).toBe(0)
+	end)
+
+	it("never calls pick for a garden refill", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 4, 0)
+		local refills = EggSlots.update(state, COMMON_REFILL, {}, pickMustNotRun)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4B")
+	end)
+
+	it("keeps each garden's egg on its own garden's nests over 20 random takes and updates", function()
+		local rng = Random.new(11)
+		local state = meadowState()
+		local now = 0
+		for step = 1, 20 do
+			local garden = rng:NextInteger(4, 5)
+			local from: string? = nil
+			for _, name in GARDEN_NESTS[garden] do
+				if isWaiting(state, name) then
+					from = name
+				end
+			end
+			if from == nil then
+				error(`step {step}: garden {garden} has no egg waiting on its own nests`)
+			end
+			EggSlots.take(state, from, 1, now)
+			EggSlots.bank(state, 1)
+			now += COMMON_REFILL
+			EggSlots.update(state, now, {}, function(count: number): number
+				return rng:NextInteger(1, count)
+			end)
+			for g = 4, 5 do
+				local waiting = 0
+				for _, name in GARDEN_NESTS[g] do
+					if isWaiting(state, name) then
+						waiting += 1
+					end
+				end
+				if waiting ~= 1 then
+					error(`step {step}: garden {g} has {waiting} eggs on its own nests, wanted 1`)
+				end
+			end
+		end
+	end)
+end)
+
+describe("EggSlots.new for meadow nests", function()
+	it("asserts when a garden has only 1 nest", function()
+		local defs = { meadowNest("G4A", 4, 0), meadowNest("G5A", 5, 100), meadowNest("G5B", 5, 108) }
+		expect(function()
+			EggSlots.new(defs, { Common = 2 })
+		end).toThrow()
+	end)
+
+	it("asserts when a garden has 3 nests", function()
+		local defs = meadowDefs()
+		table.insert(defs, meadowNest("G4C", 4, 16))
+		expect(function()
+			EggSlots.new(defs, { Common = 2 })
+		end).toThrow()
+	end)
+
+	it("asserts when the Common slot count is 3 for 2 gardens", function()
+		expect(function()
+			EggSlots.new(meadowDefs(), { Common = 3 })
+		end).toThrow()
+	end)
+
+	it("asserts when the Common slot count is 1 for 2 gardens", function()
+		expect(function()
+			EggSlots.new(meadowDefs(), { Common = 1 })
+		end).toThrow()
+	end)
+
+	it("asserts when a rank mixes garden nests and nests with no garden", function()
+		local defs = meadowDefs()
+		table.insert(defs, { name = "Loose1", rank = "Common", position = Vector3.new(200, 0, 0) })
+		expect(function()
+			EggSlots.new(defs, { Common = 2 })
+		end).toThrow()
+	end)
+end)
+
 describe("EggSlots over a long random run", function()
 	it("never has more eggs waiting plus carried from a live countdown than slots", function()
 		local rng = Random.new(7)

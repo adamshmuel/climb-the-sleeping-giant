@@ -114,6 +114,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 4: Meadow eggs stay by their garden**
 - Stands on: Task 3 (the refill pick in `EggSlots`, built).
+- For: core gameplay (a new player's first egg always comes back by their own bridge). Size: 3 steps, 34 min, about 11 Studio calls (card `work/p5t4/p5t4-card.md`).
 - Spec rules: Rule 75 (Meadow eggs stay by their garden). Story B's third case. Section 8: "A garden's player takes the neighbour's Common egg", "An empty garden".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: each garden has one Common slot and its 2 meadow nests. When its egg is taken, the new one appears on the garden's other meadow nest after 10 seconds, every time: no spacing check, no player check, never a wait. Anyone may take it.
@@ -122,6 +123,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 5: A lost egg goes back to its nest**
 - Stands on: Task 4 (the meadow refill in `EggSlots`, built).
+- For: core gameplay (a caught carrier's egg pops back; never more eggs than slots). Size: 3 steps, 34 min, about 11 Studio calls (card `work/p5t5/p5t5-card.md`). The card adds a take counter per slot (an egg whose slot was taken again is "gone") and a rank check in Task 4's other-nest pick.
 - Spec rules: Rule 78 (A lost egg goes back to its nest). Story C. Section 8: "A carrier is caught after their slot's egg has already refilled".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: `returnEgg(state, player)` gives back "back" (the egg waits on its nest again and the slot's countdown stops) or "gone" (the egg disappears with V1's pop) and the nest's name. "Gone" happens when the slot's countdown already ended (its new egg is out), or when another slot's egg now sits on that nest; in the second case this slot's countdown keeps running. The 15-stud limit doesn't apply, and a locked nest takes its egg back.

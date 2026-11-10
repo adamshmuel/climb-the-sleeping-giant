@@ -6,7 +6,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 
-export type NestDefinition = { name: string, rank: Config.RarityName, position: Vector3 }
+-- `garden` is a garden index, set only on meadow nests (Rule 75). A rank is a meadow rank when all its nests have one.
+export type NestDefinition = { name: string, rank: Config.RarityName, position: Vector3, garden: number? }
 
 -- What a caller may read about one nest. There is no refill time: an empty nest shows no timer (Rule 77).
 export type NestView = { waiting: boolean, rank: Config.RarityName }
@@ -24,12 +25,15 @@ type Slot = {
 	dueAt: number?,
 	-- The nest the egg was last taken from. The new egg never lands there. nil before the first take.
 	lastNest: string?,
+	-- The garden this slot belongs to (a meadow slot), or nil. Its egg only ever sits on that garden's 2 nests.
+	garden: number?,
 }
 
 type Nest = {
 	name: string,
 	rank: Config.RarityName,
 	position: Vector3,
+	garden: number?,
 	-- The slot whose egg waits here, or nil when the nest is empty.
 	slot: Slot?,
 }
@@ -84,9 +88,34 @@ local function allowedNests(state: State, rank: Config.RarityName, lastNest: str
 	return allowed
 end
 
+-- A meadow rank (Rule 75): one slot per garden, starting on that garden's first nest in the order given. Every garden
+-- has exactly 2 nests, and the slot count is the number of gardens. No spacing applies.
+local function placeMeadowSlots(state: State, rank: Config.RarityName, rankNests: { Nest }, count: number)
+	local gardens: { number } = {}
+	local byGarden: { [number]: { Nest } } = {}
+	for _, nest in rankNests do
+		local garden = nest.garden :: number
+		if byGarden[garden] == nil then
+			byGarden[garden] = {}
+			table.insert(gardens, garden)
+		end
+		table.insert(byGarden[garden], nest)
+	end
+	for _, garden in gardens do
+		assert(#byGarden[garden] == 2, `{rank} garden {garden} has {#byGarden[garden]} nests, wanted 2`)
+	end
+	assert(count == #gardens, `{rank} has {count} slots but {#gardens} gardens`)
+	for _, garden in gardens do
+		local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil, garden = garden }
+		byGarden[garden][1].slot = slot
+		table.insert(state.slots, slot)
+	end
+end
+
 -- Every slot starts with its egg waiting: slot i of a rank sits on the next nest of that rank, in the order given,
 -- that is at least Config.Nests.EggSpacing studs from every egg already placed. A rank that can't fit all its slots
--- asserts.
+-- asserts. A rank whose nests all have a garden is a meadow rank (`placeMeadowSlots`); one that mixes garden and
+-- no-garden nests asserts.
 function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityName]: number }): State
 	local state: State = { nests = {}, order = {}, slots = {}, carried = {} }
 	local byRank: { [string]: { Nest } } = {}
@@ -97,6 +126,7 @@ function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityN
 			name = definition.name,
 			rank = definition.rank,
 			position = definition.position,
+			garden = definition.garden,
 			slot = nil,
 		}
 		state.nests[definition.name] = nest
@@ -111,10 +141,21 @@ function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityN
 	local ranks = Config.RarityOrder :: { Config.RarityName }
 	for _, rank: Config.RarityName in ranks do
 		local count = slotsPerRank[rank] or 0
-		local rankNests = byRank[rank] or {}
+		local rankNests: { Nest } = byRank[rank] or {}
+		local withGarden = 0
+		for _, nest in rankNests do
+			if nest.garden ~= nil then
+				withGarden += 1
+			end
+		end
+		assert(withGarden == 0 or withGarden == #rankNests, `{rank} mixes garden nests and nests with no garden`)
+		if withGarden > 0 then
+			placeMeadowSlots(state, rank, rankNests, count)
+			continue
+		end
 		assert(#rankNests >= count, `{rank} has {count} slots but only {#rankNests} nests`)
 		for i = 1, count do
-			local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil }
+			local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil, garden = nil }
 			local first = allowedNests(state, rank, nil, {})[1]
 			assert(first ~= nil, `{rank} has {#rankNests} nests but only room for {i - 1} of {count} slots`)
 			first.slot = slot
@@ -147,16 +188,37 @@ function EggSlots.take(state: State, nestName: string, playerId: number, now: nu
 	return true, nil
 end
 
+-- The other nest of a meadow slot's garden: the garden's nest that is not `lastNest` (Rule 75). It is empty, because
+-- the garden's one egg was taken from `lastNest`.
+local function otherGardenNest(state: State, slot: Slot): Nest
+	for _, name in state.order do
+		local nest = state.nests[name]
+		if nest.garden == slot.garden and name ~= slot.lastNest then
+			assert(nest.slot == nil, `garden {slot.garden}'s other nest {name} is not empty`)
+			return nest
+		end
+	end
+	error(`garden {slot.garden} has no other nest than {slot.lastNest}`)
+end
+
 -- Refills every slot whose countdown has ended and returns the eggs it placed, in slot order. A slot refills even if
 -- the player who took its egg is still carrying it. Its allowed nests are described at `allowedNests`; pick(count)
 -- chooses one (1 to count). Eggs placed earlier in the same call count as waiting eggs. With no allowed nest the slot
 -- stays due and tries again at now + Config.Nests.RetrySeconds, never sooner; the checks never relax.
+-- A meadow slot (it has a garden, Rule 75) skips all that: its egg goes on its garden's other nest at the countdown's
+-- end, with no spacing check, no player check, no wait, and `pick` is not called.
 function EggSlots.update(state: State, now: number, playersAt: { Vector3 }, pick: (count: number) -> number): { Refill }
 	local refilled: { Refill } = {}
 	for _, slot in state.slots do
 		local refillAt = slot.refillAt
 		local dueAt = slot.dueAt
-		if refillAt ~= nil and dueAt ~= nil and now >= refillAt then
+		if refillAt ~= nil and dueAt ~= nil and now >= refillAt and slot.garden ~= nil then
+			local chosen = otherGardenNest(state, slot)
+			chosen.slot = slot
+			slot.refillAt = nil
+			slot.dueAt = nil
+			table.insert(refilled, { nest = chosen.name, rank = slot.rank, waited = now - dueAt })
+		elseif refillAt ~= nil and dueAt ~= nil and now >= refillAt then
 			local allowed = allowedNests(state, slot.rank, slot.lastNest, playersAt)
 			if #allowed > 0 then
 				local index = pick(#allowed)

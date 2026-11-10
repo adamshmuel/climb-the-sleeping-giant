@@ -9,7 +9,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 1: Egg slots and nests in the game numbers | ☑ done (2026-11-10; narrow runs Config 52/0, WalkAreaCheck 26/0; full run 3071 passed, 2 failed, the accepted EggSpots and OnTheGiant reds) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 2: Eggs come from slots, not spots | ☑ done (2026-11-10; narrow run EggSlots 8/0; full run 3079 passed, 2 failed, the accepted EggSpots and OnTheGiant reds) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 3: A random nest of the same rank, or wait | ☑ done (2026-11-10; narrow run EggSlots 15/0; full run 3086 passed, 2 failed, the accepted EggSpots and OnTheGiant reds) | builder, runner, code_lead |
-| Egg nests and climbing (V2 spec 5) | Task 4: Meadow eggs stay by their garden | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 4: Meadow eggs stay by their garden | ☑ done 2026-11-10: code approved by code_lead (narrow run EggSlots 26/0); full run 3097 passed, 2 accepted reds (EggSpots, OnTheGiant walk-area) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 5: A lost egg goes back to its nest | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 6: Locked nests | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 7: The server runs the nests | ☐ not started | |
