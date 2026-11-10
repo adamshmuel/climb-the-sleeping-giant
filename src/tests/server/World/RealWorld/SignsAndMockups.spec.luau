@@ -426,6 +426,20 @@ describe("the real world, no mockup avatar stands in a player's way", function()
 		expect(problems).toEqual({})
 	end)
 
+	-- Plan 5 Task 16b: tools/world/36-mockups-to-library.luau moves the rest of Mockup_Nests (Art and the others) to the library.
+	it("the nests mockup waits in ServerStorage.ArtLibrary, none left in the world", function()
+		local library = game:GetService("ServerStorage"):FindFirstChild("ArtLibrary")
+		expect(library).never.toBeNil()
+		local inLibrary = (library :: Instance):FindFirstChild("Mockup_Nests")
+		local inWorld = Workspace:FindFirstChild("Mockup_Nests")
+		local art = if inLibrary then inLibrary:FindFirstChild("Art") else nil
+		expect({
+			inLibrary = inLibrary ~= nil and inLibrary:IsA("Folder"),
+			hasArt = art ~= nil,
+			inWorld = inWorld ~= nil,
+		}).toEqual({ inLibrary = true, hasArt = true, inWorld = false })
+	end)
+
 	-- Plan 4 Task 2: tools/world/28-rank-eggs.luau turns the Epic and Legendary mockup eggs into templates and sends the
 	-- rest of Mockup_EggRanks to the library. ArtLibrary.MockupAvatars holds another Mockup_EggRanks (the avatar only),
 	-- so the lookup is a direct child.

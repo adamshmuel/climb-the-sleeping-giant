@@ -4,7 +4,7 @@
 -- tests (Nests.spec) read the same copy.
 -- Spots: docs/design/v2/style-guide/nests-map.md, "Common: 16 meadow nests" and "On him: 22 nests" (knee pocket at
 -- y 27.1 / 27.2 on his skin, designer ruling 2026-11-10). Gardens 5 to 8 mirror gardens 4 to 1 (x turned positive).
--- Leans: the straw nests in Workspace.Mockup_Nests.Art.Nests (designer), as YXZ Euler degrees (x, y, z), read 2026-11-10.
+-- Leans: the straw nests in ServerStorage.ArtLibrary.Mockup_Nests.Art.Nests (designer), as YXZ Euler degrees (x, y, z), read 2026-11-10.
 
 export type Nest = {
 	name: string, -- Nest_<Place>_<Side>, or Nest_Meadow_<garden><a|b>

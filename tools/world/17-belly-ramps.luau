@@ -36,6 +36,7 @@ local CHECK_ONLY = false
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 -- The cover boards live in tools/world/17b-belly-cover.luau (a clone is required so an edited copy is always read).
@@ -126,7 +127,7 @@ end
 
 local function readStations(): { Vector3 }
 	local source: Instance? = nil
-	local nests = Workspace:FindFirstChild("Mockup_Nests")
+	local nests = MockupNests.find()
 	if nests ~= nil then
 		source = nests:FindFirstChild("RampBuild_CodeLead", true)
 	end

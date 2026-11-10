@@ -2,9 +2,11 @@
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local Helpers = require(script.Parent.Helpers)
+local MockupNests = require(ServerStorage.Tests.server.World.MockupNests)
 local bodyMesh = Helpers.bodyMesh
 
 -- Plan 5 Task 15a (spec 5 Rule 80 "The seam shows where walking ends", section 5 "Steep face" 75 degrees): a smooth,
@@ -252,7 +254,7 @@ describe("the real world, the steep layer", function()
 		end
 	end)
 
-	-- The belly pockets' ledges (Mockup_Nests.Art.Pockets.BellyPocket_<side>.LedgeWalk) are walk area; a steep piece may
+	-- The belly pockets' ledges (ArtLibrary.Mockup_Nests.Art.Pockets.BellyPocket_<side>.LedgeWalk) are walk area; a steep piece may
 	-- not stand up past one. A 21 by 21 ray grid over each ledge top, from above, against the steep layer only.
 	it("no steep piece rises above a belly pocket ledge", function()
 		local GRID = 21
@@ -264,7 +266,7 @@ describe("the real world, the steep layer", function()
 		params.FilterType = Enum.RaycastFilterType.Include
 		params.FilterDescendantsInstances = if layer == nil then {} else { layer }
 		params.RespectCanCollide = false
-		local nests = Workspace:FindFirstChild("Mockup_Nests")
+		local nests = MockupNests.find()
 		local pockets = if nests == nil then nil else nests:FindFirstChild("Art")
 		pockets = if pockets == nil then nil else pockets:FindFirstChild("Pockets")
 		local bad: { string } = {}

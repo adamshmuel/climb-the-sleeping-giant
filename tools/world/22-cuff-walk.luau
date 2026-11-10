@@ -6,7 +6,7 @@
 -- the straps and added a flap, a foot and two curbs to each cuff, then four more walk curbs on each strap
 -- (work/p5t13b/curbs-done.md), so this script now copies 13 pieces per side (26).
 -- What it does: for each cuff (Left and Right) it clones the thirteen invisible walk pieces from the art in
--- Workspace.Mockup_Nests.Art into a new folder World.CuffWalk, with the same place and size:
+-- ServerStorage.ArtLibrary.Mockup_Nests.Art into a new folder World.CuffWalk, with the same place and size:
 --   Straps.CuffStrap_<side>.StrapWalk                      -> Strap_<side>
 --   Straps.CuffStrap_<side>.CuffTabWalk                    -> Tab_<side>
 --   Straps.CuffStrap_<side>.StrapFootWalk                  -> Foot_<side>
@@ -24,8 +24,9 @@
 -- Each copy is Anchored, CanCollide / CanQuery / CanTouch true, Transparency 1, has no Mockup* attribute, has
 -- StitchedEdge = true, and the right side also RidesRightArm = true. The art is not touched.
 -- Worlds, checked before any change: a piece missing = STOP; World.CuffWalk with 26 parts matching their sources (count,
--- CFrame within 0.01, size) = "already done"; World.CuffWalk with parts that do not match = it is backed up, removed and
--- rebuilt with all 26.
+-- CFrame within 0.01, size; a WedgePart from script 23c only needs its name and StitchedEdge) = "already done",
+-- also in CHECK_ONLY (the check comes first); World.CuffWalk with parts that do not match = it is backed up, removed
+-- and rebuilt with all 26.
 -- Before any change it clones World.CuffWalk and both CuffStrap_* models (as <name>_Before22) into
 -- ServerStorage.WorldBackups.Plan5Task13b, in the same call.
 -- Rollback: delete World.CuffWalk and clone the backup back.
@@ -37,6 +38,7 @@ local CHECK_ONLY = false
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local BACKUP_NAME = "Plan5Task13b"
@@ -105,7 +107,9 @@ local function getBackupFolder(): Instance
 	return backupFolder :: Instance
 end
 
--- True when World.CuffWalk already holds all the finished pieces (same names, CFrame within 0.01 and size as the art).
+-- True when World.CuffWalk already holds all the finished pieces (same names, size and CFrame within 0.01 as the art).
+-- A WedgePart (a curb that script 23c replaced; it has its own size and place) matches when a part of that name is a
+-- WedgePart with StitchedEdge true, with no size or position check, like 23c's own "already done" check.
 local function alreadyDone(folder: Instance, sources: { [string]: BasePart }): boolean
 	local parts = folder:GetChildren()
 	if #parts ~= EXPECTED then
@@ -116,12 +120,13 @@ local function alreadyDone(folder: Instance, sources: { [string]: BasePart }): b
 		if made == nil or not made:IsA("BasePart") then
 			return false
 		end
-		if
-			(made.Size - source.Size).Magnitude > 1e-3
-			or not made.CFrame:FuzzyEq(source.CFrame, 0.01)
-			or made:GetAttribute("StitchedEdge") ~= true
-		then
+		if made:GetAttribute("StitchedEdge") ~= true then
 			return false
+		end
+		if not made:IsA("WedgePart") then
+			if (made.Size - source.Size).Magnitude > 1e-3 or not made.CFrame:FuzzyEq(source.CFrame, 0.01) then
+				return false
+			end
 		end
 	end
 	return true
@@ -133,9 +138,9 @@ local function run22(): string
 	end
 
 	local world = Workspace:FindFirstChild("World")
-	local art = child(child(Workspace, "Mockup_Nests"), "Art")
+	local art = child(MockupNests.find(), "Art")
 	if world == nil or art == nil then
-		return "STOP: Workspace.World or Workspace.Mockup_Nests.Art is missing, nothing changed"
+		return "STOP: Workspace.World or ArtLibrary.Mockup_Nests.Art is missing, nothing changed"
 	end
 
 	-- 1. Find the 26 pieces.
@@ -165,15 +170,15 @@ local function run22(): string
 		return finish(`STOP: {count} pieces found, plan 5 Task 13b says {EXPECTED}, nothing changed`)
 	end
 
-	-- 3. CHECK_ONLY: print the names and stop.
-	if CHECK_ONLY then
-		return finish(`CHECK_ONLY: {table.concat(order, ", ")}; changed nothing`)
-	end
-
-	-- 4. Already done?
+	-- 3. Already done?
 	local existing = world:FindFirstChild(FOLDER_NAME)
 	if existing ~= nil and alreadyDone(existing, sources) then
 		return finish("already done")
+	end
+
+	-- 4. CHECK_ONLY: print the names and stop.
+	if CHECK_ONLY then
+		return finish(`CHECK_ONLY: {table.concat(order, ", ")}; changed nothing`)
 	end
 
 	-- 5. Backup in the same call: World.CuffWalk (if there is one) and both CuffStrap_* models.

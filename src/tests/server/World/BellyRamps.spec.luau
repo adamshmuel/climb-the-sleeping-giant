@@ -5,6 +5,7 @@ local Workspace = game:GetService("Workspace")
 local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
+local MockupNests = require(ServerStorage.Tests.server.World.MockupNests)
 
 -- Plan 3, Task 6a (docs/plans/v2/gardens-and-ways-up.md, "Task 6" and its split lines): the two belly ramps and their
 -- edge guards. Spec Rule 45 (One way onto the belly), Rule 15 (The climb needs no jump). These tests only READ the real
@@ -29,10 +30,10 @@ describe("the belly ramps (task six a)", function()
 		return found :: Instance
 	end
 
-	-- The left stations: where code_lead's ramp build lives now (Mockup_Nests, later ArtLibrary).
+	-- The left stations: where code_lead's ramp build lives now (ArtLibrary.Mockup_Nests since plan 5 Task 16b).
 	local function leftStations(): { Vector3 }
 		local source: Instance? = nil
-		local nests = Workspace:FindFirstChild("Mockup_Nests")
+		local nests = MockupNests.find()
 		if nests ~= nil then
 			source = nests:FindFirstChild("RampBuild_CodeLead", true)
 		end

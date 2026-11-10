@@ -5,7 +5,7 @@
 --  1. Clones World.EggSpots (and every prop or flower clump it moves) into ServerStorage.WorldBackups.p5t12, in the same call
 --     as the first change (attribute BackupOf = the old full path on the moved clones).
 --  2. Removes V1's 16 bare spots (with their glow rings and EggPosts) from World.EggSpots and builds the 38 nest models
---     there: Base + PromptAnchor (cloned from V1's EggSpot_Rare_1.Base), Nest (the straw nest from Mockup_Nests.Art.Library,
+--     there: Base + PromptAnchor (cloned from V1's EggSpot_Rare_1.Base), Nest (the straw nest from ArtLibrary.Mockup_Nests.Art.Library,
 --     leaned as NestTable says) and the attributes Rarity, NestName, Twin, Garden (meadow), RidesRightArm (right cuff).
 --     On-him nests sit at a down ray from the map's x and z (ray from y+4, 10 down); the hit must be within 0.5 of the map.
 --  3. World.NestArt (new Folder): clones of KneePocket_* (down 3.1, back 0.5), BellyPocket_* (in place) and LaceBow_*
@@ -24,6 +24,7 @@ local CHECK_ONLY = false
 
 local Workspace = game:GetService("Workspace")
 local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local BACKUP_NAME = "p5t12"
@@ -122,7 +123,7 @@ local function run(): string
 	local world = child(Workspace, "World")
 	local eggSpots = child(world, "EggSpots")
 	local nature = child(world, "Nature")
-	local art = child(child(Workspace, "Mockup_Nests"), "Art")
+	local art = child(MockupNests.find(), "Art")
 	local library = child(art, "Library")
 	local pockets = child(art, "Pockets")
 	local bowsFolder = child(art, "Nests")
@@ -220,7 +221,7 @@ local function run(): string
 	end
 
 	-- 2. Where each nest goes (a down ray for the ones on him).
-	local ignore: { Instance } = { eggSpots, nature, child(Workspace, "Mockup_Nests") :: Instance }
+	local ignore: { Instance } = { eggSpots, nature, MockupNests.find() :: Instance }
 	local nestArt = child(world, "NestArt")
 	if nestArt then
 		table.insert(ignore, nestArt)

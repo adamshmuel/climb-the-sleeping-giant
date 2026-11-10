@@ -3,10 +3,10 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-local Workspace = game:GetService("Workspace")
 local Config = require(ReplicatedStorage.Shared.Config)
 local NestTable = require(ServerStorage.Tools.checks.NestTable)
 local Helpers = require(script.Parent.Helpers)
+local MockupNests = require(ServerStorage.Tests.server.World.MockupNests)
 local realWorld = Helpers.realWorld
 
 -- The 38 egg nests (plan 5 Task 12; spec 5 Rules 70, 71, 72 and 75 and the spot rules). Built by
@@ -296,7 +296,7 @@ describe("the real world, the 38 nests", function()
 	-- Each belly pocket piece in World.NestArt sits within 0.1 studs of its source piece in the mockup (Task 16 cut the
 	-- stitches to the pockets where they stand today, so a moved pocket would open a gap or cover a stitch).
 	it("each belly pocket piece copied into NestArt sits within 0.1 studs of its source piece", function()
-		local mockup = Workspace:FindFirstChild("Mockup_Nests") :: Instance
+		local mockup = MockupNests.find() :: Instance
 		expect(mockup).never.toBeNil()
 		local sources = (mockup:FindFirstChild("Art") :: Instance):FindFirstChild("Pockets") :: Instance
 		local nestArt = realWorld():FindFirstChild("NestArt") :: Instance

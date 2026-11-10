@@ -25,6 +25,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 -- The seam table and its line helpers (seamLine, flatDistanceToLine, distanceToBox, marksAlong) live once in
@@ -114,11 +115,11 @@ local function run24(): string
 	if world == nil or giant == nil then
 		return finish("STOP: Workspace.World or World.Giant is missing, nothing changed")
 	end
-	local nests = Workspace:FindFirstChild("Mockup_Nests")
+	local nests = MockupNests.find()
 	local art = if nests ~= nil then nests:FindFirstChild("Art") else nil
 	local pocketsFolder = if art ~= nil then art:FindFirstChild("Pockets") else nil
 	if pocketsFolder == nil then
-		return finish("STOP: Workspace.Mockup_Nests.Art.Pockets is missing, nothing changed")
+		return finish("STOP: ArtLibrary.Mockup_Nests.Art.Pockets is missing, nothing changed")
 	end
 	local strapParts: { BasePart } = {}
 	local cuffArt = world:FindFirstChild("CuffArt")

@@ -14,7 +14,7 @@ local visibleArt = WalkAreaFacts.visibleArt
 -- Plan 5 (docs/plans/v2/egg-nests-and-climbing.md) Task 13: the solid, invisible cuff straps and ledges in World.CuffWalk
 -- and the two Belly boxes round the cuffs. Spec 5, section 5: "Cuff strap and ledge (Epic)" and "Belly zone around each
 -- cuff". These tests only READ the real world. The pieces are made by tools/world/22-cuff-walk.luau from the art in
--- Workspace.Mockup_Nests.Art, the boxes by tools/world/02-zones.luau. Numbers: work/p5t13/p5t13-scripts.md, sections W and T.
+-- ServerStorage.ArtLibrary.Mockup_Nests.Art, the boxes by tools/world/02-zones.luau. Numbers: work/p5t13/p5t13-scripts.md, sections W and T.
 -- Plan 5 Task 13b adds the flap (Tab_), the foot (Foot_) and the two foot curbs (CurbFar_, CurbSide_) to each cuff: 9 pieces
 -- on each of 2 sides, then four more invisible walk curbs per side (StrapCurbInboard_, StrapCurbTop_, FlapCurbUphill_,
 -- FlapCurbEnd_): 13 on each of 2 sides, 26 in all. Numbers: work/p5t13b/p5t13b-scripts.md, sections W2 and T2, and
@@ -757,7 +757,7 @@ describe("CuffWalk", function()
 	end)
 
 	-- Plan 5 Task 15e3 (work/p5t15e3/art-decision.md, card 15e3-card.md): the visible strap and cuff pocket art, copied by
-	-- tools/world/23d-cuff-art.luau from Workspace.Mockup_Nests.Art into Workspace.World.CuffArt (one sub-model per source model).
+	-- tools/world/23d-cuff-art.luau from ServerStorage.ArtLibrary.Mockup_Nests.Art into Workspace.World.CuffArt (one sub-model per source model).
 	describe("cuff art in the world", function()
 		-- Source model path under Mockup_Nests.Art -> its sub-model name in World.CuffArt (the same name).
 		local ART_MODELS = {

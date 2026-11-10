@@ -20,6 +20,8 @@
 local CHECK_ONLY = false
 
 local Workspace = game:GetService("Workspace")
+local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local RunService = game:GetService("RunService")
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
@@ -145,10 +147,10 @@ local function run23d(): string
 		return finish(`STOP: {why}, nothing changed`)
 	end
 
-	local nests = Workspace:FindFirstChild("Mockup_Nests")
+	local nests = MockupNests.find()
 	local art = if nests ~= nil then nests:FindFirstChild("Art") else nil
 	if art == nil then
-		return finish("STOP: Workspace.Mockup_Nests.Art is missing, nothing changed")
+		return finish("STOP: ArtLibrary.Mockup_Nests.Art is missing, nothing changed")
 	end
 
 	local plan: { { entry: typeof(MODELS[1]), pieces: { BasePart } } } = {}

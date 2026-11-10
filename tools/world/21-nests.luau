@@ -3,8 +3,8 @@
 -- (card work/p5t8/p5t8-card.md; spec 5 Rule 77 and section 6 "A new egg appears"; style guide
 -- docs/design/v2/style-guide/nests-art.md lines 32-49).
 -- Why: the client's NestPop (src/client/Fx/NestPop.luau) clones ReplicatedStorage.Assets.RefillPop when a nest gets its
--- egg back. The 4 mockup copies in Workspace.Mockup_Nests.Art.RefillPop are all the same, so the Common one is the source.
--- What it does: clones Workspace.Mockup_Nests.Art.RefillPop.RefillPop_Common.SparkleShell (a see-through Part holding one
+-- egg back. The 4 mockup copies in ServerStorage.ArtLibrary.Mockup_Nests.Art.RefillPop are all the same, so the Common one is the source.
+-- What it does: clones ServerStorage.ArtLibrary.Mockup_Nests.Art.RefillPop.RefillPop_Common.SparkleShell (a see-through Part holding one
 -- ParticleEmitter, Sparkles) to ReplicatedStorage.Assets.RefillPop, anchored, with CanCollide, CanQuery and CanTouch off.
 -- It adds only: 1 new part (plus its emitter). Nothing existing is touched, so there is no backup clone.
 -- STOP (nothing changed, the reason is reported): Assets or the source missing; the source not a BasePart with exactly 1
@@ -31,6 +31,8 @@ local CHECK_ONLY = false
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 -- How many parts this script adds, as planned in the card (the one template).
@@ -62,13 +64,13 @@ local function runTemplate(): string
 	if assets == nil then
 		return "STOP: ReplicatedStorage.Assets is missing, nothing changed"
 	end
-	local mockup = Workspace:FindFirstChild("Mockup_Nests")
+	local mockup = MockupNests.find()
 	local art = if mockup then mockup:FindFirstChild("Art") else nil
 	local group = if art then art:FindFirstChild("RefillPop") else nil
 	local common = if group then group:FindFirstChild("RefillPop_Common") else nil
 	local source = if common then common:FindFirstChild("SparkleShell") else nil
 	if source == nil or not source:IsA("BasePart") then
-		return "STOP: Workspace.Mockup_Nests.Art.RefillPop.RefillPop_Common.SparkleShell is missing or not a part, nothing changed"
+		return "STOP: ServerStorage.ArtLibrary.Mockup_Nests.Art.RefillPop.RefillPop_Common.SparkleShell is missing or not a part, nothing changed"
 	end
 	local sourceEmitter = onlyEmitter(source)
 	if sourceEmitter == nil then
@@ -115,8 +117,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 -- Part 2: the EggPost on every Common meadow spot.
-
-local ServerStorage = game:GetService("ServerStorage")
 
 local POST_NAME = "EggPost"
 local BACKUP_FOLDER = "WorldBackups"

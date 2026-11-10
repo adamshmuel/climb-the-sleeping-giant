@@ -30,6 +30,7 @@ local CHECK_ONLY = false
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local MockupNests: { find: () -> Instance? } = (require :: any)(ServerStorage.Tools.checks.MockupNests:Clone())
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local BACKUP_NAME = "Plan3Task5"
@@ -205,7 +206,7 @@ local function run(): string
 	local world = Workspace:FindFirstChild("World")
 	local surfaces = if world ~= nil then world:FindFirstChild("WalkSurfaces") else nil
 	local mockups = Workspace:FindFirstChild("Mockup_WaysUp")
-	local nests = Workspace:FindFirstChild("Mockup_Nests")
+	local nests = MockupNests.find()
 	local build = if nests ~= nil then nests:FindFirstChild("RampBuild_CodeLead") else nil
 	local moved = if build ~= nil then build:FindFirstChild("MovedLapPlanks") else nil
 	local rampFolder = if build ~= nil then build:FindFirstChild("Ramps") else nil
@@ -281,7 +282,8 @@ local function run(): string
 	if backups:FindFirstChild(BACKUP_NAME) == nil then
 		local folder = Instance.new("Folder")
 		folder.Name = BACKUP_NAME
-		for _, source in { plankSources.Left, plankSources.Right, landingSrc, moved, bootsWalk } do
+		local sourceList: { Instance } = { plankSources.Left, plankSources.Right, landingSrc, moved, bootsWalk }
+		for _, source in sourceList do
 			source:Clone().Parent = folder
 		end
 		folder.Parent = backups

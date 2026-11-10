@@ -4,7 +4,11 @@
 -- What it does: moves Workspace.Mockup_WaysUp to ServerStorage.ArtLibrary.Mockup_WaysUp, and
 -- Workspace.Mockup_Nests.LapBuild_Designer and .RampBuild_CodeLead to ServerStorage.ArtLibrary.Mockup_Nests (a Folder made
 -- if missing). Values inside are not touched (the Mockup* attributes stay; RampBuild_CodeLead keeps LeftStations).
--- The rest of Workspace.Mockup_Nests stays in the Workspace (plan 5 uses it).
+-- Step 2 (plan 5 Task 16b, card work/p5t16b/16b-card.md): the rest of Workspace.Mockup_Nests (Art and the other folders) moves
+-- into ServerStorage.ArtLibrary.Mockup_Nests and the empty Workspace folder is removed. Before any change the whole old
+-- folder is cloned into ServerStorage.WorldBackups.p5t16b (attribute BackupOf). No Mockup_Nests in the Workspace = "already
+-- done". The names in the Workspace folder must not already be in ArtLibrary.Mockup_Nests (else STOP, nothing changed).
+-- Rollback of step 2: parent the children back into a new Workspace Folder named Mockup_Nests, or clone the backup back.
 -- Before any change it clones the three into ServerStorage.WorldBackups.t6c (attribute BackupOf = the old full path).
 -- Worlds, checked before any change: all three in ArtLibrary and none in the Workspace = "already done"; all three in the
 -- Workspace and none in ArtLibrary (with the descendant counts of B) = move; anything else = STOP, nothing changed.
@@ -238,8 +242,109 @@ local function run36(): string
 	return `changed: moved 3 mockup folders to ArtLibrary, counts match, LeftStations kept; backup in ServerStorage.WorldBackups.{BACKUP_NAME}`
 end
 
+local NESTS_BACKUP_NAME = "p5t16b"
+
+-- Step 2: moves what is left in Workspace.Mockup_Nests into ArtLibrary.Mockup_Nests (a Folder made by step 1).
+local function runNests(): string
+	local library = ServerStorage:FindFirstChild("ArtLibrary")
+	local worldNests = Workspace:FindFirstChild("Mockup_Nests")
+	local libNests = if library ~= nil then library:FindFirstChild("Mockup_Nests") else nil
+	if libNests == nil or not libNests:IsA("Folder") then
+		return "STOP: ArtLibrary.Mockup_Nests (a Folder) is missing, nothing changed"
+	end
+	if worldNests == nil then
+		return `already done: no Mockup_Nests in the Workspace; ArtLibrary.Mockup_Nests has {#libNests:GetChildren()} children`
+	end
+	if not worldNests:IsA("Folder") or countNamed(Workspace, "Mockup_Nests") > 1 then
+		return "STOP: Workspace.Mockup_Nests is not one Folder, nothing changed"
+	end
+	local moving = worldNests:GetChildren()
+	local total = #worldNests:GetDescendants()
+	local libBefore = #libNests:GetDescendants()
+	for _, item in moving do
+		if libNests:FindFirstChild(item.Name) ~= nil then
+			return `STOP: {item.Name} is already in ArtLibrary.Mockup_Nests, nothing changed`
+		end
+		note(`{item.Name}: {item.ClassName}, {#item:GetDescendants()} descendants`)
+	end
+	local head = `would move {#moving} children ({total} descendants) from Workspace.Mockup_Nests to ArtLibrary`
+	if CHECK_ONLY then
+		return `CHECK_ONLY: {head}; changed nothing`
+	end
+
+	local backups = ServerStorage:FindFirstChild("WorldBackups")
+	if backups == nil then
+		local folder = Instance.new("Folder")
+		folder.Name = "WorldBackups"
+		folder.Parent = ServerStorage
+		backups = folder
+	end
+	local backupFolder = backups:FindFirstChild(NESTS_BACKUP_NAME)
+	if backupFolder == nil then
+		local folder = Instance.new("Folder")
+		folder.Name = NESTS_BACKUP_NAME
+		folder.Parent = backups
+		backupFolder = folder
+	end
+	if backupFolder:FindFirstChild("Mockup_Nests") == nil then
+		local copy = worldNests:Clone()
+		copy:SetAttribute("BackupOf", worldNests:GetFullName())
+		copy.Parent = backupFolder
+	end
+
+	ChangeHistoryService:SetWaypoint("36-mockups-to-library: nests before")
+	local oldParents: { Instance } = {}
+	local movedCount = 0
+	local failure: string? = nil
+	for index, item in moving do
+		oldParents[index] = item.Parent :: Instance
+		local ok, err = pcall(function()
+			item.Parent = libNests
+		end)
+		if not ok then
+			failure = `{item.Name}: {err}`
+			break
+		end
+		movedCount += 1
+	end
+	if failure ~= nil then
+		for index = 1, movedCount do
+			moving[index].Parent = oldParents[index]
+		end
+		return `STOP: a move failed ({failure}), the moved ones were put back`
+	end
+	for name, value in worldNests:GetAttributes() do
+		if libNests:GetAttribute(name) == nil then
+			libNests:SetAttribute(name, value)
+		end
+	end
+	local left = #worldNests:GetChildren()
+	if left == 0 then
+		worldNests:Destroy()
+	end
+	ChangeHistoryService:SetWaypoint("36-mockups-to-library: nests after")
+
+	local gained = #libNests:GetDescendants() - libBefore
+	local inWorld = countNamed(Workspace, "Mockup_Nests")
+	note(
+		`{total} before, {gained} gained in ArtLibrary.Mockup_Nests, {left} children left, {inWorld} Mockup_Nests in the Workspace`
+	)
+	if gained ~= total or left ~= 0 or inWorld ~= 0 then
+		return `PROBLEM: counts differ; rollback: clone WorldBackups.{NESTS_BACKUP_NAME}.Mockup_Nests back into the Workspace`
+	end
+	return `changed: moved {#moving} children ({total} descendants) to ArtLibrary.Mockup_Nests; backup in ServerStorage.WorldBackups.{NESTS_BACKUP_NAME}`
+end
+
 local ok, message = pcall(run36)
 if not ok then
 	return finish(`STOPPED WITH AN ERROR: {tostring(message)}`)
 end
-return finish(message)
+local isStop = string.sub(message, 1, 4) == "STOP" or string.sub(message, 1, 7) == "PROBLEM"
+if isStop or string.sub(message, 1, 10) == "CHECK_ONLY" then
+	return finish(message)
+end
+local okNests, nestsMessage = pcall(runNests)
+if not okNests then
+	return finish(`STOPPED WITH AN ERROR in step 2: {tostring(nestsMessage)}`)
+end
+return finish(`step 2: {nestsMessage} | step 1: {message}`)

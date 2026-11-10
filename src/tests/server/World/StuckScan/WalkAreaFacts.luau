@@ -16,6 +16,7 @@ local SlideProfile = require(ServerScriptService.Server.World.SlideProfile)
 local WalkAreaCheck = require(ServerScriptService.Server.World.WalkAreaCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
+local MockupNests = require(ServerStorage.Tests.server.World.MockupNests)
 local DrawnSkin = require(ServerStorage.Tests.server.World.DrawnSkin)
 local RealWorldHelpers = require(ServerStorage.Tests.server.World.RealWorld.Helpers)
 local StuckHelpers = require(script.Parent.Helpers)
@@ -95,7 +96,7 @@ function WalkAreaFacts.stitchPositions(world: Instance): { Vector3 }?
 end
 
 function WalkAreaFacts.artFolder(): Instance
-	local nests = Workspace:FindFirstChild("Mockup_Nests")
+	local nests = MockupNests.find()
 	expect(nests).never.toBeNil()
 	local art = (nests :: Instance):FindFirstChild("Art")
 	expect(art).never.toBeNil()

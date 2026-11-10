@@ -70,7 +70,7 @@ SlideProfile.STRAP_START_RIGHT = Vector3.new(52, 38.3, 3.8)
 local STRAP_WIDTH = 6.2
 local STRAP_GAP = STRAP_WIDTH / 2
 SlideProfile.STRAP_GAP = STRAP_GAP
--- The two belly pocket ledges (Mockup_Nests.Art.Pockets.BellyPocket_<side>.LedgeWalk, read 2026-11-08): centre (x, z),
+-- The two belly pocket ledges (ArtLibrary.Mockup_Nests.Art.Pockets.BellyPocket_<side>.LedgeWalk, read 2026-11-08): centre (x, z),
 -- size (x, z) and turn about Y in degrees. They are walk area: the steep layer stays off them (steepList).
 local LEDGE_KEEP_OFF = 0.5 -- studs: the steep layer keeps this far off a ledge's flat footprint
 SlideProfile.BELLY_LEDGES = {
