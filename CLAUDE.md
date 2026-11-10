@@ -18,6 +18,12 @@ The user's golden rule: "if any shot or test fails, the owners should consider i
 - A failed shot, Play check or test goes to its owners in the same turn: `product` (with `game_creator` for importance) weighs how much it matters to a player against its cost and picks fix now, accept for now, or cut; `code_lead` finds a code cause. Never stop to ask the user, never start a fix hunt alone.
 - Tell the user in one line what failed and who is weighing it. `.claude/hooks/failures-to-owners.py` blocks a turn that ends after a failed report without an owner.
 
+## The main chat's veto
+The user's golden rule (2026-11-10): when a task or test takes too long, or time passes with no real progress, the main chat has a veto over every owner. It uses the team's discretion and YAGNI ("you aren't gonna need it": don't build what players won't miss). The game must still pass the viral test and look industry standard, but time and money never go to unimportant things.
+- **When:** a task past its time limit, a loop (`stop-and-step-back` skill, "Triggers"), or 30 minutes with no commit while a task is open. `.claude/hooks/task-clock.py` shows a "Veto check" note at each of these.
+- **How:** read any doc the decision needs (spec, plan, progress, rulings, idea), then pick: keep going, lower the bar, accept for now, cut, or change the approach. Owners' rulings can be overruled; a cut of a whole feature or anything about money still goes to the user.
+- Log each veto in one line in `docs/problems-log/teamwork.md` (what, why, time saved) and tell the user in one line.
+
 ## Follow Anthropic's guides
 The agent setup (this file, `.claude/rules`, `agents`, `skills`, `hooks`, settings and the workflow) follows Anthropic's official guides: [best practices](https://code.claude.com/docs/en/best-practices), [memory](https://code.claude.com/docs/en/memory), [subagents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks).
 - Before any setup change or suggestion, the user's included, check the guide and say in one line: it fits, or the better way the guide gives, with the link.

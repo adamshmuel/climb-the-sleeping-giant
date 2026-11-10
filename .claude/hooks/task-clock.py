@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""UserPromptSubmit and PreToolUse (Agent) hook: the task clock (CLAUDE.md, "Speed rules").
+"""UserPromptSubmit and PreToolUse (Agent) hook: the task clock (CLAUDE.md, "Speed rules"
+and "The main chat's veto").
 
 The main chat writes one line to work/task-clock.txt when a task starts:
     Task 5 | small | 2026-11-03 12:00
@@ -7,19 +8,41 @@ The class is "small" (10-minute limit) or "task" (1 hour, also a new part).
 "done" closes it. Past the limit, every prompt and every agent start gets the
 red-flag note until the line changes. Overruns kept going unseen because the
 clock was only a written rule (2026-11-03).
+
+While a task is open, 30 minutes with no commit (counted from the later of the
+task start and the last commit) gives a "Veto check" note: the user gave the
+main chat a veto over every owner when time passes with no real progress
+(2026-11-10).
 """
 
 import datetime
 import json
 import os
+import subprocess
 import sys
 
 LIMITS = {"small": 10, "task": 60}
+NO_PROGRESS = 30
 FORMAT = "%Y-%m-%d %H:%M"
+VETO = (
+    "Veto check (CLAUDE.md, \"The main chat's veto\"): decide now with YAGNI and the viral test, "
+    "reading any doc you need; overrule an owner if their path wastes time. Log it in "
+    "docs/problems-log/teamwork.md and tell the user in one line."
+)
 
 
 def note(event, text):
     print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": text}}))
+
+
+def last_commit(project):
+    try:
+        out = subprocess.run(
+            ["git", "-C", project, "log", "-1", "--format=%ct"], capture_output=True, text=True, timeout=5
+        )
+        return datetime.datetime.fromtimestamp(int(out.stdout.strip()))
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
 
 
 def main():
@@ -46,14 +69,21 @@ def main():
     except (ValueError, KeyError):
         note(event, f"work/task-clock.txt can't be read. Write it as: Task 5 | small | {datetime.datetime.now():{FORMAT}} (small, task or done).")
         return
-    minutes = int((datetime.datetime.now() - started).total_seconds() // 60)
+    now = datetime.datetime.now()
+    minutes = int((now - started).total_seconds() // 60)
     if minutes > limit:
         note(
             event,
             f"Red flag: {task} has run {minutes} min against its {limit}-min limit. Stop the work at a safe point, "
             "tell the user in one line what is done and what isn't, and follow the stop-and-step-back skill. "
-            "Restart the clock in work/task-clock.txt only when work starts again from the decided way.",
+            "Restart the clock in work/task-clock.txt only when work starts again from the decided way. " + VETO,
         )
+        return
+    commit = last_commit(project)
+    since = max(started, commit) if commit else started
+    quiet = int((now - since).total_seconds() // 60)
+    if quiet > NO_PROGRESS:
+        note(event, f"No progress: {task} is open and nothing was committed for {quiet} min. " + VETO)
 
 
 if __name__ == "__main__":
