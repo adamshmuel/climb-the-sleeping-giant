@@ -1,7 +1,9 @@
 --!strict
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
-local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local describe, it, expect, beforeEach, afterEach =
+	JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.beforeEach, JestGlobals.afterEach
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local WaysUpCheck = require(ServerScriptService.Server.World.WaysUpCheck)
 
@@ -85,5 +87,66 @@ describe("WaysUpCheck walk part", function()
 			expect(#problems).toBe(1)
 			expect(problems[1].kind).toBe("skips the landing")
 		end
+	end)
+end)
+
+-- The overhead part (plan 5 Task 18b Step 1): nothing see-through (Transparency 0.5 or more) and solid hangs within
+-- 15 studs above a spot. The world is a WorldModel in ServerStorage, destroyed after each test; the spot is the origin.
+describe("WaysUpCheck overhead part", function()
+	local world: WorldModel
+	local SPOT = Vector3.new(0, 0, 0)
+
+	-- A 4 x 1 x 4 slab centred `height` studs above the spot.
+	local function addSlab(name: string, height: number, transparency: number, canCollide: boolean): Part
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Anchored = true
+		part.CanCollide = canCollide
+		part.Transparency = transparency
+		part.Size = Vector3.new(4, 1, 4)
+		part.CFrame = CFrame.new(0, height, 0)
+		part.Parent = world
+		return part
+	end
+
+	beforeEach(function()
+		world = Instance.new("WorldModel")
+		world.Parent = ServerStorage
+	end)
+
+	afterEach(function()
+		world:Destroy()
+	end)
+
+	it("fails a 60% see-through solid part 10 studs up, and names the part and the spot", function()
+		addSlab("GlassRoof", 10, 0.6, true)
+		local problems = WaysUpCheck.overheadProblems(world, { SPOT }, {})
+		expect(#problems).toBe(1)
+		expect(problems[1].kind).toBe("overhead")
+		expect(problems[1].detail).toContain("GlassRoof")
+		expect(problems[1].detail).toContain(tostring(SPOT))
+	end)
+
+	it("passes the same part when it is out of reach (bottom face 16.5 up)", function()
+		addSlab("GlassRoof", 17, 0.6, true)
+		expect(#WaysUpCheck.overheadProblems(world, { SPOT }, {})).toBe(0)
+	end)
+
+	it("passes a 40% see-through part 10 studs up", function()
+		addSlab("TintedRoof", 10, 0.4, true)
+		expect(#WaysUpCheck.overheadProblems(world, { SPOT }, {})).toBe(0)
+	end)
+
+	it("passes a fully see-through part with CanCollide off 10 studs up", function()
+		addSlab("Ghost", 10, 1, false)
+		expect(#WaysUpCheck.overheadProblems(world, { SPOT }, {})).toBe(0)
+	end)
+
+	it("sees a see-through part behind a visible one", function()
+		addSlab("Beam", 5, 0, true)
+		addSlab("GlassRoof", 10, 0.6, true)
+		local problems = WaysUpCheck.overheadProblems(world, { SPOT }, {})
+		expect(#problems).toBe(1)
+		expect(problems[1].detail).toContain("GlassRoof")
 	end)
 end)

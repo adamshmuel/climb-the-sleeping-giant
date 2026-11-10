@@ -26,6 +26,7 @@ describe("the real world, the lap landing is the only way onto the belly", funct
 	local map: PathCheck.WalkMap
 	local giant: Instance
 	local takenOut: { Instance } = {}
+	local waysUp: { Instance } = {}
 
 	local function isUnder(part: Instance, roots: { Instance }): boolean
 		for _, root in roots do
@@ -70,6 +71,14 @@ describe("the real world, the lap landing is the only way onto the belly", funct
 			rampLeft,
 			rampRight,
 		}
+		waysUp = {
+			walkSurfaces:FindFirstChild("LapPlank_Left") :: Instance,
+			walkSurfaces:FindFirstChild("LapPlank_Right") :: Instance,
+			walkSurfaces:FindFirstChild("LapLanding") :: Instance,
+			walkSurfaces:FindFirstChild("LapApron") :: Instance,
+			rampLeft,
+			rampRight,
+		}
 		options = PathCheck.defaults(Workspace)
 		options.spacing = SPACING
 		options.slopeAngle = SLOPE_LIMIT
@@ -108,4 +117,24 @@ describe("the real world, the lap landing is the only way onto the belly", funct
 			expect(#WaysUpCheck.bellyReached(map, rulesFor(xRange), true)).toBe(0)
 		end)
 	end
+
+	-- Nothing invisible overhead (spec 3 Rule 45 point 2): over every walk-map spot on the lap planks, the landing, its
+	-- apron and the two belly ramps, no solid part within 15 studs is see-through (Transparency 0.5 or more).
+	local function waysUpSpots(): { Vector3 }
+		local spots: { Vector3 } = {}
+		for _, spot in map.spots do
+			if isUnder(spot.standsOn, waysUp) then
+				table.insert(spots, spot.position)
+			end
+		end
+		return spots
+	end
+
+	it("the ways-up area has walk-map spots, so the overhead check is not empty", function()
+		expect(#waysUpSpots() > 0).toBe(true)
+	end)
+
+	it("nothing invisible hangs over the ways-up area", function()
+		expect(messages(WaysUpCheck.overheadProblems(Workspace, waysUpSpots(), {}))).toEqual({})
+	end)
 end)

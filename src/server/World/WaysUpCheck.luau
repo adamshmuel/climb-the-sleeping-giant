@@ -43,6 +43,9 @@ local TRUSS_ABOVE = 15 -- studs: a climbable part within reach of a jump surface
 local NEST_CLEAR = 8 -- studs: a nest is this far or farther (plain 3D) from every stand a jump reaches
 local START_NEAR = 1 -- studs: a point this close to a start counts as reached without a jump
 local NO_SOLID = -math.huge -- the ray found nothing
+local OVERHEAD_REACH = 15 -- studs: nothing see-through hangs this far above a spot (spec 4 "Visible surface")
+local OVERHEAD_HITS = 8 -- the most solid parts one ray up from a spot is followed through
+local SEE_THROUGH = 0.5 -- Transparency from here up is invisible
 
 local NO_LINKS: { PathCheck.Link } = {}
 
@@ -307,6 +310,41 @@ function WaysUpCheck.jumpProblems(world: WorldRoot, input: JumpInput): { Problem
 	walkAreaProblems(world, input, problems)
 	climbableProblems(input, problems)
 	nestProblems(input, problems)
+	return problems
+end
+
+-- The overhead rule (spec 5 Rule 82, spec 3 Rule 45 point 2): above each spot, within OVERHEAD_REACH studs, every solid
+-- part (CanCollide on, not in `ignore`) is visible. A ray goes straight up and is cast again past each hit, so parts
+-- behind a visible one are seen too. One "overhead" problem per see-through part and spot.
+function WaysUpCheck.overheadProblems(world: WorldRoot, spots: { Vector3 }, ignore: { Instance }): { Problem }
+	local problems: { Problem } = {}
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.RespectCanCollide = true
+	for _, spot in spots do
+		local start = spot + Vector3.new(0, RAY_START_ABOVE, 0)
+		local skip = table.clone(ignore)
+		local from = start
+		for _ = 1, OVERHEAD_HITS do
+			local left = OVERHEAD_REACH - (from.Y - start.Y)
+			if left <= 0 then
+				break
+			end
+			params.FilterDescendantsInstances = skip
+			local hit = world:Raycast(from, Vector3.new(0, left, 0), params)
+			if hit == nil then
+				break
+			end
+			local part = hit.Instance
+			if part.Transparency >= SEE_THROUGH then
+				local detail =
+					`{part.Name}: Transparency {part.Transparency}, spot {spot}, hit {hit.Position.Y - spot.Y} above the spot`
+				table.insert(problems, problem("overhead", spot, detail))
+			end
+			table.insert(skip, part)
+			from = hit.Position
+		end
+	end
 	return problems
 end
 
