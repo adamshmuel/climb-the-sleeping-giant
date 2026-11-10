@@ -35,7 +35,7 @@
 --     the sock and the teacup, never over water or through props), with a way past the ramp feet;
 --   * each ramp: Foot, Low, High, Top (the top is on the boot);
 --   * the nests (plan 5 Task 17a): one point each, named like the nest, with the nest as its Target (NEST_POINTS in
---     RoutePlaces.luau); the cuff and cap nests have none yet;
+--     RoutePlaces.luau); the cap nests have none yet;
 --   * the boot tops: the two Uncommon egg points of each boot (no Target);
 --   * the walk to each boot ladder: Walk<n>_<k> and Ladder<Side>_InNorth / _InSouth / _RunIn / _Foot on the grass,
 --     Ladder<Side>_Top on the boot (spec Rule 42: footprints take the quickest way; Rule 35);

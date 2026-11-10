@@ -156,7 +156,7 @@ describe("the real world, the route to the ways up", function()
 	end)
 
 	-- Plan 5 Task 17, test 2. The nests of one group that some garden's spawn point has no way to, as "nest (garden n)".
-	local function unreachedNests(cuffAndCap: boolean): { checked: number, unreached: { string } }
+	local function unreachedNests(caps: boolean): { checked: number, unreached: { string } }
 		local graph = RouteGraph.new(loadRoute())
 		local spawns: { [number]: Vector3 } = {}
 		for _, point in loadRoute() do
@@ -166,7 +166,7 @@ describe("the real world, the route to the ways up", function()
 			end
 		end
 		local unreached: { string } = {}
-		local nests = NestRoute.group(cuffAndCap)
+		local nests = NestRoute.group(caps)
 		for _, spot in nests do
 			for garden = 1, 8 do
 				if RouteGraph.find(graph, spawns[garden], { spot.name }) == nil then
@@ -177,16 +177,13 @@ describe("the real world, the route to the ways up", function()
 		return { checked = #nests, unreached = unreached }
 	end
 
-	it("from every garden's spawn point the route finds a way to each of the 30 nests the route reaches", function()
-		expect(unreachedNests(false)).toEqual({ checked = 30, unreached = {} })
+	it("from every garden's spawn point the route finds a way to each of the 34 nests the route reaches", function()
+		expect(unreachedNests(false)).toEqual({ checked = 34, unreached = {} })
 	end)
 
-	it(
-		"ACCEPTED RED until 17b and 17c: from every garden's spawn point the route finds a way to the 8 cuff and cap nests",
-		function()
-			expect(unreachedNests(true)).toEqual({ checked = 8, unreached = {} })
-		end
-	)
+	it("ACCEPTED RED until 17c: from every garden's spawn point the route finds a way to the 4 cap nests", function()
+		expect(unreachedNests(true)).toEqual({ checked = 4, unreached = {} })
+	end)
 
 	-- Check D5 (spec 3): the way from the landing's back point to a lower belly nest goes up that side's belly ramp and
 	-- never touches the other ramp. Returns which ramp points the way passes, e.g. { left = 3, right = 0 }.

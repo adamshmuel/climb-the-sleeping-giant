@@ -14,9 +14,9 @@ local NestRoute = {}
 -- Studs from a nest's route point to its prompt anchor (plan 5 Task 17, test 1).
 NestRoute.ANCHOR_REACH = 8
 
--- The 8 cuff and cap nests: the route reaches them in Tasks 17b and 17c, so the tests that name them stay red until then.
-function NestRoute.isCuffOrCap(nestName: string): boolean
-	return string.match(nestName, "^Nest_Cuff") ~= nil or string.match(nestName, "^Nest_Cap") ~= nil
+-- The 4 cap nests: the route reaches them in Task 17c, so the tests that name them stay red until then.
+function NestRoute.isCap(nestName: string): boolean
+	return string.match(nestName, "^Nest_Cap") ~= nil
 end
 
 -- Every nest in World.EggSpots, in name order.
@@ -26,11 +26,11 @@ function NestRoute.nests(): { WorldIndex.EggSpot }
 	return spots :: { WorldIndex.EggSpot }
 end
 
--- The nests of one group: the 8 cuff and cap nests (`cuffAndCap` true) or the other 30.
-function NestRoute.group(cuffAndCap: boolean): { WorldIndex.EggSpot }
+-- The nests of one group: the 4 cap nests (`caps` true) or the other 34.
+function NestRoute.group(caps: boolean): { WorldIndex.EggSpot }
 	local picked: { WorldIndex.EggSpot } = {}
 	for _, spot in NestRoute.nests() do
-		if NestRoute.isCuffOrCap(spot.name) == cuffAndCap then
+		if NestRoute.isCap(spot.name) == caps then
 			table.insert(picked, spot)
 		end
 	end

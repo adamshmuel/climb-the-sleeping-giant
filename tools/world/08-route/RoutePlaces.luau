@@ -135,6 +135,34 @@ local HAND_POINTS: { [string]: { number } } = {
 	-- sides as steep walls (70 to 80 degrees), so the footprints go round its north end, not straight into a side.
 	Belly_4 = { -5.5, -26.0, 58.7 },
 	Belly_Crest = { -1.1, -30.1, 61.8 }, -- on the crest between Belly_4 and Rare egg 4 (a straight link is 1.2 studs off it)
+	-- the arms and the cuff straps (plan 5 Task 17b), at the feet the Task 17w reach walks left in Play (work/p5t17/17w-note.md):
+	-- from Belly_4 down each sleeve to the tab, down the strap to its foot. Both sleeves are listed by hand, each on its
+	-- own walk's feet (the right walk started at (5.5, -26), the mirror of Belly_4, and is not an exact mirror).
+	ArmLeft_1 = { -12, -21, 60 },
+	ArmLeft_2 = { -18, -17, 60 },
+	ArmLeft_3 = { -22, -14, 59 },
+	ArmLeft_4 = { -28, -10, 55 },
+	ArmLeft_5 = { -33, -7, 50 },
+	ArmLeft_6 = { -40, -4, 50 },
+	ArmLeft_7 = { -43, -2, 49 },
+	ArmLeft_8 = { -48, 1, 43 },
+	ArmLeft_9 = { -50, 2, 39 },
+	StrapLeft_Top = { -55, 0, 35 }, -- the tab (Strap_Left)
+	StrapLeft_Foot = { -56, -3, 33 }, -- the strap's foot (Foot_Left)
+	ArmRight_0 = { 6, -26, 59 },
+	-- listed by hand: the right sleeve is not an exact mirror; these are the feet of the right walk (17w-note.md)
+	ArmRight_1 = { 12, -21, 60 },
+	ArmRight_2 = { 16, -19, 60 },
+	ArmRight_3 = { 19, -16, 59 },
+	ArmRight_4 = { 26, -12, 57 },
+	ArmRight_5 = { 31, -8, 53 },
+	ArmRight_6 = { 33.3, -6.4, 50 }, -- the seam between body and sleeve, 0.8 from the traced foot (34, -6)
+	ArmRight_7 = { 41, -3, 51 },
+	ArmRight_8 = { 44, -1, 49 },
+	ArmRight_9 = { 46, 1, 46 },
+	ArmRight_10 = { 48, 2, 42 }, -- the last sleeve foot: the next traced foot (50, 3) joins it by a 70 degree patch
+	StrapRight_Top = { 55, -1, 35 }, -- the tab (Strap_Right)
+	StrapRight_Foot = { 56, -4, 33 }, -- the strap's foot (Foot_Right)
 }
 
 -- The right side of the ways up: the left points with x turned to -x. Garden 8 mirrors garden 1, 7 mirrors 2 and 6
@@ -176,7 +204,7 @@ local POINT_TAGS: { [string]: Tags } = {
 
 -- The target points of the nests (plan 5 Task 17a): nest name -> x, z, a rough height, and the points it links to. One
 -- point per nest, named like the nest, with the nest as its Target and within 8 studs of the nest's PromptAnchor. The
--- cuff and cap nests have none yet (Tasks 17b and 17c). Where a point stands: a meadow nest on the grass at its anchor;
+-- cap nests have none yet (Task 17c). Where a point stands: a meadow nest on the grass at its anchor;
 -- a boot-toe nest on the boot top beside it; the lap fold and knee pocket nests on the lap plank deck at the deck spot
 -- nearest the anchor (the knee pocket by code_lead's ruling, 2026-11-10); a lower belly nest on its ramp top; a beard
 -- fold or belly pocket nest on the belly top within 8 studs.
@@ -211,10 +239,15 @@ local NEST_POINTS: { [string]: { any } } = {
 	Nest_BellyPocket_Left = { -16, -34.5, 47.6, "Egg_Rare_2" },
 	Nest_BeardFold_Right = { 7.5, -36.5, 49.6, "BellyRampRight_4" },
 	Nest_BellyPocket_Right = { 16, -34.5, 47.8, "BellyRampRight_4" },
+	-- the cuff nests (Task 17b): on the top of the back and the front ledge of CuffWalk; the strap foot links to the front one (the traced way past the curb), the front to the back
+	Nest_CuffBack_Left = { -57.4, -5.7, 32.5, "Nest_CuffFront_Left" },
+	Nest_CuffFront_Left = { -55.73, -10.27, 32.5, "StrapLeft_Foot" },
+	Nest_CuffBack_Right = { 57.4, -5.7, 32.5, "Nest_CuffFront_Right" },
+	Nest_CuffFront_Right = { 55.73, -10.27, 32.5, "StrapRight_Foot" },
 }
 
--- The nests that get no route point yet: the cuff nests (Task 17b) and the cap nests (Task 17c).
-local NESTS_WITHOUT_POINT = { "^Nest_Cuff", "^Nest_Cap" }
+-- The nests that get no route point yet: the cap nests (Task 17c).
+local NESTS_WITHOUT_POINT = { "^Nest_Cap" }
 
 -- The links, as pairs of point names (without the RoutePoint_ start). Every one is made on both ends.
 local LINKS: { { string } } = {}
@@ -330,6 +363,19 @@ link("Egg_Rare_2", "Egg_Rare_3")
 link("Egg_Rare_3", "Belly_4")
 link("Belly_4", "Belly_Crest")
 link("Belly_Crest", "Egg_Rare_4")
+-- plan 5 Task 17b: each arm from the belly path down the sleeve, down the strap to the cuff nests
+link("Belly_4", "ArmLeft_1")
+link("Egg_Rare_4", "ArmRight_0") -- the nearest route point to where the right walk started
+link("ArmRight_0", "ArmRight_1")
+for _, side in { "Left", "Right" } do
+	local last = 1
+	while HAND_POINTS[`Arm{side}_{last + 1}`] ~= nil do
+		link(`Arm{side}_{last}`, `Arm{side}_{last + 1}`)
+		last += 1
+	end
+	link(`Arm{side}_{last}`, `Strap{side}_Top`)
+	link(`Strap{side}_Top`, `Strap{side}_Foot`)
+end
 link("Ramp_Right_Top", "Egg_Uncommon_3")
 link("Egg_Uncommon_3", "Egg_Uncommon_4")
 -- the nest points (plan 5 Task 17a)

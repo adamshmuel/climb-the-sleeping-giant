@@ -20,7 +20,7 @@ local SKY_RAY_LENGTH = Places.SKY_RAY_LENGTH
 local LANDING_PLACES = Places.LANDING_PLACES
 
 export type Stem = { name: string, x: number, z: number }
-export type Circle = { name: string, x: number, z: number, radius: number }
+export type Circle = { name: string, x: number, z: number, radius: number, top: number? }
 
 -- What RouteChecks hands over: the world's folders, the props it found, the egg places, and its two ground helpers.
 export type Context = {

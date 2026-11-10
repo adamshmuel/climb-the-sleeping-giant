@@ -517,6 +517,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - What changes: route points from the belly top along each sleeve, strap and ledge to a target point beside each cuff nest. Tests 1 and 2 go green for the 4 cuff nests.
 - Done when: the tests pass, `08-route` run twice says "already done", and a Play shot shows the trail on one strap.
 - Cards: `work/p5t17/17b-card.md` (Steps 1-4) and `17b-play-card.md` (Step 5).
+- Built route rule (main chat veto, 2026-11-10): links whose two ends are within 1 stud of a Task 17w traced foot are listed in `WALKED_LINKS` (`src/shared/RouteData.luau`); `RouteChecks` skips only the body-box, ground and steep checks on them, because the Play walk crossed them. `BODY_BOX_SKIPS` keeps its old entries. The prop and clearance checks still run. One link, `Egg_Rare_4` to `ArmRight_0`, crosses a 1.7-stud crease between the belly and the right arm that no 17w walk crossed; Task 17b Step 5's walk W crossed it both ways in Play (2026-11-10), and its feet are in Route.spec's traced feet. A bush or rock is passed over when the link's lower end is more than 6 studs above its top (`RouteData.passesOverProp`, used by RouteChecks and LandingSpots.spec).
 - For: core gameplay. Size: 5 steps, 56 minutes.
 
 **Task 17c: The footprints reach the cap nests**
@@ -525,7 +526,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Files: `tools/world/08-route/RoutePlaces.luau`, `RouteChecks.luau`, the RealWorld route tests.
 - What changes: route points up the beard ladder, across the nose top, up the cap ladder and the cap's front slope to each cap nest. Tests 1 and 2 go fully green.
 - Done when: the tests pass, `08-route` run twice says "already done", and the two cap-trail shots and the cap-nest view shots above, on computer and iPhone 14, go to designer and game_creator.
-- Cards: `work/p5t17/17c-card.md` (Steps 1-4) and `17c-play-card.md` (Steps 5-6). Route.spec's climb count goes from 2 to 4.
+- Cards: `work/p5t17/17c-card.md` (Steps 1-4) and `17c-play-card.md` (Steps 5-6). Route.spec's climb count goes from 2 to 4. The cap links go in `WALKED_LINKS` the same way, from the 17w cap trace feet; no nightcap skip.
 - For: core gameplay (the Legendary eggs at the top). Size: 6 steps, 59 minutes.
 
 ### Part 3: Checks on the walk map

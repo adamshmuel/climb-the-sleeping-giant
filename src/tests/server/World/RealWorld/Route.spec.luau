@@ -102,10 +102,10 @@ describe("the real world, route and landing spots", function()
 
 	-- Plan 5 Task 17, test 1. A nest "has its point" when exactly one route point names it and that point is within
 	-- NestRoute.ANCHOR_REACH studs of the nest's prompt anchor. Returns the nests checked and one line per failure.
-	local function nestPointProblems(cuffAndCap: boolean): { checked: number, problems: { string } }
+	local function nestPointProblems(caps: boolean): { checked: number, problems: { string } }
 		local byTarget = NestRoute.pointsByTarget()
 		local problems: { string } = {}
-		local nests = NestRoute.group(cuffAndCap)
+		local nests = NestRoute.group(caps)
 		for _, spot in nests do
 			local found = byTarget[spot.name] or {}
 			if #found ~= 1 then
@@ -121,14 +121,14 @@ describe("the real world, route and landing spots", function()
 	end
 
 	it(
-		"each of the 30 nests the route reaches has exactly one route point, within 8 studs of its prompt anchor",
+		"each of the 34 nests the route reaches has exactly one route point, within 8 studs of its prompt anchor",
 		function()
-			expect(nestPointProblems(false)).toEqual({ checked = 30, problems = {} })
+			expect(nestPointProblems(false)).toEqual({ checked = 34, problems = {} })
 		end
 	)
 
-	it("ACCEPTED RED until 17b and 17c: each of the 8 cuff and cap nests has one route point within 8 studs", function()
-		expect(nestPointProblems(true)).toEqual({ checked = 8, problems = {} })
+	it("ACCEPTED RED until 17c: each of the 4 cap nests has one route point within 8 studs", function()
+		expect(nestPointProblems(true)).toEqual({ checked = 4, problems = {} })
 	end)
 
 	it("every Safe Gate has its own target point just outside the arch, and every spawn spot has its own", function()
@@ -318,8 +318,15 @@ describe("the real world, route and landing spots", function()
 								end
 								linkOptions = skipOptions[skipKey]
 							end
-							local problem =
-								PathCheck.linkProblem(linkOptions, point.position, byName[neighbourName].position)
+							-- A link the 17w Play walk proved (RouteData.isWalked) is not judged here, exactly as the world
+							-- script (tools/world/08-route/RouteChecks.luau) leaves it out: ground, slope, body box and
+							-- water (linkProblem is one call). Safe for water: walked links are 30 or more studs above
+							-- the meadow.
+							local problem = nil
+							if not RouteData.isWalked(point.name, neighbourName) then
+								problem =
+									PathCheck.linkProblem(linkOptions, point.position, byName[neighbourName].position)
+							end
 							if problem ~= nil then
 								problems[`{point.name} to {neighbourName}`] = problem
 							end
@@ -335,4 +342,105 @@ describe("the real world, route and landing spots", function()
 			expect(checked > 50).toBe(true)
 		end
 	)
+
+	-- Feet (x, z) the 17w Play walks traced, from work/p5t17/17w-note.md ("ARM-L PASS" and "ARM-R PASS" lines).
+	local TRACED_FEET: { { number } } = {
+		{ -5, -26 },
+		{ -12, -21 },
+		{ -15, -19 },
+		{ -18, -17 },
+		{ -22, -14 },
+		{ -25, -12 },
+		{ -28, -10 },
+		{ -31, -8 },
+		{ -33, -7 },
+		{ -40, -4 },
+		{ -43, -2 },
+		{ -46, -1 },
+		{ -48, 1 },
+		{ -50, 2 },
+		{ -55, 0 },
+		{ -56, -3 },
+		{ -56, -8 },
+		{ 6, -26 },
+		{ 9, -24 },
+		{ 12, -21 },
+		{ 16, -19 },
+		{ 19, -16 },
+		{ 23, -14 },
+		{ 26, -12 },
+		{ 31, -8 },
+		{ 34, -6 },
+		{ 37, -5 },
+		{ 41, -3 },
+		{ 44, -1 },
+		{ 46, 1 },
+		{ 48, 2 },
+		{ 50, 3 },
+		{ 55, -1 },
+		{ 56, -4 },
+		{ 56, -8 },
+		-- 17b Step 5 walk W: Egg_Rare_4 to ArmRight_0, the feet the player stood on at the start and on arrival
+		{ 2.5, -30.5 },
+		{ 5.1, -27.2 },
+	}
+	-- Ends that are not on a traced foot on purpose (RouteData.luau, WALKED_LINKS comment): the cuff nests, which sit 2 to
+	-- 3 studs from the ledge foot the walk crossed. They get the wider limit, not a skip.
+	local OFF_FOOT_OK: { [string]: boolean } = {
+		Nest_CuffFront_Left = true,
+		Nest_CuffBack_Left = true,
+		Nest_CuffFront_Right = true,
+		Nest_CuffBack_Right = true,
+	}
+	local OFF_FOOT_LIMIT = 3.5 -- studs: the 4 cuff nests sit 2 to 3 studs from the ledge foot the walk crossed
+
+	it("every walked link has both ends within 1 stud of a foot the 17w walks traced", function()
+		local byShort: { [string]: WorldIndex.RoutePoint } = {}
+		for _, point in loadRoute() do
+			byShort[string.gsub(point.name, "^RoutePoint_", "")] = point
+		end
+		local off: { string } = {}
+		for _, link in RouteData.walkedLinks() do
+			for _, name in link do
+				local point = byShort[name]
+				if point == nil then
+					table.insert(off, `{name} is missing`)
+				else
+					local limit = if OFF_FOOT_OK[name] then OFF_FOOT_LIMIT else 1
+					local nearest = math.huge
+					for _, foot in TRACED_FEET do
+						nearest = math.min(
+							nearest,
+							(Vector2.new(foot[1], foot[2]) - Vector2.new(point.position.X, point.position.Z)).Magnitude
+						)
+					end
+					if nearest > limit then
+						table.insert(off, `{name} is {nearest} studs from a traced foot`)
+					end
+				end
+			end
+		end
+		expect(off).toEqual({})
+		expect(#RouteData.walkedLinks() > 20).toBe(true)
+	end)
+
+	it("the walked links mirror on both sides: every Left link has its Right link", function()
+		local links = RouteData.walkedLinks()
+		local lefts = 0
+		for _, link in links do
+			if string.find(link[1], "Left", 1, true) or string.find(link[2], "Left", 1, true) then
+				lefts += 1
+				local mirrored = {}
+				for _, name in link do
+					table.insert(mirrored, (string.gsub(name, "Left", "Right")))
+				end
+				-- the right arm has one more point than the left (ArmRight_0 to 10, ArmLeft_1 to 9): arm points are
+				-- matched by the strap links, which mirror exactly
+				if string.find(mirrored[1] .. mirrored[2], "Arm", 1, true) == nil then
+					expect(RouteData.isWalked(mirrored[1], mirrored[2])).toBe(true)
+				end
+			end
+		end
+		expect(lefts > 10).toBe(true)
+	end)
 end)

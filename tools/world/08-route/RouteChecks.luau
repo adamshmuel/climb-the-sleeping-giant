@@ -139,6 +139,7 @@ local function collectProps(world: Instance): ({ Stem }, { Circle }, { BasePart 
 				x = boxCFrame.Position.X,
 				z = boxCFrame.Position.Z,
 				radius = math.min(boxSize.X, boxSize.Z) / 2,
+				top = boxCFrame.Position.Y + boxSize.Y / 2,
 			})
 		end
 	end
@@ -319,6 +320,7 @@ local function planWorld(world: Instance): Plan
 	local longest, longestName = 0, ""
 	local climbs = 0
 	local baseOptions = walkOptions(world)
+	local walkedInfo: { string } = {} -- links the 17w Play walk proved (RouteData.isWalked), not walk-checked here
 	local skipOptions: { [string]: any } = {} -- one options table per giant part a link may leave out (RouteData.bodyBoxSkip)
 	for _, pair in usable do
 		if RouteData.isClimb(byName[pair[1]] :: any, byName[pair[2]] :: any) then
@@ -349,7 +351,12 @@ local function planWorld(world: Instance): Plan
 			end
 			options = skipOptions[skipKey]
 		end
-		local walkProblem = PathCheck.linkProblem(options, from, to)
+		local walkProblem = nil
+		if RouteData.isWalked(pair[1], pair[2]) then
+			table.insert(walkedInfo, `walked: {pair[1]} - {pair[2]}`)
+		else
+			walkProblem = PathCheck.linkProblem(options, from, to)
+		end
 		if walkProblem then
 			table.insert(problems, `walk: link {pair[1]} to {pair[2]} is not walkable: {walkProblem}`)
 		end
@@ -357,6 +364,7 @@ local function planWorld(world: Instance): Plan
 
 	-- every link keeps clear of the props a player would walk through
 	local stems, circles, flowerParts = collectProps(world)
+	local propsOver: { string } = {}
 	if #stems == 0 or #circles == 0 then
 		error("no sunflowers or no bushes and rocks found under World: the prop check would see nothing")
 	end
@@ -384,7 +392,27 @@ local function planWorld(world: Instance): Plan
 		end
 		for _, circle in circles do
 			local gap = distanceToLink(circle.x, circle.z, from, to) - circle.radius
-			if gap < EDGE_LINK_CLEARANCE then
+			local propTop = circle.top
+			local lowest = math.min(from.Y, to.Y)
+			if propTop ~= nil and RouteData.passesOverProp(lowest, propTop) then
+				-- plan 5 Task 17b: a link whose lowest end is over 6 studs above the prop's top passes over it
+				if gap < EDGE_LINK_CLEARANCE then
+					table.insert(
+						propsOver,
+						string.format(
+							"%s %s at (%.1f, %.1f): link %s to %s lowest end %.1f, prop top %.1f",
+							"left out:",
+							circle.name,
+							circle.x,
+							circle.z,
+							pair[1],
+							pair[2],
+							lowest,
+							propTop
+						)
+					)
+				end
+			elseif gap < EDGE_LINK_CLEARANCE then
 				table.insert(
 					problems,
 					string.format(
@@ -460,6 +488,12 @@ local function planWorld(world: Instance): Plan
 		`climb links (not length or walk checked): {climbs}`,
 		`nest points: {nestPoints} of {nestCount} nests (the rest wait for Tasks 17b and 17c)`,
 	}
+	for _, line in propsOver do
+		table.insert(info, line)
+	end
+	for _, line in walkedInfo do
+		table.insert(info, line)
+	end
 	for _, line in flowerReport do
 		table.insert(info, line)
 	end

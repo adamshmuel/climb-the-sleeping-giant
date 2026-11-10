@@ -4,6 +4,7 @@ local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.e
 local ServerScriptService = game:GetService("ServerScriptService")
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
+local RouteData = require(game:GetService("ReplicatedStorage").Shared.RouteData)
 local Helpers = require(script.Parent.Helpers)
 local RAY_START_ABOVE = Helpers.RAY_START_ABOVE
 local STAND_LIMIT = Helpers.STAND_LIMIT
@@ -54,7 +55,7 @@ describe("the real world, route and landing spots", function()
 	end
 
 	type Stem = { name: string, x: number, z: number }
-	type Circle = { name: string, x: number, z: number, radius: number }
+	type Circle = { name: string, x: number, z: number, radius: number, top: number }
 
 	-- Every sunflower stem and every bush or rock circle under Workspace.World (FarTrees left out).
 	local function collectProps(world: Instance): ({ Stem }, { Circle })
@@ -86,6 +87,7 @@ describe("the real world, route and landing spots", function()
 					x = boxCFrame.Position.X,
 					z = boxCFrame.Position.Z,
 					radius = math.min(boxSize.X, boxSize.Z) / 2,
+					top = boxCFrame.Position.Y + boxSize.Y / 2,
 				})
 			end
 		end
@@ -213,7 +215,9 @@ describe("the real world, route and landing spots", function()
 					end
 					for _, circle in circles do
 						local gap = distanceToLink(circle.x, circle.z, from, to) - circle.radius
-						if gap < EDGE_LINK_CLEARANCE then
+						-- the world script's rule, one shared function (RouteData.passesOverProp)
+						local over = RouteData.passesOverProp(math.min(from.Y, to.Y), circle.top)
+						if gap < EDGE_LINK_CLEARANCE and not over then
 							table.insert(
 								problems,
 								string.format(

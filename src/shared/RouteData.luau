@@ -194,6 +194,39 @@ local BODY_BOX_SKIPS: { [string]: { string } } = {
 	["BellyRampRight_4|Nest_LowerBelly_Right"] = { BODY },
 }
 
+-- Links proven by the 17w Play walk (work/p5t17/17w-note.md): a body walked each one in Play with the real controls, so
+-- the Edit-mode walk check (body box, ground line, slope) does not judge them. Every other check still does. Each is the
+-- belly to a sleeve, the sleeve down to the tab and strap, and the strap to the cuff ledges, on both sides. The arm,
+-- strap and Rare 4 points are within 1 stud of a traced foot; the two Nest_Cuff points are 2 to 3 studs from one (the
+-- walk crossed the ledge there).
+local WALKED_LINKS: { [string]: boolean } = {}
+local WALKED_LIST: { { string } } = {}
+local function sortedKey(a: string, b: string): string
+	local first, second = a, b
+	if second < first then
+		first, second = second, first
+	end
+	return `{first}|{second}`
+end
+local function walked(a: string, b: string)
+	WALKED_LINKS[sortedKey(a, b)] = true
+	table.insert(WALKED_LIST, { a, b })
+end
+walked("Belly_4", "ArmLeft_1")
+walked("ArmRight_0", "ArmRight_1")
+-- proven by the 17b Step 5 walk W
+walked("Egg_Rare_4", "ArmRight_0")
+for _, side in { "Left", "Right" } do
+	local last = if side == "Left" then 9 else 10
+	for index = 1, last - 1 do
+		walked(`Arm{side}_{index}`, `Arm{side}_{index + 1}`)
+	end
+	walked(`Arm{side}_{last}`, `Strap{side}_Top`)
+	walked(`Strap{side}_Top`, `Strap{side}_Foot`)
+	walked(`Strap{side}_Foot`, `Nest_CuffFront_{side}`)
+	walked(`Nest_CuffFront_{side}`, `Nest_CuffBack_{side}`)
+end
+
 local function pointKey(name: string): string
 	local stripped = string.gsub(name, "^RoutePoint_", "")
 	return stripped
@@ -207,6 +240,23 @@ function RouteData.bodyBoxSkip(a: string, b: string): { string }
 		first, second = second, first
 	end
 	return BODY_BOX_SKIPS[`{first}|{second}`] or {}
+end
+
+-- Every walked link as { a, b } short names, in the order they were listed (for tests).
+function RouteData.walkedLinks(): { { string } }
+	return WALKED_LIST
+end
+
+-- Plan 5 Task 17b (code_lead ruling): a link passes over a bush or rock when its lowest end is more than this many studs
+-- above the prop's top. Sunflower stems are not covered. The world script and the real-world test both call this.
+local PROP_OVER_HEIGHT = 6
+function RouteData.passesOverProp(lowestEndY: number, propTop: number): boolean
+	return lowestEndY > propTop + PROP_OVER_HEIGHT
+end
+
+-- Whether the 17w Play walk proved the link between two points (either order).
+function RouteData.isWalked(a: string, b: string): boolean
+	return WALKED_LINKS[sortedKey(pointKey(a), pointKey(b))] == true
 end
 
 -- The parts bodyBoxSkip names for a link, found under `world`. Errors when a named part is missing.

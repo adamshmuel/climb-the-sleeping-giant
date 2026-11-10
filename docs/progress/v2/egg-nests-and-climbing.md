@@ -37,7 +37,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg nests and climbing (V2 spec 5) | Task 16b: Mockup_Nests leaves the Workspace (added 2026-11-09, product's ruling work/p5t16/stands-on-ruling.md) | ☑ done 2026-11-10 | Full run 3129/4 (4 accepted reds). A real re-run of 22 plus Undo lost CuffWalk; rebuilt from 22 and 23c (0 differ). 22's "already done" now matches wedges by name and StitchedEdge. |
 | Egg nests and climbing (V2 spec 5) | Task 17a: The footprints reach the 30 nests on today's route | ☑ done 2026-11-10 (`c86d929b`; fork shots pass) | builder, code_lead |
 | Egg nests and climbing (V2 spec 5) | Task 17w: Reach walks to the cuff and cap nests | ✅ done | All 4 walks PASS in Play (arms end ±56,32.5,-8.4; caps ±16.5,119,26.3); measure rule fixed to one 65° slope limit (`work/p5t17/17w-note.md`) |
-| Egg nests and climbing (V2 spec 5) | Task 17b: The footprints reach the cuff nests | ☐ not started | |
+| Egg nests and climbing (V2 spec 5) | Task 17b: The footprints reach the cuff nests | ☑ done | code_lead approved 2026-11-10 (walk W PASS, 3 shots PASS); full run 3142/3, only the 2 cap reds (Task 17c) and the standing walk-area red |
 | Egg nests and climbing (V2 spec 5) | Task 17c: The footprints reach the cap nests | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 18: No new way onto the belly | ☐ not started | |
 | Egg nests and climbing (V2 spec 5) | Task 19: Every nest scored and ranked | ☐ not started | |
