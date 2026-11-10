@@ -27,6 +27,8 @@ type Slot = {
 	lastNest: string?,
 	-- The garden this slot belongs to (a meadow slot), or nil. Its egg only ever sits on that garden's 2 nests.
 	garden: number?,
+	-- How many times this slot's egg has been taken. A carried egg remembers the value at its take (Rule 78).
+	takes: number,
 }
 
 type Nest = {
@@ -43,6 +45,8 @@ type Carried = {
 	nest: string,
 	rank: Config.RarityName,
 	slot: Slot,
+	-- The slot's take counter at the moment this egg was taken.
+	takes: number,
 }
 
 export type State = {
@@ -106,7 +110,7 @@ local function placeMeadowSlots(state: State, rank: Config.RarityName, rankNests
 	end
 	assert(count == #gardens, `{rank} has {count} slots but {#gardens} gardens`)
 	for _, garden in gardens do
-		local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil, garden = garden }
+		local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil, garden = garden, takes = 0 }
 		byGarden[garden][1].slot = slot
 		table.insert(state.slots, slot)
 	end
@@ -155,7 +159,7 @@ function EggSlots.new(nests: { NestDefinition }, slotsPerRank: { [Config.RarityN
 		end
 		assert(#rankNests >= count, `{rank} has {count} slots but only {#rankNests} nests`)
 		for i = 1, count do
-			local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil, garden = nil }
+			local slot: Slot = { rank = rank, refillAt = nil, dueAt = nil, lastNest = nil, garden = nil, takes = 0 }
 			local first = allowedNests(state, rank, nil, {})[1]
 			assert(first ~= nil, `{rank} has {#rankNests} nests but only room for {i - 1} of {count} slots`)
 			first.slot = slot
@@ -184,16 +188,17 @@ function EggSlots.take(state: State, nestName: string, playerId: number, now: nu
 	slot.refillAt = now + Config.Rarity[nest.rank].RefillSeconds
 	slot.dueAt = slot.refillAt
 	slot.lastNest = nestName
-	state.carried[playerId] = { nest = nestName, rank = nest.rank, slot = slot }
+	slot.takes += 1
+	state.carried[playerId] = { nest = nestName, rank = nest.rank, slot = slot, takes = slot.takes }
 	return true, nil
 end
 
--- The other nest of a meadow slot's garden: the garden's nest that is not `lastNest` (Rule 75). It is empty, because
--- the garden's one egg was taken from `lastNest`.
+-- The other nest of a meadow slot's garden: the garden's nest of the slot's rank that is not `lastNest` (Rule 75). It is
+-- empty, because the garden's one egg was taken from `lastNest`. Another rank may use the same garden number.
 local function otherGardenNest(state: State, slot: Slot): Nest
 	for _, name in state.order do
 		local nest = state.nests[name]
-		if nest.garden == slot.garden and name ~= slot.lastNest then
+		if nest.garden == slot.garden and nest.rank == slot.rank and name ~= slot.lastNest then
 			assert(nest.slot == nil, `garden {slot.garden}'s other nest {name} is not empty`)
 			return nest
 		end
@@ -245,6 +250,38 @@ function EggSlots.bank(state: State, playerId: number): (string?, Config.RarityN
 	end
 	state.carried[playerId] = nil
 	return carried.nest, carried.rank
+end
+
+-- The player's carried egg is lost (Rule 78) and leaves them. Returns the result and the nest it was taken from, or
+-- nil, nil when they carry nothing.
+-- "gone": the slot's new egg is already out (it sits on a nest, or was taken again after this egg), or another slot's
+-- egg now sits on this nest. In the second case the slot's countdown keeps running as it was.
+-- "back": otherwise the egg waits on its nest again, and the slot's countdown and any retry stop. No spacing check and
+-- no player check.
+function EggSlots.returnEgg(state: State, playerId: number): (("back" | "gone")?, string?)
+	local carried = state.carried[playerId]
+	if carried == nil then
+		return nil, nil
+	end
+	state.carried[playerId] = nil
+	local slot = carried.slot
+	local nest = state.nests[carried.nest]
+	local slotIsOut = slot.takes ~= carried.takes
+	if not slotIsOut then
+		for _, other in state.nests do
+			if other.slot == slot then
+				slotIsOut = true
+				break
+			end
+		end
+	end
+	if slotIsOut or nest.slot ~= nil then
+		return "gone", carried.nest
+	end
+	nest.slot = slot
+	slot.refillAt = nil
+	slot.dueAt = nil
+	return "back", carried.nest
 end
 
 -- The rank of the egg this player carries, or nil if they carry nothing.

@@ -23,4 +23,5 @@
 - Before naming the next task from a handoff's order ("then Task 12"), read that task's Files and test lines for pieces another task makes: p5 Task 12 removes Task 7's bare-spot allowance and extends Task 8's script 21, but its Stands on said only Tasks 1 to 3 (fixed to 1 to 8, 2026-11-10).
 - A "lost item returns" rule needs a take counter per slot: "countdown still running" alone lets a stale egg come back after its slot refilled and was taken again (p5t5 card, 2026-11-10).
 - Card titles: `job-check` reads egg/nest + "goes back"/"place"/"build" in a heading as world placing and asks for a reach walk. Say "returns" in code-only titles. A heading that names another Task needs its own Stands on line.
+- A card's `script_grep` sync check names a query only the changed file holds (a new describe title, "function EggSlots.setLocked"), never a common name: "returnEgg" hit the 50-match cap (p5t5 builder, 2026-11-10).
 - Progress index counts drift: recount from every `docs/progress/v2/*.md` (task rows minus removed or dropped) at each close, not by adding 1 (2026-11-10: index said 117 of 214, files gave 131 of 221).

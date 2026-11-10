@@ -388,6 +388,156 @@ describe("EggSlots.new for meadow nests", function()
 	end)
 end)
 
+local function pickLast(count: number): number
+	return count
+end
+
+describe("EggSlots.returnEgg (Rule 78)", function()
+	it("puts an egg lost at 30 s of 60 back on its nest, and nothing refills at 61 s", function()
+		local state = lineWorld("Rare", WIDE_RARE, 4)
+		EggSlots.take(state, "Rare1", 1, 0)
+		local result, nest = EggSlots.returnEgg(state, 1)
+		expect(result).toBe("back")
+		expect(nest).toBe("Rare1")
+		expect(isWaiting(state, "Rare1")).toBe(true)
+		expect(EggSlots.carrying(state, 1)).toBe(nil)
+		expect(#EggSlots.update(state, 61, {}, pickFirst)).toBe(0)
+		expect(countWaiting(state, "Rare")).toBe(4)
+	end)
+
+	it("loses the egg for good once its refill landed, and the new egg stays where it is", function()
+		local state = lineWorld("Rare", WIDE_RARE, 4)
+		EggSlots.take(state, "Rare1", 1, 0)
+		expect(EggSlots.update(state, RARE_REFILL, {}, pickFirst)[1].nest).toBe("Rare5")
+		local result, nest = EggSlots.returnEgg(state, 1)
+		expect(result).toBe("gone")
+		expect(nest).toBe("Rare1")
+		expect(isWaiting(state, "Rare1")).toBe(false)
+		expect(isWaiting(state, "Rare5")).toBe(true)
+		expect(countWaiting(state, "Rare")).toBe(4)
+	end)
+
+	it(
+		"loses player 1's egg for good when the refilled egg is already carried by player 2, who keeps counting down",
+		function()
+			local state = lineWorld("Rare", WIDE_RARE, 4)
+			EggSlots.take(state, "Rare1", 1, 0)
+			EggSlots.update(state, RARE_REFILL, {}, pickFirst) -- the new egg lands on Rare5
+			EggSlots.take(state, "Rare5", 2, 70) -- player 2 takes it: its countdown ends at 130
+			local result, nest = EggSlots.returnEgg(state, 1)
+			expect(result).toBe("gone")
+			expect(nest).toBe("Rare1")
+			expect(isWaiting(state, "Rare1")).toBe(false)
+			expect(#EggSlots.update(state, 129, {}, pickFirst)).toBe(0)
+			expect(#EggSlots.update(state, 130, {}, pickFirst)).toBe(1)
+			expect(EggSlots.carrying(state, 2)).toBe("Rare")
+		end
+	)
+
+	it("loses the egg for good when another slot's egg sits on its nest, and its own refill stays on time", function()
+		local state = lineWorld("Rare", WIDE_RARE, 4)
+		EggSlots.take(state, "Rare2", 2, 0)
+		EggSlots.take(state, "Rare1", 1, 30) -- this slot's countdown ends at 90
+		local landed = EggSlots.update(state, RARE_REFILL, {}, pickFirst) -- the Rare2 slot's egg lands on Rare1
+		expect(#landed).toBe(1)
+		expect(landed[1].nest).toBe("Rare1")
+		local result, nest = EggSlots.returnEgg(state, 1)
+		expect(result).toBe("gone")
+		expect(nest).toBe("Rare1")
+		expect(#EggSlots.update(state, 89, {}, pickFirst)).toBe(0)
+		local refills = EggSlots.update(state, 90, {}, pickFirst)
+		expect(#refills).toBe(1)
+		expect(refills[1].waited).toBe(0)
+	end)
+
+	it(
+		"puts an egg back on its nest even with a waiting egg 3 studs away, and a player on the nest changes nothing",
+		function()
+			-- Rare1 x 0, Rare2 x 3, Rare3 x 20. Slots start on Rare1 and Rare3 (Rare2 is within 6 studs of Rare1).
+			local state = lineWorld("Rare", { 0, 3, 20 }, 2)
+			EggSlots.take(state, "Rare3", 1, 0)
+			EggSlots.take(state, "Rare1", 2, 30)
+			-- At 60 the Rare3 slot's egg lands on the last allowed nest: Rare2, 3 studs from Rare1.
+			local landed = EggSlots.update(state, RARE_REFILL, {}, pickLast)
+			expect(#landed).toBe(1)
+			expect(landed[1].nest).toBe("Rare2")
+			local result, nest = EggSlots.returnEgg(state, 2)
+			expect(result).toBe("back")
+			expect(nest).toBe("Rare1")
+			expect(isWaiting(state, "Rare1")).toBe(true)
+			expect(isWaiting(state, "Rare2")).toBe(true)
+			expect(#EggSlots.update(state, 100, { Vector3.new(0, 0, 0) }, pickFirst)).toBe(0)
+			expect(isWaiting(state, "Rare1")).toBe(true)
+		end
+	)
+
+	it("puts an egg back when its slot is due but still retrying, and the retry stops", function()
+		local state = lineWorld("Rare", WIDE_RARE, 4)
+		EggSlots.take(state, "Rare1", 1, 0)
+		local crowd = { Vector3.new(90, 0, 0) } -- 10 studs from Rare5 and Rare6: no nest is allowed
+		expect(#EggSlots.update(state, RARE_REFILL, crowd, pickFirst)).toBe(0)
+		local result, nest = EggSlots.returnEgg(state, 1)
+		expect(result).toBe("back")
+		expect(nest).toBe("Rare1")
+		expect(isWaiting(state, "Rare1")).toBe(true)
+		expect(#EggSlots.update(state, RARE_REFILL + Config.Nests.RetrySeconds, {}, pickFirst)).toBe(0)
+		expect(#EggSlots.update(state, 200, {}, pickFirst)).toBe(0)
+		expect(countWaiting(state, "Rare")).toBe(4)
+	end)
+
+	it("puts a meadow egg lost before the 10 s refill back on the same garden nest", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 4, 0)
+		local result, nest = EggSlots.returnEgg(state, 4)
+		expect(result).toBe("back")
+		expect(nest).toBe("G4A")
+		expect(isWaiting(state, "G4A")).toBe(true)
+		expect(isWaiting(state, "G4B")).toBe(false)
+		expect(#EggSlots.update(state, COMMON_REFILL + 1, {}, pickMustNotRun)).toBe(0)
+	end)
+
+	it("loses a meadow egg for good when it is lost after the 10 s refill", function()
+		local state = meadowState()
+		EggSlots.take(state, "G4A", 4, 0)
+		expect(EggSlots.update(state, COMMON_REFILL, {}, pickMustNotRun)[1].nest).toBe("G4B")
+		local result, nest = EggSlots.returnEgg(state, 4)
+		expect(result).toBe("gone")
+		expect(nest).toBe("G4A")
+		expect(isWaiting(state, "G4A")).toBe(false)
+		expect(isWaiting(state, "G4B")).toBe(true)
+	end)
+
+	it("returns nil, nil for a player who carries nothing, also after their egg was already returned", function()
+		local state = newState()
+		local noResult, noNest = EggSlots.returnEgg(state, 1)
+		expect(noResult).toBe(nil)
+		expect(noNest).toBe(nil)
+		EggSlots.take(state, "Rare1", 1, 0)
+		expect((EggSlots.returnEgg(state, 1))).toBe("back")
+		expect(EggSlots.carrying(state, 1)).toBe(nil)
+		local againResult, againNest = EggSlots.returnEgg(state, 1)
+		expect(againResult).toBe(nil)
+		expect(againNest).toBe(nil)
+	end)
+
+	it("never lands a Common meadow refill on an Uncommon nest with the same garden number", function()
+		-- Both ranks use garden 4. The Uncommon nests come first in the order given.
+		local nests: { EggSlots.NestDefinition } = {
+			{ name = "U4A", rank = "Uncommon", position = Vector3.new(200, 0, 0), garden = 4 },
+			{ name = "U4B", rank = "Uncommon", position = Vector3.new(208, 0, 0), garden = 4 },
+			{ name = "G4A", rank = "Common", position = Vector3.new(0, 0, 0), garden = 4 },
+			{ name = "G4B", rank = "Common", position = Vector3.new(8, 0, 0), garden = 4 },
+		}
+		local state = EggSlots.new(nests, { Common = 1, Uncommon = 1 })
+		EggSlots.take(state, "G4A", 1, 0)
+		local refills = EggSlots.update(state, COMMON_REFILL, {}, pickMustNotRun)
+		expect(#refills).toBe(1)
+		expect(refills[1].nest).toBe("G4B")
+		expect(isWaiting(state, "U4A")).toBe(true)
+		expect(isWaiting(state, "U4B")).toBe(false)
+	end)
+end)
+
 describe("EggSlots over a long random run", function()
 	it("never has more eggs waiting plus carried from a live countdown than slots", function()
 		local rng = Random.new(7)

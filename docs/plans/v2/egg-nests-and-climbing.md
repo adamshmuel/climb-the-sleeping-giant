@@ -132,6 +132,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 6: Locked nests**
 - Stands on: Task 5 (`returnEgg` in `EggSlots`, built).
+- For: core gameplay (no grab on his raised arm; a lost egg still comes home). Size: 3 steps, 34 min, about 11 Studio calls (card `work/p5t6/p5t6-card.md`). The card asserts that only nests on him lock, and adds `locked` to the nest view for Task 7.
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps): "the server must keep the right cuff nests at their resting spots and lock them: no grab prompt, any grab refused, and no refill picks them". Section 8: "A carrier of a right cuff Epic egg is caught while he's awake", "A right cuff Epic slot's countdown ends while he's awake".
 - Files: `src/server/Eggs/EggSlots.luau`, its test.
 - What it does: `setLocked(state, nestNames, locked)`. A take on a locked nest fails with "locked"; a refill never picks it; a lost egg still goes back to it and waits there.
