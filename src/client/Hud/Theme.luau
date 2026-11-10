@@ -81,7 +81,8 @@ Theme.tiptoeGradient = ColorSequence.new({
 })
 
 -- Eggs: a highlight, the main colour and a shade, from the mockups' egg pictures (core-hud.html, hud.html). The main
--- colour is the rarity's colour from the style guide (Common cream white, Uncommon leaf green, Rare sky blue).
+-- colour is the rarity's colour from the style guide (Common cream white, Uncommon leaf green, Rare sky blue, Epic
+-- purple, Legendary gold).
 export type RarityLook = {
 	light: Color3,
 	main: Color3,
@@ -92,6 +93,8 @@ Theme.rarity = {
 	Common = { light = Color3.fromHex("FFFFFF"), main = Color3.fromHex("EDE6D6"), dark = Color3.fromHex("BFB49C") },
 	Uncommon = { light = Color3.fromHex("C8F7BE"), main = Color3.fromHex("5BD45B"), dark = Color3.fromHex("2E9E3A") },
 	Rare = { light = Color3.fromHex("CDEBFF"), main = Color3.fromHex("3FA9FF"), dark = Color3.fromHex("1F78D1") },
+	Epic = { light = Color3.fromHex("E3C8FF"), main = Color3.fromHex("B05CFF"), dark = Color3.fromHex("7A2EC9") },
+	Legendary = { light = Color3.fromHex("FFEDB0"), main = Color3.fromHex("FFC93C"), dark = Color3.fromHex("D9951A") },
 } :: { [string]: RarityLook } -- by rarity name
 
 -- The dark, see-through plates behind the grab prompt, the carry pill and the tips (core-hud.html, hud.html).

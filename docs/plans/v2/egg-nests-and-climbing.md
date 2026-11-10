@@ -589,15 +589,15 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Stands on: Tasks 15d, 15e, 15e2, 15e3, 16, 18a and 18b (built: the walk fixes, walk-offs, steep curb tops, cuff art, seam and jump check).
 - For: core gameplay (it decides whether Task 22b changes the ground).
 - Spec rules: Rule 80 (The seam shows where walking ends): "the stuck scan and the bot walk must find no other" climb.
-- Files: `tools/play/bot-walk-legs.luau` (a probe leg).
-- What it does: at points every 2 studs under his beard and along both sides, the bot walks into him; any "Climbing" state (`Enum.HumanoidStateType.Climbing`) away from the eight ladders is listed with its place. It changes nothing in the world. The result decides Task 22b: parts named, or "nothing found".
+- Files: `scripts/bot-walk/climb-probe.luau` (the probe job, new; `tools/play/` does not exist).
+- What it does: at points every 2 studs under his beard and along both sides, the bot walks into him; any "Climbing" state (`Enum.HumanoidStateType.Climbing`) away from the four ladders (`BootLadder_Left`, `BootLadder_Right`, `BeardLadder`, `CapLadder`, each `.Climb`) is listed with its place. It changes nothing in the world. The result decides Task 22b: parts named, or "nothing found".
 - Failing test first: none (a Play tool). One probe point made to fail on purpose (a test truss, made in Play only) proves it can fail.
 - Done when: the list of climb places, or "nothing found", is in the report, with each place's coordinates.
 
 **Task 22: The bot walk on the walk area** (everything but the climb probe, which is Task 22p; split (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
 - Stands on: Task 22b (the beard climb fix, built or closed), Tasks 19 and 20 (the nests at their final spots, fair: the strap and pocket legs walk to them), Task 7 (the prompts, built), Task 12 (the nests, built), Tasks 15d, 15e, 15e2, 15e3, 16, 18a and 18b (walk fixes, walk-offs, the steep curb tops its strap and ledge legs walk beside, the cuff art in the world, seam, jump check, built). Its strap and pocket legs take 15b's pocket grab cases.
 - Spec rules: the Play proof of Rule 79 (Walk anywhere down to the seam) and Rule 82 (No new way onto the belly) (Rule 24: A bot walks every way). Rule 80: "the stuck scan and the bot walk must find no other" climb. Section 6's Play checks: straps and ledges both arms with an egg, the seam at 65°, the three fixes, the knee pocket area, the beard tip, the mid-air grab.
-- Files: `tools/play/bot-walk-legs.luau`, `tools/play/bot-walk.luau` (plan 2, Task 8).
+- Files: `scripts/bot-walk/` jobs, `tools/checks/BotLegs.luau` and `BotWalk.luau` (plan 2, Task 8), plus `scripts/bot-walk/climb-probe.luau` (Task 22p).
 - What it adds:
   - walks across the walk area in a star from Rare egg 1, along the seam just above the stitches, over the beard tip, and out along each arm, down each strap to each pocket, a grab (the hold, on the Client), and back up the strap carrying the egg, on both arms;
   - step-offs every 4 studs just past the seam: each must slide off with one Belly thud. They take Task 15e's moved cases (`work/p5t15e/time-decision.md`): the seam slides D3, and the hip slides G at z −36 on both sides (SR36, SL36). A slide that lands on the leg band below his hip (x ±30 to ±34, z −56 to −49, y 18 to 26) passes if the body walks off, falls off, or is rescued within 4 s of pressing (`work/p5t15e/pocket-decision.md`);
@@ -611,7 +611,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 - Done when: every leg passes, the probe's result (Task 22p, re-run in Task 22b) is copied into the results table, and the results table is in the report. If the mid-air grab worked even once, Task 25 is built before review.
 
 **Task 22b: The beard climb fix** (moved out of Task 15 on 2026-11-08, product's step-back decision; built before Tasks 19, 20 and 22 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
-- Stands on: Task 22p (run: it names each place a player climbs away from the eight ladders), and plan 3 Task 9q (done 2026-11-10: "the map", so no ground fix comes from it).
+- Stands on: Task 22p (run: it names each place a player climbs away from the four ladders), and plan 3 Task 9q (done 2026-11-10: "the map", so no ground fix comes from it).
 - Spec rules: Rule 80 (The seam shows where walking ends): "The accidental climbing under his beard near (−14, 67, −14) must be removed", "the stuck scan and the bot walk must find no other".
 - Size: priced by code_lead from the probe's result, before the card. If the probe finds nothing there, this task is closed with that result.
 - What: the parts the probe names are changed so they can't be climbed, the same on both sides where mirrored; backup and reach check as every world task. Each spot is measured with rays that see every solid part.
@@ -620,7 +620,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 23 is split into 23a and 23b** (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): 23a is items 1 to 5, 7, 7b, 7c and 7d. 23b is items 6 and 6b (the wake-ups, the arm, the red circles), which need plan 6's arm, slam circle and director. What is checked, and the done line, are below.
 
-**Task 23a: The Play proof, items 1 to 5, 7, 7b, 7c and 7d**
+**Task 23a: The Play proof, items 1 to 5, 7, 7b, 7c, 7d and 7e**
 - Stands on: Tasks 8, 9 and 10 (the pop, the riding cuff, the slide tip, built), Task 12 (the nests, built), Task 16 (the seam, built), Task 17 (the footprints to every nest, built), Tasks 19 and 20 (nests at their final spots, fair), Task 22 (the bot walk passed) and Task 22b.
 - Spec rules: section 6 ("Checks that need Play before the build review"), the Play check of Rule 100 (Nothing you stand on moves while he sleeps), the 3 seconds of Rule 84 (A slide is a fall, and the first one gets a tip), and spec 3's Rule 36 (The lap planks), condition 3, in Play.
 - Files: none (a Play check). Screenshots go in the report.
@@ -639,6 +639,7 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
   7b. (Task 10 veto, 2026-11-10) The slide tip on screen: walk off the belly seam with a client `hum:Move` loop (not `character_navigation`), and shoot "💥 Too steep! Slipping is loud." at the bottom centre within its 3 s, empty-handed and carrying (the pill comes back after), computer and phone, from Task 10's camera (CAM (-11.55, 56.87, -18.20), LOOK (-23.92, 52.87, -28.35)). Task 10 proved the remote fires on a real slide and the text in unit tests; `screen_capture` timed out twice in Play.
   7c. (Task 11, accepted for now by product, 2026-11-10) The analytics hookup: first check in one call that the nest's prompt fires `PromptShown`, then grab one meadow nest egg in Play and count exactly one new `LogCustomEvent` line when it refills (the console never prints event names). Task 11's Play job and code_lead's own try could not grab from 4.5 studs: the prompt (on, 8 studs, line of sight off) never showed, so EggRefill was proven only in unit tests. code_lead's trace found the cause in the session, not the nests: a fresh default prompt 2 studs away also never showed. So the first call makes a fresh test prompt; if it shows 0 times, restart Play before the grab. This item is also the first Play grab from a Task 12 nest.
   7d. (Task 26b veto, 2026-11-10) The quiet drops on the phone and the belly ramp. On the iPhone 14, in a fresh Play session (no `hum:Move` loop left bound), climb each of the 4 ladders once with the thumbstick and the game's own camera, and let go where the ladder's let-go may land: no thud (biggest single meter step under 2). Then walk down each belly ramp to the lap landing on the computer: no thud. Task 26b's Play once saw one 30.3 step on the left belly ramp walk and a quiet redo (0.6), cause not found. If it shows again, code_lead traces it before review. Task 26b proved on the computer: every let-go case (cap 1.1, beard top 0.7, beard middle 0.7 to 0.8), the boot ladder let-go (0.7) and the side falls (one thud each).
+  7e. (plan 4 Task 3 veto, 2026-11-10) The Epic rank word on the phone. On the iPhone 14, stand about 8 to 10 studs from a waiting Epic nest (cuff) with the game's own camera: "Epic" shows in purple above the egg and the sleep meter bar does not cover it. Task 3's phone shot showed no word (likely the shot's camera put it under the meter bar, not checked); the computer shot and both Legendary shots were readable (`work/p4t3/shots/`). If the bar covers it, designer moves the label or the bar.
 - Done when (23a): every shot of items 1 to 5, 7, 7b, 7c and 7d is in the report with what it shows, compared with the mockups. The main chat sends them to designer.
 
 **Task 23b: The Play proof, items 6 and 6b (the wake-ups, the arm, the red circles)**
