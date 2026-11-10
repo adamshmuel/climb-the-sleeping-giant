@@ -47,6 +47,9 @@ export type Sample = {
 	zone: Config.ZoneName,
 	garden: number?,
 	thudFrom: Config.ZoneName?, -- set on the tick a thud is due: the highest zone the fall (or hop) left
+	falling: boolean, -- a fall is under way (the landing detector's state after this tick)
+	moveGrace: boolean, -- true on a tick the server's move still excuses (see `moved`), the last one included
+	onStitchedEdge: boolean, -- standing on a part marked StitchedEdge; asked only on ticks where falling is false
 }
 
 -- What the tracker needs from a player. A real Player fits, and tests pass simple stand-ins.
@@ -60,6 +63,8 @@ export type Deps = {
 	-- Where this character's jumps took off since the last time it was asked, oldest first (JumpWatcher).
 	takeoffs: (character: Model) -> { Vector3 },
 	now: () -> number, -- the clock in seconds (os.clock), injected so tests can set the time by hand
+	-- Is this character standing on a StitchedEdge part? Left out, `PlayerTracker.onStitchedEdgeByRay` is used.
+	onStitchedEdge: ((character: Model) -> boolean)?,
 }
 
 export type Tracker = {
@@ -109,11 +114,11 @@ end
 -- longer than the way to the feet. Only solid parts count (RespectCanCollide), so the invisible zone boxes
 -- don't. Every character is left out, so one player standing on another's head is not "on the ground".
 -- A surface too steep to stand on (his steep sides) is not ground either, so brushing past him is no landing.
-function PlayerTracker.groundedByRay(character: Model): boolean
+local function groundHit(character: Model): RaycastResult?
 	local root = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if root == nil or not root:IsA("BasePart") or humanoid == nil then
-		return false
+		return nil
 	end
 	local excluded: { Instance } = { character }
 	for _, player in Players:GetPlayers() do
@@ -125,8 +130,18 @@ function PlayerTracker.groundedByRay(character: Model): boolean
 	params.ExcludeInstances = excluded
 	params.RespectCanCollide = true
 	local length = humanoid.HipHeight + root.Size.Y / 2 + GROUND_REACH
-	local hit = Workspace:Raycast(root.Position, Vector3.new(0, -length, 0), params)
+	return Workspace:Raycast(root.Position, Vector3.new(0, -length, 0), params)
+end
+
+function PlayerTracker.groundedByRay(character: Model): boolean
+	local hit = groundHit(character)
 	return hit ~= nil and PlayerTracker.isStandable(hit.Normal, StarterPlayer.CharacterMaxSlopeAngle)
+end
+
+-- Is the character standing on a part marked StitchedEdge? Same ray as groundedByRay, same characters left out.
+function PlayerTracker.onStitchedEdgeByRay(character: Model): boolean
+	local hit = groundHit(character)
+	return hit ~= nil and hit.Instance:GetAttribute("StitchedEdge") == true
 end
 
 -- Did the character move since the last tick? The distance is measured in 3D, so climbing straight up counts.
@@ -211,6 +226,7 @@ end
 
 function PlayerTracker.new(deps: Deps): Tracker
 	local memories: { [number]: Memory } = {}
+	local onStitchedEdge: (Model) -> boolean = deps.onStitchedEdge or PlayerTracker.onStitchedEdgeByRay
 	local graces: { [number]: Grace } = {} -- players the server moved, whose grace has not ended yet
 
 	local function tick(_self: Tracker): { Sample }
@@ -251,6 +267,7 @@ function PlayerTracker.new(deps: Deps): Tracker
 				local thudFrom: Config.ZoneName?
 				local takeoffZones: { Config.ZoneName } = {}
 				local grace = graces[player.UserId]
+				local inGrace = grace ~= nil
 				if grace ~= nil then
 					-- The server moved them: the move and the drop after it are neither walking nor a fall. A thud owed
 					-- from before the move stays. The take-offs are still asked for, so the list is emptied now and
@@ -289,6 +306,9 @@ function PlayerTracker.new(deps: Deps): Tracker
 					zone = place.zone,
 					garden = place.garden,
 					thudFrom = thudFrom,
+					falling = memory.landing.falling,
+					moveGrace = inGrace,
+					onStitchedEdge = not memory.landing.falling and onStitchedEdge(character),
 				})
 			end
 		end

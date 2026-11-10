@@ -167,6 +167,7 @@ if server then
 		eggHome = { OnClientEvent = server.EggHome.OnClientEvent },
 		warning = { OnClientEvent = server.Warning.OnClientEvent },
 		caught = { OnClientEvent = server.Caught.OnClientEvent },
+		slideTip = { OnClientEvent = server.SlideTip.OnClientEvent },
 		giantState = server.GiantState,
 		viewport = SleepMeterUi.workspaceViewport(Workspace),
 	})

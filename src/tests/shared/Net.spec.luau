@@ -134,7 +134,7 @@ describe("Net.setup", function()
 		local first = Net.setup(parent)
 		first.GiantState:SetAttribute("Meter", 42)
 		local second = Net.setup(parent)
-		expect(#parent:GetDescendants()).toBe(13) -- the Remotes folder, 11 remotes and GiantState
+		expect(#parent:GetDescendants()).toBe(14) -- the Remotes folder, 12 remotes and GiantState
 		expect(second.GiantState).toBe(first.GiantState)
 		expect(second.Warning).toBe(first.Warning)
 		expect(second.SetTiptoe).toBe(first.SetTiptoe)

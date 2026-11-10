@@ -263,6 +263,9 @@ local function sampleOf(player: FakePlayer, garden: number?, x: number, z: numbe
 		zone = "Meadow",
 		garden = garden,
 		thudFrom = nil,
+		falling = false,
+		moveGrace = false,
+		onStitchedEdge = false,
 	}
 end
 

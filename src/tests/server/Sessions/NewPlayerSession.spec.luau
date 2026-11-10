@@ -214,6 +214,9 @@ local function at(zone: Config.ZoneName, moving: boolean, groundSpeed: number, g
 		zone = zone,
 		garden = garden,
 		thudFrom = nil,
+		falling = false,
+		moveGrace = false,
+		onStitchedEdge = false,
 	}
 end
 

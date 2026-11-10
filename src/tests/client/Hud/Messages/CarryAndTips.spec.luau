@@ -55,6 +55,7 @@ describe("Messages: the carry pill", function()
 			eggHome = { OnClientEvent = newSignal() },
 			warning = { OnClientEvent = newSignal() },
 			caught = { OnClientEvent = newSignal() },
+			slideTip = { OnClientEvent = newSignal() },
 			giantState = made(Instance.new("Folder")),
 			viewport = {
 				get = function()
@@ -191,6 +192,7 @@ describe("Messages: the Follow the glowing footprints! tip", function()
 			eggHome = { OnClientEvent = newSignal() },
 			warning = { OnClientEvent = newSignal() },
 			caught = { OnClientEvent = newSignal() },
+			slideTip = { OnClientEvent = newSignal() },
 			giantState = made(Instance.new("Folder")),
 			viewport = {
 				get = function()

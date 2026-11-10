@@ -249,6 +249,9 @@ local function sample(
 		zone = zone,
 		garden = garden,
 		thudFrom = thudFrom,
+		falling = false,
+		moveGrace = false,
+		onStitchedEdge = false,
 	}
 end
 

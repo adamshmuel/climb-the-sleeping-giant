@@ -61,6 +61,7 @@ export type Rig = {
 	eggHome: any,
 	warning: any,
 	caught: any,
+	slideTip: any,
 	me: any,
 	timers: { Timer },
 	handle: Messages.Handle,
@@ -109,6 +110,7 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 	local eggHome = newSignal()
 	local warning = newSignal()
 	local caught = newSignal()
+	local slideTip = newSignal()
 	local timers: { Timer } = {}
 	-- This player. EggHome carries the player who banked, and the card is for this one only.
 	local me = {
@@ -127,6 +129,7 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 		eggHome = { OnClientEvent = eggHome },
 		warning = { OnClientEvent = warning },
 		caught = { OnClientEvent = caught },
+		slideTip = { OnClientEvent = slideTip },
 		giantState = giantState,
 		viewport = {
 			get = function()
@@ -166,6 +169,7 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 		eggHome = eggHome,
 		warning = warning,
 		caught = caught,
+		slideTip = slideTip,
 		me = me,
 		timers = timers,
 		handle = handle,

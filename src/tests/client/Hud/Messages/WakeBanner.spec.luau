@@ -152,6 +152,7 @@ describe("Messages: the wake banner", function()
 			eggHome = { OnClientEvent = newSignal() },
 			warning = { OnClientEvent = newSignal() },
 			caught = { OnClientEvent = newSignal() },
+			slideTip = { OnClientEvent = newSignal() },
 			giantState = made(Instance.new("Folder")),
 			viewport = {
 				get = function()

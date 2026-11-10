@@ -91,6 +91,7 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - A timed action starts from a signal inside the key call itself (for example `GuiService.MenuIsOpen` turning true), never from an earlier call.
 - **Loops and copies.** Every background loop stops on a flag the clean-up script sets; finish one trial loop before starting the next. A walk script reads the walk speed from the game's config, never a saved value. A job that reuses a walk script lists every line that uses its mirror sign before the first paste.
 - A job fix that changes how every leg moves says so, and the next full walk re-checks every leg.
+- **Slides and falls need a real walk off the edge.** `character_navigation` finds a safe path and never walks off a seam, and setting the root's velocity doesn't move the body. Walk off the edge with a client `hum:Move(direction)` loop. <!-- p5t10, 2026-11-10 -->
 
 ## Prompts
 - Face the player and the camera toward the part, and print whether it's on screen.

@@ -181,6 +181,9 @@ local function sample(userId: number, garden: number?): PlayerTracker.Sample
 		zone = "Meadow",
 		garden = garden,
 		thudFrom = nil,
+		falling = false,
+		moveGrace = false,
+		onStitchedEdge = false,
 	}
 end
 

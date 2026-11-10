@@ -69,6 +69,10 @@ Messages.caughtTitle = "Caught!"
 Messages.caughtLine = "The egg went back. You lost nothing else."
 Messages.caughtSeconds = 3
 
+-- The slide tip (spec Rule 84): the first slide on a too-steep slope shows this in the tip plate, once per session.
+Messages.slideText = "💥 Too steep! Slipping is loud."
+Messages.slideSeconds = Config.Nests.SlideTipSeconds
+
 -- The words in the carry pill for an egg of this rarity.
 function Messages.carryText(rarity: string): string
 	return `{rarity} egg! Get it home`
@@ -96,6 +100,9 @@ export type WarningLike = { OnClientEvent: SignalLike }
 -- The Caught remote, as far as this module uses it: it fires the player who was caught.
 export type CaughtLike = { OnClientEvent: SignalLike }
 
+-- The SlideTip remote, as far as this module uses it: the server fires it once (it sends nothing).
+export type SlideTipLike = { OnClientEvent: SignalLike }
+
 export type PlayerLike = {
 	GetAttribute: (self: any, name: string) -> any,
 	GetAttributeChangedSignal: (self: any, name: string) -> RBXScriptSignal,
@@ -115,6 +122,7 @@ export type Deps = {
 	eggHome: EggHomeLike, -- the EggHome remote
 	warning: WarningLike, -- the Warning remote
 	caught: CaughtLike, -- the Caught remote
+	slideTip: SlideTipLike, -- the SlideTip remote
 	giantState: Instance, -- ReplicatedStorage.GiantState: its Phase says when he wakes and WokenBy who woke him
 	viewport: ViewportLike,
 	-- Runs `callback` after `seconds` and returns a function that cancels it. Left out, the real clock is used.
@@ -211,6 +219,22 @@ function Messages.start(deps: Deps): Handle
 	end
 	trove:Add(stopWarningTimer)
 
+	-- The slide tip: true while it shows its 3 seconds, and while it waits for the 85% tip, a missed-grab tip or the
+	-- pinned phone pill to end. A carrier's pill gives its place to the tip while it shows.
+	local slideShowing = false
+	local slidePending = false
+	local cancelSlide: (() -> ())? = nil
+
+	local function stopSlideTimer()
+		if cancelSlide then
+			cancelSlide()
+			cancelSlide = nil
+		end
+		slideShowing = false
+		slidePending = false
+	end
+	trove:Add(stopSlideTimer)
+
 	-- True while Phase is Awake. A player who joins while he is awake sees no banner, but the pill's words are right.
 	local awake = deps.giantState:GetAttribute("Phase") == "Awake"
 	local bannerShowing = false
@@ -278,12 +302,32 @@ function Messages.start(deps: Deps): Handle
 		return nil
 	end
 
-	-- Shows the tip that fits now, or none. The 85% warning wins over everything; then the carry pill; then a missed
-	-- grab; then the footprints tip, until the first grab.
+	local renderCarry: () -> ()
+
+	-- A slide tip that waited starts its seconds once nothing it waits for is showing. Called before every render.
+	local function maybeStartSlide()
+		if not slidePending or warningShowing or missedShowing or pillPinned then
+			return
+		end
+		slidePending = false
+		slideShowing = true
+		-- SOUND (plan 7): slide tip
+		cancelSlide = after(Messages.slideSeconds, function()
+			cancelSlide = nil
+			slideShowing = false
+			renderCarry()
+		end)
+	end
+
+	-- Shows the tip that fits now, or none. The 85% warning wins over everything; then the slide tip; then the carry
+	-- pill; then a missed grab; then the footprints tip, until the first grab.
 	local function renderTip()
+		maybeStartSlide()
 		local words: string? = nil
 		if warningShowing then
 			words = Messages.standStillText
+		elseif slideShowing then
+			words = Messages.slideText
 		elseif carriedRarity() == nil then
 			if missedShowing then
 				words = Messages.missedText
@@ -297,7 +341,8 @@ function Messages.start(deps: Deps): Handle
 		parts.tip.Visible = words ~= nil and not (caughtShowing and phone) and not pillPinned
 	end
 
-	local function renderCarry()
+	function renderCarry()
+		maybeStartSlide()
 		local rarity = carriedRarity()
 		if rarity == nil then
 			parts.pill.Visible = false
@@ -308,7 +353,7 @@ function Messages.start(deps: Deps): Handle
 		-- While he is awake, the carrier is told what to do, instead of where to go.
 		parts.text.Text = if awake then Messages.dodgeText else Messages.carryText(rarity)
 		parts.eggGradient.Color = MessageParts.eggColors(look)
-		parts.pill.Visible = not warningShowing -- the warning tip takes its place for 3 seconds
+		parts.pill.Visible = not warningShowing and not slideShowing -- a tip takes its place for 3 seconds
 		grabbedOnce = true
 		stopMissedTimer()
 		renderTip() -- they stand in the same place, and the carry pill wins
@@ -365,6 +410,15 @@ function Messages.start(deps: Deps): Handle
 		end
 	end
 
+	-- The server says the player slipped. The tip comes once; a second one while it shows or waits changes nothing.
+	local function onSlideTip()
+		if stopped or slideShowing or slidePending then
+			return
+		end
+		slidePending = true
+		renderCarry()
+	end
+
 	local function setPillPinned(pinned: boolean)
 		if stopped or pinned == pillPinned then
 			return
@@ -379,7 +433,7 @@ function Messages.start(deps: Deps): Handle
 				warning()
 			end
 		end
-		renderTip()
+		renderCarry()
 	end
 
 	-- An egg came home. Only this player's own egg shows the card; a second one while it shows replaces the words and
@@ -461,6 +515,7 @@ function Messages.start(deps: Deps): Handle
 	trove:Add(deps.eggHome.OnClientEvent:Connect(onEggHome))
 	trove:Add(deps.warning.OnClientEvent:Connect(onWarning))
 	trove:Add(deps.caught.OnClientEvent:Connect(onCaught))
+	trove:Add(deps.slideTip.OnClientEvent:Connect(onSlideTip))
 	trove:Add(deps.viewport.connect(relayout))
 
 	return {

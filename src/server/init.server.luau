@@ -30,6 +30,7 @@ local Recovery = require(script.Players.Recovery)
 local RedCircles = require(script.Giant.RedCircles)
 local Zones = require(script.Giant.Zones)
 local SafeSpots = require(script.Players.SafeSpots)
+local SlideWatch = require(script.Players.SlideWatch)
 local Spawning = require(script.Players.Spawning)
 local PressingHandler = require(script.Remotes.PressingHandler)
 local ResetHandler = require(script.Remotes.ResetHandler)
@@ -62,6 +63,8 @@ local eggSpots = WorldIndex.loadEggSpots(world)
 local landingSpots = WorldIndex.loadLandingSpots(world)
 -- And the point on his face that bounced players turn to look at.
 local facePoint = WorldIndex.loadGiantFace(world)
+-- And the seam line under his belly that a slide is measured against (Rule 84).
+local seamLine = WorldIndex.loadSeamLine(world)
 -- So is the footprint route (each client draws its own footprints from it). The server uses its meadow points as the
 -- places where he slams when no one carries an egg; a place without a good route stops here with every problem listed.
 local meadowPoints: { Vector3 } = {}
@@ -137,6 +140,39 @@ HomeDisplay.start({
 -- When he wakes, everyone on him is turned to face him, moved above a landing spot and lowered onto it. It lets go on
 -- the giant's tick, below.
 local floater = Floater.start({ players = Players, facePoint = facePoint, now = os.clock })
+
+-- The first slide a player has gets a tip on their screen (Rule 84). The judge is SlideWatch; this only wires it.
+local slides = SlideWatch.new({
+	seam = seamLine,
+	floating = function(userId: number): boolean
+		return floater:isFloating(userId)
+	end,
+	fireTip = function(userId: number)
+		local player = Players:GetPlayerByUserId(userId)
+		if player ~= nil then
+			net.SlideTip:FireClient(player)
+		end
+	end,
+})
+
+-- One reading per sample for the slide judge.
+local function slideReadings(samples: { PlayerTracker.Sample }): { SlideWatch.Reading }
+	local readings: { SlideWatch.Reading } = {}
+	for _, sample in samples do
+		table.insert(readings, {
+			userId = sample.userId,
+			position = sample.position,
+			falling = sample.falling,
+			thudFrom = sample.thudFrom :: string?,
+			moveGrace = sample.moveGrace,
+			onStitchedEdge = sample.onStitchedEdge,
+		})
+	end
+	return readings
+end
+Players.PlayerRemoving:Connect(function(player: Player)
+	slides:forget(player.UserId)
+end)
 
 -- Jumps: each character's Humanoid tells the server when it jumps, because a jump up the steep belly path is in the air
 -- for too short a time for the ground check to see, and a held Jump hops again within 0.3 s. The server notes where
@@ -250,6 +286,7 @@ local director = GiantDirector.new({
 		local samples = tracker:tick()
 		recovery:step()
 		banking:check(samples)
+		slides:check(slideReadings(samples))
 		if analytics ~= nil then
 			analytics:check(samples)
 		end

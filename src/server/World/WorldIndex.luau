@@ -8,6 +8,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local Zones = require(script.Parent.Parent.Giant.Zones)
 local NestReader = require(script.Parent.NestReader)
+local SlideWatch = require(script.Parent.Parent.Players.SlideWatch)
 
 export type Box = { cframe: CFrame, size: Vector3 }
 
@@ -54,6 +55,9 @@ export type LandingSpot = {
 	index: number, -- 1 to 10
 	position: Vector3, -- the top centre of the spot's part: where a player's feet land
 }
+
+-- One stitch of the seam (World.Seam.SeamLine): where it is and which way is downhill (flat, length 1).
+export type SeamPoint = SlideWatch.SeamPoint
 
 -- The egg models in ServerStorage.Assets.Eggs, one per rank in Config.RarityOrder.
 export type EggTemplates = { [string]: Model }
@@ -589,6 +593,54 @@ function WorldIndex.loadLandingSpots(world: Instance): { LandingSpot }
 		error(table.concat(problems, "\n"), 0)
 	end
 	return spots
+end
+
+-- Reads World.Seam.SeamLine: every BasePart in it is one stitch, with a `Down` attribute (a flat Vector3 pointing
+-- downhill). Sorted by name. Problems are listed like readLandingSpots does.
+function WorldIndex.readSeamLine(world: Instance): ({ SeamPoint }?, { string })
+	local seam = world:FindFirstChild("Seam")
+	if seam == nil then
+		return nil, { "World is missing Seam" }
+	end
+	local line = seam:FindFirstChild("SeamLine")
+	if line == nil then
+		return nil, { "Seam is missing SeamLine" }
+	end
+	local parts: { BasePart } = {}
+	for _, child in line:GetChildren() do
+		if child:IsA("BasePart") then
+			table.insert(parts, child)
+		end
+	end
+	table.sort(parts, function(a, b)
+		return a.Name < b.Name
+	end)
+	local points: { SeamPoint } = {}
+	local problems: { string } = {}
+	for _, part in parts do
+		local down = part:GetAttribute("Down")
+		if typeof(down) == "Vector3" then
+			table.insert(points, { position = part.Position, down = down })
+		else
+			table.insert(problems, `SeamLine.{part.Name} has no Down (a Vector3)`)
+		end
+	end
+	if #parts == 0 then
+		table.insert(problems, "SeamLine is empty")
+	end
+	if #problems > 0 then
+		return nil, problems
+	end
+	return points, {}
+end
+
+-- Same as readSeamLine, but stops the server with every problem listed (one per line) if the world is wrong.
+function WorldIndex.loadSeamLine(world: Instance): { SeamPoint }
+	local points, problems = WorldIndex.readSeamLine(world)
+	if points == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return points
 end
 
 -- Reads the point bounced players turn to look at: the pivot position of World.Giant.SleepEyes (the centre of his face).

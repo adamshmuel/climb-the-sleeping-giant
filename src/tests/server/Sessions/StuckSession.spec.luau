@@ -181,6 +181,9 @@ local function tick(s: Session, moving: boolean): number
 		zone = "Belly",
 		garden = nil,
 		thudFrom = nil,
+		falling = false,
+		moveGrace = false,
+		onStitchedEdge = false,
 	}
 	s.samples = { sample }
 	s.director:step()
