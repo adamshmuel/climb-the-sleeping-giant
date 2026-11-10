@@ -10,3 +10,4 @@
 - p3t8 8f step back: a moving HUD piece (rising Zs) needs its highest frame drawn and >= 8 pt margin to every screen edge there; zero margin forced point-exact Play measures. Write limits relative to another HUD piece in the same ScreenGui (no GetGuiInset; phone sim reports 58 but GUI is 20 pt taller than viewport).
 
 - Judging a tint from Play shots: sample real pixel colours (python3 PIL getpixel on the jpg) at the egg in sun and shade; the Epic #5E3CFF tint measured #2500FE in shade vs #832FFF in sun (p5t12, 2026-11-10).
+- Phone HIDDEN verdict (p5t17c, 2026-11-10): first check the phone shot used the computer shot's camera; 844x390 has the same vertical view, so a sideways camera, not the phone, hides things. Body-egg beams are off within 30 studs, so no beam shows at a nest up close.
