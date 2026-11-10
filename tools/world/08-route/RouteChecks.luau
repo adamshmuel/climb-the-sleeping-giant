@@ -401,11 +401,19 @@ local function planWorld(world: Instance): Plan
 		end
 	end
 
-	-- the landing spots
+	-- the landing spots; the boot ladder feet are the route points that carry both a Ladder and a WayUpFoot tag
+	-- (the same rule as LandingSpots.spec)
+	local ladderFeet: { { name: string, position: Vector3 } } = {}
+	for _, point in points do
+		if point.ladder ~= nil and point.wayUpFoot ~= nil then
+			table.insert(ladderFeet, { name = point.name, position = point.position })
+		end
+	end
 	local landing, flowerReport = LandingChecks.planLanding({
 		plots = plots,
 		zones = zones,
 		giant = giant :: Model,
+		ladderFeet = ladderFeet,
 		eggPlaces = eggPlaces,
 		stems = stems,
 		circles = circles,

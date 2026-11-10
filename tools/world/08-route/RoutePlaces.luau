@@ -13,13 +13,14 @@ local MAX_LINK_LENGTH = 25
 local RAY_START_ABOVE = 3
 local LANDING_SPACING = 10
 local LANDING_REACH = 110
-local LANDING_BOX = Vector3.new(4, 6, 4)
+local LANDING_BOX = Vector3.new(5, 6, 5) -- Rule 43: a 5 by 6 by 5 player box touches nothing
 local LANDING_BOX_LIFT = 0.1
 local LANDING_MIN_NORMAL_Y = math.cos(math.rad(10)) -- flat grass only
 local STEM_LINK_CLEARANCE = 3 -- studs, across the ground, between a route link and a sunflower stem
 local EDGE_LINK_CLEARANCE = 1 -- studs between a route link and the edge of a bush or rock (half a player's width)
 local PROP_LANDING_CLEARANCE = 5 -- studs between a landing spot and a stem, or the edge of a bush or rock
 local EGG_LANDING_CLEARANCE = 10 -- studs between a landing spot and every egg spot
+local LADDER_FOOT_CLEARANCE = 5 -- studs, across the ground, between a landing spot and a boot ladder's foot (Rule 43)
 local FLOWER_LANDING_CLEARANCE = 2.5 -- studs: designer's look rule, reported only
 local SAME_PLACE = 0.05 -- studs: closer than this is "the same place" when the script compares with what exists
 local SKY_RAY_LENGTH = 300
@@ -287,6 +288,8 @@ local LANDING_PLACES: { { number } } = {
 	{ -50, -54 },
 	{ 56, -62 }, -- Task 5b2 moved: product's addendum, spec 3 line 93
 	{ 49, -54 },
+	{ -48, -69 }, -- Task 8d: 5.8 studs from the left boot ladder's foot, flat grass (measured by code_lead, 2026-11-10)
+	{ 48, -69 }, -- Task 8d: the mirror, by the right boot ladder
 }
 
 return {
@@ -304,6 +307,7 @@ return {
 	EDGE_LINK_CLEARANCE = EDGE_LINK_CLEARANCE,
 	PROP_LANDING_CLEARANCE = PROP_LANDING_CLEARANCE,
 	EGG_LANDING_CLEARANCE = EGG_LANDING_CLEARANCE,
+	LADDER_FOOT_CLEARANCE = LADDER_FOOT_CLEARANCE,
 	FLOWER_LANDING_CLEARANCE = FLOWER_LANDING_CLEARANCE,
 	SAME_PLACE = SAME_PLACE,
 	SKY_RAY_LENGTH = SKY_RAY_LENGTH,

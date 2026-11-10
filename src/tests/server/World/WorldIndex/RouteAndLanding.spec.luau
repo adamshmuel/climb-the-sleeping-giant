@@ -229,7 +229,7 @@ describe("WorldIndex.readWaysUp", function()
 	end)
 end)
 
--- Builds a fake world that only has LandingSpots (Task 23): spots 1 to 8, with no parent.
+-- Builds a fake world that only has LandingSpots (Task 23): spots 1 to 10, with no parent.
 type LandingOptions = {
 	skip: { number }?, -- spot numbers to leave out
 	wrongClass: { [number]: string }?, -- spot number -> class to build it as
@@ -247,7 +247,7 @@ local function makeLandingWorld(options: LandingOptions?): Folder
 	local folder = Instance.new("Folder")
 	folder.Name = "LandingSpots"
 	folder.Parent = world
-	for number = 8, 1, -1 do -- built backwards on purpose: the reader must give them back in order
+	for number = 10, 1, -1 do -- built backwards on purpose: the reader must give them back in order
 		if opts.skip and table.find(opts.skip, number) then
 			continue
 		end
@@ -270,13 +270,13 @@ local function makeLandingWorld(options: LandingOptions?): Folder
 end
 
 describe("WorldIndex.readLandingSpots", function()
-	it("reads the 8 landing spots in order, each with the top centre of its part", function()
+	it("reads the 10 landing spots in order, each with the top centre of its part", function()
 		local world = makeLandingWorld()
 		local spots, problems = WorldIndex.readLandingSpots(world)
 		expect(problems).toEqual({})
 		expect(spots).never.toBeNil()
 		local list = spots :: { WorldIndex.LandingSpot }
-		expect(#list).toBe(8)
+		expect(#list).toBe(10)
 		for number, spot in list do
 			expect(spot.index).toBe(number)
 			expect(spot.position).toEqual(Vector3.new(number * 12, 2, -70))
@@ -289,6 +289,14 @@ describe("WorldIndex.readLandingSpots", function()
 		local spots, problems = WorldIndex.readLandingSpots(world)
 		expect(spots).toBeNil()
 		expect(problems).toEqual({ "LandingSpots is missing LandingSpot_5" })
+		world:Destroy()
+	end)
+
+	it("reports the missing spot when LandingSpot_10 is left out", function()
+		local world = makeLandingWorld({ skip = { 10 } })
+		local spots, problems = WorldIndex.readLandingSpots(world)
+		expect(spots).toBeNil()
+		expect(problems).toEqual({ "LandingSpots is missing LandingSpot_10" })
 		world:Destroy()
 	end)
 
@@ -308,12 +316,12 @@ describe("WorldIndex.readLandingSpots", function()
 		world:Destroy()
 	end)
 
-	it("reports a child that is not one of the 8 spots", function()
-		local world = makeLandingWorld({ extra = { "LandingSpot_9", "Stray" } })
+	it("reports a child that is not one of the 10 spots", function()
+		local world = makeLandingWorld({ extra = { "LandingSpot_11", "Stray" } })
 		local spots, problems = WorldIndex.readLandingSpots(world)
 		expect(spots).toBeNil()
 		expect(problems).toEqual({
-			"LandingSpots has an unexpected child LandingSpot_9",
+			"LandingSpots has an unexpected child LandingSpot_11",
 			"LandingSpots has an unexpected child Stray",
 		})
 		world:Destroy()
@@ -323,7 +331,7 @@ end)
 describe("WorldIndex.loadLandingSpots", function()
 	it("returns the spots of a good world, and errors with every problem of a bad one", function()
 		local good = makeLandingWorld()
-		expect(#WorldIndex.loadLandingSpots(good)).toBe(8)
+		expect(#WorldIndex.loadLandingSpots(good)).toBe(10)
 		good:Destroy()
 		local bad = makeLandingWorld({ skip = { 2, 7 } })
 		local ok, message = pcall(WorldIndex.loadLandingSpots, bad)

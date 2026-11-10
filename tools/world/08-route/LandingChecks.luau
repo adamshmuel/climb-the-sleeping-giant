@@ -14,6 +14,7 @@ local LANDING_BOX_LIFT = Places.LANDING_BOX_LIFT
 local LANDING_MIN_NORMAL_Y = Places.LANDING_MIN_NORMAL_Y
 local PROP_LANDING_CLEARANCE = Places.PROP_LANDING_CLEARANCE
 local EGG_LANDING_CLEARANCE = Places.EGG_LANDING_CLEARANCE
+local LADDER_FOOT_CLEARANCE = Places.LADDER_FOOT_CLEARANCE
 local FLOWER_LANDING_CLEARANCE = Places.FLOWER_LANDING_CLEARANCE
 local SKY_RAY_LENGTH = Places.SKY_RAY_LENGTH
 local LANDING_PLACES = Places.LANDING_PLACES
@@ -26,6 +27,7 @@ export type Context = {
 	plots: Instance,
 	zones: Instance,
 	giant: Model,
+	ladderFeet: { { name: string, position: Vector3 } }, -- the two boot ladder feet (route points tagged Ladder and WayUpFoot)
 	eggPlaces: { { name: string, position: Vector3 } },
 	stems: { Stem },
 	circles: { Circle },
@@ -70,6 +72,10 @@ local function planLanding(context: Context): ({ Vector3 }, { string })
 		end
 		table.insert(gardenBoxes, volume)
 	end
+	local ladderFeet = context.ladderFeet
+	if #ladderFeet ~= 2 then
+		error(`landing: found {#ladderFeet} boot ladder feet in the route, not 2`)
+	end
 	local giantMiddle = flat(context.giant:GetPivot().Position)
 	local boxParams = OverlapParams.new()
 	boxParams.RespectCanCollide = true
@@ -105,6 +111,14 @@ local function planLanding(context: Context): ({ Vector3 }, { string })
 		end
 		if (flat(spot) - giantMiddle).Magnitude > LANDING_REACH then
 			problem(`landing: {label}: more than {LANDING_REACH} studs from the giant's middle`)
+		end
+		for _, foot in ladderFeet do
+			local distance = (flat(spot) - flat(foot.position)).Magnitude
+			if distance < LADDER_FOOT_CLEARANCE then
+				problem(
+					`landing: {label}: only {string.format("%.1f", distance)} studs from the ladder foot {foot.name} (the least is {LADDER_FOOT_CLEARANCE})`
+				)
+			end
 		end
 		for other, otherSpot in landing do
 			if (flat(spot) - flat(otherSpot)).Magnitude < LANDING_SPACING then

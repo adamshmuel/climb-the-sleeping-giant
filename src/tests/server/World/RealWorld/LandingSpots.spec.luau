@@ -18,10 +18,11 @@ describe("the real world, route and landing spots", function()
 	local StarterPlayer = game:GetService("StarterPlayer")
 	local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 
-	local LANDING_COUNT = 8
+	local LANDING_COUNT = 10
 	local LANDING_SPACING = 10
 	local LANDING_REACH = 110 -- studs, across the ground, from the giant's middle
-	local LANDING_BOX = Vector3.new(4, 6, 4) -- a standing player with room around
+	local LANDING_BOX = Vector3.new(5, 6, 5) -- a standing player with room around (Rule 43)
+	local LADDER_FOOT_CLEARANCE = 5 -- studs, across the ground, between a landing spot and every ladder foot (Rule 43)
 	local LANDING_BOX_LIFT = 0.1
 	local STEM_LINK_CLEARANCE = 3 -- studs, across the ground, between a route link and a sunflower stem
 	local EDGE_LINK_CLEARANCE = 1 -- studs between a route link and the edge of a bush or rock (half a player's width)
@@ -100,7 +101,7 @@ describe("the real world, route and landing spots", function()
 		return (point - (start + along * fraction)).Magnitude
 	end
 
-	it("there are 8 landing spots, in the Meadow and in no garden, on ground a player can stand on", function()
+	it("there are 10 landing spots, in the Meadow and in no garden, on ground a player can stand on", function()
 		local world = realWorld()
 		local zoneBoxes, zoneProblems = WorldIndex.readZones(world)
 		expect(zoneProblems).toEqual({})
@@ -144,7 +145,7 @@ describe("the real world, route and landing spots", function()
 		end
 	end)
 
-	it("every landing spot has room for a standing player: a 4 by 6 by 4 box above it touches no solid part", function()
+	it("every landing spot has room for a standing player: a 5 by 6 by 5 box above it touches no solid part", function()
 		local params = OverlapParams.new()
 		params.RespectCanCollide = true
 		for _, spot in loadLandingSpots() do
@@ -260,6 +261,33 @@ describe("the real world, route and landing spots", function()
 		expect(problems).toEqual({})
 	end)
 
+	it("landing spots are at least 5 studs from every boot ladder foot", function()
+		-- The ladder feet are the route points that carry both a Ladder and a WayUpFoot tag (code_lead's ruling), read
+		-- through WorldIndex.readWaysUp. Distance is across the ground.
+		local waysUp, problems = WorldIndex.readWaysUp(realWorld())
+		expect(problems).toEqual({})
+		local feet: { WorldIndex.RoutePoint } = {}
+		for _, wayUp in waysUp :: { WorldIndex.WayUp } do
+			if wayUp.foot.ladder ~= nil then
+				table.insert(feet, wayUp.foot)
+			end
+		end
+		expect(#feet).toBe(2)
+		local tooClose: { string } = {}
+		for _, landing in loadLandingSpots() do
+			for _, foot in feet do
+				local distance = (flat(landing.position) - flat(foot.position)).Magnitude
+				if distance < LADDER_FOOT_CLEARANCE then
+					table.insert(
+						tooClose,
+						string.format("LandingSpot_%d is %.1f studs from %s", landing.index, distance, foot.name)
+					)
+				end
+			end
+		end
+		expect(tooClose).toEqual({})
+	end)
+
 	it("landing spots stay clear of sunflower stems, bushes and rocks", function()
 		local stems, circles = collectProps(realWorld())
 		expect(#stems > 0).toBe(true)
@@ -371,6 +399,8 @@ describe("the real world, route and landing spots", function()
 			{ -50, -54 },
 			{ 56, -62 }, -- 5b2 moved: product's addendum, spec 3 line 93
 			{ 49, -54 },
+			{ -48, -69 }, -- Task 8d: 5.8 studs from the left boot ladder's foot
+			{ 48, -69 }, -- Task 8d: the mirror, by the right boot ladder
 		}
 		local spots = loadLandingSpots()
 		expect(#spots).toBe(#approved)

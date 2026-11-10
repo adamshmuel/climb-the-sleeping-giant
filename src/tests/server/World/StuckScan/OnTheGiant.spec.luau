@@ -458,7 +458,7 @@ describe("the stuck scan on the real world", function()
 		if #problems > 0 then
 			error("\n" .. table.concat(problems, "\n"), 0)
 		end
-		expect(#landings).toBe(8)
+		expect(#landings).toBe(10)
 	end)
 
 	it("the giant has no stuck spots, and the V1 stuck spots stay fixed", function()

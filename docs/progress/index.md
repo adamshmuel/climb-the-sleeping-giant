@@ -18,7 +18,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | V2 setups 1 to 7b | `v2/setups.md` | 8 of 8 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
-| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 16 of 35 | ◐ in progress (Tasks 8a and 8b done; next: Task 8c, then 8d) |
+| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 23 of 43 | ◐ in progress (Tasks 8a to 8d done; next: Task 8e) |
 | 4. Egg reachability | `v2/egg-reachability.md` | 0 of 13 | ☐ not started |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 13 of 36 | ◐ in progress (13, 13b, 14, 15a-15e, 15e2, 15e3, 15f, 15g and 16 done; next: the build order in `docs/plans/v2/index.md`) |
 | 6. Wake-up | `v2/wake-up.md` | 0 of 23 | ☐ not started |
@@ -37,7 +37,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Tests that are red today
 
-5 accepted reds: Route ×2 and DrawnBody (green in plan 3 Task 8c), EggSpots (plan 5 Task 12), and OnTheGiant "the walk area passes the walk-area check" (plan 5 Task 15 turns every kind green but seam match; Task 16 turns seam match green). Latest full run, plan 3 Task 8b (2026-11-10): 3008 passed, 5 failed, 0 could not run.
+2 accepted reds: EggSpots (plan 5 Task 12), and OnTheGiant "the walk area passes the walk-area check" (plan 5 Task 15 turns every kind green but seam match; Task 16 turns seam match green). Latest full run, plan 3 Task 8d (2026-11-10): 3025 passed, 2 failed.
 
 The stuck scan is green: 114 stuck spots (plan 5 Task 13b), all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
 

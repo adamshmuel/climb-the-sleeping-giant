@@ -42,9 +42,9 @@ export type WayUp = {
 	top: RoutePoint,
 }
 
--- One place in the meadow where a player lands after the bounce-off (Rule 12): LandingSpot_1 to LandingSpot_8.
+-- One place in the meadow where a player lands after the bounce-off (Rule 12): LandingSpot_1 to LandingSpot_10.
 export type LandingSpot = {
-	index: number, -- 1 to 8
+	index: number, -- 1 to 10
 	position: Vector3, -- the top centre of the spot's part: where a player's feet land
 }
 
@@ -57,7 +57,7 @@ local ZONE_NAMES = { "Boots", "Belly", "Beard", "Nightcap" }
 local PLOT_COUNT = 8
 local PET_PAD_COUNT = 6
 local HOME_SPOT_COUNT = 12
-local LANDING_SPOT_COUNT = 8
+local LANDING_SPOT_COUNT = 10
 
 local WorldIndex = {}
 
@@ -459,7 +459,7 @@ function WorldIndex.readWaysUp(world: Instance): ({ WayUp }?, { string })
 	return waysUp, {}
 end
 
--- Reads World.LandingSpots: exactly LandingSpot_1 to LandingSpot_8, each a BasePart. They come back in number order.
+-- Reads World.LandingSpots: exactly LandingSpot_1 to LandingSpot_10, each a BasePart. They come back in number order.
 function WorldIndex.readLandingSpots(world: Instance): ({ LandingSpot }?, { string })
 	local folder = world:FindFirstChild("LandingSpots")
 	if folder == nil then
