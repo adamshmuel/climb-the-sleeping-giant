@@ -4,6 +4,9 @@
 Luau reads a line starting with "(" as a call on the line before, so the
 script fails to parse and the Studio call is lost. Lines inside
 long strings and block comments are skipped.
+
+Also blocks any call to Undo or Redo (ChangeHistoryService): it rolls back
+changes made by other jobs too.
 """
 
 import json
@@ -68,6 +71,15 @@ def paren_lines(code):
 def main():
     data = json.load(sys.stdin)
     code = (data.get("tool_input") or {}).get("code", "")
+    if re.search(r"[:.]\s*(Undo|Redo)\s*\(", code):
+        print(
+            "Blocked: this Studio script calls Undo or Redo. Studio's history mixes every agent's "
+            "changes, so Undo can roll back work you never saw (p5t16b, 2026-11-10: it lost CuffWalk). "
+            "To roll back, clone from ServerStorage.WorldBackups.<task> and re-run the committed "
+            "world scripts in order, each with a CHECK_ONLY dry run first.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
     lines = paren_lines(code)
     if lines:
         shown = ", ".join(str(n) for n in lines[:5])

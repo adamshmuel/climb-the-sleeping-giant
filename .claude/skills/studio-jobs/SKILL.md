@@ -54,6 +54,7 @@ A job is a script in `work/` pasted with `execute_luau`. `scripts/job-check.sh` 
 - A walk map covers every place the job measures, with 20 studs around each, and prints its edges.
 - A job that finds starts by label matches the label's first word, and its first call prints labels with no start.
 - A report pastes the last line of each check it ran.
+- **A world script's state is checked only with a CHECK_ONLY clone** (gsub the flag on a clone of its Source). Never run one for real to see "already done": a script whose done-test predates later fixes rebuilds over them. Undo and Redo are blocked by a hook; a rollback clones from `WorldBackups`. <!-- p5t16b, 2026-11-10: a real re-run of 22 plus Undo lost CuffWalk -->
 
 ## Printing results
 - Every stop names the check that fired and prints that check's own first failure.
