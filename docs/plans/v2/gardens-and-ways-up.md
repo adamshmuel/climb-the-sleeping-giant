@@ -496,7 +496,15 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   2. No footprint lies between a ladder's foot and top points.
   3. The last footprint before a ladder foot is 2 to 4 studs in front of the bottom rung, on the climbing side, and the last 8 studs of trail are within 30° of straight at the rungs (spec 3 section 5, "Trail end at a ladder").
   4. (Real world) Check A2: from garden 8's spawn point, with every meadow and boot egg taken, the way to Rare egg 1 goes up the right boot ladder (spec check A2, 2026-11-03). From each garden, the way to Rare egg 1 goes up that garden's own way up.
-- Done when: the tests pass, and a Play walk with the player's controls only (computer and iPhone 14) from gardens 1, 2, 3, 6, 7 and 8 after banking the Common egg shows: the next footprints are on screen at every step, the trail ends facing the rungs, and holding forward climbs. One more shot (designer, Task 8c step back, 2026-11-10): from the player's camera on the left belly ramp, the last footprints and Rare egg 1 at the ramp top, where prints could show running into his skin (+1 Studio call). Shots go to designer.
+- Size: 3 steps, 60 min, 20 Studio calls (cards `work/p3t13/13-card.md`, `13-run-card.md`).
+- Done when: the tests pass (the full run too). The Play walk and the left belly ramp shot are Task 13c.
+
+**Task 13c: Footprints on the real ways up, played with the player's controls**
+- Stands on: Task 13 (green, with its full run passed).
+- Spec rules: Rule 42 (Footprints take the quickest way), section 5 "Trail end at a ladder".
+- Files: none (a Play job, `work/p3t13/13c-play-card.md`; no code change).
+- Size: 3 steps, 60 min, 23 Studio calls.
+- Done when: a Play walk with the player's controls only (computer and iPhone 14) from gardens 1, 2, 3, 6, 7 and 8 after banking the Common egg shows: the next footprints are on screen at every step, the trail ends facing the rungs, and holding forward climbs. One more shot (designer, Task 8c step back, 2026-11-10): from the player's camera on the left belly ramp, the last footprints and Rare egg 1 at the ramp top, where prints could show running into his skin. Shots go to designer.
 
 **Task 13b: Props fade in front of the camera** (a new feature, approved by Adam on 2026-11-04; product's ruling `work/t5/real-play-ruling.md`, finding 3a, and `work/t5/drop-task14.md`)
 - Stands on: designer's answer to question 1 in `work/t5/real-play-ruling.md` (fade values, which prop families count, his body excluded); for Step B also Step A and Tasks 4e4 and 4g (the final prop spots, built).

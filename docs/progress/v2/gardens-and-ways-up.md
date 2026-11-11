@@ -46,6 +46,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 12a: `costsFrom` and `routeFrom` on fake maps (split from Task 12 on 2026-11-10; stands on nothing; plan 4 Task 7 needs it) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 12b: Every way up is equally loud, real world (stands on Tasks 9, 11, 12a, 13 and plan 5 Task 22b) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way (stands on Task 8, built; built before Task 12b) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 13c: Footprints on the real ways up, played (split from Task 13 on 2026-11-11; stands on Task 13) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 14: The ladder glows on your screen | removed 2026-11-03 (Adam dropped it; nothing built) | product |
 | Gardens and ways up (V2 spec 3) | Task 15a: The slam circle skips ladders and steep surfaces | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 15b: The ladder grace and the slam warning on a ladder in Play | ☐ not started | |
