@@ -70,7 +70,8 @@ local ROPE_OUT = 2.85 -- rope and post centre line, from the ramp's centre line 
 -- Post stations per side and one straight rope between neighbours (designer's verdict work/t6/look-verdict-6a2.md, item 2).
 -- No rail over the landing deck, and the P side has no rail at all: posts 6 and 12 stand inside his skin, so a lone post
 -- 10 would be left (designer, work/t6/look-verdict-6a2.md, Step 4 again).
-local POST_STATIONS: { [string]: { number } } = { N = { 6, 7, 10, 13, 16 }, P = {} }
+-- Post 16 dropped: it stood inside Rare egg 1's nest rim (p3t13 post fix).
+local POST_STATIONS: { [string]: { number } } = { N = { 6, 7, 10, 13 }, P = {} }
 local ROPE_SAMPLES = 4 -- rays along a span rope
 local RAIL_RAY_UP = 6
 
