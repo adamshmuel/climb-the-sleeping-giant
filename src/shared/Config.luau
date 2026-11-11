@@ -159,6 +159,8 @@ export type Config = {
 		SinkEggUpright: number,
 		SinkEggLeaning: number,
 		EggInNest: number,
+		BodyBeamStuds: number,
+		BodyZones: { [string]: boolean },
 	},
 }
 
@@ -323,6 +325,8 @@ local config: Config = {
 		SinkEggUpright = 0.3, -- studs an upright bare egg may sink into its surface
 		SinkEggLeaning = 1, -- studs a leaning bare egg may sink into its surface
 		EggInNest = 0.2, -- studs an egg's bottom may be off its nest's seat (checked in Step 6b)
+		BodyBeamStuds = 10, -- studs: length of the beam of a waiting egg on his body (spec 4 section 6)
+		BodyZones = { Belly = true, Beard = true, Nightcap = true }, -- the zones that are his body; boots and meadow keep V1's beam
 	},
 }
 

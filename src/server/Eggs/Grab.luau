@@ -66,6 +66,9 @@ export type Deps = {
 	-- The giant's phase, read on every step: the right cuff nests lock while it is Awake (Rule 100). Left out, it is
 	-- always "Asleep" (nothing locks).
 	phase: (() -> Config.Phase)?,
+	-- Which zone a position is in. An egg on his body (belly, beard, nightcap) shows a 10-stud beam. Left out, no beam
+	-- is shortened.
+	zoneOf: ((position: Vector3) -> Config.ZoneName)?,
 }
 
 export type Grab = {
@@ -189,7 +192,7 @@ function Grab.start(deps: Deps): Grab
 	local sawAwake = false
 	local leftAwakeAt: number? = nil
 	local lastFistAt: number? = nil
-	local spotModels = SpotModels.new(deps.spots, deps.templates)
+	local spotModels = SpotModels.new(deps.spots, deps.templates, deps.zoneOf)
 	trove:Add(function()
 		spotModels:destroy()
 	end)

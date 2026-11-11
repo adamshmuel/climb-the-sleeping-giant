@@ -318,6 +318,20 @@ describe("Config", function()
 		expect(Config.Nests.RareEggOne).toBe("Nest_LowerBelly_Left")
 	end)
 
+	it("Config.Ranks holds the whole rank table, with the 10-stud body beam and its three zones", function()
+		expect(Config.Ranks).toEqual({
+			VisibleBelow = 0.5,
+			FloatLimit = 0.2,
+			SinkNestUpright = 0.3,
+			SinkNestLeaning = 1.5,
+			SinkEggUpright = 0.3,
+			SinkEggLeaning = 1,
+			EggInNest = 0.2,
+			BodyBeamStuds = 10,
+			BodyZones = { Belly = true, Beard = true, Nightcap = true },
+		})
+	end)
+
 	it("Config can't be changed while the game runs", function()
 		expect(function()
 			(Config.Meter :: any).Max = 5

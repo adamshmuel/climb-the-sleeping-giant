@@ -32,6 +32,7 @@ local TiptoeButton = require(script.Hud.TiptoeButton)
 local BodyBeams = require(script.World.BodyBeams)
 local EggFade = require(script.World.EggFade)
 local Footprints = require(script.World.Footprints)
+local RankGlowView = require(script.World.RankGlowView)
 local RouteGraph = require(script.World.RouteGraph)
 local SpotLabels = require(script.World.SpotLabels)
 
@@ -358,6 +359,17 @@ if server then
 			})
 			script.Destroying:Once(bodyBeams.stop)
 		end
+		-- The rank glow: a halo of see-through rings behind every waiting egg above Common, hidden up close and strongest
+		-- from 75 studs (this screen only).
+		local rankGlow = RankGlowView.start({
+			root = eggSpots,
+			camera = function()
+				local camera = Workspace.CurrentCamera
+				return if camera then camera.CFrame else nil
+			end,
+			step = RunService.RenderStepped,
+		})
+		script.Destroying:Once(rankGlow.stop)
 	else
 		warn("The egg spots were not found, so the grab prompts and the egg labels have no look.")
 	end

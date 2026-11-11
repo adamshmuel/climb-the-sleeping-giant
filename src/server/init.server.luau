@@ -121,6 +121,9 @@ local grab = Grab.start({
 		return Workspace:GetServerTimeNow()
 	end,
 	phase = readPhase,
+	zoneOf = function(position)
+		return Zones.zoneAt(position, zoneBoxes)
+	end,
 })
 
 -- Bringing eggs home: banks a carrier who stands in their own garden, and sends a carried egg back to its spot

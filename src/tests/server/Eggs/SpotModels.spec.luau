@@ -222,6 +222,7 @@ local function newLookingTemplate(rarity: string, withBeam: boolean): Model
 		bottom.Parent = body
 		local top = Instance.new("Attachment")
 		top.Name = "BeamTop"
+		top.Position = Vector3.new(0, 26, 0) -- the real Rare template's beam is about 26 studs long
 		top.Parent = body
 		local beam = Instance.new("Beam")
 		beam.Attachment0 = bottom
@@ -432,5 +433,83 @@ describe("SpotModels EggPost (Rule 85)", function()
 		models:hide("EggSpot_Common_1")
 		models:step({})
 		expect(allSolid(parts, false)).toBe(true)
+	end)
+end)
+
+-- The beam on an egg on his body is 10 studs long (spec 4 section 6; Config.Ranks.BodyBeamStuds). The fake Rare beam
+-- is 26 studs (newLookingTemplate), so a shortened clone is easy to tell from an untouched one.
+local function beamLength(root: Instance): number
+	local beam = root:FindFirstChildWhichIsA("Beam", true) :: Beam
+	local a0 = beam.Attachment0 :: Attachment
+	local a1 = beam.Attachment1 :: Attachment
+	return (a1.WorldPosition - a0.WorldPosition).Magnitude
+end
+
+local function zoneStub(zone: Config.ZoneName): (Vector3) -> Config.ZoneName
+	return function(_position: Vector3): Config.ZoneName
+		return zone
+	end
+end
+
+describe("SpotModels: the 10-stud beam on his body", function()
+	for _, zone in { "Belly", "Beard", "Nightcap" } do
+		it(`shortens the shown egg's beam to 10 studs in the {zone}`, function()
+			local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Rare_1")
+			expect(beamLength(spot.model)).toBeCloseTo(10, 2)
+		end)
+	end
+
+	for _, zone in { "Meadow", "Boots" } do
+		it(`keeps the beam's 26 studs in the {zone}`, function()
+			local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Rare_1")
+			expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+		end)
+	end
+
+	it("keeps the beam's 26 studs when no zoneOf is given", function()
+		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+		local models = SpotModels.new({ spot }, newLookingTemplates())
+		models:show("EggSpot_Rare_1")
+		expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+	end)
+
+	it("leaves the template's own beam at 26 studs after a show on the belly", function()
+		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+		local templates = newLookingTemplates()
+		local models = SpotModels.new({ spot }, templates, zoneStub("Belly"))
+		models:show("EggSpot_Rare_1")
+		expect(beamLength(templates.Rare)).toBeCloseTo(26, 2)
+	end)
+
+	it("shows an Uncommon egg with no beam on the belly without an error and without a beam", function()
+		local spot = newSpot("EggSpot_Uncommon_1", "Uncommon", leaned)
+		local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub("Belly"))
+		models:show("EggSpot_Uncommon_1")
+		expect(#eggsOn(spot)).toBe(1)
+		expect(countOf(spot.model, "Beam")).toBe(0)
+	end)
+
+	it("shortens the second clone too, when the egg is hidden and shown again", function()
+		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+		local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub("Belly"))
+		models:show("EggSpot_Rare_1")
+		models:hide("EggSpot_Rare_1")
+		models:show("EggSpot_Rare_1")
+		expect(countOf(spot.model, "Beam")).toBe(1)
+		expect(beamLength(spot.model)).toBeCloseTo(10, 2)
+	end)
+
+	it("gives 10 studs on a flat spot and on a leaning spot", function()
+		local flat = newSpot("EggSpot_Rare_1", "Rare", CFrame.new(0, 5, 0))
+		local tilted = newSpot("EggSpot_Rare_2", "Rare", leaned)
+		local models = SpotModels.new({ flat, tilted }, newLookingTemplates(), zoneStub("Belly"))
+		models:show("EggSpot_Rare_1")
+		models:show("EggSpot_Rare_2")
+		expect(beamLength(flat.model)).toBeCloseTo(10, 2)
+		expect(beamLength(tilted.model)).toBeCloseTo(10, 2)
 	end)
 end)

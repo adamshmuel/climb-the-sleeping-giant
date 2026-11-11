@@ -7,6 +7,7 @@
 -- A meadow spot also has a flat glow ring (GlowRing) under the egg: show sets it to the waiting look. The labels are
 -- drawn by each player's own client (SpotLabels), from the Waiting attribute.
 
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local PostClear = require(script.Parent.PostClear)
 local WorldIndex = require(script.Parent.Parent.World.WorldIndex)
 
@@ -32,12 +33,34 @@ local POST_NAME = "EggPost"
 
 local SpotModels = {}
 
+-- Shortens the egg's beam so its two attachments are `studs` apart in the world, keeping its direction. A copy of the
+-- egg only: the template is never changed. An egg with no beam is left alone.
+local function shortenBeam(egg: Model, studs: number)
+	for _, descendant in egg:GetDescendants() do
+		if descendant:IsA("Beam") then
+			local bottom = descendant.Attachment0
+			local top = descendant.Attachment1
+			local part = if top then top.Parent else nil
+			if bottom ~= nil and top ~= nil and part ~= nil and part:IsA("BasePart") then
+				local along = top.WorldPosition - bottom.WorldPosition
+				if along.Magnitude > 0 then
+					top.Position = part.CFrame:PointToObjectSpace(bottom.WorldPosition + along.Unit * studs)
+				end
+			end
+		end
+	end
+end
+
 -- How see-through the glow ring is: 60% with an egg waiting, 85% on an empty spot (spec section 6, "Empty egg spot").
 -- Exported so the real-world test checks the same numbers.
 SpotModels.WAITING_RING_TRANSPARENCY = 0.6
 SpotModels.EMPTY_RING_TRANSPARENCY = 0.85
 
-function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.EggTemplates): SpotModels
+function SpotModels.new(
+	spots: { WorldIndex.EggSpot },
+	templates: WorldIndex.EggTemplates,
+	zoneOf: ((position: Vector3) -> Config.ZoneName)?
+): SpotModels
 	local spotByName: { [string]: WorldIndex.EggSpot } = {}
 	for _, spot in spots do
 		spotByName[spot.name] = spot
@@ -100,6 +123,10 @@ function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.Egg
 				end
 			end
 			egg:PivotTo(spot.cframe)
+			-- Eggs on his body (belly, beard, nightcap) get a short beam, so a column of light doesn't wash the screen.
+			if zoneOf ~= nil and Config.Ranks.BodyZones[zoneOf(spot.cframe.Position)] then
+				shortenBeam(egg, Config.Ranks.BodyBeamStuds)
+			end
 			egg.Parent = spot.model
 			setRing(spot, SpotModels.WAITING_RING_TRANSPARENCY)
 			spot.model:SetAttribute("Waiting", true)
