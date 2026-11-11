@@ -45,6 +45,8 @@ local ROUTE_NAMES = {
 	"RoutePoint_Egg_Rare_2",
 	"RoutePoint_Egg_Rare_3",
 	"RoutePoint_Egg_Rare_4",
+	"RoutePoint_BellyPathRight_1", -- Plan 5 Task 20b
+	"RoutePoint_BellyPathRight_2",
 }
 
 -- The part's full name without the leading "Workspace.".

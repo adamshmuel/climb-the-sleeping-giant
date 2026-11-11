@@ -128,8 +128,11 @@ local HAND_POINTS: { [string]: { number } } = {
 	BellyRampLeft_3 = { -11.38, -42.55, 39.12 },
 	-- the lap landing's back point, on its middle line (x 0): where the way forks onto both belly ramps (Rule 45)
 	Landing_Back = { 0, -51.0, 33.2 },
-	-- the right ramp that has no egg yet: a dead end until plan 5 Task 12 puts the twin nest there
+	-- the right ramp's end; the route goes on from here along BellyPathRight_1 and _2 to the right arm (plan 5 Task 20b)
 	BellyRampRight_4 = { 12.61, -40.07, 41.89 },
+	-- plan 5 Task 20b: mirror Egg_Rare_2 and Egg_Rare_3, so the way to the right arm no longer climbs the left ramp
+	BellyPathRight_1 = { 11.2, -34.8, 49.8 },
+	BellyPathRight_2 = { 8.1, -30.7, 54.3 },
 	-- Belly_4 moved (-0.83, +4.67) in x and z, 4.7 studs north, to the gentle north end of the raised strip on his belly
 	-- (stuck safety Task 26, Rulings 10 and 11; product and game_creator both said yes). The closer fit shows the strip's
 	-- sides as steep walls (70 to 80 degrees), so the footprints go round its north end, not straight into a side.
@@ -383,7 +386,10 @@ for _, boot in BOOT_SIDES do
 	link(`BellyRamp{boot.side}_2`, `BellyRamp{boot.side}_3`)
 end
 link("BellyRampLeft_3", "Egg_Rare_1")
-link("BellyRampRight_3", "BellyRampRight_4") -- the right ramp's end is a dead end
+link("BellyRampRight_3", "BellyRampRight_4")
+link("BellyRampRight_4", "BellyPathRight_1") -- plan 5 Task 20b: the right ramp reaches the right arm
+link("BellyPathRight_1", "BellyPathRight_2")
+link("BellyPathRight_2", "ArmRight_0")
 link("Egg_Rare_1", "Egg_Rare_2")
 link("Egg_Rare_2", "Egg_Rare_3")
 link("Egg_Rare_3", "Belly_4")

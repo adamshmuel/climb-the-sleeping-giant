@@ -20,10 +20,10 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 27 of 40 | ◐ in progress (Tasks 2, 3, 3b, 11, 12b, 13 and 4a to 8f done; 4b to 4d, 10 and 14 removed or merged; still open: 1, 15a to 19) |
 | 4. Egg reachability | `v2/egg-reachability.md` | 14 of 19 | ◐ in progress (Tasks 1 to 4b, 6 to 8, 9a to 9d and 10 done; next: plan 5 Task 19, then 13 after plan 5 Tasks 19, 20; 12 after plan 6 Task 8) |
-| 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 47 of 55 (recounted from its progress file on 2026-11-11; 20b added) | ◐ in progress (everything up to 19c done; 20 built, commits with the accepted Rule 73 red; next: 20b, then 22; 21b, 23a and 23b wait on plan 6; 24 and 25 only if a check needs them) |
+| 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 49 of 55 (recounted from its progress file on 2026-11-11; 20b added) | ◐ in progress (everything up to 20b done; next: 22; 21b, 23a and 23b wait on plan 6; 24 and 25 only if a check needs them) |
 | 6. Wake-up | `v2/wake-up.md` | 0 of 23 | ☐ not started |
 | 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
-| **All of V2** | | **134 of 224** (setups included; recounted from every progress file on 2026-11-10; plan 5 Task 7 split in 3) | |
+| **All of V2** | | **136 of 224** (setups included; recounted from every progress file on 2026-11-10; plan 5 Task 7 split in 3) | |
 
 Removed and dropped tasks are not counted.
 
@@ -37,7 +37,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Tests that are red today
 
-2 accepted reds once plan 5 Task 20 commits: OnTheGiant "the walk area passes the walk-area check" (standing), and WaysUpFairness "every rank, the beard-belly fold and the cuff front pocket are fair from every way up (Rule 73)" (cuff front pocket pair only; plan 5 Task 20b turns it green, `work/p5t20/cuff-ruling.md`). Last full run, plan 5 Task 19c (2026-11-11): 3450 passed, 1 failed; Task 20 expects 3455 passed, 2 failed.
+1 accepted red: OnTheGiant "the walk area passes the walk-area check" (standing). Last full run, plan 5 Task 20b (2026-11-11): 3456 passed, 1 failed.
 
 The stuck scan is green: 114 stuck spots (plan 5 Task 13b), all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
 

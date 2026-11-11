@@ -40,6 +40,8 @@ describe("the real world, ladder boxes and zone boxes", function()
 		Belly = {
 			"Belly_4",
 			"BellyRampRight_4",
+			"BellyPathRight_1", -- Plan 5 Task 20b: the right belly path, mirrors Egg_Rare_2 and Egg_Rare_3
+			"BellyPathRight_2",
 			"Belly_Crest",
 			"Egg_Rare_1",
 			"Egg_Rare_2",

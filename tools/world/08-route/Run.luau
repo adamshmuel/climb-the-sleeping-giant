@@ -41,7 +41,7 @@
 --     Ladder<Side>_Top on the boot (spec Rule 42: footprints take the quickest way; Rule 35);
 --   * the lap: Plank<Side>_Out and _In on each lap plank, Landing_Back on the lap landing, then the fork (spec Rule 45
 --     point 3): BellyRamp<Side>_1 .. _3 on each belly ramp. The left ramp goes on to Egg_Rare_1; the right one ends at
---     BellyRampRight_4 (a dead end);
+--     BellyRampRight_4 and goes on by BellyPathRight_1 and _2 to ArmRight_0 (plan 5 Task 20b);
 --   * the belly path: Egg_Rare_1 .. Egg_Rare_3, Belly_4, Belly_Crest and Egg_Rare_4.
 -- Workspace.World.LandingSpots is a Folder of LandingSpot_1 .. LandingSpot_<n>, the same kind of part, with its top
 -- centre on the meadow grass around his feet.
