@@ -1,0 +1,228 @@
+--!strict
+local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
+local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Config = require(ReplicatedStorage.Shared.Config)
+local HeistScore = require(ServerScriptService.Server.World.HeistScore)
+local PathCheck = require(ServerScriptService.Server.World.PathCheck)
+local ReachCheck = require(ServerScriptService.Server.World.ReachCheck)
+
+-- ReachCheck (spec 4, Rules 46 to 48): the difficulty score of a nest on a hand-built map (nothing is placed in the
+-- world). The map is in work/p4t7/p4t7-tests.md: two feet (Ramp 1, Ladder 2) on a meadow floor (3), a ledge in the
+-- Boots (5) reached by a walk from the Ramp and a climb from the Ladder, a high ledge in the Nightcap (6), a ledge only
+-- a slide leads to (7), and a trap ledge (8) with a walk up and only a drop back.
+describe("ReachCheck", function()
+	local ZONES: { [number]: Config.ZoneName } = {
+		[1] = "Meadow",
+		[2] = "Meadow",
+		[3] = "Meadow",
+		[5] = "Boots",
+		[6] = "Nightcap",
+		[7] = "Nightcap",
+		[8] = "Boots",
+		[9] = "Meadow",
+	}
+	local function spot(id: number, position: Vector3, up: Vector3?): PathCheck.Spot
+		return { id = id, position = position, up = up or Vector3.new(0, 1, 0), standsOn = Instance.new("Part") }
+	end
+	local function link(to: number, kind: PathCheck.LinkKind, length: number, seconds: number): PathCheck.Link
+		return { to = to, kind = kind, length = length, seconds = seconds }
+	end
+	local function buildMap(): PathCheck.WalkMap
+		return {
+			spacing = Config.Stuck.ScanSpacing,
+			spots = {
+				spot(1, Vector3.new(0, 0, 0)),
+				spot(2, Vector3.new(20, 0, 0)),
+				spot(3, Vector3.new(10, 0, 0)),
+				spot(5, Vector3.new(10, 20, -30)),
+				spot(6, Vector3.new(10, 60, -30)),
+				spot(7, Vector3.new(50, 60, -30)),
+				spot(8, Vector3.new(-30, 20, -30)),
+				spot(9, Vector3.new(100, 0, 100), Vector3.new(0.954, 0.3, 0).Unit),
+			},
+			links = {
+				[1] = { link(3, "Walk", 10, 0.625), link(5, "Walk", 48, 3), link(8, "Walk", 40, 2.5) },
+				[2] = { link(3, "Walk", 10, 0.625), link(5, "Climb", 20, 20 / 11.2) },
+				[3] = { link(1, "Walk", 10, 0.625), link(2, "Walk", 10, 0.625) },
+				[5] = { link(1, "Walk", 48, 3), link(2, "Climb", 20, 20 / 11.2), link(6, "Climb", 100, 100 / 11.2) },
+				[6] = { link(5, "Climb", 100, 100 / 11.2), link(7, "Slide", 20, 1) },
+				[7] = {},
+				[8] = { link(1, "Slide", 40, 2) },
+				[9] = {},
+			},
+			columns = {},
+			origin = Vector3.zero,
+			countX = 0,
+			countZ = 0,
+		} :: any
+	end
+	local function buildOptions(feet: { ReachCheck.Foot }?, rareFrom: number?, hasRoom: ((PathCheck.Spot) -> boolean)?)
+		local options: ReachCheck.Options = {
+			map = buildMap(),
+			feet = feet or { { name = "Ramp", spot = 1 }, { name = "Ladder", spot = 2 } },
+			gardens = { { garden = 1, spot = 1 }, { garden = 4, spot = 3 } },
+			zoneOf = function(id: number): Config.ZoneName
+				return ZONES[id]
+			end,
+			rareFrom = rareFrom or 40,
+			hasRoom = hasRoom,
+		}
+		return options
+	end
+	local function nest(name: string, x: number, y: number, z: number, inMeadow: boolean): ReachCheck.NestInput
+		return { name = name, position = Vector3.new(x, y, z), inMeadow = inMeadow }
+	end
+	local FLOOR = nest("Floor", 10, 1, 0, true)
+	local LEDGE = nest("Ledge", 10, 21, -30, false)
+	local HIGH = nest("High", 10, 61, -30, false)
+
+	local function step(length: number, kind: "Walk" | "Climb"): HeistScore.Step
+		return { length = length, kind = kind, zone = "Boots" }
+	end
+
+	local function routeOf(cost: number): PathCheck.Route
+		return { steps = {}, cost = cost }
+	end
+
+	it("a meadow nest scores 0, has no egg and no feet, and is reached and left", function()
+		local result = ReachCheck.analyse(buildOptions(), FLOOR)
+		expect(result.score).toBe(0)
+		expect(result.eggUsed).toBeNil()
+		expect(result.roomToStand).toBe(true)
+		expect(result.reached).toBe(true)
+		expect(result.left).toBe(true)
+		expect(result.upBy).toBeNil()
+		expect(result.homeBy).toBeNil()
+	end)
+
+	it("a ledge reached by both feet takes the quietest, and scores the replay of that trip", function()
+		local options = buildOptions()
+		local result = ReachCheck.analyse(options, LEDGE)
+		expect(result.reached).toBe(true)
+		expect(result.left).toBe(true)
+		expect(result.upBy).toBe("Ladder")
+		expect(result.homeBy).toBe("Ladder")
+		local byHand = HeistScore.replay({
+			up = { step(20, "Climb") },
+			down = { step(20, "Climb") },
+			egg = "Uncommon",
+			tiptoe = false,
+		})
+		expect(result.score).toBeCloseTo(byHand.peak, 5)
+		-- No climb between the ladder foot (2) and the ledge (5): the Ramp foot can't borrow the ladder through the meadow.
+		local rampOptions = buildOptions({ { name = "Ramp", spot = 1 } })
+		for _, id in { 2, 5 } do
+			local kept: { PathCheck.Link } = {}
+			for _, candidate in rampOptions.map.links[id] do
+				local joinsLadder = candidate.kind == "Climb" and (candidate.to == 2 or candidate.to == 5)
+				if not joinsLadder then
+					table.insert(kept, candidate)
+				end
+			end
+			rampOptions.map.links[id] = kept
+		end
+		local rampOnly = ReachCheck.analyse(rampOptions, LEDGE)
+		expect(rampOnly.score).toBeGreaterThan(result.score)
+	end)
+
+	it("the egg is Uncommon, and Rare once the Uncommon score reaches rareFrom", function()
+		local ledge = ReachCheck.analyse(buildOptions(), LEDGE)
+		expect(ledge.eggUsed).toBe("Uncommon")
+		expect(ledge.score).toBeLessThan(40)
+		local high = ReachCheck.analyse(buildOptions(), HIGH)
+		local uncommonOnly = ReachCheck.analyse(buildOptions(nil, 100000), HIGH)
+		expect(uncommonOnly.eggUsed).toBe("Uncommon")
+		expect(uncommonOnly.score).toBeGreaterThanOrEqual(40)
+		expect(high.eggUsed).toBe("Rare")
+		expect(high.score).toBeGreaterThan(uncommonOnly.score)
+	end)
+
+	it("a nest only a slide reaches, or only a drop leaves, is not reached or not left and scores 0", function()
+		local dropped = ReachCheck.analyse(buildOptions(), nest("Dropped", 50, 61, -30, false))
+		expect(dropped.reached).toBe(false)
+		expect(dropped.left).toBe(false)
+		expect(dropped.score).toBe(0)
+		local trap = ReachCheck.analyse(buildOptions(), nest("Trap", -30, 21, -30, false))
+		expect(trap.reached).toBe(true)
+		expect(trap.left).toBe(false)
+		expect(trap.score).toBe(0)
+	end)
+
+	it("a nest with no flat spot, or no room, within reach has no room to stand", function()
+		local far = ReachCheck.analyse(buildOptions(), nest("Far", 100, 1, 100, false))
+		expect(far.roomToStand).toBe(false)
+		expect(far.reached).toBe(false)
+		expect(far.left).toBe(false)
+		expect(far.score).toBe(0)
+		local noRoom = ReachCheck.analyse(
+			buildOptions(nil, nil, function(s: PathCheck.Spot): boolean
+				return s.id ~= 3
+			end),
+			nest("Crowded", 10, 3, 0, true)
+		)
+		expect(noRoom.roomToStand).toBe(false)
+		expect(noRoom.reached).toBe(false)
+	end)
+
+	it("the Tiptoe peak is lower than the score, and the ladder time counts only the ladder", function()
+		local high = ReachCheck.analyse(buildOptions(), HIGH)
+		expect(high.tiptoePeak).toBeLessThan(high.score)
+		local ledge = ReachCheck.analyse(buildOptions(), LEDGE)
+		expect(ledge.ladderSeconds).toBeCloseTo(3.6654, 3)
+	end)
+
+	it(
+		"pickRoutes takes the cheapest up and the cheapest way home, and replayPick matches the hand-built trip",
+		function()
+			local pick = ReachCheck.pickRoutes(
+				{ Ladder = routeOf(10), Ramp = routeOf(12) },
+				{ Ladder = routeOf(9), Ramp = routeOf(4) }
+			)
+			expect(pick).never.toBeNil()
+			local picked = pick :: ReachCheck.Pick
+			expect(picked.upBy).toBe("Ladder")
+			expect(picked.homeBy).toBe("Ramp")
+			expect(picked.up.cost).toBe(10)
+			expect(picked.down.cost).toBe(4)
+			expect(ReachCheck.pickRoutes({}, { Ramp = routeOf(4) })).toBeNil()
+			expect(ReachCheck.pickRoutes({ Ramp = routeOf(4) }, {})).toBeNil()
+			local tied = ReachCheck.pickRoutes(
+				{ Ramp = routeOf(5), Ladder = routeOf(5) },
+				{ Ramp = routeOf(7), Ladder = routeOf(7) }
+			) :: ReachCheck.Pick
+			expect(tied.upBy).toBe("Ladder")
+			expect(tied.homeBy).toBe("Ladder")
+
+			local climb: PathCheck.Step = { from = 2, to = 5, kind = "Climb", length = 20, seconds = 20 / 11.2 }
+			local walk: PathCheck.Step = { from = 5, to = 1, kind = "Walk", length = 48, seconds = 3 }
+			local handBuilt: ReachCheck.Pick = {
+				upBy = "Ladder",
+				homeBy = "Ramp",
+				up = { steps = { climb }, cost = 1 },
+				down = { steps = { walk }, cost = 1 },
+			}
+			local zones = buildOptions().zoneOf
+			local replayed = ReachCheck.replayPick(handBuilt, "Uncommon", false, zones)
+			local byHand = HeistScore.replay({
+				up = { step(20, "Climb") },
+				down = { step(48, "Walk") },
+				egg = "Uncommon",
+				tiptoe = false,
+			})
+			expect(replayed.peak).toBeCloseTo(byHand.peak, 5)
+			expect(replayed.ladderSeconds).toBeCloseTo(byHand.ladderSeconds, 5)
+		end
+	)
+
+	it("the garden times of a ledge are the quickest and slowest garden to its stand spot", function()
+		local result = ReachCheck.analyse(buildOptions(), LEDGE)
+		local quickest = result.quickest :: ReachCheck.GardenTime
+		local slowest = result.slowest :: ReachCheck.GardenTime
+		expect(quickest.garden).toBe(4)
+		expect(quickest.seconds).toBeCloseTo(2.4107, 3)
+		expect(slowest.garden).toBe(1)
+		expect(slowest.seconds).toBeCloseTo(3, 3)
+	end)
+end)

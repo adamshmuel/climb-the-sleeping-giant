@@ -145,6 +145,15 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
   6. The Tiptoe peak is lower than the score, and the ladder seconds count only the climb.
   7. Rule 47's "different ways up" (the pure part of `ReachCheck`, given each way up's trip-up and trip-home results): when the quietest trip up is through way up A and the quietest trip home ends at way up B, the score is A's trip up + the grab + B's trip home, and the result names both.
 - Done when: the tests pass.
+- Done (2026-11-11, code_lead approved): 8 ReachCheck tests green; full run 3363/2 with this module (stuck-scan red plus the old test 2, fixed in the test only: the Ramp-only map has no ladder link), expected 3364/1 (second full run vetoed by the main chat).
+
+**Task 7b: The right way up is named when the meadow ties** (found at Task 7's review, 2026-11-11)
+- Stands on: Task 7 (built). Pure code.
+- What it's for: Rule 47 (How the score is worked out) names the way up each trip uses. The meadow is silent, so in the real world a trip from any foot can walk to the cheapest way up at no cost, and every foot ties. A tie by name would always name the foot that sorts first. Not a thing players see; it keeps the report and plan 5 Task 20's per-way-up check true. Size: 2 builder steps (red, then green), about 18 min, 6 Studio calls, then the runner's full run (about 5 min, 3 Studio calls).
+- Files: `src/server/World/ReachCheck.luau` (`pickRoutes`), `src/tests/server/World/ReachCheck.spec.luau`.
+- The rule: costs within 1e-6 tie; a tie goes to the route with fewer seconds (the sum of its steps' seconds), then to the name that sorts first.
+- Failing test first: `pickRoutes` with two trips up of the same cost, where the name that sorts first has more seconds, picks the other one; the same for the trip home.
+- Done when: the tests pass.
 
 **Task 8: The score sets the rank, close calls and drift**
 - Stands on: Task 6 and Task 7 (built; their results are its input). Pure code.
@@ -164,7 +173,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
   - **No scored route goes past a slide guard** (game_creator's condition at stuck safety Task 23): no step of any nest's scored heist route stands within 2 studs of a part in `World.WalkSurfaces.SlideGuards`. A step that does is named in the report, and that guard becomes a flush patch (plan 2's rules).
   - **Moved to plan 5 Task 20** (it already says the same, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`)): "no heist to a nest of Rare rank reaches 100" and "per rank, no way up more than 5 points quieter than another". One check, once.
 - Failing test first: the check itself. **It is expected to fail on today's world**: V1's ranks are set by zone, so game_creator expects Rare eggs 2 to 4 to score Epic or higher, and Rare egg 4's spot floats about 2.2 studs (designer). That list is the failing test for plan 5 Task 19 (Task 11 is merged into it). Until Task 19 makes it pass, it is the only accepted failure in the run.
-- If the whole file takes longer than 2 minutes: the walk map is already built once and shared, so the spec's trigger (section 5, "Check time limit") is the scan grid from 2 to 3 studs (`Config.Stuck.ScanSpacing`). It changes the stuck scan too, so the builder asks code_lead first and the report says so.
+- If the whole file takes longer than 2 minutes, first cache in `ReachCheck` the trips up from each foot and the garden searches (they don't depend on the nest: 12 searches per run instead of 12 per nest) and measure again. If it is still over: the walk map is already built once and shared, so the spec's trigger (section 5, "Check time limit") is the scan grid from 2 to 3 studs (`Config.Stuck.ScanSpacing`). It changes the stuck scan too, so the builder asks code_lead first and the report says so.
 - Done when: the run finishes within 2 minutes, and its full failure list and the report are in the task report.
 
 **Task 10: A report Adam can read** (the pure report and the tool only; the tool's first real-world run is in Task 9, because a run on today's world would be redone after plan 5 Task 19)

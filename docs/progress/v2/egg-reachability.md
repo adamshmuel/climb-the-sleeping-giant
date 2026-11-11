@@ -13,7 +13,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg reachability (V2 spec 4) | Task 4b: The rank glow fade walk in Play (stands on Task 4) | ☑ done 2026-11-11: glow full from 75 studs, fades smoothly nearer, off at 55 or less; beams about 10 studs (Rare stand-in egg, see plan) | builder / code_lead |
 | Egg reachability (V2 spec 4) | Task 5: Harder rank, better pets | moved to spec 2 (Hatching and pets) 2026-11-10 by product: no V2 code hatches an egg | product |
 | Egg reachability (V2 spec 4) | Task 6: Eggs sit on something you can see (stands on nothing) | ☑ done 2026-11-10: `NestSeat.measure` on fake worlds, 6 tests; full run 3283/1, only the walk-area red | builder / code_lead |
-| Egg reachability (V2 spec 4) | Task 7: The difficulty score for every nest (stands on plan 3 Tasks 11 and 12a) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 7: The difficulty score for every nest (stands on plan 3 Tasks 11 and 12a) | ☑ done | builder / code_lead |
+| Egg reachability (V2 spec 4) | Task 7b: The right way up is named when the meadow ties (stands on Task 7) | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 8: The score sets the rank, close calls and drift (stands on Tasks 6, 7) | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 9: The check runs on the real world on every test run (its fairness bullet moved to plan 5 Task 20; stands on plan 3 Tasks 9 and 12b, plan 4 Tasks 6, 7, 8, 10, plan 5 Task 12) | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 10: A report Adam can read (pure report and the tool; its first real-world run is Task 9's; stands on Task 8) | ☐ not started | |
