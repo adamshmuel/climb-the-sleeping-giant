@@ -168,6 +168,7 @@ export type Config = {
 		EggInNest: number,
 		LeaningFromDegrees: number,
 		BodyBeamStuds: number,
+		LegendaryBeamStuds: number,
 		BodyZones: { [string]: boolean },
 		BandEdges: { Rare: number, Epic: number, Legendary: number },
 		EdgeWarning: number,
@@ -348,6 +349,7 @@ local config: Config = {
 		EggInNest = 0.2, -- studs an egg's bottom may be off its nest's seat (checked in Step 6b)
 		LeaningFromDegrees = 5, -- degrees a nest or an egg's base may tilt from level before it counts as leaning (Rule 59)
 		BodyBeamStuds = 10, -- studs: length of the beam of a waiting egg on his body (spec 4 section 6)
+		LegendaryBeamStuds = 15, -- studs: length of the Legendary egg's beam on his body, straight up (13c ruling, option D)
 		BodyZones = { Belly = true, Beard = true, Nightcap = true }, -- the zones that are his body; boots and meadow keep V1's beam
 		BandEdges = { Rare = 40, Epic = 85, Legendary = 130 }, -- the score where each rank starts (spec 4 Rule 50); an edge takes the higher rank
 		EdgeWarning = 3, -- a score this close to an edge, above or below, is flagged as a close call (Rule 56)

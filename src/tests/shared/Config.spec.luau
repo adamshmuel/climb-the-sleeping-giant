@@ -340,6 +340,7 @@ describe("Config", function()
 			EggInNest = 0.2,
 			LeaningFromDegrees = 5,
 			BodyBeamStuds = 10,
+			LegendaryBeamStuds = 15,
 			BodyZones = { Belly = true, Beard = true, Nightcap = true },
 			BandEdges = { Rare = 40, Epic = 85, Legendary = 130 },
 			EdgeWarning = 3,

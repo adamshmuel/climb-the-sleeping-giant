@@ -223,6 +223,10 @@ local function newLookingTemplate(rarity: string, withBeam: boolean): Model
 		local top = Instance.new("Attachment")
 		top.Name = "BeamTop"
 		top.Position = Vector3.new(0, 26, 0) -- the real Rare template's beam is about 26 studs long
+		if rarity == "Legendary" then
+			-- the real Legendary template's beam leans about 18 degrees (read in Studio, 13c Step A)
+			top.Position = Vector3.new(-0.186, 0.951, -0.248).Unit * 26
+		end
 		top.Parent = body
 		local beam = Instance.new("Beam")
 		beam.Attachment0 = bottom
@@ -237,6 +241,8 @@ local function newLookingTemplates(): WorldIndex.EggTemplates
 		Common = newLookingTemplate("Common", false),
 		Uncommon = newLookingTemplate("Uncommon", false),
 		Rare = newLookingTemplate("Rare", true),
+		Epic = newLookingTemplate("Epic", true),
+		Legendary = newLookingTemplate("Legendary", true),
 	}
 end
 
@@ -436,8 +442,9 @@ describe("SpotModels EggPost (Rule 85)", function()
 	end)
 end)
 
--- The beam on an egg on his body is 10 studs long (spec 4 section 6; Config.Ranks.BodyBeamStuds). The fake Rare beam
--- is 26 studs (newLookingTemplate), so a shortened clone is easy to tell from an untouched one.
+-- The beam on an egg on his body is 10 studs long, and 15 for the Legendary egg (spec 4 section 6; Config.Ranks.BodyBeamStuds
+-- and LegendaryBeamStuds). The fake Rare, Epic and Legendary beams are 26 studs (newLookingTemplate), so a
+-- shortened clone is easy to tell from an untouched one.
 local function beamLength(root: Instance): number
 	local beam = root:FindFirstChildWhichIsA("Beam", true) :: Beam
 	local a0 = beam.Attachment0 :: Attachment
@@ -451,7 +458,7 @@ local function zoneStub(zone: Config.ZoneName): (Vector3) -> Config.ZoneName
 	end
 end
 
-describe("SpotModels: the 10-stud beam on his body", function()
+describe("SpotModels: the beam on his body (10 studs; 15 for the Legendary egg)", function()
 	for _, zone in { "Belly", "Beard", "Nightcap" } do
 		it(`shortens the shown egg's beam to 10 studs in the {zone}`, function()
 			local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
@@ -511,5 +518,59 @@ describe("SpotModels: the 10-stud beam on his body", function()
 		models:show("EggSpot_Rare_2")
 		expect(beamLength(flat.model)).toBeCloseTo(10, 2)
 		expect(beamLength(tilted.model)).toBeCloseTo(10, 2)
+	end)
+
+	-- Where the beam's end sits compared with its start, in the world.
+	local function beamRise(root: Instance): Vector3
+		local beam = root:FindFirstChildWhichIsA("Beam", true) :: Beam
+		local a0 = beam.Attachment0 :: Attachment
+		local a1 = beam.Attachment1 :: Attachment
+		return a1.WorldPosition - a0.WorldPosition
+	end
+
+	for _, zone in { "Belly", "Beard", "Nightcap" } do
+		it(`gives the Legendary egg a 15-stud beam in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			expect(beamLength(spot.model)).toBeCloseTo(15, 2)
+		end)
+
+		it(`points the Legendary egg's beam straight up in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			local rise = beamRise(spot.model)
+			expect(rise.Y).toBeGreaterThan(0)
+			expect(rise.X).toBeCloseTo(0, 2)
+			expect(rise.Z).toBeCloseTo(0, 2)
+		end)
+	end
+
+	for _, rarity in { "Rare", "Epic" } do
+		it(`keeps a {rarity} egg's beam at 10 studs on the Nightcap`, function()
+			local name = `EggSpot_{rarity}_1`
+			local spot = newSpot(name, rarity :: Config.RarityName, leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub("Nightcap"))
+			models:show(name)
+			expect(beamLength(spot.model)).toBeCloseTo(10, 2)
+		end)
+	end
+
+	for _, zone in { "Meadow", "Boots" } do
+		it(`keeps the Legendary egg's beam at 26 studs in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+		end)
+	end
+
+	it("leaves the Legendary template's own beam at 26 studs after a show on the Nightcap", function()
+		local spot = newSpot("EggSpot_Legendary_1", "Legendary", leaned)
+		local templates = newLookingTemplates()
+		local models = SpotModels.new({ spot }, templates, zoneStub("Nightcap"))
+		models:show("EggSpot_Legendary_1")
+		expect(beamLength(templates.Legendary)).toBeCloseTo(26, 2)
 	end)
 end)

@@ -33,9 +33,10 @@ local POST_NAME = "EggPost"
 
 local SpotModels = {}
 
--- Shortens the egg's beam so its two attachments are `studs` apart in the world, keeping its direction. A copy of the
--- egg only: the template is never changed. An egg with no beam is left alone.
-local function shortenBeam(egg: Model, studs: number)
+-- Shortens the egg's beam so its two attachments are `studs` apart in the world, keeping its direction, or pointing
+-- along `direction` (a world direction) when one is given. A copy of the egg only: the template is never changed. An
+-- egg with no beam is left alone.
+local function shortenBeam(egg: Model, studs: number, direction: Vector3?)
 	for _, descendant in egg:GetDescendants() do
 		if descendant:IsA("Beam") then
 			local bottom = descendant.Attachment0
@@ -44,7 +45,8 @@ local function shortenBeam(egg: Model, studs: number)
 			if bottom ~= nil and top ~= nil and part ~= nil and part:IsA("BasePart") then
 				local along = top.WorldPosition - bottom.WorldPosition
 				if along.Magnitude > 0 then
-					top.Position = part.CFrame:PointToObjectSpace(bottom.WorldPosition + along.Unit * studs)
+					top.Position =
+						part.CFrame:PointToObjectSpace(bottom.WorldPosition + (direction or along.Unit) * studs)
 				end
 			end
 		end
@@ -123,9 +125,14 @@ function SpotModels.new(
 				end
 			end
 			egg:PivotTo(spot.cframe)
-			-- Eggs on his body (belly, beard, nightcap) get a short beam, so a column of light doesn't wash the screen.
+			-- Eggs on his body (belly, beard, nightcap) get a short beam, so a column of light doesn't wash the screen. The
+			-- Legendary egg's is a little longer and points straight up, so its gold shows above the cap from every garden.
 			if zoneOf ~= nil and Config.Ranks.BodyZones[zoneOf(spot.cframe.Position)] then
-				shortenBeam(egg, Config.Ranks.BodyBeamStuds)
+				if spot.rarity == "Legendary" then
+					shortenBeam(egg, Config.Ranks.LegendaryBeamStuds, Vector3.yAxis)
+				else
+					shortenBeam(egg, Config.Ranks.BodyBeamStuds)
+				end
 			end
 			egg.Parent = spot.model
 			setRing(spot, SpotModels.WAITING_RING_TRANSPARENCY)
