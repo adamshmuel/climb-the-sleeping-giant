@@ -172,6 +172,7 @@ export type Config = {
 		BandEdges: { Rare: number, Epic: number, Legendary: number },
 		EdgeWarning: number,
 		TiptoeLimit: number,
+		TiptoeLimitLegendary: number,
 		ColourWords: { [RarityName]: string },
 	},
 }
@@ -351,6 +352,7 @@ local config: Config = {
 		BandEdges = { Rare = 40, Epic = 85, Legendary = 130 }, -- the score where each rank starts (spec 4 Rule 50); an edge takes the higher rank
 		EdgeWarning = 3, -- a score this close to an edge, above or below, is flagged as a close call (Rule 56)
 		TiptoeLimit = 60, -- a Tiptoe peak at or over this fails the nest (Rule 54)
+		TiptoeLimitLegendary = 85, -- a Legendary nest's Tiptoe peak at or over this fails it (Rule 54; game_creator, work/p5t19/cap-ruling.md)
 		ColourWords = {
 			Common = "cream white",
 			Uncommon = "leaf green",

@@ -16,6 +16,15 @@ export type NestVerdictInput = {
 	reach: ReachCheck.NestResult,
 	seat: NestSeat.Result,
 }
+-- One nest for the order and count check: the rank it is meant to have, the score it got and the rank that score
+-- earns. A bot-walk nest (scored by Task 22) has no real score yet.
+export type OrderRow = {
+	name: string,
+	worldRank: Config.RarityName,
+	score: number,
+	scoreRank: Config.RarityName,
+	botWalk: boolean?,
+}
 export type Verdict = { rank: Config.RarityName, band: string, close: boolean, reasons: { string }, ok: boolean }
 export type Failure = { name: string, score: number, rank: Config.RarityName, band: string, reasons: { string } }
 export type RunResult = { verdicts: { Verdict }, failures: { Failure }, ok: boolean }
@@ -65,6 +74,14 @@ local function isClose(rank: Config.RarityName, score: number): boolean
 		or math.abs(score - edges.Legendary) <= warning
 end
 
+-- The Tiptoe limit for a nest of this world rank: Legendary nests have their own, higher one (Rule 54).
+local function tiptoeLimitFor(worldRank: Config.RarityName): number
+	if worldRank == "Legendary" then
+		return Config.Ranks.TiptoeLimitLegendary
+	end
+	return Config.Ranks.TiptoeLimit
+end
+
 -- A NestSeat reason in the words the report uses; an unknown one is copied as it is.
 local function seatReason(text: string): string
 	if string.sub(text, 1, 3) == "gap" then
@@ -111,10 +128,11 @@ function EggRanks.judge(input: NestVerdictInput): Verdict
 				)
 			)
 		end
-		if reach.tiptoePeak >= Config.Ranks.TiptoeLimit then
+		local tiptoeLimit = tiptoeLimitFor(input.worldRank)
+		if reach.tiptoePeak >= tiptoeLimit then
 			table.insert(
 				reasons,
-				string.format("Tiptoe peak %.1f is at or over the limit %g", reach.tiptoePeak, Config.Ranks.TiptoeLimit)
+				string.format("Tiptoe peak %.1f is at or over the limit %g", reach.tiptoePeak, tiptoeLimit)
 			)
 		end
 	end
@@ -144,6 +162,80 @@ function EggRanks.run(inputs: { NestVerdictInput }): RunResult
 		end
 	end
 	return result
+end
+
+-- The nest with the lowest (or highest) score among the rows that pass `keep`; nil when none does.
+local function extreme(rows: { OrderRow }, keep: (OrderRow) -> boolean, wantHighest: boolean): OrderRow?
+	local best: OrderRow? = nil
+	for _, row in rows do
+		if keep(row) and (best == nil or (if wantHighest then row.score > best.score else row.score < best.score)) then
+			best = row
+		end
+	end
+	return best
+end
+
+-- The problems in the order and count of every nest, in plain words, sorted. Empty when all is well: every nest has
+-- a name; each rank has Config.Rarity[rank].Nests nests at its world rank (Rule 71); every Uncommon nest scores
+-- under every Rare nest; every "Cap " nest scores at least as high as every "Beard " nest. A bot-walk nest counts at
+-- its world rank but is left out of both score comparisons.
+function EggRanks.rankOrder(rows: { OrderRow }): { string }
+	local problems: { string } = {}
+	local counts: { [string]: number } = {}
+	for _, row in rows do
+		if row.name == "" then
+			table.insert(problems, "a nest has no name")
+		end
+		counts[row.worldRank] = (counts[row.worldRank] or 0) + 1
+	end
+	for _, rank in Config.RarityOrder do
+		local have = counts[rank] or 0
+		local want = Config.Rarity[rank].Nests
+		if have ~= want then
+			table.insert(problems, string.format("%s has %d nests, expected %d", rank, have, want))
+		end
+	end
+	local function scored(row: OrderRow): boolean
+		return row.botWalk ~= true
+	end
+	local topUncommon = extreme(rows, function(row)
+		return scored(row) and row.worldRank == "Uncommon"
+	end, true)
+	local lowRare = extreme(rows, function(row)
+		return scored(row) and row.worldRank == "Rare"
+	end, false)
+	if topUncommon ~= nil and lowRare ~= nil and topUncommon.score > lowRare.score then
+		table.insert(
+			problems,
+			string.format(
+				"Uncommon nest %s scores %.1f, above Rare nest %s at %.1f (every Uncommon nest must be easier than every Rare nest)",
+				topUncommon.name,
+				topUncommon.score,
+				lowRare.name,
+				lowRare.score
+			)
+		)
+	end
+	local lowCap = extreme(rows, function(row)
+		return scored(row) and string.sub(row.name, 1, 4) == "Cap "
+	end, false)
+	local topBeard = extreme(rows, function(row)
+		return scored(row) and string.sub(row.name, 1, 6) == "Beard "
+	end, true)
+	if lowCap ~= nil and topBeard ~= nil and lowCap.score < topBeard.score then
+		table.insert(
+			problems,
+			string.format(
+				"Cap nest %s scores %.1f, under Beard nest %s at %.1f (every cap nest must be at least as hard as every beard nest)",
+				lowCap.name,
+				lowCap.score,
+				topBeard.name,
+				topBeard.score
+			)
+		)
+	end
+	table.sort(problems)
+	return problems
 end
 
 return EggRanks

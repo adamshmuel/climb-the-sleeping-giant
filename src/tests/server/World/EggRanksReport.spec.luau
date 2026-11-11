@@ -80,7 +80,7 @@ describe("EggRanksReport", function()
 		"Nest: the name of the nest in the world",
 		"Score: the highest the shared sleep meter gets on the quietest trip to the nest and home with its egg, in percent (100% wakes the giant; a meadow nest is 0%). The rank comes from it.",
 		"Rank and colour: the rank the score earns, and the colour of its glow",
-		"Tiptoe peak: the same trip with Tiptoe on the whole way; 60% or more fails the nest",
+		"Tiptoe peak: the same trip with Tiptoe on the whole way; 60% or more fails the nest (85% for Legendary)",
 		"Quickest garden: the garden whose player gets to the nest fastest, walking and climbing, and how many seconds it takes",
 		"Slowest garden: the garden whose player takes longest to get to the nest, and how many seconds it takes",
 		"Ladder seconds: the seconds spent on ladders on the trip",
@@ -102,6 +102,64 @@ describe("EggRanksReport", function()
 
 	it("writes the header, the table sorted easiest first, and the five rank lines", function()
 		expect(EggRanksReport.build(threeRows(), HEADER)).toBe(EXPECTED)
+	end)
+
+	it("adds nothing after the rank lines when the header has no order list", function()
+		local text = EggRanksReport.build(threeRows(), HEADER)
+		expect(string.find(text, "Rank order and counts", 1, true)).toBeNil()
+		expect(string.sub(text, -#"Legendary: no nests")).toBe("Legendary: no nests")
+	end)
+
+	it("says Rank order and counts: all pass when the order list is empty", function()
+		local header: EggRanksReport.Header =
+			{ date = HEADER.date, drain = HEADER.drain, surfaceWords = HEADER.surfaceWords, order = {} }
+		local text = EggRanksReport.build(threeRows(), header)
+		expect(text).toBe(`{EXPECTED}\nRank order and counts: all pass`)
+	end)
+
+	it("writes one Rank order and counts line for each problem", function()
+		local order = { "Rare has 5 nests, expected 6", "Cap nest A scores 50%, under Beard nest B at 60%" }
+		local header: EggRanksReport.Header =
+			{ date = HEADER.date, drain = HEADER.drain, surfaceWords = HEADER.surfaceWords, order = order }
+		local text = EggRanksReport.build(threeRows(), header)
+		local lines = string.split(text, "\n")
+		expect(lines[#lines - 1]).toBe(`Rank order and counts: {order[1]}`)
+		expect(lines[#lines]).toBe(`Rank order and counts: {order[2]}`)
+		expect(string.find(text, "all pass", 1, true)).toBeNil()
+	end)
+
+	it("writes scored by Task 22 as the note of a bot-walk row", function()
+		local row = rowOf("Nest_Cuff", "nest", "Epic", 0, FLUSH, { close = false, reasons = { "not reached" } })
+		row.botWalk = true
+		local lines = string.split(EggRanksReport.build({ row }, HEADER), "\n")
+		expect(string.sub(lines[16] or "", -#"| scored by Task 22 |")).toBe("| scored by Task 22 |")
+		expect(string.find(lines[16] or "", "not reached", 1, true)).toBeNil()
+	end)
+
+	it("counts a bot-walk nest at its target rank, outside lowest and highest", function()
+		local scored = rowOf("Nest_Scored", "egg", "Epic", 90, FLUSH, NO_REASONS)
+		local walk = rowOf("Nest_Cuff", "nest", "Legendary", 216, FLUSH, NO_REASONS)
+		walk.botWalk = true
+		walk.worldRank = "Epic"
+		local text = EggRanksReport.build({ scored, walk }, HEADER)
+		expect((string.find(text, "Epic: 2 nests, lowest 90%, highest 90% (1 scored by Task 22)", 1, true))).toBeDefined()
+		expect((string.find(text, "Legendary: no nests", 1, true))).toBeDefined()
+		local only = rowOf("Nest_Cuff", "nest", "Legendary", 216, FLUSH, NO_REASONS)
+		only.botWalk = true
+		only.worldRank = "Epic"
+		local alone = EggRanksReport.build({ only }, HEADER)
+		expect((string.find(alone, "Epic: 1 nest (1 scored by Task 22)", 1, true))).toBeDefined()
+	end)
+
+	it("shows a bot-walk row's score as not scored yet and its target rank", function()
+		local row = rowOf("Nest_Cuff", "nest", "Legendary", 216, FLUSH, NO_REASONS)
+		row.botWalk = true
+		row.worldRank = "Epic"
+		local lines = string.split(EggRanksReport.build({ row }, HEADER), "\n")
+		local cells = string.split(lines[16] or "", " | ")
+		expect(cells[2]).toBe("not scored yet")
+		local target: Config.RarityName = "Epic"
+		expect(cells[3]).toBe(`Epic (target), {Config.Ranks.ColourWords[target]}`)
 	end)
 
 	it("shows a missing name as unnamed nest and fails its row", function()

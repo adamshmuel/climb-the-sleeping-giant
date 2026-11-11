@@ -14,6 +14,7 @@ export type ToolNest = {
 	input: ReachCheck.NestInput,
 	worldRank: Config.RarityName,
 	seat: NestSeat.Seat,
+	botWalk: boolean?,
 }
 export type ToolInput = {
 	options: ReachCheck.Options,
@@ -39,6 +40,7 @@ local function check(input: ToolInput): (string, EggRanks.RunResult, { EggRanksR
 	end
 	local result = EggRanks.run(verdictInputs)
 	local rows: { EggRanksReport.ReportRow } = {}
+	local orderRows: { EggRanks.OrderRow } = {}
 	for index, nest in input.nests do
 		rows[index] = {
 			name = nest.name,
@@ -46,9 +48,24 @@ local function check(input: ToolInput): (string, EggRanks.RunResult, { EggRanksR
 			reach = reaches[index],
 			seat = seats[index],
 			verdict = result.verdicts[index],
+			botWalk = nest.botWalk,
+			worldRank = nest.worldRank,
+		}
+		orderRows[index] = {
+			name = nest.name or "",
+			worldRank = nest.worldRank,
+			score = reaches[index].score,
+			scoreRank = result.verdicts[index].rank,
+			botWalk = nest.botWalk,
 		}
 	end
-	return EggRanksReport.build(rows, input.header), result, rows
+	local header: EggRanksReport.Header = {
+		date = input.header.date,
+		drain = input.header.drain,
+		surfaceWords = input.header.surfaceWords,
+		order = EggRanks.rankOrder(orderRows),
+	}
+	return EggRanksReport.build(rows, header), result, rows
 end
 
 local function run(input: ToolInput): string

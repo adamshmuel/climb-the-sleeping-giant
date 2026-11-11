@@ -9,16 +9,21 @@ local EggRanks = require(ServerScriptService.Server.World.EggRanks)
 local NestSeat = require(ServerScriptService.Server.World.NestSeat)
 local ReachCheck = require(ServerScriptService.Server.World.ReachCheck)
 
-export type Header = { date: string, drain: number, surfaceWords: { [string]: string } }
+export type Header = { date: string, drain: number, surfaceWords: { [string]: string }, order: { string }? }
 export type ReportRow = {
 	name: string?,
 	seatKind: "nest" | "egg",
 	reach: ReachCheck.NestResult,
 	seat: NestSeat.Result,
 	verdict: EggRanks.Verdict,
+	botWalk: boolean?,
+	worldRank: Config.RarityName?,
 }
 
 local UNNAMED = "unnamed nest"
+local ORDER_LABEL = "Rank order and counts"
+local BOT_WALK_NOTE = "scored by Task 22"
+local NOT_SCORED = "not scored yet"
 local NO_NAME_PROBLEM = "problem: this nest has no name in the world (its NestName label is empty)"
 local COLUMNS = {
 	"Nest",
@@ -79,6 +84,10 @@ local function noteOf(row: ReportRow): string
 	if not hasName(row) then
 		table.insert(parts, NO_NAME_PROBLEM)
 	end
+	if row.botWalk == true then
+		table.insert(parts, BOT_WALK_NOTE)
+		return table.concat(parts, "; ")
+	end
 	local verdict = row.verdict
 	if verdict.ok then
 		if verdict.close then
@@ -92,10 +101,17 @@ end
 
 local function rowLine(row: ReportRow, header: Header): string
 	local rank: Config.RarityName = row.verdict.rank
+	local scoreCell = percent(row.reach.score)
+	local rankCell = `{rank}, {Config.Ranks.ColourWords[rank]}`
+	if row.botWalk == true then
+		local target: Config.RarityName = row.worldRank or rank
+		scoreCell = NOT_SCORED
+		rankCell = `{target} (target), {Config.Ranks.ColourWords[target]}`
+	end
 	local cells = {
 		if hasName(row) then row.name :: string else UNNAMED,
-		percent(row.reach.score),
-		`{rank}, {Config.Ranks.ColourWords[rank]}`,
+		scoreCell,
+		rankCell,
 		string.format("%.1f%%", row.reach.tiptoePeak),
 		gardenCell(row.reach.quickest),
 		gardenCell(row.reach.slowest),
@@ -137,8 +153,9 @@ local function headerLines(header: Header): { string }
 		"Score: the highest the shared sleep meter gets on the quietest trip to the nest and home with its egg, in percent (100% wakes the giant; a meadow nest is 0%). The rank comes from it.",
 		"Rank and colour: the rank the score earns, and the colour of its glow",
 		string.format(
-			"Tiptoe peak: the same trip with Tiptoe on the whole way; %g%% or more fails the nest",
-			Config.Ranks.TiptoeLimit
+			"Tiptoe peak: the same trip with Tiptoe on the whole way; %g%% or more fails the nest (%g%% for Legendary)",
+			Config.Ranks.TiptoeLimit,
+			Config.Ranks.TiptoeLimitLegendary
 		),
 		"Quickest garden: the garden whose player gets to the nest fastest, walking and climbing, and how many seconds it takes",
 		"Slowest garden: the garden whose player takes longest to get to the nest, and how many seconds it takes",
@@ -149,10 +166,15 @@ local function headerLines(header: Header): { string }
 end
 
 local function rankLine(rank: Config.RarityName, rows: { ReportRow }): string
-	local count = 0
+	local count, botWalk = 0, 0
 	local lowest, highest = math.huge, -math.huge
 	for _, row in rows do
-		if row.verdict.rank == rank then
+		if row.botWalk == true then
+			if (row.worldRank or row.verdict.rank) == rank then
+				count += 1
+				botWalk += 1
+			end
+		elseif row.verdict.rank == rank then
 			count += 1
 			lowest = math.min(lowest, row.reach.score)
 			highest = math.max(highest, row.reach.score)
@@ -162,7 +184,14 @@ local function rankLine(rank: Config.RarityName, rows: { ReportRow }): string
 		return `{rank}: no nests`
 	end
 	local noun = if count == 1 then "nest" else "nests"
-	return `{rank}: {count} {noun}, lowest {percent(lowest)}, highest {percent(highest)}`
+	local text = `{rank}: {count} {noun}`
+	if botWalk < count then
+		text ..= `, lowest {percent(lowest)}, highest {percent(highest)}`
+	end
+	if botWalk > 0 then
+		text ..= ` ({botWalk} {BOT_WALK_NOTE})`
+	end
+	return text
 end
 
 function EggRanksReport.build(rows: { ReportRow }, header: Header): string
@@ -176,6 +205,15 @@ function EggRanksReport.build(rows: { ReportRow }, header: Header): string
 	table.insert(lines, "")
 	for _, rank: Config.RarityName in Config.RarityOrder do
 		table.insert(lines, rankLine(rank, rows))
+	end
+	local order = header.order
+	if order ~= nil then
+		if #order == 0 then
+			table.insert(lines, `{ORDER_LABEL}: all pass`)
+		end
+		for _, problem in order do
+			table.insert(lines, `{ORDER_LABEL}: {problem}`)
+		end
 	end
 	return table.concat(lines, "\n")
 end

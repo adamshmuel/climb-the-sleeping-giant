@@ -86,6 +86,19 @@ describe("EggRanks", function()
 		expect(EggRanks.judge(under).ok).toBe(true)
 	end)
 
+	it("uses the Legendary Tiptoe limit for a Legendary nest", function()
+		local under = nestWith(140, "Legendary", "Legendary")
+		under.reach.tiptoePeak = 78.3
+		local passing = EggRanks.judge(under)
+		expect(passing.reasons).toEqual({})
+		expect(passing.ok).toBe(true)
+		local atLimit = nestWith(140, "Legendary", "Legendary")
+		atLimit.reach.tiptoePeak = 85.0
+		local failing = EggRanks.judge(atLimit)
+		expect(failing.ok).toBe(false)
+		expect(failing.reasons).toEqual({ "Tiptoe peak 85.0 is at or over the limit 85" })
+	end)
+
 	it("lists only the reach reason for a nest that is not reached, not left or has no room", function()
 		local unreached = goodRare()
 		unreached.reach.reached = false
@@ -157,5 +170,85 @@ describe("EggRanks", function()
 		expect(allGood.ok).toBe(true)
 		expect(allGood.failures).toEqual({})
 		expect(#allGood.verdicts).toBe(2)
+	end)
+end)
+
+-- The order and count check over every nest (spec 4 Rule 71, game_creator's two conditions) on made-up rows.
+describe("EggRanks.rankOrder", function()
+	local SCORES: { [string]: number } = { Common = 0, Uncommon = 20, Rare = 60, Epic = 100, Legendary = 150 }
+
+	-- A good set: the count of nests Config.Rarity names for each rank, each rank scoring in its own range, one
+	-- "Beard " nest (Epic) and one "Cap " nest (Legendary) with the cap harder.
+	local function goodRows(): { EggRanks.OrderRow }
+		local rows: { EggRanks.OrderRow } = {}
+		for _, rank in Config.RarityOrder do
+			for i = 1, Config.Rarity[rank].Nests do
+				local row: EggRanks.OrderRow = {
+					name = `{rank} {i}`,
+					worldRank = rank :: Config.RarityName,
+					score = SCORES[rank],
+					scoreRank = rank :: Config.RarityName,
+				}
+				table.insert(rows, row)
+			end
+		end
+		return rows
+	end
+
+	local function find(rows: { EggRanks.OrderRow }, name: string): EggRanks.OrderRow
+		for _, row in rows do
+			if row.name == name then
+				return row
+			end
+		end
+		error(`no row named {name}`)
+	end
+
+	local function goodRowsWithBodyNests(): { EggRanks.OrderRow }
+		local rows = goodRows()
+		find(rows, "Epic 1").name = "Beard Test"
+		find(rows, "Legendary 1").name = "Cap Test"
+		return rows
+	end
+
+	it("returns no problem for a good set of 38 nests", function()
+		local rows = goodRowsWithBodyNests()
+		expect(#rows).toBe(38)
+		expect(EggRanks.rankOrder(rows)).toEqual({})
+	end)
+
+	it("reports a nest with an empty name", function()
+		local rows = goodRowsWithBodyNests()
+		find(rows, "Common 1").name = ""
+		expect(EggRanks.rankOrder(rows)).toEqual({ "a nest has no name" })
+	end)
+
+	it("reports an Uncommon nest that scores above a Rare nest", function()
+		local rows = goodRowsWithBodyNests()
+		find(rows, "Uncommon 1").score = 70
+		expect(EggRanks.rankOrder(rows)).toEqual({
+			"Uncommon nest Uncommon 1 scores 70.0, above Rare nest Rare 1 at 60.0 (every Uncommon nest must be easier than every Rare nest)",
+		})
+	end)
+
+	it("reports a Cap nest that scores under a Beard nest", function()
+		local rows = goodRowsWithBodyNests()
+		find(rows, "Cap Test").score = 90
+		expect(EggRanks.rankOrder(rows)).toEqual({
+			"Cap nest Cap Test scores 90.0, under Beard nest Beard Test at 100.0 (every cap nest must be at least as hard as every beard nest)",
+		})
+	end)
+
+	it("reports a rank that is one nest short", function()
+		local rows = goodRowsWithBodyNests()
+		table.remove(rows, #rows) -- a Legendary nest
+		expect(EggRanks.rankOrder(rows)).toEqual({ "Legendary has 3 nests, expected 4" })
+	end)
+
+	it("counts a bot-walk nest at its world rank but leaves it out of the score comparisons", function()
+		local rows = goodRowsWithBodyNests()
+		find(rows, "Uncommon 2").score = 99
+		find(rows, "Uncommon 2").botWalk = true
+		expect(EggRanks.rankOrder(rows)).toEqual({})
 	end)
 end)

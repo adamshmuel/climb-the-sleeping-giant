@@ -39,6 +39,17 @@ describe("the egg check on the real world", function()
 	local results: { ReachCheck.NestResult } = {}
 	local seconds = math.huge
 
+	-- The cuff nests players reach by walking; plan 5 Task 22's bot walk scores them, so the egg check leaves them out here
+	-- (plan 5 Task 19a, card Step 4).
+	local SCORED_BY_BOT_WALK: { [string]: boolean } = {
+		["Cuff Back (Left)"] = true,
+		["Cuff Back (Right)"] = true,
+		["Cuff Front (Left)"] = true,
+		["Cuff Front (Right)"] = true,
+	}
+
+	local reportText = ""
+
 	beforeAll(function()
 		local found = Workspace:FindFirstChild("World")
 		expect(found).never.toBeNil()
@@ -71,6 +82,7 @@ describe("the egg check on the real world", function()
 				name = eggSpot.nestName,
 				input = { name = eggSpot.name, position = eggSpot.cframe.Position, inMeadow = eggSpot.garden ~= nil },
 				worldRank = eggSpot.rarity,
+				botWalk = SCORED_BY_BOT_WALK[eggSpot.nestName or ""],
 				seat = NestSeat.seatOf(eggSpot.nest, base, eggSpot.cframe.Position, { eggSpot.model }, lookParts),
 			})
 		end
@@ -92,6 +104,7 @@ describe("the egg check on the real world", function()
 		for index, row in rows do
 			results[index] = row.reach
 		end
+		reportText = text
 		print("EGG RANKS REPORT")
 		print(text)
 		print(`EGG CHECK SECONDS {string.format("%.1f", seconds)}`)
@@ -120,15 +133,6 @@ describe("the egg check on the real world", function()
 		expect(spotCount).toBe(38)
 		expect(#rows).toBe(38)
 	end)
-
-	-- The cuff nests players reach by walking; plan 5 Task 22's bot walk scores them, so the egg check leaves them out here
-	-- (plan 5 Task 19a, card Step 4).
-	local SCORED_BY_BOT_WALK: { [string]: boolean } = {
-		["Cuff Back (Left)"] = true,
-		["Cuff Back (Right)"] = true,
-		["Cuff Front (Left)"] = true,
-		["Cuff Front (Right)"] = true,
-	}
 
 	it("every nest left to the bot walk is in the run", function()
 		local inRun: { [string]: boolean } = {}
@@ -160,6 +164,17 @@ describe("the egg check on the real world", function()
 			)
 		end
 		expect(failures).toEqual({})
+	end)
+
+	it("every rank keeps its order and count of nests (Rule 71)", function()
+		local problems: { string } = {}
+		for _, line in string.split(reportText, "\n") do
+			if string.sub(line, 1, 21) == "Rank order and counts" and line ~= "Rank order and counts: all pass" then
+				table.insert(problems, line)
+			end
+		end
+		expect((string.find(reportText, "Rank order and counts: all pass", 1, true))).never.toBeNil()
+		expect(problems).toEqual({})
 	end)
 
 	-- Plan 4, Task 9c: the far ends of the climb are reached on the egg map. Each target needs at least one map spot that
