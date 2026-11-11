@@ -207,7 +207,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: the tests pass, and in Play the console shows one "EggGrab" line per grab and one "WakeRank" line per wake-up.
 
 **Task 13: The Play proof** (the whole-session test is cut, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): banked rank equals nest rank is plan 5 Task 21; an Epic carries like a Rare is Task 1 test 3; peaks inside the band are Task 9's scores and this task's bot-walk peaks; "no longer new after the first Rare" is plan 1)
-- Stands on: plan 5 Tasks 19 and 20 (nests at their final spots, fair), plan 3 Tasks 2 and 3 (the live ladder noise), and plan 4 Tasks 3 and 4 (the labels and the glow, built).
+- Stands on: plan 5 Tasks 19 and 20 (nests at their final spots, fair), plan 3 Tasks 2, 3 and 3b (the live ladder noise), and plan 4 Tasks 3 and 4 (the labels and the glow, built).
 - Spec rules: Rule 46's Play proof (the bot walk to every nest and back); section 9's risk rows (the bot walk's peaks against the scores; the rank glow from all 8 gardens).
 - Files: `tools/play/bot-walk-legs.luau` (legs to every nest and back). No test file.
 - Done when, with the Play proof in the report (sound muted):

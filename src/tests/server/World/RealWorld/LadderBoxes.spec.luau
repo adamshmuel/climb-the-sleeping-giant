@@ -338,6 +338,39 @@ describe("the real world, ladder boxes and zone boxes", function()
 		expect(table.concat(misses, " ")).toBe("")
 	end)
 
+	-- Plan 3 Task 3b (rules 39, 40): the box must reach a climber's root, which rides off the truss axis.
+	it("a climber's root 3.3 studs off any side of each ladder's truss is on that ladder", function()
+		-- the Task 3b trace measured a climbing root 2.81 to 3.22 studs from the BootLadder_Left truss axis (work/p3t3b/3b-trace-note.md)
+		local CLIMBER_OFFSET = 3.3
+		local ladders = WorldIndex.loadLadders(realWorld())
+		local sides: { { string | Vector2 } } = {
+			{ "+X", Vector2.new(CLIMBER_OFFSET, 0) },
+			{ "-X", Vector2.new(-CLIMBER_OFFSET, 0) },
+			{ "+Y", Vector2.new(0, CLIMBER_OFFSET) },
+			{ "-Y", Vector2.new(0, -CLIMBER_OFFSET) },
+		}
+		local misses: { string } = {}
+		for _, name in { "BootLadder_Left", "BootLadder_Right", "BeardLadder", "CapLadder" } do
+			local climb = walkSurfaces()[name].Climb :: TrussPart
+			local half = climb.Size.Z / 2
+			local index = 0
+			local along = -half
+			while along <= half do
+				index += 1
+				for _, side in sides do
+					local offset = side[2] :: Vector2
+					local point = climb.CFrame:PointToWorldSpace(Vector3.new(offset.X, offset.Y, along))
+					local box = Zones.ladderAt(point, ladders)
+					if box == nil or box.ladder ~= name then
+						table.insert(misses, `{name}#{index}{side[1] :: string}`)
+					end
+				end
+				along += TRUSS_STEP
+			end
+		end
+		expect(table.concat(misses, " ")).toBe("")
+	end)
+
 	it("the grass at each boot ladder's foot is Meadow with the zone boxes alone", function()
 		expect(#ladderBoxes()).toBe(BOX_COUNT) -- the ladder boxes exist: this check is about the zone boxes beside them
 		local zoneBoxes = WorldIndex.readZones(realWorld()) :: { Zones.ZoneBox }

@@ -102,12 +102,14 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass, the helper is gone, and `readLadders` on the real world finds the 4 boxes.
 
 **Task 3b: A boot-ladder climb is loud from the first rung**
-- Stands on: Task 3 (ladder zone and `onLadder`, committed).
+- Stands on: Task 3 (ladder zone and `onLadder`, committed) and plan 5 Task 22b (the climb gate, done).
+- Cause found by the Step 1 trace (code_lead, 2026-11-11): the ladder boxes reach 3 studs from the truss axis, but a climbing root rides 2.81 to 3.22 studs out, so about half the ladder ticks fell to the zone boxes' Meadow (x 0). "Moving" was true on every tick. Fix: the boxes reach 5 studs (`BOX_SIDE` 6 to 10 in `tools/world/18-ladder-boxes-and-zones.luau`), with a red test first in `RealWorld/LadderBoxes.spec.luau`. Cards: `work/p3t3b/3b-trace-card.md` (done), `3b-fix-card.md` (red test, bigger boxes, full run), `3b-recheck-card.md` (Play).
 - Spec rules: Rule 39 (Ladders are a little louder): a climber on a boot ladder counts as Boots × 1.2, about 4.8 noise a second, from the bottom rung up.
 - What's wrong: in the Task 3 re-check the meter stayed flat from y 7 to y 27 on `BootLadder_Left` and rose only near the top. The zone is right (Boots, on the ladder). The likely cause is the "moving" check: a climb counts as moving only if the body goes more than 0.5 studs a tick, at least 1 stud a second in a line, and leaves a 1.8-stud pocket. A slow or jerky climb may fail it. Not proven: the re-check had no timed rows.
 - For: core gameplay (the sleep meter is the game's main danger; a silent ladder is a free sneak route). Size: 3 steps, about 30 min, at most 15 Studio calls.
 - Steps: 1. Trace (Sonnet, Play, 10 min): climb `BootLadder_Left` from the grass, one row per 0.1 s tick: time, root position, step length, `moving`, zone, `onLadder`, Humanoid state, meter. 2. code_lead names the cause from the rows and the fix. 3. Builder: a failing test with the traced climb's positions, then the fix; runner full run.
 - Done when: a climb from the grass raises the meter from the first rung in Play, and the test passes.
+- **Done 2026-11-11:** the 4 ladder boxes are 10 x 10 across (backup `WorldBackups.p3t3b`); 1 new test; full run 3396 passed, 1 failed (the standing walk-area red, accepted). Play re-check: every climb row from y 6 was Boots and on `BootLadder_Left`, and the meter rose 3.1 a second from y 7 to y 27.
 
 ### Part 3: World prep
 
@@ -491,7 +493,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass.
 
 **Task 12b: Every way up is equally loud (real world)**
-- Stands on: Task 9 (the stuck scan, built), Task 11 (`HeistScore`, built), Task 11f (one climb factor, built), Task 12a (`costsFrom`, built), Task 13 (the footprints count seconds, built: this check runs on its trail), and plan 5 Task 22b (the last ground change, built or closed).
+- Stands on: Task 9 (the stuck scan, built), Task 11 (`HeistScore`, built), Task 11f (one climb factor, built), Task 12a (`costsFrom`, built), Task 13 (the footprints count seconds, built: this check runs on its trail), Task 3b (the boot-ladder climb is loud from the first rung, built), and plan 5 Task 22b (the last ground change, built or closed).
 - Spec rules: Rule 41 (Every way up is equally loud), the test-run proof, for Rare egg 1 and the Uncommon rank, on the quietest route and, for the Rare egg 1 window, also on the footprint route. Check A1 (the parts that exist before spec 5).
 - Files: `src/server/World/FairnessCheck.luau` (new), `src/tests/server/World/FairnessCheck.spec.luau` (new, fake worlds), `WalkMap.spec.luau`. `PathCheck.costsFrom` comes from Task 12a.
 - What it does:

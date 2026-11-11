@@ -9,7 +9,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier (stands on nothing) | ☑ done | builder / code_lead (full run 3277/1, only the walk-area red) |
 | Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☑ done 2026-11-11: 11 new tests; full run 3395 passed, 1 failed (the standing walk-area red); ladder re-check passed both tries | builder, runner, code_lead |
-| Gardens and ways up (V2 spec 3) | Task 3b: A boot-ladder climb is loud from the first rung | ☐ not started (re-check found the lower `BootLadder_Left` silent; trace first) | builder, code_lead |
+| Gardens and ways up (V2 spec 3) | Task 3b: A boot-ladder climb is loud from the first rung | ☑ done (3396/1, 1 new test; Play: meter +3.1 a second from the first rung) | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ☑ done (committed ec95c9b; designer: before and after same or better, 2026-11-04) | builder, code_lead, designer |
 | Gardens and ways up (V2 spec 3) | Task 4b: World prep: the two side ladders and their side pads | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4c: World prep: the two thigh planks | removed 2026-11-03 (Adam dropped them) | product |
