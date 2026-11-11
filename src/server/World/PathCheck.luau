@@ -66,6 +66,9 @@ export type WalkMap = {
 }
 export type Step = { from: number, to: number, kind: LinkKind, length: number, seconds: number }
 export type Route = { steps: { Step }, cost: number }
+-- One search from a spot: the cheapest cost to every spot it reaches (a spot it can't reach has no entry) and the
+-- step that reached each spot. Read with routeFrom.
+export type Search = { from: number, costs: { [number]: number }, cameBy: { [number]: Step } }
 -- Which link kinds count: a kind that isn't listed (or is false) doesn't.
 export type AllowedKinds = { Walk: boolean?, Climb: boolean?, Slide: boolean? }
 -- allow: the link kinds that count (default: all). cost: what a link costs (default: its seconds).
@@ -745,17 +748,16 @@ local function heapPop(heap: Heap): (number, number)
 	return topCost, topId
 end
 
--- The cheapest route from one spot to any of the `to` spots, or nil. `rules.allow` picks the link kinds that count
--- (default: all) and `rules.cost` sets what each link costs (default: its seconds; never negative). Starting on one of
--- the `to` spots is a route with no steps.
-function PathCheck.route(map: WalkMap, from: number, to: { number }, rules: Rules?): Route?
-	local goals: { [number]: boolean } = {}
-	for _, id in to do
-		goals[id] = true
-	end
-	if goals[from] then
-		return { steps = {}, cost = 0 }
-	end
+-- The search behind route and costsFrom: the cheapest cost to each spot reached (best) and the step that reached it
+-- (cameBy). With `goals` it stops, before expanding, when it settles a spot in `goals` and returns that spot's id;
+-- without, it settles every spot it can reach. `rules.allow` picks the link kinds that count (default: all) and
+-- `rules.cost` sets what each link costs (default: its seconds; never negative).
+local function search(
+	map: WalkMap,
+	from: number,
+	rules: Rules?,
+	goals: { [number]: boolean }?
+): ({ [number]: number }, { [number]: Step }, number?)
 	local allow = if rules ~= nil then rules.allow else nil
 	local costOf = if rules ~= nil then rules.cost else nil
 
@@ -766,15 +768,8 @@ function PathCheck.route(map: WalkMap, from: number, to: { number }, rules: Rule
 	while heap.size > 0 do
 		local cost, id = heapPop(heap)
 		if cost <= (best[id] or math.huge) then -- (a dearer duplicate of a spot already settled is skipped)
-			if goals[id] then
-				local steps: { Step } = {}
-				local at = id
-				while at ~= from do
-					local step = cameBy[at]
-					table.insert(steps, 1, step)
-					at = step.from
-				end
-				return { steps = steps, cost = cost }
+			if goals ~= nil and goals[id] then
+				return best, cameBy, id
 			end
 			for _, link in map.links[id] or NO_LINKS do
 				if allow == nil or allow[link.kind] then
@@ -794,7 +789,58 @@ function PathCheck.route(map: WalkMap, from: number, to: { number }, rules: Rule
 			end
 		end
 	end
-	return nil
+	return best, cameBy, nil
+end
+
+-- The steps walked back through `cameBy` from `to` to `from`.
+local function stepsTo(cameBy: { [number]: Step }, from: number, to: number): { Step }
+	local steps: { Step } = {}
+	local at = to
+	while at ~= from do
+		local step = cameBy[at]
+		table.insert(steps, 1, step)
+		at = step.from
+	end
+	return steps
+end
+
+-- The cheapest route from one spot to any of the `to` spots, or nil. `rules.allow` picks the link kinds that count
+-- (default: all) and `rules.cost` sets what each link costs (default: its seconds; never negative). Starting on one of
+-- the `to` spots is a route with no steps.
+function PathCheck.route(map: WalkMap, from: number, to: { number }, rules: Rules?): Route?
+	local goals: { [number]: boolean } = {}
+	for _, id in to do
+		goals[id] = true
+	end
+	if goals[from] then
+		return { steps = {}, cost = 0 }
+	end
+	local best, cameBy, reached = search(map, from, rules, goals)
+	if reached == nil then
+		return nil
+	end
+	return { steps = stepsTo(cameBy, from, reached), cost = best[reached] }
+end
+
+-- One search from a spot (a way-up foot), reused for every goal (every nest): the cheapest cost to every spot it can
+-- reach, with no entry for a spot it can't. `rules` mean what they mean for route (`allow`, `cost`). Read the routes
+-- with routeFrom. The links the rules allow must cost the same both ways for the costs to read as "back" too: that is
+-- the caller's job.
+function PathCheck.costsFrom(map: WalkMap, from: number, rules: Rules?): Search
+	local best, cameBy = search(map, from, rules, nil)
+	return { from = from, costs = best, cameBy = cameBy }
+end
+
+-- The route to `to` from the spot a costsFrom search started on, or nil if that search didn't reach it.
+function PathCheck.routeFrom(searched: Search, to: number): Route?
+	local cost = searched.costs[to]
+	if cost == nil then
+		return nil
+	end
+	if to == searched.from then
+		return { steps = {}, cost = 0 }
+	end
+	return { steps = stepsTo(searched.cameBy, searched.from, to), cost = cost }
 end
 
 -- Every spot in the outermost grid columns (all four sides of the area) that stands on one of the `ground` instances or
