@@ -106,6 +106,42 @@ describe("NestSeat.measure", function()
 		expect(edge.ok).toBe(true)
 		expect(edge.eggOffset).toBeCloseTo(0.2, 4)
 	end)
+
+	-- A look part rays skip (the cuff pockets have CanQuery false): the block's top is at y = 1.0, the floor's at 0.
+	-- A WorldModel's raycast ignores CanQuery (tried in Edit), so the block is left out of the world: no ray can see it, as
+	-- in the real world, and the seat is handed it through `lookParts`.
+	local function lookBlock(transparency: number): BasePart
+		local block = Instance.new("Part")
+		block.Name = "LookPocket"
+		block.Anchored = true
+		block.Size = Vector3.new(40, 0.5, 40)
+		block.CFrame = CFrame.new(0, 0.75, 0)
+		block.Transparency = transparency
+		return block
+	end
+
+	it("a nest on a visible look part that rays skip sits on it", function()
+		local block = lookBlock(0)
+		local seat: NestSeat.Seat = { kind = "egg", bottom = Vector3.new(0, 1.1, 0), pose = "upright" }
+		local without = NestSeat.measure(world, seat)
+		expect(without.ok).toBe(false) -- the ray finds the floor, 1.1 below
+		expect(without.reasons).toEqual({ "gap 1.1" })
+		seat.lookParts = { block }
+		local with = NestSeat.measure(world, seat)
+		expect(with.ok).toBe(true)
+		expect(with.surface).toBe("LookPocket")
+		expect(with.gap).toBeCloseTo(0.1, 3)
+	end)
+
+	it("an invisible look part is not a seat", function()
+		local block = lookBlock(1)
+		local seat: NestSeat.Seat =
+			{ kind = "egg", bottom = Vector3.new(0, 1.1, 0), pose = "upright", lookParts = { block } }
+		local result = NestSeat.measure(world, seat)
+		expect(result.ok).toBe(false)
+		expect(result.surface).toBe("VisibleFloor")
+		expect(result.reasons).toEqual({ "gap 1.1" })
+	end)
 end)
 
 -- NestSeat.seatOf (spec 4 Rule 59): a nest or a bare egg's seat from the parts themselves (unparented test parts, no world).

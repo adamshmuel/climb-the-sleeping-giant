@@ -57,6 +57,13 @@ describe("the egg check on the real world", function()
 
 		local eggSpots, problems = WorldIndex.readEggSpots(found :: Instance)
 		spotProblems = problems
+		-- The look parts rays skip (CanQuery false) that a player can see: a nest may sit on one (NestSeat, Rule 59).
+		local lookParts: { BasePart } = {}
+		for _, part in (found :: Instance):GetDescendants() do
+			if part:IsA("BasePart") and not part.CanQuery and part.Transparency < Config.Ranks.VisibleBelow then
+				table.insert(lookParts, part)
+			end
+		end
 		local toolNests: { any } = {}
 		for _, eggSpot in (eggSpots or {}) :: { WorldIndex.EggSpot } do
 			local base = eggSpot.model:FindFirstChild("Base") :: BasePart
@@ -64,7 +71,7 @@ describe("the egg check on the real world", function()
 				name = eggSpot.nestName,
 				input = { name = eggSpot.name, position = eggSpot.cframe.Position, inMeadow = eggSpot.garden ~= nil },
 				worldRank = eggSpot.rarity,
-				seat = NestSeat.seatOf(eggSpot.nest, base, eggSpot.cframe.Position, { eggSpot.model }),
+				seat = NestSeat.seatOf(eggSpot.nest, base, eggSpot.cframe.Position, { eggSpot.model }, lookParts),
 			})
 		end
 		spotCount = #toolNests
@@ -126,6 +133,57 @@ describe("the egg check on the real world", function()
 			)
 		end
 		expect(failures).toEqual({})
+	end)
+
+	-- Plan 4, Task 9c: the far ends of the climb are reached on the egg map. Each target needs at least one map spot that
+	-- stands on it (or under it) and that a foot reaches by walking and climbing (the egg check's own search).
+	it("the far ends of the climb are reached on the egg map", function()
+		local built = setup :: RealReach.Setup
+		local allowed: PathCheck.AllowedKinds = { Walk = true, Climb = true }
+		local searches: { [string]: PathCheck.Search } = {}
+		for _, foot in built.feet do
+			searches[foot.name] = PathCheck.costsFrom(built.map, foot.spot, { allow = allowed })
+		end
+		local function find(path: string): Instance?
+			local at: Instance? = world
+			for _, name in string.split(path, ".") do
+				at = if at then at:FindFirstChild(name) else nil
+			end
+			return at
+		end
+		local targets: { { path: string, from: string? } } = {
+			{ path = "Giant.nightcap.nightcap" },
+			{ path = "CuffWalk.FrontLedge_Left" },
+			{ path = "CuffWalk.FrontLedge_Right" },
+			{ path = "CuffWalk.BackLedge_Left" },
+			{ path = "CuffWalk.BackLedge_Right" },
+			{ path = "WalkSurfaces.LapPlank_Left", from = "Left ramp" },
+			{ path = "WalkSurfaces.LapPlank_Right", from = "Right ramp" },
+		}
+		local misses: { string } = {}
+		for _, target in targets do
+			local part = find(target.path)
+			if part == nil then
+				table.insert(misses, `{target.path}: not in the world`)
+				continue
+			end
+			local onIt, reached = 0, 0
+			for _, spot in built.map.spots do
+				if spot.standsOn == part or spot.standsOn:IsDescendantOf(part) then
+					onIt += 1
+					for name, search in searches do
+						if (target.from == nil or target.from == name) and search.costs[spot.id] ~= nil then
+							reached += 1
+							break
+						end
+					end
+				end
+			end
+			if reached == 0 then
+				table.insert(misses, `{target.path}: {onIt} spots on it, none reached from {target.from or "any foot"}`)
+			end
+		end
+		expect(misses).toEqual({})
 	end)
 
 	it("no scored route stands on the cave skirt", function()
