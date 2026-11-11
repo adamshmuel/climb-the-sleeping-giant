@@ -86,6 +86,11 @@ describe("ReachCheck", function()
 		return { steps = {}, cost = cost }
 	end
 
+	local function routeWith(cost: number, seconds: number): PathCheck.Route
+		local only: PathCheck.Step = { from = 1, to = 3, kind = "Walk", length = 10, seconds = seconds }
+		return { steps = { only }, cost = cost }
+	end
+
 	it("a meadow nest scores 0, has no egg and no feet, and is reached and left", function()
 		local result = ReachCheck.analyse(buildOptions(), FLOOR)
 		expect(result.score).toBe(0)
@@ -215,6 +220,21 @@ describe("ReachCheck", function()
 			expect(replayed.ladderSeconds).toBeCloseTo(byHand.ladderSeconds, 5)
 		end
 	)
+
+	it("pickRoutes breaks a cost tie by fewer seconds, then by name", function()
+		local bySeconds = ReachCheck.pickRoutes(
+			{ Ladder = routeWith(5, 4), Ramp = routeWith(5, 2) },
+			{ Ladder = routeWith(7 + 1e-9, 3), Ramp = routeWith(7, 1) }
+		) :: ReachCheck.Pick
+		expect(bySeconds.upBy).toBe("Ramp")
+		expect(bySeconds.homeBy).toBe("Ramp")
+		local byName = ReachCheck.pickRoutes(
+			{ Ladder = routeWith(5, 2), Ramp = routeWith(5, 2) },
+			{ Ladder = routeWith(7, 2), Ramp = routeWith(7, 2) }
+		) :: ReachCheck.Pick
+		expect(byName.upBy).toBe("Ladder")
+		expect(byName.homeBy).toBe("Ladder")
+	end)
 
 	it("the garden times of a ledge are the quickest and slowest garden to its stand spot", function()
 		local result = ReachCheck.analyse(buildOptions(), LEDGE)

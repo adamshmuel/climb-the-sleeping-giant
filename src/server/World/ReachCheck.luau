@@ -49,7 +49,34 @@ local function louder(a: Config.ZoneName, b: Config.ZoneName): Config.ZoneName
 	return a
 end
 
--- The name with the lowest route cost; a tie goes to the name that sorts first. nil if there is no route at all.
+-- Two costs or times within this are a tie (the silent meadow makes many routes cost the same).
+local TIE = 1e-6
+
+local function secondsOf(route: PathCheck.Route): number
+	local total = 0
+	for _, step in route.steps do
+		total += step.seconds
+	end
+	return total
+end
+
+-- Does `route` (named `name`) beat `best` (named `bestName`)? Lower cost wins. A cost tie (within 1e-6) goes to fewer
+-- seconds, and a seconds tie to the name that sorts first.
+local function beats(route: PathCheck.Route, name: string, best: PathCheck.Route, bestName: string): boolean
+	if route.cost < best.cost - TIE then
+		return true
+	end
+	if route.cost > best.cost + TIE then
+		return false
+	end
+	local seconds, bestSeconds = secondsOf(route), secondsOf(best)
+	if seconds < bestSeconds - TIE then
+		return true
+	end
+	return seconds <= bestSeconds + TIE and name < bestName
+end
+
+-- The name of the cheapest route (see `beats`). nil if there is no route at all.
 local function cheapest(routes: { [string]: PathCheck.Route? }): (string?, PathCheck.Route?)
 	local bestName: string? = nil
 	local best: PathCheck.Route? = nil
@@ -57,12 +84,7 @@ local function cheapest(routes: { [string]: PathCheck.Route? }): (string?, PathC
 		if route ~= nil then
 			local bestNow = best
 			local bestNameNow = bestName
-			if
-				bestNow == nil
-				or bestNameNow == nil
-				or route.cost < bestNow.cost
-				or (route.cost == bestNow.cost and name < bestNameNow)
-			then
+			if bestNow == nil or bestNameNow == nil or beats(route, name, bestNow, bestNameNow) then
 				best = route
 				bestName = name
 			end
