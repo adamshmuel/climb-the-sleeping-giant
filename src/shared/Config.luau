@@ -169,6 +169,14 @@ export type Config = {
 		LeaningFromDegrees: number,
 		BodyBeamStuds: number,
 		LegendaryBeamStuds: number,
+		LegendaryBeamWidth0: number,
+		LegendaryBeamWidth1: number,
+		LegendaryBeamColor: Color3,
+		LegendaryBeamLightEmission: number,
+		LegendaryBeamLightInfluence: number,
+		LegendaryBeamFaceCamera: boolean,
+		LegendaryBeamBaseTransparency: number,
+		LegendaryBeamTopTransparency: number,
 		BodyZones: { [string]: boolean },
 		BandEdges: { Rare: number, Epic: number, Legendary: number },
 		EdgeWarning: number,
@@ -349,7 +357,15 @@ local config: Config = {
 		EggInNest = 0.2, -- studs an egg's bottom may be off its nest's seat (checked in Step 6b)
 		LeaningFromDegrees = 5, -- degrees a nest or an egg's base may tilt from level before it counts as leaning (Rule 59)
 		BodyBeamStuds = 10, -- studs: length of the beam of a waiting egg on his body (spec 4 section 6)
-		LegendaryBeamStuds = 15, -- studs: length of the Legendary egg's beam on his body, straight up (13c ruling, option D)
+		LegendaryBeamStuds = 35, -- studs: length of the Legendary egg's beam on his body, straight up; tall enough to clear his head from gardens 7 and 8 (13c beam ruling)
+		LegendaryBeamWidth0 = 4, -- studs: width of that beam at its base (13e ruling, designer tune: reads as treasure from every garden)
+		LegendaryBeamWidth1 = 3, -- studs: width of that beam at its top
+		LegendaryBeamColor = Color3.fromRGB(255, 190, 40), -- #FFBE28 deep gold (designer: 255,211,77 read white-gold)
+		LegendaryBeamLightEmission = 0.5, -- half glow, so the gold does not wash to white
+		LegendaryBeamLightInfluence = 0, -- 0 = the world's lighting doesn't dim it
+		LegendaryBeamFaceCamera = true, -- the flat beam always turns to face the player
+		LegendaryBeamBaseTransparency = 0.05, -- nearly solid at the base
+		LegendaryBeamTopTransparency = 0.4, -- top stays visible above his cap
 		BodyZones = { Belly = true, Beard = true, Nightcap = true }, -- the zones that are his body; boots and meadow keep V1's beam
 		BandEdges = { Rare = 40, Epic = 85, Legendary = 130 }, -- the score where each rank starts (spec 4 Rule 50); an edge takes the higher rank
 		EdgeWarning = 3, -- a score this close to an edge, above or below, is flagged as a close call (Rule 56)

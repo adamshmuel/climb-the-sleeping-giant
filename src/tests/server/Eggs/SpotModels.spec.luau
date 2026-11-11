@@ -442,7 +442,7 @@ describe("SpotModels EggPost (Rule 85)", function()
 	end)
 end)
 
--- The beam on an egg on his body is 10 studs long, and 15 for the Legendary egg (spec 4 section 6; Config.Ranks.BodyBeamStuds
+-- The beam on an egg on his body is 10 studs long, and 35 for the Legendary egg (spec 4 section 6; Config.Ranks.BodyBeamStuds
 -- and LegendaryBeamStuds). The fake Rare, Epic and Legendary beams are 26 studs (newLookingTemplate), so a
 -- shortened clone is easy to tell from an untouched one.
 local function beamLength(root: Instance): number
@@ -458,7 +458,7 @@ local function zoneStub(zone: Config.ZoneName): (Vector3) -> Config.ZoneName
 	end
 end
 
-describe("SpotModels: the beam on his body (10 studs; 15 for the Legendary egg)", function()
+describe("SpotModels: the beam on his body (10 studs; 35 for the Legendary egg)", function()
 	for _, zone in { "Belly", "Beard", "Nightcap" } do
 		it(`shortens the shown egg's beam to 10 studs in the {zone}`, function()
 			local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
@@ -529,11 +529,11 @@ describe("SpotModels: the beam on his body (10 studs; 15 for the Legendary egg)"
 	end
 
 	for _, zone in { "Belly", "Beard", "Nightcap" } do
-		it(`gives the Legendary egg a 15-stud beam in the {zone}`, function()
+		it(`gives the Legendary egg a 35-stud beam in the {zone}`, function()
 			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
 			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
 			models:show("EggSpot_Legendary_1")
-			expect(beamLength(spot.model)).toBeCloseTo(15, 2)
+			expect(beamLength(spot.model)).toBeCloseTo(35, 2)
 		end)
 
 		it(`points the Legendary egg's beam straight up in the {zone}`, function()
@@ -563,6 +563,61 @@ describe("SpotModels: the beam on his body (10 studs; 15 for the Legendary egg)"
 			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
 			models:show("EggSpot_Legendary_1")
 			expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+		end)
+	end
+
+	-- The Legendary egg's beam on his body is a wide gold column a kid can see from every garden (13e ruling).
+	local function firstBeam(root: Instance): Beam
+		return root:FindFirstChildWhichIsA("Beam", true) :: Beam
+	end
+
+	for _, zone in { "Belly", "Beard", "Nightcap" } do
+		it(`gives the Legendary egg's beam the wide gold look in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			local beam = firstBeam(spot.model)
+			local ranks = Config.Ranks
+			expect(beam.Width0).toBe(ranks.LegendaryBeamWidth0)
+			expect(beam.Width1).toBe(ranks.LegendaryBeamWidth1)
+			expect(beam.Color.Keypoints[1].Value).toBe(ranks.LegendaryBeamColor)
+			expect(beam.LightEmission).toBe(ranks.LegendaryBeamLightEmission)
+			expect(beam.LightInfluence).toBe(ranks.LegendaryBeamLightInfluence)
+			expect(beam.FaceCamera).toBe(ranks.LegendaryBeamFaceCamera)
+			local points = beam.Transparency.Keypoints
+			expect(points[1].Value).toBeCloseTo(ranks.LegendaryBeamBaseTransparency, 5)
+			expect(points[#points].Value).toBeCloseTo(ranks.LegendaryBeamTopTransparency, 5)
+		end)
+	end
+
+	for _, rarity in { "Rare", "Epic" } do
+		it(`leaves a {rarity} egg's beam look as the template's on the Nightcap`, function()
+			local name = `EggSpot_{rarity}_1`
+			local spot = newSpot(name, rarity :: Config.RarityName, leaned)
+			local templates = newLookingTemplates()
+			local models = SpotModels.new({ spot }, templates, zoneStub("Nightcap"))
+			models:show(name)
+			local beam = firstBeam(spot.model)
+			local original = firstBeam(templates[rarity :: Config.RarityName])
+			expect(beam.Width0).toBe(original.Width0)
+			expect(beam.Width1).toBe(original.Width1)
+			expect(beam.Color.Keypoints[1].Value).toBe(original.Color.Keypoints[1].Value)
+			expect(beam.LightEmission).toBe(original.LightEmission)
+		end)
+	end
+
+	for _, zone in { "Meadow", "Boots" } do
+		it(`leaves the Legendary egg's beam look as the template's in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", leaned)
+			local templates = newLookingTemplates()
+			local models = SpotModels.new({ spot }, templates, zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			local beam = firstBeam(spot.model)
+			local original = firstBeam(templates.Legendary)
+			expect(beam.Width0).toBe(original.Width0)
+			expect(beam.Width1).toBe(original.Width1)
+			expect(beam.Color.Keypoints[1].Value).toBe(original.Color.Keypoints[1].Value)
+			expect(beam.LightEmission).toBe(original.LightEmission)
 		end)
 	end
 

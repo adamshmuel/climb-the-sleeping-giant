@@ -53,6 +53,24 @@ local function shortenBeam(egg: Model, studs: number, direction: Vector3?)
 	end
 end
 
+-- Gives the egg's beam the Legendary look: a wide gold column, solid at the base and fading at the top (13e ruling).
+-- A copy of the egg only: the template is never changed. The values are in Config.Ranks.
+local function showLegendaryBeam(egg: Model)
+	local ranks = Config.Ranks
+	for _, descendant in egg:GetDescendants() do
+		if descendant:IsA("Beam") then
+			descendant.Width0 = ranks.LegendaryBeamWidth0
+			descendant.Width1 = ranks.LegendaryBeamWidth1
+			descendant.Color = ColorSequence.new(ranks.LegendaryBeamColor)
+			descendant.LightEmission = ranks.LegendaryBeamLightEmission
+			descendant.LightInfluence = ranks.LegendaryBeamLightInfluence
+			descendant.FaceCamera = ranks.LegendaryBeamFaceCamera
+			descendant.Transparency =
+				NumberSequence.new(ranks.LegendaryBeamBaseTransparency, ranks.LegendaryBeamTopTransparency)
+		end
+	end
+end
+
 -- How see-through the glow ring is: 60% with an egg waiting, 85% on an empty spot (spec section 6, "Empty egg spot").
 -- Exported so the real-world test checks the same numbers.
 SpotModels.WAITING_RING_TRANSPARENCY = 0.6
@@ -130,6 +148,7 @@ function SpotModels.new(
 			if zoneOf ~= nil and Config.Ranks.BodyZones[zoneOf(spot.cframe.Position)] then
 				if spot.rarity == "Legendary" then
 					shortenBeam(egg, Config.Ranks.LegendaryBeamStuds, Vector3.yAxis)
+					showLegendaryBeam(egg)
 				else
 					shortenBeam(egg, Config.Ranks.BodyBeamStuds)
 				end

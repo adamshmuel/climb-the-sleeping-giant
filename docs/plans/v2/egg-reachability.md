@@ -275,6 +275,11 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: items 2, 3 and 4 above (item 3's phone set is gates 1 to 4 plus the 3 kept states), and from all 8 computer gates a gold light shows above the nightcap's outline with no beam or glow on his face, and on phone gates 1 and 2 the Legendary egg's glow is not under the meter bar (designer judges the shots).
 - Not checked: the beam with the egg on `CapSide_*` or `CapBrim_Right` (no way to place the egg without a `src/` hook; accepted by Rule 72 and because the beam rises above the whole cap).
 
+**Task 13e (small fix, 10 min): A gold beam a kid can see from every garden** (product's ruling 2026-11-12, `work/p4t13/13c-beam-ruling.md`)
+- Stands on: spec 4 section 6, row "Looking at the giant from a garden" (updated 2026-11-12); Task 13c (committed 14fa4159); plan 5 Task 19 (done). Not on 13d.
+- What: only the Legendary egg on his body gets a wider, brighter beam (about 4 studs at the base, 3 at the top, deep gold #FFBE28, half glowing (designer tune, 13c-gate-verdict.md Beam3), facing the camera, nearly solid at the base and no more than 40% see-through at the top). It is 35 studs, straight up (was 15; his head and cap hid the lower part from gardens 7 and 8: code_lead rays, product ruling 2026-11-12). Values in `Config.Ranks`, test first in `SpotModels.spec`.
+- Done when: gate 7 and 8 computer shots show a gold column above the nightcap outline, with no gold on his eyes; gardens 1-6 look the same or better; one cap shot shows the beam off up close; the full run has no new red. At the limit with no gold from gates 7-8: back to product (fallback: accept for now).
+
 **Task 13d (small fix, not part of 13c): The "Z Z" cut by the top edge of the screen**
 - Stands on: Task 13c closed (its own goal, the HUD edge, not the rank shots; no open change to the HUD or the giant's sleep billboard).
 - For: scenery (a barely clipped letter; product's ruling, Q2). Size: one small fix, 10-minute limit, one builder (Sonnet), about 10 calls: find where the "Z Z" is drawn (code_lead confirms it is the HUD, since it shows at the same screen spot in every shot), nudge it inside the screen, one before and after shot. If it takes longer, accept it as is (`stop-and-step-back`). Then one `runner` test run if a test file changed.
