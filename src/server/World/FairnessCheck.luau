@@ -13,6 +13,9 @@ export type WayUpPeaks = {
 	footprintUncommon: number?,
 }
 export type Verdict = { failures: { string }, reports: { string }, table: string }
+-- One rank (Rare, Epic, ...) or one pair of nests (the fold, the cuff front pocket): the peak per way up, nil when the
+-- way up can't reach it.
+export type RankRow = { label: string, ways: { { name: string, footprint: number?, quiet: number? } } }
 
 -- Rule 41's numbers.
 local Limits = {
@@ -26,6 +29,8 @@ local Limits = {
 	DrainTrigger = 77,
 	-- Every ladder more than this from the ramps' mean is reported, not failed.
 	LadderTrigger = 3,
+	-- Plan 5 Task 20, Rule 73: no heist to a Rare nest may reach this meter value (it wakes him), on either route.
+	RareCeiling = 100,
 }
 
 local MESSAGE_LIMIT = 150
@@ -69,9 +74,9 @@ local function checkWindow(failures: { string }, way: WayUpPeaks, peak: number?,
 end
 
 -- Every way whose peak is more than GapPoints above the lowest way's is added to `into`, naming both. Ways with no peak
--- are skipped.
-local function checkGap(into: { string }, ways: { WayUpPeaks }, peakOf: (WayUpPeaks) -> number?, label: string)
-	local lowest: WayUpPeaks? = nil
+-- are skipped. Any table with a name fits (a WayUpPeaks or a RankRow way).
+local function checkGap<T>(into: { string }, ways: { T }, peakOf: (T) -> number?, nameOf: (T) -> string, label: string)
+	local lowest: T? = nil
 	local lowestPeak = math.huge
 	for _, way in ways do
 		local peak = peakOf(way)
@@ -84,17 +89,21 @@ local function checkGap(into: { string }, ways: { WayUpPeaks }, peakOf: (WayUpPe
 	end
 	for _, way in ways do
 		local peak = peakOf(way)
-		if peak ~= nil and peak - lowestPeak > Limits.GapPoints then
+		if peak ~= nil and lowest ~= nil and peak - lowestPeak > Limits.GapPoints then
 			table.insert(
 				into,
 				cut(
-					`{format(peak - lowestPeak)} points apart (limit {Limits.GapPoints}): {way.name} at {format(peak)} vs {lowest.name} at {format(
-						lowestPeak
-					)} on the {label}`
+					`{format(peak - lowestPeak)} points apart (limit {Limits.GapPoints}): {nameOf(way)} at {format(peak)} vs {nameOf(
+						lowest
+					)} at {format(lowestPeak)} on the {label}`
 				)
 			)
 		end
 	end
+end
+
+local function wayName(way: WayUpPeaks): string
+	return way.name
 end
 
 local function checkLadders(reports: { string }, ways: { WayUpPeaks })
@@ -164,19 +173,67 @@ function FairnessCheck.judge(ways: { WayUpPeaks }): Verdict
 	end
 	checkGap(failures, ways, function(way)
 		return way.footprintRare
-	end, "footprint Rare")
+	end, wayName, "footprint Rare")
 	checkGap(failures, ways, function(way)
 		return way.footprintUncommon
-	end, "footprint Uncommon")
+	end, wayName, "footprint Uncommon")
 	checkGap(reports, ways, function(way)
 		return way.quietRare
-	end, "quietest Rare")
+	end, wayName, "quietest Rare")
 	checkGap(reports, ways, function(way)
 		return way.quietUncommon
-	end, "quietest Uncommon")
+	end, wayName, "quietest Uncommon")
 	checkLadders(reports, ways)
 
 	return { failures = failures, reports = reports, table = table.concat(lines, "\n") }
+end
+
+-- Plan 5 Task 20, Rule 73: judges every rank (and the fold and cuff pairs) the way judge does Rare egg 1. A footprint
+-- gap over GapPoints fails (naming the rank and both ways up), a way up with no footprint peak fails as can't reach,
+-- a quietest-route gap is only reported. One table line per row.
+function FairnessCheck.judgeRanks(rows: { RankRow }): Verdict
+	local failures: { string } = {}
+	local reports: { string } = {}
+	local lines: { string } = {}
+	local function footprintOf(way: { name: string, footprint: number?, quiet: number? }): number?
+		return way.footprint
+	end
+	local function quietOf(way: { name: string, footprint: number?, quiet: number? }): number?
+		return way.quiet
+	end
+	local function nameOf(way: { name: string, footprint: number?, quiet: number? }): string
+		return way.name
+	end
+	for _, row in rows do
+		local parts: { string } = {}
+		for _, way in row.ways do
+			table.insert(parts, `{way.name} footprint {orDash(way.footprint)} quietest {orDash(way.quiet)}`)
+			if way.footprint == nil then
+				table.insert(failures, cut(`can't reach: {way.name} footprint {row.label}`))
+			end
+		end
+		table.insert(lines, `{row.label} | {table.concat(parts, " | ")}`)
+		checkGap(failures, row.ways, footprintOf, nameOf, `footprint {row.label}`)
+		checkGap(reports, row.ways, quietOf, nameOf, `quietest {row.label}`)
+	end
+	return { failures = failures, reports = reports, table = table.concat(lines, "\n") }
+end
+
+-- Plan 5 Task 20, Rule 73: every trip (one Rare nest through one way up on one route) with a peak of RareCeiling or
+-- more fails, naming the nest, the way up and the route.
+function FairnessCheck.judgeCeiling(trips: { { nest: string, way: string, route: string, peak: number } }): { string }
+	local failures: { string } = {}
+	for _, trip in trips do
+		if trip.peak >= Limits.RareCeiling then
+			table.insert(
+				failures,
+				cut(
+					`{format(trip.peak)} reaches {Limits.RareCeiling}: {trip.nest} through {trip.way} on the {trip.route} route`
+				)
+			)
+		end
+	end
+	return failures
 end
 
 return FairnessCheck

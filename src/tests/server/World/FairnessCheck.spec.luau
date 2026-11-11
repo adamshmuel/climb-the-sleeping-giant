@@ -141,3 +141,71 @@ describe("FairnessCheck.judge", function()
 		expect(mentions(verdict.reports, "adder")).toBe(true)
 	end)
 end)
+
+-- Plan 5 Task 20, spec Rule 73 (Every rank is fair from every way up): the rank judge and the Rare ceiling only read
+-- numbers. Limits: gap 5 on the footprint route, Rare ceiling 100.
+describe("FairnessCheck.judgeRanks and judgeCeiling", function()
+	local function mentions(lines: { string }, text: string): boolean
+		for _, line in lines do
+			if string.find(line, text, 1, true) ~= nil then
+				return true
+			end
+		end
+		return false
+	end
+
+	it("a rank where one way up is 8 points quieter fails, naming the rank and both ways up", function()
+		local verdict = FairnessCheck.judgeRanks({
+			{
+				label = "Epic",
+				ways = {
+					{ name = "BootRamp", footprint = 70, quiet = 70 },
+					{ name = "BootLadder_Left", footprint = 78, quiet = 78 },
+				},
+			},
+		})
+		expect(#verdict.failures).toBe(1)
+		expect(mentions(verdict.failures, "Epic")).toBe(true)
+		expect(mentions(verdict.failures, "BootRamp")).toBe(true)
+		expect(mentions(verdict.failures, "BootLadder_Left")).toBe(true)
+	end)
+
+	it("the same rank at 4 points apart passes", function()
+		local verdict = FairnessCheck.judgeRanks({
+			{
+				label = "Epic",
+				ways = {
+					{ name = "BootRamp", footprint = 70, quiet = 70 },
+					{ name = "BootLadder_Left", footprint = 74, quiet = 74 },
+				},
+			},
+		})
+		expect(#verdict.failures).toBe(0)
+	end)
+
+	it("a way up with no footprint peak for a rank fails as can't reach", function()
+		local verdict = FairnessCheck.judgeRanks({
+			{
+				label = "Legendary",
+				ways = {
+					{ name = "BootRamp", footprint = 90, quiet = nil },
+					{ name = "RightBootRamp", footprint = nil, quiet = nil },
+				},
+			},
+		})
+		expect(#verdict.failures).toBe(1)
+		expect((string.find(verdict.failures[1], "can't reach", 1, true))).toBe(1)
+		expect(mentions(verdict.failures, "RightBootRamp")).toBe(true)
+		expect(mentions(verdict.failures, "Legendary")).toBe(true)
+	end)
+
+	it("a Rare nest peaking 101 through one way up fails, naming the nest and the way up", function()
+		local failures = FairnessCheck.judgeCeiling({
+			{ nest = "Nest_LowerBelly_Left", way = "BootRamp", route = "footprint", peak = 99.5 },
+			{ nest = "Nest_UpperBelly_Right", way = "BootLadder_Right", route = "quietest", peak = 101 },
+		})
+		expect(#failures).toBe(1)
+		expect(mentions(failures, "Nest_UpperBelly_Right")).toBe(true)
+		expect(mentions(failures, "BootLadder_Right")).toBe(true)
+	end)
+end)
