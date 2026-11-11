@@ -75,6 +75,16 @@ describe("the real world, slide guards", function()
 		for _, steep in PlayerNeeds.steepLayer(world) do
 			table.insert(needs, steep)
 		end
+		-- Plan 5 Task 19c: each nest's straw box (World.EggSpots.<nest>.Nest) is a place players need too.
+		local eggSpots = world:FindFirstChild("EggSpots")
+		if eggSpots ~= nil then
+			for _, model in eggSpots:GetChildren() do
+				local straw = model:FindFirstChild("Nest")
+				if straw ~= nil and straw:IsA("BasePart") then
+					table.insert(needs, PlayerNeeds.boxNeed(`nest straw {model.Name}`, straw))
+				end
+			end
+		end
 		local names: { [string]: boolean } = {}
 		for _, need in needs do
 			names[need.name] = true
@@ -160,4 +170,28 @@ describe("the real world, slide guards", function()
 			error("\n" .. table.concat(problems, "\n"), 0)
 		end
 	end, BUILD_TIMEOUT_MS + TEST_TIMEOUT_MS)
+
+	-- Plan 5 Task 19c: the nests' straw boxes are places players need, so the slide guards keep clear of them.
+	it("the slide guards' list of places holds every nest's straw box", function()
+		local world = Workspace:FindFirstChild("World")
+		expect(world).never.toBeNil()
+		local spots = (world :: Instance):FindFirstChild("EggSpots")
+		expect(spots).never.toBeNil()
+		local names: { [string]: boolean } = {}
+		for _, need in realNeeds(world :: Instance) do
+			names[need.name] = true
+		end
+		local missing: { string } = {}
+		local nests = 0
+		for _, model in (spots :: Instance):GetChildren() do
+			if model:IsA("Model") and model:FindFirstChild("Nest") ~= nil then
+				nests += 1
+				if not names[`nest straw {model.Name}`] then
+					table.insert(missing, model.Name)
+				end
+			end
+		end
+		expect(nests).toBeGreaterThan(0)
+		expect(missing).toEqual({})
+	end)
 end)

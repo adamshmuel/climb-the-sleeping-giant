@@ -587,8 +587,10 @@ Words used here (the spec's own words, such as nest, rank, egg slot, refill, sea
 
 **Task 19c: Slide guards, jump tops and rail posts beside the real nests**
 - Stands on: Task 19a (every nest at its final spot, built).
-- For: core gameplay (no shortcut onto the belly, no post in a nest). Size: 4 steps, about 25 calls, 50 min.
+- For: core gameplay (no shortcut onto the belly, no post in a nest). Size: 4 steps, about 35 calls, 53 min (card `work/p5t19/19c-card.md`; builder A Steps 1 to 3, a fresh builder B for Step 4, the world change).
 - What it does: the "Slide guards", "guard-top jump check" and "No rail post inside a nest rim" lines above, on the real nests.
+- Found by code_lead's read-only probe (2026-11-11): no slide guard is near a nest; the jump check already reads the real nests (Task 18); two lap plank posts stand 0.1 studs inside the rims of the boot toe inner nests. One shared rim check (`tools/checks/PostRim.luau`) feeds the new test and a small world script (`tools/world/21e-post-clear.luau`) that slides those posts along their planks. No nest moves.
+- Built (2026-11-11): both end posts slid 0.55 studs toward their plank's end (designer's pick: sliding toward the middle needed 2.8 studs and left the rope end hanging), rim margin 0.12. The posts and ropes are invisible (Transparency 1), so no look shots (main chat's veto). The clearance the script keeps is `PostRim.CLEAR` 0.1 studs, the most the plank end allows (0.14).
 - Done when: plan 2's slide-guard test passes with the nests in its list, the guard-top jump check passes, the rail post check passes, and designer is sent the moved-nest list for the eye limit from all 8 gardens.
 
 **Task 20: Every rank is fair from every way up**

@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local NestTable = require(ServerStorage.Tools.checks.NestTable)
+local PostRim = require(ServerStorage.Tools.checks.PostRim)
 local Helpers = require(script.Parent.Helpers)
 local MockupNests = require(ServerStorage.Tests.server.World.MockupNests)
 local NestRoute = require(script.Parent.NestRoute)
@@ -348,5 +349,26 @@ describe("the real world, the 38 nests", function()
 			table.insert(problems, "NestArt has no parts")
 		end
 		expect(problems).toEqual({})
+	end)
+
+	-- Product's post ruling (work/p3t13/13c-post-order.md; plan 5 Task 19): no rail post stands inside a nest's rim.
+	-- The rim sum lives once, in tools/checks/PostRim.luau.
+	it("no rail post stands inside a nest rim, on either side", function()
+		local world = realWorld()
+		local nests: { PostRim.Nest } = {}
+		for name, model in nestModels() do
+			local mesh = model:FindFirstChild("Nest")
+			expect(mesh).never.toBeNil()
+			local cframe, size = model:GetBoundingBox()
+			table.insert(nests, { name = name, mesh = mesh :: BasePart, box = { cframe = cframe, size = size } })
+		end
+		local posts: { BasePart } = {}
+		for _, part in world:GetDescendants() do
+			if part:IsA("BasePart") and (part.Name == "Post" or string.sub(part.Name, 1, 5) == "Post_") then
+				table.insert(posts, part)
+			end
+		end
+		expect(#posts).toBeGreaterThan(0)
+		expect(PostRim.problems(nests, posts)).toEqual({})
 	end)
 end)
