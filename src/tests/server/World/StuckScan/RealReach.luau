@@ -126,7 +126,7 @@ function RealReach.gardens(setup: Setup, world: Instance): { ReachCheck.Garden }
 	local gardens: { ReachCheck.Garden } = {}
 	for index, wayUp in setup.waysUp do
 		for _, number in wayUp.gardens do
-			local spawn = spawnOf[number]
+			local spawn: Vector3? = spawnOf[number]
 			if spawn == nil then
 				error(`RealReach: garden {number} has no spawn spot`)
 			end

@@ -22,19 +22,38 @@ export type ToolInput = {
 	nests: { ToolNest },
 }
 
-local function run(input: ToolInput): string
-	local rows: { EggRanksReport.ReportRow } = {}
+-- Measures every nest (ReachCheck.analyseAll makes the searches once) and returns the report text, the rank run's result
+-- (its failure list) and the report rows (each nest's reach, seat and verdict, in input order).
+local function check(input: ToolInput): (string, EggRanks.RunResult, { EggRanksReport.ReportRow })
+	local nestInputs: { ReachCheck.NestInput } = {}
 	for _, nest in input.nests do
-		local reach = ReachCheck.analyse(input.options, nest.input)
-		local seat = NestSeat.measure(input.world, nest.seat)
-		local verdict =
-			EggRanks.judge({ name = nest.name or "", worldRank = nest.worldRank, reach = reach, seat = seat })
-		table.insert(
-			rows,
-			{ name = nest.name, seatKind = nest.seat.kind, reach = reach, seat = seat, verdict = verdict }
-		)
+		table.insert(nestInputs, nest.input)
 	end
-	return EggRanksReport.build(rows, input.header)
+	local reaches = ReachCheck.analyseAll(input.options, nestInputs)
+	local seats: { NestSeat.Result } = {}
+	local verdictInputs: { EggRanks.NestVerdictInput } = {}
+	for index, nest in input.nests do
+		seats[index] = NestSeat.measure(input.world, nest.seat)
+		verdictInputs[index] =
+			{ name = nest.name or "", worldRank = nest.worldRank, reach = reaches[index], seat = seats[index] }
+	end
+	local result = EggRanks.run(verdictInputs)
+	local rows: { EggRanksReport.ReportRow } = {}
+	for index, nest in input.nests do
+		rows[index] = {
+			name = nest.name,
+			seatKind = nest.seat.kind,
+			reach = reaches[index],
+			seat = seats[index],
+			verdict = result.verdicts[index],
+		}
+	end
+	return EggRanksReport.build(rows, input.header), result, rows
 end
 
-return { run = run }
+local function run(input: ToolInput): string
+	local text = check(input)
+	return text
+end
+
+return { run = run, check = check }
