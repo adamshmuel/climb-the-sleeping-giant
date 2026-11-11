@@ -9,7 +9,7 @@
 --    closer. From the join spot the way can go toward either end of that link.
 --  * The shortest way: by walking time (spec Rule 42, "Footprints take the quickest way"), starting with the stretch
 --    from the join spot. A walk link takes length / WalkSpeed seconds; a climb link (both ends on the same ladder,
---    RouteData.isClimb) takes length / (0.7 x WalkSpeed), because Roblox climbs at 70% of WalkSpeed (docs,
+--    RouteData.isClimb) takes length / (the climb factor in Config x WalkSpeed), because Roblox climbs at 70% of WalkSpeed (docs,
 --    Humanoid.Climbing; the same factor as PathCheck.CLIMB_SPEED). The stretch from the join spot is costed by the
 --    kind of the joined link.
 --  * Choosing: of the targets that are allowed right now, the one with the fewest seconds wins. A tie goes to the
@@ -44,7 +44,7 @@ export type Graph = {
 export type Found = {
 	target: string,
 	length: number, -- distance in studs along the way, from the join spot
-	seconds: number, -- time the way takes: walk links at WalkSpeed, climb links at 0.7 of it
+	seconds: number, -- time the way takes: walk links at WalkSpeed, climb links at the climb factor in Config of it
 	path: { Vector3 },
 	climbs: { boolean }, -- for each stretch of `path` (`climbs[i]` is path[i] to path[i + 1]): true on a climb link
 }
@@ -61,7 +61,7 @@ export type Way = {
 }
 
 local NEARLY_ZERO = 1e-6
-local CLIMB_SPEED_FACTOR = 0.7 -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing; PathCheck.CLIMB_SPEED)
+local CLIMB_SPEED_FACTOR = Config.Movement.ClimbSpeedFactor -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing)
 
 function RouteGraph.new(points: { Point }): Graph
 	local sorted = table.clone(points)

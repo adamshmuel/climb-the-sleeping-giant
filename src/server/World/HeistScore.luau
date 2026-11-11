@@ -1,7 +1,7 @@
 --!strict
 -- The replay of spec 4, Rule 47 (How the score is worked out): a trip is walked step by step through the same meter
 -- rules the game uses (Noise.perSecond, the solo drain, the carry slowdown, tiptoe), and the highest meter reached is
--- the score. Pure maths: no services, no yields. Every number comes from Config except the climb factor.
+-- the score. Pure maths: no services, no yields. Every number comes from Config.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -15,7 +15,7 @@ export type Trip = { up: { Step }, down: { Step }?, egg: Config.RarityName?, tip
 export type Score = { peak: number, ladderSeconds: number, totalSeconds: number }
 
 -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing).
-local CLIMB_SPEED = 0.7
+local CLIMB_SPEED = Config.Movement.ClimbSpeedFactor
 
 local HeistScore = {}
 

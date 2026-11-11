@@ -88,7 +88,7 @@ local SPOTS_PER_YIELD = 200
 -- and the nearest grid column can be up to 1.4 studs to the side. (The real ladders' ends are 2.0 to 3.5 studs from
 -- their nearest spot.)
 local CLIMB_REACH_STEPS = 2
-local CLIMB_SPEED = 0.7 -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing)
+local CLIMB_SPEED = Config.Movement.ClimbSpeedFactor -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing)
 local SLIDE_LIFT = 0.5 -- studs: the body is checked this far above the edge the slide starts from
 local SLIDE_STEP = 1 -- studs: how far a slide follows a steep surface downhill before looking again
 local MAX_SLIDE_STEPS = 200

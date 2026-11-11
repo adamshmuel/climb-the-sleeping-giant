@@ -29,6 +29,10 @@ describe("Config", function()
 		expect(Config.Movement.TiptoeSpeedFactor).toBe(0.6)
 	end)
 
+	it("Roblox climbs at 70% of WalkSpeed", function()
+		expect(Config.Movement.ClimbSpeedFactor).toBe(0.7)
+	end)
+
 	it("grabbing takes a 1 second hold within 8 studs, plus 2 studs for lag", function()
 		expect(Config.Grab).toEqual({ HoldSeconds = 1, ReachStuds = 8, ReachToleranceStuds = 2 })
 	end)

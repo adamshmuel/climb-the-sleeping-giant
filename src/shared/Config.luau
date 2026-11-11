@@ -28,6 +28,7 @@ export type Config = {
 	Movement: {
 		WalkSpeed: number,
 		TiptoeSpeedFactor: number,
+		ClimbSpeedFactor: number, -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing)
 	},
 	Grab: {
 		HoldSeconds: number,
@@ -176,7 +177,11 @@ local function deepFreeze<T>(value: T): T
 end
 
 local config: Config = {
-	Movement = { WalkSpeed = 16, TiptoeSpeedFactor = 0.6 },
+	Movement = {
+		WalkSpeed = 16,
+		TiptoeSpeedFactor = 0.6,
+		ClimbSpeedFactor = 0.7, -- Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing)
+	},
 	Grab = { HoldSeconds = 1, ReachStuds = 8, ReachToleranceStuds = 2 },
 	RarityOrder = { "Common", "Uncommon", "Rare", "Epic", "Legendary" },
 	Rarity = {

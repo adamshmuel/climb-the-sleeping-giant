@@ -169,7 +169,7 @@ describe("PathCheck walk map", function()
 		end
 		expect(#climbs).toBe(1)
 		expect(climbs[1].length > 7).toBe(true)
-		expect(climbs[1].seconds).toBeCloseTo(climbs[1].length / (0.7 * WALK_SPEED), 5)
+		expect(climbs[1].seconds).toBeCloseTo(climbs[1].length / (Config.Movement.ClimbSpeedFactor * WALK_SPEED), 5)
 	end)
 
 	-- A ladder like the real ones: a 2 x 2 truss leaning about 54 degrees from the floor up to the shelf's edge, its
