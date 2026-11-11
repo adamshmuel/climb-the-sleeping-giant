@@ -39,8 +39,8 @@ describe("the egg check on the real world", function()
 	local results: { ReachCheck.NestResult } = {}
 	local seconds = math.huge
 
-	-- The cuff nests players reach by walking; plan 5 Task 22's bot walk scores them, so the egg check leaves them out here
-	-- (plan 5 Task 19a, card Step 4).
+	-- The cuff nests players reach by walking; plan 4 Task 13b's nest walk scores them, so the egg check leaves them out
+	-- here (plan 5 Task 19a, card Step 4).
 	local SCORED_BY_BOT_WALK: { [string]: boolean } = {
 		["Cuff Back (Left)"] = true,
 		["Cuff Back (Right)"] = true,

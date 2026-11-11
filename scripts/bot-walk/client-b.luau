@@ -1,4 +1,4 @@
---!strict
+-- (no --!strict line: job-check lints a part without it together with the part before it, as one paste.)
 -- Task 8b slot 4, second half: pasted right after client-a.luau in the same Client call.
 -- Uses client-a's names (Leg, BotWalk, feetNow, placeBot, press, runLeg) and never redefines them.
 -- Every name here starts with "wk" so it can't clash with client-a's.
@@ -86,12 +86,13 @@ for _, raw in wkData.legs do
 		wkWall = leg
 	end
 end
-if #wkLegs ~= wkData.total or wkWall == nil then
-	return wkStop(
-		`T8bLegs holds {#wkLegs} legs, total says {tostring(wkData.total)}, wall leg {tostring(wkWall ~= nil)}`
-	)
+-- Task 22's legs have no wall leg: then the wall steps (2 and 3 below) are skipped and the self-check starts from leg 1.
+if #wkLegs == 0 or #wkLegs ~= wkData.total then
+	return wkStop(`T8bLegs holds {#wkLegs} legs, total says {tostring(wkData.total)}`)
 end
-local wallLeg: Leg = wkWall
+local wallLeg: Leg? = wkWall
+local wkSelfLeg: Leg = if wallLeg ~= nil then wallLeg else wkLegs[1]
+local wkHoldSeconds = if wallLeg ~= nil then wkWallHold else 0
 
 -- A leg never errors (client-a's contract), but a stray error must not kill the whole job.
 local wkErr = ""
@@ -104,30 +105,41 @@ local function wkRun(leg: Leg): (boolean, string, Vector3, number)
 	return pass, reason, endFeet, secs
 end
 
--- 2. Self-check: 1 s of input towards -z must move the body at least 8 studs.
-placeBot(wallLeg.from)
-task.wait(0.4)
+-- 2. Self-check: 1 s of input along the first leg's flat direction (from to to) must move the body at least 5 studs.
+-- Leg 1 slopes towards -z, so a fixed -z press can stall (Task 22 Step 3); the leg's own direction is what the bot walks.
+local wkSelfDir = Vector3.new(wkSelfLeg.to.X - wkSelfLeg.from.X, 0, wkSelfLeg.to.Z - wkSelfLeg.from.Z)
+if wkSelfDir.Magnitude < 5 then
+	return wkStop(`INPUT DEAD: the first leg is {string.format("%.1f", wkSelfDir.Magnitude)} studs flat, need 5`)
+end
+placeBot(wkSelfLeg.from)
+task.wait(1.5)
 local wkStart = feetNow()
-press(Vector3.new(0, 0, -1), 1)
+press(wkSelfDir.Unit, 1)
 local wkMoved = feetNow() - wkStart
 local wkFlat = Vector3.new(wkMoved.X, 0, wkMoved.Z).Magnitude
-if wkFlat < 8 then
-	return wkStop(string.format("INPUT DEAD: 1 s of Move towards -z moved %.1f studs flat, need 8", wkFlat))
+if wkFlat < 5 then
+	return wkStop(string.format("INPUT DEAD: 1 s of Move along the first leg moved %.1f studs flat, need 5", wkFlat))
 end
 table.insert(wkOut, string.format("self-check ok: %.1f studs in 1 s", wkFlat))
 
--- 3. Test wall (client-b owns it): the left ramp walk must fail with SLOW.
-local wkWallPart = Instance.new("Part")
-wkWallPart.Name, wkWallPart.Anchored = "T8bTestWall", true
-wkWallPart.Size, wkWallPart.CFrame = Vector3.new(12, 10, 1), CFrame.new(-24.0, 16.8, -84.5)
-wkWallPart.Parent = game:GetService("Workspace")
-local wkPass, wkReason, wkEnd, wkSecsWall = wkRun(wallLeg)
-local wkWallLine = `wall leg #{wallLeg.n} {wkReason} end {wkFeet(wkEnd)} {math.floor(wkSecsWall * 10) / 10} s`
-if wkPass or wkReason ~= "SLOW" then
-	wkWallPart:Destroy()
-	return wkStop(`WALL MISSED: must fail SLOW, got pass={tostring(wkPass)}: {wkWallLine} {wkErr}`)
+-- 3. Test wall (client-b owns it): the left ramp walk must fail with SLOW. Skipped when there is no wall leg (Task 22).
+local wkWallPart: Part? = nil
+if wallLeg ~= nil then
+	local wkWallNew = Instance.new("Part")
+	wkWallNew.Name, wkWallNew.Anchored = "T8bTestWall", true
+	wkWallNew.Size, wkWallNew.CFrame = Vector3.new(12, 10, 1), CFrame.new(-24.0, 16.8, -84.5)
+	wkWallNew.Parent = game:GetService("Workspace")
+	wkWallPart = wkWallNew
+	local wkPass, wkReason, wkEnd, wkSecsWall = wkRun(wallLeg)
+	local wkWallLine = `wall leg #{wallLeg.n} {wkReason} end {wkFeet(wkEnd)} {math.floor(wkSecsWall * 10) / 10} s`
+	if wkPass or wkReason ~= "SLOW" then
+		wkWallNew:Destroy()
+		return wkStop(`WALL MISSED: must fail SLOW, got pass={tostring(wkPass)}: {wkWallLine} {wkErr}`)
+	end
+	table.insert(wkOut, wkWallLine .. " (wanted SLOW, ok)")
+else
+	table.insert(wkOut, "no wall leg: wall test skipped")
 end
-table.insert(wkOut, wkWallLine .. " (wanted SLOW, ok)")
 
 -- 4. The shared state the fetches read.
 local wkNow = os.time()
@@ -144,8 +156,8 @@ local wkState: WkState = {
 	failCount = 0,
 	failLegs = {},
 	expectedEnd = 0,
-	startedAt = wkNow + wkWallHold,
-	holds = { wall = { from = wkNow, to = wkNow + wkWallHold } },
+	startedAt = wkNow + wkHoldSeconds,
+	holds = { wall = { from = wkNow, to = wkNow + wkHoldSeconds } },
 }
 wkShared.T8bWalk = wkState
 
@@ -219,8 +231,10 @@ table.insert(
 )
 
 task.spawn(function()
-	wkHold(wkWallHold)
-	wkWallPart:Destroy()
+	wkHold(wkHoldSeconds)
+	if wkWallPart ~= nil then
+		wkWallPart:Destroy()
+	end
 	for _, leg in wkLegs do
 		local t0 = os.clock()
 		local pass, reason, endFeet, secs = wkRun(leg)
