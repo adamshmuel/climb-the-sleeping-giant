@@ -464,6 +464,14 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   4. A heist that would pass 100 returns its real peak (for example 130).
   5. A Rare egg's slowdown makes the trip home longer and louder than an Uncommon's.
 - Done when: the tests pass.
+- Built 2026-11-11 with a local `CLIMB_SPEED = 0.7`, the third copy of that number (`PathCheck.luau`, `RouteGraph.luau`).
+
+**Task 11f: One climb factor (small fix, code_lead ruling 2026-11-11)**
+- Stands on: Task 11 (built) and plan 4 Task 4 (committed: its builder is editing `Config.luau` and `Config.spec.luau` now).
+- Why: Rule 41 and spec 4's Rule 55 say the fairness check and the scores must be the same check. Three copies of 0.7 can drift apart.
+- Files: `src/shared/Config.luau` (`Movement.ClimbSpeedFactor = 0.7`, in the type and the table, comment "Roblox climbs at 70% of WalkSpeed (docs, Humanoid.Climbing)"), `src/tests/shared/Config.spec.luau` (one `toBe(0.7)` line beside `TiptoeSpeedFactor`), and the three users: `src/server/World/PathCheck.luau` (`CLIMB_SPEED`), `src/client/World/RouteGraph.luau` (`CLIMB_SPEED_FACTOR`), `src/server/World/HeistScore.luau` (`CLIMB_SPEED`), each reading the Config key instead.
+- Failing test first: the Config.spec line (red until the key exists). Every other test keeps its numbers.
+- Done when: `grep -rn "= 0.7" src/server/World src/client/World` finds no climb factor, `check.sh` is clean, and one runner full run shows only the standing walk-area red.
 
 **Task 12 is split into 12a and 12b** (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): 12a is `PathCheck.costsFrom` and `routeFrom` on fake maps, code only, which plan 4 Task 7 needs. 12b is `FairnessCheck` on the real world; it reads the finished ground and the footprint route, and its fix may move a ladder top, so it waits for them. Plan 4 Task 7 stands on 12a only.
 
@@ -475,7 +483,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the tests pass.
 
 **Task 12b: Every way up is equally loud (real world)**
-- Stands on: Task 9 (the stuck scan, built), Task 11 (`HeistScore`, built), Task 12a (`costsFrom`, built), Task 13 (the footprints count seconds, built: this check runs on its trail), and plan 5 Task 22b (the last ground change, built or closed).
+- Stands on: Task 9 (the stuck scan, built), Task 11 (`HeistScore`, built), Task 11f (one climb factor, built), Task 12a (`costsFrom`, built), Task 13 (the footprints count seconds, built: this check runs on its trail), and plan 5 Task 22b (the last ground change, built or closed).
 - Spec rules: Rule 41 (Every way up is equally loud), the test-run proof, for Rare egg 1 and the Uncommon rank, on the quietest route and, for the Rare egg 1 window, also on the footprint route. Check A1 (the parts that exist before spec 5).
 - Files: `src/server/World/FairnessCheck.luau` (new), `src/tests/server/World/FairnessCheck.spec.luau` (new, fake worlds), `WalkMap.spec.luau`. `PathCheck.costsFrom` comes from Task 12a.
 - What it does:
