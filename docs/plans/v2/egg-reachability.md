@@ -103,7 +103,8 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Spec rules: section 6, "Looking at the giant from a garden" (the glow fades in smoothly; the 10-stud beam). Risk row: "The rank glow fades in smoothly between 55 and 75 studs".
 - Files: none in `src/`. Jobs `work/p4t4/walk-S.luau` and `walk-P.luau` (written in Step A of `work/p4t4/4-play-card.md`).
 - Size: about 27 min, about 16 Studio calls (Step A 12 min, 4 calls; Step B 15 min, about 12 calls).
-- Done when: in Play a walk from the spawn toward `Nest_LowerBelly_Left` and back, sampled every 0.2 s, shows the ring see-through never falls with distance, hidden at 55 studs or less, full from 75 studs, no pop; the belly egg's beam is about 10 studs; shots at about 80, 65 and 50 studs.
+- Done when: in Play a walk from the spawn toward `Nest_LowerBelly_Left` and back, sampled every 0.2 s, shows the ring see-through never rises as the distance grows (it gets clearer as you walk away), hidden at 55 studs or less, full from 75 studs, no pop; the belly egg's beam is about 10 studs; shots at about 80, 65 and 50 studs.
+- Done (2026-11-11, approved by code_lead): `Nest_LowerBelly_Left` had no egg in that run, so `Nest_BellyPocket_Left` (also Rare, beam 10) stood in. The walk sampled 141 to 61 studs and back (full 0.883 from 75 studs, smooth 0.899 to 0.966 nearer); a held camera covered 80, 65, 55, 50 and 45 studs (halo off at 55 or less). Beams: Rare and Epic 10, Legendary 9.99, Common and Uncommon none. Result: `work/p4t4/walk-result.md`.
 - Not built yet: plan 4 Task 13 (spawn shots), plan 5 Task 19 (the nests may move).
 
 **Task 5: Harder rank, better pets** (moved out of V2 into spec 2, Hatching and pets, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): no V2 code hatches an egg, so no player sees these tables, and Rule 58 lets spec 2 change the numbers. Not a feature cut: the rule stays, only when it is built moves. Spec 4 Rule 58 says so.)
