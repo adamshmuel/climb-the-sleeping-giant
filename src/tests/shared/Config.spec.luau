@@ -70,8 +70,8 @@ describe("Config", function()
 		expect(Config.Noise.TiptoeFactor).toBe(0.2)
 	end)
 
-	it("climbing a ladder is 1.2 times as loud", function()
-		expect(Config.Noise.LadderMultiplier).toBeCloseTo(1.2)
+	it("climbing a ladder is 1.3 times as loud", function()
+		expect(Config.Noise.LadderMultiplier).toBeCloseTo(1.3)
 	end)
 
 	it("a jump landing makes a burst of 20 noise", function()

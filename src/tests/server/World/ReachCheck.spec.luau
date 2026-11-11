@@ -22,6 +22,7 @@ describe("ReachCheck", function()
 		[7] = "Nightcap",
 		[8] = "Boots",
 		[9] = "Meadow",
+		[10] = "Boots",
 	}
 	local function spot(id: number, position: Vector3, up: Vector3?): PathCheck.Spot
 		return { id = id, position = position, up = up or Vector3.new(0, 1, 0), standsOn = Instance.new("Part") }
@@ -244,5 +245,90 @@ describe("ReachCheck", function()
 		expect(quickest.seconds).toBeCloseTo(2.4107, 3)
 		expect(slowest.garden).toBe(1)
 		expect(slowest.seconds).toBeCloseTo(3, 3)
+	end)
+
+	-- Spec 3, Rule 41: the score of each foot on its own, on the same fake map. The ledge (5) is 48 studs from the Ramp
+	-- (1) by a walk and 20 studs from the Ladder (2) by a climb; the trap ledge (8) is reached by a walk from the Ramp.
+	describe("ReachCheck.peaksByFoot", function()
+		local TRAP = nest("Trap", -30, 21, -30, false)
+		local function nothingOffLimits(_spot: PathCheck.Spot): boolean
+			return false
+		end
+		local function feetOffLimits(offLimitsSpot: PathCheck.Spot): boolean
+			return offLimitsSpot.id == 1 or offLimitsSpot.id == 2
+		end
+
+		it("each foot's trip goes up and back down the same foot", function()
+			local byNest = ReachCheck.peaksByFoot(buildOptions(), { LEDGE }, "Uncommon", feetOffLimits)
+			local trips = byNest.Ledge
+			local ramp = trips.Ramp
+			local ladder = trips.Ladder
+			expect(ramp.up.steps[1].from).toBe(1)
+			expect(ramp.up.steps[#ramp.up.steps].to).toBe(5)
+			expect(ramp.down.steps[1].from).toBe(5)
+			expect(ramp.down.steps[#ramp.down.steps].to).toBe(1)
+			expect(ladder.up.steps[1].from).toBe(2)
+			expect(ladder.down.steps[#ladder.down.steps].to).toBe(2)
+			local walked: HeistScore.Step = { length = 48, kind = "Walk", zone = "Boots" }
+			local expected = HeistScore.replay({ up = { walked }, down = { walked }, egg = "Uncommon", tiptoe = false })
+			expect(ramp.peak).toBeCloseTo(expected.peak, 5)
+		end)
+
+		it("a route never steps onto an off-limits spot other than its own foot", function()
+			local byNest = ReachCheck.peaksByFoot(buildOptions(), { LEDGE, TRAP }, "Uncommon", feetOffLimits)
+			expect(byNest.Trap.Ramp).never.toBeNil()
+			expect(byNest.Trap.Ladder).toBeNil()
+			for _, trips in byNest do
+				for footName, trip in trips do
+					local own = if footName == "Ramp" then 1 else 2
+					for _, route in { trip.up, trip.down } do
+						for _, routeStep in route.steps do
+							expect(routeStep.to == own or routeStep.to == 5 or routeStep.to == 8).toBe(true)
+						end
+					end
+				end
+			end
+			local open = ReachCheck.peaksByFoot(buildOptions(), { TRAP }, "Uncommon", nothingOffLimits)
+			expect(open.Trap.Ladder).never.toBeNil()
+		end)
+
+		it("a ladder on the way down is scored as a drop", function()
+			local byNest = ReachCheck.peaksByFoot(buildOptions(), { LEDGE }, "Uncommon", feetOffLimits)
+			local climbed: HeistScore.Step = { length = 20, kind = "Climb", zone = "Boots" }
+			local dropped: HeistScore.Step = { length = 20, kind = "Walk", zone = "Boots" }
+			local asDrop = HeistScore.replay({ up = { climbed }, down = { dropped }, egg = "Uncommon", tiptoe = false })
+			local climbedDown =
+				HeistScore.replay({ up = { climbed }, down = { climbed }, egg = "Uncommon", tiptoe = false })
+			expect(byNest.Ledge.Ladder.peak).toBeCloseTo(asDrop.peak, 5)
+			expect(byNest.Ledge.Ladder.peak).toBeLessThan(climbedDown.peak)
+		end)
+
+		-- A new spot (10) 30 studs from the ledge (5), `drop` studs lower, joined only by a one-way Slide from the ledge.
+		local function withSlideDown(drop: number): (ReachCheck.Options, ReachCheck.NestInput)
+			local options = buildOptions()
+			table.insert(options.map.spots, spot(10, Vector3.new(40, 20 - drop, -30)))
+			table.insert(options.map.links[5], link(10, "Slide", 30, 1))
+			options.map.links[10] = {}
+			return options, nest("Below", 40, 21 - drop, -30, false)
+		end
+
+		-- Product's ruling (work/p3t12b/12b-mirror-decision.md): a Slide of under 2 studs is a walked step.
+		it("a step down of under 2 studs is walked on the way up", function()
+			local options, below = withSlideDown(0.7)
+			local byNest = ReachCheck.peaksByFoot(options, { below }, "Uncommon", feetOffLimits)
+			local trip = byNest.Below.Ramp
+			expect(trip).never.toBeNil()
+			expect(trip.up.steps[#trip.up.steps].kind).toBe("Slide")
+			local walked: { HeistScore.Step } = { step(48, "Walk"), step(30, "Walk") }
+			local byHand = HeistScore.replay({ up = walked, down = walked, egg = "Uncommon", tiptoe = false })
+			expect(trip.peak).toBeCloseTo(byHand.peak, 5)
+		end)
+
+		it("a drop of 2 studs or more is never part of a trip", function()
+			local options, below = withSlideDown(2)
+			local byNest = ReachCheck.peaksByFoot(options, { below }, "Uncommon", feetOffLimits)
+			expect(byNest.Below.Ramp).toBeNil()
+			expect(byNest.Below.Ladder).toBeNil()
+		end)
 	end)
 end)

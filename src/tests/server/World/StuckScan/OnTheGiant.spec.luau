@@ -667,8 +667,7 @@ describe("the ways up on a route map with even rows", function()
 			(world :: any).WalkSurfaces.BootRamp.Ramp_Walk,
 			(world :: any).WalkSurfaces.RightBootRamp.Ramp_Walk,
 		}
-		local routeArea: PathCheck.Area = { min = Vector3.new(-69, -8, -104), max = Vector3.new(69, 70, 0) }
-		map = PathCheck.buildMap(options, routeArea)
+		map = PathCheck.buildMap(options, WaysUpRoutes.ROUTE_AREA)
 	end, SCAN_TIMEOUT_MS)
 
 	afterAll(function()

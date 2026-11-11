@@ -166,7 +166,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Approved (2026-11-11, code_lead): EggRanks 7/7, Config 56/56, check.sh clean. A nest not reached, not left or with no room gets only those reasons and its seat reasons (no band or Tiptoe reason, never close); a nest with no egg used is Common. Waiting on the joint full run with Task 7b (expected 3372 passed, 1 failed).
 
 **Task 9: The check runs on the real world on every test run**
-- Stands on: plan 3 Task 9 (the stuck scan on the finished ground), plan 3 Task 12b (fairness on the real world), Tasks 6, 7, 8 and 10 (built), and plan 5 Task 12 (the 38 nests, built). Through plan 3 Task 9 and 12b it also stands on plan 5 Task 22b and plan 3 Task 9q (the last ground changes). Its first real-world run is here (Task 10 runs only on fake nests).
+- Stands on: plan 3 Task 9 (the stuck scan on the finished ground), plan 3 Task 12b (fairness on the real world, built 2026-11-11), Tasks 6, 7, 8 and 10 (built), and plan 5 Task 12 (the 38 nests, built). Through plan 3 Task 9 and 12b it also stands on plan 5 Task 22b and plan 3 Task 9q (the last ground changes). Its first real-world run is here (Task 10 runs only on fake nests).
 - Spec rules: Rule 55 (It runs on every test run), Rule 54 (The check fails when a nest drifts), Rule 46 (Every nest gets a difficulty score), Rule 59 (Eggs sit on something you can see).
 - Files: `src/tests/server/World/WalkMap.spec.luau`.
 - What changes:

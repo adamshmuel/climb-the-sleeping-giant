@@ -206,7 +206,7 @@ local config: Config = {
 		WalkPerSecond = 4,
 		TiptoeFactor = 0.2,
 		JumpBurst = 20,
-		LadderMultiplier = 1.2,
+		LadderMultiplier = 1.3,
 		QuietDrop = { TrussNear = 1.5, TopNear = 2, FootStuds = 8 },
 		ZoneMultiplier = { Meadow = 0, Boots = 1, Belly = 1.5, Beard = 2, Nightcap = 3 },
 	},

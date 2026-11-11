@@ -25,8 +25,8 @@ describe("GiantDirector meter", function()
 	end)
 
 	it("makes a climber on a ladder a little louder", function()
-		-- Belly 1.5 x walk 4 x ladder multiplier (Config.Noise.LadderMultiplier) = 7.2 a second, so 0.72 a step,
-		-- minus 0.15 of drain. The same walk off a ladder is 0.6 a step (the first test). Ten steps, because the
+		-- Belly 1.5 x walk 4 x ladder multiplier (Config.Noise.LadderMultiplier) = 7.8 a second, so 0.78 a step,
+		-- minus 0.15 of drain (0.63). The same walk off a ladder is 0.6 a step (the first test). Ten steps, because the
 		-- meter reads out to 0.1 and one step's 0.57 would round.
 		local harness = newHarness(10)
 		addPlayer(harness, 1, "Mia")

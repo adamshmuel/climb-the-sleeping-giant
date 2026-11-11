@@ -33,6 +33,18 @@ local WaysUpRoutes = {}
 
 WaysUpRoutes.PIECES = PIECES
 
+-- The box the route tests build their even-row map over: the boots, the lap, the belly, up to the nose (the ways up and
+-- Rare egg 1 lie inside it; piecesOutside checks that).
+WaysUpRoutes.ROUTE_AREA = { min = Vector3.new(-69, -8, -104), max = Vector3.new(69, 70, 0) } :: PathCheck.Area
+
+-- Each Config.WaysUp name to the piece in World.WalkSurfaces that is its way up, and whether that piece is a ladder.
+WaysUpRoutes.PIECE_OF = {
+	["Left boot ladder"] = { piece = "BootLadder_Left", isLadder = true },
+	["Left ramp"] = { piece = "BootRamp", isLadder = false },
+	["Right ramp"] = { piece = "RightBootRamp", isLadder = false },
+	["Right boot ladder"] = { piece = "BootLadder_Right", isLadder = true },
+} :: { [string]: { piece: string, isLadder: boolean } }
+
 local function piece(world: Instance, name: string): Model?
 	local surfaces = (world :: any).WalkSurfaces :: Instance
 	return surfaces:FindFirstChild(name) :: Model?
@@ -62,7 +74,7 @@ local function rampFoot(ramp: Model): Vector3?
 end
 
 -- The walk-map spot at the foot of a way up: a ladder's by ladderEndSpots, a ramp's by its lower end.
-local function startSpot(name: string, isLadder: boolean, map: PathCheck.WalkMap, world: Instance): number?
+function WaysUpRoutes.startSpot(name: string, isLadder: boolean, map: PathCheck.WalkMap, world: Instance): number?
 	if isLadder then
 		local foot = WalkFacts.ladderEndSpots(name, map, world)
 		return foot
@@ -83,7 +95,7 @@ end
 
 -- "ok", or a message that starts with the way up's name and how many spots its walk-and-climb search reached.
 function WaysUpRoutes.routeProblem(name: string, isLadder: boolean, map: PathCheck.WalkMap, world: Instance): string
-	local start = startSpot(name, isLadder, map, world)
+	local start = WaysUpRoutes.startSpot(name, isLadder, map, world)
 	if start == nil then
 		return `{name}: 0 spots reached, no walk-map spot at its foot`
 	end

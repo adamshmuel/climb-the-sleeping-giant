@@ -1,7 +1,7 @@
 --!strict
--- The difficulty score of a nest (spec 4, Rules 46 to 48): the player walks up from a foot of a way up to a spot they can
--- grab the nest from and home again, the quietest way, with no jump; the score is the highest the shared sleep meter
--- reaches (HeistScore.replay). Pure code on a walk map: nothing is placed or measured in the world.
+-- The difficulty score of a nest (spec 4, Rules 46 to 48): the player walks up from a foot of a way up to a spot they
+-- can grab the nest from and home again, the quietest way, with no jump; the score is the highest the shared sleep
+-- meter reaches (HeistScore.replay). Pure code on a walk map: nothing is placed or measured in the world.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -38,6 +38,9 @@ export type NestResult = {
 	slowest: GardenTime?,
 }
 export type Pick = { upBy: string, homeBy: string, up: PathCheck.Route, down: PathCheck.Route }
+-- One foot's own trip to a nest (Rule 41): the route up, the route back down (the up route's way, reversed) and the
+-- highest the meter reaches on it.
+export type FootTrip = { peak: number, up: PathCheck.Route, down: PathCheck.Route }
 
 local ReachCheck = {}
 
@@ -103,14 +106,11 @@ function ReachCheck.pickRoutes(ups: { [string]: PathCheck.Route? }, downs: { [st
 	return { upBy = upBy, homeBy = homeBy, up = up, down = down }
 end
 
--- A route's steps as the heist replay's steps; each one is in the louder zone of its two ends. A Slide never gets here
--- (the searches don't allow it).
+-- A route's steps as the heist replay's steps; each one is in the louder zone of its two ends. A Slide step is a small
+-- step down (peaksByFoot allows no other), so it is scored as a Walk.
 local function replaySteps(route: PathCheck.Route, zoneOf: (spot: number) -> Config.ZoneName): { HeistScore.Step }
 	local steps: { HeistScore.Step } = {}
 	for _, step in route.steps do
-		if step.kind == "Slide" then
-			error("ReachCheck: a Slide step is never part of a trip")
-		end
 		local kind: "Walk" | "Climb" = if step.kind == "Climb" then "Climb" else "Walk"
 		table.insert(steps, { length = step.length, kind = kind, zone = louder(zoneOf(step.from), zoneOf(step.to)) })
 	end
@@ -134,11 +134,15 @@ end
 
 -- No jump, no drop: only walking and climbing links count (Rule 46).
 local ALLOWED: PathCheck.AllowedKinds = { Walk = true, Climb = true }
+-- Product's ruling (work/p3t12b/12b-mirror-decision.md): a one-way Slide that drops less than this many studs is a
+-- step down, walked like a Walk by peaksByFoot. Any bigger drop is a jump and never part of a trip.
+local STEP_DOWN_STUDS = 2
+local WITH_STEPS_DOWN: PathCheck.AllowedKinds = { Walk = true, Climb = true, Slide = true }
 -- A spot is flat enough to stand on when its up direction is within 70 degrees of straight up.
 local FLAT_UP_Y = math.cos(math.rad(70))
 
--- The zone of every link: the louder zone of its two ends, so a ladder from the meadow up to a boot is in the Boots both
--- ways. The cost function only gets the link, so it reads the zone from this table.
+-- The zone of every link: the louder zone of its two ends, so a ladder from the meadow up to a boot is in the Boots
+-- both ways. The cost function only gets the link, so it reads the zone from this table.
 local function linkZones(map: PathCheck.WalkMap, zoneOf: (spot: number) -> Config.ZoneName)
 	local zones: { [PathCheck.Link]: Config.ZoneName } = {}
 	for from, links in map.links do
@@ -214,6 +218,125 @@ local function gardenTimes(options: Options, standId: number): (GardenTime?, Gar
 		end
 	end
 	return quickest, slowest
+end
+
+-- A cost that never takes a link into an off-limits spot other than `footSpot` (the foot this search starts from):
+-- Rule 41's trip goes up and back down the same foot, never across another way up.
+local function keepOffLimits(
+	cost: (PathCheck.Link) -> number,
+	spotsById: { [number]: PathCheck.Spot },
+	offLimits: (spot: PathCheck.Spot) -> boolean,
+	footSpot: number
+): (PathCheck.Link) -> number
+	return function(link: PathCheck.Link): number
+		local target = spotsById[link.to]
+		if link.to ~= footSpot and target ~= nil and offLimits(target) then
+			return math.huge
+		end
+		return cost(link)
+	end
+end
+
+-- Every Slide link that is a step down of under STEP_DOWN_STUDS (spot heights).
+local function stepsDown(map: PathCheck.WalkMap, spotsById: { [number]: PathCheck.Spot }): { [PathCheck.Link]: boolean }
+	local steps: { [PathCheck.Link]: boolean } = {}
+	for from, links in map.links do
+		for _, link in links do
+			local fromSpot, toSpot = spotsById[from], spotsById[link.to]
+			if
+				link.kind == "Slide"
+				and fromSpot ~= nil
+				and toSpot ~= nil
+				and fromSpot.position.Y - toSpot.position.Y < STEP_DOWN_STUDS
+			then
+				steps[link] = true
+			end
+		end
+	end
+	return steps
+end
+
+-- `cost`, except that a Slide drops `math.huge` unless it is in `steps`.
+local function onlyStepsDown(
+	steps: { [PathCheck.Link]: boolean },
+	cost: (PathCheck.Link) -> number
+): (PathCheck.Link) -> number
+	return function(link: PathCheck.Link): number
+		if link.kind == "Slide" and not steps[link] then
+			return math.huge
+		end
+		return cost(link)
+	end
+end
+
+-- A route walked the other way: the steps in reverse order, each from and to swapped.
+local function reversed(route: PathCheck.Route): PathCheck.Route
+	local steps: { PathCheck.Step } = {}
+	for index = #route.steps, 1, -1 do
+		local step = route.steps[index]
+		table.insert(
+			steps,
+			{ from = step.to, to = step.from, kind = step.kind, length = step.length, seconds = step.seconds }
+		)
+	end
+	return { steps = steps, cost = route.cost }
+end
+
+-- Rule 41: the meter peak of each foot's own trip to each nest, by nest name then foot name. Per foot, the quietest way
+-- up empty-handed and the quietest way carrying `egg`, both kept off every spot `offLimits` names except this foot's
+-- own; per nest, the stand spot cheapest from this foot. The way down is the up route's way with `egg` in hand,
+-- replayed as HeistScore.dropDown (a leaning ladder can't be climbed down). A foot that can't reach a nest has no entry
+-- for it.
+function ReachCheck.peaksByFoot(
+	options: Options,
+	nests: { NestInput },
+	egg: Config.RarityName,
+	offLimits: (spot: PathCheck.Spot) -> boolean
+): { [string]: { [string]: FootTrip } }
+	local zones = linkZones(options.map, options.zoneOf)
+	local spotsById: { [number]: PathCheck.Spot } = {}
+	for _, spot in options.map.spots do
+		spotsById[spot.id] = spot
+	end
+	local result: { [string]: { [string]: FootTrip } } = {}
+	for _, nest in nests do
+		result[nest.name] = {}
+	end
+	local steps = stepsDown(options.map, spotsById)
+	local function trimmed(carrying: Config.RarityName?, footSpot: number): (PathCheck.Link) -> number
+		return onlyStepsDown(steps, keepOffLimits(noiseCost(zones, carrying), spotsById, offLimits, footSpot))
+	end
+	for _, foot in options.feet do
+		local upSearch =
+			PathCheck.costsFrom(options.map, foot.spot, { allow = WITH_STEPS_DOWN, cost = trimmed(nil, foot.spot) })
+		local eggSearch =
+			PathCheck.costsFrom(options.map, foot.spot, { allow = WITH_STEPS_DOWN, cost = trimmed(egg, foot.spot) })
+		for _, nest in nests do
+			local stand: PathCheck.Spot? = nil
+			local standCost = math.huge
+			for _, spot in standSpots(options, nest.position) do
+				local cost = upSearch.costs[spot.id]
+				if cost ~= nil and cost < standCost then
+					stand = spot
+					standCost = cost
+				end
+			end
+			if stand ~= nil then
+				local up = PathCheck.routeFrom(upSearch, stand.id)
+				local eggRoute = PathCheck.routeFrom(eggSearch, stand.id)
+				if up ~= nil and eggRoute ~= nil then
+					local score = HeistScore.replay({
+						up = replaySteps(up, options.zoneOf),
+						down = HeistScore.dropDown(replaySteps(eggRoute, options.zoneOf)),
+						egg = egg,
+						tiptoe = false,
+					})
+					result[nest.name][foot.name] = { peak = score.peak, up = up, down = reversed(eggRoute) }
+				end
+			end
+		end
+	end
+	return result
 end
 
 -- Rules 46 to 48: how hard is it to take the egg from this nest and get home with no jump.

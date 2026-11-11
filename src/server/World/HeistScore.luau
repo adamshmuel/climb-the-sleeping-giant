@@ -19,6 +19,18 @@ local CLIMB_SPEED = Config.Movement.ClimbSpeedFactor
 
 local HeistScore = {}
 
+-- Spec 3, Rule 41 (the drop): a leaning ladder can't be climbed down, so the way down it is a drop. Each Climb step
+-- replays as a Walk of the same length and zone (no ladder extra, no thud). The real drop is shorter, so this errs
+-- loud. Returns a new list in reverse order; the input is not changed.
+function HeistScore.dropDown(steps: { Step }): { Step }
+	local down: { Step } = {}
+	for index = #steps, 1, -1 do
+		local step = steps[index]
+		table.insert(down, { length = step.length, kind = "Walk", zone = step.zone })
+	end
+	return down
+end
+
 function HeistScore.replay(trip: Trip): Score
 	local drain = SleepMeter.drainPerSecond(1)
 	local meter = 0
