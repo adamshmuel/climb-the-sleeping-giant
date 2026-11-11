@@ -7,7 +7,9 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 local GiantFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.GiantFx)
+local RouteGraph = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.World.RouteGraph)
 local Helpers = require(script.Parent.Helpers)
+local loadRoute = Helpers.loadRoute
 local realWorld = Helpers.realWorld
 
 -- The pieces the giant's waking pose moves (Task 28): where the head and the right arm turn, and the awake eyes.
@@ -135,6 +137,119 @@ describe("the real world, footprints", function()
 		end
 		expect(cleatCount > 0).toBe(true)
 		expect(problems).toEqual({})
+	end)
+
+	-- Task 13: the quickest way, on the real route. The footprints are laid by RouteGraph.way, so these read the real
+	-- route points and gardens and work the way out the same way the client does.
+	local function wayUpOf(garden: number): string
+		for _, wayUp in Config.WaysUp do
+			if table.find(wayUp.Gardens, garden) then
+				return wayUp.Name
+			end
+		end
+		error(`no way up for garden {garden}`)
+	end
+
+	local function feetOf(garden: WorldIndex.Garden): Vector3
+		return garden.spawnSpot.Position + Vector3.new(0, garden.spawnSpot.Size.Y / 2, 0)
+	end
+
+	local function passes(path: { Vector3 }, position: Vector3): boolean
+		for _, point in path do
+			if (point - position).Magnitude < 0.05 then
+				return true
+			end
+		end
+		return false
+	end
+
+	it("each garden's way to Rare egg 1 goes up its own way up (Config.WaysUp)", function()
+		local points = loadRoute()
+		local graph = RouteGraph.new(points)
+		local gardens = WorldIndex.readGardens(realWorld()) :: { WorldIndex.Garden }
+		local wrong: { string } = {}
+		local lines: { string } = {}
+		for _, garden in gardens do
+			local name = wayUpOf(garden.index)
+			local found = RouteGraph.find(graph, feetOf(garden), { "Nest_LowerBelly_Left", "Nest_LowerBelly_Right" })
+			expect(found).never.toBeNil()
+			local path = (found :: RouteGraph.Found).path
+			local missing: { string } = {}
+			for _, point in points do
+				-- the way up's foot, and for a ladder its top too: the path has to pass both
+				if (point.wayUpFoot == name or point.wayUpTop == name) and not passes(path, point.position) then
+					table.insert(missing, point.name)
+				end
+			end
+			table.insert(lines, `garden {garden.index}: {name}, to {(found :: RouteGraph.Found).target}`)
+			if #missing > 0 then
+				table.insert(wrong, `garden {garden.index} ({name}) misses {table.concat(missing, ", ")}`)
+			end
+		end
+		print(table.concat(lines, "\n"))
+		expect(wrong).toEqual({})
+	end)
+
+	it("a footprint way ends 2 studs short of every ladder it enters and has no footprint on the ladder", function()
+		local points = loadRoute()
+		local graph = RouteGraph.new(points)
+		local gardens = WorldIndex.readGardens(realWorld()) :: { WorldIndex.Garden }
+		local targets: { string } = {}
+		for _, point in points do
+			if point.target ~= nil then
+				table.insert(targets, point.target)
+			end
+		end
+		local problems: { string } = {}
+		local entered: { [string]: boolean } = {}
+		local minToLadder = math.huge
+		for _, garden in gardens do
+			for _, target in targets do
+				local found = RouteGraph.find(graph, feetOf(garden), { target })
+				if found == nil then
+					continue
+				end
+				local steps = RouteGraph.place(found, Config.Footprints.Spacing, Config.Footprints.LadderStop)
+				local runLength = 0
+				for i = 1, #found.path - 1 do
+					local from, to = found.path[i], found.path[i + 1]
+					if not found.climbs[i] then
+						runLength += (to - from).Magnitude
+						continue
+					end
+					local nearest = math.huge
+					for _, step in steps do
+						nearest = math.min(nearest, (step.position - from).Magnitude)
+						local along = (to - from)
+						local t = (step.position - from):Dot(along) / along:Dot(along)
+						-- only a footprint beside the ladder's length counts: one past either end is on the ground or the pad
+						if t > 0.02 and t < 0.98 then
+							minToLadder = math.min(minToLadder, (step.position - (from + along * t)).Magnitude)
+						end
+					end
+					-- a run shorter than 3 studs may hold no footprint; only a longer run must end 1 to 3 studs short
+					if runLength >= 3 and (nearest < 1 or nearest > 3) then
+						table.insert(problems, `garden {garden.index} to {target}: {nearest} studs from the foot`)
+					end
+					if runLength >= 3 then
+						entered[`{from.X}, {from.Y}, {from.Z}`] = true
+					end
+					runLength = 0
+				end
+			end
+		end
+		local count = 0
+		for _ in entered do
+			count += 1
+		end
+		print(
+			`{count} ladder feet entered after a run of 3 studs or more; nearest footprint to any ladder link: {minToLadder}`
+		)
+		expect({ entered = count > 0, clearOfLadders = minToLadder > 0.5, problems = problems }).toEqual({
+			entered = true,
+			clearOfLadders = true,
+			problems = {},
+		})
 	end)
 end)
 

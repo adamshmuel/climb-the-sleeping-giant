@@ -46,7 +46,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Gardens and ways up (V2 spec 3) | Task 11: The heist replay (stands on Task 2) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 12a: `costsFrom` and `routeFrom` on fake maps (split from Task 12 on 2026-11-10; stands on nothing; plan 4 Task 7 needs it) | ☑ done 2026-11-11: one search per spot, `route` now shares it (same results and tie breaks); 7 tests on fake maps; full run 3290/1, only the walk-area red | builder / code_lead |
 | Gardens and ways up (V2 spec 3) | Task 12b: Every way up is equally loud, real world (stands on Tasks 9, 11, 12a, 13 and plan 5 Task 22b) | ☐ not started | |
-| Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way (stands on Task 8, built; built before Task 12b) | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 13: Footprints take the quickest way (stands on Task 8, built; built before Task 12b) | ☑ done (2026-11-11: the way is chosen by seconds, with ladders at 0.7 speed; no footprints on a ladder; the trail stops 2 studs before a ladder foot; every garden goes up its own way; full run 3299 passed, 1 failed, the standing walk-area red) | builder / runner / code_lead |
 | Gardens and ways up (V2 spec 3) | Task 13c: Footprints on the real ways up, played (split from Task 13 on 2026-11-11; stands on Task 13) | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 14: The ladder glows on your screen | removed 2026-11-03 (Adam dropped it; nothing built) | product |
 | Gardens and ways up (V2 spec 3) | Task 15a: The slam circle skips ladders and steep surfaces | ☐ not started | |

@@ -167,15 +167,19 @@ describe("Config", function()
 		})
 	end)
 
-	it("footprints: 3.6 apart, redone every 0.25 s, lifted 0.05 (0.35 on ramp planks), 100 at most", function()
-		expect(Config.Footprints).toEqual({
-			Spacing = 3.6,
-			UpdateSeconds = 0.25,
-			Lift = 0.05,
-			RampLift = 0.35,
-			MaxShown = 100,
-		})
-	end)
+	it(
+		"footprints: 3.6 apart, redone every 0.25 s, lifted 0.05 (0.35 on ramp planks), 100 at most, stop 2 before a ladder",
+		function()
+			expect(Config.Footprints).toEqual({
+				Spacing = 3.6,
+				UpdateSeconds = 0.25,
+				Lift = 0.05,
+				RampLift = 0.35,
+				MaxShown = 100,
+				LadderStop = 2,
+			})
+		end
+	)
 
 	it("the four ways up, in garden order, with their gardens and walk limits", function()
 		expect(Config.WaysUp).toEqual({

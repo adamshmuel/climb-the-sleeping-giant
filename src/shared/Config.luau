@@ -106,6 +106,7 @@ export type Config = {
 		Lift: number,
 		RampLift: number,
 		MaxShown: number,
+		LadderStop: number,
 	},
 	Stuck: {
 		BodyWidth: number,
@@ -230,7 +231,17 @@ local config: Config = {
 	-- Spacing: studs between footprints. UpdateSeconds: how often the way is worked out again. Lift: studs between the
 	-- ground and the bottom of a footprint. RampLift: the same gap on the boot-ramp planks, so the cleats (cross-strips
 	-- 0.3 studs tall) don't cut through the footprints. MaxShown: how many copies are kept (no way needs more than 70).
-	Footprints = { Spacing = 3.6, UpdateSeconds = 0.25, Lift = 0.05, RampLift = 0.35, MaxShown = 100 },
+	-- LadderStop: studs before a ladder's foot point where a walk run of footprints stops. The foot is 1 stud out from
+	-- the bottom rung and the run-in point 3 out (tools/world/08-route/RoutePlaces.luau, "the ways up"), so the last
+	-- footprint is 3 studs in front of the rung (spec 3 Rule 42: 2 to 4).
+	Footprints = {
+		Spacing = 3.6,
+		UpdateSeconds = 0.25,
+		Lift = 0.05,
+		RampLift = 0.35,
+		MaxShown = 100,
+		LadderStop = 2,
+	},
 	-- Spec section 5, "Scan body size": the solid part of a standard player's body, measured in Play on 2026-10-19 (R15,
 	-- every body scale 1). Only HumanoidRootPart (2 x 2 x 1), UpperTorso and LowerTorso collide, on the Server and the
 	-- Client alike; the head, arms, hands, legs and feet do not. Together they are 2.0 wide, 1.05 to 1.09 deep and
