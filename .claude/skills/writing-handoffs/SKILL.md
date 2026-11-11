@@ -92,7 +92,9 @@ A builder's red run uses the narrowest filter (the step's own spec names) so the
 
 - **Files and counts checked when the plan is written.** `ls` every file on a task's Files line, and count any "the N ladders" or "the N parts" in the world, before the plan is saved (p5t22p: a file that never existed, and "eight ladders" where the world has four).
 - **Count before sizing.** A task that works through a list (spots, parts, files) first counts it in one read-only call, and is sized from that count.
-- **Every step and every size has a Studio-call count** from the start, even a shots-only step or a size in a ruling, including its test runs (red run, full run and fetch). Every call counts, whoever makes it; `code_lead`'s own calls are their own lines.
+- **Every step and every size has a Studio-call count** from the start, even a shots-only step or a size in a ruling, including its test runs (red run, full run and fetch). Every call counts, whoever makes it; `code_lead`'s own calls are their own lines. Each paste, file read and fetch is one whole call, and the cap adds 30% spare. <!-- p5t22, 2026-11-11: 6 builder steps in a row went over cap (24/20 to 36/30) when reads and pastes were counted as less -->
+- **A pass line names what the player feels,** never a broader measure: list the barred nests by name (not "no grab prompt"), and use a limit a player notices (not a raw speed). <!-- p5t22, 2026-11-11: 4 false fails from "no prompt" and "sideways speed under 20" -->
+- **A Play job reports the end state its pass line asks for** (feet position and time after the move, not just distance walked), so no re-run is needed to judge it. <!-- p5t22 let-go re-run, 2026-11-11 -->
 - **Stand-in numbers** name the recorded run that replaces them, in a named task step.
 - **The task that builds a look checks it in Play**, with shots timed to catch it. An earlier task doesn't list it.
 - **Check the spec's proof list first.** Plan a proof task only for what the list doesn't already give to another step (for example, the build review).
