@@ -450,6 +450,7 @@ table.freeze(computerCaught)
 table.freeze(phoneCaught)
 
 -- The values are the style guide's (meter-zs.md, "Where", "Size" and "Heavy Sleep"): (dx, dy, letter height).
+-- The top Z sits 5 points lower than the mockup so it stays on screen at the top of its 8-point rise (plan 4 Task 13d).
 local function letters(rows: { { number } }): { ZLetter }
 	local result: { ZLetter } = {}
 	for _, row in rows do
@@ -459,8 +460,8 @@ local function letters(rows: { { number } }): { ZLetter }
 end
 
 local computerZs: Zs = {
-	calm = letters({ { 8, 30, 30 }, { 40, 4, 36 }, { 78, -12, 42 } }),
-	heavy = letters({ { 8, 22, 40 }, { 52, -4, 46 }, { 102, -12, 52 } }),
+	calm = letters({ { 8, 30, 30 }, { 40, 4, 36 }, { 78, -7, 42 } }),
+	heavy = letters({ { 8, 22, 40 }, { 52, -4, 46 }, { 102, -7, 52 } }),
 	letterPerTextSize = 0.74,
 	strokeThickness = 4,
 	dropOffset = 3,
@@ -468,8 +469,8 @@ local computerZs: Zs = {
 }
 
 local phoneZs: Zs = {
-	calm = letters({ { 6, 20, 24 }, { 32, 0, 28 }, { 62, -24, 32 } }),
-	heavy = letters({ { 6, 14, 32 }, { 40, -10, 38 }, { 80, -24, 44 } }),
+	calm = letters({ { 6, 20, 24 }, { 32, 0, 28 }, { 62, -19, 32 } }),
+	heavy = letters({ { 6, 14, 32 }, { 40, -10, 38 }, { 80, -19, 44 } }),
 	letterPerTextSize = 0.74,
 	strokeThickness = 4,
 	dropOffset = 3,

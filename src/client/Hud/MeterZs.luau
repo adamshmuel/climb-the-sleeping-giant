@@ -7,6 +7,8 @@ local TweenService = game:GetService("TweenService")
 
 local Layout = require(script.Parent.Layout)
 local MeterZsView = require(script.Parent.MeterZsView)
+
+local RISE_POINTS = MeterZsView.RISE_POINTS
 local Theme = require(script.Parent.Theme)
 local Ui = require(script.Parent.Ui)
 
@@ -16,7 +18,6 @@ local MeterZs = {}
 MeterZs.padding = 12
 
 local LETTERS = 3
-local RISE_POINTS = 8 -- meter-zs.md, "Motion": each Z rises about 8 points
 local START_GAP_SECONDS = 0.6 -- the three start 0.6 s apart
 
 export type Deps = {

@@ -6,6 +6,9 @@ local Layout = require(script.Parent.Layout)
 
 local MeterZsView = {}
 
+-- meter-zs.md, "Motion": each Z rises about 8 points, so the letters keep this much room above them.
+MeterZsView.RISE_POINTS = 8
+
 -- The three looks of the world's Z Z Z, plus Heavy Sleep. `hidden` is the 85% warning and when he is awake.
 export type Sign = "shown" | "faded" | "hidden" | "heavy"
 

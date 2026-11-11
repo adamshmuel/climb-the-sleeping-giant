@@ -129,21 +129,21 @@ describe("MeterZsView.boxes", function()
 		end
 	end)
 
-	it("keeps every letter's top at least 4 points below the screen top", function()
+	it("keeps every letter's top at least 4 points below the screen top, at the top of its rise", function()
 		for _, case in CASES do
 			local _, _, _, _, boxes = setup(case)
 			for index, box in boxes do
-				local gap = case.topInset + box.letterTop
+				local gap = case.topInset + box.letterTop - MeterZsView.RISE_POINTS
 				expect(`{case.name} Z{index} gap {gap}`).toBe(`{case.name} Z{index} gap {math.max(gap, MIN_TOP_GAP)}`)
 			end
 		end
 	end)
 
-	it("keeps every turned letter's top at least 4 points below the screen top", function()
+	it("keeps every turned letter's top at least 4 points below the screen top, at the top of its rise", function()
 		for _, case in CASES do
 			local screen, _, _, _, boxes = setup(case)
 			for index, box in boxes do
-				local gap = case.topInset + turnedTop(box, screen.zs.tilt)
+				local gap = case.topInset + turnedTop(box, screen.zs.tilt) - MeterZsView.RISE_POINTS
 				expect(`{case.name} Z{index} turned gap {gap}`).toBe(
 					`{case.name} Z{index} turned gap {math.max(gap, MIN_TOP_GAP)}`
 				)
@@ -172,12 +172,12 @@ describe("MeterZsView.boxes", function()
 		expect(boxes[1].height).toBe(30)
 	end)
 
-	it("puts the third Heavy Sleep Z on the phone 80 points right and 24 above the meter top, 44 tall", function()
-		-- The phone Heavy Sleep row of the card's look table: (80, -24, 44).
+	it("puts the third Heavy Sleep Z on the phone 80 points right and 19 above the meter top, 44 tall", function()
+		-- The phone Heavy Sleep row of the card's look table, 5 points lower for the rise (plan 4 Task 13d): (80, -19, 44).
 		local case = CASES[2]
 		local screen, meterRight, _, _, boxes = setup(case)
 		expect(boxes[3].x).toBeCloseTo(meterRight + 80, 3)
-		expect(boxes[3].y).toBeCloseTo(screen.meter.topOffset - 24, 3)
+		expect(boxes[3].y).toBeCloseTo(screen.meter.topOffset - 19, 3)
 		expect(boxes[3].height).toBe(44)
 	end)
 end)
