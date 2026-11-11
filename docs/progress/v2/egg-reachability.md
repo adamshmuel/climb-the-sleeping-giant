@@ -17,7 +17,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Egg reachability (V2 spec 4) | Task 7b: The right way up is named when the meadow ties (stands on Task 7) | ☑ done (joint full run 3372/1) | builder / code_lead |
 | Egg reachability (V2 spec 4) | Task 8: The score sets the rank, close calls and drift (stands on Tasks 6, 7) | ☑ done (joint full run 3372/1) | builder / code_lead |
 | Egg reachability (V2 spec 4) | Task 9: The check runs on the real world on every test run (its fairness bullet moved to plan 5 Task 20; stands on plan 3 Tasks 9 and 12b, plan 4 Tasks 6, 7, 8, 10, plan 5 Task 12) | ☐ not started | |
-| Egg reachability (V2 spec 4) | Task 10: A report Adam can read (pure report and the tool; its first real-world run is Task 9's; stands on Task 8) | ☐ not started | |
+| Egg reachability (V2 spec 4) | Task 10: A report Adam can read (pure report and the tool; its first real-world run is Task 9's; stands on Task 8) | ☑ approved by code_lead 2026-11-11 after review round 1 (header in plain words, the nest's egg distance, "unnamed nest"; EggRanksReport.spec 7/7); full run 3379 passed, 1 failed (the standing walk-area red) | builder / code_lead |
 | Egg reachability (V2 spec 4) | Task 11: World prep: every nest's rank from the first report | merged into plan 5 Task 19 on 2026-11-10 by product (nothing left of its own) | product |
 | Egg reachability (V2 spec 4) | Task 12: Analytics for ranks (stands on plan 6 Task 8) | ☐ not started | |
 | Egg reachability (V2 spec 4) | Task 13: The Play proof (session test cut 2026-11-10 by product; plus Task 4's 16 spawn shots; stands on plan 5 Tasks 19, 20, plan 3 Tasks 2, 3, plan 4 Tasks 3, 4) | ☐ not started | |

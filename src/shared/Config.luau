@@ -171,6 +171,7 @@ export type Config = {
 		BandEdges: { Rare: number, Epic: number, Legendary: number },
 		EdgeWarning: number,
 		TiptoeLimit: number,
+		ColourWords: { [RarityName]: string },
 	},
 }
 
@@ -348,6 +349,13 @@ local config: Config = {
 		BandEdges = { Rare = 40, Epic = 85, Legendary = 130 }, -- the score where each rank starts (spec 4 Rule 50); an edge takes the higher rank
 		EdgeWarning = 3, -- a score this close to an edge, above or below, is flagged as a close call (Rule 56)
 		TiptoeLimit = 60, -- a Tiptoe peak at or over this fails the nest (Rule 54)
+		ColourWords = {
+			Common = "cream white",
+			Uncommon = "leaf green",
+			Rare = "sky blue",
+			Epic = "purple",
+			Legendary = "gold",
+		}, -- the glow colour of each rank, in words the report prints (Rule 51)
 	},
 }
 

@@ -343,6 +343,13 @@ describe("Config", function()
 			BandEdges = { Rare = 40, Epic = 85, Legendary = 130 },
 			EdgeWarning = 3,
 			TiptoeLimit = 60,
+			ColourWords = {
+				Common = "cream white",
+				Uncommon = "leaf green",
+				Rare = "sky blue",
+				Epic = "purple",
+				Legendary = "gold",
+			},
 		})
 	end)
 
