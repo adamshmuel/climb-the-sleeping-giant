@@ -168,6 +168,9 @@ export type Config = {
 		EggInNest: number,
 		BodyBeamStuds: number,
 		BodyZones: { [string]: boolean },
+		BandEdges: { Rare: number, Epic: number, Legendary: number },
+		EdgeWarning: number,
+		TiptoeLimit: number,
 	},
 }
 
@@ -342,6 +345,9 @@ local config: Config = {
 		EggInNest = 0.2, -- studs an egg's bottom may be off its nest's seat (checked in Step 6b)
 		BodyBeamStuds = 10, -- studs: length of the beam of a waiting egg on his body (spec 4 section 6)
 		BodyZones = { Belly = true, Beard = true, Nightcap = true }, -- the zones that are his body; boots and meadow keep V1's beam
+		BandEdges = { Rare = 40, Epic = 85, Legendary = 130 }, -- the score where each rank starts (spec 4 Rule 50); an edge takes the higher rank
+		EdgeWarning = 3, -- a score this close to an edge, above or below, is flagged as a close call (Rule 56)
+		TiptoeLimit = 60, -- a Tiptoe peak at or over this fails the nest (Rule 54)
 	},
 }
 

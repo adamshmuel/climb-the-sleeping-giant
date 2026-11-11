@@ -154,6 +154,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - The rule: costs within 1e-6 tie; a tie goes to the route with fewer seconds (the sum of its steps' seconds), then to the name that sorts first.
 - Failing test first: `pickRoutes` with two trips up of the same cost, where the name that sorts first has more seconds, picks the other one; the same for the trip home.
 - Done when: the tests pass.
+- Approved (2026-11-11, code_lead): 9 ReachCheck tests green, check.sh clean. Waiting on the joint full run with Task 8 (expected: Task 8's count plus 3365 passed, 1 failed).
 
 **Task 8: The score sets the rank, close calls and drift**
 - Stands on: Task 6 and Task 7 (built; their results are its input). Pure code.
@@ -162,6 +163,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - What it does: turns each nest's results (Tasks 6 and 7) into its rank from the score, its "close to the edge" flag, and every reason it fails: the score is outside its world rank's band; it can't be reached and left with no jump; no room to stand; it floats or sinks, or its egg is out of its nest's bottom; its Tiptoe peak is 60 or more. The run fails once, listing every failing nest with its name, score, rank, band and reason.
 - Failing tests first: 39.9 is Uncommon and 40.0 Rare; 85.0 is Epic and flagged close; 87.5 is flagged, 88.1 isn't; a nest marked Rare that scores 88 fails naming "Rare, band 40 to 85" (spec Story C); a Tiptoe peak of 60 fails; three failing nests come back in one list.
 - Done when: the tests pass.
+- Approved (2026-11-11, code_lead): EggRanks 7/7, Config 56/56, check.sh clean. A nest not reached, not left or with no room gets only those reasons and its seat reasons (no band or Tiptoe reason, never close); a nest with no egg used is Common. Waiting on the joint full run with Task 7b (expected 3372 passed, 1 failed).
 
 **Task 9: The check runs on the real world on every test run**
 - Stands on: plan 3 Task 9 (the stuck scan on the finished ground), plan 3 Task 12b (fairness on the real world), Tasks 6, 7, 8 and 10 (built), and plan 5 Task 12 (the 38 nests, built). Through plan 3 Task 9 and 12b it also stands on plan 5 Task 22b and plan 3 Task 9q (the last ground changes). Its first real-world run is here (Task 10 runs only on fake nests).
