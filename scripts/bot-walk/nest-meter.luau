@@ -1,7 +1,7 @@
 --!strict
 -- Plan 4 Task 13a: nest-meter. Paste once on the SERVER, in Play, after session-hold.
 -- It makes ReplicatedStorage.P4t13Trip (RemoteEvent). nest-walk (CLIENT) fires it:
---   ("start", i, nestName, garden)  sets PlotIndex, the waiting egg, NoHold, Meter 0, offset 0, peak 0.
+--   ("start", i, nestName, garden)  sets PlotIndex, NoHold, Meter 0, offset 0, peak 0.
 --   ("end", i)                      writes P4t13Peak_<i> and P4t13Phase_<i> on ReplicatedStorage.
 -- While a trip runs, every Heartbeat: peak = max(peak, Meter + offset). When Meter reaches 40 (under the
 -- lowest warning mark) it is cut back by 40 and the offset grows by 40, so Meter + offset is the meter
@@ -89,16 +89,13 @@ local function isInt(v: any, low: number, high: number): boolean
 	return type(v) == "number" and v % 1 == 0 and v >= low and v <= high
 end
 
-local function start(player: Player, i: number, nestName: string, garden: number)
+local function start(player: Player, i: number, garden: number)
 	local ok, why = held()
 	if not ok then
 		print(`nest-meter: start {i} refused, giant not held ({why})`)
 		return
 	end
 	player:SetAttribute("PlotIndex", garden)
-	for _, nest in spots:GetChildren() do
-		nest:SetAttribute("Waiting", nest.Name == nestName)
-	end
 	player:SetAttribute("NoHold", true)
 	state:SetAttribute("Meter", 0)
 	offset = 0
@@ -120,7 +117,7 @@ remote.OnServerEvent:Connect(function(player: Player, action: any, i: any, nestN
 			print(`nest-meter: bad garden {tostring(garden)}`)
 			return
 		end
-		start(player, i, nestName, garden)
+		start(player, i, garden)
 	elseif action == "end" then
 		if active == nil or i ~= active then
 			print(`nest-meter: bad end {tostring(i)}`)

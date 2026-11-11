@@ -34,18 +34,12 @@ local RealReach: any = requireModule(StuckScan.RealReach)
 local WaysUpRoutes: any = requireModule(StuckScan.WaysUpRoutes)
 
 local function held(): (boolean, string)
-	local rs = game:GetService("ReplicatedStorage")
-	local beat = rs:GetAttribute("TrialHoldBeat")
-	if type(beat) ~= "number" then
-		return false, "no beat"
+	local beat, phase =
+		ReplicatedStorage:GetAttribute("TrialHoldBeat"), ReplicatedStorage:GetAttribute("TrialHoldPhase")
+	if type(beat) ~= "number" or Workspace:GetServerTimeNow() - beat > 2 then
+		return false, "no or old beat"
 	end
-	if game:GetService("Workspace"):GetServerTimeNow() - beat > 2 then
-		return false, "old beat"
-	end
-	if rs:GetAttribute("TrialHoldPhase") ~= "Asleep" then
-		return false, "phase " .. tostring(rs:GetAttribute("TrialHoldPhase"))
-	end
-	return true, "held"
+	return phase == "Asleep", "phase " .. tostring(phase)
 end
 
 local isEdit = not RunService:IsRunning()
@@ -159,9 +153,10 @@ local function build(): string
 		local stepCount = 0
 		local add: Adder = function(name, way, garden, score, kind, start, up, dn)
 			stepCount += #up + #dn
-			local trip =
+			table.insert(
+				trips,
 				{ n = name, w = way, g = garden, s = r2(score), k = kind, st = pt(start, false), up = up, dn = dn }
-			table.insert(trips, trip)
+			)
 		end
 		local function stepPoints(route: PathCheck.Route): { Point }
 			local list: { Point } = {}
