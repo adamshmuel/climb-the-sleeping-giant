@@ -3,7 +3,9 @@
 -- service-free, so the world script (tools/world/21b-nest-models.luau, run through execute_luau), the measure job and the
 -- tests (Nests.spec) read the same copy.
 -- Spots: docs/design/v2/style-guide/nests-map.md, "Common: 16 meadow nests" and "On him: 22 nests" (knee pocket at
--- y 27.1 / 27.2 on his skin, designer ruling 2026-11-10). Gardens 5 to 8 mirror gardens 4 to 1 (x turned positive).
+-- y 27.1 on his skin, designer ruling 2026-11-10). Plan 5 Task 19a moved two right-side spots (lower belly, beard fold)
+-- to rank-band scores; its review round 1 put knee pocket R and lap fold R back to their old spots. The left twins
+-- stayed. Gardens 5 to 8 mirror gardens 4 to 1 (x turned positive).
 -- Leans: the straw nests in ServerStorage.ArtLibrary.Mockup_Nests.Art.Nests (designer), as YXZ Euler degrees (x, y, z), read 2026-11-10.
 
 export type Nest = {
@@ -68,7 +70,7 @@ local ON_HIM: { OnHim } = {
 		place = "LowerBelly",
 		rank = "Rare",
 		left = Vector3.new(-12.5, 41.3, -40.3),
-		right = Vector3.new(12.5, 41.2, -40.3),
+		right = Vector3.new(12.5, 40.9, -40.3),
 		leanLeft = Vector3.new(-26.1, -7.3, 16.1),
 		leanRight = Vector3.new(-26.1, 7.3, -16.1),
 	},
@@ -76,7 +78,7 @@ local ON_HIM: { OnHim } = {
 		place = "BeardFold",
 		rank = "Rare",
 		left = Vector3.new(-7.5, 46.5, -38.5),
-		right = Vector3.new(7.5, 47.0, -38.5),
+		right = Vector3.new(7.5, 45.23, -39.5),
 		leanLeft = Vector3.new(-49.4, -15.9, 33.9),
 		leanRight = Vector3.new(-50, 15.3, -32.1),
 	},

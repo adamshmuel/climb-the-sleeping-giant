@@ -121,9 +121,36 @@ describe("the egg check on the real world", function()
 		expect(#rows).toBe(38)
 	end)
 
+	-- The cuff nests players reach by walking; plan 5 Task 22's bot walk scores them, so the egg check leaves them out here
+	-- (plan 5 Task 19a, card Step 4).
+	local SCORED_BY_BOT_WALK: { [string]: boolean } = {
+		["Cuff Back (Left)"] = true,
+		["Cuff Back (Right)"] = true,
+		["Cuff Front (Left)"] = true,
+		["Cuff Front (Right)"] = true,
+	}
+
+	it("every nest left to the bot walk is in the run", function()
+		local inRun: { [string]: boolean } = {}
+		for _, row in rows do
+			inRun[row.name or ""] = true
+		end
+		local missing: { string } = {}
+		for name in SCORED_BY_BOT_WALK do
+			if not inRun[name] then
+				table.insert(missing, name)
+			end
+		end
+		table.sort(missing)
+		expect(missing).toEqual({})
+	end)
+
 	it("every nest passes the rank check (Rule 54)", function()
 		local failures: { string } = {}
 		for _, failure in (result :: EggRanks.RunResult).failures do
+			if SCORED_BY_BOT_WALK[failure.name] then
+				continue
+			end
 			table.insert(
 				failures,
 				`{failure.name} ({failure.rank}, score {string.format("%.1f", failure.score)}): {table.concat(

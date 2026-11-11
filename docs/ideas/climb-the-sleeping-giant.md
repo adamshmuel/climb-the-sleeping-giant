@@ -206,6 +206,7 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
   - the zone you're in (see the table). The meadow is silent, so noise only counts once you step onto his boots.
 - **Tiptoe:** a toggle button (a big button on phones, a key on computers). It moves you at 60% speed and makes very little noise. There is no separate sprint button.
 - **Quiet moments drain the meter:** 1 point per second for each player in the server. A busy server has to tiptoe. A solo player walking a Rare home gets the 60% warning, and only wakes him from the highest spots without tiptoeing.
+- **A Legendary egg off his nightcap always makes him stir:** a solo player who tiptoes the whole way to the cap and home always gets the 60% eyelid flutter, but never the 85% last warning and never wakes him alone. Below the cap, a full-Tiptoe trip stays under 60% (2026-11-11, `work/p5t19/cap-ruling.md`).
 - **A jump landing on the giant is loud for everyone:** it counts in full, so one clumsy jump near the top of the meter wakes him for the whole server.
 - **Jumping or falling off him is loud too:** one thud per fall, sized by the zone you fell from (for example, off his belly counts like a jump on his belly). It's a fast way down, but a gamble when the meter is high. Jumps that start and end in the meadow make no thud.
 - **Eggs are shared:** every egg sits at a fixed spot, and the first player to finish the grab gets it. The spot refills after a short wait. A carried egg is yours until you get home or he catches you; nobody can take it from you.
