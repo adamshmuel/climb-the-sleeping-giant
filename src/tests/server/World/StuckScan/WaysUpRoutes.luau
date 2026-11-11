@@ -41,6 +41,14 @@ WaysUpRoutes.ROUTE_AREA = { min = Vector3.new(-69, -8, -104), max = Vector3.new(
 -- corner parity as ROUTE_AREA (the cells line up), so a row runs along z -58, the only boot-to-lap-plank lane.
 WaysUpRoutes.EGG_AREA = { min = Vector3.new(-105, -8, -104), max = Vector3.new(105, 125, 40) } :: PathCheck.Area
 
+-- The boxes the egg-reach check adds fine spots in (PathCheck Options.fineBoxes): the two cuff walks (plank ledges
+-- narrower than the grid step) and the cap. Measured by code_lead in Edit, 2026-11-11 (work/p4t9d/9d-card.md, Step 3).
+WaysUpRoutes.EGG_FINE_BOXES = {
+	{ min = Vector3.new(-62, 30, -15), max = Vector3.new(-50, 41, 6) },
+	{ min = Vector3.new(50, 30, -15), max = Vector3.new(62, 41, 6) },
+	{ min = Vector3.new(-5, 105, -8), max = Vector3.new(5, 125, 15) },
+} :: { PathCheck.Area }
+
 -- Each Config.WaysUp name to the piece in World.WalkSurfaces that is its way up, and whether that piece is a ladder.
 WaysUpRoutes.PIECE_OF = {
 	["Left boot ladder"] = { piece = "BootLadder_Left", isLadder = true },

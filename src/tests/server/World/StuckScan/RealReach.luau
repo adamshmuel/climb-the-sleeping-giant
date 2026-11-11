@@ -30,11 +30,13 @@ export type Setup = {
 local RealReach = {}
 
 -- Builds the map over `area` and everything the reach checks read from the world. The caller cleans up `options`
--- (PathCheck.cleanup) when it is done. An error names what is missing from the world.
-function RealReach.build(world: Instance, area: PathCheck.Area): Setup
+-- (PathCheck.cleanup) when it is done. `fineBoxes` (default none) are the boxes the map also gets a spot every stud in.
+-- An error names what is missing from the world.
+function RealReach.build(world: Instance, area: PathCheck.Area, fineBoxes: { PathCheck.Area }?): Setup
 	local options = PathCheck.defaults(game:GetService("Workspace"))
 	local surfaces = (world :: any).WalkSurfaces
 	options.boxIgnores = { surfaces.BootRamp.Ramp_Walk, surfaces.RightBootRamp.Ramp_Walk }
+	options.fineBoxes = fineBoxes
 	local map = PathCheck.buildMap(options, area)
 
 	local zoneBoxes = WorldIndex.loadZones(world)

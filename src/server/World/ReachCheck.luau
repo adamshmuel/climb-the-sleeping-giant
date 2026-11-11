@@ -278,6 +278,15 @@ local function onlyStepsDown(
 	end
 end
 
+-- The map's spots by id.
+local function spotsByIdOf(map: PathCheck.WalkMap): { [number]: PathCheck.Spot }
+	local byId: { [number]: PathCheck.Spot } = {}
+	for _, spot in map.spots do
+		byId[spot.id] = spot
+	end
+	return byId
+end
+
 -- A route walked the other way: the steps in reverse order, each from and to swapped.
 local function reversed(route: PathCheck.Route): PathCheck.Route
 	local steps: { PathCheck.Step } = {}
@@ -303,10 +312,7 @@ function ReachCheck.peaksByFoot(
 	offLimits: (spot: PathCheck.Spot) -> boolean
 ): { [string]: { [string]: FootTrip } }
 	local zones = linkZones(options.map, options.zoneOf)
-	local spotsById: { [number]: PathCheck.Spot } = {}
-	for _, spot in options.map.spots do
-		spotsById[spot.id] = spot
-	end
+	local spotsById = spotsByIdOf(options.map)
 	local result: { [string]: { [string]: FootTrip } } = {}
 	for _, nest in nests do
 		result[nest.name] = {}
@@ -438,14 +444,22 @@ end
 -- the nest, so they are made once (spec 4, section 5: cache first).
 function ReachCheck.analyseAll(options: Options, nests: { NestInput }): { NestResult }
 	local zones = linkZones(options.map, options.zoneOf)
-	local upCost = noiseCost(zones, nil)
+	-- the up and garden searches take a step down of under STEP_DOWN_STUDS like peaksByFoot does (a trip home stays on
+	-- ALLOWED: a way down never uses a slide)
+	local spotsById = spotsByIdOf(options.map)
+	local steps = stepsDown(options.map, spotsById)
+	local upCost = onlyStepsDown(steps, noiseCost(zones, nil))
 	local upSearches: { [string]: PathCheck.Search } = {}
 	for _, foot in options.feet do
-		upSearches[foot.name] = PathCheck.costsFrom(options.map, foot.spot, { allow = ALLOWED, cost = upCost })
+		upSearches[foot.name] = PathCheck.costsFrom(options.map, foot.spot, { allow = WITH_STEPS_DOWN, cost = upCost })
 	end
+	local gardenCost = onlyStepsDown(steps, function(link: PathCheck.Link): number
+		return link.seconds
+	end)
 	local gardenSearches: { PathCheck.Search } = {}
 	for index, garden in options.gardens do
-		gardenSearches[index] = PathCheck.costsFrom(options.map, garden.spot, { allow = ALLOWED })
+		gardenSearches[index] =
+			PathCheck.costsFrom(options.map, garden.spot, { allow = WITH_STEPS_DOWN, cost = gardenCost })
 	end
 	local results: { NestResult } = {}
 	for index, nest in nests do

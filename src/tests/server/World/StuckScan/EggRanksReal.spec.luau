@@ -44,7 +44,7 @@ describe("the egg check on the real world", function()
 		expect(found).never.toBeNil()
 		world = found :: Instance
 		local started = os.clock()
-		local built = RealReach.build(found :: Instance, WaysUpRoutes.EGG_AREA)
+		local built = RealReach.build(found :: Instance, WaysUpRoutes.EGG_AREA, WaysUpRoutes.EGG_FINE_BOXES)
 		setup = built
 		options = built.options
 		local reach: ReachCheck.Options = {
@@ -153,10 +153,8 @@ describe("the egg check on the real world", function()
 		end
 		local targets: { { path: string, from: string? } } = {
 			{ path = "Giant.nightcap.nightcap" },
-			{ path = "CuffWalk.FrontLedge_Left" },
-			{ path = "CuffWalk.FrontLedge_Right" },
-			{ path = "CuffWalk.BackLedge_Left" },
-			{ path = "CuffWalk.BackLedge_Right" },
+			-- Cuff ledges: players reach them (plan 5 Task 13b, 5 of 5 round trips); plan 5 Task 22's bot walk scores them
+			-- (Task 9d ruling).
 			{ path = "WalkSurfaces.LapPlank_Left", from = "Left ramp" },
 			{ path = "WalkSurfaces.LapPlank_Right", from = "Right ramp" },
 		}

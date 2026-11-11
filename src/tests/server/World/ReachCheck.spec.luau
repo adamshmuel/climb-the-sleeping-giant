@@ -39,7 +39,7 @@ describe("ReachCheck", function()
 				spot(3, Vector3.new(10, 0, 0)),
 				spot(5, Vector3.new(10, 20, -30)),
 				spot(6, Vector3.new(10, 60, -30)),
-				spot(7, Vector3.new(50, 60, -30)),
+				spot(7, Vector3.new(50, 50, -30)), -- 10 studs below spot 6: the slide to it is a real drop
 				spot(8, Vector3.new(-30, 20, -30)),
 				spot(9, Vector3.new(100, 0, 100), Vector3.new(0.954, 0.3, 0).Unit),
 			},
@@ -146,7 +146,7 @@ describe("ReachCheck", function()
 	end)
 
 	it("a nest only a slide reaches, or only a drop leaves, is not reached or not left and scores 0", function()
-		local dropped = ReachCheck.analyse(buildOptions(), nest("Dropped", 50, 61, -30, false))
+		local dropped = ReachCheck.analyse(buildOptions(), nest("Dropped", 50, 51, -30, false))
 		expect(dropped.reached).toBe(false)
 		expect(dropped.left).toBe(false)
 		expect(dropped.score).toBe(0)
@@ -270,6 +270,20 @@ describe("ReachCheck", function()
 			expect(quickest.seconds).toBeCloseTo(3, 3)
 			expect(slowest.garden).toBe(4)
 			expect(slowest.seconds).toBeCloseTo(12.4107, 3)
+		end)
+
+		-- Task 9d: the walk map joins a narrow strap to its deck by a step of under 2 studs, kept as a one-way Slide down;
+		-- a player walks it up and down, so a nest only such a step reaches is still reached and scored.
+		it("a step down of under 2 studs is part of a trip up", function()
+			local options = buildOptions()
+			table.insert(options.map.spots, spot(10, Vector3.new(40, 19.2, -30)))
+			table.insert(options.map.links[5], link(10, "Slide", 30, 1)) -- 0.8 studs down: the only way in
+			options.map.links[10] = { link(5, "Walk", 30, 1.9) } -- the way back is a walk
+			local below = nest("Below", 40, 20.2, -30, false)
+			local result = ReachCheck.analyseAll(options, { below })[1]
+			expect(result.reached).toBe(true)
+			expect(result.left).toBe(true)
+			expect(result.score > 0).toBe(true)
 		end)
 
 		it("a scored nest carries its up and down routes", function()

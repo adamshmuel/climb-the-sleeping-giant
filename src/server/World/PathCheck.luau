@@ -32,6 +32,9 @@ export type Options = {
 	-- fake world has none. Set it before the first check: the settings are made once per options table.
 	-- Default: none (PathCheck.defaults gives the Workspace's Terrain when the world is the Workspace).
 	terrain: Terrain?,
+	-- Boxes where the map also gets a spot every 1 stud (a plank or ledge narrower than the grid step falls between its
+	-- columns). Only the egg check sets it. Default: none.
+	fineBoxes: { Area }?,
 }
 
 local SAMPLE_STEP = 2 -- studs between the places checked along a link
@@ -64,6 +67,8 @@ export type WalkMap = {
 	origin: Vector3,
 	countX: number,
 	countZ: number,
+	-- The id of the first spot a fine box made (they come after every grid spot), or nil when there are none.
+	fineFrom: number?,
 }
 export type Step = PathSearch.Step
 export type Route = PathSearch.Route
@@ -82,6 +87,7 @@ local MAX_SURFACES = 200 -- most surfaces one column can have (a safety stop)
 local START_STEP = 3 -- studs
 local SAME_SURFACE = 0.05 -- studs: two hits on the same part this close in height are one surface
 local COLUMNS_PER_YIELD = 200
+local FINE_STEP = 1 -- studs between the columns inside a fine box
 local SPOTS_PER_YIELD = 200
 -- A ladder's foot and top join the nearest spot within this many grid steps of them. Two, because a ladder's end is the
 -- middle of its end face, about 1 stud inside the ladder; a body can't stand closer to the ladder than half its width;
@@ -121,6 +127,11 @@ type Settings = {
 	terrain: Terrain?,
 }
 local settingsCache: { [Options]: Settings } = setmetatable({}, { __mode = "k" }) :: any
+
+-- The lowest ground normal's Y a body can stand on: the cosine of the slope limit.
+local function maxSlopeOf(options: Options): number
+	return math.cos(math.rad(options.slopeAngle or StarterPlayer.CharacterMaxSlopeAngle))
+end
 
 local function settingsFor(options: Options): Settings
 	local settings = settingsCache[options]
@@ -313,7 +324,7 @@ end
 -- the box faces the way it walks. The place's text is only made when there is a problem to report.
 function PathCheck.linkProblem(options: Options, from: Vector3, to: Vector3): string?
 	local world = options.world
-	local maxSlope = math.cos(math.rad(options.slopeAngle or StarterPlayer.CharacterMaxSlopeAngle))
+	local maxSlope = maxSlopeOf(options)
 	local settings = settingsFor(options)
 	local groundRay = settings.ground
 	local overlap = settings.overlap
@@ -464,47 +475,92 @@ local function columnSurfaces(
 	return hits
 end
 
+-- Makes a spot of each surface in one column a body can stand on, and returns their ids.
+local function spotsOfColumn(
+	options: Options,
+	map: WalkMap,
+	area: Area,
+	settings: Settings,
+	maxSlope: number,
+	x: number,
+	z: number
+): { number }
+	local ids: { number } = {}
+	local justAfterWater = false
+	for _, hit in columnSurfaces(options.world, settings.ground, area, x, z) do
+		-- a surface is a spot if it isn't too steep, isn't water, isn't right under water (a player there swims,
+		-- and swimming isn't walking) and a body fits on it with nothing left out. A ladder is never a spot (a
+		-- player who touches a ladder climbs it, so the climb link covers being on one).
+		local isWater = hit.Material == Enum.Material.Water
+		if
+			not justAfterWater
+			and not isWater
+			and not hit.Instance:IsA("TrussPart")
+			and hit.Normal.Y >= maxSlope
+			and roomFor(options, settings.bare, hit.Position, hit.Normal)
+		then
+			local id = #map.spots + 1
+			map.spots[id] = {
+				id = id,
+				position = hit.Position,
+				up = hit.Normal,
+				standsOn = hit.Instance :: BasePart,
+			}
+			map.links[id] = {}
+			table.insert(ids, id)
+		end
+		justAfterWater = isWater
+	end
+	return ids
+end
+
 -- Goes down column by column through every surface and makes a spot of each one a body can stand on.
 local function findSpots(options: Options, map: WalkMap, area: Area)
-	local world = options.world
 	local settings = settingsFor(options)
-	local ground = settings.ground
-	local maxSlope = math.cos(math.rad(options.slopeAngle or StarterPlayer.CharacterMaxSlopeAngle))
+	local maxSlope = maxSlopeOf(options)
 	local columnsDone = 0
 	for iz = 0, map.countZ - 1 do
 		for ix = 0, map.countX - 1 do
 			local x = map.origin.X + ix * map.spacing
 			local z = map.origin.Z + iz * map.spacing
-			local ids: { number } = {}
-			local justAfterWater = false
-			for _, hit in columnSurfaces(world, ground, area, x, z) do
-				-- a surface is a spot if it isn't too steep, isn't water, isn't right under water (a player there swims,
-				-- and swimming isn't walking) and a body fits on it with nothing left out. A ladder is never a spot (a
-				-- player who touches a ladder climbs it, so the climb link covers being on one).
-				local isWater = hit.Material == Enum.Material.Water
-				if
-					not justAfterWater
-					and not isWater
-					and not hit.Instance:IsA("TrussPart")
-					and hit.Normal.Y >= maxSlope
-					and roomFor(options, settings.bare, hit.Position, hit.Normal)
-				then
-					local id = #map.spots + 1
-					map.spots[id] = {
-						id = id,
-						position = hit.Position,
-						up = hit.Normal,
-						standsOn = hit.Instance :: BasePart,
-					}
-					map.links[id] = {}
-					table.insert(ids, id)
-				end
-				justAfterWater = isWater
-			end
-			map.columns[iz * map.countX + ix] = ids
+			map.columns[iz * map.countX + ix] = spotsOfColumn(options, map, area, settings, maxSlope, x, z)
 			columnsDone += 1
 			if columnsDone % COLUMNS_PER_YIELD == 0 then
 				task.wait()
+			end
+		end
+	end
+end
+
+-- The same, along columns every FINE_STEP studs inside each fine box (from its lowest corner). A spot goes in the grid
+-- column nearest it, after the grid's own spots, and the first fine id is kept on the map. A fine column that lies on a
+-- grid column already has its spots, so it is left out.
+local function findFineSpots(options: Options, map: WalkMap)
+	local boxes = options.fineBoxes
+	if boxes == nil or #boxes == 0 then
+		return
+	end
+	map.fineFrom = #map.spots + 1
+	local settings = settingsFor(options)
+	local maxSlope = maxSlopeOf(options)
+	local columnsDone = 0
+	for _, box in boxes do
+		for x = box.min.X, box.max.X, FINE_STEP do
+			for z = box.min.Z, box.max.Z, FINE_STEP do
+				local gridX = (x - map.origin.X) / map.spacing
+				local gridZ = (z - map.origin.Z) / map.spacing
+				local onGrid = math.abs(gridX - math.round(gridX)) < 1e-6 and math.abs(gridZ - math.round(gridZ)) < 1e-6
+				local key = columnKey(map, math.round(gridX), math.round(gridZ))
+				if key ~= nil and not onGrid then
+					local column = map.columns[key]
+					for _, id in spotsOfColumn(options, map, box, settings, maxSlope, x, z) do
+						table.insert(column, id)
+					end
+				end
+				columnsDone += 1
+				if columnsDone % COLUMNS_PER_YIELD == 0 then
+					task.wait()
+				end
 			end
 		end
 	end
@@ -515,17 +571,21 @@ end
 -- checked once and linked both ways.
 local function findWalkLinks(options: Options, map: WalkMap)
 	local seconds = 0
+	local fineFrom = map.fineFrom or math.huge
 	for _, spot in map.spots do
 		local ix, iz = columnOf(map, spot.position)
 		for dz = -1, 1 do
 			for dx = -1, 1 do
-				local neighbours: { number } = NO_IDS
-				if dx ~= 0 or dz ~= 0 then
-					neighbours = spotsInColumn(map, ix + dx, iz + dz)
-				end
-				for _, otherId in neighbours do
+				-- a spot's own column is checked only against fine spots (a grid column's spots are one step apart
+				-- vertically, not neighbours); other ids in it come after this spot's, so a fine pair is checked once
+				local own = dx == 0 and dz == 0
+				for _, otherId in spotsInColumn(map, ix + dx, iz + dz) do
 					local other = map.spots[otherId]
-					if otherId > spot.id and PathCheck.linkProblem(options, spot.position, other.position) == nil then
+					if
+						otherId > spot.id
+						and (not own or otherId >= fineFrom)
+						and PathCheck.linkProblem(options, spot.position, other.position) == nil
+					then
 						seconds = (spot.position - other.position).Magnitude / StarterPlayer.CharacterWalkSpeed
 						addLink(map, spot.id, otherId, "Walk", seconds)
 						addLink(map, otherId, spot.id, "Walk", seconds)
@@ -607,7 +667,7 @@ end
 local function slideTarget(options: Options, map: WalkMap, area: Area, from: Spot, ix: number, iz: number): number?
 	local world = options.world
 	local ground = settingsFor(options).ground
-	local maxSlope = math.cos(math.rad(options.slopeAngle or StarterPlayer.CharacterMaxSlopeAngle))
+	local maxSlope = maxSlopeOf(options)
 	local feet =
 		Vector3.new(map.origin.X + ix * map.spacing, from.position.Y + SLIDE_LIFT, map.origin.Z + iz * map.spacing)
 	if not PathCheck.roomToStand(options, feet, STRAIGHT_UP) then
@@ -691,6 +751,7 @@ function PathCheck.buildMap(options: Options, area: Area): WalkMap
 		countZ = math.ceil((area.max.Z - area.min.Z) / spacing - 1e-6) + 1,
 	}
 	findSpots(options, map, area)
+	findFineSpots(options, map)
 	findWalkLinks(options, map)
 	findClimbLinks(options, map)
 	findSlideLinks(options, map, area)

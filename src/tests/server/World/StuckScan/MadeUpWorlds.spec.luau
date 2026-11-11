@@ -379,3 +379,58 @@ describe("the closed-void check on a made-up world", function()
 		expect(unlisted).toEqual({ 2 })
 	end)
 end)
+
+-- Egg reachability Task 9d: the egg map's grid is 2 studs apart, so a strap narrower than that can sit between two columns
+-- and have no spot on it. A fine box (PathCheck.Options.fineBoxes) puts spots every stud inside it. The made-up world is
+-- two wide decks (top y 0) with a 1.2-stud-wide strap between them, off every 2-stud column.
+describe("a strap narrower than the grid on a made-up world", function()
+	local AREA: PathCheck.Area = { min = Vector3.new(-20, -4, -12), max = Vector3.new(20, 4, 12) }
+	local world: WorldModel
+	local options: PathCheck.Options
+
+	local function addBox(name: string, min: Vector3, max: Vector3)
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Anchored = true
+		part.Size = max - min
+		part.CFrame = CFrame.new((min + max) / 2)
+		part.Parent = world
+	end
+
+	beforeEach(function()
+		world = Instance.new("WorldModel")
+		world.Name = "NarrowStrapTestWorld"
+		world.Archivable = false -- a test world is never saved with the place, even if a test crashes
+		options = PathCheck.defaults(world)
+		world.Parent = ServerStorage
+		addBox("WestDeck", Vector3.new(-14, -1, -10), Vector3.new(-3, 0, 10))
+		addBox("EastDeck", Vector3.new(1, -1, -10), Vector3.new(14, 0, 10))
+		-- z 4.4 to 5.6: between the columns at z 4 and z 6, so no grid spot lands on it
+		addBox("Strap", Vector3.new(-3, -1, 4.4), Vector3.new(1, 0, 5.6))
+	end)
+
+	afterEach(function()
+		local made = world :: WorldModel? -- nil if the first beforeEach failed before it made the world
+		if made ~= nil then
+			made:Destroy()
+		end
+		pcall(PathCheck.cleanup, options)
+	end)
+
+	local function walkRoute(map: PathCheck.WalkMap): PathCheck.Route?
+		local west = PathCheck.nearestSpot(map, Vector3.new(-10, 0, 5), 2)
+		local east = PathCheck.nearestSpot(map, Vector3.new(10, 0, 5), 2)
+		assert(west ~= nil and east ~= nil, "a deck has no spot")
+		return PathCheck.route(map, west, { east }, { allow = { Walk = true } })
+	end
+
+	it("a strap narrower than a grid step joins its decks only with a fine box", function()
+		expect(walkRoute(PathCheck.buildMap(options, AREA))).toBeNil()
+		options.fineBoxes = { { min = Vector3.new(-3, -1, 3), max = Vector3.new(1, 1, 7) } }
+		local route = walkRoute(PathCheck.buildMap(options, AREA))
+		assert(route ~= nil, "no Walk route end to end with a fine box round the strap")
+		for _, routeStep in route.steps do
+			expect(routeStep.kind).toBe("Walk")
+		end
+	end)
+end)
