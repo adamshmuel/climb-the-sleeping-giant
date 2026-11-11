@@ -107,3 +107,51 @@ describe("NestSeat.measure", function()
 		expect(edge.eggOffset).toBeCloseTo(0.2, 4)
 	end)
 end)
+
+-- NestSeat.seatOf (spec 4 Rule 59): a nest or a bare egg's seat from the parts themselves (unparented test parts, no world).
+describe("NestSeat.seatOf", function()
+	local function nestPart(tiltDegrees: number): Part
+		local part = Instance.new("Part")
+		part.Size = Vector3.new(4, 2, 4)
+		part.CFrame = CFrame.new(10, 20, 30) * CFrame.Angles(0, 0, math.rad(tiltDegrees))
+		return part
+	end
+
+	it("seatOf gives an upright nest's bottom centre", function()
+		local nest = nestPart(0)
+		local egg = Instance.new("Part")
+		local eggBottom = Vector3.new(10, 19.9, 30)
+		local ignore: { Instance } = { egg }
+		local seat = NestSeat.seatOf(nest, egg, eggBottom, ignore)
+		expect(seat.kind).toBe("nest")
+		expect(seat.pose).toBe("upright")
+		expect(seat.bottom.X).toBeCloseTo(10, 3)
+		expect(seat.bottom.Y).toBeCloseTo(19, 3) -- centre 20 minus half of the height 2
+		expect(seat.bottom.Z).toBeCloseTo(30, 3)
+		expect(seat.eggBottom).toBe(eggBottom)
+		expect(seat.ignore).toBe(ignore)
+	end)
+
+	it("seatOf calls a nest tilted 10 degrees leaning", function()
+		-- 10 degrees is over Config.Ranks.LeaningFromDegrees (5).
+		local nest = nestPart(10)
+		local seat = NestSeat.seatOf(nest, Instance.new("Part"), Vector3.new(10, 19.9, 30), {})
+		expect(seat.kind).toBe("nest")
+		expect(seat.pose).toBe("leaning")
+		local expected = nest.Position - nest.CFrame.UpVector * 1 -- half of the height 2, along the nest's own up
+		expect((seat.bottom - expected).Magnitude).toBeCloseTo(0, 3)
+	end)
+
+	it("seatOf gives a bare egg seat when there is no nest", function()
+		local base = Instance.new("Part")
+		base.CFrame = CFrame.new(0, 5, 0) * CFrame.Angles(0, 0, math.rad(10))
+		local eggBottom = Vector3.new(1, 2, 3)
+		local seat = NestSeat.seatOf(nil, base, eggBottom, {})
+		expect(seat.kind).toBe("egg")
+		expect(seat.bottom).toBe(eggBottom)
+		expect(seat.pose).toBe("leaning") -- the pose comes from the base's tilt
+		expect(seat.eggBottom).toBeNil()
+		local flat = NestSeat.seatOf(nil, Instance.new("Part"), eggBottom, {})
+		expect(flat.pose).toBe("upright")
+	end)
+end)

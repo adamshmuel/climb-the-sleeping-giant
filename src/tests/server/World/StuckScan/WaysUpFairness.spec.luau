@@ -12,10 +12,10 @@ local HeistScore = require(ServerScriptService.Server.World.HeistScore)
 local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local ReachCheck = require(ServerScriptService.Server.World.ReachCheck)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
-local Zones = require(ServerScriptService.Server.Giant.Zones)
 local RouteGraph = require(StarterPlayer.StarterPlayerScripts.Client.World.RouteGraph)
 local FootprintSteps = require(script.Parent.FootprintSteps)
 local GiantPlaces = require(script.Parent.GiantPlaces)
+local RealReach = require(script.Parent.RealReach)
 local WaysUpRoutes = require(script.Parent.WaysUpRoutes)
 
 -- Spec 3, Rule 41 (Every way up is equally loud), on the real world: each way up's quietest Rare egg 1 peak, its
@@ -27,77 +27,22 @@ describe("the ways up are equally loud (Rule 41)", function()
 	local verdict: FairnessCheck.Verdict? = nil
 	local skirtSteps = 0 -- steps of any fairness route that stand on World.CaveSkirt
 
-	-- The standing spots of every way up, and the routes that go through them.
-	local function standsOnSkirt(map: PathCheck.WalkMap, skirt: Instance?, routes: { PathCheck.Route }): number
-		if skirt == nil then
-			return 0
-		end
-		local spotsById: { [number]: PathCheck.Spot } = {}
-		for _, spot in map.spots do
-			spotsById[spot.id] = spot
-		end
-		local count = 0
-		for _, route in routes do
-			for _, step in route.steps do
-				for _, id in { step.from, step.to } do
-					if spotsById[id].standsOn:IsDescendantOf(skirt) then
-						count += 1
-					end
-				end
-			end
-		end
-		return count
-	end
-
 	beforeAll(function()
 		local found = Workspace:FindFirstChild("World")
 		expect(found).never.toBeNil()
 		local world = found :: Instance
-		local built = PathCheck.defaults(Workspace)
-		options = built
-		built.boxIgnores = {
-			(world :: any).WalkSurfaces.BootRamp.Ramp_Walk,
-			(world :: any).WalkSurfaces.RightBootRamp.Ramp_Walk,
+		local setup = RealReach.build(world, WaysUpRoutes.ROUTE_AREA)
+		options = setup.options
+		local points, ladders, zoneBoxes = setup.points, setup.ladders, setup.zoneBoxes
+		local waysUp, graph, offLimits = setup.waysUp, setup.graph, setup.offLimits
+
+		local reach: ReachCheck.Options = {
+			map = setup.map,
+			feet = setup.feet,
+			gardens = {},
+			zoneOf = setup.zoneOf,
+			rareFrom = math.huge,
 		}
-		local map = PathCheck.buildMap(built, WaysUpRoutes.ROUTE_AREA)
-
-		local zoneBoxes = WorldIndex.loadZones(world)
-		local ladders = WorldIndex.loadLadders(world)
-		local points = WorldIndex.loadRoute(world)
-		local waysUp, wayProblems = WorldIndex.readWaysUp(world)
-		expect(wayProblems).toEqual({})
-		local spotsById: { [number]: PathCheck.Spot } = {}
-		for _, spot in map.spots do
-			spotsById[spot.id] = spot
-		end
-		local function zoneOf(id: number): Config.ZoneName
-			return Zones.zoneAt(spotsById[id].position + FootprintSteps.ROOT_ABOVE_FEET, zoneBoxes)
-		end
-
-		-- The feet, and the 4 way-up models a route may stand on (Rule 41, "off the meadow").
-		local feet: { ReachCheck.Foot } = {}
-		local wayModels: { Instance } = {}
-		for _, wayUp in waysUp :: { WorldIndex.WayUp } do
-			local info = WaysUpRoutes.PIECE_OF[wayUp.name]
-			local spot = WaysUpRoutes.startSpot(info.piece, info.isLadder, map, world)
-			expect(spot).never.toBeNil()
-			table.insert(feet, { name = wayUp.name, spot = spot :: number })
-			table.insert(wayModels, (world :: any).WalkSurfaces[info.piece])
-		end
-		local function offLimits(spot: PathCheck.Spot): boolean
-			if zoneOf(spot.id) ~= "Meadow" then
-				return false
-			end
-			for _, model in wayModels do
-				if spot.standsOn:IsDescendantOf(model) then
-					return false
-				end
-			end
-			return true
-		end
-
-		local reach: ReachCheck.Options =
-			{ map = map, feet = feet, gardens = {}, zoneOf = zoneOf, rareFrom = math.huge }
 		local rareNests: { ReachCheck.NestInput } = {}
 		local uncommonNests: { ReachCheck.NestInput } = {}
 		local eggSpots, spotProblems = WorldIndex.readEggSpots(world)
@@ -118,10 +63,9 @@ describe("the ways up are equally loud (Rule 41)", function()
 		for _, nest in uncommonNests do
 			table.insert(uncommonNames, nest.name)
 		end
-		local graph = RouteGraph.new(points)
 		local ways: { FairnessCheck.WayUpPeaks } = {}
 		local routes: { PathCheck.Route } = {}
-		for _, wayUp in waysUp :: { WorldIndex.WayUp } do
+		for _, wayUp in waysUp do
 			local rare = rareTrips[Config.Nests.RareEggOne][wayUp.name]
 			local quietUncommon: number? = nil
 			for _, byFoot in uncommonTrips do
@@ -167,7 +111,7 @@ describe("the ways up are equally loud (Rule 41)", function()
 
 		local judged = FairnessCheck.judge(ways)
 		verdict = judged
-		skirtSteps = standsOnSkirt(map, world:FindFirstChild("CaveSkirt"), routes)
+		skirtSteps = RealReach.standsOnSkirt(setup.map, world:FindFirstChild("CaveSkirt"), routes)
 		print("FAIRNESS TABLE")
 		print(judged.table)
 		print(`FAIRNESS REPORTS {#judged.reports}`)

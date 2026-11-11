@@ -247,6 +247,46 @@ describe("ReachCheck", function()
 		expect(slowest.seconds).toBeCloseTo(3, 3)
 	end)
 
+	describe("ReachCheck.analyseAll", function()
+		it("analyseAll gives what analyse gives for each nest", function()
+			local nests = { FLOOR, LEDGE, HIGH, nest("Trap", -30, 21, -30, false), nest("Far", 100, 1, 100, false) }
+			local all = ReachCheck.analyseAll(buildOptions(), nests)
+			expect(#all).toBe(#nests)
+			for index, each in nests do
+				local alone = ReachCheck.analyse(buildOptions(), each)
+				expect(all[index].name).toBe(each.name)
+				expect(all[index]).toEqual(alone)
+			end
+		end)
+
+		it("a garden's startSeconds is added to its time", function()
+			local options = buildOptions()
+			-- Garden 4 (spot 3) is the quickest to the ledge's stand spot (2.4107 s); a 10 s start puts it last.
+			options.gardens = { { garden = 1, spot = 1 }, { garden = 4, spot = 3, startSeconds = 10 } }
+			local result = ReachCheck.analyseAll(options, { LEDGE })[1]
+			local quickest = result.quickest :: ReachCheck.GardenTime
+			local slowest = result.slowest :: ReachCheck.GardenTime
+			expect(quickest.garden).toBe(1)
+			expect(quickest.seconds).toBeCloseTo(3, 3)
+			expect(slowest.garden).toBe(4)
+			expect(slowest.seconds).toBeCloseTo(12.4107, 3)
+		end)
+
+		it("a scored nest carries its up and down routes", function()
+			local result = ReachCheck.analyseAll(buildOptions(), { LEDGE, FLOOR })[1]
+			expect(result.upBy).toBe("Ladder")
+			local up = result.up :: PathCheck.Route
+			local down = result.down :: PathCheck.Route
+			expect(up.steps[1].from).toBe(2)
+			expect(up.steps[#up.steps].to).toBe(5)
+			expect(down.steps[1].from).toBe(5)
+			expect(down.steps[#down.steps].to).toBe(2)
+			local floor = ReachCheck.analyseAll(buildOptions(), { FLOOR })[1]
+			expect(floor.up).toBeNil()
+			expect(floor.down).toBeNil()
+		end)
+	end)
+
 	-- Spec 3, Rule 41: the score of each foot on its own, on the same fake map. The ledge (5) is 48 studs from the Ramp
 	-- (1) by a walk and 20 studs from the Ladder (2) by a climb; the trap ledge (8) is reached by a walk from the Ramp.
 	describe("ReachCheck.peaksByFoot", function()

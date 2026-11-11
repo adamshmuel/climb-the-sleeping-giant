@@ -94,4 +94,30 @@ function NestSeat.measure(world: WorldRoot, seat: Seat): Result
 	return result
 end
 
+-- The angle in degrees between a part's up direction and straight up.
+local function tiltDegrees(part: BasePart): number
+	return math.deg(math.acos(math.clamp(part.CFrame.UpVector.Y, -1, 1)))
+end
+
+-- The seat of a nest (its bottom centre, along its own up direction) with its egg's lowest point, or, with no nest, a
+-- bare egg's seat at `eggBottom` with its pose taken from `base` (the part it rests on). Leaning when the part is tilted
+-- over Config.Ranks.LeaningFromDegrees (Rule 59).
+function NestSeat.seatOf(nest: BasePart?, base: BasePart, eggBottom: Vector3, ignore: { Instance }): Seat
+	if nest == nil then
+		return {
+			kind = "egg",
+			bottom = eggBottom,
+			pose = if tiltDegrees(base) > Config.Ranks.LeaningFromDegrees then "leaning" else "upright",
+			ignore = ignore,
+		}
+	end
+	return {
+		kind = "nest",
+		bottom = nest.Position - nest.CFrame.UpVector * (nest.Size.Y / 2),
+		pose = if tiltDegrees(nest) > Config.Ranks.LeaningFromDegrees then "leaning" else "upright",
+		eggBottom = eggBottom,
+		ignore = ignore,
+	}
+end
+
 return NestSeat

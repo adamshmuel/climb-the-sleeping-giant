@@ -12,7 +12,8 @@ local PathCheck = require(ServerScriptService.Server.World.PathCheck)
 local Noise = require(ServerScriptService.Server.Giant.Noise)
 
 export type Foot = { name: string, spot: number }
-export type Garden = { garden: number, spot: number }
+-- `startSeconds` is the time a player takes to get from the garden's spawn to its way-up foot (nil counts as 0).
+export type Garden = { garden: number, spot: number, startSeconds: number? }
 export type NestInput = { name: string, position: Vector3, inMeadow: boolean }
 export type Options = {
 	map: PathCheck.WalkMap,
@@ -36,6 +37,9 @@ export type NestResult = {
 	ladderSeconds: number,
 	quickest: GardenTime?,
 	slowest: GardenTime?,
+	-- The picked trips (nil for a nest that is not scored): `up` starts at the `upBy` foot, `down` ends at the `homeBy` foot.
+	up: PathCheck.Route?,
+	down: PathCheck.Route?,
 }
 export type Pick = { upBy: string, homeBy: string, up: PathCheck.Route, down: PathCheck.Route }
 -- One foot's own trip to a nest (Rule 41): the route up, the route back down (the up route's way, reversed) and the
@@ -201,14 +205,19 @@ local function tripsHome(
 	return downs
 end
 
--- The quickest and the slowest garden to the stand spot, by walking and climbing seconds; a garden that can't get there
--- is left out.
-local function gardenTimes(options: Options, standId: number): (GardenTime?, GardenTime?)
+-- The quickest and the slowest garden to the stand spot, by its start seconds plus walking and climbing seconds; a
+-- garden that can't get there is left out. `searches` are the gardens' own searches, in the order of options.gardens.
+local function gardenTimes(
+	options: Options,
+	searches: { PathCheck.Search },
+	standId: number
+): (GardenTime?, GardenTime?)
 	local quickest: GardenTime? = nil
 	local slowest: GardenTime? = nil
-	for _, garden in options.gardens do
-		local seconds = PathCheck.costsFrom(options.map, garden.spot, { allow = ALLOWED }).costs[standId]
-		if seconds ~= nil then
+	for index, garden in options.gardens do
+		local walked = searches[index].costs[standId]
+		if walked ~= nil then
+			local seconds = walked + (garden.startSeconds or 0)
 			if quickest == nil or seconds < quickest.seconds then
 				quickest = { garden = garden.garden, seconds = seconds }
 			end
@@ -340,7 +349,13 @@ function ReachCheck.peaksByFoot(
 end
 
 -- Rules 46 to 48: how hard is it to take the egg from this nest and get home with no jump.
-function ReachCheck.analyse(options: Options, nest: NestInput): NestResult
+local function analyseOne(
+	options: Options,
+	nest: NestInput,
+	zones: { [PathCheck.Link]: Config.ZoneName },
+	upSearches: { [string]: PathCheck.Search },
+	gardenSearches: { PathCheck.Search }
+): NestResult
 	local result: NestResult = {
 		name = nest.name,
 		roomToStand = false,
@@ -354,6 +369,8 @@ function ReachCheck.analyse(options: Options, nest: NestInput): NestResult
 		ladderSeconds = 0,
 		quickest = nil,
 		slowest = nil,
+		up = nil,
+		down = nil,
 	}
 	local spots = standSpots(options, nest.position)
 	result.roomToStand = #spots > 0
@@ -362,12 +379,6 @@ function ReachCheck.analyse(options: Options, nest: NestInput): NestResult
 	end
 
 	-- The player stands on the stand spot with the cheapest trip up (the quietest from any foot).
-	local zones = linkZones(options.map, options.zoneOf)
-	local upCost = noiseCost(zones, nil)
-	local upSearches: { [string]: PathCheck.Search } = {}
-	for _, foot in options.feet do
-		upSearches[foot.name] = PathCheck.costsFrom(options.map, foot.spot, { allow = ALLOWED, cost = upCost })
-	end
 	local stand: PathCheck.Spot? = nil
 	local standCost = math.huge
 	for _, spot in spots do
@@ -390,7 +401,7 @@ function ReachCheck.analyse(options: Options, nest: NestInput): NestResult
 	end
 	local downs = tripsHome(options, zones, stand.id, "Uncommon")
 	result.left = next(downs) ~= nil
-	result.quickest, result.slowest = gardenTimes(options, stand.id)
+	result.quickest, result.slowest = gardenTimes(options, gardenSearches, stand.id)
 	if nest.inMeadow or not result.left then
 		return result
 	end
@@ -418,7 +429,33 @@ function ReachCheck.analyse(options: Options, nest: NestInput): NestResult
 	result.tiptoePeak = ReachCheck.replayPick(pick, egg, true, options.zoneOf).peak
 	result.upBy = pick.upBy
 	result.homeBy = pick.homeBy
+	result.up = pick.up
+	result.down = pick.down
 	return result
+end
+
+-- Every nest's result. The link zones, the searches up from each foot and the searches from each garden don't depend on
+-- the nest, so they are made once (spec 4, section 5: cache first).
+function ReachCheck.analyseAll(options: Options, nests: { NestInput }): { NestResult }
+	local zones = linkZones(options.map, options.zoneOf)
+	local upCost = noiseCost(zones, nil)
+	local upSearches: { [string]: PathCheck.Search } = {}
+	for _, foot in options.feet do
+		upSearches[foot.name] = PathCheck.costsFrom(options.map, foot.spot, { allow = ALLOWED, cost = upCost })
+	end
+	local gardenSearches: { PathCheck.Search } = {}
+	for index, garden in options.gardens do
+		gardenSearches[index] = PathCheck.costsFrom(options.map, garden.spot, { allow = ALLOWED })
+	end
+	local results: { NestResult } = {}
+	for index, nest in nests do
+		results[index] = analyseOne(options, nest, zones, upSearches, gardenSearches)
+	end
+	return results
+end
+
+function ReachCheck.analyse(options: Options, nest: NestInput): NestResult
+	return ReachCheck.analyseAll(options, { nest })[1]
 end
 
 return ReachCheck

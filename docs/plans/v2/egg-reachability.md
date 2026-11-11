@@ -43,7 +43,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 | "The quietest way" (Rule 47) | The trip up is the quietest through any way up, and the trip home is the quietest to any way-up foot, which may be a different way up, so a nest's score is the quietest trip up + the 1-second grab + the quietest trip home. Each trip stays off the meadow except where it starts or ends. Product confirmed it, and Rule 47 now says so | Rule 47: "the trip up and the trip home may use different ways up, each the quietest". The meadow is silent, so a trip that crossed it to another way up would be scored as free |
 | The Tiptoe peak (Rule 46) | The same route as the score, replayed with Tiptoe on the whole way | Rule 46: "the same heist with Tiptoe on" |
 | The garden times (Rule 46) | From a garden's spawn spot to a way up's foot along the footprint route at walking speed (the meadow part, already checked walkable), plus the walk map's seconds from that foot to the nest. "Quickest garden" is the lowest over all gardens; "slowest garden" the highest | The walk map covers him and the meadow round his feet, not out to the gardens; building it out there would break the 2-minute limit |
-| Where the checks run | In `src/tests/server/World/WalkMap.spec.luau` (plan 3, Task 9), on the one walk map it builds | Spec 4's 2-minute limit covers the stuck scan and the scores together (section 5) |
+| Where the checks run | In `src/tests/server/World/StuckScan/EggRanksReal.spec.luau` (Task 9b), on its own even-row walk map over `WaysUpRoutes.EGG_AREA` (code_lead, 2026-11-11; `WalkMap.spec` was never made) | The stuck scan's map rows miss the 1-stud lane onto the lap planks (plan 3 Task 9). Spec 4's 2-minute limit is checked as the scan's seconds plus this file's (section 5) |
 | What a "visible surface" is (Rule 59) | A part a player can see: **less than half see-through** (`Transparency` under 0.5, `Config.Ranks.VisibleBelow`), and not a zone box, ladder box, route point, character, egg or label. The ray goes through everything else | Spec section 5, "Visible surface" (product changed code_lead's 0.9): a part more than half see-through looks ghostly, so V1's meadow glow rings (60% and 85% see-through) are skipped and the grass under them is measured. Invisible walk planks, guards and boxes must not count (Rule 59). The trigger is designer's: a skipped surface that clearly looks seated raises the limit just above it |
 | A bare egg before spec 5's nests (Rule 59) | Its lowest point is the top centre of its spot's `Base` (where V1 already puts the egg's bottom). It is **leaning** if the `Base` is tilted more than 5° from level, and **upright** otherwise | No egg is in the world in Edit mode (eggs are placed when the game runs), so the check measures where the egg would sit |
 | A nest (spec 5) | A spot with a `Nest` part in its model is measured as a nest: the nest's bottom against the surface, and the egg's lowest point against the nest's bottom. Plan 5 adds the nests; this plan builds and tests both ways | Rule 59 measures both, and spec 5 replaces the bare V1 spots |
@@ -165,18 +165,35 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Done when: the tests pass.
 - Approved (2026-11-11, code_lead): EggRanks 7/7, Config 56/56, check.sh clean. A nest not reached, not left or with no room gets only those reasons and its seat reasons (no band or Tiptoe reason, never close); a nest with no egg used is Common. Waiting on the joint full run with Task 7b (expected 3372 passed, 1 failed).
 
-**Task 9: The check runs on the real world on every test run**
+**Task 9: The check runs on the real world on every test run** (split on 2026-11-11 by code_lead into 9a and 9b when its cards were written: it was about 115 minutes, over the 1-hour limit)
 - Stands on: plan 3 Task 9 (the stuck scan on the finished ground), plan 3 Task 12b (fairness on the real world, built 2026-11-11), Tasks 6, 7, 8 and 10 (built), and plan 5 Task 12 (the 38 nests, built). Through plan 3 Task 9 and 12b it also stands on plan 5 Task 22b and plan 3 Task 9q (the last ground changes). Its first real-world run is here (Task 10 runs only on fake nests).
 - Spec rules: Rule 55 (It runs on every test run), Rule 54 (The check fails when a nest drifts), Rule 46 (Every nest gets a difficulty score), Rule 59 (Eggs sit on something you can see).
-- Files: `src/tests/server/World/WalkMap.spec.luau`.
+- **Which map** (code_lead, 2026-11-11): the stuck scan's map can't be used. Its rows sit on odd z, so none runs along z −58, the only lane from a boot top onto a lap plank, and every nest above the boots would read "can't be reached" (plan 3 Task 9 found this; the route and fairness tests already use their own even-row map). The check builds its own map in its own test file, over `WaysUpRoutes.EGG_AREA`: the route map's corner (x −105, z −104, so the rows stay even) out to every nest, the 16 meadow nests (x ±99) and the cap nests (y 119, z 28) included. The time limit (spec section 5, "Check time limit") is checked as the stuck scan's printed seconds plus this file's printed seconds, at the review.
+- **Moved to plan 5 Task 20** (it already says the same, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`)): "no heist to a nest of Rare rank reaches 100" and "per rank, no way up more than 5 points quieter than another". One check, once.
+- Cards: `work/p4t9/9a-card.md`, `work/p4t9/9b-card.md`, runner `work/p4t9/9-run-card.md`.
+
+**Task 9a: The pieces the real-world check needs** (fake worlds and a moved helper)
+- Stands on: Task 9's list (all built). Pure code and test helpers.
+- For: core gameplay (every nest's rank comes from it). Size: 3 builder steps, about 52 min, 22 calls, then the runner's full run (about 6 min, 4 Studio calls).
+- Files: `src/server/World/ReachCheck.luau` and its spec; `src/server/World/NestSeat.luau` and its spec; `src/shared/Config.luau` and `src/tests/shared/Config.spec.luau` (`Config.Ranks.LeaningFromDegrees = 5`); `src/tests/server/World/StuckScan/RealReach.luau` (new), `WaysUpFairness.spec.luau`, `WaysUpRoutes.luau` (`EGG_AREA`).
 - What changes:
-  - `WalkMap.spec` runs `ReachCheck`, `NestSeat` and `EggRanks` on every egg spot of the real world, on the same walk map as the stuck scan, and prints the report (Task 10). The whole file (map, scan, Rule 45 and Rule 41 checks, scores) must finish within 2 minutes; the time is printed.
-  - **The cave skirt** (added 2026-10-21, game_creator's check on stuck safety Task 22's visible cave skirt): the report runs the scores twice, with `World.CaveSkirt` in place and with it moved to `ServerStorage` (put back after, and checked). Every nest's score must be identical (0.0 change), and no walk-map link may run from a skirt top to any nest.
-  - **No scored route goes past a slide guard** (game_creator's condition at stuck safety Task 23): no step of any nest's scored heist route stands within 2 studs of a part in `World.WalkSurfaces.SlideGuards`. A step that does is named in the report, and that guard becomes a flush patch (plan 2's rules).
-  - **Moved to plan 5 Task 20** (it already says the same, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`)): "no heist to a nest of Rare rank reaches 100" and "per rank, no way up more than 5 points quieter than another". One check, once.
-- Failing test first: the check itself. **It is expected to fail on today's world**: V1's ranks are set by zone, so game_creator expects Rare eggs 2 to 4 to score Epic or higher, and Rare egg 4's spot floats about 2.2 studs (designer). That list is the failing test for plan 5 Task 19 (Task 11 is merged into it). Until Task 19 makes it pass, it is the only accepted failure in the run.
-- If the whole file takes longer than 2 minutes, first cache in `ReachCheck` the trips up from each foot and the garden searches (they don't depend on the nest: 12 searches per run instead of 12 per nest) and measure again. If it is still over: the walk map is already built once and shared, so the spec's trigger (section 5, "Check time limit") is the scan grid from 2 to 3 studs (`Config.Stuck.ScanSpacing`). It changes the stuck scan too, so the builder asks code_lead first and the report says so.
-- Done when: the run finishes within 2 minutes, and its full failure list and the report are in the task report.
+  - `ReachCheck.analyseAll(options, nests)`: the trips up from each foot and the garden searches are made once for all nests (the plan's "cache first", made before the first real run); `analyse` is `analyseAll` with one nest. A garden may carry `startSeconds` (its meadow walk to its way-up foot), added to its time. A scored nest's result carries its scored `up` and `down` routes.
+  - `NestSeat.seatOf(nest, base, eggBottom, ignore)`: a nest's bottom centre and pose (leaning when tilted more than 5°), the egg's lowest point (the Base's top centre: no egg is in the world in Edit).
+  - `RealReach.luau`: the real-world map, feet, zones, off-limits and skirt-count setup moved out of `WaysUpFairness.spec` (no copy), with the gardens and their meadow walks added.
+- Failing tests first: `analyseAll` exists and gives what `analyse` gives on the fake world; a garden's `startSeconds` is added; a scored nest carries routes; `seatOf` gives upright, leaning and bare-egg seats. `WaysUpFairness.spec` stays 2 passed after the move.
+- Done when: the tests pass and the full run is 3414 plus the new tests passed, 1 failed (the standing walk-area red).
+
+**Task 9b: The egg check on the real world**
+- Stands on: Task 9a (built). It reads the world as it is; it changes nothing but a cave-skirt move it puts back.
+- For: core gameplay. Size: 2 builder steps, about 50 min, 24 calls, then the runner's full run (about 6 min, 4 Studio calls).
+- Files: `src/tests/server/World/StuckScan/EggRanksReal.spec.luau` (new), `tools/report/egg-ranks.luau` (uses `analyseAll`, returns the run result too).
+- What changes:
+  - `EggRanksReal.spec` runs `ReachCheck`, `NestSeat` and `EggRanks` on all 38 egg spots of the real world, prints the report (Task 10) and its own seconds.
+  - **The cave skirt** (added 2026-10-21, game_creator's check on stuck safety Task 22's visible cave skirt): no scored route stands on `World.CaveSkirt`, and the report is run again with `World.CaveSkirt` moved to `ServerStorage` (put back after, and checked). The report text must be identical (every score 0.0 change).
+  - **No scored route goes past a slide guard** (game_creator's condition at stuck safety Task 23): no step of any nest's scored route stands within 2 studs of a part in `World.WalkSurfaces.SlideGuards`. A step that does is named, and that guard becomes a flush patch (plan 2's rules), as a new task through `product`.
+- Failing test first: the check itself. **It is expected to fail on today's world**: V1's ranks are set by zone, so game_creator expects some nests to score outside their band. That list is the failing test for plan 5 Task 19 (Task 11 is merged into it). Until Task 19 makes it pass, it is the only accepted failure besides the standing walk-area red.
+- If the stuck scan's seconds plus this file's pass 2 minutes: the cache is already in (9a), so the spec's trigger (section 5, "Check time limit") is the scan grid from 2 to 3 studs (`Config.Stuck.ScanSpacing`). It changes the stuck scan too, so the builder stops and code_lead rules.
+- Done when: the run finishes, and its full failure list and the report are in the task report.
 
 **Task 10: A report Adam can read** (the pure report and the tool only; the tool's first real-world run is in Task 9, because a run on today's world would be redone after plan 5 Task 19)
 - Stands on: Task 8 (built).
@@ -219,7 +236,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 
 | Rule | Tasks |
 |---|---|
-| Rule 46 (Every nest gets a difficulty score) | 7, 9, 13 |
+| Rule 46 (Every nest gets a difficulty score) | 7, 9a, 9b, 13 |
 | Rule 47 (How the score is worked out) | 7 (and plan 3, Task 11) |
 | Rule 48 (The score uses the egg the nest would hold) | 7 |
 | Rule 49 (Higher eggs carry like a Rare) | 1 (and plan 5 Task 21) |
@@ -227,12 +244,12 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 | Rule 51 (One colour per rank) | 1, 2, 3 |
 | Rule 52 (The rank shows everywhere) | 2, 3, 4 |
 | Rule 53 (A nest's rank is fixed) | plan 5 Task 19 |
-| Rule 54 (The check fails when a nest drifts) | 8, 9 |
-| Rule 55 (It runs on every test run) | 9 |
+| Rule 54 (The check fails when a nest drifts) | 8, 9b |
+| Rule 55 (It runs on every test run) | 9b |
 | Rule 56 (Close calls are flagged) | 8, 10 |
 | Rule 57 (A report Adam can read) | 10, and plan 5 Task 19 (the file) |
 | Rule 58 (Harder rank, better pets) | 5 (moved to spec 2) |
-| Rule 59 (Eggs sit on something you can see) | 6, 9, and plan 5 Task 19 |
+| Rule 59 (Eggs sit on something you can see) | 6, 9a, 9b, and plan 5 Task 19 |
 | Section 10 (Success signals) | 12 |
 
 **Built in a later plan:** Rule 59 on spec 5's real nests, and the nest counts per rank (plan 5). Rare egg 4's spot is replaced in plan 5, which fixes the eye limit there.

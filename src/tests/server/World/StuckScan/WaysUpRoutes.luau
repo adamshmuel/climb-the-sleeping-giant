@@ -37,6 +37,10 @@ WaysUpRoutes.PIECES = PIECES
 -- Rare egg 1 lie inside it; piecesOutside checks that).
 WaysUpRoutes.ROUTE_AREA = { min = Vector3.new(-69, -8, -104), max = Vector3.new(69, 70, 0) } :: PathCheck.Area
 
+-- The box the egg-reach check builds its map over: the whole giant and the meadow around him, reaching every nest. Same
+-- corner parity as ROUTE_AREA (the cells line up), so a row runs along z -58, the only boot-to-lap-plank lane.
+WaysUpRoutes.EGG_AREA = { min = Vector3.new(-105, -8, -104), max = Vector3.new(105, 125, 40) } :: PathCheck.Area
+
 -- Each Config.WaysUp name to the piece in World.WalkSurfaces that is its way up, and whether that piece is a ladder.
 WaysUpRoutes.PIECE_OF = {
 	["Left boot ladder"] = { piece = "BootLadder_Left", isLadder = true },

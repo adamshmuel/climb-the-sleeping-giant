@@ -166,6 +166,7 @@ export type Config = {
 		SinkEggUpright: number,
 		SinkEggLeaning: number,
 		EggInNest: number,
+		LeaningFromDegrees: number,
 		BodyBeamStuds: number,
 		BodyZones: { [string]: boolean },
 		BandEdges: { Rare: number, Epic: number, Legendary: number },
@@ -344,6 +345,7 @@ local config: Config = {
 		SinkEggUpright = 0.3, -- studs an upright bare egg may sink into its surface
 		SinkEggLeaning = 1, -- studs a leaning bare egg may sink into its surface
 		EggInNest = 0.2, -- studs an egg's bottom may be off its nest's seat (checked in Step 6b)
+		LeaningFromDegrees = 5, -- degrees a nest or an egg's base may tilt from level before it counts as leaning (Rule 59)
 		BodyBeamStuds = 10, -- studs: length of the beam of a waiting egg on his body (spec 4 section 6)
 		BodyZones = { Belly = true, Beard = true, Nightcap = true }, -- the zones that are his body; boots and meadow keep V1's beam
 		BandEdges = { Rare = 40, Epic = 85, Legendary = 130 }, -- the score where each rank starts (spec 4 Rule 50); an edge takes the higher rank
