@@ -50,7 +50,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 | The report file | `tools/report/egg-ranks.luau` (run in Edit mode) returns the whole report as text, and the builder writes it into `docs/egg-ranks.md`. `WalkMap.spec` prints the same text on every run, and code_lead's review checks the file matches | A test running inside Studio can't write a file in the project folder |
 | A name a person understands (Rule 57) | Each egg spot gets a `NestName` attribute, for example "Belly, left of the beard". The check fails if one is missing | Rule 57's "Nest" column. Spot names like `EggSpot_Rare_2` stay as they are: other code finds spots by them |
 | Rare egg 4's spot (Rule 50's eye limit and Rule 59) | This plan lowers it onto his skin (Rule 59's fix), as section 4 says. Designer measured that the lowered spot still fails the eye limit; spec 5 moves it away (section 8), so plan 5 replaces it | The spec: "the spot is moved, never given a different rank. Where the real nests go is spec 5's decision" |
-| The beam length | `SpotModels` sets each waiting egg's beam to 10 studs on a spot on him (any zone but the Meadow), and leaves V1's beam on spots on the boots and in the meadow | Section 6: beams from eggs on his body are 10 studs, so none reaches his eyes |
+| The beam length | `SpotModels` sets each waiting egg's beam to 10 studs on a spot on him (the Belly, Beard and Nightcap zones), and leaves V1's beam on spots on the boots and in the meadow | Section 6: beams from eggs on his body are 10 studs, so none reaches his eyes |
 | New world scripts | `28-rank-eggs`, `20-egg-ranks` | 15 to 19 and 27 are taken by plans 2 and 3 (`19-ways-up-ladders` is built); `19-rank-eggs` clashed with it and became 28, the first free number (2026-11-03) |
 
 ## Tasks
@@ -88,14 +88,23 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 - Failing tests first: each of the five ranks gives its word and colour on the label; no two ranks share a colour (Rule 51); the pill and the card say the rank word for Epic and Legendary; the card stays green.
 - Done when: the tests pass, and in Play (computer and the iPhone 14), with one spot set to Epic and one to Legendary at runtime from a Server `execute_luau`, screenshots match `epic-egg-*`, `legendary-egg-*`, `carry-epic-*` and `carry-legendary-*` in `docs/design/v2/mockups/`. The main chat sends them to designer.
 
-**Task 4: The rank glow** (code, tests and the fade walk only; its 16 spawn shots and the eye-limit check moved into Task 13 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
+**Task 4: The rank glow** (code and tests only, about 50 min; the fade walk is Task 4b (split by the main chat's veto, 2026-11-11, over the 1-hour limit); its 16 spawn shots and the eye-limit check moved into Task 13 (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`))
 - Stands on: nothing (code; any built Rare-or-higher nest shows the fade).
 - Spec rules: section 6, "Looking at the giant from a garden" (the rank glow and the 10-stud beams). Rule 52 (The rank shows everywhere): the colour readable from the spawn spot. Rule 50 (The score sets the rank): no glow or beam covers his eyes.
 - Files: `src/client/World/RankGlow.luau` (new, pure: the glow's size, strength and fade for a rank and a distance), `src/client/World/SpotLabels.luau` or a new `src/client/World/RankGlowView.luau` (draws it), `src/server/Eggs/SpotModels.luau` (the beam length), tests for each.
 - What it does, with the values in `docs/design/v2/style-guide.md`, "Egg ranks" and "The rank glow": a soft round halo in the rank colour behind every waiting egg above Common, twice the egg's height across; hidden closer than 55 studs, fading in evenly, full from 75 studs; Uncommon with no beam, Rare and up stronger and with a beam, so no lower rank outshines a higher one; only waiting eggs glow. On spots on him, the beam is 10 studs long.
 - Failing tests first (`RankGlow`, pure): no glow at 50 studs, half at 65, full at 80; no glow for Common; each rank's glow is at least as strong as the rank below; (`SpotModels`) a Rare on the belly gets a 10-stud beam, a Rare in the meadow keeps V1's.
 - Keep: V2 setup 5 (`index.md`) already turns off each beam on his body when the camera is within 30 studs of its egg. The 10-stud beams keep that, and its tests stay green.
-- Done when: the tests pass, and in Play a walk from a spawn spot up to a glowing egg and back with shots at about 80, 65 and 50 studs shows the glow fade smoothly (the spec's risk row). **Moved to Task 13:** the spawn view from all 8 gardens on a computer and the iPhone 14 (16 shots), compared with `view-ranks.png`, `view-phone-ranks.png`, `ranks-desktop.png` and `ranks-phone.png`, and designer's eye-limit check. They judge glows at the nests' final spots, which plan 5 Task 19 may move.
+- Done when: the tests pass and the full run is green (the fade walk is Task 4b). Cards: `work/p4t4/4-card.md`, `4-run-card.md`. **Moved to Task 13:** the spawn view from all 8 gardens on a computer and the iPhone 14 (16 shots), compared with `view-ranks.png`, `view-phone-ranks.png`, `ranks-desktop.png` and `ranks-phone.png`, and designer's eye-limit check. They judge glows at the nests' final spots, which plan 5 Task 19 may move.
+
+
+**Task 4b: The rank glow fade walk in Play** (split from Task 4 on 2026-11-11 by the main chat's veto, as 13c was split from 13)
+- Stands on: plan 4 Task 4 (built: the glow view and the 10-stud beam, full run green).
+- Spec rules: section 6, "Looking at the giant from a garden" (the glow fades in smoothly; the 10-stud beam). Risk row: "The rank glow fades in smoothly between 55 and 75 studs".
+- Files: none in `src/`. Jobs `work/p4t4/walk-S.luau` and `walk-P.luau` (written in Step A of `work/p4t4/4-play-card.md`).
+- Size: about 27 min, about 16 Studio calls (Step A 12 min, 4 calls; Step B 15 min, about 12 calls).
+- Done when: in Play a walk from the spawn toward `Nest_LowerBelly_Left` and back, sampled every 0.2 s, shows the ring see-through never falls with distance, hidden at 55 studs or less, full from 75 studs, no pop; the belly egg's beam is about 10 studs; shots at about 80, 65 and 50 studs.
+- Not built yet: plan 4 Task 13 (spawn shots), plan 5 Task 19 (the nests may move).
 
 **Task 5: Harder rank, better pets** (moved out of V2 into spec 2, Hatching and pets, (product's order ruling, 2026-11-10, `work/p5t19/order-ruling.md`): no V2 code hatches an egg, so no player sees these tables, and Rule 58 lets spec 2 change the numbers. Not a feature cut: the rule stays, only when it is built moves. Spec 4 Rule 58 says so.)
 - Stands on: spec 2 (Hatching and pets), the first code that hatches an egg. Status: not built in V2.
