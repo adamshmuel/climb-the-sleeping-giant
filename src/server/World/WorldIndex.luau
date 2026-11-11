@@ -647,13 +647,13 @@ function WorldIndex.loadSeamLine(world: Instance): { SeamPoint }
 	return points
 end
 
--- The four ways down (spec core-heist Rule 8): model name under World.WalkSurfaces, kind, and for a boot ladder the
--- route point on the grass at its foot.
-local CLIMB_MODELS: { { name: string, kind: "head" | "boot", ground: string? } } = {
-	{ name = "BeardLadder", kind = "head" },
-	{ name = "CapLadder", kind = "head" },
-	{ name = "BootLadder_Left", kind = "boot", ground = "RoutePoint_LadderLeft_Foot" },
-	{ name = "BootLadder_Right", kind = "boot", ground = "RoutePoint_LadderRight_Foot" },
+-- The four ways down (spec core-heist Rule 8): the model names are Config.Ladders.Models (under World.WalkSurfaces).
+-- Here: each one's kind, and for a boot ladder the route point on the grass at its foot.
+local CLIMB_INFO: { [string]: { kind: "head" | "boot", ground: string? } } = {
+	BeardLadder = { kind = "head" },
+	CapLadder = { kind = "head" },
+	BootLadder_Left = { kind = "boot", ground = "RoutePoint_LadderLeft_Foot" },
+	BootLadder_Right = { kind = "boot", ground = "RoutePoint_LadderRight_Foot" },
 }
 
 -- Reads the four ladders from World.WalkSurfaces.<model>.Climb (a TrussPart: its ends are the ladder's foot and top)
@@ -667,7 +667,8 @@ function WorldIndex.readClimbParts(world: Instance): ({ Ladder }?, { string })
 	local route = world:FindFirstChild("Route")
 	local ladders: { Ladder } = {}
 	local problems: { string } = {}
-	for _, entry in CLIMB_MODELS do
+	for _, name in Config.Ladders.Models do
+		local entry = { name = name, kind = CLIMB_INFO[name].kind, ground = CLIMB_INFO[name].ground }
 		local model = surfaces:FindFirstChild(entry.name)
 		local climb = if model ~= nil then model:FindFirstChild("Climb") else nil
 		if climb == nil or not climb:IsA("TrussPart") then

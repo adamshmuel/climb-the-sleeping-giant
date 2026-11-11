@@ -207,6 +207,13 @@ describe("Config", function()
 		end
 	end)
 
+	it("the ladders: four models, a 2-stud margin", function()
+		expect(Config.Ladders).toEqual({
+			Models = { "BeardLadder", "CapLadder", "BootLadder_Left", "BootLadder_Right" },
+			NearStuds = 2,
+		})
+	end)
+
 	it("the game loop ticks every 0.1 s", function()
 		expect(Config.Tick.Seconds).toBe(0.1)
 	end)

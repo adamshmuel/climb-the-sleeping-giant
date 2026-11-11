@@ -19,6 +19,7 @@ local GiantFx = require(script.Fx.GiantFx)
 local NestPop = require(script.Fx.NestPop)
 local SlamFx = require(script.Fx.SlamFx)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
+local ClimbGate = require(script.Player.ClimbGate)
 local Recovery = require(script.Player.Recovery)
 local RescueFx = require(script.Fx.RescueFx)
 local GrabPrompt = require(script.Hud.GrabPrompt)
@@ -100,6 +101,15 @@ if server then
 	})
 	script.Destroying:Once(function()
 		recovery:destroy()
+	end)
+	-- Only the four wooden ladders climb: everywhere else this device's Humanoid has its Climbing state switched off.
+	local climbGate = ClimbGate.start({
+		localPlayer = Players.LocalPlayer,
+		findLadders = ClimbGate.findLadders,
+		every = ClimbGate.every,
+	})
+	script.Destroying:Once(function()
+		climbGate:destroy()
 	end)
 	-- A lavender puff with gold sparkles hides each rescue, for every player, where they were and where they are now.
 	local rescueFx = RescueFx.start({

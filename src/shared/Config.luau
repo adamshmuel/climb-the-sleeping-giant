@@ -128,6 +128,12 @@ export type Config = {
 	Tick: {
 		Seconds: number,
 	},
+	-- The four wooden ladders (Rule 80): the only places the Climbing state is allowed. Models: names under
+	-- World.WalkSurfaces. NearStuds: how close to a ladder's Climb part a body counts as at it.
+	Ladders: {
+		Models: { string },
+		NearStuds: number,
+	},
 	WaysUp: { WayUpConfig },
 	-- Egg nests: every number of spec 5 section 5 that the nest placement and its checks read (Rules 71 to 82).
 	Nests: {
@@ -285,6 +291,10 @@ local config: Config = {
 		PressChangesPerSecond = 10,
 	},
 	Tick = { Seconds = 0.1 },
+	Ladders = {
+		Models = { "BeardLadder", "CapLadder", "BootLadder_Left", "BootLadder_Right" },
+		NearStuds = 2, -- at walk speed 16 one 0.1 s tick moves 1.6 studs, so 2 is a margin a player can't feel
+	},
 	-- The four ways up from the gardens to the first boot top (Rule 35 and section 5, "The four ways up and their
 	-- gardens"), in garden order. Name: the value of the route points' WayUpFoot and WayUpTop attributes. Gardens: the
 	-- gardens that use it. WalkLimitSeconds: the longest walk from each of those gardens to the way up's foot (one number
