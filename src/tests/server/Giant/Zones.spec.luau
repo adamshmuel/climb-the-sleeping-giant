@@ -118,3 +118,35 @@ describe("Zones.higher", function()
 		expect(Zones.higher("Belly", "Belly")).toBe("Belly")
 	end)
 end)
+
+describe("Zones.locateClimber", function()
+	-- A Boots ladder box (6 wide, 36 tall) whose centre is at (0, 20, 0), and a Belly zone box that holds
+	-- the top pad (centred at (0, 60, 0), 10 on every side).
+	local ladderBoxes: { Zones.LadderBox } = {
+		{ ladder = "TestLadder", zone = "Boots", cframe = CFrame.new(0, 20, 0), size = Vector3.new(6, 36, 6) },
+	}
+	local zoneBoxes = { zoneBox("Belly", Vector3.new(0, 36, 0)) }
+	local gardens = {}
+
+	it("a root in a ladder box, off the ground, is on that ladder in the box's zone when it is higher", function()
+		local point = Vector3.new(0, 10, 0) -- inside the ladder box, outside the Belly box
+		local place, ladder = Zones.locateClimber(point, false, zoneBoxes, gardens, ladderBoxes)
+		expect(place).toEqual({ zone = "Boots", garden = nil })
+		expect(ladder).toBe("TestLadder")
+		expect(Zones.ladderAt(point, ladderBoxes)).toBe(ladderBoxes[1])
+	end)
+
+	it("a root in a ladder box but on the grass is not on a ladder, and stays in the Meadow", function()
+		local point = Vector3.new(0, 10, 0)
+		local place, ladder = Zones.locateClimber(point, true, zoneBoxes, gardens, ladderBoxes)
+		expect(place).toEqual({ zone = "Meadow", garden = nil })
+		expect(ladder).toBeNil()
+	end)
+
+	it("a root on the top pad is not on a ladder, and counts as the pad's zone", function()
+		local point = Vector3.new(0, 36, 0) -- inside both the ladder box and the Belly box
+		local place, ladder = Zones.locateClimber(point, true, zoneBoxes, gardens, ladderBoxes)
+		expect(place).toEqual({ zone = "Belly", garden = nil })
+		expect(ladder).toBeNil()
+	end)
+end)

@@ -9,6 +9,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 export type ZoneBox = { zone: Config.ZoneName, cframe: CFrame, size: Vector3 } -- zone is never "Meadow"
 export type GardenBox = { index: number, cframe: CFrame, size: Vector3 }
 export type Place = { zone: Config.ZoneName, garden: number? }
+export type LadderBox = { ladder: string, zone: Config.ZoneName, cframe: CFrame, size: Vector3 }
 
 -- Higher number = higher on the giant. Where boxes overlap, the highest zone wins.
 local RANK: { [Config.ZoneName]: number } = { Meadow = 0, Boots = 1, Belly = 2, Beard = 3, Nightcap = 4 }
@@ -57,6 +58,36 @@ function Zones.locate(position: Vector3, zoneBoxes: { ZoneBox }, gardens: { Gard
 		return { zone = "Meadow", garden = garden }
 	end
 	return { zone = Zones.zoneAt(position, zoneBoxes), garden = nil }
+end
+
+-- The ladder box that holds a point, or nil. Pure.
+function Zones.ladderAt(position: Vector3, ladderBoxes: { LadderBox }): LadderBox?
+	for _, box in ladderBoxes do
+		if Zones.isInside(position, box.cframe, box.size) then
+			return box
+		end
+	end
+	return nil
+end
+
+-- Where a climber is, and which ladder it is on (nil when on none). The plain place first; a body that is not
+-- standing on ground, inside a ladder box, takes the higher of its place's zone and the box's zone.
+function Zones.locateClimber(
+	position: Vector3,
+	grounded: boolean,
+	zoneBoxes: { ZoneBox },
+	gardens: { GardenBox },
+	ladderBoxes: { LadderBox }
+): (Place, string?)
+	local place = Zones.locate(position, zoneBoxes, gardens)
+	if grounded then
+		return place, nil
+	end
+	local box = Zones.ladderAt(position, ladderBoxes)
+	if box == nil then
+		return place, nil
+	end
+	return { zone = Zones.higher(place.zone, box.zone), garden = place.garden }, box.ladder
 end
 
 return Zones

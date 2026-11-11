@@ -34,23 +34,36 @@ export type Rig = {
 	tracker: PlayerTracker.Tracker,
 	setTime: (seconds: number) -> (),
 	setGrounded: (grounded: boolean) -> (),
+	-- "Standing on ground that isn't a ladder's rungs". Nil (the start) means the same as grounded.
+	setStanding: (standing: boolean?) -> (),
 	-- Take-offs handed out once on the next tick, then none.
 	setTakeoffs: (positions: { Vector3 }) -> (),
 }
 
-function TrackerRig.groundSpeedRig(character: Model): Rig
+-- Ladder boxes for a tracker, if the test wants some. Zone boxes are none unless given.
+export type Boxes = { zoneBoxes: { Zones.ZoneBox }?, ladderBoxes: { Zones.LadderBox }? }
+
+function TrackerRig.groundSpeedRig(character: Model, boxes: Boxes?): Rig
 	local players: { PlayerTracker.PlayerLike } = { { UserId = 1, Character = character } }
 	local time = 0
 	local grounded = false
+	local standing: boolean? = nil
 	local pendingTakeoffs: { Vector3 } = {}
 	local tracker = PlayerTracker.new({
 		getPlayers = function()
 			return players
 		end,
-		zoneBoxes = TrackerRig.noZones,
+		zoneBoxes = if boxes and boxes.zoneBoxes then boxes.zoneBoxes else TrackerRig.noZones,
 		gardens = TrackerRig.noGardens,
+		ladderBoxes = if boxes then boxes.ladderBoxes else nil,
 		isGrounded = function(_character: Model): boolean
 			return grounded
+		end,
+		isStanding = function(_character: Model): boolean
+			if standing == nil then
+				return grounded
+			end
+			return standing
 		end,
 		takeoffs = function(_character: Model): { Vector3 }
 			local handedOut = pendingTakeoffs
@@ -68,6 +81,9 @@ function TrackerRig.groundSpeedRig(character: Model): Rig
 		end,
 		setGrounded = function(value: boolean)
 			grounded = value
+		end,
+		setStanding = function(value: boolean?)
+			standing = value
 		end,
 		setTakeoffs = function(positions: { Vector3 })
 			pendingTakeoffs = positions

@@ -8,7 +8,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 |---|---|---|---|
 | Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☐ not started | |
 | Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier (stands on nothing) | ☑ done | builder / code_lead (full run 3277/1, only the walk-area red) |
-| Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ◐ Steps 1-5 approved 2026-11-11 (8 new tests). The ladder look found climbers resting on the leaning rungs counted as standing (Meadow, silent): Step 6 (`work/p3t3/step6-card.md`, 3 more tests, 11 in all) then the joint full run with Task 9 and a ladder look re-check | builder, code_lead |
+| Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☑ done 2026-11-11: 11 new tests; full run 3395 passed, 1 failed (the standing walk-area red); ladder re-check passed both tries | builder, runner, code_lead |
+| Gardens and ways up (V2 spec 3) | Task 3b: A boot-ladder climb is loud from the first rung | ☐ not started (re-check found the lower `BootLadder_Left` silent; trace first) | builder, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 4a: World prep: the two boot ladders | ☑ done (committed ec95c9b; designer: before and after same or better, 2026-11-04) | builder, code_lead, designer |
 | Gardens and ways up (V2 spec 3) | Task 4b: World prep: the two side ladders and their side pads | removed 2026-11-03 (Adam dropped them) | product |
 | Gardens and ways up (V2 spec 3) | Task 4c: World prep: the two thigh planks | removed 2026-11-03 (Adam dropped them) | product |

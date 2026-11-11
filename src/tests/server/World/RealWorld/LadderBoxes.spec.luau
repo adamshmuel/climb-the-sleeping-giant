@@ -7,7 +7,6 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 local Helpers = require(script.Parent.Helpers)
-local LadderZone = require(script.Parent.LadderZone)
 local realWorld = Helpers.realWorld
 
 -- Plan 3 Task 7 (rules 36, 39, 40, 45): the ladder boxes (World.LadderBoxes) and the reshaped zone boxes, built by
@@ -156,7 +155,11 @@ describe("the real world, ladder boxes and zone boxes", function()
 	end
 
 	local function zoneOf(point: Vector3): string
-		return LadderZone.climberZone(realWorld(), point)
+		-- Off the ground (a climber), so a ladder box raises the zone: the rule in Zones.locateClimber.
+		local world = realWorld()
+		local zoneBoxes = WorldIndex.readZones(world) :: { Zones.ZoneBox }
+		local ladders = WorldIndex.readLadders(world) :: { Zones.LadderBox }
+		return Zones.locateClimber(point, false, zoneBoxes, {}, ladders).zone
 	end
 
 	local function mirror(point: Vector3): Vector3

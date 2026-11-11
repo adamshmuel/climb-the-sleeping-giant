@@ -7,7 +7,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
 local CameraFx = require(game:GetService("StarterPlayer").StarterPlayerScripts.Client.Fx.CameraFx)
 local Helpers = require(script.Parent.Helpers)
-local LadderZone = require(script.Parent.LadderZone)
+local Zones = require(ServerScriptService.Server.Giant.Zones)
 local BODY_PIECES = Helpers.BODY_PIECES
 local locator = Helpers.locator
 local realWorld = Helpers.realWorld
@@ -364,10 +364,12 @@ describe("the real world, zones and extras", function()
 		local world = locator()
 		local spots = standableSpots(world)
 		expect(#spots > 500).toBe(true) -- the grid really found his body
+		local zoneBoxes = WorldIndex.readZones(world) :: { Zones.ZoneBox }
+		local ladders = WorldIndex.readLadders(world) :: { Zones.LadderBox }
 		local misses = {}
 		for _, spot in spots do
-			-- a spot inside a ladder box counts as the climber's zone says (LadderZone, plan 3 Task 7)
-			if LadderZone.climberZone(world, spot) == "Meadow" then
+			-- a spot inside a ladder box counts as the climber's zone says (Zones.locateClimber, off the ground)
+			if Zones.locateClimber(spot, false, zoneBoxes, {}, ladders).zone == "Meadow" then
 				table.insert(misses, string.format("(%d, %d, %d)", spot.X, spot.Y, spot.Z))
 			end
 		end

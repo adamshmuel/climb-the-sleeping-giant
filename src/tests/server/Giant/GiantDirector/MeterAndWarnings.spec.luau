@@ -24,6 +24,19 @@ describe("GiantDirector meter", function()
 		expect(meter(harness)).toBeCloseTo(14.5, 5)
 	end)
 
+	it("makes a climber on a ladder a little louder", function()
+		-- Belly 1.5 x walk 4 x ladder multiplier (Config.Noise.LadderMultiplier) = 7.2 a second, so 0.72 a step,
+		-- minus 0.15 of drain. The same walk off a ladder is 0.6 a step (the first test). Ten steps, because the
+		-- meter reads out to 0.1 and one step's 0.57 would round.
+		local harness = newHarness(10)
+		addPlayer(harness, 1, "Mia")
+		local climber = sample(1, "Belly", true)
+		climber.onLadder = true
+		harness.samples = { climber }
+		stepTimes(harness, 10)
+		expect(meter(harness)).toBeCloseTo(10 + (6 * Config.Noise.LadderMultiplier - 1.5), 5)
+	end)
+
 	it("starts from 0 without going below it", function()
 		local harness = newHarness(0)
 		addPlayer(harness, 1, "Mia")

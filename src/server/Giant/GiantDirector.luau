@@ -350,6 +350,7 @@ function GiantDirector.new(deps: Deps): Director
 								zone = sample.zone,
 								garden = sample.garden,
 								moving = sample.moving,
+								onLadder = sample.onLadder,
 								tiptoe = tiptoeCounts(info, sample.groundSpeed),
 								carrying = info.carrying,
 							}) * dt

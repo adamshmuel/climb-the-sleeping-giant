@@ -702,6 +702,66 @@ function WorldIndex.loadClimbParts(world: Instance): { Ladder }
 	return ladders
 end
 
+-- Reads the ladder boxes in World.LadderBoxes: each part's Ladder (a model in WalkSurfaces with a TrussPart Climb) and
+-- Zone attributes, its place and its size. Problems are listed one per line, like readZones does.
+function WorldIndex.readLadders(world: Instance): ({ Zones.LadderBox }?, { string })
+	local folder = world:FindFirstChild("LadderBoxes")
+	if folder == nil then
+		return nil, { "World is missing LadderBoxes" }
+	end
+	local surfaces = world:FindFirstChild("WalkSurfaces")
+	local boxes: { Zones.LadderBox } = {}
+	local problems: { string } = {}
+	local children = folder:GetChildren()
+	table.sort(children, function(a, b)
+		return a.Name < b.Name
+	end)
+	for _, child in children do
+		if not child:IsA("BasePart") then
+			table.insert(problems, `LadderBoxes.{child.Name} must be a BasePart, not a {child.ClassName}`)
+			continue
+		end
+		local ladder = child:GetAttribute("Ladder")
+		local zone = child:GetAttribute("Zone") :: any
+		if type(ladder) ~= "string" then
+			table.insert(problems, `LadderBoxes.{child.Name} has no Ladder attribute`)
+			continue
+		end
+		if zone == nil then
+			table.insert(problems, `LadderBoxes.{child.Name} has no Zone attribute`)
+			continue
+		end
+		if not table.find(ZONE_NAMES, zone) then
+			table.insert(problems, `LadderBoxes.{child.Name} has an unknown Zone "{zone}"`)
+			continue
+		end
+		local model = if surfaces ~= nil then surfaces:FindFirstChild(ladder) else nil
+		if model == nil then
+			table.insert(problems, `WalkSurfaces is missing the ladder {ladder} (LadderBoxes.{child.Name})`)
+			continue
+		end
+		local climb = model:FindFirstChild("Climb")
+		if climb == nil or not climb:IsA("TrussPart") then
+			table.insert(problems, `WalkSurfaces.{ladder} has no TrussPart Climb (LadderBoxes.{child.Name})`)
+			continue
+		end
+		table.insert(boxes, { ladder = ladder, zone = zone, cframe = child.CFrame, size = child.Size })
+	end
+	if #problems > 0 then
+		return nil, problems
+	end
+	return boxes, {}
+end
+
+-- Same as readLadders, but stops the server with every problem listed (one per line) if the world is wrong.
+function WorldIndex.loadLadders(world: Instance): { Zones.LadderBox }
+	local boxes, problems = WorldIndex.readLadders(world)
+	if boxes == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return boxes
+end
+
 -- Reads the point bounced players turn to look at: the pivot position of World.Giant.SleepEyes (the centre of his face).
 function WorldIndex.readGiantFace(world: Instance): (Vector3?, { string })
 	local giant = world:FindFirstChild("Giant")

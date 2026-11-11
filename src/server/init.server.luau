@@ -203,7 +203,9 @@ local tracker = PlayerTracker.new({
 	end,
 	zoneBoxes = zoneBoxes,
 	gardens = gardenBoxes,
+	ladderBoxes = WorldIndex.loadLadders(world),
 	isGrounded = PlayerTracker.groundedByRay,
+	isStanding = PlayerTracker.standingByRay,
 	takeoffs = function(character: Model)
 		return jumpWatcher:took(character)
 	end,

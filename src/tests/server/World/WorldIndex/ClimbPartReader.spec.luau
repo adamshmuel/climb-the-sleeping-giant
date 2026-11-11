@@ -4,6 +4,7 @@ local Workspace = game:GetService("Workspace")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
+local Zones = require(ServerScriptService.Server.Giant.Zones)
 
 type Ladder = WorldIndex.Ladder
 
@@ -111,6 +112,85 @@ describe("ClimbPartReader", function()
 		for _, name in MODELS do
 			local climb = (surfaces:FindFirstChild(name) :: Instance):FindFirstChild("Climb") :: BasePart
 			expect(climb.CanCollide).toBe(true)
+		end
+	end)
+end)
+
+-- Adds World.LadderBoxes to a fake world: one box per entry, each with the given attributes (a nil one is left off).
+local function addLadderBoxes(world: Folder, entries: { { name: string, ladder: string?, zone: string? } })
+	local folder = Instance.new("Folder")
+	folder.Name = "LadderBoxes"
+	folder.Parent = world
+	for _, entry in entries do
+		local box = Instance.new("Part")
+		box.Name = entry.name
+		box.Size = Vector3.new(6, 6, 36)
+		box.CFrame = CFrame.new(10, 20, 0)
+		box:SetAttribute("Ladder", entry.ladder)
+		box:SetAttribute("Zone", entry.zone)
+		box.Parent = folder
+	end
+end
+
+local function hasLine(problems: { string }, ...: string): boolean
+	for _, line in problems do
+		local all = true
+		for _, part in { ... } do
+			if string.find(line, part, 1, true) == nil then
+				all = false
+			end
+		end
+		if all then
+			return true
+		end
+	end
+	return false
+end
+
+describe("readLadders", function()
+	it("names each missing ladder model, Climb part and attribute", function()
+		local world = makeWorld({ "BeardLadder", "CapLadder", "BootLadder_Left" })
+		-- CapLadder keeps its model but loses its Climb part
+		local capModel = (world:FindFirstChild("WalkSurfaces") :: Instance):FindFirstChild("CapLadder") :: Instance
+		local capClimb = capModel:FindFirstChild("Climb") :: Instance
+		capClimb:Destroy()
+		addLadderBoxes(world, {
+			{ name = "LadderBox_NoLadder", ladder = nil, zone = "Boots" },
+			{ name = "LadderBox_NoZone", ladder = "BeardLadder", zone = nil },
+			{ name = "LadderBox_BadZone", ladder = "BeardLadder", zone = "Attic" },
+			{ name = "LadderBox_NoModel", ladder = "BootLadder_Right", zone = "Boots" },
+			{ name = "LadderBox_NoClimb", ladder = "CapLadder", zone = "Beard" },
+		})
+		local boxes, problems = WorldIndex.readLadders(world)
+		expect(boxes).toBe(nil)
+		expect(#problems).toBe(5)
+		expect(hasLine(problems, "LadderBox_NoLadder", "Ladder")).toBe(true)
+		expect(hasLine(problems, "LadderBox_NoZone", "Zone")).toBe(true)
+		expect(hasLine(problems, "LadderBox_BadZone", "Attic")).toBe(true)
+		expect(hasLine(problems, "BootLadder_Right")).toBe(true)
+		expect(hasLine(problems, "CapLadder", "Climb")).toBe(true)
+		local noFolder = makeWorld(MODELS)
+		local none, noFolderProblems = WorldIndex.readLadders(noFolder)
+		expect(none).toBe(nil)
+		expect(hasLine(noFolderProblems, "LadderBoxes")).toBe(true)
+		world:Destroy()
+		noFolder:Destroy()
+	end)
+
+	it("readLadders finds the 4 real ladder boxes", function()
+		local world = Workspace:FindFirstChild("World") :: Instance
+		local boxes, problems = WorldIndex.readLadders(world)
+		expect(problems).toEqual({})
+		local list = boxes :: { Zones.LadderBox }
+		expect(#list).toBe(4)
+		local folder = world:FindFirstChild("LadderBoxes") :: Instance
+		for _, box in list do
+			local found = folder:FindFirstChild("LadderBox_" .. box.ladder)
+			expect(found).never.toBeNil()
+			local part = found :: BasePart
+			expect(box.zone).toBe(part:GetAttribute("Zone"))
+			expect(box.size).toBe(part.Size)
+			expect(box.cframe).toBe(part.CFrame)
 		end
 	end)
 end)
