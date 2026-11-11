@@ -1,10 +1,8 @@
 --!strict
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
 
-local Config = require(ReplicatedStorage.Shared.Config)
 local ClimbGate = require(StarterPlayer.StarterPlayerScripts.Client.Player.ClimbGate)
 
 type Call = { state: Enum.HumanoidStateType, value: boolean }
@@ -44,14 +42,13 @@ end
 -- Everything a test needs: the stand-in player, the ladder boxes (change `boxes` to move them), and a way to tick.
 local function setup(boxes: { { cframe: CFrame, size: Vector3 } })
 	local me: { Character: any? } = { Character = nil }
-	local run = { tick = nil :: (() -> ())?, stops = 0, seconds = nil :: number? }
+	local run = { tick = nil :: (() -> ())?, stops = 0 }
 	local deps = {
 		localPlayer = me :: any,
 		findLadders = function()
 			return boxes
 		end,
-		every = function(seconds: number, fn: () -> ()): () -> ()
-			run.seconds = seconds
+		eachStep = function(fn: () -> ()): () -> ()
 			run.tick = fn
 			return function()
 				run.stops += 1
@@ -111,9 +108,18 @@ describe("ClimbGate.near", function()
 end)
 
 describe("ClimbGate.start", function()
-	it("ticks every Config.Tick.Seconds", function()
-		local _me, run = setup({})
-		expect(run.seconds).toBe(Config.Tick.Seconds)
+	it("checks before every physics step: a body moved far from the box sends false on the very next step", function()
+		local humanoid = makeHumanoid()
+		local root = { Position = Vector3.new(1 + 1, 0, 0) } -- 1 stud from the box face at x = 1
+		local me, _run, step = setup({ ladderBox() })
+		me.Character = makeCharacter(humanoid, root)
+		step() -- near: true
+		root.Position = Vector3.new(1 + 7.5, 0, 0) -- 7.5 studs from the face
+		step() -- the very next step
+		expect(humanoid.calls).toEqual({
+			{ state = Enum.HumanoidStateType.Climbing, value = true },
+			{ state = Enum.HumanoidStateType.Climbing, value = false },
+		})
 	end)
 
 	it("far from every ladder: the first tick sends false, ten more send nothing", function()

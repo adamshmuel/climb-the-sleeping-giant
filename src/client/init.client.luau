@@ -106,7 +106,7 @@ if server then
 	local climbGate = ClimbGate.start({
 		localPlayer = Players.LocalPlayer,
 		findLadders = ClimbGate.findLadders,
-		every = ClimbGate.every,
+		eachStep = ClimbGate.eachStep,
 	})
 	script.Destroying:Once(function()
 		climbGate:destroy()

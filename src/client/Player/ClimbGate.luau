@@ -1,8 +1,9 @@
 --!strict
 -- Only the four wooden ladders climb (Rule 80). Roblox lets a body climb any TrussPart-like surface it walks into, so this
--- switches the Humanoid's Climbing state off unless the body is within Config.Ladders.NearStuds of a ladder's Climb part.
--- It runs on the device: a state switched off on the server does not reach the client's Humanoid (Humanoid page, checked
--- 2026-11-11).
+-- switches the Humanoid's Climbing state off unless the body is within Config.Ladders.NearStuds of a ladder's Climb
+-- part. It checks before every physics step, so a teleport never leaves climbing on for a step.
+-- It runs on the device: a state switched off on the server does not reach the client's Humanoid (Humanoid page,
+-- checked 2026-11-11).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -16,7 +17,7 @@ export type Box = { cframe: CFrame, size: Vector3 }
 export type Deps = {
 	localPlayer: { Character: any? }, -- the player on this device
 	findLadders: () -> { Box }, -- the real one reads World.WalkSurfaces.<ladder>.Climb for each Config.Ladders.Models name
-	every: (seconds: number, fn: () -> ()) -> () -> (), -- runs fn every `seconds`; returns the function that stops it
+	eachStep: (fn: () -> ()) -> () -> (), -- runs fn before every physics step; returns the function that stops it
 }
 
 export type ClimbGate = {
@@ -69,7 +70,7 @@ function ClimbGate.start(deps: Deps): ClimbGate
 		end
 	end
 
-	trove:Add(deps.every(Config.Tick.Seconds, tick))
+	trove:Add(deps.eachStep(tick))
 
 	local function destroy(_self: ClimbGate)
 		if destroyed then
@@ -99,16 +100,9 @@ function ClimbGate.findLadders(): { Box }
 	return boxes
 end
 
--- The real timer: a Heartbeat that adds up time, and runs fn each time `seconds` have passed.
-function ClimbGate.every(seconds: number, fn: () -> ()): () -> ()
-	local elapsed = 0
-	local connection = RunService.Heartbeat:Connect(function(dt: number)
-		elapsed += dt
-		if elapsed >= seconds then
-			elapsed = 0
-			fn()
-		end
-	end)
+-- The real step hook: PreSimulation fires every frame, before physics runs (RunService page, checked 2026-11-11).
+function ClimbGate.eachStep(fn: () -> ()): () -> ()
+	local connection = RunService.PreSimulation:Connect(fn)
 	return function()
 		connection:Disconnect()
 	end

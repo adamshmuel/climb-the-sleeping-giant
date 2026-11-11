@@ -4,7 +4,7 @@
 -- (no hold: Edit only) CHECK_ONLY = true is the Edit dry run: it counts points, sets nothing, needs no hold.
 -- In Play, held() runs before every point. Nothing is left behind: no bind, the test truss destroyed in a pcall.
 local CHECK_ONLY = true
-local ZONE = "Beard" -- "Beard", "SideL" or "SideR"
+local ZONE = "Beard" -- "Beard", "SideL", "SideR" or "Cup"
 local FIRST, LAST = 1, 160 -- the slice of the zone's points this paste walks
 local SHOW_FROM = 1 -- reading: the first climb row shown (5 rows per read)
 local RERUN = false -- true: walk this slice again (a slice that lost 5 percent or more)
@@ -19,13 +19,13 @@ local MAX_FAR, MAX_BELOW = 20, 3 -- "lost": over 20 studs from the start, or low
 local TRUSS_NAME = "ProbeTestTruss"
 local WALK = "Workspace.World.WalkSurfaces."
 local LADDERS = { "BeardLadder", "CapLadder", "BootLadder_Left", "BootLadder_Right" }
--- Measured in Edit: head_with_beard x -46..46 y 47..119 z -19..61; body_and_cushion x -59..59 y -3..70 z -48..68.
--- Beard: the belly under the beard (holds (-14,67,-14)). Sides: the meadow by the body.
+-- Measured in Edit: head_with_beard x -46..46 y 47..119 z -19..61; body_and_cushion x -59..59 y -3..70 z -48..68. Beard: the belly under the beard (holds (-14,67,-14)). Sides and Cup: the meadow.
 type Zone = { x: { number }, z: { number }, y: { number } }
 local ZONES: { [string]: Zone } = {
 	Beard = { x = { -30, 30 }, z = { -34, -6 }, y = { 40, 80 } },
 	SideL = { x = { -66, -58 }, z = { -60, 40 }, y = { -1, 8 } },
 	SideR = { x = { 58, 66 }, z = { -60, 40 }, y = { -1, 8 } },
+	Cup = { x = { 56, 98 }, z = { 8, 52 }, y = { -1, 8 } },
 }
 type Point = { label: string, feet: Vector3 }
 
