@@ -196,6 +196,10 @@ local jumpWatcher = JumpWatcher.start({
 	rootPosition = JumpWatcher.rootPositionOf,
 })
 
+-- The ladder boxes are read once: the sleep meter tracks them, and the slam rays skip the ladder models they name.
+local ladderBoxes = WorldIndex.loadLadders(world)
+local ladderModels = SlamSurface.ladderParts(world:FindFirstChild("WalkSurfaces") :: Instance, ladderBoxes)
+
 -- The giant's sleep meter: it reads every player's position ten times a second.
 local tracker = PlayerTracker.new({
 	getPlayers = function()
@@ -203,7 +207,7 @@ local tracker = PlayerTracker.new({
 	end,
 	zoneBoxes = zoneBoxes,
 	gardens = gardenBoxes,
-	ladderBoxes = WorldIndex.loadLadders(world),
+	ladderBoxes = ladderBoxes,
 	isGrounded = PlayerTracker.groundedByRay,
 	isStanding = PlayerTracker.standingByRay,
 	takeoffs = function(character: Model)
@@ -357,6 +361,10 @@ local director = GiantDirector.new({
 			if player.Character ~= nil then
 				table.insert(characters, player.Character)
 			end
+		end
+		-- A slam's circle is never drawn on a ladder either (Check C4).
+		for _, model in ladderModels do
+			table.insert(characters, model)
 		end
 		return SlamSurface.below(Workspace, centre, characters)
 	end,

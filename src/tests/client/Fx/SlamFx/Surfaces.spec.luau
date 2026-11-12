@@ -166,6 +166,26 @@ describe("SlamFx.huggableParts and workspaceCastHug", function()
 		expect(hitHeight(scene, 160)).toBeNil()
 	end)
 
+	-- Guard (plan 3 Task 15a): passes when written, because the list only holds the giant, the ramps and the planks. The
+	-- server's slam point skips ladders too (SlamSurface.ladderParts), so the two circles agree on a ladder.
+	it("a ladder model in the world is never in huggableParts, and a ray over it finds the pad", function()
+		local scene = newScene()
+		local walk = scene.world:FindFirstChild("WalkSurfaces") :: Instance
+		add(modelIn(walk, "PadRamp"), "Ramp_Walk", Vector3.new(10, 10, 10), Vector3.new(300, 0, 0)) -- top at 5
+		local ladder = modelIn(walk, "BeardLadder")
+		add(ladder, "Climb", Vector3.new(2, 10, 1), Vector3.new(300, 12, 0), "TrussPart")
+		for step = 1, 3 do
+			add(ladder, "Rung", Vector3.new(2, 0.5, 0.5), Vector3.new(300, 6 + step * 3, 0))
+		end
+		scene.refresh()
+		local list = SlamFx.huggableParts(Workspace, scene.world)
+		for _, instance in list do
+			expect(instance:IsDescendantOf(ladder)).toBe(false)
+		end
+		expect(table.find(list, scene.plank)).never.toBeNil()
+		expect(math.abs((hitHeight(scene, 300) :: number) - 5) < 1e-3).toBe(true)
+	end)
+
 	it("lists the Terrain, the five body parts, the two ramps and the planks, and nothing else", function()
 		local scene = newScene()
 		local list = SlamFx.huggableParts(Workspace, scene.world)

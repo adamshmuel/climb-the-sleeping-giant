@@ -41,4 +41,13 @@ describe("RedCircles.covers", function()
 		-- Asking with an earlier time afterwards finds nothing: the landed circle is gone.
 		expect(circles:covers(Vector3.new(5, 40, 5), 100)).toBe(false)
 	end)
+
+	it("a player high on a ladder is outside the circle on the grass under them", function()
+		local circles = RedCircles.new()
+		-- The circle is drawn on the grass; HEIGHT_LIMIT in Slams.luau is 10, so 24 studs up is out and 8 studs up is in.
+		local grass = Vector3.new(0, 1, 0)
+		circles:add(grass, 110)
+		expect(circles:covers(Vector3.new(0, 25, 0), 100)).toBe(false)
+		expect(circles:covers(Vector3.new(0, 9, 0), 100)).toBe(true)
+	end)
 end)

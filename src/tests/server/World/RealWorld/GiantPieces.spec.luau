@@ -385,6 +385,43 @@ describe("the real world, slam surface", function()
 		expect(withoutBoth.Y).toBeLessThan(withoutRamp.Y)
 	end)
 
+	-- Plan 3 Task 15a: the circle is never drawn on a ladder. 3 points up each real ladder (25%, 50%, 75% of the way
+	-- from its foot to its top, WorldIndex.loadClimbParts) are the places a climber is hit from.
+	-- Guard only: on the real world no axis point's ray hits a ladder part even without ladderParts (15a, measured). SlamSurface.spec tests 1-2 prove the helper matters.
+	it("the ray points under every real ladder are on no ladder part", function()
+		local world = realWorld()
+		local walkSurfaces = (world :: any).WalkSurfaces :: Instance
+		local ignore = SlamSurface.ladderParts(walkSurfaces, WorldIndex.loadLadders(world))
+		local function onLadderPart(point: Vector3): string?
+			for _, model in ignore do
+				for _, part in model:GetDescendants() do
+					-- 0.05 per side: a hit on a ladder face is ~0; CapLadder's foot rests 0.19 off the nose top (measured 15a).
+					if
+						part:IsA("BasePart")
+						and Zones.isInside(point, part.CFrame, part.Size + Vector3.new(0.1, 0.1, 0.1))
+					then
+						return `{model.Name}.{part.Name}`
+					end
+				end
+			end
+			return nil
+		end
+		local problems: { string } = {}
+		local points = 0
+		for _, ladder in WorldIndex.loadClimbParts(world) do
+			for _, fraction in { 0.25, 0.5, 0.75 } do
+				points += 1
+				local centre = ladder.foot:Lerp(ladder.top, fraction)
+				local hit = onLadderPart(SlamSurface.below(Workspace, centre, ignore))
+				if hit ~= nil then
+					table.insert(problems, `{ladder.name} at {fraction}: the point is inside {hit}`)
+				end
+			end
+		end
+		expect(points).toBe(12)
+		expect(problems).toEqual({})
+	end)
+
 	it("falls to the meadow when the giant and the walk surfaces are both ignored", function()
 		local world = realWorld()
 		local giant = (world :: any).Giant :: Model

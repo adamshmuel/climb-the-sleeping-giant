@@ -18,7 +18,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | V2 setups 1 to 7b | `v2/setups.md` | 8 of 8 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
-| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 27 of 40 | ◐ in progress (Tasks 2, 3, 3b, 11, 12b, 13 and 4a to 8f done; 4b to 4d, 10 and 14 removed or merged; still open: 1, 15a to 19) |
+| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 28 of 40 | ◐ in progress (Tasks 2, 3, 3b, 11, 12b, 13, 15a and 4a to 8f done; 4b to 4d, 10 and 14 removed or merged; still open: 1, 15b to 19) |
 | 4. Egg reachability | `v2/egg-reachability.md` | 15 of 22 | ◐ in progress (Tasks 1 to 4b, 6 to 8, 9a to 9d and 10 done; Task 13 split into 13a, 13b, 13c; 13a done; next: plan 5 Task 22, then 13b and 13c; 12 after plan 6 Task 8) |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 49 of 55 (recounted from its progress file on 2026-11-11; 20b added) | ◐ in progress (everything up to 20b done; next: 21b and 23b wait on plan 6; 23a done 2026-11-12; 24 and 25 only if a check needs them) |
 | 6. Wake-up | `v2/wake-up.md` | 1 of 23 | ◐ in progress |
