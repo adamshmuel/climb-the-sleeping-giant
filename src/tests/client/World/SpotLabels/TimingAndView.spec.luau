@@ -97,6 +97,40 @@ describe("SpotLabels: labels never sit under the meter", function()
 	end)
 end)
 
+describe("SpotLabels: labels never sit under the RUN HOME! pill", function()
+	local pill = rect(914, 14, 200, 50)
+
+	it("fades a label that touches the pill's box in 0.15 s, and brings it back once it is clear", function()
+		local screen = newScreen()
+		screen.pill = pill
+		local rig = newRig(screen.view)
+		local spot = rig.addSpot("EggSpot_Common_1", "Common")
+		screen.places["EggSpot_Common_1"] = { rect = rect(1000, 40, 60, 20), distance = 5 }
+		rig.set(spot, "Waiting", true)
+		rig.advance(0.075)
+		expect(seeThrough(rig, spot)).toBeCloseTo(0.5, 3)
+		rig.advance(0.075)
+		expect(seeThrough(rig, spot)).toBeCloseTo(1, 3)
+		-- the pill goes (the egg is home): the label is not hidden any more
+		screen.pill = nil
+		rig.advance(0.1)
+		rig.advance(0.075)
+		rig.advance(0.075)
+		expect(seeThrough(rig, spot)).toBeCloseTo(0, 3)
+	end)
+
+	it("shows a label clear of the pill", function()
+		local screen = newScreen()
+		screen.pill = pill
+		local rig = newRig(screen.view)
+		local spot = rig.addSpot("EggSpot_Common_1", "Common")
+		screen.places["EggSpot_Common_1"] = { rect = rect(1000, 120, 60, 20), distance = 5 }
+		rig.set(spot, "Waiting", true)
+		rig.advance(0.3)
+		expect(seeThrough(rig, spot)).toBe(0)
+	end)
+end)
+
 describe("SpotLabels: labels never stack", function()
 	-- Spec V1 rule "Egg labels never stack": words that touch or nearly touch read as one clipped word, so only the
 	-- nearer label shows.
@@ -322,5 +356,39 @@ describe("SpotLabels.screenView", function()
 		expect(view.meter()).toEqual(rect(1, 2, 3, 4))
 		box = nil
 		expect(view.meter()).toBeNil()
+	end)
+
+	it("passes on the RUN HOME! pill's box, or nothing", function()
+		local box: SpotLabels.Rect? = rect(5, 6, 7, 8)
+		local view = SpotLabels.screenView(
+			fakeCamera,
+			function()
+				return nil
+			end,
+			sizes,
+			function()
+				return box
+			end
+		)
+		expect(view.pill()).toEqual(rect(5, 6, 7, 8))
+		box = nil
+		expect(view.pill()).toBeNil()
+	end)
+end)
+
+describe("SpotLabels.screenRect", function()
+	-- A stand-in for a GuiObject: Roblox only reports these two for it.
+	local function fakeGui(position: Vector2, size: Vector2): GuiObject
+		return { AbsolutePosition = position, AbsoluteSize = size } :: any
+	end
+
+	it("adds the top bar's inset to where the object reports itself", function()
+		-- The pill in Play B reported (560, -46) and the top bar is 58 high: it really sits at y 12.
+		local box = SpotLabels.screenRect(fakeGui(Vector2.new(560, -46), Vector2.new(160, 38)), Vector2.new(0, 58))
+		expect(box).toEqual(rect(560, 12, 160, 38))
+	end)
+
+	it("gives nothing for an object that is not drawn yet (no size)", function()
+		expect(SpotLabels.screenRect(fakeGui(Vector2.new(5, 5), Vector2.new(0, 0)), Vector2.new(0, 58))).toBeNil()
 	end)
 end)

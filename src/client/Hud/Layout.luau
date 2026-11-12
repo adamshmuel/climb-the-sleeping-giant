@@ -147,6 +147,22 @@ export type Caught = {
 	secondTextSize: number, -- "The egg went back. You lost nothing else."
 }
 
+-- The red "RUN HOME!" pill at the top, right of the sleep meter (style guide wake-up.md, "RUN HOME!" and "Where RUN HOME!
+-- sits"; mockup wake-hud.html: #runhome). Sizes in pixels; the pill is a fixed size so its box is known without drawing it.
+export type RunHomePill = {
+	width: number,
+	height: number,
+	leftGap: number, -- from the meter's right edge to the pill's left edge
+	topOffset: number, -- from the top of the screen to the pill's top edge
+	borderThickness: number, -- the Ink outline
+	shadowOffset: number, -- how far the Ink shadow shows under the pill
+	textSize: number, -- "RUN HOME!"
+	textOutline: number, -- the Ink outline round the words
+	emojiTextSize: number, -- the runner picture
+	gap: number, -- between the picture and the words
+	tilt: number, -- degrees (negative: the right side is higher)
+}
+
 -- One Z of the Z Z Z on the sleep meter (style guide: meter-zs.md). `dx` and `dy` are points from the meter's right
 -- edge and its top edge to the corner of the letter's text box; `height` is the letter's own height.
 export type ZLetter = {
@@ -174,6 +190,7 @@ export type Screen = {
 	card: Card,
 	banner: Banner,
 	caught: Caught,
+	runHome: RunHomePill,
 	zs: Zs,
 }
 
@@ -449,6 +466,40 @@ table.freeze(phoneBanner)
 table.freeze(computerCaught)
 table.freeze(phoneCaught)
 
+-- The values are the style guide's (wake-up.md lines 39 to 44): 34 px words on a computer and 20 px on a phone, a 4 px
+-- outline and 5 px shadow (phone 3 and 3), turned -2 degrees, level with the meter, 14 px from the top (phone 12) and
+-- 14 px right of the meter (phone 10). The width and height fit the picture, the words and the mockup's padding (6 px
+-- above and below, 14 px left, 22 px right), and are scaled like the phone's other pieces.
+local computerRunHome: RunHomePill = {
+	width = 270,
+	height = 60,
+	leftGap = 14,
+	topOffset = 14,
+	borderThickness = 4,
+	shadowOffset = 5,
+	textSize = 34,
+	textOutline = 3,
+	emojiTextSize = 36,
+	gap = 8,
+	tilt = -2,
+}
+
+local phoneRunHome: RunHomePill = {
+	width = 160,
+	height = 38,
+	leftGap = 10,
+	topOffset = 12,
+	borderThickness = 3,
+	shadowOffset = 3,
+	textSize = 20,
+	textOutline = 2,
+	emojiTextSize = 21,
+	gap = 5,
+	tilt = -2,
+}
+table.freeze(computerRunHome)
+table.freeze(phoneRunHome)
+
 -- The values are the style guide's (meter-zs.md, "Where", "Size" and "Heavy Sleep"): (dx, dy, letter height).
 -- The top Z sits 5 points lower than the mockup so it stays on screen at the top of its 8-point rise (plan 4 Task 13d).
 local function letters(rows: { { number } }): { ZLetter }
@@ -516,6 +567,7 @@ function Layout.forScreen(screenSize: Vector2): Screen
 		card = if phone then phoneCard else computerCard,
 		banner = if phone then phoneBanner else computerBanner,
 		caught = if phone then phoneCaught else computerCaught,
+		runHome = if phone then phoneRunHome else computerRunHome,
 		zs = if phone then phoneZs else computerZs,
 	}
 end

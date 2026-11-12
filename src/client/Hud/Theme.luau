@@ -121,6 +121,15 @@ Theme.bannerRedMainAt = 0.55
 Theme.slamGold = Color3.fromHex("FFC93C")
 Theme.slamRed = Color3.fromHex("E0233A")
 
+-- The "RUN HOME!" pill's fill: the wake banner's red, light at the top and dark at the bottom (style guide wake-up.md:
+-- "#FF7A86 to #C4142A"; mockup wake-hud.html: #runhome).
+Theme.runHome = {
+	fillTop = Theme.bannerRedLight,
+	fillMiddle = Theme.bannerRed,
+	fillBottom = Theme.bannerRedDark,
+	middleAt = Theme.bannerRedMainAt,
+}
+
 -- The white marks on the bar at 60% and 85%.
 Theme.tickColor = Color3.new(1, 1, 1)
 Theme.tickTransparency = 0.2

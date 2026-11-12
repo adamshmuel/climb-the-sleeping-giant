@@ -349,3 +349,32 @@ describe("SpotLabels: where the screen is told the label is", function()
 		)
 	end)
 end)
+
+-- Spec 6 section 5 ("Egg words near RUN HOME!"): a word that touches the pill fades exactly as for the meter.
+describe("SpotLabels.pickShown: labels never sit under the RUN HOME! pill", function()
+	local meter = rect(500, 16, 400, 54) -- 500 to 900 across, 16 to 70 down
+	local pill = rect(914, 14, 200, 50) -- 14 px right of the meter, 914 to 1114 across, 14 to 64 down
+
+	it("hides a label that touches the pill's box", function()
+		local shown = SpotLabels.pickShown({
+			candidate(1, rect(1000, 40, 60, 20), NEAR), -- overlaps the pill
+			candidate(2, rect(854, 30, 60, 20), NEAR), -- its right edge is the pill's left edge
+		}, meter, pill)
+		expect(shown[1]).toBe(false)
+		expect(shown[2]).toBe(false)
+	end)
+
+	it("shows a label that is clear of the pill's box", function()
+		local shown = SpotLabels.pickShown({
+			candidate(1, rect(1000, 100, 60, 20), NEAR), -- below the pill
+			candidate(2, rect(1200, 30, 60, 20), NEAR), -- to the right of it
+		}, meter, pill)
+		expect(shown[1]).toBe(true)
+		expect(shown[2]).toBe(true)
+	end)
+
+	it("with no pill, a label where the pill would be still shows", function()
+		local shown = SpotLabels.pickShown({ candidate(1, rect(1000, 40, 60, 20), NEAR) }, meter, nil)
+		expect(shown[1]).toBe(true)
+	end)
+end)

@@ -163,6 +163,7 @@ type FakeScreen = {
 	view: SpotLabels.View,
 	places: { [string]: { rect: SpotLabels.Rect, distance: number } },
 	meter: SpotLabels.Rect?,
+	pill: SpotLabels.Rect?, -- the RUN HOME! pill's box, or nothing
 	calls: number, -- how many times a label was measured
 	measured: { [string]: number }, -- how many times each spot's label was measured
 	centres: { [string]: Vector3 }, -- where each spot's label was said to be centred, in the world, at its last measuring
@@ -172,6 +173,7 @@ local function newScreen(): FakeScreen
 	local screen: FakeScreen = {
 		places = {},
 		meter = nil,
+		pill = nil,
 		calls = 0,
 		measured = {},
 		centres = {},
@@ -191,6 +193,9 @@ local function newScreen(): FakeScreen
 		end,
 		meter = function()
 			return screen.meter
+		end,
+		pill = function()
+			return screen.pill
 		end,
 	}
 	return screen

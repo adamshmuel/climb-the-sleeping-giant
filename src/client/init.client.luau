@@ -27,9 +27,11 @@ local Recovery = require(script.Player.Recovery)
 local RescueFx = require(script.Fx.RescueFx)
 local GrabPrompt = require(script.Hud.GrabPrompt)
 local Messages = require(script.Hud.Messages)
+local HuntView = require(script.Hud.HuntView)
 local Layout = require(script.Hud.Layout)
 local MeterZs = require(script.Hud.MeterZs)
 local MeterZsView = require(script.Hud.MeterZsView)
+local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
@@ -161,8 +163,25 @@ if server then
 		end,
 	})
 	script.Destroying:Once(meterZs.destroy)
+	-- The red RUN HOME! pill right of the meter (spec 6 Rule 67). HuntView says when it shows, from the giant's phase and
+	-- this player's own attributes; each change of one of them asks again (no polling). The meter says where it sits.
+	local runHome = RunHome.new(Ui.hudTop(playerGui))
+	local runHomeScreen: Layout.Screen? = nil
+	local runHomeShown = false
+	local stopRunHome = HuntView.watch(server.GiantState, Players.LocalPlayer, function(view: HuntView.View)
+		runHomeShown = view.runHome
+		runHome.setShown(view.runHome)
+	end)
+	script.Destroying:Once(function()
+		stopRunHome()
+		runHome.destroy()
+	end)
 	SleepMeterUi.start({
-		onLayout = meterZs.place,
+		onLayout = function(screen: Layout.Screen, meterRight: number)
+			meterZs.place(screen, meterRight)
+			runHomeScreen = screen
+			runHome.place(screen, meterRight)
+		end,
 		parent = playerGui,
 		giantState = server.GiantState,
 		warning = { OnClientEvent = server.Warning.OnClientEvent },
@@ -350,7 +369,9 @@ if server then
 		-- The rarity names over waiting eggs (an empty spot shows nothing, Rule 77). A rarity name fades while it
 		-- overlaps a nearer one, touches the sleep meter or reaches past the top of the screen. The meter's box is read
 		-- in the same pixels the world is projected into: the meter's screen reports positions from just below the top
-		-- bar, so the bar's height is added back.
+		-- bar, so the bar's height is added back (SpotLabels.screenRect). The pill's box is read the same way while it
+		-- shows, widened to what it paints (RunHome.paintedBox: the tilt turns it about its centre, and its outline
+		-- and shadow reach past it).
 		SpotLabels.start({
 			parent = playerGui,
 			root = eggSpots,
@@ -358,23 +379,31 @@ if server then
 				return Workspace:GetServerTimeNow()
 			end,
 			step = RunService.RenderStepped,
-			view = SpotLabels.screenView(function()
-				return Workspace.CurrentCamera
-			end, function(): SpotLabels.Rect?
-				local hudTop = playerGui:FindFirstChild("HudTop")
-				local meter = if hudTop then hudTop:FindFirstChild("SleepMeter") else nil
-				local panel = if meter then meter:FindFirstChild("Panel") else nil
-				if panel == nil or not panel:IsA("GuiObject") or panel.AbsoluteSize.X <= 0 then
-					return nil
+			view = SpotLabels.screenView(
+				function()
+					return Workspace.CurrentCamera
+				end,
+				function(): SpotLabels.Rect?
+					local hudTop = playerGui:FindFirstChild("HudTop")
+					local meter = if hudTop then hudTop:FindFirstChild("SleepMeter") else nil
+					local panel = if meter then meter:FindFirstChild("Panel") else nil
+					if panel == nil or not panel:IsA("GuiObject") then
+						return nil
+					end
+					return SpotLabels.screenRect(panel, GuiService:GetGuiInset())
+				end,
+				nil,
+				function(): SpotLabels.Rect?
+					local hudTop = playerGui:FindFirstChild("HudTop")
+					local pill = if hudTop then hudTop:FindFirstChild("RunHome") else nil
+					local screen = runHomeScreen
+					if pill == nil or not pill:IsA("GuiObject") or screen == nil or not runHomeShown then
+						return nil
+					end
+					local box = SpotLabels.screenRect(pill, GuiService:GetGuiInset())
+					return if box then RunHome.paintedBox(box, screen) else nil
 				end
-				local inset = GuiService:GetGuiInset()
-				return {
-					x = panel.AbsolutePosition.X + inset.X,
-					y = panel.AbsolutePosition.Y + inset.Y,
-					width = panel.AbsoluteSize.X,
-					height = panel.AbsoluteSize.Y,
-				}
-			end),
+			),
 		})
 		-- When an empty nest gets its egg back, the egg grows in and gold stars rise (Rule 77). The stars are the
 		-- RefillPop part the place holds; without it only the grow-in plays. Reduce Motion drops the grow-in and

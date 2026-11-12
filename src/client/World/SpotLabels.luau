@@ -12,7 +12,7 @@
 -- the meter"). About ten times a second, every rarity label that is drawn gets a rectangle on this screen (the drawn
 -- words). A rarity label fades out over 0.15 s, and back in over 0.15 s once it is clear, when:
 --   * its words overlap the words of a nearer rarity label that is showing (only the nearest egg's label shows);
---   * its words touch the sleep meter's box, or reach past the top edge of the screen.
+--   * its words touch the sleep meter's box, or the RUN HOME! pill's box, or reach past the top edge of the screen.
 -- The eggs themselves are never touched.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -53,10 +53,11 @@ export type CameraLike = {
 -- What the screen knows. `words`: the rectangle of a label's words and its real distance from the camera, or nothing
 -- when the label is behind the camera or not drawn yet. A far label still gets its rectangle: Roblox culls a billboard
 -- by depth along the look, not by real distance, so `pickShown` hides what is past the range. `meter`: the sleep
--- meter's box, or nothing.
+-- meter's box, or nothing. `pill`: the RUN HOME! pill's box, or nothing (it is only there while the pill shows).
 export type View = {
 	words: (gui: BillboardGui, text: TextLabel, centre: Vector3) -> (Rect?, number?),
 	meter: () -> Rect?,
+	pill: () -> Rect?,
 }
 
 export type Deps = {
@@ -122,18 +123,19 @@ local function overlaps(a: Rect, b: Rect, gap: number): boolean
 		and b.y < a.y + a.height + gap
 end
 
--- True when the rectangles share some area or touch, because a word half under the meter looks broken.
+-- True when the rectangles share some area or touch, because a word half under the meter or the pill looks broken.
 local function touches(a: Rect, b: Rect): boolean
 	return a.x <= b.x + b.width and b.x <= a.x + a.width and a.y <= b.y + b.height and b.y <= a.y + a.height
 end
 
 -- Which rarity labels show. Each label is hidden when it is farther than MAX_DISTANCE (Rule 52), its rectangle touches
--- the meter's box (`meter`, nil when there is none) or reaches past the top edge of the screen (y below 0). Of the
--- others, the nearest to the camera comes first, and a label shows unless it overlaps one that already shows. A label
--- hidden by the range, the meter or the top edge takes no part, so it never hides another. Equal distances go by id,
--- so the answer never depends on the order of the list.
+-- the meter's box (`meter`, nil when there is none), touches the RUN HOME! pill's box (`pill`, nil when it is hidden)
+-- or reaches past the top edge of the screen (y below 0). Of the others, the nearest to the camera comes first, and a
+-- label shows unless it overlaps one that already shows. A label hidden by the range, the meter, the pill or the top
+-- edge takes no part, so it never hides another. Equal distances go by id, so the answer never depends on the order of
+-- the list.
 -- Returns, for every id given, true when it shows and false when it hides.
-function SpotLabels.pickShown(candidates: { Candidate }, meter: Rect?): { [number]: boolean }
+function SpotLabels.pickShown(candidates: { Candidate }, meter: Rect?, pill: Rect?): { [number]: boolean }
 	local answer: { [number]: boolean } = {}
 	local ranked: { Candidate } = {}
 	for _, candidate in candidates do
@@ -141,6 +143,7 @@ function SpotLabels.pickShown(candidates: { Candidate }, meter: Rect?): { [numbe
 			candidate.distance > MAX_DISTANCE
 			or candidate.rect.y < 0
 			or (meter ~= nil and touches(candidate.rect, meter))
+			or (pill ~= nil and touches(candidate.rect, pill))
 		then
 			answer[candidate.id] = false
 		else
@@ -196,9 +199,27 @@ local function drawnSizes(gui: BillboardGui, text: TextLabel): Sizes?
 	return { billboard = billboard, box = box, words = text.TextBounds }
 end
 
+-- Where a GuiObject really is on the screen, in the pixels the world is projected into: the position and size Roblox
+-- reports for it, with the top bar's `inset` added back (a ScreenGui that ignores the top bar reports from just below
+-- it). Nothing before its first frame, when Roblox reports 0 wide. Rotation is not in these numbers.
+function SpotLabels.screenRect(gui: GuiObject, inset: Vector2): Rect?
+	local size = gui.AbsoluteSize
+	if size.X <= 0 then
+		return nil
+	end
+	local position = gui.AbsolutePosition
+	return { x = position.X + inset.X, y = position.Y + inset.Y, width = size.X, height = size.Y }
+end
+
 -- The real screen: `getCamera` gives the camera (nil when there is none), `getMeter` the meter's box in screen pixels
--- (nil when there is none). `readSizes` is for tests; the real one reads what Roblox is drawing.
-function SpotLabels.screenView(getCamera: () -> CameraLike?, getMeter: () -> Rect?, readSizes: SizesReader?): View
+-- (nil when there is none), `getPill` the RUN HOME! pill's box (nil when it is hidden; without a getter there is never
+-- one). `readSizes` is for tests; the real one reads what Roblox is drawing.
+function SpotLabels.screenView(
+	getCamera: () -> CameraLike?,
+	getMeter: () -> Rect?,
+	readSizes: SizesReader?,
+	getPill: (() -> Rect?)?
+): View
 	local read: SizesReader = drawnSizes
 	if readSizes ~= nil then
 		read = readSizes
@@ -222,6 +243,9 @@ function SpotLabels.screenView(getCamera: () -> CameraLike?, getMeter: () -> Rec
 				distance
 		end,
 		meter = getMeter,
+		pill = function(): Rect?
+			return if getPill then getPill() else nil
+		end,
 	}
 end
 
@@ -412,7 +436,7 @@ function SpotLabels.start(deps: Deps): () -> ()
 				end
 			end
 		end
-		local shown = SpotLabels.pickShown(candidates, view.meter())
+		local shown = SpotLabels.pickShown(candidates, view.meter(), view.pill())
 		for _, entry in entries do
 			entry.hide = shown[entry.id] == false
 		end
