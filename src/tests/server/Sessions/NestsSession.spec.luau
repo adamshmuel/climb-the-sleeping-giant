@@ -1,8 +1,9 @@
 --!strict
 -- A whole session with egg nests for one brand-new player (plan 5, Task 21; .claude/rules/tdd.md, "Whole-session
--- tests"). The real Config, EggSlots (inside Grab), Grab, Banking and GrabRig's fakes run together. Stand-ins: the
--- tracker (the test says where the player stands every tick), the hold prompts, the clock and a random that always
--- picks the first allowed nest. Fake nests sit in a row along x (see NESTS).
+-- tests"). The real Config, EggSlots (inside Grab), Grab, Banking and GrabRig's fakes run together; test B adds the
+-- real GiantDirector, Catcher, Noise and SleepMeter. Stand-ins: the tracker (the test says where the player stands
+-- and in which zone every tick), the hold prompts, the clock and a random that always picks the first allowed nest.
+-- Fake nests sit in a row along x (see NESTS).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
@@ -10,9 +11,14 @@ local describe, it, expect, afterAll = JestGlobals.describe, JestGlobals.it, Jes
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Banking = require(ServerScriptService.Server.Eggs.Banking)
+local Catcher = require(ServerScriptService.Server.Giant.Catcher)
+local GiantDirector = require(ServerScriptService.Server.Giant.GiantDirector)
 local Grab = require(ServerScriptService.Server.Eggs.Grab)
+local Noise = require(ServerScriptService.Server.Giant.Noise)
 local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
+local SleepMeter = require(ServerScriptService.Server.Giant.SleepMeter)
 local WorldIndex = require(ServerScriptService.Server.World.WorldIndex)
+local GiantRig = require(script.Parent.GiantRig)
 local GrabRig = require(script.Parent.Parent.Eggs.GrabRig)
 
 type Rank = Config.RarityName
@@ -43,6 +49,7 @@ type RefillLine = { rank: Rank, waited: number, tick: number, nest: string? }
 
 type Session = {
 	player: any,
+	players: any, -- the fake Players service
 	grab: Grab.Grab,
 	banking: Banking.Banking,
 	spots: { WorldIndex.EggSpot },
@@ -55,6 +62,16 @@ type Session = {
 	eggsAtLastTick: { [string]: boolean }, -- which nests showed an egg at the end of the last tick
 	lastNest: { [string]: string }, -- the nest each rank's last egg was taken from
 	carriedFrom: string?, -- the nest of the egg the player carries now
+	zone: Config.ZoneName, -- the zone the tracker reports for the player
+	moving: boolean, -- does the tracker say the player walks?
+	-- Test B only (startGiant): the giant's state folder, the director and catcher, what the catcher took, the tick of
+	-- the last fist, and the nests a catch put an egg back on this tick (a returned egg is not a refill).
+	state: Folder?,
+	director: GiantDirector.Director?,
+	catcher: Catcher.Catcher?,
+	caught: { Rank },
+	fistTick: number?,
+	returnedNow: { [string]: boolean },
 }
 
 local cleanups: { () -> () } = {}
@@ -177,9 +194,9 @@ local function sampleOf(s: Session): Sample
 	return {
 		userId = USER_ID,
 		position = rootOf(s).Position,
-		moving = false,
-		groundSpeed = 0,
-		zone = "Meadow",
+		moving = s.moving,
+		groundSpeed = if s.moving then Config.Movement.WalkSpeed else 0,
+		zone = s.zone,
 		garden = s.garden,
 		thudFrom = nil,
 		falling = false,
@@ -188,13 +205,21 @@ local function sampleOf(s: Session): Sample
 	}
 end
 
--- One 0.1 s step: the clock moves, Grab checks its refills, Banking reads where the player stands, the checks run.
+-- One 0.1 s step: the clock moves, the giant (test B) reads the player, Grab checks its locks and refills, Banking
+-- reads where the player stands, the checks run.
 local function tick(s: Session)
 	local before = table.clone(s.eggsAtLastTick)
 	local logBefore = #s.refillLog
 	s.ticks += 1
+	if s.director ~= nil then
+		s.director:step()
+	end
 	s.grab:step()
 	s.banking:check({ sampleOf(s) })
+	for name in s.returnedNow do
+		before[name] = true
+	end
+	table.clear(s.returnedNow)
 	checkSession(s, before, logBefore)
 end
 
@@ -255,7 +280,8 @@ local function newSession(): Session
 			return clockOf(s)
 		end,
 		phase = function(): Config.Phase
-			return "Asleep"
+			local state = s.state
+			return if state ~= nil then state:GetAttribute("Phase") :: Config.Phase else "Asleep"
 		end,
 		random = firstChoice :: any,
 		createPrompt = function(anchor: Attachment, _rank: Rank): any
@@ -268,6 +294,7 @@ local function newSession(): Session
 	local banking = Banking.start({ grab = grab, players = players :: any })
 	s = {
 		player = player,
+		players = players,
 		grab = grab,
 		banking = banking,
 		spots = spots,
@@ -280,7 +307,22 @@ local function newSession(): Session
 		eggsAtLastTick = {},
 		lastNest = {},
 		carriedFrom = nil,
+		zone = "Meadow",
+		moving = false,
+		state = nil,
+		director = nil,
+		catcher = nil,
+		caught = {},
+		fistTick = nil,
+		returnedNow = {},
 	}
+	grab.returned:Connect(function(_who: any, rank: Rank, _why: string)
+		for _, spot in spots do
+			if spot.rarity == rank and hasEgg(spot) and not s.eggsAtLastTick[spot.name] then
+				s.returnedNow[spot.name] = true
+			end
+		end
+	end)
 	banking.banked:Connect(function(_who: any, rank: Rank)
 		table.insert(s.banked, rank)
 	end)
@@ -335,6 +377,55 @@ local function bankAtGarden(s: Session): Rank
 	return s.banked[#s.banked]
 end
 
+-- Test B: starts the real giant (GiantRig). A catch puts the tracker stand-in back in the garden, as the tracker would.
+local function startGiant(s: Session)
+	local rig = GiantRig.start({
+		player = s.player,
+		service = s.players,
+		sample = function()
+			return sampleOf(s)
+		end,
+		now = function()
+			return clockOf(s)
+		end,
+		grab = s.grab,
+		plot = PLOT,
+		home = HOME,
+		onCaught = function(rank: string)
+			table.insert(s.caught, rank :: Rank)
+			s.garden, s.zone, s.moving = PLOT, "Meadow", false
+		end,
+		onFist = function()
+			s.fistTick = s.ticks
+		end,
+	})
+	s.state, s.director, s.catcher = rig.state, rig.director, rig.catcher
+	table.insert(cleanups, rig.stop)
+end
+
+local function meterOf(s: Session): number
+	return (s.state :: Folder):GetAttribute("Meter") :: number
+end
+
+local function phaseOf(s: Session): string
+	return (s.state :: Folder):GetAttribute("Phase") :: string
+end
+
+-- The meter after `ticks` ticks should have risen by the Belly walk noise (carrying `rank`, or nothing) minus the
+-- solo drain. Noise, SleepMeter and Config give the rate; the rounding to 0.1 at both ends is the margin.
+local function expectMeterRise(s: Session, rank: Rank?, ticks: number)
+	local noise = Noise.perSecond({ zone = "Belly", garden = nil, moving = true, tiptoe = false, carrying = rank })
+	local perTick = (noise - SleepMeter.drainPerSecond(1)) * Config.Tick.Seconds
+	local from = meterOf(s)
+	for _ = 1, ticks do
+		tick(s)
+	end
+	local risen = meterOf(s) - from
+	if math.abs(risen - perTick * ticks) > 0.11 then
+		fail(s, `meter rose {risen} in {ticks} ticks, Belly rate says {perTick * ticks} (carrying {rank})`)
+	end
+end
+
 describe("NestsSession", function()
 	it("A: a new player banks a Common, an Uncommon and a Rare, and each refills where the rules say", function()
 		local s = newSession()
@@ -384,4 +475,95 @@ describe("NestsSession", function()
 		expect(table.concat(s.banked, ",")).toBe("Common,Uncommon,Rare")
 		expect(#s.refillLog).toBe(3)
 	end)
+
+	it(
+		"B: the right-cuff Epic wakes him, a catch sends it back to a locked nest, and it opens after he sleeps",
+		function()
+			local s = newSession()
+			startGiant(s)
+			local cuff = s.spotByName.Epic_RightCuff
+			-- A Rare first: the player is no longer new, so the full meter wakes him instead of a free save.
+			grabAt(s, "Rare_1")
+			expect(bankAtGarden(s)).toBe("Rare")
+			expect(s.player:GetAttribute("RareHome")).toBe(true)
+
+			-- The cuff is on his body: every step there counts as Belly (the zone the tracker stand-in reports).
+			s.zone, s.moving = "Belly", true
+			expect(Noise.perSecond({ zone = "Belly", garden = nil, moving = true, tiptoe = false })).toBeGreaterThan(
+				Noise.perSecond({ zone = "Meadow", garden = nil, moving = true, tiptoe = false })
+			)
+			rootOf(s).Position = cuff.promptAnchor.WorldPosition + Vector3.new(3, 0, 0)
+			s.garden = nil
+			tick(s) -- the first tick from 0 only adds noise: the drain has nothing to take
+			expectMeterRise(s, nil, 20)
+			grabAt(s, "Epic_RightCuff")
+			expectMeterRise(s, "Epic", 10)
+
+			-- Carrying the Epic, walking on: the meter fills and he wakes.
+			for _ = 1, 300 do
+				tick(s)
+				if phaseOf(s) == "Awake" then
+					break
+				end
+			end
+			if phaseOf(s) ~= "Awake" then
+				fail(s, `meter {meterOf(s)} after 30 s: he never woke`)
+			end
+			expect((s.state :: Folder):GetAttribute("WokenBy")).toBe("Mia")
+			s.moving = false
+
+			-- The first slam is aimed at the carrier and catches them: the egg is back on its own nest, which stays locked.
+			for _ = 1, 100 do
+				if #s.caught > 0 then
+					break
+				end
+				tick(s)
+			end
+			if #s.caught ~= 1 or s.caught[1] ~= "Epic" then
+				fail(s, `caught {table.concat(s.caught, ",")} (wanted one Epic) while {phaseOf(s)}`)
+			end
+			expect(hasEgg(cuff)).toBe(true)
+			expect(s.prompts.Epic_RightCuff.Enabled).toBe(false)
+			expect(s.player:GetAttribute("Carrying")).toBe(nil)
+			local home = rootOf(s).Position
+			expect(math.sqrt((home.X - HOME.X) ^ 2 + (home.Z - HOME.Z) ^ 2)).toBeLessThan(0.5)
+			expect(#refillLog(s, "Epic")).toBe(0)
+
+			-- The wake-up runs. The nest opens a set time after he leaves Awake, and a set time after the last fist,
+			-- whichever is later (Grab.updateCuffLock: Config.Nests.UnlockSeconds and ArmReturnSeconds). Checked one tick
+			-- before and one tick after that tick, so the float edge never decides.
+			for _ = 1, 300 do
+				tick(s)
+				if phaseOf(s) ~= "Awake" then
+					break
+				end
+			end
+			expect(phaseOf(s)).toBe("HeavySleep")
+			local sleepTick = s.ticks
+			tick(s) -- a fist may land on the same tick he leaves Awake: read the last fist after it
+			local unlockTick = math.max(
+				sleepTick + math.round(Config.Nests.UnlockSeconds * TICKS_PER_SECOND),
+				(s.fistTick :: number) + math.round(Config.Nests.ArmReturnSeconds * TICKS_PER_SECOND)
+			)
+			while s.ticks < unlockTick - 1 do
+				tick(s)
+			end
+			if s.prompts.Epic_RightCuff.Enabled ~= false then
+				fail(s, `cuff nest open at tick {s.ticks}, locked until {unlockTick} (he left Awake at {sleepTick})`)
+			end
+			tick(s)
+			tick(s)
+			if s.prompts.Epic_RightCuff.Enabled ~= true then
+				fail(s, `cuff nest still locked at tick {s.ticks}, open from {unlockTick} (fist {s.fistTick})`)
+			end
+
+			-- Take it again and bank it.
+			s.zone = "Belly"
+			grabAt(s, "Epic_RightCuff")
+			expect(bankAtGarden(s)).toBe("Epic")
+			expect(table.concat(s.banked, ",")).toBe("Rare,Epic")
+			expect(s.player:GetAttribute("EggsHome")).toBe(2)
+			expect(#s.caught).toBe(1)
+		end
+	)
 end)
