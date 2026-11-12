@@ -72,7 +72,8 @@ export type Deps = {
 	banked: SignalLike, -- Banking's signal: (player, rarity) after EggsHome went up
 	caught: SignalLike, -- Catcher's signal: (player, rarity of the lost egg)
 	woke: SignalLike, -- the director's signal: (display name, waker's UserId or nil, cause)
-	slammed: SignalLike, -- the director's signal: (UserId the slam was aimed at or nil, UserIds it caught) as the hand lands
+	slammed: SignalLike, -- the director's signal: (UserId the slam was aimed at or nil, target kind, UserIds it caught, UserIds it bonked) as the hand lands
+	bonked: SignalLike, -- Bonker's signal: (player) when a bonk starts
 	saved: SignalLike, -- the director's signal: (UserId, zone) when a player's free save is spent
 	returned: SignalLike, -- Grab's signal: (player, rarity, "Caught" or "Lost") when a carried egg goes back
 	unstuck: SignalLike, -- Recovery's signal: (player, how, zone) just before a rescue, a Reset on the giant or a loop send home
@@ -125,7 +126,9 @@ local LEFT_GARDEN_STUDS = 10
 --   "PlayerCaught":   CustomField01 = the lost egg's rarity (no other slot).
 --   "GiantWoke":      CustomField01 = the server size ("1", "2-4" or "5-8"), CustomField02 = what filled the meter,
 --                     CustomField03 = who woke him ("New" = no Rare home yet, "Veteran", or "Nobody" if nobody can be named).
---   "Slam":           CustomField01 = the result ("Caught", "Missed" or "Empty"), CustomField02 = the server size.
+--   "Slam":           CustomField01 = the result ("Caught", "Bonked", "Missed" or "Empty"), CustomField02 = the server size,
+--                     CustomField03 = what the hand was aimed at (the target kind), valued at the number caught.
+--   "Bonked":         CustomField01 = the server size (no other slot), valued 1, one per bonked player.
 --   "FreeSaveUsed":   CustomField01 = where ("Boots", "Belly" or "Higher"; "Meadow" would be a bug), CustomField02 = the
 --                     player's eggs home ("0", "1" or "2+"), CustomField03 = the egg they carried ("None" or its rarity).
 --   "FreeSaveResult": CustomField01 = how that egg's heist ended ("Home", "Woke him", "Caught" or "Lost"), valued at the
@@ -143,6 +146,7 @@ local EVENT_EGG_HOME = "EggHome"
 local EVENT_GIANT_WOKE = "GiantWoke"
 local EVENT_PLAYER_CAUGHT = "PlayerCaught"
 local EVENT_SLAM = "Slam" -- one per hand slam, valued at the number of players it caught
+local EVENT_BONKED = "Bonked" -- one per player a slam bonked
 local EVENT_FREE_SAVE_USED = "FreeSaveUsed" -- one per free save
 local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, valued at the seconds since the save
 local EVENT_UNSTUCK = "Unstuck" -- one per rescue, Reset on the giant or loop send home
@@ -203,6 +207,8 @@ local RESULT_LOST = "Lost"
 -- What a "Slam" did, as the chart's result breakdown says it.
 -- It caught at least one carrier, whoever it was aimed at (this is the number the success target counts):
 local SLAM_CAUGHT = "Caught"
+-- It caught nobody but bonked at least one player (a player with no egg):
+local SLAM_BONKED = "Bonked"
 -- It was aimed at a carrier and caught nobody (the carrier ran, or the circle was dodged):
 local SLAM_MISSED = "Missed"
 -- It was aimed at nobody (no carrier was outside the gardens) and caught nobody, so it is left out of the success target:
@@ -542,8 +548,8 @@ function Analytics.start(deps: Deps): Analytics
 
 	-- "Slam": once per slam, as the hand lands. The result comes from what the hand did. It is logged on the target, if
 	-- they are still here; otherwise on the first caught player still here (an empty-meadow slam that a carrier walked
-	-- under), otherwise on the player who has been here longest, so no slam goes missing.
-	trove:Add(deps.slammed:Connect(function(target: number?, caught: { number })
+	-- under), then the first bonked one, otherwise on the player who has been here longest, so no slam goes missing.
+	trove:Add(deps.slammed:Connect(function(target: number?, kind: string, caught: { number }, bonked: { number })
 		if stopped then
 			return
 		end
@@ -554,6 +560,8 @@ function Analytics.start(deps: Deps): Analytics
 		local result = SLAM_EMPTY
 		if #caught > 0 then
 			result = SLAM_CAUGHT
+		elseif #bonked > 0 then
+			result = SLAM_BONKED
 		elseif target ~= nil then
 			result = SLAM_MISSED
 		end
@@ -567,6 +575,14 @@ function Analytics.start(deps: Deps): Analytics
 					break
 				end
 			end
+			if logOn == nil then
+				for _, userId in bonked do
+					logOn = players:GetPlayerByUserId(userId)
+					if logOn ~= nil then
+						break
+					end
+				end
+			end
 		end
 		if logOn == nil then
 			logOn = longestInServer()
@@ -577,6 +593,21 @@ function Analytics.start(deps: Deps): Analytics
 		logCustom(logOn, EVENT_SLAM, #caught, {
 			[FIELD_ONE] = result,
 			[FIELD_TWO] = Analytics.serverSize(count),
+			[FIELD_THREE] = kind,
+		})
+	end))
+
+	-- "Bonked": one per player a bonk starts on (Rule 70), logged on that player.
+	trove:Add(deps.bonked:Connect(function(player: PlayerLike)
+		if stopped then
+			return
+		end
+		local count = #players:GetPlayers()
+		if count == 0 then
+			return
+		end
+		logCustom(player, EVENT_BONKED, EVENT_VALUE, {
+			[FIELD_ONE] = Analytics.serverSize(count),
 		})
 	end))
 

@@ -506,6 +506,7 @@ analytics = Analytics.start({
 	caught = catcher.caught,
 	woke = director.woke,
 	slammed = director.slammed,
+	bonked = bonker.bonked,
 	saved = director.saved,
 	returned = grab.returned,
 	unstuck = recovery.unstuck,

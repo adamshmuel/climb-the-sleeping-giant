@@ -10,6 +10,7 @@ local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
+local FIELD_THREE = Enum.AnalyticsCustomFieldKeys.CustomField03.Name
 
 -- Everything the fake AnalyticsService was asked to log, in order.
 export type Call = {
@@ -47,7 +48,8 @@ export type Harness = {
 	banked: Signal.Signal<any, any>,
 	caught: Signal.Signal<any, any>,
 	woke: Signal.Signal<string, number?, string>,
-	slammed: Signal.Signal<number?, { number }>,
+	slammed: Signal.Signal<number?, string, { number }, { number }>, -- (target, kind, caught, bonked)
+	bonked: Signal.Signal<any>, -- Bonker's signal: (player) when a bonk starts
 	saved: Signal.Signal<number, Config.ZoneName>,
 	returned: Signal.Signal<any, any, string>,
 	unstuck: Signal.Signal<any, string, string>, -- (player, how, zone)
@@ -117,6 +119,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		caught = Signal.new(),
 		woke = Signal.new(),
 		slammed = Signal.new(),
+		bonked = Signal.new(),
 		saved = Signal.new(),
 		returned = Signal.new(),
 		unstuck = Signal.new(),
@@ -190,6 +193,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		caught = harness.caught,
 		woke = harness.woke,
 		slammed = harness.slammed,
+		bonked = harness.bonked,
 		saved = harness.saved,
 		returned = harness.returned,
 		unstuck = harness.unstuck,
@@ -319,6 +323,7 @@ end
 return {
 	FIELD_ONE = FIELD_ONE,
 	FIELD_TWO = FIELD_TWO,
+	FIELD_THREE = FIELD_THREE,
 	OWN_GARDEN_SPAWN_X = OWN_GARDEN_SPAWN_X,
 	awayFromHome = awayFromHome,
 	bank = bank,

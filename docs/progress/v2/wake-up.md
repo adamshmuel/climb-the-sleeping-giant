@@ -26,7 +26,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Wake-up (V2 spec 6) | Task 18: The one-line wake banner and the bottom tip | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 19: RUN HOME! | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 20: Red edges while he hunts | ☐ not started | |
-| Wake-up (V2 spec 6) | Task 21: Analytics for the hunt | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 21: Analytics for the hunt | ☑ done (2026-11-12; full run 3575/1, standing red only) | code_lead |
 | Wake-up (V2 spec 6) | Task 22: A whole session with wake-ups | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 23: The Play proof | ☐ not started | |
 
