@@ -40,7 +40,6 @@ local Spawning = require(script.Players.Spawning)
 local PressingHandler = require(script.Remotes.PressingHandler)
 local ResetHandler = require(script.Remotes.ResetHandler)
 local TiptoeHandler = require(script.Remotes.TiptoeHandler)
-local SoundSettings = require(script.World.SoundSettings)
 local WorldIndex = require(script.World.WorldIndex)
 
 -- The most ticks one frame may run when the server has fallen behind. The rest are dropped.
@@ -51,12 +50,6 @@ local MAX_TICKS_PER_FRAME = 3
 local world = Workspace:FindFirstChild("World")
 if world == nil then
 	error("Workspace.World is missing: the place file doesn't match the code")
-end
-
--- Roblox's character sounds need two SoundService settings (spec 7 Rule 96). A wrong one only warns: the game still runs, silently.
-local soundProblems = SoundSettings.read(game:GetService("SoundService"))
-if #soundProblems > 0 then
-	warn(`[Sound] character sounds may be silent: {table.concat(soundProblems, "; ")}`)
 end
 
 -- If the world does not match what the code needs, this stops the server with a clear message.

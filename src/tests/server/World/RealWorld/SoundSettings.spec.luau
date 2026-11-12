@@ -35,4 +35,30 @@ describe("the real sound setup", function()
 		end
 		expect(table.concat(found, "; ")).toBe("")
 	end)
+
+	-- Plan 7 Task 4 fix: DefaultListenerLocation needs the PluginOrOpenCloud capability. These Edit tests have it; a game script
+	-- in Play does not, so a read there stopped the server script before Net.setup.
+	it("no game script calls SoundSettings", function()
+		local roots: { Instance } = {
+			game:GetService("ServerScriptService"):FindFirstChild("Server") :: Instance,
+			game:GetService("ReplicatedStorage"):FindFirstChild("Shared") :: Instance,
+			game:GetService("StarterPlayer"):FindFirstChild("StarterPlayerScripts") :: Instance,
+		}
+		local ownName = "ServerScriptService.Server.World.SoundSettings"
+		local offenders: { string } = {}
+		for _, root in roots do
+			-- GetDescendants skips the root itself, and ServerScriptService.Server is itself the server Script.
+			local items: { Instance } = root:GetDescendants()
+			table.insert(items, root)
+			for _, item in items do
+				if item:IsA("Script") or item:IsA("ModuleScript") or item:IsA("LocalScript") then
+					local name = item:GetFullName()
+					if name ~= ownName and string.find((item :: any).Source, "SoundSettings", 1, true) then
+						table.insert(offenders, name)
+					end
+				end
+			end
+		end
+		expect(`{#offenders} offenders: {table.concat(offenders, "; ")}`).toBe("0 offenders: ")
+	end)
 end)

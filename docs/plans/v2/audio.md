@@ -123,9 +123,10 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 4: World prep: Roblox's character sounds on the newer objects**
 - Spec rules: Rule 96 (Your own noise is heard): "Walking, climbing and jumping otherwise use Roblox's normal character sounds"; Rule 99 (one way to mute).
-- Files: `tools/world/26-sound-setup.luau` (new), `src/server/World/SoundSettings.luau` (new: the sound part of the world contract; `WorldIndex.luau` is already 880 lines), `src/server/init.server.luau` (warns at start if the check fails), `src/tests/server/World/SoundSettings.spec.luau` (new), `src/tests/server/World/RealWorld/SoundSettings.spec.luau` (new).
+- Files: `tools/world/26-sound-setup.luau` (new), `src/server/World/SoundSettings.luau` (new: the sound part of the world contract; `WorldIndex.luau` is already 880 lines), `src/tests/server/World/SoundSettings.spec.luau` (new), `src/tests/server/World/RealWorld/SoundSettings.spec.luau` (new).
 - What the script does: sets `SoundService.CharacterSoundsUseNewApi` to `Enabled` (Roblox docs, checked 2026-10-19: Roblox then makes character sounds with `AudioPlayer`s and `AudioEmitter`s) and checks `DefaultListenerLocation` is `Camera`.
 - Failing tests first: the world contract reports a place whose `CharacterSoundsUseNewApi` isn't `Enabled`, or whose listener location is `None`. A real-world test for Rule 99: the place holds no audio object, `Sound`, `SoundGroup` or `AudioFader` at Volume 0 (today it holds none at all, checked 2026-10-19).
+- The place's sound settings are checked only by the Edit-mode tests, because a game script can't read `DefaultListenerLocation` (it needs the PluginOrOpenCloud capability; the first start-up warning killed the server in Play, product ruling 2026-11-12, fixed by `work/p7/task4-fix-card.md`).
 - Done when: the script runs twice (the second run says "already done"), the tests pass, and **Adam saves the place**.
 - Stands on: spec 7 Rules 96 and 99 (final); Task 3's muted session (done 2026-11-12), which showed Roblox's own listener sits on the camera (`Workspace.Camera.AudioListener`), so the listener check matches the place today.
 
