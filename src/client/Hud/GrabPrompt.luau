@@ -221,6 +221,11 @@ local function spotOf(inside: Instance?): Instance?
 	return inside:FindFirstAncestorOfClass("Model")
 end
 
+-- A locked spot (the cuff nest while the giant is awake) can't be grabbed from. A prompt with no spot is never locked.
+local function isLocked(spot: Instance?): boolean
+	return spot ~= nil and spot:GetAttribute("Locked") == true
+end
+
 -- A spot whose egg was taken has Waiting set to false. A prompt that belongs to no spot is never empty.
 local function isEmpty(spot: Instance?): boolean
 	return spot ~= nil and spot:GetAttribute("Waiting") == false
@@ -240,8 +245,8 @@ function GrabPrompt.start(deps: Deps): Handle
 	local carrying = deps.player:GetAttribute("Carrying") ~= nil
 	-- Every grab prompt under the root, so they can be switched off and on.
 	local tracked: { [Instance]: boolean } = {}
-	-- Each tracked prompt's listener for its spot's Waiting attribute.
-	local watching: { [Instance]: RBXScriptConnection? } = {}
+	-- Each tracked prompt's listeners for its spot's Waiting and Locked attributes.
+	local watching: { [Instance]: { RBXScriptConnection }? } = {}
 
 	local function setFill(current: Shown, share: number)
 		current.parts.fill.Size = UDim2.fromScale(share, 1)
@@ -348,12 +353,13 @@ function GrabPrompt.start(deps: Deps): Handle
 	local release: () -> () = function() end
 
 	local function onShown(prompt: PromptLike, inputType: Enum.ProximityPromptInputType)
-		-- Prompts of other styles draw themselves. While carrying, or on an empty spot, nothing is drawn.
+		-- Prompts of other styles draw themselves. While carrying, or on an empty or locked spot, nothing is drawn.
 		if
 			stopped
 			or carrying
 			or prompt.Style ~= Enum.ProximityPromptStyle.Custom
 			or isEmpty(spotOf(prompt.Parent))
+			or isLocked(spotOf(prompt.Parent))
 		then
 			return
 		end
@@ -445,11 +451,13 @@ function GrabPrompt.start(deps: Deps): Handle
 		end
 	end
 
-	-- A prompt is on unless the player carries an egg or its spot is empty. Roblox hides a switched-off prompt by
-	-- itself (and calls onHidden); switching it off is the point.
+	-- A prompt is on unless the player carries an egg, its spot is empty, or its spot is locked (the cuff nest while
+	-- the giant is awake). Roblox hides a switched-off prompt by itself (and calls onHidden); switching it off is the
+	-- point.
 	local function update(instance: Instance)
 		if instance:IsA("ProximityPrompt") then
-			instance.Enabled = not carrying and not isEmpty(spotOf(instance))
+			local spot = spotOf(instance)
+			instance.Enabled = not carrying and not isEmpty(spot) and not isLocked(spot)
 		end
 	end
 
@@ -461,23 +469,29 @@ function GrabPrompt.start(deps: Deps): Handle
 		update(instance)
 		local spot = spotOf(instance)
 		if spot ~= nil and watching[instance] == nil then
-			watching[instance] = spot:GetAttributeChangedSignal("Waiting"):Connect(function()
+			-- The prompt that is drawn belongs to the spot that just emptied or locked: take it away.
+			local function refresh()
 				update(instance)
-				-- The prompt that is drawn belongs to the spot that just emptied: take it away.
 				local current = shown
-				if current ~= nil and isEmpty(spot) and spotOf(current.prompt.Parent) == spot then
+				if current ~= nil and (isEmpty(spot) or isLocked(spot)) and spotOf(current.prompt.Parent) == spot then
 					remove()
 				end
-			end)
+			end
+			watching[instance] = {
+				spot:GetAttributeChangedSignal("Waiting"):Connect(refresh),
+				spot:GetAttributeChangedSignal("Locked"):Connect(refresh),
+			}
 		end
 	end
 
 	local function untrack(instance: Instance)
 		tracked[instance] = nil
-		local connection = watching[instance]
-		if connection ~= nil then
+		local connections = watching[instance]
+		if connections ~= nil then
 			watching[instance] = nil
-			connection:Disconnect()
+			for _, connection in connections do
+				connection:Disconnect()
+			end
 		end
 	end
 
