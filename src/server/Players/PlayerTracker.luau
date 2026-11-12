@@ -61,7 +61,13 @@ export type Sample = {
 }
 
 -- What the tracker needs from a player. A real Player fits, and tests pass simple stand-ins.
-export type PlayerLike = { UserId: number, Character: Model? }
+-- A real Player has GetAttribute and SetAttribute; the stand-ins in other tests may leave them out.
+export type PlayerLike = {
+	UserId: number,
+	Character: Model?,
+	GetAttribute: ((self: any, name: string) -> any)?,
+	SetAttribute: ((self: any, name: string, value: any) -> ())?,
+}
 
 export type Deps = {
 	getPlayers: () -> { PlayerLike },
@@ -353,6 +359,14 @@ function PlayerTracker.new(deps: Deps): Tracker
 					jumped = #takeoffZones > 0 or memory.landing.jumped
 				end
 				memory.ladderZone = if ladder then place.zone else nil
+				-- The garden the player stands in (0 if none), written only when it changed.
+				local getAttribute, setAttribute = player.GetAttribute, player.SetAttribute
+				if getAttribute ~= nil and setAttribute ~= nil then
+					local inGarden = place.garden or 0
+					if getAttribute(player, "InGarden") ~= inGarden then
+						setAttribute(player, "InGarden", inGarden)
+					end
+				end
 				table.insert(samples, {
 					userId = player.UserId,
 					position = root.Position,

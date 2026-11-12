@@ -697,3 +697,110 @@ describe("PlayerTracker jumps", function()
 		character:Destroy()
 	end)
 end)
+
+-- A stand-in player that counts every SetAttribute call, and keeps the attributes it was given.
+type CountingPlayer = {
+	UserId: number,
+	Character: Model?,
+	attributes: { [string]: any },
+	writes: number,
+}
+
+local function newCountingPlayer(userId: number, character: Model?): CountingPlayer
+	local player = {
+		UserId = userId,
+		Character = character,
+		attributes = {} :: { [string]: any },
+		writes = 0,
+	}
+	local methods = player :: any
+	methods.GetAttribute = function(self: any, name: string): any
+		return self.attributes[name]
+	end
+	methods.SetAttribute = function(self: any, name: string, value: any)
+		self.writes += 1
+		self.attributes[name] = value
+	end
+	return player
+end
+
+describe("PlayerTracker InGarden attribute", function()
+	local gardens: { Zones.GardenBox } = {
+		{ index = 3, cframe = CFrame.new(100, 5, 0), size = Vector3.new(30, 20, 30) },
+	}
+
+	local function trackerFor(player: CountingPlayer): PlayerTracker.Tracker
+		local players: { PlayerTracker.PlayerLike } = { player :: any }
+		return PlayerTracker.new({
+			getPlayers = function()
+				return players
+			end,
+			zoneBoxes = noZones,
+			gardens = gardens,
+			isGrounded = neverGrounded,
+			takeoffs = neverTookOff,
+			now = zeroClock,
+		})
+	end
+
+	it("walking into garden 3 sets InGarden to 3 once, and walking out sets 0 once", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local player = newCountingPlayer(1, character)
+		local tracker = trackerFor(player)
+
+		tracker:tick()
+		expect(player.attributes.InGarden).toBe(0)
+		expect(player.writes).toBe(1)
+
+		rootOf(character).Position = Vector3.new(100, 5, 0)
+		tracker:tick()
+		expect(player.attributes.InGarden).toBe(3)
+		expect(player.writes).toBe(2)
+
+		rootOf(character).Position = Vector3.new(0, 5, 0)
+		tracker:tick()
+		expect(player.attributes.InGarden).toBe(0)
+		expect(player.writes).toBe(3)
+
+		character:Destroy()
+	end)
+
+	it("a tick where nothing changed writes nothing", function()
+		local character = makeCharacter(Vector3.new(100, 5, 0))
+		local player = newCountingPlayer(1, character)
+		local tracker = trackerFor(player)
+
+		tracker:tick()
+		local writesAfterFirst = player.writes
+		tracker:tick()
+		tracker:tick()
+
+		expect(player.writes).toBe(writesAfterFirst)
+
+		character:Destroy()
+	end)
+
+	it("a player with no living character gets no write", function()
+		local dead = makeCharacter(Vector3.new(100, 5, 0), 0)
+		local player = newCountingPlayer(1, dead)
+		local missing = newCountingPlayer(2, nil)
+		local players: { PlayerTracker.PlayerLike } = { player :: any, missing :: any }
+		local tracker = PlayerTracker.new({
+			getPlayers = function()
+				return players
+			end,
+			zoneBoxes = noZones,
+			gardens = gardens,
+			isGrounded = neverGrounded,
+			takeoffs = neverTookOff,
+			now = zeroClock,
+		})
+
+		tracker:tick()
+
+		expect(player.writes).toBe(0)
+		expect(missing.writes).toBe(0)
+
+		dead:Destroy()
+	end)
+end)

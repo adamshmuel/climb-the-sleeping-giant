@@ -128,7 +128,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   6. In a garden, floating, or touched down 1.4 s ago: never hit. Touched down 1.5 s ago: hit.
   7. The stuck rescue's guard blocks a player 30 studs over a circle that hasn't landed (plan 2's test, with the new shape).
 - Done when: the tests pass.
-- Stands on: plan 3 (`docs/plans/v2/gardens-and-ways-up.md`) Task 15a (the ladder and steep skip that `SlamSurface.under` uses; not built on 2026-11-12, today's `SlamSurface.below` has no skip).
+- Stands on: plan 3 (`docs/plans/v2/gardens-and-ways-up.md`) Task 15a (the ladder and steep skip that `SlamSurface.under` uses, built 2026-11-12).
 
 **Task 4: Show slams near a protected player**
 - Spec rules: Rule 60 (Carriers first), point 3; Rule 63 (A bonk gives a breather), the "lands for show near them" part; Check A1 ("lands for show 35 to 45 studs away ... never on their way home ... Every slam lands where the solo player can see it"); section 8, "A show slam near a protected player can't find a clear spot" and "A solo player is in a garden when he wakes".
