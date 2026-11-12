@@ -10,7 +10,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Audio (V2 spec 7) | Task 2: Every file loads, and is the one designer picked | ☑ done | 2026-11-12: 26 files load, makers and lengths match; full run 3943/1 (standing OnTheGiant red); code_lead APPROVED |
 | Audio (V2 spec 7) | Task 3: The sound board, and the muted session | ☑ done | 2026-11-12: board code (22 + 2 tests), full run 3967/1 (standing OnTheGiant red); muted session 3 runs: 3 wires cut each run, later wires cut, character spawned before the mute (ruled fine until Task 6's play counter); code_lead APPROVED |
 | Audio (V2 spec 7) | Task 4: World prep: Roblox's character sounds on the newer objects | ☑ done | 2026-11-12: SoundSettings check (7 tests), world script 26 set CharacterSoundsUseNewApi to Enabled (backup WorldBackups.p7t4), second run "already done"; full run 3974/1 (standing OnTheGiant red); code_lead APPROVED. Adam saves the place at the commit |
-| Audio (V2 spec 7) | Task 5: What the music should be doing | ☐ not started | |
+| Audio (V2 spec 7) | Task 5: What the music should be doing | ☑ done | builder (MusicMix 15/0); runner (full run 3989/1, only the standing red); code_lead APPROVED 2026-11-12 |
 | Audio (V2 spec 7) | Task 6: The music plays | ☐ not started | |
 | Audio (V2 spec 7) | Task 7: The snore follows his sleep (waits for designer: the puff timing) | ☐ not started | |
 | Audio (V2 spec 7) | Task 8: The snorts and the mumble | ☐ not started | |
