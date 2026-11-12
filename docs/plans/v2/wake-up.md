@@ -132,17 +132,17 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 4: Show slams near a protected player**
 - Spec rules: Rule 60 (Carriers first), point 3; Rule 63 (A bonk gives a breather), the "lands for show near them" part; Check A1 ("lands for show 35 to 45 studs away ... never on their way home ... Every slam lands where the solo player can see it"); section 8, "A show slam near a protected player can't find a clear spot" and "A solo player is in a garden when he wakes".
-- Files: `src/server/Giant/Slams.luau` (pure), `src/tests/server/Giant/Slams.spec.luau`, `src/tests/server/Giant/GiantDirector/Slams.spec.luau` (its 5 "nobody can be targeted" tests set their no-egg player floating, so they stay empty-meadow slams until Task 8).
-- What changes: `Slams.pickShow(spots, players, protected, gates, gardens, landingSpots, anchor, pick)` follows "Where a show slam lands near a protected player" and "Which protected player" in "Decisions". `Slams.plan` uses it when nobody can be targeted but someone is protected, and V1's `pickEmpty` when nobody is outside a garden.
+- Files: `src/server/Giant/ShowSlam.luau` (new, pure) and `src/tests/server/Giant/ShowSlam.spec.luau` (new). code_lead, 2026-11-12: a new module, so Tasks 3 and 4 share no file (Task 3 edits `Slams.luau`). After Task 3: `src/shared/Config.luau` and `src/tests/shared/Config.spec.luau` (V1's 1-stud garden margin moves from a local in `Slams.luau` to `Config.Wake.SlamGardenMarginStuds`, so `Slams` and `ShowSlam` read one value), and `src/server/Giant/Slams.luau` (reads that key, and shares its flat distance with `ShowSlam`).
+- What changes: `ShowSlam.pickShow(spots, players, protected, gates, gardens, landingSpots, anchor, pick, circleDiameter?)` (the last one only for tests; it defaults to `Config.Wake.SlamCircleDiameter`) follows "Where a show slam lands near a protected player" and "Which protected player" in "Decisions". `Slams.plan` uses it in Task 8, when the director is wired: when nobody can be targeted but someone is protected, and V1's `pickEmpty` when `pickShow` gives nil (nobody outside a garden, or no spot).
 - Failing tests first (a fake list of spots on a flat grid):
   1. A solo player just bonked: the show slam's centre is 35 to 45 studs from them.
-  2. It never lies within 16 studs of the stretch from them to their gate; a spot 10 studs past the gate, on the same line, is allowed.
+  2. It never lies within 16 studs of the stretch from them to their gate; a spot 20 studs past the gate, on the same line, is allowed.
   2b. With a test circle 40 studs wide, the margin is 21 studs (half the width plus 1).
   3. It never covers another player, a landing spot or a garden.
   4. Two protected players, one just bonked: it lands near the bonked one, and off both lines home.
   5. Nobody bonked, two protected (both just appeared): near the one nearer to him.
-  6. The 35–45 ring is full: the nearest fitting spot out to 60; none to 60: V1's pick.
-  7. A solo player in a garden: V1's empty-meadow pick.
+  6. The 35–45 ring is full: the nearest fitting spot out to 60 (never one under 35); none to 60: nil, so the caller uses V1's pick.
+  7. A solo player in a garden: nil, so the caller uses V1's empty-meadow pick. Players in a garden are not protected for show slams (Rule 60 point 3 names "a player outside a garden"), so they are never chosen and their way home is not kept clear.
 - Done when: the tests pass.
 - Stands on: Task 1 (the show slam distances in `Config.Wake`), Task 2 (who is protected).
 

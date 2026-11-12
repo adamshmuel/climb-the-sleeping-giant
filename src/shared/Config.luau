@@ -89,6 +89,7 @@ export type Config = {
 		ShowSlamNearStuds: number,
 		ShowSlamFarStuds: number,
 		ShowSlamMaxStuds: number,
+		SlamGardenMarginStuds: number,
 		DoorSeconds: number,
 		BreatherSlams: number,
 		SlamShakeStuds: number,
@@ -263,6 +264,7 @@ local config: Config = {
 		ShowSlamNearStuds = 35,
 		ShowSlamFarStuds = 45,
 		ShowSlamMaxStuds = 60,
+		SlamGardenMarginStuds = 1, -- studs of free grass between a red circle's edge and a garden fence (Slams, ShowSlam)
 		DoorSeconds = 3,
 		BreatherSlams = 1,
 		SlamShakeStuds = 1,

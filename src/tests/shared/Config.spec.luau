@@ -172,6 +172,10 @@ describe("Config", function()
 		expect(Config.Wake.SlamCircleDiameter).toBe(30)
 	end)
 
+	it("a red circle's edge stays 1 stud clear of every garden", function()
+		expect(Config.Wake.SlamGardenMarginStuds).toBe(1)
+	end)
+
 	it("the banner shows 3 s and Heavy Sleep lasts 45 s", function()
 		expect(Config.Wake.BannerSeconds).toBe(3)
 		expect(Config.Wake.HeavySleepSeconds).toBe(45)

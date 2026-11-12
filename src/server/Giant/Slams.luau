@@ -24,8 +24,6 @@ export type Player = {
 export type HandCircle = { centre: Vector3, point: Vector3 }
 export type Circle = { centre: Vector3, target: number? } -- target is the user id aimed at, nil for an empty-meadow slam
 
--- Studs of free grass between the circle's edge and a garden, so the edge never touches the fence.
-local GARDEN_MARGIN = 1
 -- A jump is about 7 studs high; a circle on the meadow must not catch someone high up on the giant above it.
 local HEIGHT_LIMIT = 10
 -- How far a pushed circle moves each try. The result is never more than this much further than it had to move.
@@ -41,6 +39,7 @@ end
 local function flatDistance(a: Vector3, b: Vector3): number
 	return math.sqrt((a.X - b.X) ^ 2 + (a.Z - b.Z) ^ 2)
 end
+Slams.flatDistance = flatDistance
 
 -- Whether a point is inside a slam's circle: within its radius across the ground, and not high above or below it.
 -- The catch and the rescue's red-circle guard both use this one test.
@@ -58,9 +57,9 @@ local function gapToGarden(point: Vector3, garden: Zones.GardenBox): number
 	return math.sqrt(gapX * gapX + gapZ * gapZ)
 end
 
--- Does a circle at this centre stand at least GARDEN_MARGIN studs outside every garden?
+-- Does a circle at this centre stand at least Config.Wake.SlamGardenMarginStuds outside every garden?
 local function isClearOfGardens(centre: Vector3, gardens: { Zones.GardenBox }): boolean
-	local needed = circleRadius() + GARDEN_MARGIN
+	local needed = circleRadius() + Config.Wake.SlamGardenMarginStuds
 	for _, garden in gardens do
 		if gapToGarden(centre, garden) < needed then
 			return false
