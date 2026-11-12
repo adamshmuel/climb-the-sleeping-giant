@@ -104,6 +104,7 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 - What it does: one entry per sound row, copied from the spec's table: its name, asset id, maker, group, the spec's loudness, its speed (or speed range), where it starts, its loop part, its length as designer measured it, and "one at a time" for the mumble and the snort. The snort is the snore's file from 3.46 s to 3.86 s with a 0.05 s fade at its end. The flump has three loudnesses. `SoundList.playerVolume(specLoudness)` gives twice the number. `Config.Audio` holds every other number in section 5: the 1 s music fade, the 0.1 s snore stop, half loudness for the thinned music and the light snore, a quarter for Tiptoe footsteps, 3 copies, the 1 s chase start, the snore speed ranges (0.95–1.05, Heavy Sleep 0.76–0.84), the 85% times (snorts at 0 and 0.5 s, mumble at 1.0 s), and the two hearing curves.
 - Failing tests first: there are 30 rows (26 different files), each matching its section 5 row; every maker is Roblox, ProSoundEffects or APMOfficial; every row has one of the three groups; `playerVolume` doubles (0.2 → 0.4, 3.8 → 7.6) and every converted volume is above 0 and at most 10; the yawn's file is neither the roar's nor the mumble's; the snort's part ends before its file's length; the calm tune loops from 0.05 to 127.7 s and the chase tune from 0.3 to 102.35 s; the Whole valley curve gives 1 at 60 studs, at least a third at 200 and 0.2 at 1,000; the Nearby curve gives 1 at 10 and 0 at 80.
 - Done when: the tests pass.
+- Stands on: spec 7 section 5 as changed 2026-11-12 (only the snore row's words changed, no number), and designer's measured lengths in `docs/specs/v2/research/decisions-audio.md` section 2. Both final.
 
 **Task 2: Every file loads, and is the one designer picked**
 - Spec rules: Rule 85 (Only free audio from Roblox and its partners); section 8, "A sound doesn't load" ("The build check loads ... every sound once ... and fails if one doesn't load"); section 9, "A sound disappears".
@@ -131,7 +132,7 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 **Task 5: What the music should be doing**
 - Spec rules: Rule 89 (Music follows the meter); Rule 93 (Chase music); section 5, "Music change fade", "Thinned music", "Silence at 85%", "Chase tune start"; section 8, "The meter hovers at 59–61%", "A player joins at 85% or more", "A player joins while he's awake", "A player stands in their garden during the wake".
 - Files: `src/client/Audio/MusicMix.luau` (new, pure), `src/tests/client/Audio/MusicMix.spec.luau` (new).
-- What it does: from the giant's `Phase`, `Meter` and `PhaseEndsAt`, the 85% silence (from an 85% warning until the meter is under 75%, like the Z Z Z; see "Questions"), the player's `InGarden`, the music button and the time, it says how loud each tune should be, how muffled the music is (0 clear, 1 fully muffled), and where the chase tune should be in its file. Each change moves toward its target over the 1 s fade.
+- What it does: from the giant's `Phase`, `Meter` and `PhaseEndsAt`, the 85% silence (from every 85% warning, first or replayed, until that warning ends (the bubble is gone) **and** the meter is under 75%: Rule 89, spec line 126, product's answer 2026-11-12), the player's `InGarden`, the music button and the time, it says how loud each tune should be, how muffled the music is (0 clear, 1 fully muffled), and where the chase tune should be in its file. Each change moves toward its target over the 1 s fade.
 - Failing tests first (fake clock, brand-new player):
   1. Asleep at 10%: calm full, clear; chase silent.
   2. Passing 60%: calm reaches half and fully muffled 1 s later, never in one jump; back under 60%: back to full over 1 s.
@@ -141,30 +142,31 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
   6. Awake and in a garden: chase at half and muffled within 1 s; out again: full within 1 s.
   7. Lie-down: chase fades out over 1 s as calm fades back in; Heavy Sleep: calm full and clear.
   8. Music button off: both tunes silent at once, and the chase never starts in the next wake.
+  9. A free save at 88% (the meter drops to 70 while the warning replays): still silent until the replayed warning ends, then back to the tune for the meter.
 - Done when: the tests pass.
-- Waits for product (the music during a free save's replayed warning; "Questions").
+- Stands on: Task 1 (`Config.Audio`); Rule 89 as changed 2026-11-12 (final).
 
 **Task 6: The music plays**
 - Spec rules: Rule 89 (Music follows the meter), Rule 93 (Chase music), on the board; section 5, "Tune checks", "Tune length"; section 2 (the tune "starts quietly").
 - Files: `src/client/Audio/Music.luau` (new), `src/client/init.client.luau`, `src/tests/client/Audio/Music.spec.luau` (new).
-- What it does: two looping tune players on the music bus, each through its own fader, then one low-pass `AudioFilter` for "muffled" (values in "Questions", designer). Each frame it applies `MusicMix`. The calm tune loops 0.05–127.7 s and the chase 0.3–102.35 s (`LoopRegion`). Nothing starts until the character has spawned and both files are ready; the calm tune then fades in over 1 s.
+- What it does: two looping tune players on the music bus, each through its own fader, then one low-pass `AudioFilter` for "muffled": `Lowpass24dB`, 1,000 Hz when fully muffled and 22,000 Hz when clear, moved over the same 1 s fade, for the chase tune in a garden too (designer's answer 2026-11-12, `work/p7/designer-answers.md`). The two cutoffs go in `Config.Audio`. If players don't notice it (the spec's "Thinned music" trigger), designer's next step is 500 Hz and a third of the loudness. Each frame it applies `MusicMix`. The calm tune loops 0.05–127.7 s and the chase 0.3–102.35 s (`LoopRegion`). Nothing starts until the character has spawned and both files are ready; the calm tune then fades in over 1 s.
 - Failing tests first (fake board, fake clock): the calm tune's fader follows `MusicMix` frame by frame; the filter's cutoff moves between clear and muffled over 1 s; loop parts are set; the chase starts at the file time `MusicMix` gives; nothing plays before the character spawns.
-- Done when: the tests pass, and in a muted session the board's log and the faders' values (read by a Client `execute_luau`) show the calm tune playing from spawn, half and muffled after a forced 60% (the meter written on the Server), silent by 1 s after 85%, and the chase starting 1 s after a wake.
-- Waits for designer (the numbers for "muffled"; "Questions").
+- Done when: the tests pass, and in a muted session the board's log and the faders' values (read by a Client `execute_luau`) show the calm tune playing from spawn, half and muffled (filter at 1,000 Hz) after a forced 60% (the meter written on the Server), silent by 1 s after 85%, and the chase starting 1 s after a wake.
+- Stands on: Task 3 (the sound board), Task 5 (`MusicMix`); designer's muffled numbers (final, 2026-11-12).
 
 **Task 7: The snore follows his sleep**
 - Spec rules: Rule 90 (The snore follows his sleep); Rule 17 (A free save replays the 85% warning): the snore stays off until the replay ends; section 5, "Snore at 60–84%", "Snore speed"; section 8, "The meter hovers at 59–61%".
-- Files: `src/client/Fx/GiantFx.luau` (tells who listens how the snore puffs are: "Normal", "Heavy" or "Off", and when they restart), `src/client/Audio/Snore.luau` (new), `src/client/init.client.luau`, their tests.
-- What it does: one snore player on an emitter at his mouth. It plays exactly while `GiantFx` says the snore puffs show: full while asleep under 60%; stopped for the 2-second pause at 60%, then at half loudness from 60% to 84%; off within 0.1 s at the 85% warning; off while awake; the Heavy Sleep snore (its own loudness and speeds) while Heavy Sleep lasts; after a free save, off until the replayed warning ends. Each time the loop starts again (`AudioPlayer.Looped`, Roblox docs), it picks a new speed in its range (the random pick is passed in), and the puffs start again with it (designer's puff timing, see "Questions").
+- Files: `src/client/Fx/GiantFx.luau` (tells who listens how the snore puffs are: "Normal", "Heavy" or "Off"; the puffs now also stop for the 2-second Z Z Z pause at 60%), `src/client/Audio/Snore.luau` (new), `src/client/init.client.luau`, their tests.
+- What it does: one snore player on an emitter at his mouth. It plays exactly while `GiantFx` says the snore puffs show: full while asleep under 60%; stopped for the 2-second pause at 60%, then at half loudness from 60% to 84%; off within 0.1 s at the 85% warning; off while awake; the Heavy Sleep snore (its own loudness and speeds) while Heavy Sleep lasts; after a free save, off until the replayed warning ends. Each time the loop starts again (`AudioPlayer.Looped`, Roblox docs), it picks a new speed in its range (the random pick is passed in). The puffs stay on, steady, while the loop plays: nothing restarts them at each loop (spec line 191; designer's answer 1). At 60% the puff emitter stops for the same 2 s as the snore (puffs already in the air finish), then comes back at the normal rate with the half-loud snore (designer's answer 2; Rule 90 stands with no exception).
 - Failing tests first (fake board, fake `GiantFx`, fake clock, fixed random):
   1. Asleep at 10%: the snore plays at its full volume.
-  2. Passing 60%: silent for 2 s, then at half.
+  2. Passing 60%: silent for 2 s, then at half; `GiantFx` reports the puffs "Off" for the same 2 s.
   3. The 85% warning: silent within 0.1 s, not 1 s; back when the puffs come back.
   4. Awake: off. Heavy Sleep: the Heavy Sleep volume and a speed from 0.76 to 0.84; back to normal when Heavy Sleep ends.
   5. A free save: off until the replay ends, then back only if the meter is under 75.
-  6. Every loop restart gets a new speed from 0.95 to 1.05, and tells the puffs to restart.
+  6. Every loop restart gets a new speed from 0.95 to 1.05, and the puffs stay on through it (never restarted).
 - Done when: the tests pass, and in a muted session the board's log shows the snore's on and off times matching the puffs through 60%, 85% and a wake-up.
-- Waits for designer (the puff timing and the 60% pause; "Questions").
+- Stands on: Task 3 (the sound board), Task 1 (snore speeds); designer's puff answers and spec line 191 (final, 2026-11-12).
 
 **Task 8: The snorts and the mumble**
 - Spec rules: Rule 91 (The mumble); Rule 17 (A free save replays the 85% warning); section 5, "The 85% sound timing"; section 8, "A free save happens while the first mumble is still playing", "The meter passes 85% while a replayed warning is still showing".
@@ -313,19 +315,13 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 ## Questions
 
-- **For designer (Task 7 waits):**
-  1. The snore puffs today blow steadily while he sleeps; spec 7 says they "restart with each loop" of the 5.7-second snore file, so the snore is "timed with his snore puffs". At which times inside the file should the puffs burst (and how many each time), or do the steady puffs stay and only start again at each loop?
-  2. At 60% the spec stops the snore for 2 seconds while the Z Z Z pause, but today the snore puffs keep going then. Should the puffs pause for those 2 seconds too? (Rule 90 says the snore plays "exactly while his snore puffs show"; product is asked to confirm the reading below.)
-- **For designer (Task 6 waits):** what "muffled" is in numbers. code_lead's starting value: Roblox's low-pass filter (`AudioFilter`, `Lowpass24dB`) at 1,000 Hz, reached over the same 1-second fade, so the 300 to 1,000 Hz that phone speakers play stays.
-- **For designer (to know):**
-  - Every `AudioPlayer` volume is twice the spec's number, which makes your "0.5 plays a file as recorded" assumption exactly true in the build, so your crackle caps hold.
-  - The music button is placed on `HudTop` from `GuiService.TopbarInset`, not in its own `TopbarSafeInsets` screen, because the small-phone spot lies outside that area. It still sits right after Roblox's buttons and moves with them.
-  - The snore comes from his mouth's asleep spot (`AwakeMouth.Mouth`, placed by plan 6), and the Z Z Z pop from the floating Z Z Z spot.
-- **For product (Task 5 waits):** Rule 89 says the music is silent "85% or more" until the meter falls below 75%. A free save drops the meter to 70 while the 85% warning replays. code_lead's reading: the music is silent from every 85% warning, first or replayed, until that warning ends and the meter is under 75 (the same as the Z Z Z), so a replay is silent too. Right?
-- **For product (to confirm, with designer's answer 2):** Rule 90's "exactly while his snore puffs show" and its 60% stop: if designer keeps the puffs going at 60%, the rule needs "except the 2-second stop at 60%".
-- **For product (to know):**
-  - A mumble still playing when he wakes stops with the bubble, so it always ends before the bubble does (Rule 91).
-  - The grab pluck plays when the server's answer arrives (the carry pill shows), not when the hold ends on the device.
-  - The build check's "loads and plays every sound once, muted" is two steps: every file loads in the Edit-mode test run (Task 2), and every sound plays once inside a muted Play session (Task 20).
-  - Tiptoe quietens the player's own footsteps on their own device only, as Rule 96 says; other players hear a tiptoer's footsteps as normal.
-  - The slide tip gets no sound of its own; the slide's thud plays the flump.
+All closed on 2026-11-12 (`work/p7/designer-answers.md`, `work/p7/product-answers.md`).
+
+| Question | Answer | Where it went |
+|---|---|---|
+| designer, Task 7: snore puffs, bursts or steady? | Steady: the puffs stay on while the loop plays, nothing restarts them (Heavy Sleep keeps its own rate) | Task 7; spec line 191 |
+| designer, Task 7: do the puffs pause for the 2 s at 60%? | Yes, for the same 2 s as the snore | Task 7; Rule 90 stands as written |
+| designer, Task 6: "muffled" in numbers | `Lowpass24dB` at 1,000 Hz over the 1 s fade, back to 22,000 Hz over 1 s; fallback 500 Hz and a third of the loudness | Task 6 |
+| product, Task 5: music during a replayed 85% warning | Silent from every 85% warning until it ends **and** the meter is under 75 | Task 5 (test 9); Rule 89, spec line 126 |
+| product: Rule 90 with the 60% stop | No change needed (the puffs pause too) | Rule 90 |
+| designer and product, "to know" items | Both agreed with all of them | No change |
