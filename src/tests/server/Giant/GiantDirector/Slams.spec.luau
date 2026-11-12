@@ -421,15 +421,27 @@ describe("GiantDirector slams", function()
 	end)
 end)
 
--- What the slammed signal said, and how many carriers had been caught (by the fake catch) when it said it.
-type SlammedCall = { target: number?, caught: { number }, catchesBefore: number }
+-- What the slammed signal said (the target, what it was aimed at, who was caught and who was bonked), and how many
+-- carriers had been caught (by the fake catch) when it said it.
+type SlammedCall = {
+	target: number?,
+	kind: string,
+	caught: { number },
+	bonked: { number },
+	catchesBefore: number,
+}
 
 -- Listens to the slammed signal of this harness's director. The connection goes with the director when it is destroyed.
 local function watchSlams(harness: Harness): { SlammedCall }
 	local calls: { SlammedCall } = {}
-	(harness.director :: any).slammed:Connect(function(target: number?, caught: { number })
-		table.insert(calls, { target = target, caught = caught, catchesBefore = #harness.catches })
-	end)
+	(harness.director :: any).slammed:Connect(
+		function(target: number?, kind: string, caught: { number }, bonked: { number })
+			table.insert(
+				calls,
+				{ target = target, kind = kind, caught = caught, bonked = bonked, catchesBefore = #harness.catches }
+			)
+		end
+	)
 	return calls
 end
 
@@ -440,7 +452,7 @@ describe("GiantDirector slammed signal", function()
 		stepAt(harness, WARN[1])
 		expect(#slams).toBe(0)
 		stepAt(harness, LAND[1])
-		expect(slams).toEqual({ { target = 1, caught = { 1 }, catchesBefore = 1 } })
+		expect(slams).toEqual({ { target = 1, kind = "Carrier", caught = { 1 }, bonked = {}, catchesBefore = 1 } })
 	end)
 
 	it("says the target and an empty list when the carrier ran out of the circle", function()
@@ -449,7 +461,7 @@ describe("GiantDirector slammed signal", function()
 		stepAt(harness, WARN[1])
 		moveTo(harness, 1, NEAR + Vector3.new(0, 0, 20))
 		stepAt(harness, LAND[1])
-		expect(slams).toEqual({ { target = 1, caught = {}, catchesBefore = 0 } })
+		expect(slams).toEqual({ { target = 1, kind = "Carrier", caught = {}, bonked = {}, catchesBefore = 0 } })
 	end)
 
 	it("says no target and an empty list for a slam on the empty meadow", function()
@@ -460,7 +472,9 @@ describe("GiantDirector slammed signal", function()
 		stepAt(harness, LAND[1])
 		expect(#slams).toBe(1)
 		expect(slams[1].target).toBeNil()
+		expect(slams[1].kind).toBe("None")
 		expect(slams[1].caught).toEqual({})
+		expect(slams[1].bonked).toEqual({})
 	end)
 
 	it("says who an empty-meadow slam caught when a carrier walked under it", function()
@@ -473,7 +487,7 @@ describe("GiantDirector slammed signal", function()
 		harness.floating[1] = false
 		moveTo(harness, 1, MEADOW_POINTS[1])
 		stepAt(harness, LAND[1])
-		expect(slams).toEqual({ { target = nil, caught = { 1 }, catchesBefore = 1 } })
+		expect(slams).toEqual({ { target = nil, kind = "None", caught = { 1 }, bonked = {}, catchesBefore = 1 } })
 	end)
 
 	it("fires once for each of the 6 slams, with the target each time", function()
@@ -483,7 +497,9 @@ describe("GiantDirector slammed signal", function()
 		expect(#slams).toBe(6)
 		for _, call in slams do
 			expect(call.target).toBe(1)
+			expect(call.kind).toBe("Carrier")
 			expect(call.caught).toEqual({ 1 })
+			expect(call.bonked).toEqual({})
 		end
 	end)
 
@@ -495,7 +511,7 @@ describe("GiantDirector slammed signal", function()
 		local slams = watchSlams(harness)
 		stepAt(harness, WARN[1])
 		stepAt(harness, LAND[1])
-		expect(slams).toEqual({ { target = 1, caught = { 1, 2 }, catchesBefore = 2 } })
+		expect(slams).toEqual({ { target = 1, kind = "Carrier", caught = { 1, 2 }, bonked = {}, catchesBefore = 2 } })
 	end)
 
 	it("fires nothing for a slam that has warned when he is put back to sleep from outside", function()

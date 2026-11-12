@@ -19,6 +19,7 @@ local Banking = require(script.Eggs.Banking)
 local Carry = require(script.Eggs.Carry)
 local Grab = require(script.Eggs.Grab)
 local HomeDisplay = require(script.Eggs.HomeDisplay)
+local Bonker = require(script.Giant.Bonker)
 local Catcher = require(script.Giant.Catcher)
 local GiantDirector = require(script.Giant.GiantDirector)
 local ShowSpots = require(script.Giant.ShowSpots)
@@ -232,8 +233,8 @@ local function slamRayIgnore(): { Instance }
 	return ignore
 end
 
--- The meadow spots a show slam may land on, built once at start (Task 8 wires them in and drops the underscore).
-local _showSpots = ShowSpots.build(Workspace, gardenBoxes, zoneBoxes, slamRayIgnore())
+-- The meadow spots a show slam may land on, built once at start.
+local showSpots = ShowSpots.build(Workspace, gardenBoxes, zoneBoxes, slamRayIgnore())
 
 -- The red circles shown and not landed yet: a rescue waits while the player stands in one (Rule 28).
 local redCircles = RedCircles.new()
@@ -306,6 +307,71 @@ ResetHandler.start({
 	now = os.clock,
 })
 
+-- The Safe Gate of each player's own garden, by user id. The gates are anchored, so each is read once; a player's entry
+-- follows their PlotIndex attribute (set when they spawn) and goes when they leave.
+local gateByPlot: { [number]: Vector3 } = {}
+for _, garden in gardens do
+	gateByPlot[garden.index] = garden.gate:GetPivot().Position
+end
+local gates: { [number]: Vector3 } = {}
+local gateWatchers: { [number]: RBXScriptConnection } = {}
+local function watchGate(player: Player)
+	local function refresh()
+		gates[player.UserId] = gateByPlot[player:GetAttribute("PlotIndex") :: any]
+	end
+	refresh()
+	gateWatchers[player.UserId] = player:GetAttributeChangedSignal("PlotIndex"):Connect(refresh)
+end
+-- When each player joined and when they last appeared at their door (joined, a new character, or caught), in the
+-- director's clock. The director reads them for Rules 62 and 5 (a late joiner is never a target that wake-up).
+local joinTimes: { [number]: number } = {}
+local appearTimes: { [number]: number } = {}
+local function noteJoined(player: Player)
+	joinTimes[player.UserId] = Workspace:GetServerTimeNow()
+end
+local function noteAppeared(userId: number)
+	appearTimes[userId] = Workspace:GetServerTimeNow()
+end
+local function watchAppearing(player: Player)
+	player.CharacterAdded:Connect(function()
+		noteAppeared(player.UserId)
+	end)
+end
+Players.PlayerAdded:Connect(function(player: Player)
+	noteJoined(player)
+	watchAppearing(player)
+	watchGate(player)
+end)
+for _, player in Players:GetPlayers() do
+	noteJoined(player)
+	watchAppearing(player)
+	watchGate(player)
+end
+Players.PlayerRemoving:Connect(function(player: Player)
+	gates[player.UserId] = nil
+	local watcher: RBXScriptConnection? = gateWatchers[player.UserId]
+	if watcher ~= nil then
+		watcher:Disconnect()
+		gateWatchers[player.UserId] = nil
+	end
+	joinTimes[player.UserId] = nil
+	appearTimes[player.UserId] = nil
+end)
+
+-- The bonk (Rule 61): the tumble mark a slam's hit puts on a player with no egg.
+local bonker = Bonker.new({
+	players = Players,
+	delay = function(seconds: number, callback: () -> ())
+		local thread = task.delay(seconds, callback)
+		return function()
+			task.cancel(thread)
+		end
+	end,
+})
+
+-- Who was on a ladder at the last tick (the bonk is told, Rule 61).
+local onLadderNow: { [number]: boolean } = {}
+
 -- A caught carrier's egg goes back, and they are put on their own spawn spot facing him.
 local catcher = Catcher.new({
 	players = Players,
@@ -316,6 +382,9 @@ local catcher = Catcher.new({
 		net.Caught:FireAllClients(player)
 	end,
 })
+catcher.caught:Connect(function(player)
+	noteAppeared(player.UserId)
+end)
 -- The analytics events (spec section 10). It is made after the director below, because it listens to his `woke` signal;
 -- the director's tick passes it every player's place, so it waits here until then.
 local analytics: Analytics.Analytics? = nil
@@ -324,6 +393,10 @@ local slamRandom = Random.new()
 local director = GiantDirector.new({
 	tick = function()
 		local samples = tracker:tick()
+		table.clear(onLadderNow)
+		for _, sample in samples do
+			onLadderNow[sample.userId] = sample.onLadder == true
+		end
 		quietDrops:check(samples)
 		recovery:step()
 		banking:check(samples)
@@ -378,9 +451,8 @@ local director = GiantDirector.new({
 	surfaceBelow = function(centre: Vector3)
 		return SlamSurface.below(Workspace, centre, slamRayIgnore())
 	end,
-	fireSlamWarning = function(slam: number, point: Vector3, landsAt: number)
-		-- The point has the centre's X and Z (the ray goes straight down), so it stands for both across the ground.
-		redCircles:add(point, point, landsAt)
+	fireSlamWarning = function(slam: number, point: Vector3, landsAt: number, centre: Vector3)
+		redCircles:add(point, centre, landsAt)
 		net.SlamWarning:FireAllClients(slam, point, landsAt)
 	end,
 	fireSlamLanded = function(slam: number, point: Vector3)
@@ -388,6 +460,23 @@ local director = GiantDirector.new({
 	end,
 	catch = function(userId: number)
 		catcher:catch(userId)
+	end,
+	joinedAt = function(userId: number)
+		return joinTimes[userId]
+	end,
+	appearedAt = function(userId: number)
+		return appearTimes[userId]
+	end,
+	showSpots = showSpots,
+	gates = gates,
+	bonk = function(userId: number, onLadder: boolean)
+		local player = Players:GetPlayerByUserId(userId)
+		if player ~= nil then
+			bonker:bonk(player, onLadder)
+		end
+	end,
+	onLadder = function(userId: number)
+		return onLadderNow[userId] == true
 	end,
 	spendSave = function(userId: number)
 		-- On the Player, not the character, so being caught, resetting or respawning never gives the save back (Rule 18).

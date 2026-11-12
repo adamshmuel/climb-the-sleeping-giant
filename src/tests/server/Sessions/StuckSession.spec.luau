@@ -141,6 +141,18 @@ local function newSession(): Session
 		fireSlamWarning = function() end,
 		fireSlamLanded = function() end,
 		catch = function() end,
+		joinedAt = function()
+			return nil
+		end,
+		appearedAt = function()
+			return nil
+		end,
+		showSpots = {},
+		gates = {},
+		bonk = function() end,
+		onLadder = function()
+			return false
+		end,
 		spendSave = function(userId: number)
 			expect(userId).toBe(USER_ID)
 			player:SetAttribute("FreeSaveUsed", true)

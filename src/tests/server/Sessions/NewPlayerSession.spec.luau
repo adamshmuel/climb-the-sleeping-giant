@@ -183,6 +183,18 @@ local function newSession(): Session
 		fireSlamWarning = function() end,
 		fireSlamLanded = function() end,
 		catch = function() end,
+		joinedAt = function()
+			return nil
+		end,
+		appearedAt = function()
+			return nil
+		end,
+		showSpots = {},
+		gates = {},
+		bonk = function() end,
+		onLadder = function()
+			return false
+		end,
 		-- Like the server: the used save stays on the player, never on the character.
 		spendSave = function(userId: number)
 			table.insert(session.spent, userId)

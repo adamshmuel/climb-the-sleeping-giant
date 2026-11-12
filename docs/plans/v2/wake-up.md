@@ -133,7 +133,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 **Task 4: Show slams near a protected player**
 - Spec rules: Rule 60 (Carriers first), point 3; Rule 63 (A bonk gives a breather), the "lands for show near them" part; Check A1 ("lands for show 35 to 45 studs away ... never on their way home ... Every slam lands where the solo player can see it"); section 8, "A show slam near a protected player can't find a clear spot" and "A solo player is in a garden when he wakes".
 - Files: `src/server/Giant/ShowSlam.luau` (new, pure) and `src/tests/server/Giant/ShowSlam.spec.luau` (new). code_lead, 2026-11-12: a new module, so Tasks 3 and 4 share no file (Task 3 edits `Slams.luau`). After Task 3: `src/shared/Config.luau` and `src/tests/shared/Config.spec.luau` (V1's 1-stud garden margin moves from a local in `Slams.luau` to `Config.Wake.SlamGardenMarginStuds`, so `Slams` and `ShowSlam` read one value), and `src/server/Giant/Slams.luau` (reads that key, and shares its flat distance with `ShowSlam`).
-- What changes: `ShowSlam.pickShow(spots, players, protected, gates, gardens, landingSpots, anchor, pick, circleDiameter?)` (the last one only for tests; it defaults to `Config.Wake.SlamCircleDiameter`) follows "Where a show slam lands near a protected player" and "Which protected player" in "Decisions". `Slams.plan` uses it in Task 8, when the director is wired: when nobody can be targeted but someone is protected, and V1's `pickEmpty` when `pickShow` gives nil (nobody outside a garden, or no spot).
+- What changes: `ShowSlam.pickShow(spots, players, protected, gates, gardens, landingSpots, anchor, pick, circleDiameter?)` (the last one only for tests; it defaults to `Config.Wake.SlamCircleDiameter`) follows "Where a show slam lands near a protected player" and "Which protected player" in "Decisions". The director calls it in Task 8 (`ShowSlam` requires `Slams`, so `Slams.plan` can't): when nobody can be targeted but someone is protected, and V1's `pickEmpty` when `pickShow` gives nil (nobody outside a garden, or no spot).
 - Failing tests first (a fake list of spots on a flat grid):
   1. A solo player just bonked: the show slam's centre is 35 to 45 studs from them.
   2. It never lies within 16 studs of the stretch from them to their gate; a spot 20 studs past the gate, on the same line, is allowed.
@@ -158,7 +158,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - Spec rules: Rule 13, second bullet ("the first walkable surface straight below the target ... never on ladder rungs and never stands upright"); section 8, "A player with no egg is the target on a ladder"; spec 5, section 8, "The red slam circle under a sliding player" and "A player stands where his arm rests while it is raised" (no circle on the resting shape).
 - Files: `src/server/Giant/SlamSurface.luau`, `src/client/Fx/SlamFx.luau`, their tests.
 - What changes: plan 3 Task 15a's ray already does ladders and steep surfaces. While he's awake, the server's ray (`SlamSurface.below`, and `SlamSurface.under` too) and `SlamFx`'s piece rays also pass through the pieces marked `RightArmRest` (his right arm's resting solid shape, marked in Task 10).
-- Failing tests first (fake worlds): a player with no egg on a ladder gets the circle on the pad below and `SlamWarning` names the ladder; a target standing on a `RightArmRest` piece while he's awake gets the circle on the ground under it; while he's asleep the same piece counts (it is his real arm then); no circle piece sits on a `RightArmRest` piece while he's awake; `SlamSurface.under` at a player's spot over a `RightArmRest` piece while he's awake finds the ground under it. (The 75° slope test moved to plan 3 Task 15a.)
+- Failing tests first (fake worlds): a player with no egg on a ladder gets the circle on the pad below the ladder (the warning's point is that pad; the remote carries no ladder name, so nothing names the ladder); a target standing on a `RightArmRest` piece while he's awake gets the circle on the ground under it; while he's asleep the same piece counts (it is his real arm then); no circle piece sits on a `RightArmRest` piece while he's awake; `SlamSurface.under` at a player's spot over a `RightArmRest` piece while he's awake finds the ground under it. (The 75° slope test moved to plan 3 Task 15a.)
 - Done when: the tests pass.
 - Stands on: plan 3 Task 15a (the ladder and steep skip), Task 3 (`SlamSurface.under`), Task 10 (the `RightArmRest` marks).
 
@@ -172,7 +172,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 8: The director hunts everyone**
 - Spec rules: Rule 13 (Hand slams hunt everyone outside a garden), all of it on the server; Rule 60, Rule 62, Rule 63 together; Checks A1, A2, B1, B2; edge cases "A player leaves a garden while he's awake", "A player grabs an egg while he's awake", "A caught player appears at their spawn spot outside the gate", "A player joins while he's awake", "The fist lands on the bounce landing spots".
-- Files: `src/server/Giant/GiantDirector.luau`, `src/server/Giant/Slams.luau` (V1's `caught` goes), `src/server/init.server.luau`, `src/tests/server/Giant/GiantDirector/Hunt.spec.luau` (new, with the folder's `Helpers.luau`; `GiantDirector/Slams.spec.luau` is 495 lines and keeps its tests).
+- Files: `src/server/Giant/GiantDirector.luau`, `src/server/Giant/Slams.luau` (V1's `caught` goes; new `Slams.isProtected`, Rule 60 point 3's "only because of Rule 62 or 63"), `src/tests/server/Giant/Slams.spec.luau` (the `caught` tests go, `isProtected` tests come), `src/server/init.server.luau`, `src/tests/server/Giant/GiantDirector/Hunt.spec.luau` (new, with the folder's `Helpers.luau`; `GiantDirector/Slams.spec.luau` is 532 lines and keeps its tests; its 6 tests of the `slammed` signal move to the 4-argument shape (code_lead, 2026-11-12)).
 - What changes: new settings `joinedAt(userId)`, `appearedAt(userId)`, `showSpots`, `gates` and `bonk(userId, onLadder)`. Each warning plans with Tasks 2 and 4; each landing uses `Slams.hits`: carriers go to `catch`, players with no egg to `bonk` (with whether the tracker has them on a ladder); the bonked list is kept for the next slam's breather. `slammed` fires with (target id or nil, target kind "Carrier", "No egg" or "None", caught ids, bonked ids). `init.server.luau` keeps each player's join time and appear time (`Catcher`'s move and `CharacterAdded`), and forgets them on leave.
 - Failing tests first (fake players, fake clock, brand-new players):
   1. A solo player with no egg standing still for a whole wake-up: slams 1, 3 and 5 aim at them and bonk them; 2, 4 and 6 land for show 35 to 45 studs away (Check A1, and the spec's "half is the floor").
@@ -182,6 +182,8 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   5. A player who joins at 5 s is never a target that wake-up, and is one in the next.
   6. A player who grabs an egg at 6 s is the target of the next warning.
   7. The target leaves while their circle shows: the fist still lands and hits anyone else inside.
+  8. The slammed signal's four arguments for a carrier, a no-egg and a show slam.
+  4b. A player who respawned 0.5 s before he woke is not the first warning's target (Rule 62 counts from when they appear, not from the wake).
 - Done when: the tests pass.
 - Stands on: Tasks 1, 2, 3, 4, 5 (`showSpots`) and 7 (`bonk`).
 
@@ -305,10 +307,10 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 21: Analytics for the hunt**
 - Spec rules: section 10 ("Success signals"): "Slam" with "Bonked" and "Target", the new "Bonked" event.
-- Files: `src/server/Analytics.luau`, `src/server/init.server.luau`, `src/tests/server/Analytics.spec.luau`.
+- Files: `src/server/Analytics.luau`, `src/server/init.server.luau`, `src/tests/server/Analytics/Hunt.spec.luau` (new), `Analytics/SlamAndService.spec.luau`, `Analytics/Helpers.luau`.
 - What changes: "Slam" results "Caught" (caught at least one carrier), "Bonked" (bonked at least one, caught none), "Missed" (aimed at a player, hit nobody) and "Empty" (aimed at nobody); third breakdown "Target"; still valued at the number caught and logged on the same player as in V1 (the target, else the first player hit, else the longest-in-server player). "Bonked": once per bonked player, breakdown the server size ("1", "2-4" or "5-8"), from `Bonker`'s `bonked` Signal.
 - Failing tests first (fake AnalyticsService): one "Slam" per slam, 6 per wake-up; a bonk with no catch logs "Bonked" with Target "No egg"; a show slam logs "Empty" with Target "None"; a slam that catches one and bonks one logs "Caught", value 1; each bonked player logs one "Bonked" with the right server size; "GiantWoke" and "EggHome" are unchanged.
-- Done when: the tests pass, and in Play the console shows the "Slam" and "Bonked" lines of one wake-up.
+- Done when: the tests pass and the Play start is clean. The console proof of one wake-up's "Slam" and "Bonked" lines moves to Tasks 22 and 23 (no Play wake trigger exists before them).
 - Stands on: Task 7 (the `bonked` Signal), Task 8 (what `slammed` sends).
 
 **Task 22: A whole session with wake-ups**

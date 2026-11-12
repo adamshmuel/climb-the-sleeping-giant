@@ -17,7 +17,7 @@ export type Player = {
 	floating: boolean, -- still floating down after the bounce-off
 	landedAgo: number?, -- seconds since the bounce-off float touched down, nil if it hasn't in this wake-up
 	joinedThisWake: boolean?, -- true: joined after he woke, never a target
-	appearedAgo: number?, -- seconds since a catch or a new character put them at the door, nil = not this wake-up
+	appearedAgo: number?, -- seconds since a catch or a new character put them at the door, nil = never appeared
 	bonkedLast: boolean?, -- true: the slam before bonked them, not a target now
 }
 -- A slam's circle as the hit test sees it: the hand's centre and the surface point it lands on.
@@ -77,6 +77,20 @@ local function canBeTargeted(player: Player): boolean
 	end
 	local appearedAgo = player.appearedAgo
 	return appearedAgo == nil or appearedAgo >= Config.Wake.DoorSeconds
+end
+
+-- Would a circle aimed at this player land before they could move? Yes for a player the slam before bonked, and for
+-- one who appeared at the door less than DoorSeconds ago (Rules 62 and 63). The director then plans a show slam
+-- instead of a warning at them. Players on the ground outside the gardens only; a late joiner is never aimed at.
+function Slams.isProtected(player: Player): boolean
+	if player.floating or player.inGarden or player.joinedThisWake == true then
+		return false
+	end
+	if player.bonkedLast == true then
+		return true
+	end
+	local appearedAgo = player.appearedAgo
+	return appearedAgo ~= nil and appearedAgo < Config.Wake.DoorSeconds
 end
 
 -- Carriers first: the target is picked from the players who carry an egg, and only when none can be aimed at, from the
@@ -254,20 +268,6 @@ function Slams.hits(
 		table.insert(if player.carrying then caught else bonked, player.userId)
 	end
 	return { caught = caught, bonked = bonked }
-end
-
--- The user ids of everyone the hand catches, in the players' list order: carriers who are on the ground (not floating),
--- outside the gardens, within the circle across the ground and not more than HEIGHT_LIMIT studs above or below it. A
--- carrier who touched down from the bounce-off float less than SlamWarningSeconds ago is not caught: they could not
--- steer the fall, so they get the same warning as everyone.
-function Slams.caught(players: { Player }, centre: Vector3): { number }
-	local caught: { number } = {}
-	for _, player in players do
-		if player.carrying and not neverHit(player) and Slams.inCircle(player.position, centre) then
-			table.insert(caught, player.userId)
-		end
-	end
-	return caught
 end
 
 return Slams

@@ -489,84 +489,6 @@ describe("Slams.plan", function()
 	end)
 end)
 
-describe("Slams.caught", function()
-	local centre = Vector3.new(-50, 5, 20)
-
-	it("a carrier exactly 15 studs away across the ground is caught", function()
-		expect(Slams.caught({ player(1, -35, 20) }, centre)).toEqual({ 1 })
-	end)
-
-	it("a carrier 15.1 studs away across the ground is not caught", function()
-		expect(Slams.caught({ player(1, -34.9, 20) }, centre)).toEqual({})
-	end)
-
-	it("the distance is measured across the ground in both directions", function()
-		-- 10 across in X and 10 in Z is 14.14 studs, caught; 11 and 11 is 15.56, not caught.
-		expect(Slams.caught({ player(1, -40, 30) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -39, 31) }, centre)).toEqual({})
-	end)
-
-	it("a carrier 9 studs above the centre is caught, 11 studs above is not", function()
-		expect(Slams.caught({ player(1, -50, 20, { position = Vector3.new(-50, 14, 20) }) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -50, 20, { position = Vector3.new(-50, 16, 20) }) }, centre)).toEqual({})
-	end)
-
-	it("the distance across the ground ignores height: 14 studs across and 9 studs up is caught", function()
-		-- In 3D this carrier would be 16.6 studs away, outside the 15-stud circle.
-		expect(Slams.caught({ player(1, -36, 20, { position = Vector3.new(-36, 14, 20) }) }, centre)).toEqual({ 1 })
-	end)
-
-	it("a carrier 9 studs below the centre is caught, 11 studs below is not", function()
-		expect(Slams.caught({ player(1, -50, 20, { position = Vector3.new(-50, -4, 20) }) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -50, 20, { position = Vector3.new(-50, -6, 20) }) }, centre)).toEqual({})
-	end)
-
-	it("a carrier exactly 10 studs above the centre is caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { position = Vector3.new(-50, 15, 20) }) }, centre)).toEqual({ 1 })
-	end)
-
-	it("a player who carries nothing is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { carrying = false }) }, centre)).toEqual({})
-	end)
-
-	it("a floating carrier is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { floating = true }) }, centre)).toEqual({})
-	end)
-
-	it("a carrier in a garden is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { inGarden = true }) }, centre)).toEqual({})
-	end)
-
-	it("several carriers inside are all caught, in list order, and the target need not be one of them", function()
-		local players = { player(9, -45, 20), player(2, -50, 25), player(5, 100, 100), player(4, -55, 15) }
-		expect(Slams.caught(players, centre)).toEqual({ 9, 2, 4 })
-	end)
-
-	it("nobody is caught when nobody is inside", function()
-		expect(Slams.caught({ player(1, 100, 100) }, centre)).toEqual({})
-		expect(Slams.caught({}, centre)).toEqual({})
-	end)
-
-	it("a carrier who landed 1.4 s ago is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { landedAgo = 1.4 }) }, centre)).toEqual({})
-	end)
-
-	it("a carrier who landed exactly 1.5 s ago is caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { landedAgo = 1.5 }) }, centre)).toEqual({ 1 })
-	end)
-
-	it("a carrier who landed long ago, or never floated, is caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { landedAgo = 12 }) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -50, 20, { landedAgo = nil }) }, centre)).toEqual({ 2 })
-	end)
-
-	it("a guarded carrier does not stop the others in the same circle from being caught", function()
-		local players =
-			{ player(1, -50, 20, { landedAgo = 0.3 }), player(2, -48, 20), player(3, -52, 20, { landedAgo = 0 }) }
-		expect(Slams.caught(players, centre)).toEqual({ 2 })
-	end)
-end)
-
 describe("Slams.inCircle", function()
 	local centre = Vector3.new(0, 40, 0)
 
@@ -638,5 +560,42 @@ describe("Slams.hits", function()
 			caught = { 1 },
 			bonked = {},
 		})
+	end)
+end)
+
+-- Rules 62 and 63: who the director plans a protected warning for. A player the engine would hit for free is
+-- protected, because a circle aimed at them would land before they could move.
+describe("Slams.isProtected", function()
+	it("a player the slam before bonked is protected", function()
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false, bonkedLast = true }))).toBe(true)
+	end)
+
+	it("a player who appeared at the door less than the door seconds ago is protected", function()
+		local justBefore = Config.Wake.DoorSeconds - 0.1
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false, appearedAgo = justBefore }))).toBe(true)
+	end)
+
+	it("a player who appeared exactly the door seconds ago is no longer protected", function()
+		local changes = { carrying = false, appearedAgo = Config.Wake.DoorSeconds }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
+	end)
+
+	it("a player who never appeared and wasn't bonked is not protected", function()
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false }))).toBe(false)
+	end)
+
+	it("a floating player is not protected even at the door", function()
+		local changes = { carrying = false, appearedAgo = 0.5, floating = true }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
+	end)
+
+	it("a bonked player who is back in a garden is not protected", function()
+		local changes = { carrying = false, bonkedLast = true, inGarden = true }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
+	end)
+
+	it("a player who joined during this wake-up is not protected", function()
+		local changes = { carrying = false, bonkedLast = true, appearedAgo = 0.5, joinedThisWake = true }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
 	end)
 end)

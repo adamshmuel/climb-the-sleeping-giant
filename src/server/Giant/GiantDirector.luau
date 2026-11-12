@@ -19,6 +19,7 @@ local Noise = require(script.Parent.Noise)
 local PlayerInfo = require(script.Parent.Parent.Players.PlayerInfo)
 local PlayerTracker = require(script.Parent.Parent.Players.PlayerTracker)
 local SleepMeter = require(script.Parent.SleepMeter)
+local ShowSlam = require(script.Parent.ShowSlam)
 local Slams = require(script.Parent.Slams)
 local Warnings = require(script.Parent.Warnings)
 local WorldIndex = require(script.Parent.Parent.World.WorldIndex)
@@ -44,9 +45,18 @@ export type Deps = {
 	landedAgo: (userId: number) -> number?, -- seconds since this player's float touched down, nil if it hasn't
 	pick: (count: number) -> number, -- a random whole number from 1 to count, for the empty-meadow slams
 	surfaceBelow: (centre: Vector3) -> Vector3, -- the surface under a circle's centre, where it is drawn
-	fireSlamWarning: (slam: number, point: Vector3, landsAt: number) -> (), -- tells every client a circle starts
+	-- Tells every client a circle starts. `centre` is the circle's centre (the hit test counts from it); `point` is the
+	-- surface point below it, where it is drawn.
+	fireSlamWarning: (slam: number, point: Vector3, landsAt: number, centre: Vector3) -> (),
 	fireSlamLanded: (slam: number, point: Vector3) -> (), -- tells every client the hand landed
 	catch: (userId: number) -> (), -- sends one caught carrier home
+	-- The hunt (Rules 60, 62 and 63):
+	joinedAt: (userId: number) -> number?, -- when this player joined, in the `now` clock (nil: not known)
+	appearedAt: (userId: number) -> number?, -- when a catch or a new character last put them at the door, in the `now` clock
+	showSpots: { Vector3 }, -- where a show slam may land (Rule 63)
+	gates: { [number]: Vector3 }, -- the Safe Gate of each player's own garden, by user id
+	bonk: (userId: number, onLadder: boolean) -> (), -- bonks one player with no egg (Rule 60)
+	onLadder: (userId: number) -> boolean, -- is this player on a ladder right now?
 	-- Marks this player's free save as used, for the rest of their visit (Rule 18). It must outlive their character.
 	spendSave: (userId: number) -> (),
 }
@@ -56,9 +66,10 @@ export type Director = {
 	-- Fires once when he wakes: the waker's display name ("" if none is named), the waker's UserId (nil if none is
 	-- named) and what filled the meter ("Walking", "Jump on him", "Jump off" or "Waker left"). Analytics listens to it.
 	woke: Signal.Signal<string, number?, string>,
-	-- Fires once for each slam when its hand lands, right after the catches: the user id the slam was aimed at (nil for
-	-- a slam on empty meadow) and the user ids it caught. Analytics listens to it.
-	slammed: Signal.Signal<number?, { number }>,
+	-- Fires once for each slam when its hand lands, right after the catches and bonks: the user id the slam was aimed at
+	-- (nil for a show slam or a slam on empty meadow), what it was aimed at ("Carrier", "No egg" or "None"), the user ids
+	-- it caught and the user ids it bonked. Analytics listens to it.
+	slammed: Signal.Signal<number?, string, { number }, { number }>,
 	-- Fires once for each free save, right after it is spent: the saved player's user id and the zone they were in. Analytics
 	-- listens to it.
 	saved: Signal.Signal<number, Config.ZoneName>,
@@ -119,9 +130,14 @@ end
 -- The wake-up in progress: the clock when he woke, and how many seconds after that the last tick was.
 type Timeline = { wokeAt: number, lastElapsed: number }
 
--- A slam that has warned and not landed yet: the circle's centre (catches count from here), the surface point
--- that clients draw, and the user id it is aimed at (nil on empty meadow).
-type PlannedSlam = { centre: Vector3, point: Vector3, target: number? }
+-- A slam that has warned and not landed yet: the circle's centre (hits count from here), the surface point that
+-- clients draw, the user id it is aimed at (nil for a show slam or on empty meadow) and what it was aimed at.
+type PlannedSlam = { centre: Vector3, point: Vector3, target: number?, kind: string }
+
+-- What a slam was aimed at, as the "slammed" signal says it.
+local KIND_CARRIER = "Carrier"
+local KIND_NO_EGG = "No egg"
+local KIND_NONE = "None"
 
 local function readMeter(state: Instance): number?
 	local meter = state:GetAttribute("Meter")
@@ -136,7 +152,7 @@ function GiantDirector.new(deps: Deps): Director
 	local state = deps.state
 	local dt = Config.Tick.Seconds
 	local woke = Signal.new() :: Signal.Signal<string, number?, string>
-	local slammed = Signal.new() :: Signal.Signal<number?, { number }>
+	local slammed = Signal.new() :: Signal.Signal<number?, string, { number }, { number }>
 	local saved = Signal.new() :: Signal.Signal<number, Config.ZoneName>
 	-- Where bounced players land. A slam must never cover one (Slams.pickEmpty), so Slams is given only their points.
 	local landingPositions: { Vector3 } = {}
@@ -154,6 +170,8 @@ function GiantDirector.new(deps: Deps): Director
 	local plannedSlams: { [number]: PlannedSlam } = {}
 	local lastTarget: number? = nil -- the user id the last slam aimed at (nil after a slam at empty meadow)
 	local lastCentre: Vector3? = nil
+	-- Who the last slam of this wake-up bonked: the next slam never aims at them (Rule 62).
+	local bonkedByLast: { [number]: boolean } = {}
 
 	-- Sends every player on the giant to a landing spot. They are moved while he is still asleep, before anything
 	-- tells the clients that he moves, so nobody is standing on him when he does.
@@ -176,11 +194,18 @@ function GiantDirector.new(deps: Deps): Director
 	end
 
 	-- Everyone who is in the server with a sample this tick, in the shape Slams wants.
-	local function slamPlayers(samples: { PlayerTracker.Sample }, byId: { [number]: PlayerInfo }): { Slams.Player }
+	local function slamPlayers(
+		wokeAt: number,
+		samples: { PlayerTracker.Sample },
+		byId: { [number]: PlayerInfo }
+	): { Slams.Player }
 		local list: { Slams.Player } = {}
+		local now = deps.now()
 		for _, sample in samples do
 			local info = byId[sample.userId]
 			if info ~= nil then
+				local joinedAt = deps.joinedAt(sample.userId)
+				local appearedAt = deps.appearedAt(sample.userId)
 				table.insert(list, {
 					userId = sample.userId,
 					position = sample.position,
@@ -188,10 +213,64 @@ function GiantDirector.new(deps: Deps): Director
 					inGarden = sample.garden ~= nil,
 					floating = deps.floating(sample.userId),
 					landedAgo = deps.landedAgo(sample.userId),
+					joinedThisWake = joinedAt ~= nil and joinedAt > wokeAt,
+					bonkedLast = bonkedByLast[sample.userId] == true,
+					appearedAgo = if appearedAt ~= nil then now - appearedAt else nil,
 				})
 			end
 		end
 		return list
+	end
+
+	local function surfaceHeight(position: Vector3): number
+		return deps.surfaceBelow(position).Y
+	end
+
+	-- Where the next slam goes. Someone the engine would hit for free (just bonked, or just at the door) is never aimed
+	-- at. When no one else can be aimed at, a show slam lands near them instead (Rule 63), or an empty-meadow slam if no
+	-- show spot suits.
+	local function planSlam(players: { Slams.Player }): Slams.Circle
+		local protected: { Slams.Player } = {}
+		for _, player in players do
+			if Slams.isProtected(player) then
+				table.insert(protected, player)
+			end
+		end
+		if #protected > 0 and Slams.pickTarget(players, deps.face, lastTarget) == nil then
+			local centre = ShowSlam.pickShow(
+				deps.showSpots,
+				players,
+				protected,
+				deps.gates,
+				deps.gardens,
+				landingPositions,
+				deps.face,
+				deps.pick
+			)
+			if centre ~= nil then
+				return { centre = centre, target = nil }
+			end
+		end
+		return Slams.plan(
+			players,
+			deps.face,
+			deps.gardens,
+			deps.meadowPoints,
+			landingPositions,
+			lastTarget,
+			lastCentre,
+			deps.pick
+		)
+	end
+
+	-- What a slam is aimed at: a carrier, a player with no egg, or nothing (a show slam or an empty-meadow slam).
+	local function kindOf(players: { Slams.Player }, target: number?): string
+		for _, player in players do
+			if player.userId == target then
+				return if player.carrying then KIND_CARRIER else KIND_NO_EGG
+			end
+		end
+		return KIND_NONE
 	end
 
 	-- Plays the part of the wake-up timeline that falls between the last tick and this one. Returns when the
@@ -203,36 +282,42 @@ function GiantDirector.new(deps: Deps): Director
 		for _, event in GiantCycle.eventsBetween(running.lastElapsed, elapsed) do
 			if event.kind == "SlamWarning" or event.kind == "SlamLanded" then
 				if players == nil then
-					players = slamPlayers(samples, byId)
+					players = slamPlayers(running.wokeAt, samples, byId)
 				end
 			end
 			if event.kind == "SlamWarning" and players ~= nil then
-				local circle = Slams.plan(
-					players,
-					deps.face,
-					deps.gardens,
-					deps.meadowPoints,
-					landingPositions,
-					lastTarget,
-					lastCentre,
-					deps.pick
-				)
+				local circle = planSlam(players)
 				local point = deps.surfaceBelow(circle.centre)
-				plannedSlams[event.slam :: number] = { centre = circle.centre, point = point, target = circle.target }
+				plannedSlams[event.slam :: number] = {
+					centre = circle.centre,
+					point = point,
+					target = circle.target,
+					kind = kindOf(players, circle.target),
+				}
 				lastTarget = circle.target
 				lastCentre = circle.centre
-				deps.fireSlamWarning(event.slam :: number, point, running.wokeAt + (event.landsAt :: number))
+				deps.fireSlamWarning(
+					event.slam :: number,
+					point,
+					running.wokeAt + (event.landsAt :: number),
+					circle.centre
+				)
 			elseif event.kind == "SlamLanded" and players ~= nil then
 				local planned = plannedSlams[event.slam :: number]
 				if planned ~= nil then
 					plannedSlams[event.slam :: number] = nil
 					deps.fireSlamLanded(event.slam :: number, planned.point)
 					-- The circle's centre, not the surface point: a jump of about 7 studs still can't escape the fist.
-					local caught = Slams.caught(players, planned.centre)
-					for _, userId in caught do
+					local hits = Slams.hits(players, { centre = planned.centre, point = planned.point }, surfaceHeight)
+					table.clear(bonkedByLast)
+					for _, userId in hits.caught do
 						deps.catch(userId)
 					end
-					slammed:Fire(planned.target, caught)
+					for _, userId in hits.bonked do
+						bonkedByLast[userId] = true
+						deps.bonk(userId, deps.onLadder(userId))
+					end
+					slammed:Fire(planned.target, planned.kind, hits.caught, hits.bonked)
 				end
 			elseif event.kind == "Phase" and event.phase == "HeavySleep" then
 				state:SetAttribute("PhaseEndsAt", running.wokeAt + (event.endsAt or HEAVY_SLEEP_ENDS_AT))
@@ -244,6 +329,7 @@ function GiantDirector.new(deps: Deps): Director
 				state:SetAttribute("PhaseEndsAt", nil)
 				state:SetAttribute("Phase", "Asleep")
 				timeline = nil
+				table.clear(bonkedByLast)
 				return
 			end
 		end
@@ -407,6 +493,7 @@ function GiantDirector.new(deps: Deps): Director
 			local wokeAt = deps.now()
 			timeline = { wokeAt = wokeAt, lastElapsed = 0 }
 			table.clear(plannedSlams)
+			table.clear(bonkedByLast)
 			lastTarget = nil
 			lastCentre = nil
 			state:SetAttribute("WokenBy", name)
