@@ -21,6 +21,7 @@ local Grab = require(script.Eggs.Grab)
 local HomeDisplay = require(script.Eggs.HomeDisplay)
 local Catcher = require(script.Giant.Catcher)
 local GiantDirector = require(script.Giant.GiantDirector)
+local ShowSpots = require(script.Giant.ShowSpots)
 local SlamSurface = require(script.Giant.SlamSurface)
 local Collisions = require(script.Players.Collisions)
 local Floater = require(script.Players.Floater)
@@ -230,6 +231,9 @@ local function slamRayIgnore(): { Instance }
 	end
 	return ignore
 end
+
+-- The meadow spots a show slam may land on, built once at start (Task 8 wires them in and drops the underscore).
+local _showSpots = ShowSpots.build(Workspace, gardenBoxes, zoneBoxes, slamRayIgnore())
 
 -- The red circles shown and not landed yet: a rescue waits while the player stands in one (Rule 28).
 local redCircles = RedCircles.new()
