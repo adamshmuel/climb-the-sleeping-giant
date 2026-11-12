@@ -132,6 +132,7 @@ function GiantFx.start(deps: Deps): Handle
 		flutterAt = nil,
 		fadeAt = nil,
 		snortAt = nil,
+		mumbleAt = nil,
 		bubbleAt = nil,
 		bubbleUntil = nil,
 		quiet = false,
@@ -156,6 +157,15 @@ function GiantFx.start(deps: Deps): Handle
 	}
 
 	local find = Find.new(deps)
+
+	-- Plays a sound place at a spot. A spot that is streamed out (nil) plays nothing (code_lead ruling, Task 8).
+	local function playSoundAt(name: string, at: Vector3?)
+		local playSound = deps.playSound
+		if playSound ~= nil and at ~= nil then
+			playSound(name, at)
+		end
+	end
+
 	local bubbleLook = BubbleLook.new(state, deps, find)
 	local sleepSigns = SleepSigns.new(state, deps, find)
 	local ride = Ride.new(state, deps)
@@ -276,6 +286,11 @@ function GiantFx.start(deps: Deps): Handle
 		if state.snortAt ~= nil and now - state.snortAt >= Shared.snortGapSeconds then
 			state.snortAt = nil
 			sleepSigns.snortBurst()
+			playSoundAt("Snort2", find.noseAt())
+		end
+		if state.mumbleAt ~= nil and now >= state.mumbleAt then
+			state.mumbleAt = nil
+			playSoundAt("Mumble", find.mouthAt())
 		end
 		if state.fadeAt ~= nil then
 			local seconds = now - state.fadeAt
@@ -341,6 +356,7 @@ function GiantFx.start(deps: Deps): Handle
 		if
 			state.flutterAt == nil
 			and state.snortAt == nil
+			and state.mumbleAt == nil
 			and state.fadeAt == nil
 			and state.bubbleUntil == nil
 			and state.replayUntil == nil
@@ -397,11 +413,17 @@ function GiantFx.start(deps: Deps): Handle
 			local popAt = deps.now()
 			state.bubbleAt = popAt
 			state.bubbleUntil = popAt + Bubble85.showSeconds(deps.reducedMotion())
+			-- The mumble starts over: a playing one stops, and the new one comes 1.0 s after this 85.
+			if deps.stopSound ~= nil then
+				deps.stopSound("Mumble")
+			end
+			state.mumbleAt = popAt + Shared.mumbleDelaySeconds
 		end
 		if table.find(plan, SNORT) ~= nil then
 			-- A new 85 starts the snort over: a burst now, and the second one after this one (not after the old one).
 			state.snortAt = deps.now()
 			sleepSigns.snortBurst()
+			playSoundAt("Snort1", find.noseAt())
 		end
 		if #plan > 0 then
 			applyState()
@@ -473,6 +495,10 @@ function GiantFx.start(deps: Deps): Handle
 			pose.placeLids(0)
 		end
 		state.snortAt = nil
+		state.mumbleAt = nil
+		if deps.stopSound ~= nil then
+			deps.stopSound("Mumble")
+		end
 		sleepSigns.clearSnort()
 		if state.fadeAt ~= nil then
 			state.fadeAt = nil
@@ -528,6 +554,7 @@ function GiantFx.start(deps: Deps): Handle
 		disconnectStep()
 		state.flutterAt = nil
 		state.snortAt = nil
+		state.mumbleAt = nil
 		state.fadeAt = nil
 		state.bubbleAt = nil
 		state.bubbleUntil = nil

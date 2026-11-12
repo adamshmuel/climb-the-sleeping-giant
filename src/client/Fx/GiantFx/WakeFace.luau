@@ -117,8 +117,7 @@ function WakeFace.new(state: Shared.State, deps: Shared.Deps, find: Find.Finders
 			zpop.Enabled = true
 		end
 		play("WakeEyes", nil)
-		local mouth = find.child(find.mouth(), "Mouth")
-		play("WakeRoar", if mouth ~= nil and mouth:IsA("BasePart") then mouth.Position else nil)
+		play("WakeRoar", find.mouthAt())
 		local anchor = find.bang()
 		play("ZzzPop", if anchor ~= nil and anchor:IsA("BasePart") then anchor.Position else nil)
 	end

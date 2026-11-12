@@ -37,6 +37,7 @@ local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
+local Cues = require(script.Audio.Cues)
 local Music = require(script.Audio.Music)
 local Snore = require(script.Audio.Snore)
 local SoundBoard = require(script.Audio.SoundBoard)
@@ -76,8 +77,33 @@ local soundBoard = SoundBoard.start({
 			end,
 		}
 	end,
+	fadeOut = function(copy: AudioPlayer, afterSeconds: number, seconds: number)
+		-- The cut sound's last moments fade to nothing so the cut doesn't click (the snort's 0.05 s).
+		TweenService:Create(
+			copy,
+			TweenInfo.new(seconds, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, afterSeconds),
+			{
+				Volume = 0,
+			}
+		):Play()
+	end,
 	now = os.clock,
 })
+
+-- The named sound places (a name from the game's code to a sound board row): GiantFx's snorts and mumble now; later tasks
+-- add their names to Cues. A name with no row yet plays nothing.
+local function playCue(name: string, at: Vector3?)
+	local cue = Cues.forName(name)
+	if cue ~= nil then
+		soundBoard.play(cue.row, at, { speed = cue.speed })
+	end
+end
+local function stopCue(name: string)
+	local cue = Cues.forName(name)
+	if cue ~= nil then
+		soundBoard.stop(cue.row)
+	end
+end
 
 -- The route and the egg spots never stream out (they are Persistent), so they are there at once. The camera needs them from
 -- the very first spawn, to turn the player away from the egg the footprints lead to. The footprints below use the same ones.
@@ -353,6 +379,8 @@ if server then
 		script.Destroying:Once(snore.destroy)
 		GiantFx.start({
 			world = world,
+			playSound = playCue,
+			stopSound = stopCue,
 			warning = { OnClientEvent = server.Warning.OnClientEvent },
 			slamWarning = { OnClientEvent = server.SlamWarning.OnClientEvent },
 			giantState = server.GiantState,

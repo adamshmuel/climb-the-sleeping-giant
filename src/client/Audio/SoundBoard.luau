@@ -17,10 +17,12 @@ export type Deps = {
 	startPlaying: (player: AudioPlayer) -> (), -- player:Play() in the game
 	isReady: (player: AudioPlayer) -> boolean, -- player.IsReady in the game
 	ended: (player: AudioPlayer, callback: () -> ()) -> Disconnectable, -- player.Ended in the game
+	fadeOut: ((copy: AudioPlayer, afterSeconds: number, seconds: number) -> ())?, -- fades the copy's Volume to 0 (a tween in the game)
 	now: () -> number,
 }
 export type PlayOptions = {
 	thud: number?, -- the flump's thud size (+20, +30, +40 or more)
+	speed: number?, -- overrides the row's own speed (the second snort's 0.9)
 	into: Instance?, -- a Just for you row wires here instead of to its bus (Music's faders)
 }
 export type LogRecord = { row: string, time: number, place: Vector3? }
@@ -152,11 +154,19 @@ function SoundBoard.start(deps: Deps): Board
 		local copy = template:Clone()
 		copy.Name = `Copy {rowName}`
 		copy.Volume = SoundList.playerVolume(loudness)
-		copy.PlaybackSpeed = speedFor(entry)
+		local speed = (options and options.speed) or speedFor(entry)
+		copy.PlaybackSpeed = speed
 		copy.TimePosition = entry.fileStart
 		if entry.loopStart ~= nil and entry.loopEnd ~= nil then
 			copy.Looping = true
 			copy.LoopRegion = NumberRange.new(entry.loopStart, entry.loopEnd)
+		end
+		if entry.fileEnd ~= nil then
+			copy.PlaybackRegion = NumberRange.new(entry.fileStart, entry.fileEnd)
+			local fadeOut = deps.fadeOut
+			if entry.endFade ~= nil and fadeOut ~= nil then
+				fadeOut(copy, (entry.fileEnd - entry.fileStart - entry.endFade) / speed, entry.endFade / speed)
+			end
 		end
 		copy.Parent = deps.root
 

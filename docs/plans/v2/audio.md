@@ -187,10 +187,12 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 9: The wake-up is loud, and the yawn**
 - Spec rules: Rule 92 (The wake-up is loud); Rule 88 (The game reads without sound): Reduce Motion changes no sound; Rule 86 (Three ways to hear): 8 boings; section 8, "8 players are bounced off at once", "Reduce Motion is on", "A player joins while he's awake".
-- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau` (new: plays the cues for the sound places and for player attributes), `src/client/init.client.luau` (passes `playSound` to `GiantFx`, `WakeWorld` and `CameraFx`), their tests.
+- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/SoundBoard.luau` (a fade option), `src/client/Audio/Moments.luau` (new: plays the cues for the sound places and for player attributes; the `playCue`/`stopCue` pair moves here from `init.client`), `src/client/Fx/GiantFx/WakeFace.luau` (`LieDown` is played at his mouth: the yawn is a whole-valley row, and the board skips a world row with no place), `src/client/init.client.luau` (passes the play function to `GiantFx`, `WakeWorld` and `CameraFx`), their tests.
+- Changed 2026-11-12 (code_lead): the hooks all fire at 0 s, so `Cues` gives the birds a 0.2 s delay and the Z Z Z pop 0.3 s; `Moments` schedules them. Done when also has a muted Play wake (Task 8's pattern).
 - What it does: connects plan 6's `WakeEyes` (the sting), `WakeRoar` (the roar, speed 0.8), `WakeRumble` (the rumble, faded out over 1 s), `WakeBirds`, `ZzzPop` and `LieDown` (the yawn, speed 0.8). A player whose `Floating` turns true gets a boing at them. If the yawn row is ever taken out of the list (Rule 92's fallback), `LieDown` plays nothing; the Heavy Sleep snore starts at the lie-down anyway (Task 7).
 - Failing tests first (fake board, fake clock, a whole wake from the real `GiantFx` with fakes around it): the sting, roar and rumble start at 0 s, the birds at 0.2 s, the Z Z Z pop at 0.3 s, each once; the rumble is silent from 1.0 s; with Reduce Motion on, exactly the same sounds at the same times; 8 players floating at once give 3 boings; a player who joins mid-wake hears no roar; at the lie-down one yawn from his mouth; with the yawn row removed, nothing plays at the lie-down and the Heavy Sleep snore still starts.
-- Done when: the tests pass.
+- Done when: the tests pass, and a muted Play wake shows each wake row once at its time, the rumble silent by 1 s, and one yawn at the lie-down.
+- Stands on: Tasks 3, 6, 7 and 8 (approved 2026-11-12); plan 6's sound hooks in `WakeFace`, `CameraFx/Shake` and `WakeWorld` (built).
 
 **Task 10: Every slam is heard**
 - Spec rules: Rule 94 (Every slam is heard): the whoosh, the thud, the bonk with its twinkle, the caught whoosh; section 8, "The music is off and he wakes".

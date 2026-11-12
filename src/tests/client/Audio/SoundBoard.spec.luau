@@ -16,6 +16,9 @@ local PRECISION = 2
 local PLACE = Vector3.new(40, 5, -30)
 local LOG_LIMIT = 200 -- plan 7, Task 3: "the last 200 plays"
 
+-- One fade the board asked for: the copy, the seconds to wait, and the seconds the fade lasts.
+type Fade = { copy: AudioPlayer, afterSeconds: number, seconds: number }
+
 type Rig = {
 	board: SoundBoard.Board,
 	root: Folder,
@@ -23,6 +26,7 @@ type Rig = {
 	worldParent: Part,
 	started: { AudioPlayer }, -- every copy startPlaying was asked to start, in order
 	notReady: { [string]: boolean }, -- Asset strings whose file "isn't ready yet"
+	fades: { Fade }, -- every fadeOut the board asked for, in order
 	setTime: (seconds: number) -> (),
 	fireEnded: (copy: AudioPlayer) -> (),
 }
@@ -36,6 +40,7 @@ local function newRig(): Rig
 	local started: { AudioPlayer } = {}
 	local notReady: { [string]: boolean } = {}
 	local endedCallbacks: { [AudioPlayer]: () -> () } = {}
+	local fades: { Fade } = {}
 	local time = 0
 	local board = SoundBoard.start({
 		root = root,
@@ -55,6 +60,9 @@ local function newRig(): Rig
 				end,
 			}
 		end,
+		fadeOut = function(copy: AudioPlayer, afterSeconds: number, seconds: number)
+			table.insert(fades, { copy = copy, afterSeconds = afterSeconds, seconds = seconds })
+		end,
 		now = function(): number
 			return time
 		end,
@@ -66,6 +74,7 @@ local function newRig(): Rig
 		worldParent = worldParent,
 		started = started,
 		notReady = notReady,
+		fades = fades,
 		setTime = function(seconds: number)
 			time = seconds
 		end,
@@ -380,5 +389,55 @@ describe("SoundBoard", function()
 				end
 			end
 		end
+	end)
+end)
+
+describe("SoundBoard: the snort's speed, cut and fade (plan 7 Task 8)", function()
+	it("plays a row at the speed option instead of the row's own speed", function()
+		local rig = newRig()
+		rig.board.play("85% snort (two)", PLACE) -- the row's speed 1
+		expect(lastCopy(rig).PlaybackSpeed).toBeCloseTo(1, PRECISION)
+		rig.board.play("85% snort (two)", PLACE, { speed = 0.9 })
+		expect(lastCopy(rig).PlaybackSpeed).toBeCloseTo(0.9, PRECISION)
+	end)
+
+	it("lets the speed option beat a row's speed range", function()
+		local rig = newRig()
+		rig.board.play("Snore (loop)", PLACE, { speed = 1.25 })
+		expect(lastCopy(rig).PlaybackSpeed).toBeCloseTo(1.25, PRECISION)
+	end)
+
+	it("cuts the snort to 3.46 s to 3.86 s and leaves every row without a fileEnd uncut", function()
+		local rig = newRig()
+		rig.board.play("85% snort (two)", PLACE)
+		local region = lastCopy(rig).PlaybackRegion
+		expect(region.Min).toBeCloseTo(3.46, PRECISION)
+		expect(region.Max).toBeCloseTo(3.86, PRECISION)
+		rig.board.play("Bonk", PLACE)
+		local uncut = Instance.new("AudioPlayer").PlaybackRegion
+		expect(lastCopy(rig).PlaybackRegion).toEqual(uncut)
+	end)
+
+	it("asks for the end fade 0.35 s in and 0.05 s long at speed 1", function()
+		local rig = newRig()
+		local copy = rig.board.play("85% snort (two)", PLACE) :: AudioPlayer
+		expect(#rig.fades).toBe(1)
+		expect(rig.fades[1].copy).toBe(copy)
+		expect(rig.fades[1].afterSeconds).toBeCloseTo(0.35, PRECISION)
+		expect(rig.fades[1].seconds).toBeCloseTo(0.05, PRECISION)
+	end)
+
+	it("stretches the end fade with the speed option", function()
+		local rig = newRig()
+		rig.board.play("85% snort (two)", PLACE, { speed = 0.9 })
+		expect(rig.fades[1].afterSeconds).toBeCloseTo(0.35 / 0.9, PRECISION)
+		expect(rig.fades[1].seconds).toBeCloseTo(0.05 / 0.9, PRECISION)
+	end)
+
+	it("asks for no fade for a row without an endFade", function()
+		local rig = newRig()
+		rig.board.play("Bonk", PLACE)
+		rig.board.play('"Mmm..." mumble', PLACE)
+		expect(#rig.fades).toBe(0)
 	end)
 end)

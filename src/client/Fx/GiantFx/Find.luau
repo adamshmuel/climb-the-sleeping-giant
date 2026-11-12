@@ -18,6 +18,8 @@ export type Finders = {
 	snortPuff: () -> ParticleEmitter?,
 	bubble: () -> BillboardGui?,
 	mouth: () -> Model?,
+	mouthAt: () -> Vector3?,
+	noseAt: () -> Vector3?,
 	bang: () -> any,
 }
 
@@ -98,6 +100,25 @@ function Find.new(deps: Shared.Deps): Finders
 		return nil
 	end
 
+	-- Where his mouth is (the Mouth part's position), or nil when it is streamed out.
+	local function mouthAt(): Vector3?
+		local part = child(mouth(), "Mouth")
+		if part ~= nil and part:IsA("BasePart") then
+			return part.Position
+		end
+		return nil
+	end
+
+	-- Where his nose is (the snort puff's part), or nil when it is streamed out.
+	local function noseAt(): Vector3?
+		local part = snortPuff()
+		local holder = if part ~= nil then part.Parent else nil
+		if holder ~= nil and holder:IsA("BasePart") then
+			return holder.Position
+		end
+		return nil
+	end
+
 	-- The "!" badge's anchor part (the Bang and ZPop guis sit on it).
 	local function bang(): any
 		return child(fx(), "BangAnchor")
@@ -114,6 +135,8 @@ function Find.new(deps: Shared.Deps): Finders
 		snortPuff = snortPuff,
 		bubble = bubble,
 		mouth = mouth,
+		mouthAt = mouthAt,
+		noseAt = noseAt,
 		bang = bang,
 	}
 end

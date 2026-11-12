@@ -117,6 +117,7 @@ export type Rig = {
 	zpopSize: UDim2,
 	bangLooks: { [Instance]: number }, -- each Frame's BackgroundTransparency and UIStroke's Transparency in Bang, at the start
 	sounds: { SoundCall }, -- every playSound call, in order
+	soundStops: { SoundCall }, -- every stopSound call, in order (the place is always nil)
 }
 
 -- One playSound call the module made: the name, the place (nil for no place) and the seconds since the rig was built.
@@ -390,6 +391,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 	local clears: { ParticleEmitter } = {}
 	-- The stand-in for the sound setting: it records each call with the seconds since the rig was built.
 	local sounds: { SoundCall } = {}
+	local soundStops: { SoundCall } = {}
 
 	-- Where the pieces are before the module starts: a module that starts while he is awake moves them at once.
 	local armStart = arm:GetPivot()
@@ -441,6 +443,11 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 		playSound = if withSound ~= false
 			then function(name: string, at: Vector3?)
 				table.insert(sounds, { name = name, at = at, time = clock - 100 })
+			end
+			else nil,
+		stopSound = if withSound ~= false
+			then function(name: string)
+				table.insert(soundStops, { name = name, at = nil, time = clock - 100 })
 			end
 			else nil,
 	})
@@ -529,6 +536,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 		zpopSize = zpop.Size,
 		bangLooks = bangLooks,
 		sounds = sounds,
+		soundStops = soundStops,
 	}
 end
 

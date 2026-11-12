@@ -45,6 +45,8 @@ export type Deps = {
 	onPuffsChanged: ((puffs: Puffs) -> ())?,
 	-- Plays a sound by name (`at` is the place it comes from, or nil for no place). If left out, nothing plays.
 	playSound: ((name: string, at: Vector3?) -> ())?,
+	-- Stops a sound place that is playing by name (the mumble, at a replay or a wake). If left out, nothing stops.
+	stopSound: ((name: string) -> ())?,
 }
 
 -- What start gives back: `stop` puts every piece back as it was and disconnects everything.
@@ -96,6 +98,8 @@ export type State = {
 	fadeAt: number?,
 	-- When the snort started: its second burst is still to come until this is nil.
 	snortAt: number?,
+	-- When the "Mmm..." mumble plays (1.0 s after an 85), or nil.
+	mumbleAt: number?,
 	-- The 85 bubble: when it popped in, and when it goes off (after its fade), or nil.
 	bubbleAt: number?,
 	bubbleUntil: number?,
@@ -166,6 +170,7 @@ Shared.flutterSeconds = 0.5 -- one flutter: 0.25 s up, 0.25 s down
 Shared.flutterCount = 2
 Shared.snortPuffs = 20 -- the puffs in each of the two snort bursts (style guide, "The snort")
 Shared.snortGapSeconds = 0.5 -- the second burst comes this long after the first
+Shared.mumbleDelaySeconds = 1.0 -- the mumble starts this long after an 85 (spec 7 Rule 91)
 Shared.fadeSeconds = 2 -- the Z Z Z fade, all in all
 Shared.fadeEdgeSeconds = 0.2 -- the way down to half and the way back
 Shared.fadeTo = 0.5 -- half see-through
