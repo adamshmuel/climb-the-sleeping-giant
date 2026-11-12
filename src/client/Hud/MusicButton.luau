@@ -31,6 +31,7 @@ export type Deps = {
 	},
 	hudLeft: () -> number, -- HudTop's own left edge (AbsolutePosition.X), taken off the inset's Min.X
 	music: { setOn: (on: boolean) -> () },
+	send: (on: boolean) -> (), -- tells the server the answer (the SetMusic remote), once per tap
 	click: () -> (), -- plays the "Music button click" row
 }
 
@@ -93,6 +94,7 @@ function MusicButton.start(deps: Deps): Handle
 		on = not on
 		paintLook()
 		deps.music.setOn(on)
+		deps.send(on)
 		deps.click()
 	end
 

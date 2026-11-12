@@ -6,6 +6,7 @@ export type Made = {
 	Remotes: Folder,
 	Warning: RemoteEvent, -- fires 60 or 85 when the meter rises past that mark; at a free save it fires (85, "FreeSave") to replay the 85% warning
 	SetTiptoe: RemoteEvent, -- the client asks for Tiptoe on or off (true or false)
+	SetMusic: RemoteEvent, -- the client tells the server its music is on or off (true or false)
 	GrabMissed: RemoteEvent, -- the server tells one player that someone else got the egg first (sends nothing)
 	EggHome: RemoteEvent, -- the server tells everyone an egg was banked: (player, rarity, position of the new egg)
 	Bounced: RemoteEvent, -- the server tells one player the flat direction (Vector3) they now face after the bounce-off
@@ -27,6 +28,7 @@ Net.RemotesName = "Remotes"
 Net.GiantStateName = "GiantState"
 Net.WarningName = "Warning"
 Net.SetTiptoeName = "SetTiptoe"
+Net.SetMusicName = "SetMusic"
 Net.GrabMissedName = "GrabMissed"
 Net.EggHomeName = "EggHome"
 Net.BouncedName = "Bounced"
@@ -62,6 +64,7 @@ function Net.setup(parent: Instance): Made
 	local remotes = (findOrMake(parent, Net.RemotesName, "Folder"))
 	local warning = (findOrMake(remotes, Net.WarningName, "RemoteEvent"))
 	local setTiptoe = (findOrMake(remotes, Net.SetTiptoeName, "RemoteEvent"))
+	local setMusic = (findOrMake(remotes, Net.SetMusicName, "RemoteEvent"))
 	local grabMissed = (findOrMake(remotes, Net.GrabMissedName, "RemoteEvent"))
 	local eggHome = (findOrMake(remotes, Net.EggHomeName, "RemoteEvent"))
 	local bounced = (findOrMake(remotes, Net.BouncedName, "RemoteEvent"))
@@ -83,6 +86,7 @@ function Net.setup(parent: Instance): Made
 		Remotes = remotes :: Folder,
 		Warning = warning :: RemoteEvent,
 		SetTiptoe = setTiptoe :: RemoteEvent,
+		SetMusic = setMusic :: RemoteEvent,
 		GrabMissed = grabMissed :: RemoteEvent,
 		EggHome = eggHome :: RemoteEvent,
 		Bounced = bounced :: RemoteEvent,
@@ -128,6 +132,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 	local setTiptoe = if remotes
 		then waitForChildOfClass(remotes, Net.SetTiptoeName, "RemoteEvent", remaining())
 		else nil
+	local setMusic = if remotes then waitForChildOfClass(remotes, Net.SetMusicName, "RemoteEvent", remaining()) else nil
 	local grabMissed = if remotes
 		then waitForChildOfClass(remotes, Net.GrabMissedName, "RemoteEvent", remaining())
 		else nil
@@ -155,6 +160,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		remotes == nil
 		or warning == nil
 		or setTiptoe == nil
+		or setMusic == nil
 		or grabMissed == nil
 		or eggHome == nil
 		or bounced == nil
@@ -178,6 +184,9 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		end
 		if setTiptoe == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.SetTiptoeName}`)
+		end
+		if setMusic == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.SetMusicName}`)
 		end
 		if grabMissed == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.GrabMissedName}`)
@@ -225,6 +234,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		Remotes = remotes :: Folder,
 		Warning = warning :: RemoteEvent,
 		SetTiptoe = setTiptoe :: RemoteEvent,
+		SetMusic = setMusic :: RemoteEvent,
 		GrabMissed = grabMissed :: RemoteEvent,
 		EggHome = eggHome :: RemoteEvent,
 		Bounced = bounced :: RemoteEvent,

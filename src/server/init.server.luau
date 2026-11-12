@@ -39,6 +39,7 @@ local WayUpWatch = require(script.Players.WayUpWatch)
 local Spawning = require(script.Players.Spawning)
 local PressingHandler = require(script.Remotes.PressingHandler)
 local ResetHandler = require(script.Remotes.ResetHandler)
+local MusicHandler = require(script.Remotes.MusicHandler)
 local TiptoeHandler = require(script.Remotes.TiptoeHandler)
 local WorldIndex = require(script.World.WorldIndex)
 
@@ -106,6 +107,14 @@ TiptoeHandler.start({
 	remote = { OnServerEvent = net.SetTiptoe.OnServerEvent },
 	players = Players,
 	now = os.clock,
+})
+-- The music button: a client says its music is on or off; only a real change reaches Analytics ("MusicOff"/"MusicOn").
+local musicToggled = Signal.new() :: Signal.Signal<number, boolean>
+MusicHandler.start({
+	remote = { OnServerEvent = net.SetMusic.OnServerEvent },
+	players = Players,
+	now = os.clock,
+	changed = musicToggled,
 })
 Carry.watchSpeed(Players)
 
@@ -538,6 +547,7 @@ analytics = Analytics.start({
 	unstuck = recovery.unstuck,
 	refilled = grab.refilled,
 	slideEnded = slideEnded,
+	musicToggled = musicToggled,
 	gardens = gardenSpots,
 	wayUps = wayUpTops,
 	now = os.clock,

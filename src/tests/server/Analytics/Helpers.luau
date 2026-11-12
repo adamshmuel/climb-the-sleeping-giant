@@ -55,6 +55,7 @@ export type Harness = {
 	unstuck: Signal.Signal<any, string, string>, -- (player, how, zone)
 	refilled: Signal.Signal<any, number>, -- (rank, waited seconds)
 	slideEnded: Signal.Signal<number, number>, -- (userId, slideNumber)
+	musicToggled: Signal.Signal<number, boolean>, -- (userId, on)
 	idsMade: number,
 }
 
@@ -87,6 +88,7 @@ local function cleanUp()
 		harness.unstuck:Destroy()
 		harness.refilled:Destroy()
 		harness.slideEnded:Destroy()
+		harness.musicToggled:Destroy()
 	end
 	table.clear(made)
 	for _, player in players do
@@ -133,6 +135,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		unstuck = Signal.new(),
 		refilled = Signal.new(),
 		slideEnded = Signal.new(),
+		musicToggled = Signal.new(),
 		idsMade = 0,
 	}
 	local function record(method: string, call: Call)
@@ -207,6 +210,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		unstuck = harness.unstuck,
 		refilled = harness.refilled,
 		slideEnded = harness.slideEnded,
+		musicToggled = harness.musicToggled,
 		gardens = gardens,
 		wayUps = WAY_UP_TOPS,
 		now = function()
@@ -283,6 +287,11 @@ local function slide(harness: Harness, userId: number, number: number)
 	harness.slideEnded:Fire(userId, number)
 end
 
+-- A player tapped the music button: `on` is what their music is now (MusicHandler's `changed`).
+local function fireMusic(harness: Harness, userId: number, on: boolean)
+	harness.musicToggled:Fire(userId, on)
+end
+
 -- Where a player is for the tick: `garden` is the garden box they stand in (nil in the meadow), and `x`, `z` and `y`
 -- the position.
 local function sampleOf(player: FakePlayer, garden: number?, x: number, z: number, y: number?): PlayerTracker.Sample
@@ -356,6 +365,7 @@ return {
 	cleanUp = cleanUp,
 	enter = enter,
 	eventsNamed = eventsNamed,
+	fireMusic = fireMusic,
 	grab = grab,
 	join = join,
 	leave = leave,

@@ -281,7 +281,9 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 18: A whole session with sound**
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests"); Rule 88 (The game reads without sound).
-- Files: `src/tests/client/Sessions/AudioSession.spec.luau` (new).
+- Files: `src/tests/client/Sessions/AudioSession.spec.luau` (new), `src/tests/client/Sessions/AudioRig.luau` (new, its stand-ins).
+- Stands on: Tasks 1 to 17.
+- Changed 2026-11-13 (code_lead): the stand-ins move to a helper file so neither file nears the line limit.
 - The test: a brand-new player with the real `SoundBoard` (fake output, fake start, fake clock), `Music`, `MusicMix`, `Snore`, `Cues`, `Moments`, `Footsteps` and `MusicButton`, and stand-ins for the remotes, the attributes and `GiantFx`'s sound places. They join at 10% (calm tune fading in, snore); grab and bank a Common (pluck, toot); jump on his boot (flump); pass 60% (snore pause, music half and muffled); turn Tiptoe on (click, quiet footsteps); pass 85% (snore off in 0.1 s, two snorts, music silent by 1 s, mumble at 1 s); get their free save (snorts and mumble again); keep going: bank a Rare (toot and hit); wake him (sting, roar, rumble, birds, Z Z Z, 8 bounced players give 3 boings, chase at 1 s); are bonked (bonk and twinkle), grab an egg, are caught (whoosh, the egg pops back); he lies down (yawn, Heavy Sleep snore, calm tune back); they turn the music off; in a second wake-up there is no chase tune but every effect plays.
 - Checks: every sound played matches its moment in the board's log; no row ever has more than 3 copies at once; every sound played comes with its on-screen partner from "Every sound, and what the screen shows with it" (the stand-ins record both); nothing was ever wired to a real speaker output.
 - Failing test first: the test itself. The builder breaks one task's rule on purpose once (for example, the snore's 0.1 s stop) and shows it fail.

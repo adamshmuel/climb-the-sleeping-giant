@@ -789,6 +789,9 @@ if server then
 			return hudTop.AbsolutePosition.X
 		end,
 		music = music,
+		send = function(on: boolean)
+			server.SetMusic:FireServer(on)
+		end,
 		click = function()
 			soundBoard.play("Music button click")
 		end,

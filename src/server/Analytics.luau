@@ -80,6 +80,7 @@ export type Deps = {
 	unstuck: SignalLike, -- Recovery's signal: (player, how, zone) just before a rescue, a Reset on the giant or a loop send home
 	refilled: SignalLike, -- Grab's signal: (rank, seconds waited past the countdown) when a new egg appears
 	slideEnded: SignalLike, -- (UserId, slide number this session) when a slide ends
+	musicToggled: SignalLike, -- MusicHandler's signal: (UserId, on) when a player turns their music off or on
 	gardens: { GardenSpot },
 	wayUps: { WayUpWatch.Top }, -- each way up's name and where its top is (WorldIndex.readWaysUp; plan 3 Task 16)
 	now: () -> number, -- os.clock; it tells who has been in the server longest
@@ -146,6 +147,7 @@ local LEFT_GARDEN_STUDS = 10
 --   "WakeWayUp":      CustomField01 = the waker's last way up ("None" if they never climbed or nobody can be named),
 --                     CustomField02 = the server size.
 --   "EggGrab":        CustomField01 = the rank of the egg grabbed, CustomField02 = the server size. One per grab.
+--   "MusicOff"/"MusicOn": CustomField01 = the server size, valued at the whole minutes since the player joined.
 --   "WakeRank":       CustomField01 = the rank the waker carried when he woke ("None" if empty-handed or nobody can be
 --                     named), CustomField02 = the server size. One per wake-up, logged next to "GiantWoke" (which has
 --                     no slot left).
@@ -167,6 +169,9 @@ local EVENT_WAY_UP = "WayUp" -- one per climb to the top of a way up
 local EVENT_WAKE_WAY_UP = "WakeWayUp" -- one per wake-up, on the player "GiantWoke" is logged on
 local EVENT_EGG_GRAB = "EggGrab" -- one per egg grabbed, on the grabber
 local EVENT_WAKE_RANK = "WakeRank" -- one per wake-up, on the player "GiantWoke" is logged on
+local EVENT_MUSIC_OFF = "MusicOff" -- one per tap that turns the music off, valued at the whole minutes since the player joined
+local EVENT_MUSIC_ON = "MusicOn" -- one per tap that turns it back on, valued the same way
+local SECONDS_PER_MINUTE = 60
 local NO_WAY_UP = "None" -- "WakeWayUp" and "WayUp": no way up or garden to name
 local NO_RANK = "None" -- "WakeRank": the waker carried nothing, or nobody can be named
 local CARRYING = "Carrying"
@@ -691,6 +696,21 @@ function Analytics.start(deps: Deps): Analytics
 		logCustom(record.player, EVENT_SLIDE_OFF, EVENT_VALUE, {
 			[FIELD_ONE] = if carries(record.player) then CARRYING else EMPTY,
 			[FIELD_TWO] = which,
+		})
+	end))
+
+	-- The music button: logged on the player who tapped, valued at the whole minutes (rounded down) since they joined.
+	trove:Add(deps.musicToggled:Connect(function(userId: number, on: boolean)
+		if stopped then
+			return
+		end
+		local record = records[userId]
+		if record == nil then
+			return
+		end
+		local minutes = math.floor((deps.now() - record.joinedAt) / SECONDS_PER_MINUTE)
+		logCustom(record.player, if on then EVENT_MUSIC_ON else EVENT_MUSIC_OFF, minutes, {
+			[FIELD_ONE] = Analytics.serverSize(#players:GetPlayers()),
 		})
 	end))
 

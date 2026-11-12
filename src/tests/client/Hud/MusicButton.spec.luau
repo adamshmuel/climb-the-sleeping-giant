@@ -10,6 +10,8 @@
 --   deps.hudLeft    () -> number, HudTop's AbsolutePosition.X; the button's x is minX minus this
 --   deps.music      { setOn: (on) -> () }
 --   deps.click      () -> (), plays the row "Music button click" once
+--   deps.send       (on: boolean) -> (), tells the server (SetMusic); called once per tap, after music.setOn
+--                   (plan 7 Task 17; the real wiring is FireServer in init.client)
 --   handle.setMeterLeft(x): the meter's left edge at its biggest, told by SleepMeterUi's onLayout; before it is told,
 --     the button assumes the meter is far away.
 --   handle.toggle(): what a tap does (the button's Activated calls it).
@@ -50,6 +52,7 @@ type Rig = {
 	parent: Folder,
 	handle: MusicButton.Handle,
 	setOnCalls: { boolean },
+	sends: { boolean },
 	clicks: () -> number,
 	topbarConnections: () -> number,
 	moveTopbar: (minX: number, height: number?) -> (),
@@ -64,6 +67,7 @@ local function newRig(hudLeft: number?): Rig
 	local rect = { minX = MIN_X, height = BAND }
 	local connections = 0
 	local setOnCalls: { boolean } = {}
+	local sends: { boolean } = {}
 	local clicks = 0
 
 	local handle = MusicButton.start({
@@ -92,6 +96,9 @@ local function newRig(hudLeft: number?): Rig
 		click = function()
 			clicks += 1
 		end,
+		send = function(on: boolean)
+			table.insert(sends, on)
+		end,
 	})
 	table.insert(stops, handle.stop)
 
@@ -106,6 +113,7 @@ local function newRig(hudLeft: number?): Rig
 		parent = parent,
 		handle = handle,
 		setOnCalls = setOnCalls,
+		sends = sends,
 		clicks = function()
 			return clicks
 		end,
@@ -248,6 +256,17 @@ describe("MusicButton.start: a tap", function()
 		expect(rig.slash().Visible).toBe(false)
 		expect(rig.note().TextTransparency).toBeCloseTo(0, PRECISION)
 		expect(rig.clicks()).toBe(2)
+	end)
+
+	it("tells the server false on the first tap and true on the second, one message per tap", function()
+		local rig = newRig()
+		expect(#rig.sends).toBe(0)
+		rig.handle.toggle()
+		expect(#rig.sends).toBe(1)
+		expect(rig.sends[1]).toBe(false)
+		rig.handle.toggle()
+		expect(#rig.sends).toBe(2)
+		expect(rig.sends[2]).toBe(true)
 	end)
 
 	it("keeps its off look when it is placed again", function()
