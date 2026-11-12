@@ -62,7 +62,12 @@ function ClimbGate.start(deps: Deps): ClimbGate
 		if humanoid == nil or root == nil then
 			return
 		end
-		local want = ClimbGate.near(root.Position, deps.findLadders(), Config.Ladders.NearStuds)
+		-- The root is HipHeight + Size.Y / 2 above the feet. A body at a ladder top (feet on the lip, root above the reach)
+		-- still counts, so either point being near keeps climbing on (K13).
+		local feet = root.Position - Vector3.new(0, humanoid.HipHeight + root.Size.Y / 2, 0)
+		local ladders = deps.findLadders()
+		local reach = Config.Ladders.NearStuds
+		local want = ClimbGate.near(root.Position, ladders, reach) or ClimbGate.near(feet, ladders, reach)
 		if humanoid ~= lastHumanoid or want ~= lastSent then
 			lastHumanoid = humanoid
 			lastSent = want

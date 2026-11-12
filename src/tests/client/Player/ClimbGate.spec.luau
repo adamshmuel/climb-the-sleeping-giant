@@ -3,6 +3,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
 
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local ClimbGate = require(StarterPlayer.StarterPlayerScripts.Client.Player.ClimbGate)
 
 type Call = { state: Enum.HumanoidStateType, value: boolean }
@@ -14,11 +15,17 @@ local function makeHumanoid()
 	local calls: { Call } = {}
 	local humanoid = {
 		calls = calls,
+		HipHeight = 2, -- as on the real body: the feet are HipHeight + Size.Y / 2 below the root (Rule 15)
 		SetStateEnabled = function(_self: any, state: Enum.HumanoidStateType, value: boolean)
 			table.insert(calls, { state = state, value = value })
 		end,
 	}
 	return humanoid
+end
+
+-- A stand-in HumanoidRootPart: a position and the 2 x 2 x 1 size the real root has. With HipHeight 2 the feet are 3 below.
+local function makeRoot(position: Vector3)
+	return { Position = position, Size = Vector3.new(2, 2, 1) }
 end
 
 -- A stand-in character: FindFirstChildOfClass("Humanoid") and FindFirstChild("HumanoidRootPart") work, nothing else.
@@ -110,7 +117,7 @@ end)
 describe("ClimbGate.start", function()
 	it("checks before every physics step: a body moved far from the box sends false on the very next step", function()
 		local humanoid = makeHumanoid()
-		local root = { Position = Vector3.new(1 + 1, 0, 0) } -- 1 stud from the box face at x = 1
+		local root = makeRoot(Vector3.new(1 + 1, 0, 0)) -- 1 stud from the box face at x = 1
 		local me, _run, step = setup({ ladderBox() })
 		me.Character = makeCharacter(humanoid, root)
 		step() -- near: true
@@ -125,7 +132,7 @@ describe("ClimbGate.start", function()
 	it("far from every ladder: the first tick sends false, ten more send nothing", function()
 		local humanoid = makeHumanoid()
 		local me, _run, tick = setup({ ladderBox() })
-		me.Character = makeCharacter(humanoid, { Position = Vector3.new(50, 0, 50) })
+		me.Character = makeCharacter(humanoid, makeRoot(Vector3.new(50, 0, 50)))
 		tick()
 		expect(humanoid.calls).toEqual({ { state = Enum.HumanoidStateType.Climbing, value = false } })
 		for _ = 1, 10 do
@@ -136,7 +143,7 @@ describe("ClimbGate.start", function()
 
 	it("into a zone sends true once, out of it sends false once", function()
 		local humanoid = makeHumanoid()
-		local root = { Position = Vector3.new(50, 0, 50) }
+		local root = makeRoot(Vector3.new(50, 0, 50))
 		local me, _run, tick = setup({ ladderBox() })
 		me.Character = makeCharacter(humanoid, root)
 		tick() -- far: false
@@ -156,7 +163,7 @@ describe("ClimbGate.start", function()
 	it("a respawn (a new Humanoid) gets its own first send", function()
 		local first = makeHumanoid()
 		local second = makeHumanoid()
-		local root = { Position = Vector3.new(50, 0, 50) }
+		local root = makeRoot(Vector3.new(50, 0, 50))
 		local me, _run, tick = setup({ ladderBox() })
 		me.Character = makeCharacter(first, root)
 		tick()
@@ -173,7 +180,7 @@ describe("ClimbGate.start", function()
 		tick() -- no character
 		me.Character = makeCharacter(humanoid, nil)
 		tick() -- a Humanoid, no root
-		me.Character = makeCharacter(nil, { Position = Vector3.zero })
+		me.Character = makeCharacter(nil, makeRoot(Vector3.zero))
 		tick() -- a root, no Humanoid
 		expect(#humanoid.calls).toBe(0)
 	end)
@@ -181,7 +188,24 @@ describe("ClimbGate.start", function()
 	it("no ladders found: sends false", function()
 		local humanoid = makeHumanoid()
 		local me, _run, tick = setup({})
-		me.Character = makeCharacter(humanoid, { Position = Vector3.zero })
+		me.Character = makeCharacter(humanoid, makeRoot(Vector3.zero))
+		tick()
+		expect(humanoid.calls).toEqual({ { state = Enum.HumanoidStateType.Climbing, value = false } })
+	end)
+
+	it("a body whose feet are still within reach keeps climbing at the ladder top", function()
+		-- ladderBox() top is y 16. Root one stud past the reach (Config.Ladders.NearStuds); feet are 3 below the root.
+		local humanoid = makeHumanoid()
+		local me, _run, tick = setup({ ladderBox() })
+		me.Character = makeCharacter(humanoid, makeRoot(Vector3.new(0, 16 + Config.Ladders.NearStuds + 1, 0)))
+		tick()
+		expect(humanoid.calls).toEqual({ { state = Enum.HumanoidStateType.Climbing, value = true } })
+	end)
+
+	it("feet below and root above both out of reach send false", function()
+		local humanoid = makeHumanoid()
+		local me, _run, tick = setup({ ladderBox() })
+		me.Character = makeCharacter(humanoid, makeRoot(Vector3.new(0, 16 + Config.Ladders.NearStuds + 5, 0)))
 		tick()
 		expect(humanoid.calls).toEqual({ { state = Enum.HumanoidStateType.Climbing, value = false } })
 	end)
@@ -189,7 +213,7 @@ describe("ClimbGate.start", function()
 	it("destroy stops the ticks and sends nothing more", function()
 		local humanoid = makeHumanoid()
 		local me, run, tick, gate = setup({ ladderBox() })
-		me.Character = makeCharacter(humanoid, { Position = Vector3.new(50, 0, 50) })
+		me.Character = makeCharacter(humanoid, makeRoot(Vector3.new(50, 0, 50)))
 		tick()
 		gate:destroy()
 		expect(run.stops).toBe(1)
