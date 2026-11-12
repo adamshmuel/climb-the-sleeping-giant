@@ -603,6 +603,25 @@ function Layout.meterCenterX(
 	return math.max(center, closestCenter)
 end
 
+-- The music button (plan 7 Task 16; spec 7 Rule 98), all in HudTop pixels. Numbers measured in Play (work/p7/task16-ruling.md).
+local MUSIC_SIZE_SHARE = 0.76 -- of the top-bar band: 44 px in Roblox's 58 px band, like Roblox's own buttons
+Layout.MUSIC_FIRST_LEFT = 16 -- Roblox's first button's left edge: where the button goes when it moves down
+local MUSIC_ROW_TOP = 12 -- Roblox's buttons sit 12 px from the top of the band
+local MUSIC_DOWN_GAP = 6 -- when it moves down, it sits this far below the band
+
+export type MusicSpot = { size: number, x: number, y: number, movedDown: boolean }
+
+-- Where the music button goes. It sits right of Roblox's buttons (`edge` is where their free space starts), level with
+-- their top. If the sleep meter at its biggest (`meterLeft`) would come within 8 px of it, it moves under Roblox's
+-- first button (`firstLeft` is that button's left edge), 6 px below the band.
+function Layout.musicButton(band: number, edge: number, firstLeft: number, meterLeft: number): MusicSpot
+	local size = math.round(MUSIC_SIZE_SHARE * band)
+	if edge + size + BUTTON_GAP > meterLeft then
+		return { size = size, x = firstLeft, y = band + MUSIC_DOWN_GAP, movedDown = true }
+	end
+	return { size = size, x = edge, y = MUSIC_ROW_TOP, movedDown = false }
+end
+
 -- All the sizes for a screen of this size.
 function Layout.forScreen(screenSize: Vector2): Screen
 	local phone = Layout.isPhone(screenSize)

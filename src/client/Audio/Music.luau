@@ -2,7 +2,7 @@
 -- The music player (plan 7 Task 6; spec 7 Rule 89 "Music follows the meter", Rule 93 "Chase music"). Each frame it asks the
 -- pure MusicMix what the music should do and applies it: two faders (calm, chase) go through one low-pass filter into the
 -- board's Music bus. The calm tune plays for the whole session; the chase tune starts when the mix says so and is never
--- sought while it plays. The music button (Task 16) is not built yet, so the music is always on.
+-- sought while it plays. The music button (Task 16) calls setOn, which turns the whole music bus off or on at once.
 local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local MusicMix = require(script.Parent.MusicMix)
 local SoundBoard = require(script.Parent.SoundBoard)
@@ -23,7 +23,7 @@ export type Deps = {
 	serverNow: () -> number,
 	hasCharacter: () -> boolean,
 }
-export type Handle = { destroy: () -> () }
+export type Handle = { destroy: () -> (), setOn: (on: boolean) -> () }
 
 local Music = {}
 
@@ -86,7 +86,7 @@ function Music.start(deps: Deps): Handle
 			phaseEndsAt = numberOf(deps.giantState:GetAttribute("PhaseEndsAt")),
 			warningAt = warningAt,
 			inGarden = inGarden > 0,
-			musicOn = true, -- the music button is Task 16
+			musicOn = true, -- the button silences the bus itself (setOn), so the faders keep following the mix
 			now = now,
 		})
 		calmFader.Volume = mix.calm
@@ -137,7 +137,14 @@ function Music.start(deps: Deps): Handle
 		end
 	end
 
-	return { destroy = destroy }
+	local function setOn(on: boolean)
+		local bus = deps.board.music
+		if bus:IsA("AudioFader") then
+			bus.Volume = if on then 1 else 0
+		end
+	end
+
+	return { destroy = destroy, setOn = setOn }
 end
 
 return Music

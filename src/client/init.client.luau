@@ -40,6 +40,7 @@ local TiptoeButton = require(script.Hud.TiptoeButton)
 local Footsteps = require(script.Audio.Footsteps)
 local Moments = require(script.Audio.Moments)
 local Music = require(script.Audio.Music)
+local MusicButton = require(script.Hud.MusicButton)
 local Snore = require(script.Audio.Snore)
 local SoundBoard = require(script.Audio.SoundBoard)
 local BodyBeams = require(script.World.BodyBeams)
@@ -148,6 +149,12 @@ local cameraWatcher = CameraFx.watch(Players.LocalPlayer, function()
 	return Workspace.CurrentCamera
 end, Config.Spawn.CameraTiltUpDegrees, Config.Spawn.EaseBackSeconds, nil, nil, { firstEgg = findFirstEgg })
 
+-- The music button (plan 7 Task 16) is built by the music block at the bottom. The meter tells its left edge on every
+-- layout, possibly before the button exists, so the edge is kept here and handed over when the button is made.
+local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+local musicButtonHandle: MusicButton.Handle? = nil
+local latestMeterLeft: number? = nil
+
 -- The sleep meter, the Tiptoe button and the messages need the server's remotes and the giant's state, so this part waits for
 -- them (after the camera is set up).
 local server = Net.waitForClient(ReplicatedStorage, NET_WAIT_SECONDS)
@@ -230,7 +237,6 @@ if server then
 		cameraWatcher.stop()
 		shaker.stop()
 	end)
-	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 	-- The Z Z Z beside the sleep meter. GiantFx says what they should look like; the meter says where they go.
 	local meterZs = MeterZs.new(Ui.hudTop(playerGui), {
 		reducedMotion = function(): boolean
@@ -281,10 +287,14 @@ if server then
 		redEdges.destroy()
 	end)
 	SleepMeterUi.start({
-		onLayout = function(screen: Layout.Screen, meterRight: number)
+		onLayout = function(screen: Layout.Screen, meterRight: number, meterLeft: number)
 			meterZs.place(screen, meterRight)
 			runHomeScreen = screen
 			runHome.place(screen, meterRight)
+			latestMeterLeft = meterLeft
+			if musicButtonHandle then
+				musicButtonHandle.setMeterLeft(meterLeft)
+			end
 		end,
 		parent = playerGui,
 		giantState = server.GiantState,
@@ -762,4 +772,30 @@ if server then
 		end,
 	})
 	script.Destroying:Once(music.destroy)
+
+	-- The music button (plan 7 Task 16): a tap turns the whole music off or on, and plays its click.
+	local hudTop = Ui.hudTop(playerGui)
+	local musicTopbar = SleepMeterUi.guiServiceTopbar(GuiService)
+	local button = MusicButton.start({
+		parent = hudTop,
+		topbar = {
+			get = function(): MusicButton.TopbarRect
+				local inset = GuiService.TopbarInset
+				return { minX = inset.Min.X, height = inset.Height }
+			end,
+			connect = musicTopbar.connect,
+		},
+		hudLeft = function(): number
+			return hudTop.AbsolutePosition.X
+		end,
+		music = music,
+		click = function()
+			soundBoard.play("Music button click")
+		end,
+	})
+	musicButtonHandle = button
+	if latestMeterLeft then
+		button.setMeterLeft(latestMeterLeft)
+	end
+	script.Destroying:Once(button.stop)
 end

@@ -338,3 +338,43 @@ describe("Music", function()
 		expect(#rig:playsOf(CHASE)).toBe(0)
 	end)
 end)
+
+-- The music button (plan 7 Task 16; spec 7 Rule 98): setOn turns the whole music bus off or on at once. The faders and
+-- the filter keep following the mix; only the bus changes.
+describe("Music.setOn", function()
+	it("silences the music bus at once and brings it back at once", function()
+		local rig = newRig()
+		rig:run(1)
+		expect(rig.music.Volume).toBeCloseTo(1, PRECISION)
+		rig.handle.setOn(false)
+		expect(rig.music.Volume).toBeCloseTo(0, PRECISION)
+		rig.handle.setOn(true)
+		expect(rig.music.Volume).toBeCloseTo(1, PRECISION)
+	end)
+
+	it("leaves the faders and the filter following the mix while it is off", function()
+		local rig = newRig()
+		rig.handle.setOn(false)
+		rig:run(DT) -- the first frame
+		rig:run(1)
+		expect(rig:calm().Volume).toBeCloseTo(1, PRECISION)
+		expect(rig:chase().Volume).toBeCloseTo(0, PRECISION)
+		expect(rig:muffle().Frequency).toBeCloseTo(CLEAR, HZ_PRECISION)
+		expect(rig.music.Volume).toBeCloseTo(0, PRECISION)
+		wake(rig)
+		rig:run(8)
+		expect(rig:chase().Volume).toBeGreaterThan(0.5)
+		expect(rig.music.Volume).toBeCloseTo(0, PRECISION)
+	end)
+
+	it("stays off when the character goes away and comes back", function()
+		local rig = newRig()
+		rig:run(1)
+		rig.handle.setOn(false)
+		rig.character.spawned = false
+		rig:run(1)
+		rig.character.spawned = true
+		rig:run(1)
+		expect(rig.music.Volume).toBeCloseTo(0, PRECISION)
+	end)
+end)
