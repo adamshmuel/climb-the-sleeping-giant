@@ -255,7 +255,7 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 16: The music button**
 - Spec rules: Rule 98 (The music button); section 5, "Music button height", "Small-phone move"; section 6 (all three states); section 8, "The music is off and he wakes", "A small phone", "Roblox adds or removes one of its own top-bar buttons".
-- Files: `src/client/Hud/MusicButton.luau` (new), `src/client/Hud/Layout.luau` (the button's size and whether it moves down), `src/client/Audio/Music.luau` (the music bus on and off), `src/client/init.client.luau`, their tests.
+- Files: `src/client/Hud/MusicButton.luau` (new), `src/client/Hud/Layout.luau` (the button's size and whether it moves down), `src/client/Hud/SleepMeterUi.luau` (tells where the meter's left edge is at its biggest), `src/client/Audio/Music.luau` (the music bus on and off), `src/client/init.client.luau`, their tests.
 - What it does, from the style guide ("The music button"):
   - a round button on `HudTop` (the meter's own screen), placed from `GuiService.TopbarInset` the way the meter already is: its left edge where Roblox's free top-bar space starts, centred in the top-bar band, 76% of the band's height;
   - Ink fill at 92%, a 2 px white ring, the blue 🎵 at 60% of its height, no word;
@@ -265,6 +265,8 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
   - Why `HudTop` and not its own `ScreenGui` with `TopbarSafeInsets` (designer's build line): the moved spot on small phones lies outside that area, and `HudTop` already follows `TopbarInset`. The button still sits right after Roblox's buttons and moves with them. designer knows (see "Questions").
 - Failing tests first: the button sits at `TopbarInset`'s left edge, centred in the band, 44 px tall in a 58 px band; it follows `TopbarInset` when it changes; on a 667 × 375 screen with the measured Roblox button it moves down one row, and on the iPhone 14 (844 × 390) it doesn't; a tap shows the off look, silences both tunes at once and clicks; a second tap brings them back; the snore and effects are untouched; after a respawn the choice is the same.
 - Done when: the tests pass, and in a muted session, on a computer (1280 wide), the iPhone 14 and the small 4.7-inch phone: screenshots of music on and off (off while he's awake, on the red edges), compared with `hud-music-desktop.png`, `hud-music-phone.png`, `hud-music-off-desktop.png`, `hud-music-off-phone.png` and `hud-music-small-phone.png`. The report gives the measured `TopbarInset`, Roblox's real button height, the button's box and its gap to the meter on each screen, and whether Roblox shows a backpack button. The main chat sends the shots to designer.
+- Changed 2026-11-13 (code_lead, how it is built; what the player sees is unchanged): `SleepMeterUi` tells the button where the meter's left edge is at its biggest (its pulse), so the 8 px gap holds while the meter pulses. The button never moves the meter. Card: `work/p7/task16-card.md`. Specs: unchanged.
+- Stands on: Tasks 3 and 6 (approved 2026-11-12: the board's Music bus and `Music`); the sleep meter and `HudTop` (built, V2 wake-up plan). Step 2's test numbers stand on Step 1's measured top bar.
 
 **Task 17: The music button's analytics**
 - Spec rules: section 10 ("Success signals"): "MusicOff" and "MusicOn".

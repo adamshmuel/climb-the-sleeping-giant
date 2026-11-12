@@ -27,6 +27,7 @@ export type Handle = {
 	hearEggHome: (eggHome: { OnClientEvent: SignalLike }) -> (),
 	hearEggPop: (eggPop: { OnClientEvent: SignalLike }) -> (),
 	hearThud: (thud: { OnClientEvent: SignalLike }) -> (),
+	hearRescued: (rescued: { OnClientEvent: SignalLike }) -> (),
 	destroy: () -> (),
 }
 
@@ -175,6 +176,21 @@ function Moments.start(deps: Deps): Handle
 		)
 	end
 
+	-- A rescue happens: the remote fires (player, from, to). One poof plays where he left and one where he lands, at once
+	-- (Rule 97). Every player's rescue is heard, so the player is never read. A bad `from` or `to` plays nothing.
+	local function hearRescued(rescued: { OnClientEvent: SignalLike })
+		table.insert(
+			connections,
+			rescued.OnClientEvent:Connect(function(_player: any, from: any, to: any)
+				if typeof(from) ~= "Vector3" or typeof(to) ~= "CFrame" then
+					return
+				end
+				play("RescuePoof", from)
+				play("RescuePoof", to.Position)
+			end)
+		)
+	end
+
 	local function destroy()
 		alive = false
 		for _, connection in connections do
@@ -195,6 +211,7 @@ function Moments.start(deps: Deps): Handle
 		hearEggHome = hearEggHome,
 		hearEggPop = hearEggPop,
 		hearThud = hearThud,
+		hearRescued = hearRescued,
 		destroy = destroy,
 	}
 end

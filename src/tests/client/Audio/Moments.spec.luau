@@ -30,6 +30,7 @@ type Rig = {
 	eggHome: BindableEvent,
 	eggPop: BindableEvent,
 	thud: BindableEvent,
+	rescued: BindableEvent,
 	addPlayer: (position: Vector3?) -> Instance,
 	setFloating: (player: Instance, floating: boolean) -> (),
 }
@@ -62,6 +63,8 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	table.insert(made, eggPop)
 	local thud = Instance.new("BindableEvent") -- plan 7 Task 13: the Thud remote
 	table.insert(made, thud)
+	local rescued = Instance.new("BindableEvent") -- plan 7 Task 15: the Rescued remote
+	table.insert(made, rescued)
 	local played: { Call } = {}
 	local stopped: { string } = {}
 	local later: { Later } = {}
@@ -99,6 +102,10 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	if hearThud ~= nil then
 		hearThud({ OnClientEvent = thud.Event })
 	end
+	local hearRescued = (handle :: any).hearRescued
+	if hearRescued ~= nil then
+		hearRescued({ OnClientEvent = rescued.Event })
+	end
 	local function addPlayer(position: Vector3?): Instance
 		local player = Instance.new("Folder")
 		player.Parent = players
@@ -118,6 +125,7 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 		eggHome = eggHome,
 		eggPop = eggPop,
 		thud = thud,
+		rescued = rescued,
 		addPlayer = addPlayer,
 		setFloating = function(player: Instance, floating: boolean)
 			player:SetAttribute("Floating", floating)
@@ -645,6 +653,59 @@ describe("Moments.hearThud (the flump)", function()
 		local rig = newRig()
 		rig.handle.destroy()
 		rig.thud:Fire(PLACE, 20)
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+end)
+
+-- Plan 7 Task 15 (Rules 97 and 33): every rescue is heard. One "poof" at the spot he left and one where he lands, at
+-- once (the puffs start at once). The player is never read.
+describe("Moments.hearRescued (the poof)", function()
+	local POOF = 'Rescue "poof"'
+	local FROM = Vector3.new(1, 2, 3)
+	local TO = CFrame.new(21, 2, 3)
+
+	it("plays two poofs at once, at the spot he left and the spot he lands", function()
+		local rig = newRig()
+		local player = rig.addPlayer(nil)
+		rig.rescued:Fire(player, FROM, TO)
+		task.wait()
+		expect(rows(rig)).toEqual({ POOF, POOF })
+		expect(rig.played[1].at).toEqual(FROM)
+		expect(rig.played[2].at).toEqual(TO.Position)
+		expect(#rig.later).toBe(0)
+	end)
+
+	it("still plays both when the player is nil", function()
+		local rig = newRig()
+		rig.rescued:Fire(nil, FROM, TO)
+		task.wait()
+		expect(rows(rig)).toEqual({ POOF, POOF })
+		expect(rig.played[1].at).toEqual(FROM)
+		expect(rig.played[2].at).toEqual(TO.Position)
+	end)
+
+	it("plays nothing when the spot he left is not a Vector3", function()
+		local rig = newRig()
+		rig.rescued:Fire(nil, "far away", TO)
+		rig.rescued:Fire(nil, nil, TO)
+		rig.rescued:Fire(nil, CFrame.new(1, 2, 3), TO)
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing when the landing spot is a Vector3 and not a CFrame", function()
+		local rig = newRig()
+		rig.rescued:Fire(nil, FROM, Vector3.new(21, 2, 3))
+		rig.rescued:Fire(nil, FROM, nil)
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing after destroy", function()
+		local rig = newRig()
+		rig.handle.destroy()
+		rig.rescued:Fire(nil, FROM, TO)
 		task.wait()
 		expect(#rig.played).toBe(0)
 	end)

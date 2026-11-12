@@ -52,6 +52,7 @@ local FIXED: { [string]: Cue } = {
 	SparklePop = { row = "Sparkle pop" }, -- plan 7 Task 12: a new egg shows on its nest (Rule 95), at the row's own speed
 	EggPop = { row = 'Egg "pop"' }, -- a lost egg pops back or away (Rule 94), at the row's own speed
 	Thud = { row = 'Thud "flump"' }, -- your own and others' landings (Rule 96), at the row's own speed
+	RescuePoof = { row = 'Rescue "poof"' }, -- plan 7 Task 15 (Rule 97): both puffs of a rescue, at the row's own speed
 }
 
 local HOME_NAMES: { [string]: string } = {
