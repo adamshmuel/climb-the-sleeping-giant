@@ -12,6 +12,7 @@ paths:
 - Server-authoritative: the server validates every RemoteEvent and RemoteFunction argument (type, range, ownership, rate). Never trust client values for currency, damage or position.
 - DataStores: wrap every call in `pcall`, prefer `UpdateAsync`, and save on `PlayerRemoving` and `game:BindToClose`.
 - Disconnect connections and destroy instances you create. Don't leak them per player or per round.
+- Never keep the only copy of data about a live Instance in a weak-keyed table: Luau can collect the key while the Instance is still in the game (Roblox docs, Metatables, "Use weak tables"). Use a plain table and remove entries on a lifecycle event (CharacterAdded, Destroying, AncestryChanged).
 - Never start a line with `(`: StyLua joins it onto the line above and the script breaks with no lint error. Write a cast as `local x = y :: Instance`.
 
 ## Test first
