@@ -11,7 +11,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Wake-up (V2 spec 6) | Task 3: Who the hand hits | ☑ done 2026-11-12 | HandShape (shared), Slams.underHand/hits, SlamSurface.under, RedCircles guard; full run 3538 passed, 1 failed (the standing stuck-scan red); code_lead approved |
 | Wake-up (V2 spec 6) | Task 4: Show slams near a protected player | ☑ done 2026-11-12 | ShowSlam.pickShow (new module), garden margin moved to Config.Wake.SlamGardenMarginStuds, Slams.flatDistance shared; full run 3547 passed, 1 failed (the standing stuck-scan red); builder, code_lead |
 | Wake-up (V2 spec 6) | Task 5: The meadow spots for show slams | ☑ done | builder, code_lead |
-| Wake-up (V2 spec 6) | Task 6: The circle under anyone, on the first walkable surface | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 6: The circle under anyone, on the first walkable surface | ☑ done (2026-11-12; full run 3585/1, standing red only; circle shots in Task 23) | code_lead |
 | Wake-up (V2 spec 6) | Task 7: The bonk on the server | ☑ done 2026-11-12 | Bonker 6/0, Carry 35/0; full run 3510 passed, 1 failed (the standing stuck-scan red); Play hold proof moved to Task 16 (product, accept for now); code_lead approved |
 | Wake-up (V2 spec 6) | Task 8: The director hunts everyone | ☑ done (2026-11-12; full run 3568/1, standing red only) | code_lead |
 | Wake-up (V2 spec 6) | Task 9: The server says who is in a garden and who floats | ☑ done 2026-11-12 | PlayerTracker 40/0, Floater 41/0; full run 3516 passed, 1 failed (the standing stuck-scan red); code_lead approved |

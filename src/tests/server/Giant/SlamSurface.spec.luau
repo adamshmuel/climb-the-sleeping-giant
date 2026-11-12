@@ -157,6 +157,78 @@ describe("SlamSurface.ladderParts", function()
 	end)
 end)
 
+-- The raised right arm: a solid part high over the pad, standing over the ray at x = 0.
+local ARM_RISE = 12
+local function armPart(folder: Folder): Part
+	local arm = part(folder, "RightArmRest", Vector3.new(6, 2, 6), CFrame.new(ORIGIN + Vector3.new(0, ARM_RISE, 0)))
+	arm:SetAttribute("RightArmRest", true)
+	return arm
+end
+
+describe("SlamSurface.rayIgnore", function()
+	it("adds the arm while he is awake and leaves the caller's list alone", function()
+		local folder = newFolder()
+		local arm = armPart(folder)
+		local marker = track(Instance.new("Folder"))
+		local base: { Instance } = { marker }
+		local list = SlamSurface.rayIgnore(base, arm, true)
+		expect(#list).toBe(2)
+		expect(table.find(list, arm)).never.toBeNil()
+		expect(table.find(list, marker)).never.toBeNil()
+		expect(#base).toBe(1)
+		expect(base[1]).toBe(marker)
+	end)
+
+	it("does not add the arm while he is asleep", function()
+		local folder = newFolder()
+		local arm = armPart(folder)
+		local marker = track(Instance.new("Folder"))
+		local list = SlamSurface.rayIgnore({ marker }, arm, false)
+		expect(#list).toBe(1)
+		expect(table.find(list, arm)).toBeNil()
+	end)
+
+	it("a missing arm adds nothing", function()
+		local marker = track(Instance.new("Folder"))
+		expect(#SlamSurface.rayIgnore({ marker }, nil, true)).toBe(1)
+	end)
+end)
+
+-- Spec 5 section 8: a player under his raised arm gets the circle on the ground below it, not on the arm.
+describe("SlamSurface.below under the raised arm", function()
+	it("the awake list gives the pad under the arm", function()
+		local folder = newFolder()
+		pad(folder)
+		local arm = armPart(folder)
+		local point = SlamSurface.below(Workspace, CENTRE, SlamSurface.rayIgnore({}, arm, true))
+		expect(point.Y).toBeCloseTo(PAD_TOP, 2)
+	end)
+
+	it("the asleep list lands on the arm", function()
+		local folder = newFolder()
+		pad(folder)
+		local arm = armPart(folder)
+		local point = SlamSurface.below(Workspace, CENTRE, SlamSurface.rayIgnore({}, arm, false))
+		expect(point.Y).toBeCloseTo(PAD_TOP + ARM_RISE + 1, 2)
+	end)
+end)
+
+-- Rule 13 and section 8: a no-egg player on a ladder is the target; the circle goes on the pad below the ladder.
+describe("SlamSurface.below under a no-egg player on a ladder", function()
+	it("the ladder model in the ignore list gives the pad below", function()
+		local folder = newFolder()
+		pad(folder)
+		local surfaces = Instance.new("Folder")
+		surfaces.Name = "WalkSurfaces"
+		surfaces.Parent = folder
+		ladder(surfaces, "TestLadder")
+		local ignore = SlamSurface.rayIgnore(SlamSurface.ladderParts(surfaces, { box("TestLadder") }), nil, true)
+		local onLadder = ORIGIN + Vector3.new(0, 8, 0)
+		local point = SlamSurface.below(Workspace, onLadder, ignore)
+		expect(point.Y).toBeCloseTo(PAD_TOP, 2)
+	end)
+end)
+
 -- A circle whose point is `rise` over the pad and whose centre is on the same line (the circle's middle, drawn on a
 -- curved surface that is higher in the middle than at the edge).
 local function circleOver(rise: number): Slams.HandCircle

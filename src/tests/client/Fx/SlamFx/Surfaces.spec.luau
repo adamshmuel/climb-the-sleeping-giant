@@ -202,6 +202,17 @@ describe("SlamFx.huggableParts and workspaceCastHug", function()
 		)
 	end)
 
+	it("never lists a part marked RightArmRest, even inside left_arm", function()
+		local scene = newScene()
+		local giant = scene.world:FindFirstChild("Giant") :: Instance
+		local leftArm = giant:FindFirstChild("left_arm") :: Instance
+		local marked = add(leftArm, "RestingArm", Vector3.new(10, 10, 10), Vector3.new(80, 0, 20))
+		marked:SetAttribute("RightArmRest", true)
+		local list = SlamFx.huggableParts(Workspace, scene.world)
+		expect(table.find(list, marked)).toBeNil()
+		expect(table.find(list, leftArm:FindFirstChild("left_arm") :: Instance)).never.toBeNil() -- the unmarked arm part stays on the list
+	end)
+
 	it("lists single parts, never the Bridges or WalkSurfaces folders or the Giant", function()
 		local scene = newScene()
 		for _, instance in SlamFx.huggableParts(Workspace, scene.world) do
@@ -292,6 +303,23 @@ describe("SlamFx.workspaceSurfaceNormal", function()
 		bush.Parent = Workspace
 		local normalOf = SlamFx.workspaceSurfaceNormal(Workspace, noPlayers, made(Instance.new("Folder")))
 		expectNear(normalOf(point), floor.CFrame.YVector, 1e-3)
+	end)
+
+	it("goes through a part marked RightArmRest and gives the floor under it", function()
+		local floor = made(Instance.new("Part"))
+		floor.Anchored = true
+		floor.Size = Vector3.new(60, 2, 60)
+		floor.CFrame = CFrame.new(4000, 0, 4000) -- level, its top face at y = 1
+		floor.Parent = Workspace
+		local arm = made(Instance.new("Part"))
+		arm.Anchored = true
+		arm.Size = Vector3.new(20, 0.5, 20)
+		arm.CFrame = CFrame.new(4000, 1.5, 4000) * CFrame.Angles(0, 0, math.rad(30)) -- tilted, just over the floor
+		arm:SetAttribute("RightArmRest", true)
+		arm.Parent = Workspace
+		local point = Vector3.new(4000, 1, 4000)
+		local normalOf = SlamFx.workspaceSurfaceNormal(Workspace, noPlayers, made(Instance.new("Folder")))
+		expectNear(normalOf(point), UP, 1e-3)
 	end)
 
 	it("goes through every player's character", function()

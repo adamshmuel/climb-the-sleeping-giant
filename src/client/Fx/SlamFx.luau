@@ -70,6 +70,8 @@ local SPARKLES_LIFETIME = NumberRange.new(0.5, 0.9)
 -- The ray that finds the surface's slope: it starts above the point and looks a little way down.
 local NORMAL_RAY_START_ABOVE = 1
 local NORMAL_RAY_LENGTH = 2
+local ARM_REST_MARK = "RightArmRest" -- the attribute on his raised right arm's mesh (WorldIndex.loadWakePieces finds it)
+local MARKED_PART_CASTS = 4 -- the most rays one point casts, each one past a marked part
 
 -- The shapes this module needs, so tests can pass simple stand-ins. The real ones fit these shapes.
 export type SignalLike = {
@@ -161,20 +163,26 @@ function SlamFx.workspaceSurfaceNormal(
 		if folder ~= nil then
 			table.insert(filter, folder)
 		end
-		params.FilterDescendantsInstances = filter
-		local result = workspace:Raycast(
-			point + Vector3.new(0, NORMAL_RAY_START_ABOVE, 0),
-			Vector3.new(0, -NORMAL_RAY_LENGTH, 0),
-			params
-		)
-		if result == nil then
-			return Vector3.yAxis
+		local origin = point + Vector3.new(0, NORMAL_RAY_START_ABOVE, 0)
+		local direction = Vector3.new(0, -NORMAL_RAY_LENGTH, 0)
+		-- His raised right arm is marked RightArmRest: no circle lies on it, so a ray that hits it goes on through it.
+		for _ = 1, MARKED_PART_CASTS do
+			params.FilterDescendantsInstances = filter
+			local result = workspace:Raycast(origin, direction, params)
+			if result == nil then
+				return Vector3.yAxis
+			end
+			if result.Instance:GetAttribute(ARM_REST_MARK) ~= true then
+				return result.Normal
+			end
+			table.insert(filter, result.Instance)
 		end
-		return result.Normal
+		return Vector3.yAxis
 	end
 end
 
--- The parts of his body a circle lies on (not his right arm, which moves during slams).
+-- The parts of his body a circle lies on (not his right arm, which moves during slams, and never a part marked
+-- RightArmRest).
 local GIANT_SOLID_NAMES = { "body_and_cushion", "head_with_beard", "legs_and_boots", "nightcap", "left_arm" }
 
 -- Everything a circle may lie on, as single parts: the meadow and the stream (the Terrain), his body, the two boot
@@ -192,7 +200,7 @@ function SlamFx.huggableParts(workspace: Workspace, world: Instance): { Instance
 					table.insert(list, body)
 				end
 				for _, descendant in body:GetDescendants() do
-					if descendant:IsA("BasePart") then
+					if descendant:IsA("BasePart") and descendant:GetAttribute(ARM_REST_MARK) ~= true then
 						table.insert(list, descendant)
 					end
 				end

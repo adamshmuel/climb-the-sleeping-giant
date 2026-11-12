@@ -201,6 +201,13 @@ local jumpWatcher = JumpWatcher.start({
 -- The ladder boxes are read once: the sleep meter tracks them, and the slam rays skip the ladder models they name.
 local ladderBoxes = WorldIndex.loadLadders(world)
 local ladderModels = SlamSurface.ladderParts(world:FindFirstChild("WalkSurfaces") :: Instance, ladderBoxes)
+-- The wake pieces are read once; the slam rays use the one part marked RightArmRest (the wake pieces live in
+-- ReplicatedStorage.Assets, not in the ServerStorage `assets` above).
+local sharedAssets = ReplicatedStorage:FindFirstChild("Assets")
+if sharedAssets == nil then
+	error("ReplicatedStorage.Assets is missing: the place file doesn't match the code")
+end
+local wakePieces = WorldIndex.loadWakePieces(world, sharedAssets)
 
 -- The giant's sleep meter: it reads every player's position ten times a second.
 local tracker = PlayerTracker.new({
@@ -218,8 +225,9 @@ local tracker = PlayerTracker.new({
 	now = os.clock,
 })
 
--- What a slam's rays skip: every player's character (a player's own body is not the ground) and the ladder models (a
--- circle is never drawn on a ladder, Check C4). Built fresh each time, since characters come and go.
+-- What a slam's rays skip: every player's character (a player's own body is not the ground), the ladder models (a
+-- circle is never drawn on a ladder, Check C4) and, while he is awake, his raised right arm (a player under it gets the
+-- circle on the ground below). Built fresh each time, since characters come and go.
 local function slamRayIgnore(): { Instance }
 	local ignore: { Instance } = {}
 	for _, player in Players:GetPlayers() do
@@ -230,7 +238,7 @@ local function slamRayIgnore(): { Instance }
 	for _, model in ladderModels do
 		table.insert(ignore, model)
 	end
-	return ignore
+	return SlamSurface.rayIgnore(ignore, wakePieces.rightArm, readPhase() == "Awake")
 end
 
 -- The meadow spots a show slam may land on, built once at start.

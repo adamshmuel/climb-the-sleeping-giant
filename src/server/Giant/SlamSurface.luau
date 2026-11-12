@@ -65,6 +65,17 @@ function SlamSurface.under(
 	return if found ~= nil then found.Y else circle.point.Y
 end
 
+-- The list a slam's rays skip: a copy of `base`, plus the raised right arm (`arm`, the part marked RightArmRest) while
+-- he is awake and `arm` is not nil, so a circle under his arm is drawn on the ground below it (spec 5 section 8). The
+-- caller's list is never changed.
+function SlamSurface.rayIgnore(base: { Instance }, arm: Instance?, awake: boolean): { Instance }
+	local list = table.clone(base)
+	if awake and arm ~= nil then
+		table.insert(list, arm)
+	end
+	return list
+end
+
 -- The whole model (the Climb truss and every visible piece) of each ladder box, so a slam's ray never lands on a
 -- ladder. A name that has no model in `walkSurfaces` is skipped.
 function SlamSurface.ladderParts(walkSurfaces: Instance, ladders: { Zones.LadderBox }): { Instance }
