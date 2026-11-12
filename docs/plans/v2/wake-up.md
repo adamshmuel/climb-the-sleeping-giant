@@ -21,7 +21,7 @@ Words used here (the spec's own words, such as carrier, slam, target, bonk and r
 - **Show slam:** a slam aimed at nobody, landing on an empty meadow spot so the player can see it (Rule 60: Carriers first, point 3).
 - **Protected player:** a player outside every garden who can't be the target only because of Rule 62 (No bonk at the door) or Rule 63 (A bonk gives a breather).
 - **Shared clock:** the server's clock that every device can read (`Workspace:GetServerTimeNow()`), so every screen counts the same seconds.
-- **World script:** a small script in `tools/world/`, run once in Studio's Edit mode. It checks before it changes anything, and a second run says "already done". Its result lives in the place file, so **Adam saves the place** afterwards.
+- **World script:** a small script in `tools/world/`, run once in Studio's Edit mode. It checks before it changes anything, and a second run says "already done". Its result lives in the place file, so the place is saved at Gate 4 (main chat veto, 2026-11-12).
 - **Fake world:** a few parts a test builds inside a `WorldModel` in `ServerStorage` and destroys at the end.
 - **Pure:** a module that only does maths on what it is given.
 - **Sound hook:** one named place in the code where plan 7 (audio) plays a sound. This plan picks no sounds.
@@ -197,7 +197,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 10: World prep: the wake pieces**
 - Spec rules: Rule 66 (His face wakes first) and Rule 69 (The world reacts): the pieces; spec 5, section 8 (the arm's resting shape).
-- Files: `tools/world/25-wake-pieces.luau` (new), `src/server/World/WorldIndex.luau` (the world contract, 790 lines: the card plans a helper module if it passes about 880), `src/tests/server/World/WorldIndex.spec.luau`, `src/tests/server/World/RealWorld/WakePieces.spec.luau` (new).
+- Files: `tools/world/25-wake-pieces.luau` (new), `src/server/World/WorldIndex.luau` (the world contract, 790 lines: the card plans a helper module if it passes about 880; built at exactly 880, so any later task that adds a reader to it first moves `readWakePieces` and `loadWakePieces` into their own module beside it), `src/tests/server/World/WorldIndex.spec.luau`, `src/tests/server/World/RealWorld/WakePieces.spec.luau` (new).
 - Before the card: one read-only Edit call lists `Workspace.Mockup_WakeUp` today. V2 setup 4's script `11c-mockup-avatars-away` already moved its avatar to `ServerStorage.ArtLibrary.MockupAvatars`, and scripts `11a` and `11b` changed mockup parts, so the list below is checked against what is there.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
 - What the script does, from `Workspace.Mockup_WakeUp` (see "Decisions"):
@@ -209,7 +209,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   - marks his right arm's resting solid shape with `RightArmRest = true` (the `right_arm` mesh: plan 2 kept his real shape, so the arm has no separate collision pieces);
   - moves the rest of `Mockup_WakeUp` (the avatar, the props, `Saved` and the 3 ModuleScripts) to `ServerStorage.ArtLibrary`.
 - Failing tests first: the world contract reports a missing `AwakeMouth`, `Bang`, `ZPop`, `WakeDust` (7 spots), `WakeBirds` (24 birds) or `RightArmRest` piece; on the real world, after the script: `AwakeMouth.Mouth` is within 0.1 studs of (0, 80.3, −15.6) and its Tongue of (0, 77.0, −16.7); no part of `AwakeMouth` collides; at least 100 flower models are marked and nothing else is; `Mockup_WakeUp` is gone from the Workspace.
-- Done when: the script runs twice (the second run says "already done"), the tests pass, and **Adam saves the place**. Screenshots from garden 4 (computer and the iPhone 14) show the sleeping giant with no mouth, no "!", no birds and no mockup avatar. The main chat sends them to designer.
+- Done when: the script runs twice (the second run says "already done"), the tests pass, and the place is saved at Gate 4 (main chat veto, 2026-11-12: the main chat can't save the open place and Adam does no manual work; the script is in git and reruns safely, with the copy in `work/place-backups/p6t10-2026-11-12.rbxl` and `ServerStorage.WorldBackups.p6t10`). Screenshots from garden 4 (computer and the iPhone 14) show the sleeping giant with no mouth, no "!", no birds and no mockup avatar. The main chat sends them to designer.
 - Stands on: build order steps 4 and 6 (the ground and the nests, built), plan 5 Task 9 (the `RidesRightArm` pieces, built).
 
 ### Part 3: What players see (client)

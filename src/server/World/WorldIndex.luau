@@ -66,6 +66,15 @@ export type SeamPoint = SlideWatch.SeamPoint
 -- The egg models in ServerStorage.Assets.Eggs, one per rank in Config.RarityOrder.
 export type EggTemplates = { [string]: Model }
 
+-- The pieces the wake-up needs (plan 6 Task 10, moved in by tools/world/25-wake-pieces.luau).
+export type WakePieces = {
+	mouth: Model, -- World.Giant.AwakeMouth (with Mouth and Tongue)
+	bang: BasePart, -- World.GiantFX.BangAnchor (with the Bang and ZPop guis)
+	dustSpots: { BasePart }, -- World.GiantFX.WakeDust.DustSpot, each with a ParticleEmitter
+	birds: { Model }, -- ReplicatedStorage.Assets.WakeBirds
+	rightArm: BasePart, -- the part marked RightArmRest
+}
+
 -- The zones that must each have at least one box. The Meadow is "in no box", so it has none.
 local ZONE_NAMES = { "Boots", "Belly", "Beard", "Nightcap" }
 
@@ -78,6 +87,8 @@ end
 local PLOT_COUNT = 8
 local PET_PAD_COUNT = 6
 local HOME_SPOT_COUNT = 12
+local WAKE_DUST_COUNT = 7
+local WAKE_BIRD_COUNT = 24
 local LANDING_SPOT_COUNT = 10
 
 local WorldIndex = {}
@@ -785,6 +796,85 @@ function WorldIndex.loadGiantFace(world: Instance): Vector3
 		error(table.concat(problems, "\n"), 0)
 	end
 	return face
+end
+
+-- Reads the wake pieces from `world` (Workspace.World) and `assets` (ReplicatedStorage.Assets); one problem per piece.
+function WorldIndex.readWakePieces(world: Instance, assets: Instance): (WakePieces?, { string })
+	local problems: { string } = {}
+	local giant = need(world, "Giant", "Model", "World", "Giant", problems)
+	local fx = need(world, "GiantFX", "Folder", "World", "GiantFX", problems)
+	local mouth: Instance? = nil
+	local rightArm: Instance? = nil
+	if giant ~= nil then
+		mouth = need(giant, "AwakeMouth", "Model", "World", "Giant.AwakeMouth", problems)
+		if mouth ~= nil then
+			need(mouth, "Mouth", "BasePart", "World", "Giant.AwakeMouth.Mouth", problems)
+			need(mouth, "Tongue", "BasePart", "World", "Giant.AwakeMouth.Tongue", problems)
+		end
+		local marked: { Instance } = {}
+		for _, descendant in giant:GetDescendants() do
+			if descendant:IsA("BasePart") and descendant:GetAttribute("RightArmRest") == true then
+				table.insert(marked, descendant)
+			end
+		end
+		rightArm = marked[1]
+		if #marked ~= 1 then
+			table.insert(problems, `World.Giant has {#marked} parts marked RightArmRest, needs 1`)
+		end
+	end
+	local bang: Instance? = nil
+	local dustSpots: { BasePart } = {}
+	if fx ~= nil then
+		bang = need(fx, "BangAnchor", "BasePart", "World", "GiantFX.BangAnchor", problems)
+		if bang ~= nil then
+			need(bang, "Bang", "BillboardGui", "World", "GiantFX.BangAnchor.Bang", problems)
+			need(bang, "ZPop", "BillboardGui", "World", "GiantFX.BangAnchor.ZPop", problems)
+		end
+		local dust = need(fx, "WakeDust", "Folder", "World", "GiantFX.WakeDust", problems)
+		if dust ~= nil then
+			for _, spot in dust:GetChildren() do
+				local emitter = spot:FindFirstChildWhichIsA("ParticleEmitter")
+				if spot.Name == "DustSpot" and spot:IsA("BasePart") and emitter ~= nil then
+					table.insert(dustSpots, spot)
+				end
+			end
+			if #dustSpots ~= WAKE_DUST_COUNT then
+				table.insert(problems, `World.GiantFX.WakeDust has {#dustSpots} DustSpots, needs {WAKE_DUST_COUNT}`)
+			end
+		end
+	end
+	local birds: { Model } = {}
+	local birdFolder = need(assets, "WakeBirds", "Folder", "Assets", "WakeBirds", problems)
+	if birdFolder ~= nil then
+		for _, bird in birdFolder:GetChildren() do
+			if bird:IsA("Model") then
+				table.insert(birds, bird)
+			end
+		end
+		if #birds ~= WAKE_BIRD_COUNT then
+			table.insert(problems, `Assets.WakeBirds has {#birds} models, needs {WAKE_BIRD_COUNT}`)
+		end
+	end
+	if #problems > 0 or mouth == nil or bang == nil or rightArm == nil then
+		return nil, problems
+	end
+	local pieces: WakePieces = {
+		mouth = mouth :: Model,
+		bang = bang :: BasePart,
+		dustSpots = dustSpots,
+		birds = birds,
+		rightArm = rightArm :: BasePart,
+	}
+	return pieces, problems
+end
+
+-- Same as readWakePieces, but stops the server with every problem listed if the world is wrong.
+function WorldIndex.loadWakePieces(world: Instance, assets: Instance): WakePieces
+	local pieces, problems = WorldIndex.readWakePieces(world, assets)
+	if pieces == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return pieces
 end
 
 return WorldIndex
