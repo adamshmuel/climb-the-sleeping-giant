@@ -100,7 +100,13 @@ type Rig = {
 	puffs: () -> { Attachment },
 }
 
-local function newRig(noTemplate: boolean?): Rig
+-- The optional deps a test can give: the local player (a plain table, compared by identity) and the sound hook.
+type RigOptions = {
+	localPlayer: any?,
+	playSound: ((name: string, at: Vector3?) -> ())?,
+}
+
+local function newRig(noTemplate: boolean?, options: RigOptions?): Rig
 	local anchor = made(Instance.new("Part"))
 	local eggHome = newSignal()
 	local caught = newSignal()
@@ -112,9 +118,9 @@ local function newRig(noTemplate: boolean?): Rig
 	local template = newTemplate()
 	local clock = 100
 
-	local stop = Celebrations.start({
+	local deps: any = {
 		eggHome = { OnClientEvent = eggHome },
-		findEmitter = function(plotIndex: number)
+		findEmitter = function(plotIndex: number): any
 			if missingGates[plotIndex] then
 				return nil
 			end
@@ -137,7 +143,12 @@ local function newRig(noTemplate: boolean?): Rig
 		now = function()
 			return clock
 		end,
-	})
+	}
+	if options ~= nil then
+		deps.localPlayer = options.localPlayer
+		deps.playSound = options.playSound
+	end
+	local stop = Celebrations.start(deps)
 	table.insert(stops, stop)
 
 	return {
@@ -608,5 +619,55 @@ describe("Celebrations: the caught star puff", function()
 		rig.caught:Fire(newPlayer(4))
 		expect(#rig.floaters()).toBe(1)
 		expect(#rig.puffs()).toBe(1)
+	end)
+end)
+
+describe("Celebrations: the Caught sound", function()
+	local function newRecorder()
+		local calls: { { name: string, at: Vector3? } } = {}
+		return calls, function(name: string, at: Vector3?)
+			table.insert(calls, { name = name, at = at })
+		end
+	end
+
+	it("calls the hook once for the local player, with the spawn spot's position", function()
+		local calls, playSound = newRecorder()
+		local me = newPlayer(4)
+		local rig = newRig(false, { localPlayer = me, playSound = playSound })
+		rig.spots[4] = newSpot(Vector3.new(10, 5, -20))
+		rig.caught:Fire(me)
+		expect(#calls).toBe(1)
+		expect(calls[1].name).toBe("Caught")
+		expect(calls[1].at).toBe(Vector3.new(10, 5, -20))
+	end)
+
+	it("does not call the hook for another player", function()
+		local calls, playSound = newRecorder()
+		local me = newPlayer(4)
+		local rig = newRig(false, { localPlayer = me, playSound = playSound })
+		rig.spots[4] = newSpot(Vector3.new(10, 5, -20))
+		rig.spots[6] = newSpot(Vector3.new(-10, 5, 0))
+		rig.caught:Fire(newPlayer(6))
+		expect(#calls).toBe(0)
+	end)
+
+	it("does not fail without a playSound dependency, and still shows the puff", function()
+		local me = newPlayer(4)
+		local rig = newRig(false, { localPlayer = me })
+		rig.spots[4] = newSpot(Vector3.new(10, 5, -20))
+		rig.caught:Fire(me)
+		expect(#rig.puffs()).toBe(1)
+	end)
+
+	it("still shows the puff for both the local player and another player", function()
+		local calls, playSound = newRecorder()
+		local me = newPlayer(4)
+		local rig = newRig(false, { localPlayer = me, playSound = playSound })
+		rig.spots[4] = newSpot(Vector3.new(10, 5, -20))
+		rig.spots[6] = newSpot(Vector3.new(-10, 5, 0))
+		rig.caught:Fire(me)
+		rig.caught:Fire(newPlayer(6))
+		expect(#rig.puffs()).toBe(2)
+		expect(#calls).toBe(1)
 	end)
 end)

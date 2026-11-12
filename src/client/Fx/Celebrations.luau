@@ -76,6 +76,8 @@ export type Deps = {
 	anchorParent: Instance, -- where each "+1 egg" puts its Attachment (Workspace.Terrain)
 	step: SignalLike, -- once per frame, for the motion; called with the seconds since the last frame (RenderStepped)
 	now: () -> number, -- a clock in seconds (os.clock)
+	localPlayer: any?, -- this device's player: only their own "Caught" plays a sound (nil: no sound)
+	playSound: ((name: string, at: Vector3?) -> ())?, -- "Caught" at the spawn spot, for the local player only
 }
 
 -- Where the "+1 egg" is `t` of the way through its 1 second (0 to 1): how many studs it has risen and how
@@ -239,6 +241,11 @@ function Celebrations.start(deps: Deps): () -> ()
 		local spot = if plotIndex ~= nil then deps.findSpawnSpot(plotIndex) else nil
 		if spot == nil then
 			return
+		end
+		local mine: any = deps.localPlayer
+		local who: any = player
+		if deps.playSound ~= nil and who == mine then
+			deps.playSound("Caught", spot.Position)
 		end
 		local copy = template:Clone()
 		if not copy:IsA("Attachment") then

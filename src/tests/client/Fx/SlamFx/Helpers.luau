@@ -126,7 +126,13 @@ export type Rig = {
 	pieces: () -> { Part },
 }
 
-local function newRig(): Rig
+-- The optional hooks a test can give SlamFx.start: this device's own body and the sound hook.
+export type RigOptions = {
+	ownBody: (() -> { middle: Vector3, headTopY: number }?)?,
+	playSound: ((name: string, at: Vector3?) -> ())?,
+}
+
+local function newRig(options: RigOptions?): Rig
 	local parent = made(Instance.new("Folder"))
 	local template = newFistTemplate()
 	local slamWarning = newSignal()
@@ -146,7 +152,7 @@ local function newRig(): Rig
 	local surfaceMissing = false
 	local bumpy = false
 
-	local handle = SlamFx.start({
+	local deps: any = {
 		slamWarning = { OnClientEvent = slamWarning },
 		slamLanded = { OnClientEvent = slamLanded },
 		fist = template,
@@ -183,7 +189,12 @@ local function newRig(): Rig
 		burst = function(emitter: ParticleEmitter, count: number)
 			table.insert(bursts, { name = emitter.Name, count = count, parent = emitter.Parent, emitter = emitter })
 		end,
-	})
+	}
+	if options ~= nil then
+		deps.ownBody = options.ownBody
+		deps.playSound = options.playSound
+	end
+	local handle = SlamFx.start(deps)
 	table.insert(stops, handle.stop)
 
 	local function folder(): Folder?

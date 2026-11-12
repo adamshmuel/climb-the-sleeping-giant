@@ -210,6 +210,7 @@ if server then
 			eggHome = { OnClientEvent = server.EggHome.OnClientEvent },
 			findEmitter = Celebrations.emitterInWorld(world),
 			caught = { OnClientEvent = server.Caught.OnClientEvent },
+			localPlayer = Players.LocalPlayer, -- only your own "Caught" plays a sound (none yet: plan 7)
 			findSpawnSpot = findSpawnSpot,
 			poofTemplate = if assets then assets:FindFirstChild("CaughtPoof") else nil,
 			burst = function(emitter: ParticleEmitter, count: number)
@@ -494,6 +495,16 @@ if server and slamFist and slamFist:IsA("Model") and footprintWorld then
 		castHug = castHug,
 		refreshHug = refreshHug,
 		onCircle = cameraWatcher.circleAt,
+		-- This device's own body, read once per landing: the root's position and the top of the head. No joint is read.
+		ownBody = function(): SlamFx.OwnBody?
+			local character = Players.LocalPlayer.Character
+			local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+			local head = if character then character:FindFirstChild("Head") else nil
+			if root == nil or head == nil or not root:IsA("BasePart") or not head:IsA("BasePart") then
+				return nil
+			end
+			return { middle = root.Position, headTopY = head.Position.Y + head.Size.Y / 2 }
+		end,
 		serverNow = function()
 			return Workspace:GetServerTimeNow()
 		end,
