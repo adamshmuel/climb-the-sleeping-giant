@@ -6,6 +6,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local HandShape = require(ReplicatedStorage.Shared.HandShape)
 local Zones = require(script.Parent.Zones)
 
 export type Player = {
@@ -19,6 +20,8 @@ export type Player = {
 	appearedAgo: number?, -- seconds since a catch or a new character put them at the door, nil = not this wake-up
 	bonkedLast: boolean?, -- true: the slam before bonked them, not a target now
 }
+-- A slam's circle as the hit test sees it: the hand's centre and the surface point it lands on.
+export type HandCircle = { centre: Vector3, point: Vector3 }
 export type Circle = { centre: Vector3, target: number? } -- target is the user id aimed at, nil for an empty-meadow slam
 
 -- Studs of free grass between the circle's edge and a garden, so the edge never touches the fence.
@@ -220,6 +223,40 @@ function Slams.plan(
 	return { centre = Slams.pickEmpty(meadowPoints, players, landingSpots, gardens, lastCentre, pick), target = nil }
 end
 
+-- Whether the hand can never touch this player: in a garden, floating down after the bounce-off, or touched down less
+-- than SlamWarningSeconds ago (they could not steer the fall, so they get the same warning as everyone).
+local function neverHit(player: Player): boolean
+	if player.floating or player.inGarden then
+		return true
+	end
+	local landedAgo = player.landedAgo
+	return landedAgo ~= nil and landedAgo < Config.Wake.SlamWarningSeconds
+end
+
+-- Whether a position is under the hand: inside the circle across the ground, from just under the surface below it to
+-- high over it (`surfaceUnder` is that surface's height).
+function Slams.underHand(position: Vector3, circle: HandCircle, surfaceUnder: number): boolean
+	return HandShape.contains(position, circle.centre, surfaceUnder)
+end
+
+-- Everyone the hand hits, in the players' list order: carriers are caught, everyone else is bonked. `surfaceUnder` gives
+-- the height of the surface under a position.
+function Slams.hits(
+	players: { Player },
+	circle: HandCircle,
+	surfaceUnder: (position: Vector3) -> number
+): { caught: { number }, bonked: { number } }
+	local caught: { number } = {}
+	local bonked: { number } = {}
+	for _, player in players do
+		if neverHit(player) or not Slams.underHand(player.position, circle, surfaceUnder(player.position)) then
+			continue
+		end
+		table.insert(if player.carrying then caught else bonked, player.userId)
+	end
+	return { caught = caught, bonked = bonked }
+end
+
 -- The user ids of everyone the hand catches, in the players' list order: carriers who are on the ground (not floating),
 -- outside the gardens, within the circle across the ground and not more than HEIGHT_LIMIT studs above or below it. A
 -- carrier who touched down from the bounce-off float less than SlamWarningSeconds ago is not caught: they could not
@@ -227,15 +264,7 @@ end
 function Slams.caught(players: { Player }, centre: Vector3): { number }
 	local caught: { number } = {}
 	for _, player in players do
-		-- Unchanged for now: only carriers on the ground and outside the gardens (the catch rules change in a later task).
-		if not player.carrying or player.floating or player.inGarden then
-			continue
-		end
-		local landedAgo = player.landedAgo
-		if landedAgo ~= nil and landedAgo < Config.Wake.SlamWarningSeconds then
-			continue
-		end
-		if Slams.inCircle(player.position, centre) then
+		if player.carrying and not neverHit(player) and Slams.inCircle(player.position, centre) then
 			table.insert(caught, player.userId)
 		end
 	end

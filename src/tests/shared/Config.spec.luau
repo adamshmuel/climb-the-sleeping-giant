@@ -135,6 +135,11 @@ describe("Config", function()
 		expect(Config.Wake.ShowSlamMaxStuds).toBe(60)
 	end)
 
+	it("the hand reaches 1 stud under the surface and 45 studs over it", function()
+		expect(Config.Wake.HandBelowStuds).toBe(1)
+		expect(Config.Wake.HandAboveStuds).toBe(45)
+	end)
+
 	it("the door takes 3 s", function()
 		expect(Config.Wake.DoorSeconds).toBe(3)
 	end)

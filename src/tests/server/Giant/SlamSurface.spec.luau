@@ -4,8 +4,10 @@ local Workspace = game:GetService("Workspace")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
 
+local Slams = require(ServerScriptService.Server.Giant.Slams)
 local SlamSurface = require(ServerScriptService.Server.Giant.SlamSurface)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 
 -- A little world far from the map. Every part is anchored and solid (CanCollide on), so only the ignore list and the
 -- slope rule decide what the ray meets. The pad's top face is at ORIGIN.Y.
@@ -152,5 +154,87 @@ describe("SlamSurface.ladderParts", function()
 		expect(#found).toBe(2)
 		expect(found[1]).toBe(one)
 		expect(found[2]).toBe(two)
+	end)
+end)
+
+-- A circle whose point is `rise` over the pad and whose centre is on the same line (the circle's middle, drawn on a
+-- curved surface that is higher in the middle than at the edge).
+local function circleOver(rise: number): Slams.HandCircle
+	local point = ORIGIN + Vector3.new(0, rise, 0)
+	return { centre = point + Vector3.new(0, 3, 0), point = point }
+end
+
+-- 4b: the surface under a player, found by `under`, decides whether the hand hits them (Slams.underHand).
+describe("SlamSurface.under (4b: the edge of a curved surface)", function()
+	local EDGE = Vector3.new(10, 0, 0)
+
+	local function hitAt(circle: Slams.HandCircle, footAbovePad: number): boolean
+		local position = ORIGIN + EDGE + Vector3.new(0, footAbovePad, 0)
+		local surface = SlamSurface.under(Workspace, circle, position, {})
+		return Slams.underHand(position, circle, surface)
+	end
+
+	it("the pad 6 studs under the circle's point is the surface under a player on the edge", function()
+		local folder = newFolder()
+		pad(folder)
+		local surface = SlamSurface.under(Workspace, circleOver(6), ORIGIN + EDGE + Vector3.new(0, 3, 0), {})
+		expect(surface).toBeCloseTo(PAD_TOP, 2)
+	end)
+
+	it("a player on the edge, 6 under the centre, is hit", function()
+		local folder = newFolder()
+		pad(folder)
+		expect(hitAt(circleOver(6), 3)).toBe(true)
+	end)
+
+	it("a player 40 studs over the edge is hit", function()
+		local folder = newFolder()
+		pad(folder)
+		expect(hitAt(circleOver(6), 40)).toBe(true)
+	end)
+
+	it("a player 2 studs under the edge surface is not hit", function()
+		local folder = newFolder()
+		pad(folder)
+		expect(hitAt(circleOver(6), -2)).toBe(false)
+	end)
+
+	it("nothing under the ray gives the circle's own point height", function()
+		local circle = circleOver(6)
+		local surface = SlamSurface.under(Workspace, circle, ORIGIN + EDGE + Vector3.new(0, 3, 0), {})
+		expect(surface).toBeCloseTo(circle.point.Y, 2)
+	end)
+end)
+
+-- 4c: `under` looks at what a player can stand on, like `below`.
+describe("SlamSurface.under (4c: ladders and steep parts)", function()
+	it("skips a ladder model in ignore and a 75 degree part", function()
+		local folder = newFolder()
+		pad(folder)
+		slope(folder, 75, 8)
+		local surfaces = Instance.new("Folder")
+		surfaces.Name = "WalkSurfaces"
+		surfaces.Parent = folder
+		ladder(surfaces, "TestLadder")
+		local ignore = SlamSurface.ladderParts(surfaces, { box("TestLadder") })
+		local circle = circleOver(1)
+		local surface = SlamSurface.under(Workspace, circle, ORIGIN + Vector3.new(0, 3, 0), ignore)
+		expect(surface).toBeCloseTo(PAD_TOP, 2)
+	end)
+
+	it("starts above the circle by the hand's reach and does not change the ignore list", function()
+		local folder = newFolder()
+		pad(folder)
+		-- A plank HandAboveStuds - 1 over the circle's point: the ray starts over it and stands on it.
+		local circle = circleOver(1)
+		local plankY = circle.point.Y + Config.Wake.HandAboveStuds - 1
+		part(folder, "HighPlank", Vector3.new(6, 1, 6), CFrame.new(ORIGIN.X, plankY - 0.5, ORIGIN.Z))
+		local marker = Instance.new("Folder")
+		marker.Name = "Marker"
+		marker.Parent = folder
+		local ignore: { Instance } = { marker }
+		local surface = SlamSurface.under(Workspace, circle, ORIGIN + Vector3.new(0, 3, 0), ignore)
+		expect(surface).toBeCloseTo(plankY, 2)
+		expect(#ignore).toBe(1)
 	end)
 end)

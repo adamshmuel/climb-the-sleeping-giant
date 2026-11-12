@@ -8,7 +8,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 |---|---|---|---|
 | Wake-up (V2 spec 6) | Task 1: The new slam times and the wake-up numbers | ☑ done 2026-11-12 | full run 3484 passed, 1 failed (the standing stuck-scan red); code_lead approved |
 | Wake-up (V2 spec 6) | Task 2: Who can be a target | ☑ done 2026-11-12 | narrow Slams.spec 107/0; full run 3501 passed, 1 failed (the standing stuck-scan red); code_lead approved |
-| Wake-up (V2 spec 6) | Task 3: Who the hand hits | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 3: Who the hand hits | ☑ done 2026-11-12 | HandShape (shared), Slams.underHand/hits, SlamSurface.under, RedCircles guard; full run 3538 passed, 1 failed (the standing stuck-scan red); code_lead approved |
 | Wake-up (V2 spec 6) | Task 4: Show slams near a protected player | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 5: The meadow spots for show slams | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 6: The circle under anyone, on the first walkable surface | ☐ not started | |

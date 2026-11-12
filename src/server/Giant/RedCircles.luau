@@ -4,10 +4,15 @@
 
 local Slams = require(script.Parent.Slams)
 
-type Circle = { centre: Vector3, landsAt: number }
+type Circle = { centre: Vector3, point: Vector3, landsAt: number }
 export type Circles = {
-	add: (self: Circles, point: Vector3, landsAt: number) -> (),
-	covers: (self: Circles, position: Vector3, now: number) -> boolean,
+	add: (self: Circles, centre: Vector3, point: Vector3, landsAt: number) -> (),
+	covers: (
+		self: Circles,
+		position: Vector3,
+		now: number,
+		surfaceUnder: (circle: Slams.HandCircle, position: Vector3) -> number
+	) -> boolean,
 	_circles: { Circle },
 }
 
@@ -19,12 +24,19 @@ function RedCircles.new(): Circles
 	return setmetatable({ _circles = {} }, meta) :: any
 end
 
-function methods.add(self: Circles, point: Vector3, landsAt: number)
-	table.insert(self._circles, { centre = point, landsAt = landsAt })
+function methods.add(self: Circles, centre: Vector3, point: Vector3, landsAt: number)
+	table.insert(self._circles, { centre = centre, point = point, landsAt = landsAt })
 end
 
--- True when the position is inside a circle that hasn't landed yet. Landed circles are dropped on the way.
-function methods.covers(self: Circles, position: Vector3, now: number): boolean
+-- True when the position is under the hand of a circle that hasn't landed yet (Slams.underHand: the same shape the
+-- slam hits with). `surfaceUnder(circle, position)` gives the height of the surface under the position. Landed circles
+-- are dropped on the way.
+function methods.covers(
+	self: Circles,
+	position: Vector3,
+	now: number,
+	surfaceUnder: (circle: Slams.HandCircle, position: Vector3) -> number
+): boolean
 	local circles = self._circles
 	local covered = false
 	local keep = 0
@@ -33,7 +45,7 @@ function methods.covers(self: Circles, position: Vector3, now: number): boolean
 		if circle.landsAt > now then
 			keep += 1
 			circles[keep] = circle
-			if Slams.inCircle(position, circle.centre) then
+			if Slams.underHand(position, circle, surfaceUnder(circle, position)) then
 				covered = true
 			end
 		end

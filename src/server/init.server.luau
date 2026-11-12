@@ -216,6 +216,21 @@ local tracker = PlayerTracker.new({
 	now = os.clock,
 })
 
+-- What a slam's rays skip: every player's character (a player's own body is not the ground) and the ladder models (a
+-- circle is never drawn on a ladder, Check C4). Built fresh each time, since characters come and go.
+local function slamRayIgnore(): { Instance }
+	local ignore: { Instance } = {}
+	for _, player in Players:GetPlayers() do
+		if player.Character ~= nil then
+			table.insert(ignore, player.Character)
+		end
+	end
+	for _, model in ladderModels do
+		table.insert(ignore, model)
+	end
+	return ignore
+end
+
 -- The red circles shown and not landed yet: a rescue waits while the player stands in one (Rule 28).
 local redCircles = RedCircles.new()
 
@@ -263,7 +278,9 @@ local recovery = Recovery.start({
 		return floater:isFloating(userId)
 	end,
 	inRedCircle = function(position)
-		return redCircles:covers(position, Workspace:GetServerTimeNow())
+		return redCircles:covers(position, Workspace:GetServerTimeNow(), function(circle, under)
+			return SlamSurface.under(Workspace, circle, under, slamRayIgnore())
+		end)
 	end,
 })
 -- Pressing to move: the client only says it started or stopped; Recovery does the watching.
@@ -355,21 +372,11 @@ local director = GiantDirector.new({
 		return slamRandom:NextInteger(1, count)
 	end,
 	surfaceBelow = function(centre: Vector3)
-		-- The ray ignores every player's character: a player's own body is not the ground.
-		local characters: { Instance } = {}
-		for _, player in Players:GetPlayers() do
-			if player.Character ~= nil then
-				table.insert(characters, player.Character)
-			end
-		end
-		-- A slam's circle is never drawn on a ladder either (Check C4).
-		for _, model in ladderModels do
-			table.insert(characters, model)
-		end
-		return SlamSurface.below(Workspace, centre, characters)
+		return SlamSurface.below(Workspace, centre, slamRayIgnore())
 	end,
 	fireSlamWarning = function(slam: number, point: Vector3, landsAt: number)
-		redCircles:add(point, landsAt)
+		-- The point has the centre's X and Z (the ray goes straight down), so it stands for both across the ground.
+		redCircles:add(point, point, landsAt)
 		net.SlamWarning:FireAllClients(slam, point, landsAt)
 	end,
 	fireSlamLanded = function(slam: number, point: Vector3)

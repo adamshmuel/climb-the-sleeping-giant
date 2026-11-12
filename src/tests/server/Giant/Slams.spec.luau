@@ -580,3 +580,63 @@ describe("Slams.inCircle", function()
 		expect(Slams.inCircle(Vector3.new(0, 70, 0), centre)).toBe(false)
 	end)
 end)
+
+describe("Slams.hits", function()
+	local centre = Vector3.new(-50, 40, 20)
+	local circle = { centre = centre, point = Vector3.new(-50, 0, 20) }
+	local function surfaceUnder(_position: Vector3): number
+		return 0
+	end
+	local function at(userId: number, height: number, changes: { [string]: any }?): Player
+		local made: any = player(userId, -50, 20, changes)
+		made.position = Vector3.new(-50, height, 20)
+		return made :: Player
+	end
+
+	it("a carrier 30 studs over the surface is caught, 46 studs over is not hit", function()
+		expect(Slams.hits({ at(1, 30) }, circle, surfaceUnder)).toEqual({ caught = { 1 }, bonked = {} })
+		expect(Slams.hits({ at(1, 46) }, circle, surfaceUnder)).toEqual({ caught = {}, bonked = {} })
+	end)
+
+	it("a player with no egg inside the circle is bonked, not caught", function()
+		expect(Slams.hits({ at(1, 5, { carrying = false }) }, circle, surfaceUnder)).toEqual({
+			caught = {},
+			bonked = { 1 },
+		})
+	end)
+
+	it("a carrier and a player with no egg in one circle: one is caught, one is bonked", function()
+		local players = { at(7, 5, { carrying = false }), at(3, 5) }
+		expect(Slams.hits(players, circle, surfaceUnder)).toEqual({ caught = { 3 }, bonked = { 7 } })
+	end)
+
+	it("a player 2 studs under the surface point (under a bridge) is not hit", function()
+		expect(Slams.hits({ at(1, -2), at(2, -2, { carrying = false }) }, circle, surfaceUnder)).toEqual({
+			caught = {},
+			bonked = {},
+		})
+	end)
+
+	it("a player 15 studs from the centre is hit, 15.1 studs is not", function()
+		local edge: any = player(1, -35, 20, { carrying = false })
+		edge.position = Vector3.new(-35, 5, 20)
+		local outside: any = player(2, -34.9, 20, { carrying = false })
+		outside.position = Vector3.new(-34.9, 5, 20)
+		expect(Slams.hits({ edge, outside }, circle, surfaceUnder)).toEqual({ caught = {}, bonked = { 1 } })
+	end)
+
+	it("a player in a garden or floating is never hit", function()
+		expect(Slams.hits({ at(1, 5, { inGarden = true }), at(2, 5, { floating = true }) }, circle, surfaceUnder)).toEqual({
+			caught = {},
+			bonked = {},
+		})
+	end)
+
+	it("a player who landed 1.4 s ago is not hit, 1.5 s ago is hit", function()
+		expect(Slams.hits({ at(1, 5, { landedAgo = 1.4 }) }, circle, surfaceUnder)).toEqual({ caught = {}, bonked = {} })
+		expect(Slams.hits({ at(1, 5, { landedAgo = 1.5 }) }, circle, surfaceUnder)).toEqual({
+			caught = { 1 },
+			bonked = {},
+		})
+	end)
+end)

@@ -77,6 +77,8 @@ export type Config = {
 		SlamWarningTimes: { number },
 		SlamWarningSeconds: number,
 		SlamCircleDiameter: number,
+		HandBelowStuds: number,
+		HandAboveStuds: number,
 		BannerSeconds: number,
 		HeavySleepSeconds: number,
 		ShakeStuds: number,
@@ -249,6 +251,8 @@ local config: Config = {
 		SlamWarningTimes = { 2.3, 4.8, 7.2, 9.4, 11.5, 13.5 }, -- seconds after waking; the gaps shrink (spec 6, Rule 64)
 		SlamWarningSeconds = 1.5,
 		SlamCircleDiameter = 30,
+		HandBelowStuds = 1, -- the hand reaches this far under the surface it lands on (spec 6, Rule 13)
+		HandAboveStuds = 45, -- and this far over it
 		BannerSeconds = 3,
 		HeavySleepSeconds = 45,
 		ShakeStuds = 0.5,
