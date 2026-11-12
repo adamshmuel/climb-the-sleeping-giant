@@ -167,14 +167,15 @@ describe("GiantFx.start: the sound hooks", function()
 		end
 	end)
 
-	it("calls LieDown once, with no place, at the lie-down", function()
+	it("calls LieDown once, at his mouth, at the lie-down", function()
 		local rig = newRig()
 		rig.setState(100, "Awake")
 		rig.advance(2)
+		local mouthAt = rig.mouthParts[1].Position -- the head has tipped by now: the mouth is where it is at the lie-down
 		rig.setState(0, "Asleep")
 		rig.advance(1)
 		expect(soundNames(rig)).toEqual({ "WakeEyes", "WakeRoar", "ZzzPop", "LieDown" })
-		expect(rig.sounds[4].at).toBe(nil)
+		expect(rig.sounds[4].at).toEqual(mouthAt)
 		expect(rig.sounds[4].time).toBe(2)
 	end)
 

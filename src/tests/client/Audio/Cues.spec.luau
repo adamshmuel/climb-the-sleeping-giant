@@ -37,4 +37,36 @@ describe("Cues.forName", function()
 		expect(Cues.forName("")).toBe(nil)
 		expect(Cues.forName("snort1")).toBe(nil)
 	end)
+
+	it("gives each wake name its row, with its delay and fade", function()
+		local expected: { [string]: { row: string, delay: number?, fade: { after: number, seconds: number }? } } = {
+			WakeEyes = { row = '"!" sting' },
+			WakeRoar = { row = "Cartoon roar (no words)" },
+			WakeRumble = { row = "Rumble", fade = { after = 0, seconds = 1 } },
+			WakeBirds = { row = "Birds flapping", delay = 0.2 },
+			ZzzPop = { row = "Z Z Z popping", delay = 0.3 },
+			LieDown = { row = "Big yawn" },
+			Boing = { row = 'Bounce-off "boing"' },
+		}
+		for name, want in expected do
+			local found = Cues.forName(name)
+			expect(found).never.toBe(nil)
+			local cue = found :: Cues.Cue
+			expect(cue.row).toBe(want.row)
+			expect(SoundList.byName(cue.row)).never.toBe(nil)
+			expect(cue.delay).toEqual(want.delay)
+			expect(cue.fade).toEqual(want.fade)
+		end
+	end)
+
+	it("gives LieDown nothing when the yawn row is not in the list (Rule 92's fallback)", function()
+		local function withoutYawn(rowName: string): SoundList.Entry?
+			if rowName == "Big yawn" then
+				return nil
+			end
+			return SoundList.byName(rowName)
+		end
+		expect(Cues.forName("LieDown", withoutYawn)).toBe(nil)
+		expect(Cues.forName("WakeRoar", withoutYawn)).never.toBe(nil) -- other rows still found
+	end)
 end)

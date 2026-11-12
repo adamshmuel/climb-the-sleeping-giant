@@ -145,7 +145,7 @@ function WakeFace.new(state: Shared.State, deps: Shared.Deps, find: Find.Finders
 	local function finish(lieDown: boolean)
 		putBack()
 		if lieDown then
-			play("LieDown", nil)
+			play("LieDown", find.mouthAt())
 		end
 	end
 

@@ -37,7 +37,7 @@ local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
-local Cues = require(script.Audio.Cues)
+local Moments = require(script.Audio.Moments)
 local Music = require(script.Audio.Music)
 local Snore = require(script.Audio.Snore)
 local SoundBoard = require(script.Audio.SoundBoard)
@@ -90,20 +90,21 @@ local soundBoard = SoundBoard.start({
 	now = os.clock,
 })
 
--- The named sound places (a name from the game's code to a sound board row): GiantFx's snorts and mumble now; later tasks
--- add their names to Cues. A name with no row yet plays nothing.
-local function playCue(name: string, at: Vector3?)
-	local cue = Cues.forName(name)
-	if cue ~= nil then
-		soundBoard.play(cue.row, at, { speed = cue.speed })
-	end
-end
-local function stopCue(name: string)
-	local cue = Cues.forName(name)
-	if cue ~= nil then
-		soundBoard.stop(cue.row)
-	end
-end
+-- The named sound places (a name from the game's code to a sound board row, see Cues): the snorts, mumble, the wake-up
+-- sounds, the yawn and the players' boings. A name with no row plays nothing.
+local moments = Moments.start({
+	board = soundBoard,
+	after = function(seconds: number, callback: () -> ())
+		task.delay(seconds, callback)
+	end,
+	playerList = Players,
+	rootOf = function(player: Instance): Vector3?
+		local character = if player:IsA("Player") then player.Character else nil
+		local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+		return if root ~= nil and root:IsA("BasePart") then root.Position else nil
+	end,
+})
+script.Destroying:Once(moments.destroy)
 
 -- The route and the egg spots never stream out (they are Persistent), so they are there at once. The camera needs them from
 -- the very first spawn, to turn the player away from the egg the footprints lead to. The footprints below use the same ones.
@@ -191,8 +192,8 @@ if server then
 		rescueFx.destroy()
 	end)
 	-- When he wakes, the screen shakes (the camera's point moves by at most 1.5 studs for 1 second), and each slam shakes it
-	-- by how near it lands (at most 1 stud for 0.4 seconds, none from 60 studs). Reduce Motion turns both off. No wake
-	-- sound yet: WakeRumble waits for plan 7, so no playSound is passed.
+	-- by how near it lands (at most 1 stud for 0.4 seconds, none from 60 studs). Reduce Motion turns both off, and changes no
+	-- sound (Rule 88): the wake rumble plays either way.
 	-- The two slam remotes, as plain signals (the shaker's optional fields don't take an engine signal directly).
 	local slamWarningSignal: SlamFx.SignalLike = server.SlamWarning.OnClientEvent
 	local slamLandedSignal: SlamFx.SignalLike = server.SlamLanded.OnClientEvent
@@ -209,6 +210,7 @@ if server then
 		reducedMotion = function(): boolean
 			return GuiService.ReducedMotionEnabled
 		end,
+		playSound = moments.play,
 	})
 	script.Destroying:Once(function()
 		bouncedConnection:Disconnect()
@@ -379,8 +381,8 @@ if server then
 		script.Destroying:Once(snore.destroy)
 		GiantFx.start({
 			world = world,
-			playSound = playCue,
-			stopSound = stopCue,
+			playSound = moments.play,
+			stopSound = moments.stop,
 			warning = { OnClientEvent = server.Warning.OnClientEvent },
 			slamWarning = { OnClientEvent = server.SlamWarning.OnClientEvent },
 			giantState = server.GiantState,
@@ -423,6 +425,7 @@ if server then
 				emit = function(emitter: ParticleEmitter, count: number)
 					emitter:Emit(count)
 				end,
+				playSound = moments.play,
 			})
 			script.Destroying:Once(stopWakeWorld)
 		else

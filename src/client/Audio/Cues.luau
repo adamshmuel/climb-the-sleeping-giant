@@ -1,25 +1,43 @@
 --!strict
--- Cues (plan 7 Task 8): the name of a sound place in the game's code ("Snort1", "Mumble") to the sound board's row and the
--- speed it plays at. Pure: no sound is made here. A name that gives nothing yet (a place a later task connects) is nil.
+-- Cues (plan 7 Tasks 8-9): the name of a sound place in the game's code ("Snort1", "WakeRoar") to the sound board's row, the
+-- speed it plays at, how long it waits and whether it fades. Pure: no sound is made here. A name that gives nothing (a place
+-- a later task connects, or a row that is not in the list: Rule 92's no-yawn fallback) is nil.
 local SoundList = require(script.Parent.SoundList)
 
 local Cues = {}
 
-export type Cue = { row: string, speed: number? }
+export type Cue = { row: string, speed: number?, delay: number?, fade: { after: number, seconds: number }? }
 
 local SNORT_ROW = "85% snort (two)"
 local MUMBLE_ROW = '"Mmm..." mumble'
 
-function Cues.forName(name: string): Cue?
+-- Rule 92: the wake-up sounds, and the boing (Rule 86).
+local FIXED: { [string]: Cue } = {
+	Mumble = { row = MUMBLE_ROW },
+	WakeEyes = { row = '"!" sting' },
+	WakeRoar = { row = "Cartoon roar (no words)" },
+	WakeRumble = { row = "Rumble", fade = { after = 0, seconds = 1 } },
+	WakeBirds = { row = "Birds flapping", delay = 0.2 },
+	ZzzPop = { row = "Z Z Z popping", delay = 0.3 },
+	LieDown = { row = "Big yawn" },
+	Boing = { row = 'Bounce-off "boing"' },
+}
+
+function Cues.forName(name: string, byName: ((string) -> SoundList.Entry?)?): Cue?
+	local find: (string) -> SoundList.Entry? = byName or SoundList.byName
+	local cue: Cue? = nil
 	if name == "Snort1" then
-		return { row = SNORT_ROW, speed = 1 }
+		cue = { row = SNORT_ROW, speed = 1 }
 	elseif name == "Snort2" then
-		local row = SoundList.byName(SNORT_ROW)
-		return { row = SNORT_ROW, speed = if row ~= nil then row.secondSpeed else nil }
-	elseif name == "Mumble" then
-		return { row = MUMBLE_ROW }
+		local row = find(SNORT_ROW)
+		cue = { row = SNORT_ROW, speed = if row ~= nil then row.secondSpeed else nil }
+	else
+		cue = FIXED[name]
 	end
-	return nil
+	if cue == nil or find(cue.row) == nil then
+		return nil
+	end
+	return table.clone(cue)
 end
 
 return Cues

@@ -211,6 +211,17 @@ describe("SoundBoard", function()
 		expect(lastCopy(rig).PlaybackSpeed).toBeCloseTo(0.8, PRECISION)
 	end)
 
+	it("asks for a fade when the play has one, and for none when it has not", function()
+		local rig = newRig()
+		rig.board.play("Rumble", nil, { fade = { after = 0, seconds = 1 } })
+		expect(#rig.fades).toBe(1)
+		expect(rig.fades[1].copy).toBe(lastCopy(rig))
+		expect(rig.fades[1].afterSeconds).toBeCloseTo(0, PRECISION)
+		expect(rig.fades[1].seconds).toBeCloseTo(1, PRECISION)
+		rig.board.play("Rumble")
+		expect(#rig.fades).toBe(1)
+	end)
+
 	it("picks a speed inside a row's speed range", function()
 		local rig = newRig()
 		local range = Config.Audio.SnoreSpeed

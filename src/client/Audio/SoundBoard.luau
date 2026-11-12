@@ -24,6 +24,7 @@ export type PlayOptions = {
 	thud: number?, -- the flump's thud size (+20, +30, +40 or more)
 	speed: number?, -- overrides the row's own speed (the second snort's 0.9)
 	into: Instance?, -- a Just for you row wires here instead of to its bus (Music's faders)
+	fade: { after: number, seconds: number }?, -- fades the copy to nothing (the wake rumble's 1 s)
 }
 export type LogRecord = { row: string, time: number, place: Vector3? }
 export type Board = {
@@ -169,6 +170,9 @@ function SoundBoard.start(deps: Deps): Board
 			end
 		end
 		copy.Parent = deps.root
+		if options ~= nil and options.fade ~= nil and deps.fadeOut ~= nil then
+			deps.fadeOut(copy, options.fade.after, options.fade.seconds)
+		end
 
 		local attachment: Attachment? = nil
 		if inWorld then
