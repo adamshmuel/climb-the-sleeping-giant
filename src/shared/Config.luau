@@ -97,6 +97,10 @@ export type Config = {
 		SlamShakeNoneFromStuds: number,
 		SlamShakeSeconds: number,
 		HeadTipSeconds: number,
+		BirdSpeedStuds: number,
+		BirdFlapsPerSecond: number,
+		BirdSeconds: number,
+		DustBurst: number,
 		OwnFistTransparency: number,
 		BonkStarTurnSeconds: number,
 		BounceCameraUpDegrees: number,
@@ -272,6 +276,10 @@ local config: Config = {
 		SlamShakeNoneFromStuds = 60,
 		SlamShakeSeconds = 0.4,
 		HeadTipSeconds = 0.3,
+		BirdSpeedStuds = 30, -- the 24 wake birds fly this fast, straight out and up (spec 69, birds)
+		BirdFlapsPerSecond = 4,
+		BirdSeconds = 3, -- they are gone after this long
+		DustBurst = 20, -- particles each of the 7 dust spots emits at the wake
 		OwnFistTransparency = 0.9,
 		BonkStarTurnSeconds = 0.8,
 		-- A bounced player's camera pitch while floating, measured from level (up is positive). The spawn view's is 21.

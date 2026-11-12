@@ -159,6 +159,22 @@ describe("Config", function()
 		expect(Config.Wake.HeadTipSeconds).toBe(0.3)
 	end)
 
+	it("the wake birds fly at 30 studs a second", function()
+		expect(Config.Wake.BirdSpeedStuds).toBe(30)
+	end)
+
+	it("the wake birds flap 4 times a second", function()
+		expect(Config.Wake.BirdFlapsPerSecond).toBe(4)
+	end)
+
+	it("the wake birds are gone after 3 s", function()
+		expect(Config.Wake.BirdSeconds).toBe(3)
+	end)
+
+	it("each wake dust spot bursts 20 particles", function()
+		expect(Config.Wake.DustBurst).toBe(20)
+	end)
+
 	it("a player's own fist is 0.9 transparent", function()
 		expect(Config.Wake.OwnFistTransparency).toBe(0.9)
 	end)

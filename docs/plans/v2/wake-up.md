@@ -238,7 +238,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 13: Birds and dust**
 - Spec rules: Rule 69 (The world reacts): the birds and the dust; section 5, "Birds", "Dust"; Check C1 (birds behind him, gone within 3 s).
-- Files: `src/client/Fx/WakeWorld.luau` (new), `src/client/init.client.luau`, `src/tests/client/Fx/WakeWorld.spec.luau` (new).
+- Files: `src/client/Fx/WakeWorld.luau` (new), `src/client/init.client.luau`, `src/shared/Config.luau` and `src/tests/shared/Config.spec.luau` (4 new `Wake` keys: bird speed, flaps, bird seconds, dust burst), `src/tests/client/Fx/WakeWorld.spec.luau` (new).
 - What it does: at the wake, copies `Assets.WakeBirds` into the world, flies each bird up and away from the gardens at about 30 studs a second with its wings flapping 4 times a second, and removes them all at 3 s; each of the 7 dust spots emits 20 puffs once (`ParticleEmitter:Emit`). It plays with Reduce Motion on. Sound hook `WakeBirds`.
 - Failing tests first (fake clock): every bird moves away from the valley's middle and up; none is left at 3 s; each dust emitter gets one burst of 20; a second wake-up does it again; nothing is left after `stop`.
 - Done when: the tests pass, and in Play from gardens 1, 4 and 8 no bird passes between the garden and his face (screenshots at 0.5 s and 1.5 s, computer and the iPhone 14).

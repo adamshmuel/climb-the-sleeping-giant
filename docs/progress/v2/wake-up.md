@@ -18,7 +18,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Wake-up (V2 spec 6) | Task 10: World prep: the wake pieces | ☑ done | builder, code_lead, designer |
 | Wake-up (V2 spec 6) | Task 11: His face wakes | ☑ done (2026-11-12; full run 3599/1, standing red only; Play reads and 4 shots, designer judging) | code_lead |
 | Wake-up (V2 spec 6) | Task 12: His arm between slams, and back to sleep | ☑ done (2026-11-12; full run 3607/1, standing red only; Play: 6 warnings, biggest frame turn 3.6 deg, arm and cuff at rest 0.5 s after the awake end) | builder, code_lead |
-| Wake-up (V2 spec 6) | Task 13: Birds and dust | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 13: Birds and dust | ☑ done (2026-11-12; full run 3622/1, standing red only; Play: 24 birds behind him, gone by 3.3 s, dust on his body. History: the first Play found wings coming off the real birds (the code took a Wing as the body when there was no PrimaryPart); fixed to pick the first non-Wing part, red test first; re-proof worst gap 0.0000 stud) | builder, code_lead |
 | Wake-up (V2 spec 6) | Task 14: The wake shake and the slam shake | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 15: The bonk on screen | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 16: The fist on your own screen, and the slam sounds' places | ☐ not started | |

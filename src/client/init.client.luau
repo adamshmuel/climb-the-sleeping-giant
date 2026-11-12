@@ -18,6 +18,7 @@ local Celebrations = require(script.Fx.Celebrations)
 local GiantFx = require(script.Fx.GiantFx)
 local NestPop = require(script.Fx.NestPop)
 local SlamFx = require(script.Fx.SlamFx)
+local WakeWorld = require(script.Fx.WakeWorld)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local ClimbGate = require(script.Player.ClimbGate)
 local Recovery = require(script.Player.Recovery)
@@ -237,6 +238,27 @@ if server then
 				meterZs.setLook(MeterZsView.look(sign))
 			end,
 		})
+		-- The world reacts to the wake: 24 birds fly off behind him and 7 dust spots on his body puff. Without its assets it
+		-- is not started.
+		local wakeBirds = if assets then assets:WaitForChild("WakeBirds", NET_WAIT_SECONDS) else nil
+		local giantFxFolder = if world then world:WaitForChild("GiantFX", NET_WAIT_SECONDS) else nil
+		local wakeDust = if giantFxFolder then giantFxFolder:WaitForChild("WakeDust", NET_WAIT_SECONDS) else nil
+		if wakeBirds ~= nil and giantFxFolder ~= nil and wakeDust ~= nil then
+			local stopWakeWorld = WakeWorld.start({
+				giantState = server.GiantState,
+				birds = wakeBirds,
+				dust = wakeDust,
+				parent = giantFxFolder,
+				step = RunService.RenderStepped,
+				now = os.clock,
+				emit = function(emitter: ParticleEmitter, count: number)
+					emitter:Emit(count)
+				end,
+			})
+			script.Destroying:Once(stopWakeWorld)
+		else
+			warn("WakeWorld not started: Assets.WakeBirds or World.GiantFX.WakeDust is missing")
+		end
 		-- When a hand slam catches this player, the server puts them on their own spawn spot and tells every device. Their
 		-- camera snaps behind them there. The spawn spot is a loose part, so with streaming it can be missing for a moment:
 		-- the camera waits for it, for a short time.
