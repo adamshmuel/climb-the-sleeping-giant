@@ -229,3 +229,13 @@ describe("Cues.forName (the egg pop)", function()
 		expect(SoundList.byName(found.row)).never.toBe(nil)
 	end)
 end)
+
+describe("Cues.forName (the thud)", function()
+	it('gives Thud the Thud "flump" row at the row\'s own speed and no extra row', function()
+		local found = Cues.forName("Thud") :: Cues.Cue
+		expect(found.row).toBe('Thud "flump"')
+		expect(found.speed).toBe(nil)
+		expect(found.also).toBe(nil)
+		expect(SoundList.byName(found.row)).never.toBe(nil)
+	end)
+end)

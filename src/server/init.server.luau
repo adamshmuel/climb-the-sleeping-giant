@@ -520,6 +520,10 @@ end
 director.slammed:Connect(function()
 	grab:noteFist()
 end)
+-- A landing thud that makes noise is heard by everyone (Rules 96 and 84).
+director.thudded:Connect(function(position, noise)
+	net.Thud:FireAllClients(position, noise)
+end)
 analytics = Analytics.start({
 	service = AnalyticsService,
 	players = Players,

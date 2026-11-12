@@ -13,6 +13,7 @@ export type Made = {
 	SlamLanded: RemoteEvent, -- the server tells everyone the hand landed: (slam number, the same point)
 	Caught: RemoteEvent, -- the server tells everyone a carrier was caught: (the caught Player)
 	EggPop: RemoteEvent, -- the server tells everyone an egg popped at a nest: (position (Vector3), kind: "Refill" | "Back" | "Gone")
+	Thud: RemoteEvent, -- the server tells everyone a landing thud: (position (Vector3), noise (number))
 	SlideTip: RemoteEvent, -- the server tells one player they slipped on a too-steep slope, once per session (sends nothing)
 	Rescued: RemoteEvent, -- the server tells everyone a player was moved back to a safe spot: (the Player, where they were (Vector3), where they go (CFrame))
 	RequestReset: RemoteEvent, -- the client asks for a Reset (sends nothing): the server decides what happens
@@ -33,6 +34,7 @@ Net.SlamWarningName = "SlamWarning"
 Net.SlamLandedName = "SlamLanded"
 Net.CaughtName = "Caught"
 Net.EggPopName = "EggPop"
+Net.ThudName = "Thud"
 Net.SlideTipName = "SlideTip"
 Net.RescuedName = "Rescued"
 Net.RequestResetName = "RequestReset"
@@ -67,6 +69,7 @@ function Net.setup(parent: Instance): Made
 	local slamLanded = (findOrMake(remotes, Net.SlamLandedName, "RemoteEvent"))
 	local caught = (findOrMake(remotes, Net.CaughtName, "RemoteEvent"))
 	local eggPop = (findOrMake(remotes, Net.EggPopName, "RemoteEvent"))
+	local thud = (findOrMake(remotes, Net.ThudName, "RemoteEvent"))
 	local slideTip = (findOrMake(remotes, Net.SlideTipName, "RemoteEvent"))
 	local rescued = (findOrMake(remotes, Net.RescuedName, "RemoteEvent"))
 	local requestReset = (findOrMake(remotes, Net.RequestResetName, "RemoteEvent"))
@@ -87,6 +90,7 @@ function Net.setup(parent: Instance): Made
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
 		EggPop = eggPop :: RemoteEvent,
+		Thud = thud :: RemoteEvent,
 		SlideTip = slideTip :: RemoteEvent,
 		Rescued = rescued :: RemoteEvent,
 		RequestReset = requestReset :: RemoteEvent,
@@ -137,6 +141,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		else nil
 	local caught = if remotes then waitForChildOfClass(remotes, Net.CaughtName, "RemoteEvent", remaining()) else nil
 	local eggPop = if remotes then waitForChildOfClass(remotes, Net.EggPopName, "RemoteEvent", remaining()) else nil
+	local thud = if remotes then waitForChildOfClass(remotes, Net.ThudName, "RemoteEvent", remaining()) else nil
 	local slideTip = if remotes then waitForChildOfClass(remotes, Net.SlideTipName, "RemoteEvent", remaining()) else nil
 	local rescued = if remotes then waitForChildOfClass(remotes, Net.RescuedName, "RemoteEvent", remaining()) else nil
 	local requestReset = if remotes
@@ -157,6 +162,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		or slamLanded == nil
 		or caught == nil
 		or eggPop == nil
+		or thud == nil
 		or slideTip == nil
 		or rescued == nil
 		or requestReset == nil
@@ -194,6 +200,9 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		if eggPop == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.EggPopName}`)
 		end
+		if thud == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.ThudName}`)
+		end
 		if slideTip == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.SlideTipName}`)
 		end
@@ -223,6 +232,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
 		EggPop = eggPop :: RemoteEvent,
+		Thud = thud :: RemoteEvent,
 		SlideTip = slideTip :: RemoteEvent,
 		Rescued = rescued :: RemoteEvent,
 		RequestReset = requestReset :: RemoteEvent,

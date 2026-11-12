@@ -343,7 +343,6 @@ function Messages.start(deps: Deps): Handle
 		end
 		slidePending = false
 		slideShowing = true
-		-- SOUND (plan 7): slide tip
 		cancelSlide = after(Messages.slideSeconds, function()
 			cancelSlide = nil
 			slideShowing = false

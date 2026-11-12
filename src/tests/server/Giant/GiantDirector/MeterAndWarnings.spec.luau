@@ -9,6 +9,7 @@ local cleanUp = Helpers.cleanUp
 local meter = Helpers.meter
 local newHarness = Helpers.newHarness
 local sample = Helpers.sample
+type Harness = Helpers.Harness
 local stepTimes = Helpers.stepTimes
 
 afterEach(cleanUp)
@@ -173,6 +174,66 @@ describe("GiantDirector thuds", function()
 		harness.samples = { sample(1, "Meadow", false, "Beard") }
 		stepTimes(harness, 1)
 		expect(meter(harness)).toBeCloseTo(49.9, 5)
+	end)
+end)
+
+-- Plan 7 Task 13 (Rules 96 and 84): each thud also fires the thudded signal once, with where it landed and how loud.
+describe("GiantDirector thudded signal", function()
+	type Heard = { position: Vector3, noise: number }
+	local function listen(harness: Harness): { Heard }
+		local heard: { Heard } = {}
+		local looseDirector: any = harness.director
+		looseDirector.thudded:Connect(function(position: Vector3, noise: number)
+			table.insert(heard, { position = position, noise = noise })
+		end)
+		return heard
+	end
+	local PLACE = Vector3.new(12, 30, -40)
+
+	local cases: { { from: "Boots" | "Belly" | "Nightcap", noise: number } } =
+		{ { from = "Boots", noise = 20 }, { from = "Belly", noise = 30 }, { from = "Nightcap", noise = 60 } }
+	for _, case in cases do
+		it(`fires thudded once with {case.noise} at the sample's position for a thud from the {case.from}`, function()
+			local harness = newHarness(10)
+			addPlayer(harness, 1, "Mia")
+			local heard = listen(harness)
+			local standing = sample(1, "Meadow", false, case.from)
+			standing.position = PLACE
+			harness.samples = { standing }
+			stepTimes(harness, 1)
+			expect(#heard).toBe(1)
+			expect(heard[1].position).toEqual(PLACE)
+			expect(heard[1].noise).toBe(case.noise)
+		end)
+	end
+
+	it("fires nothing for a thud that ends in a garden", function()
+		local harness = newHarness(10)
+		addPlayer(harness, 1, "Mia")
+		local heard = listen(harness)
+		harness.samples = { sample(1, "Meadow", false, "Belly", 2) }
+		stepTimes(harness, 1)
+		expect(#heard).toBe(0)
+	end)
+
+	it("fires nothing for a sample with no thud", function()
+		local harness = newHarness(10)
+		addPlayer(harness, 1, "Mia")
+		local heard = listen(harness)
+		harness.samples = { sample(1, "Belly", true) }
+		stepTimes(harness, 1)
+		expect(#heard).toBe(0)
+	end)
+
+	it("fires nothing while he is awake", function()
+		local harness = newHarness(100)
+		addPlayer(harness, 1, "Mia")
+		harness.director:step() -- a full meter wakes him
+		expect(harness.state:GetAttribute("Phase")).toBe("Awake")
+		local heard = listen(harness)
+		harness.samples = { sample(1, "Meadow", false, "Belly") }
+		stepTimes(harness, 1)
+		expect(#heard).toBe(0)
 	end)
 end)
 

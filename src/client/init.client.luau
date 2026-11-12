@@ -331,6 +331,7 @@ if server then
 		local findSpawnSpot = Celebrations.spawnSpotInWorld(world)
 		moments.hearEggHome({ OnClientEvent = server.EggHome.OnClientEvent }) -- the egg-home sounds (plan 7 Task 11)
 		moments.hearEggPop({ OnClientEvent = server.EggPop.OnClientEvent }) -- the egg-pop sounds (plan 7 Task 12)
+		moments.hearThud({ OnClientEvent = server.Thud.OnClientEvent }) -- the landing flump (plan 7 Task 13)
 		Celebrations.start({
 			eggHome = { OnClientEvent = server.EggHome.OnClientEvent },
 			findEmitter = Celebrations.emitterInWorld(world),

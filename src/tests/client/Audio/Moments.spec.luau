@@ -29,6 +29,7 @@ type Rig = {
 	localPlayer: Instance,
 	eggHome: BindableEvent,
 	eggPop: BindableEvent,
+	thud: BindableEvent,
 	addPlayer: (position: Vector3?) -> Instance,
 	setFloating: (player: Instance, floating: boolean) -> (),
 }
@@ -59,6 +60,8 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	table.insert(made, eggHome)
 	local eggPop = Instance.new("BindableEvent") -- plan 7 Task 12: the EggPop remote
 	table.insert(made, eggPop)
+	local thud = Instance.new("BindableEvent") -- plan 7 Task 13: the Thud remote
+	table.insert(made, thud)
 	local played: { Call } = {}
 	local stopped: { string } = {}
 	local later: { Later } = {}
@@ -92,6 +95,10 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	if hearEggPop ~= nil then
 		hearEggPop({ OnClientEvent = eggPop.Event })
 	end
+	local hearThud = (handle :: any).hearThud
+	if hearThud ~= nil then
+		hearThud({ OnClientEvent = thud.Event })
+	end
 	local function addPlayer(position: Vector3?): Instance
 		local player = Instance.new("Folder")
 		player.Parent = players
@@ -110,6 +117,7 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 		localPlayer = localPlayer,
 		eggHome = eggHome,
 		eggPop = eggPop,
+		thud = thud,
 		addPlayer = addPlayer,
 		setFloating = function(player: Instance, floating: boolean)
 			player:SetAttribute("Floating", floating)
@@ -591,6 +599,52 @@ describe("Moments.hearEggPop (the egg pops)", function()
 		local rig = newRig()
 		rig.handle.destroy()
 		rig.eggPop:Fire(PLACE, "Refill")
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+end)
+
+-- Plan 7 Task 13 (Rules 96 and 84): your own thuds are heard. The flump plays at the position the server sends, and the
+-- board gets the thud size (options.thud) to pick its loudness.
+describe("Moments.hearThud (the flump)", function()
+	local FLUMP = 'Thud "flump"'
+
+	for _, noise in { 20, 30, 40, 60 } do
+		it(`plays one flump at the position with options.thud {noise}`, function()
+			local rig = newRig()
+			rig.thud:Fire(PLACE, noise)
+			task.wait()
+			expect(rows(rig)).toEqual({ FLUMP })
+			expect(rig.played[1].at).toEqual(PLACE)
+			expect((rig.played[1].options :: any).thud).toBe(noise)
+		end)
+	end
+
+	it("plays nothing when the position is not a Vector3", function()
+		local rig = newRig()
+		rig.thud:Fire("far away", 20)
+		rig.thud:Fire(nil, 30)
+		rig.thud:Fire(5, 40)
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing when the noise is not a finite number above 0", function()
+		local rig = newRig()
+		rig.thud:Fire(PLACE, "big")
+		rig.thud:Fire(PLACE, 0)
+		rig.thud:Fire(PLACE, -5)
+		rig.thud:Fire(PLACE, 0 / 0)
+		rig.thud:Fire(PLACE, math.huge)
+		rig.thud:Fire(PLACE, nil)
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing after destroy", function()
+		local rig = newRig()
+		rig.handle.destroy()
+		rig.thud:Fire(PLACE, 20)
 		task.wait()
 		expect(#rig.played).toBe(0)
 	end)

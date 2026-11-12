@@ -234,10 +234,12 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 14: Tiptoe is quiet, and clicks**
 - Spec rules: Rule 96 (Your own noise is heard): "While Tiptoe is on, the player's own footsteps must play at a quarter of their normal loudness", the click; Rule 9 (Tiptoe is quiet); section 8, "Two players turn Tiptoe on at the same time".
-- Files: `src/client/Audio/Footsteps.luau` (new), `src/client/Audio/Moments.luau`, `src/client/init.client.luau`, their tests.
+- Files: `src/client/Audio/Footsteps.luau` (new; it plays the click through the board itself, so `Moments` is unchanged), `src/client/init.client.luau`, `src/tests/client/Audio/Footsteps.spec.luau` (new).
 - What it does: first, in a muted session, the builder finds the footstep sound Roblox makes in the character with the newer objects (Task 4) and writes its name and class in the report. Then: while this player's own `Tiptoe` is true, that footstep player's volume is a quarter of what Roblox set, and back when it turns off, also after a respawn. Each change of this player's own `Tiptoe` (the server's answer, the moment the button changes) plays the click, but not the value the player joins with.
 - Failing tests first (a fake character holding a footstep player with the found name): Tiptoe on gives a quarter, off gives the original; a new character while Tiptoe is on gets a quarter at once; another player's Tiptoe changes nothing here; each change clicks once, joining doesn't.
-- Done when: the tests pass, and the report names Roblox's footstep sound. If Roblox makes no footstep sound that a script can find, the builder stops and tells code_lead.
+- Done when: the tests pass, the report names Roblox's footstep sound, and a muted Play (Task 10's pattern) shows that sound's Volume at a quarter while `Tiptoe` is forced on, back to its original when off, a quarter again on a new character made while on, and one `Copy Tiptoe click` for each change. If Roblox makes no footstep sound that a script can find, or rewrites its Volume while walking, the builder stops and tells code_lead.
+- Changed 2026-11-13 (code_lead): the discovery became its own muted-Play step (`work/p7/task14-find.luau`) before the tests, the click moved from `Moments` into `Footsteps` (one module for one button), and the muted Play was added, as for Tasks 10 to 13. Specs: unchanged.
+- Stands on: Tasks 3, 4, 9 and 13 (approved 2026-11-12 and 13: the board and its click row, the newer sound objects, `Moments`, the probe-first Play pattern); plan 4/5's Tiptoe button and the player's `Tiptoe` attribute (built).
 
 **Task 15: The rescue poof**
 - Spec rules: Rule 97 (The rescue poof); Rule 33 (What a rescue looks like); section 8, "A rescue happens on a carrier during a wake".

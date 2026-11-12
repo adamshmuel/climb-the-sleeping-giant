@@ -22,10 +22,11 @@ export type SignalLike = {
 	Connect: (self: any, callback: (...any) -> ()) -> RBXScriptConnection,
 }
 export type Handle = {
-	play: (name: string, at: Vector3?) -> (),
+	play: (name: string, at: Vector3?, thud: number?) -> (),
 	stop: (name: string) -> (),
 	hearEggHome: (eggHome: { OnClientEvent: SignalLike }) -> (),
 	hearEggPop: (eggPop: { OnClientEvent: SignalLike }) -> (),
+	hearThud: (thud: { OnClientEvent: SignalLike }) -> (),
 	destroy: () -> (),
 }
 
@@ -35,12 +36,12 @@ function Moments.start(deps: Deps): Handle
 	local alive = true
 	local carrying = deps.localPlayer:GetAttribute("Carrying") ~= nil -- an egg already carried at start is not a grab
 
-	local function play(name: string, at: Vector3?)
+	local function play(name: string, at: Vector3?, thud: number?)
 		local cue = Cues.forName(name)
 		if cue == nil or not alive then
 			return
 		end
-		local options = { speed = cue.speed, fade = cue.fade }
+		local options = { speed = cue.speed, fade = cue.fade, thud = thud }
 		local function playRows()
 			deps.board.play(cue.row, at, options)
 			if cue.also ~= nil then
@@ -157,6 +158,23 @@ function Moments.start(deps: Deps): Handle
 		)
 	end
 
+	-- A body lands somewhere: the remote fires (position, noise). The flump plays there, and the board gets the noise to pick
+	-- its loudness (Rule 96). A bad position, or a noise that is not a finite number above 0, plays nothing.
+	local function hearThud(thud: { OnClientEvent: SignalLike })
+		table.insert(
+			connections,
+			thud.OnClientEvent:Connect(function(position: any, noise: any)
+				if typeof(position) ~= "Vector3" then
+					return
+				end
+				if typeof(noise) ~= "number" or noise ~= noise or noise <= 0 or noise == math.huge then
+					return
+				end
+				play("Thud", position, noise)
+			end)
+		)
+	end
+
 	local function destroy()
 		alive = false
 		for _, connection in connections do
@@ -171,7 +189,14 @@ function Moments.start(deps: Deps): Handle
 		table.clear(perPlayer)
 	end
 
-	return { play = play, stop = stop, hearEggHome = hearEggHome, hearEggPop = hearEggPop, destroy = destroy }
+	return {
+		play = play,
+		stop = stop,
+		hearEggHome = hearEggHome,
+		hearEggPop = hearEggPop,
+		hearThud = hearThud,
+		destroy = destroy,
+	}
 end
 
 return Moments

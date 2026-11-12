@@ -74,6 +74,9 @@ export type Director = {
 	-- Fires once for each free save, right after it is spent: the saved player's user id and the zone they were in. Analytics
 	-- listens to it.
 	saved: Signal.Signal<number, Config.ZoneName>,
+	-- Fires once for each landing thud that makes noise while he sleeps (a slide's too, Rule 84), right after it is added to
+	-- the meter: where the body landed and how loud. The clients play the flump (Rule 96).
+	thudded: Signal.Signal<Vector3, number>,
 	destroy: (self: Director) -> (),
 }
 
@@ -155,6 +158,7 @@ function GiantDirector.new(deps: Deps): Director
 	local woke = Signal.new() :: Signal.Signal<string, number?, string>
 	local slammed = Signal.new() :: Signal.Signal<number?, string, { number }, { number }>
 	local saved = Signal.new() :: Signal.Signal<number, Config.ZoneName>
+	local thudded = Signal.new() :: Signal.Signal<Vector3, number>
 	-- Where bounced players land. A slam must never cover one (Slams.pickEmpty), so Slams is given only their points.
 	local landingPositions: { Vector3 } = {}
 	for _, spot in deps.landingSpots do
@@ -409,6 +413,7 @@ function GiantDirector.new(deps: Deps): Director
 			else
 				-- Thuds go in first, all at once, so a jumper who fills the meter is the one named.
 				local thuds: { SleepMeter.Contribution } = {}
+				local heard: { { position: Vector3, noise: number } } = {} -- the thuds to tell the clients, after they are added
 				for _, sample in samples do
 					local info = byId[sample.userId]
 					if info ~= nil and sample.thudFrom ~= nil then
@@ -419,10 +424,14 @@ function GiantDirector.new(deps: Deps): Director
 								noise = noise,
 								canBeSaved = not info.rareHome and not info.freeSaveUsed,
 							})
+							table.insert(heard, { position = sample.position, noise = noise })
 						end
 					end
 				end
 				local afterThuds = SleepMeter.add(value, phase, thuds)
+				for _, thud in heard do
+					thudded:Fire(thud.position, thud.noise)
+				end
 				savedNow = spendSaves(afterThuds.saved, samples) or savedNow
 				value = afterThuds.value
 				wokeNow = afterThuds.woke
@@ -519,9 +528,10 @@ function GiantDirector.new(deps: Deps): Director
 		woke:Destroy()
 		slammed:Destroy()
 		saved:Destroy()
+		thudded:Destroy()
 	end
 
-	return { step = step, woke = woke, slammed = slammed, saved = saved, destroy = destroy }
+	return { step = step, woke = woke, slammed = slammed, saved = saved, thudded = thudded, destroy = destroy }
 end
 
 -- Calls `stepper:step()` once for every `seconds` of game time, counted from `heartbeat`. At most `maxSteps`
