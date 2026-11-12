@@ -167,7 +167,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - Files: `src/server/Giant/Bonker.luau` (new), `src/server/Eggs/Carry.luau`, `src/tests/server/Giant/Bonker.spec.luau` (new), `src/tests/server/Eggs/Carry.spec.luau`.
 - What it does: `Bonker:bonk(player, onLadder)` sets `Bonked` to `"Ground"` or `"Ladder"` and clears it after the tumble time (1.0 s), with a Trove per player, cleared when they leave or get a new character. `Carry.speed` gives 0 while `Bonked` is set, and `Carry` turns jumping off for that time. It fires a `bonked` Signal (player) for Analytics. Nothing else about the player changes.
 - Failing tests first (fake clock, fake players): the attribute is `"Ground"` for 1.0 s and then gone; `"Ladder"` for a climber; walking speed 0 and no jump during it, back to the right speed after (also with Tiptoe and an egg's slowdown); the character is never moved; a player who leaves mid-bonk leaves nothing behind; a new character clears it.
-- Done when: the tests pass, and in Play on the Server a player made to stand on a test `TrussPart` holds on, still, for 1 s with walking speed 0 (Roblox's climbing at walking speed 0 is checked here first, before any client work).
+- Done when: the tests pass. (The Play proof that a bonked climber holds on moved to Task 16, on the real BootLadder_Left: product, 2026-11-12. A test truss driven by a server MoveTo never starts a climb.)
 - Stands on: Task 1 (the tumble times), plan 3 Task 3 (who is on a ladder, built).
 
 **Task 8: The director hunts everyone**
@@ -263,7 +263,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - Files: `src/client/Fx/SlamFx.luau` (uses `src/shared/HandShape.luau` from Task 3), `src/client/Fx/Celebrations.luau`, their tests (`src/tests/client/Fx/SlamFx/`, `Celebrations.spec.luau`).
 - What changes: see "Who sees the fist see-through" in "Decisions". Sound hooks `SlamCircle` and `SlamThud` in `SlamFx`, and `Caught` in `Celebrations` (with the star puff).
 - Failing tests first: with the device's own middle under the hand at the landing, its fist is 0.9 see-through from the landing until its bottom is above the head, then solid; a player outside the circle sees it solid throughout; the fall is always solid; each hook is called once at its moment.
-- Done when: the tests pass, and in Play the bonk halfway up the left boot ladder, seen from that player's own screen, shows the player, the red ladder, the stars and the circle (screenshots, computer and the iPhone 14), while a second Studio player on the ground sees the fist solid.
+- Done when: first, the bonked player holds on BootLadder_Left (Climbing, no rise or slide over 0.3 studs, speed back after 1.0 s); a failure goes to code_lead as a server fix before Task 16 closes. The Play job climbs with a client-side `hum:Move` loop and reads `GetState` on the client. Then: the tests pass, and in Play the bonk halfway up the left boot ladder, seen from that player's own screen, shows the player, the red ladder, the stars and the circle (screenshots, computer and the iPhone 14), while a second Studio player on the ground sees the fist solid.
 - Stands on: Task 1 (the see-through value), Task 3 (`HandShape`), Task 6 (`SlamFx`'s rays), Task 8 and plan 3 Task 15b (a real bonk on a ladder in Play).
 
 **Task 17: The flowers shake**

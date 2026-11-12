@@ -127,9 +127,9 @@ end
 
 -- The walking speed in studs per second: the normal speed, times the Tiptoe factor if Tiptoe is on,
 -- times what is left after the slowdown of the egg on the back (if any). A held player (standing still after a rescue
--- while still pressing) has speed 0.
-function Carry.speed(tiptoe: boolean, carrying: Config.RarityName?, held: boolean?): number
-	if held == true then
+-- while still pressing) has speed 0, and so has a bonked player (tumbling after a slam).
+function Carry.speed(tiptoe: boolean, carrying: Config.RarityName?, held: boolean?, bonked: boolean?): number
+	if held == true or bonked == true then
 		return 0
 	end
 	local speed = Config.Movement.WalkSpeed
@@ -167,9 +167,36 @@ function Carry.watchSpeed(players: PlayersLike): () -> ()
 		end
 		trove:Add(stopWaiting)
 
+		-- The jump value in effect before the bonk (JumpPower if UseJumpPower is on, else JumpHeight), kept per character.
+		local savedJump: { humanoid: Humanoid, usePower: boolean, value: number }? = nil
+
+		local function setJump(humanoid: Humanoid, bonked: boolean)
+			if bonked then
+				if savedJump == nil or savedJump.humanoid ~= humanoid then
+					local usePower = humanoid.UseJumpPower
+					savedJump = {
+						humanoid = humanoid,
+						usePower = usePower,
+						value = if usePower then humanoid.JumpPower else humanoid.JumpHeight,
+					}
+				end
+				humanoid.JumpPower = 0
+				humanoid.JumpHeight = 0
+			elseif savedJump ~= nil and savedJump.humanoid == humanoid then
+				if savedJump.usePower then
+					humanoid.JumpPower = savedJump.value
+				else
+					humanoid.JumpHeight = savedJump.value
+				end
+				savedJump = nil
+			end
+		end
+
 		local function setSpeed(humanoid: Humanoid)
 			local info = PlayerInfo.fromPlayer(player)
-			humanoid.WalkSpeed = Carry.speed(info.tiptoe, info.carrying, info.held)
+			local bonked = player:GetAttribute("Bonked") ~= nil
+			humanoid.WalkSpeed = Carry.speed(info.tiptoe, info.carrying, info.held, bonked)
+			setJump(humanoid, bonked)
 		end
 
 		-- Speed for the current character, waiting a moment if its Humanoid has not arrived yet.
@@ -192,7 +219,7 @@ function Carry.watchSpeed(players: PlayersLike): () -> ()
 			end)
 		end
 
-		for _, name in { "Tiptoe", "Carrying", "Held" } do
+		for _, name in { "Tiptoe", "Carrying", "Held", "Bonked" } do
 			trove:Add(player:GetAttributeChangedSignal(name):Connect(function()
 				applyToCharacter(player.Character)
 			end))

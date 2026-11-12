@@ -33,6 +33,13 @@ describe("Carry.speed", function()
 	it("is 14.4 when carrying an Epic egg without Tiptoe (the Rare's speed)", function()
 		expect(Carry.speed(false, "Epic")).toBeCloseTo(14.4, 5)
 	end)
+
+	it("is 0 when bonked, also with Tiptoe and with an egg on the back", function()
+		expect(Carry.speed(false, nil, nil, true)).toBe(0)
+		expect(Carry.speed(true, nil, nil, true)).toBe(0)
+		expect(Carry.speed(true, "Rare", nil, true)).toBe(0)
+		expect(Carry.speed(false, nil, nil, false)).toBe(16)
+	end)
 end)
 
 -- A tiny stand-in for a Roblox event: Connect, Fire and Disconnect, all in plain Luau.
@@ -163,6 +170,50 @@ describe("Carry.watchSpeed", function()
 		player.attributes:SetAttribute("Held", nil)
 		task.wait()
 		expect(humanoid.WalkSpeed).toBeCloseTo(8.64, 5)
+	end)
+
+	it("a bonked player's speed is 0, and back to normal (Tiptoe and egg included) when the bonk ends", function()
+		local character, humanoid = newCharacter()
+		local player = newPlayer(1, character)
+		watch(newPlayers({ player }))
+		player.attributes:SetAttribute("Tiptoe", true)
+		player.attributes:SetAttribute("Carrying", "Rare")
+		task.wait()
+		expect(humanoid.WalkSpeed).toBeCloseTo(8.64, 5)
+
+		player.attributes:SetAttribute("Bonked", "Ground")
+		task.wait()
+		expect(humanoid.WalkSpeed).toBe(0)
+
+		player.attributes:SetAttribute("Bonked", nil)
+		task.wait()
+		expect(humanoid.WalkSpeed).toBeCloseTo(8.64, 5)
+	end)
+
+	it("a bonked player cannot jump, and jumps as before when the bonk ends", function()
+		-- The jump property in effect is JumpPower when UseJumpPower is true, else JumpHeight (Humanoid docs).
+		local function jumpValue(humanoid: Humanoid): number
+			if humanoid.UseJumpPower then
+				return humanoid.JumpPower
+			end
+			return humanoid.JumpHeight
+		end
+		for _, usePower in { false, true } do
+			local character, humanoid = newCharacter()
+			humanoid.UseJumpPower = usePower
+			local player = newPlayer(1, character)
+			watch(newPlayers({ player }))
+			local before = jumpValue(humanoid)
+			expect(before > 0).toBe(true)
+
+			player.attributes:SetAttribute("Bonked", "Ladder")
+			task.wait()
+			expect(jumpValue(humanoid)).toBe(0)
+
+			player.attributes:SetAttribute("Bonked", nil)
+			task.wait()
+			expect(jumpValue(humanoid)).toBeCloseTo(before, 3)
+		end
 	end)
 
 	it("adds the slowdown of the egg on the back", function()

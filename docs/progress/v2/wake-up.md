@@ -12,7 +12,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Wake-up (V2 spec 6) | Task 4: Show slams near a protected player | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 5: The meadow spots for show slams | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 6: The circle under anyone, on the first walkable surface | ☐ not started | |
-| Wake-up (V2 spec 6) | Task 7: The bonk on the server | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 7: The bonk on the server | ☑ done 2026-11-12 | Bonker 6/0, Carry 35/0; full run 3510 passed, 1 failed (the standing stuck-scan red); Play hold proof moved to Task 16 (product, accept for now); code_lead approved |
 | Wake-up (V2 spec 6) | Task 8: The director hunts everyone | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 9: The server says who is in a garden and who floats | ☐ not started | |
 | Wake-up (V2 spec 6) | Task 10: World prep: the wake pieces | ☐ not started | |

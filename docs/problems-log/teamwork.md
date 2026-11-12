@@ -257,3 +257,4 @@ About handing work between agents, agent memory, and task sizes. The map is `doc
 - 07:00 2026-11-12 (loop): phone ladder drop job NOT RUN a 2nd time (26b Step 9, 23a Step 6); cause: job aims camera once, game camera script overrides; fix = pin camera via BindToRenderStep in phone jobs. Sent to product to weigh.
 - 2026-11-12 07:37: plan 3 Task 15a Step 3, second ruling on the same GiantPieces test (its 'can it fail' count relied on a false positive). Loop trigger; one more ruling, then the main chat vetoes.
 - 2026-11-12 07:27: main chat stamped handoff lines with guessed times (07:16-07:45) instead of running date; corrected in a later line. Rule exists (memory run-date-before-times); applied by running date in the same call as each handoff write from now on.
+- 2026-11-12 07:46: plan 6 Task 7 Play proof never reached Climbing (the job drives the climb with a server MoveTo against a test truss); the bonk never ran. Sent to code_lead (cause) and product (weigh).
