@@ -316,6 +316,18 @@ local function callsOf(harness: Harness, method: string, player: FakePlayer?): {
 	return found
 end
 
+-- Only the custom calls with this event name (optionally on one player). Counts by name, so another event logged in the
+-- same moment (a grab also logs "EggGrab") never changes a test's count.
+local function eventsNamed(harness: Harness, eventName: string, player: FakePlayer?): { Call }
+	local found: { Call } = {}
+	for _, call in callsOf(harness, "custom", player) do
+		if call.eventName == eventName then
+			table.insert(found, call)
+		end
+	end
+	return found
+end
+
 -- A server of `count` players, user ids 1 to `count` in the order they joined. Returns the harness and the players.
 local function serverOf(count: number): (Harness, { FakePlayer })
 	local harness = newHarness()
@@ -343,6 +355,7 @@ return {
 	catch = catch,
 	cleanUp = cleanUp,
 	enter = enter,
+	eventsNamed = eventsNamed,
 	grab = grab,
 	join = join,
 	leave = leave,

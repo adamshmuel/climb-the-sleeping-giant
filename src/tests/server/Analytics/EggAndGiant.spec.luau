@@ -10,9 +10,9 @@ type Harness = Helpers.Harness
 local FIELD_ONE = Helpers.FIELD_ONE
 local FIELD_TWO = Helpers.FIELD_TWO
 local bank = Helpers.bank
-local callsOf = Helpers.callsOf
 local cleanUp = Helpers.cleanUp
 local enter = Helpers.enter
+local eventsNamed = Helpers.eventsNamed
 local grab = Helpers.grab
 local leave = Helpers.leave
 local makePlayer = Helpers.makePlayer
@@ -49,7 +49,7 @@ describe("Analytics EggHome", function()
 		enter(harness, mia)
 		grab(harness, mia, "Rare")
 		bank(harness, mia)
-		local events = callsOf(harness, "custom", mia)
+		local events = eventsNamed(harness, "EggHome", mia)
 		expect(#events).toBe(1)
 		expect(events[1].eventName).toBe("EggHome")
 		expect(events[1].value).toBe(1)
@@ -62,7 +62,7 @@ describe("Analytics EggHome", function()
 		local harness, all = serverOf(3)
 		grab(harness, all[1], "Common")
 		bank(harness, all[1])
-		local events = callsOf(harness, "custom", all[1])
+		local events = eventsNamed(harness, "EggHome", all[1])
 		expect(#events).toBe(1)
 		expect((events[1].fields :: any)[FIELD_THREE]).toBe("2-4")
 	end)
@@ -75,7 +75,7 @@ describe("Analytics EggHome", function()
 		bank(harness, mia)
 		grab(harness, mia, "Uncommon")
 		bank(harness, mia)
-		local events = callsOf(harness, "custom", mia)
+		local events = eventsNamed(harness, "EggHome", mia)
 		expect(#events).toBe(2)
 		expect((events[1].fields :: any)[FIELD_ONE]).toBe("Common")
 		expect((events[2].fields :: any)[FIELD_ONE]).toBe("Uncommon")
@@ -245,17 +245,6 @@ describe("Analytics GiantWoke", function()
 		expect(#wokeCalls(harness)).toBe(1)
 	end)
 end)
-
--- The "FreeSaveUsed" calls on a player, and the "FreeSaveResult" calls.
-local function eventsNamed(harness: Harness, eventName: string, player: FakePlayer?): { Call }
-	local found: { Call } = {}
-	for _, call in callsOf(harness, "custom", player) do
-		if call.eventName == eventName then
-			table.insert(found, call)
-		end
-	end
-	return found
-end
 
 describe("Analytics FreeSaveUsed", function()
 	for _, row in
@@ -497,4 +486,27 @@ describe("Analytics FreeSaveResult", function()
 		expect((eventsNamed(harness, "FreeSaveResult", bo)[1].fields :: any)[FIELD_ONE]).toBe("Home")
 		expect((eventsNamed(harness, "FreeSaveResult", mia)[1].fields :: any)[FIELD_ONE]).toBe("Lost")
 	end)
+end)
+
+-- Epic and Legendary eggs (plan 4 Task 12): the rarity breakdown of "EggHome" and "PlayerCaught" names them already.
+describe("Analytics EggHome and PlayerCaught for Epic and Legendary", function()
+	for _, rank in { "Epic", "Legendary" } do
+		it(`says "{rank}" in the rarity breakdown of EggHome`, function()
+			local harness, all = serverOf(1)
+			grab(harness, all[1], rank :: any)
+			bank(harness, all[1])
+			local events = eventsNamed(harness, "EggHome", all[1])
+			expect(#events).toBe(1)
+			expect((events[1].fields :: any)[FIELD_ONE]).toBe(rank)
+		end)
+
+		it(`says "{rank}" in the rarity breakdown of PlayerCaught`, function()
+			local harness, all = serverOf(1)
+			grab(harness, all[1], rank :: any)
+			catchForReal(harness, all[1])
+			local events = eventsNamed(harness, "PlayerCaught", all[1])
+			expect(#events).toBe(1)
+			expect((events[1].fields :: any)[FIELD_ONE]).toBe(rank)
+		end)
+	end
 end)

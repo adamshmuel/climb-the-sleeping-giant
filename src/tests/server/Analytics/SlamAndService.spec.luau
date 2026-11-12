@@ -12,6 +12,7 @@ local callsOf = Helpers.callsOf
 local catch = Helpers.catch
 local cleanUp = Helpers.cleanUp
 local enter = Helpers.enter
+local eventsNamed = Helpers.eventsNamed
 local grab = Helpers.grab
 local join = Helpers.join
 local leave = Helpers.leave
@@ -222,7 +223,7 @@ describe("Analytics when the service fails", function()
 			bank(harness, mia)
 		end).never.toThrow()
 		-- Step 3 failed, and EggHome was still logged.
-		expect(callsOf(harness, "custom", mia)[1].eventName).toBe("EggHome")
+		expect(#eventsNamed(harness, "EggHome", mia)).toBe(1)
 	end)
 
 	it("goes on with a check when the service fails, and logs the next event", function()

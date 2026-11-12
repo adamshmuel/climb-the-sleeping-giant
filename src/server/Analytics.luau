@@ -145,6 +145,10 @@ local LEFT_GARDEN_STUDS = 10
 --                     CustomField03 = "Carrying" or "Empty". One per climb from the Meadow to a way up's top.
 --   "WakeWayUp":      CustomField01 = the waker's last way up ("None" if they never climbed or nobody can be named),
 --                     CustomField02 = the server size.
+--   "EggGrab":        CustomField01 = the rank of the egg grabbed, CustomField02 = the server size. One per grab.
+--   "WakeRank":       CustomField01 = the rank the waker carried when he woke ("None" if empty-handed or nobody can be
+--                     named), CustomField02 = the server size. One per wake-up, logged next to "GiantWoke" (which has
+--                     no slot left).
 -- So never read one chart's slot as another's.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
@@ -161,7 +165,10 @@ local EVENT_EGG_REFILL = "EggRefill" -- one per egg that appears again, logged o
 local EVENT_SLIDE_OFF = "SlideOff" -- one per slide off the giant, on the sliding player
 local EVENT_WAY_UP = "WayUp" -- one per climb to the top of a way up
 local EVENT_WAKE_WAY_UP = "WakeWayUp" -- one per wake-up, on the player "GiantWoke" is logged on
+local EVENT_EGG_GRAB = "EggGrab" -- one per egg grabbed, on the grabber
+local EVENT_WAKE_RANK = "WakeRank" -- one per wake-up, on the player "GiantWoke" is logged on
 local NO_WAY_UP = "None" -- "WakeWayUp" and "WayUp": no way up or garden to name
+local NO_RANK = "None" -- "WakeRank": the waker carried nothing, or nobody can be named
 local CARRYING = "Carrying"
 local EMPTY = "Empty"
 -- "EggRefill" wait bands, in seconds waited past the countdown: under WAIT_NONE_UNDER, up to and including WAIT_LONG_OVER,
@@ -407,7 +414,7 @@ function Analytics.start(deps: Deps): Analytics
 		watchPlayer(player)
 	end
 
-	trove:Add(deps.grabbed:Connect(function(player: PlayerLike, _rarity: Config.RarityName)
+	trove:Add(deps.grabbed:Connect(function(player: PlayerLike, rarity: Config.RarityName)
 		local record = records[player.UserId]
 		if stopped or record == nil then
 			return
@@ -418,6 +425,10 @@ function Analytics.start(deps: Deps): Analytics
 		local heist: Heist = if open == nil or open.step >= HEIST_GRABBED then openHeist() else open
 		record.heist = heist
 		logHeistStep(record, heist, HEIST_GRABBED, HEIST_GRABBED_NAME)
+		logCustom(player, EVENT_EGG_GRAB, EVENT_VALUE, {
+			[FIELD_ONE] = rarity,
+			[FIELD_TWO] = Analytics.serverSize(#players:GetPlayers()),
+		})
 	end))
 
 	trove:Add(deps.banked:Connect(function(player: PlayerLike, rarity: Config.RarityName)
@@ -537,12 +548,21 @@ function Analytics.start(deps: Deps): Analytics
 		if wokenBy ~= nil then
 			waker = players:GetPlayerByUserId(wokenBy)
 		end
+		-- The rank carried is read first, before any other handler can take the egg off his back.
+		local carriedRank = NO_RANK
+		if waker ~= nil then
+			local carrying = waker:GetAttribute("Carrying")
+			if type(carrying) == "string" and carrying ~= "" then
+				carriedRank = carrying
+			end
+		end
 		local reported = cause
 		local who = WAKER_NOBODY
 		if waker == nil then
 			-- Nobody can be named, or the waker is gone: the player here longest carries it, so no wake goes missing.
 			waker = longestInServer()
 			reported = CAUSE_WAKER_LEFT
+			carriedRank = NO_RANK
 		else
 			who = if PlayerInfo.fromPlayer(waker).rareHome then WAKER_VETERAN else WAKER_NEW
 			-- The waker's own noise woke him, so a save they were carrying on ends here.
@@ -558,6 +578,10 @@ function Analytics.start(deps: Deps): Analytics
 			[FIELD_ONE] = Analytics.serverSize(count),
 			[FIELD_TWO] = reported,
 			[FIELD_THREE] = who,
+		})
+		logCustom(waker, EVENT_WAKE_RANK, EVENT_VALUE, {
+			[FIELD_ONE] = carriedRank,
+			[FIELD_TWO] = Analytics.serverSize(count),
 		})
 		-- Only a named waker has a way up to report; when nobody is named it says "None".
 		local lastWayUp = if who ~= WAKER_NOBODY then wayUpWatch:lastOf(waker.UserId) else nil
