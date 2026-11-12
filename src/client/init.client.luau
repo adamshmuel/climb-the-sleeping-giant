@@ -19,6 +19,7 @@ local GiantFx = require(script.Fx.GiantFx)
 local NestPop = require(script.Fx.NestPop)
 local SlamFx = require(script.Fx.SlamFx)
 local WakeWorld = require(script.Fx.WakeWorld)
+local BonkFx = require(script.Fx.BonkFx)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local ClimbGate = require(script.Player.ClimbGate)
 local Recovery = require(script.Player.Recovery)
@@ -272,6 +273,24 @@ if server then
 		else
 			warn("WakeWorld not started: Assets.WakeBirds or World.GiantFX.WakeDust is missing")
 		end
+		-- The bonk on screen: every player's `Bonked` attribute tips their body and shows stars and a puff (spec Rule 61).
+		-- No `playSound`: the named sounds come with plan 7.
+		local stopBonkFx = BonkFx.start({
+			players = function()
+				return Players:GetPlayers()
+			end,
+			playerAdded = Players.PlayerAdded,
+			playerRemoving = Players.PlayerRemoving,
+			step = RunService.PreSimulation,
+			now = os.clock,
+			reducedMotion = function()
+				return GuiService.ReducedMotionEnabled
+			end,
+			burst = function(emitter: ParticleEmitter, count: number)
+				emitter:Emit(count)
+			end,
+		})
+		script.Destroying:Once(stopBonkFx)
 		-- When a hand slam catches this player, the server puts them on their own spawn spot and tells every device. Their
 		-- camera snaps behind them there. The spawn spot is a loose part, so with streaming it can be missing for a moment:
 		-- the camera waits for it, for a short time.
