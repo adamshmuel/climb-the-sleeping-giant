@@ -27,6 +27,7 @@ export type Deps = {
 	giantState: Instance, -- ReplicatedStorage.GiantState: the attributes Meter and Phase
 	step: SignalLike, -- once per frame, for the motion (RenderStepped)
 	now: () -> number, -- a clock in seconds (os.clock)
+	serverNow: () -> number, -- the server's clock in seconds (Workspace:GetServerTimeNow), the same on every device
 	armClear: (shoulder: Vector3, direction: Vector3) -> boolean, -- is the arm's path clear of his body?
 	-- Sends `count` puffs out of an emitter at once. If left out, it is the emitter's own Emit.
 	burst: ((emitter: ParticleEmitter, count: number) -> ())?,
@@ -110,6 +111,12 @@ export type State = {
 	-- The swing in progress: when its SlamWarning arrived (by deps.now) and where the slam lands, or nil.
 	slamAt: number?,
 	slamPoint: Vector3?,
+	-- The slam turn the arm had when the warning for this swing arrived while an earlier swing was out, or nil. The new
+	-- swing starts from it, so the arm goes on from where it is.
+	slamStart: CFrame?,
+	-- When his awake time ends on the server's clock (PhaseEndsAt, read while he is awake), or nil. A device that hears of
+	-- the Phase change late uses it to put the arm back at rest on time.
+	awakeEndsAt: number?,
 	-- True from the moment Phase turned HeavySleep until it left. After it, the Z Z Z shrink: `shrinkAt` is when Heavy
 	-- Sleep ended (by deps.now), or nil when they are not shrinking.
 	heavy: boolean,

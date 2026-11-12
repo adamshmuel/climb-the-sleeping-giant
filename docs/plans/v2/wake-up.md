@@ -226,10 +226,10 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 12: His arm between slams, and back to sleep**
 - Spec rules: Rule 64 (He gets faster), the arm; Rule 100 (Nothing you stand on moves while he sleeps), spec 5, the unlock waiting for the arm (product's condition, `decisions-plans.md`).
-- Files: `src/client/Fx/GiantFx/` (`init.luau`, `Motion.luau`, `Ride.luau`), `src/client/init.client.luau`, `src/tests/client/Fx/GiantFx/ArmSwing.spec.luau` and `Plans.spec.luau` (its line 142 already checks `ArmReturnSeconds` against `slamSwingSeconds`; test 4 below sits next to it).
+- Files: `src/client/Fx/GiantFx/` (`init.luau`, `Pose.luau` (where `placeRightArm` lives), `Shared.luau`), `src/client/init.client.luau`, `src/tests/client/Fx/GiantFx/ArmChain.spec.luau` (new: tests 1 to 4, because `ArmSwing.spec.luau` is near the size limit), `Helpers.luau`, and `ArmSwing.spec.luau` (fixes to old tests only). `Plans.spec.luau` line 142 already checks `ArmReturnSeconds` against `slamSwingSeconds`; test 4 is its whole-wake-up partner. `Motion.luau` and `Ride.luau` need no change (checked 2026-11-12).
 - What changes: see "His arm between slams" and "His arm going back to sleep" in "Decisions". `GiantFx` gets the shared clock as a new setting.
 - Failing tests first (fake clock):
-  1. A warning 2.0 s after the last one swings the arm from where it is to the new aim, with no jump (each frame's move is under one degree for a 60-frame second).
+  1. A warning 2.0 s after the last one swings the arm from where it is to the new aim, with no jump: the frame of the warning moves the arm under one degree, and no frame of the next 60 moves it faster than a fresh 0.5 s eased swing over the same distance (1.5 times the distance over 30 frames, plus 0.1 degree). (code_lead, 2026-11-12: the old "every frame under one degree" also failed a smooth swing, because the arm has already started back from its hold when the warning comes.)
   2. A piece marked `RidesRightArm` stays exactly where the arm's move puts it through a chained swing (within 0.01 studs).
   3. With `PhaseEndsAt` at 15.0 on the shared clock and the Phase change arriving at 15.3, the arm is down at 15.5.
   4. Played through a whole wake-up with the new slam times, the arm is at rest at most `Config.Nests.ArmReturnSeconds` after the 6th fist lands (this test fails if a later change lengthens the return without raising that number).

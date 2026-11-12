@@ -217,6 +217,9 @@ if server then
 			giantState = server.GiantState,
 			step = RunService.RenderStepped,
 			now = os.clock,
+			serverNow = function()
+				return Workspace:GetServerTimeNow()
+			end,
 			armClear = GiantFx.workspaceArmClear(Workspace, world),
 			isPhone = function(): boolean
 				local camera = currentCamera()

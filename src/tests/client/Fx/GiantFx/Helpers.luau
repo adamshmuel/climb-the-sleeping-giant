@@ -91,6 +91,8 @@ export type Rig = {
 	advance: (seconds: number) -> (),
 	fire: (mark: number, kind: string?) -> (),
 	setState: (meter: number, phase: string) -> (),
+	setServerOffset: (seconds: number) -> (), -- the server's clock is the rig clock plus this (default 0)
+	setPhaseEnds: (serverTime: number?) -> (), -- writes PhaseEndsAt on the state; nil removes it (no waiting)
 	armStart: CFrame,
 	leftStart: CFrame,
 	rightStart: CFrame,
@@ -367,6 +369,8 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 	local slamWarning = newSignal()
 	local step = newSignal()
 	local clock = 100
+	-- How far the server's clock is ahead of the rig clock (Workspace:GetServerTimeNow in the game).
+	local serverOffset = 0
 	-- What the screen and the camera say right now; a test changes them with setPhone and the others.
 	local onPhone = false
 	local cameraRightZ = 0
@@ -402,6 +406,9 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 		step = step,
 		now = function()
 			return clock
+		end,
+		serverNow = function()
+			return clock + serverOffset
 		end,
 		armClear = function(shoulder: Vector3, direction: Vector3): boolean
 			table.insert(armClearCalls, { shoulder = shoulder, direction = direction })
@@ -486,6 +493,12 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 			state:SetAttribute("Meter", meter)
 			state:SetAttribute("Phase", phase)
 			task.wait() -- attribute changes reach listeners a moment after they are set
+		end,
+		setServerOffset = function(seconds: number)
+			serverOffset = seconds
+		end,
+		setPhaseEnds = function(serverTime: number?)
+			state:SetAttribute("PhaseEndsAt", serverTime)
 		end,
 		armStart = armStart,
 		leftStart = leftStart,

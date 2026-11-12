@@ -143,6 +143,8 @@ function GiantFx.start(deps: Deps): Handle
 		poseDirection = 0,
 		slamAt = nil,
 		slamPoint = nil,
+		slamStart = nil,
+		awakeEndsAt = nil,
 		heavy = false,
 		shrinkAt = nil,
 		faceAt = nil,
@@ -314,6 +316,7 @@ function GiantFx.start(deps: Deps): Handle
 		if state.slamAt ~= nil and now - state.slamAt >= Shared.slamSeconds then
 			state.slamAt = nil
 			state.slamPoint = nil
+			state.slamStart = nil
 		end
 		if state.faceAt ~= nil then
 			wakeFace.update(now)
@@ -408,17 +411,23 @@ function GiantFx.start(deps: Deps): Handle
 		if from == nil then
 			return point
 		end
+		-- A swing still out: the arm points where that swing has it now, and the new path starts from there.
+		if state.slamStart ~= nil then
+			from = state.slamStart:VectorToWorldSpace(from)
+		end
 		local fixed = Motion.slamFixedAim(shoulder, model:GetPivot())
 		return Motion.slamAim(shoulder, from, point, fixed, deps.armClear)
 	end
 
-	-- A slam is coming: the arm starts to swing toward the point. Only while he is awake. A new warning replaces the
-	-- swing before it (in the game, each swing ends before the next warning).
+	-- A slam is coming: the arm starts to swing toward the point. Only while he is awake. A new warning while the swing
+	-- before it is still out takes the arm on from where it is (slamStart), so it never jumps.
 	local function onSlamWarning(_slam: any, point: any, _landsAt: any)
 		if state.stopped or not state.awake or typeof(point) ~= "Vector3" then
 			return
 		end
-		state.slamAt = deps.now()
+		local now = deps.now()
+		state.slamStart = if state.slamAt ~= nil then pose.slamTurnAt(now) else nil
+		state.slamAt = now
 		state.slamPoint = slamAimAt(point)
 		connectStep()
 	end
@@ -432,10 +441,17 @@ function GiantFx.start(deps: Deps): Handle
 		connectStep()
 	end
 
+	-- The end of his awake time on the server's clock, read from PhaseEndsAt (which the server writes before Awake), or nil.
+	local function readAwakeEnd(): number?
+		local ends = deps.giantState:GetAttribute("PhaseEndsAt")
+		return if type(ends) == "number" then ends else nil
+	end
+
 	-- He woke: the warnings stop at once, the snort cloud is cleared, the eyes swap, the bubble, the Z Z Z and the puffs go off,
 	-- and the pose starts.
 	local function onWake()
 		state.awake = true
+		state.awakeEndsAt = readAwakeEnd()
 		if state.flutterAt ~= nil then
 			state.flutterAt = nil
 			pose.placeLids(0)
@@ -467,6 +483,15 @@ function GiantFx.start(deps: Deps): Handle
 		wakeFace.finish(true)
 		applyState()
 		startPose(-1)
+		-- A device that hears of this late counts the lateness as already gone: the arm is back at rest on the server's time.
+		local endsAt = state.awakeEndsAt
+		state.awakeEndsAt = nil
+		if endsAt ~= nil then
+			local late = deps.serverNow() - endsAt
+			if late > 0 then
+				state.poseClock -= late
+			end
+		end
 		ride.update(deps.now())
 	end
 
@@ -497,6 +522,8 @@ function GiantFx.start(deps: Deps): Handle
 		state.poseDirection = 0
 		state.slamAt = nil
 		state.slamPoint = nil
+		state.slamStart = nil
+		state.awakeEndsAt = nil
 		wakeFace.finish(false)
 		pose.placeLids(0)
 		for piece, start in state.startPivots do
@@ -573,6 +600,7 @@ function GiantFx.start(deps: Deps): Handle
 	-- A player who joins while he is awake sees the full pose at once, with no motion.
 	if deps.giantState:GetAttribute("Phase") == "Awake" then
 		state.awake = true
+		state.awakeEndsAt = readAwakeEnd()
 		pose.setEyes(true)
 		applyState()
 		state.poseAge = Shared.poseSeconds

@@ -89,6 +89,58 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 		return Motion.armRaise(shoulder, raise, 1):PointToWorldSpace(middle) - shoulder
 	end
 
+	-- `turn` (a turn about `shoulder`) made `factor` of its size: 0 is no turn, 1 is the whole turn, and the turn is
+	-- still about the shoulder (a plain CFrame:Lerp would slide the pivot).
+	local function scaledTurn(shoulder: Vector3, turn: CFrame, factor: number): CFrame
+		local about = CFrame.new(shoulder)
+		local axis, angle = (about:Inverse() * turn * about):ToAxisAngle()
+		if angle < 1e-6 or factor == 0 then
+			return CFrame.identity
+		end
+		return about * CFrame.fromAxisAngle(axis, angle * factor) * about:Inverse()
+	end
+
+	-- The slam turn (about the shoulder, on top of the raise) at `now`, `share` of the way into the waking pose. With a
+	-- swing already out when the warning came (slamStart), the new swing starts from the direction the arm points
+	-- then, and the old turn fades as the new one grows, so the arm never jumps. `from` is the arm's direction in the
+	-- full raise. No swing in progress: no turn.
+	local function turnAt(shoulder: Vector3, from: Vector3, share: number, now: number): CFrame
+		local slamAt = state.slamAt
+		local target = state.slamPoint
+		if slamAt == nil or target == nil then
+			return CFrame.identity
+		end
+		local seconds = now - slamAt
+		local swing = Motion.slamShare(seconds)
+		local begin = state.slamStart
+		if begin == nil then
+			return Motion.slamTurn(shoulder, from, target, swing * share)
+		end
+		-- The old turn stays whole while the new swing goes out and holds, then fades with it on the way back.
+		local remaining = if seconds < Shared.slamHoldUntil then 1 else swing
+		return Motion.slamTurn(shoulder, begin:VectorToWorldSpace(from), target, swing * share)
+			* scaledTurn(shoulder, begin, remaining * share)
+	end
+
+	-- The slam turn the arm has at `now`, as placeRightArm would apply it (identity when there is none).
+	local function slamTurnAt(now: number): CFrame
+		local model = find.giant()
+		local rightArm = find.arm()
+		if model == nil or rightArm == nil then
+			return CFrame.identity
+		end
+		local shoulder: any = model:GetAttribute(SHOULDER_ATTRIBUTE)
+		local raise: any = model:GetAttribute(RAISE_ATTRIBUTE)
+		if typeof(shoulder) ~= "Vector3" or typeof(raise) ~= "Vector3" then
+			return CFrame.identity
+		end
+		local from = raisedDirection(rightArm, shoulder, raise)
+		if from == nil then
+			return CFrame.identity
+		end
+		return turnAt(shoulder, from, Motion.poseShare(poseAgeAt(now)), now)
+	end
+
 	-- Puts the right arm `share` of the way into the waking pose (0 is at rest, 1 is the full raise), swung toward the
 	-- slam that is in progress, if any, at `now`. The swing is scaled by `share`, so as the pose goes back to rest the
 	-- swing goes with it. At share 0 the arm is exactly on its start pivot. Whatever rides the arm (Ride) moves with
@@ -107,13 +159,10 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 			ride.place(nil)
 			return
 		end
-		local raised = Motion.armRaise(shoulder, raise, share)
-		local swing = if state.slamAt ~= nil then Motion.slamShare(now - state.slamAt) else 0
-		local target = state.slamPoint
+		local placed = Motion.armRaise(shoulder, raise, share) * start
 		local from = raisedDirection(rightArm, shoulder, raise)
-		local placed = raised * start
-		if swing > 0 and target ~= nil and from ~= nil then
-			placed = Motion.slamTurn(shoulder, from, target, swing * share) * placed
+		if from ~= nil then
+			placed = turnAt(shoulder, from, share, now) * placed
 		end
 		rightArm:PivotTo(placed)
 		-- Whatever rides the arm moves by exactly what the arm moved (Rule 100).
@@ -185,6 +234,7 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 		poseAgeAt = poseAgeAt,
 		raisedDirection = raisedDirection,
 		placeRightArm = placeRightArm,
+		slamTurnAt = slamTurnAt,
 		placePose = placePose,
 		setEyes = setEyes,
 		restoreEyes = restoreEyes,
