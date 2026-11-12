@@ -24,6 +24,9 @@ export type WayUpConfig = {
 	WalkLimitSeconds: { number },
 }
 
+-- A speed picked at random between Min and Max.
+export type SpeedRange = { Min: number, Max: number }
+
 export type Config = {
 	Movement: {
 		WalkSpeed: number,
@@ -210,6 +213,22 @@ export type Config = {
 		TiptoeLimit: number,
 		TiptoeLimitLegendary: number,
 		ColourWords: { [RarityName]: string },
+	},
+	-- Sound (spec 7 section 5, "Other values" and "The three hearing groups"; plan 7 Task 1). The muffled cutoffs belong to
+	-- Task 6. The per-sound loudness, speed and length are in client/Audio/SoundList.
+	Audio: {
+		MusicFadeSeconds: number,
+		SnoreStopSeconds: number,
+		ThinnedMusicFactor: number,
+		LightSnoreFactor: number,
+		TiptoeFootstepFactor: number,
+		MaxCopies: number,
+		ChaseStartSeconds: number,
+		SnoreSpeed: SpeedRange,
+		HeavySleepSnoreSpeed: SpeedRange,
+		WarningTimes: { SnortOne: number, SnortTwo: number, Mumble: number },
+		WholeValleyCurve: { [number]: number },
+		NearbyCurve: { [number]: number },
 	},
 }
 
@@ -431,6 +450,22 @@ local config: Config = {
 			Epic = "purple",
 			Legendary = "gold",
 		}, -- the glow colour of each rank, in words the report prints (Rule 51)
+	},
+	Audio = {
+		MusicFadeSeconds = 1, -- the music change fade (spec 7 section 5, "Music change fade")
+		SnoreStopSeconds = 0.1, -- the snore stops this fast at 85%, so it turns into the snorts
+		ThinnedMusicFactor = 0.5, -- the music at 60% to 84%: half loudness (muffled by Task 6)
+		LightSnoreFactor = 0.5, -- the snore at 60% to 84%: half loudness, after a 2 s stop
+		TiptoeFootstepFactor = 0.25, -- Tiptoe footsteps: a quarter of normal (Rule 9)
+		MaxCopies = 3, -- copies of one sound table row playing at once, per player (Rule 86); a 4th is skipped
+		ChaseStartSeconds = 1, -- the chase tune starts this long after he wakes (Rule 93)
+		SnoreSpeed = { Min = 0.95, Max = 1.05 }, -- picked each time the loop starts (Rule 90)
+		HeavySleepSnoreSpeed = { Min = 0.76, Max = 0.84 },
+		WarningTimes = { SnortOne = 0, SnortTwo = 0.5, Mumble = 1.0 }, -- seconds into the 85% warning (Rule 91)
+		-- Distance (studs) -> volume for AudioEmitter:SetDistanceAttenuation: straight lines between the points, flat
+		-- beyond the last (Roblox docs, checked 2026-11-12). Whole valley is never silent anywhere in the valley.
+		WholeValleyCurve = { [0] = 1, [60] = 1, [200] = 0.34, [600] = 0.2 },
+		NearbyCurve = { [0] = 1, [10] = 1, [80] = 0 },
 	},
 }
 

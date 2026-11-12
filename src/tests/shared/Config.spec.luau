@@ -481,3 +481,50 @@ describe("Config", function()
 		expect(#Config.Gardens.MiddleFirst + #Config.Gardens.Outer).toBe(8)
 	end)
 end)
+
+-- Spec 7 section 5, "Other values" and "The three hearing groups" (plan 7, Task 1).
+describe("Config.Audio", function()
+	it("the music fades over 1 s and the snore stops in 0.1 s", function()
+		expect(Config.Audio.MusicFadeSeconds).toBe(1)
+		expect(Config.Audio.SnoreStopSeconds).toBe(0.1)
+	end)
+
+	it("the thinned music and the light snore are half loudness", function()
+		expect(Config.Audio.ThinnedMusicFactor).toBe(0.5)
+		expect(Config.Audio.LightSnoreFactor).toBe(0.5)
+	end)
+
+	it("Tiptoe footsteps are a quarter of normal", function()
+		expect(Config.Audio.TiptoeFootstepFactor).toBe(0.25)
+	end)
+
+	it("at most 3 copies of one sound play at once", function()
+		expect(Config.Audio.MaxCopies).toBe(3)
+	end)
+
+	it("the chase tune starts 1 s after he wakes", function()
+		expect(Config.Audio.ChaseStartSeconds).toBe(1)
+	end)
+
+	it("the snore speed is 0.95 to 1.05, and 0.76 to 0.84 in Heavy Sleep", function()
+		expect(Config.Audio.SnoreSpeed).toEqual({ Min = 0.95, Max = 1.05 })
+		expect(Config.Audio.HeavySleepSnoreSpeed).toEqual({ Min = 0.76, Max = 0.84 })
+	end)
+
+	it("the 85% sounds come at 0 s, 0.5 s and 1.0 s", function()
+		expect(Config.Audio.WarningTimes).toEqual({ SnortOne = 0, SnortTwo = 0.5, Mumble = 1.0 })
+	end)
+
+	it("the Whole valley curve is full to 60 studs, 0.34 at 200 and 0.2 from 600", function()
+		expect(Config.Audio.WholeValleyCurve).toEqual({ [0] = 1, [60] = 1, [200] = 0.34, [600] = 0.2 })
+	end)
+
+	it("the Nearby curve is full to 10 studs and silent from 80", function()
+		expect(Config.Audio.NearbyCurve).toEqual({ [0] = 1, [10] = 1, [80] = 0 })
+	end)
+
+	it("the audio numbers are frozen", function()
+		expect(Config.Audio ~= nil).toBe(true)
+		expect(isDeepFrozen(Config.Audio)).toBe(true)
+	end)
+end)
