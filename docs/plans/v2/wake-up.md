@@ -273,7 +273,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - Files: `src/client/Fx/FlowerShake.luau` (new; its maths pure), `src/client/init.client.luau`, `src/tests/client/Fx/FlowerShake.spec.luau` (new).
 - What it does: at each landing, every model marked `ShakesOnSlam` whose middle is inside the circle tips up to 12° away from the circle's centre, then springs back with two smaller wobbles, 0.5 s in all, about its own base, and ends exactly on its start pivot. It plays with Reduce Motion on.
 - Failing tests first: the tip peaks at 12° away from the centre; it is back on the start pivot at 0.5 s; a flower outside the circle never moves; two slams on one flower never leave it out of place.
-- Done when: the tests pass, and in Play a slam on a flower patch is screenshot from the circle's edge (computer and the iPhone 14).
+- Done when: the tests pass, and in Play the flowers inside a real slam's circle tip about 12° and come back to rest by 0.5 s, while flowers outside never move (measured by a recorder). The screenshots from the circle's edge moved to Task 23 item 12 (product, 2026-11-12, `work/p6t17/product-step5-ruling.md`).
 - Stands on: Task 10 (the `ShakesOnSlam` marks).
 
 **Task 18: The one-line wake banner and the bottom tip**
@@ -337,6 +337,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   9. **His arm's resting shape** (spec 5, section 8): during two wake-ups, no red circle lies on it (one try also walks a target from the belly onto the arm's resting shape, if a player can reach it), and a carrier running home past his right side never bumps into it. If either fails, plan 5 Task 24 and spec 5's fallback (the arm's solid shape moves with the arm) are built before review.
   10. **Two wake-ups in a row** with the right cuff: the arm is down and the nest unlocked after each (plan 5's check, with this plan's faster slams).
   11. Every section 6 state against its `wake-*` mockup.
+  12. **A slam on a flower patch, seen from the circle's edge** (moved from Task 17): on the computer and the iPhone 14, the flowers' shake can be seen. If it can't, the tip goes up to 20° (spec 6 section 5, "Flower shake").
 - Done when: every shot is in the report with what it shows, compared with the spec and the mockups. The main chat sends them to designer.
 - Stands on: Tasks 1 to 22, plan 3 Task 15b (the ladder grace, built after Tasks 2, 4 and 8).
 

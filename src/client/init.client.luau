@@ -15,6 +15,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
 local CameraFx = require(script.Fx.CameraFx)
 local Celebrations = require(script.Fx.Celebrations)
+local FlowerShake = require(script.Fx.FlowerShake)
 local GiantFx = require(script.Fx.GiantFx)
 local NestPop = require(script.Fx.NestPop)
 local SlamFx = require(script.Fx.SlamFx)
@@ -516,4 +517,33 @@ if server and slamFist and slamFist:IsA("Model") and footprintWorld then
 	script.Destroying:Once(slams.stop)
 elseif server then
 	warn("The slam fist or the world was not found, so the hand slams have no circle, fist or dust.")
+end
+
+-- The flowers shake: when a hand slam lands, every flower inside its circle tips away and wobbles back in 0.5 s (spec Rule 69).
+-- It listens to the same landing as the slams above, needs no asset, and ignores Reduce Motion on purpose (the spec says so).
+-- One OverlapParams is reused for every part search; the module keeps only the flowers (Models marked ShakesOnSlam).
+if server then
+	local flowerParams = OverlapParams.new()
+	-- The landing remote, passed on as a plain signal (the module's field doesn't take an engine signal directly).
+	local flowerLandedSignal: SpotLabels.SignalLike = {
+		Connect = function(_self: any, callback: (...any) -> ())
+			local connection = server.SlamLanded.OnClientEvent:Connect(callback)
+			return {
+				Disconnect = function()
+					connection:Disconnect()
+				end,
+			}
+		end,
+	}
+	local flowerShake = FlowerShake.start({
+		slamLanded = { OnClientEvent = flowerLandedSignal },
+		step = RunService.RenderStepped,
+		now = function()
+			return Workspace:GetServerTimeNow()
+		end,
+		partsNear = function(point: Vector3, radius: number): { BasePart }
+			return Workspace:GetPartBoundsInRadius(point, radius, flowerParams)
+		end,
+	})
+	script.Destroying:Once(flowerShake.destroy)
 end
