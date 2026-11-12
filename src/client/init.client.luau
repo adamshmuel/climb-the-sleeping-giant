@@ -37,6 +37,7 @@ local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
+local Footsteps = require(script.Audio.Footsteps)
 local Moments = require(script.Audio.Moments)
 local Music = require(script.Audio.Music)
 local Snore = require(script.Audio.Snore)
@@ -106,6 +107,17 @@ local moments = Moments.start({
 	localPlayer = Players.LocalPlayer,
 })
 script.Destroying:Once(moments.destroy)
+
+-- Tiptoe is quiet (plan 7 Task 14, Rule 9): the player's own footsteps drop to a quarter while Tiptoe is on, and each
+-- Tiptoe change clicks. Roblox's footstep clips are the AudioPlayers named Running and Climbing (found in Play, Step 1).
+local footsteps = Footsteps.start({
+	player = Players.LocalPlayer,
+	names = { "Running", "Climbing" },
+	playClick = function()
+		soundBoard.play("Tiptoe click")
+	end,
+})
+script.Destroying:Once(footsteps.destroy)
 
 -- The route and the egg spots never stream out (they are Persistent), so they are there at once. The camera needs them from
 -- the very first spawn, to turn the player away from the egg the footprints lead to. The footprints below use the same ones.
