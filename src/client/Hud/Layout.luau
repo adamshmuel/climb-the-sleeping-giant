@@ -7,6 +7,15 @@ local Layout = {}
 -- A screen whose short side is under this many pixels is a phone (Studio's iPhone 14 simulator gives 390).
 local PHONE_SHORT_SIDE = 500
 
+-- Roblox's Jump button column on a phone: pixels from the right edge of the safe area to the column's left edge
+-- (style guide wake-up.md, "Wake banner on phones"). The phone wake banner ends `banner.jumpGap` left of it. Measured
+-- against the real column in Play A of plan 6 Task 18.
+Layout.jumpColumn = 138
+
+-- A phone shows a name on the wake banner up to this many letters whole; a longer one is cut to one letter fewer and an
+-- ellipsis, so the banner stays on one line, left of the Jump column.
+Layout.phoneNameLetters = 12
+
 -- Where the phone grab pill leaves the egg and sits at a fixed spot (Task 56). The two lines are pixels above the
 -- safe area's bottom: the pill pins when its box is lower than the first, and follows the egg again only above the
 -- second. The 20 px between them stops it flickering. A pinned pill's bottom edge sits `bottomGap` above the bottom.
@@ -89,6 +98,10 @@ export type Tip = {
 	borderThickness: number,
 	textSize: number,
 	textOutline: number,
+	circleSize: number, -- the no-egg tip's red circle icon, across (the carrier's egg icon is the pill's)
+	circleRim: number, -- the circle's gold rim, inside its edge
+	circleRing: number, -- the circle's Ink ring, outside its edge
+	circleGap: number, -- between the circle and the words
 }
 
 -- The green card under the meter ("Safe! Common egg is home"): the egg's picture and the words, on a green plate.
@@ -109,8 +122,8 @@ export type Card = {
 }
 
 -- The red wake banner ("Leo woke the Giant!"). On every screen it stands low and right of centre (on the Hud screen), so
--- it never covers his face or the red slam circles. A computer has a smaller second line under the words; a phone has
--- one small line.
+-- it never covers his face or the red slam circles. It is one line on every screen. A phone pins its right edge left of
+-- the Jump column.
 export type Banner = {
 	bottomOffset: number, -- pixels from the bottom of the safe area to the banner's outer edge (outline included)
 	centerX: number, -- where the banner's middle is, across the screen: 0.5 is the middle, 0.66 is two thirds of the way
@@ -118,7 +131,9 @@ export type Banner = {
 	paddingY: number,
 	gap: number, -- space between the 💥 and the words
 	secondGap: number, -- space between the words and the second line
-	showSecondLine: boolean, -- "Run home with your egg!" shows on computers only
+	showSecondLine: boolean, -- false on every screen: the banner is one line (the words under it live in the bottom tip)
+	jumpGap: number?, -- phone only: the banner's right edge stands this many pixels left of the Jump column (nil: no pin)
+	nameLetters: number?, -- phone only: a name over this many letters is cut (nil: never cut)
 	borderThickness: number, -- the Ink outline around the banner
 	shadowOffset: number, -- how far the Ink shadow shows under the banner
 	cornerRadius: number,
@@ -330,6 +345,10 @@ local computerTip: Tip = {
 	borderThickness = 4,
 	textSize = 24,
 	textOutline = 2,
+	circleSize = 40,
+	circleRim = 5,
+	circleRing = 3,
+	circleGap = 10,
 }
 
 local phoneTip: Tip = {
@@ -339,6 +358,10 @@ local phoneTip: Tip = {
 	borderThickness = 3,
 	textSize = 15,
 	textOutline = 1.5,
+	circleSize = 24,
+	circleRim = 3,
+	circleRing = 2,
+	circleGap = 6,
 }
 
 -- The values are the mockup's (core-hud.html: .msg), except the phone's top: 62 px, 6 px lower than the mockup's 56, so
@@ -387,7 +410,7 @@ local computerBanner: Banner = {
 	paddingY = 10,
 	gap = 8,
 	secondGap = 2,
-	showSecondLine = true,
+	showSecondLine = false,
 	borderThickness = 5,
 	shadowOffset = 7,
 	cornerRadius = 18,
@@ -406,6 +429,8 @@ local phoneBanner: Banner = {
 	gap = 4,
 	secondGap = 0,
 	showSecondLine = false,
+	jumpGap = 12,
+	nameLetters = Layout.phoneNameLetters,
 	borderThickness = 3,
 	shadowOffset = 5,
 	cornerRadius = 13,

@@ -168,9 +168,17 @@ if server then
 	local runHome = RunHome.new(Ui.hudTop(playerGui))
 	local runHomeScreen: Layout.Screen? = nil
 	local runHomeShown = false
+	-- The same view also feeds the bottom tip (Messages): `latestView` is its latest answer, and `viewListeners` are told
+	-- after each change. There is still one watcher.
+	local latestView: HuntView.View = { runHome = false, edges = false, tip = "none" }
+	local viewListeners: { [() -> ()]: true } = {}
 	local stopRunHome = HuntView.watch(server.GiantState, Players.LocalPlayer, function(view: HuntView.View)
+		latestView = view
 		runHomeShown = view.runHome
 		runHome.setShown(view.runHome)
+		for listener in table.clone(viewListeners) do
+			listener()
+		end
 	end)
 	script.Destroying:Once(function()
 		stopRunHome()
@@ -215,6 +223,17 @@ if server then
 		caught = { OnClientEvent = server.Caught.OnClientEvent },
 		slideTip = { OnClientEvent = server.SlideTip.OnClientEvent },
 		giantState = server.GiantState,
+		huntView = {
+			get = function(): HuntView.View
+				return latestView
+			end,
+			connect = function(callback: () -> ()): () -> ()
+				viewListeners[callback] = true
+				return function()
+					viewListeners[callback] = nil
+				end
+			end,
+		},
 		viewport = SleepMeterUi.workspaceViewport(Workspace),
 	})
 	-- The grab prompts on the egg spots use the Custom style, so GrabPrompt draws them and switches them off while

@@ -6,6 +6,7 @@ local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, Je
 local Hud = StarterPlayer.StarterPlayerScripts.Client.Hud
 local Messages = require(Hud.Messages)
 local Theme = require(Hud.Theme)
+local HuntView = require(Hud.HuntView)
 local Helpers = require(script.Parent.Helpers)
 type Rig = Helpers.Rig
 local cleanUp = Helpers.cleanUp
@@ -459,5 +460,119 @@ describe("Messages: the Stand still or tiptoe! tip", function()
 		rig.handle.stop()
 		expect(timer.cancelled).toBe(true)
 		expect(rig.warning:count()).toBe(0)
+	end)
+end)
+
+-- The strokes on a piece and everything inside it (the circle's rims may be its own or a child's).
+local function strokeColors(piece: Instance): { Color3 }
+	local colors: { Color3 } = {}
+	for _, instance in { piece, table.unpack(piece:GetDescendants()) } do
+		if instance:IsA("UIStroke") then
+			table.insert(colors, instance.Color)
+		end
+	end
+	return colors
+end
+
+local function hasColor(colors: { Color3 }, wanted: Color3): boolean
+	for _, color in colors do
+		if color == wanted then
+			return true
+		end
+	end
+	return false
+end
+
+describe("Messages: the bottom tip follows HuntView's tip while he is awake", function()
+	it("shows the circle icon and the dodge words for a player with no egg outside a garden", function()
+		local rig = newRig()
+		rig.wake("Leo")
+		expect(rig.tipCircle()).never.toBeNil()
+		expect((rig.tipCircle() :: Frame).Visible).toBe(true)
+		expect(rig.tip().Visible).toBe(true)
+		expect(rig.tipText().Text).toBe(Messages.dodgeText)
+		expect(rig.pill().Visible).toBe(false)
+	end)
+
+	it("draws the circle red with a gold rim and an Ink ring: 40 px on a computer, 24 px on a phone", function()
+		local rig = newRig(Vector2.new(1280, 720))
+		rig.wake("Leo")
+		local circle = rig.tipCircle() :: Frame
+		expect(circle.BackgroundColor3 == Theme.slamRed).toBe(true)
+		expect(hasColor(strokeColors(circle), Theme.slamGold)).toBe(true)
+		expect(hasColor(strokeColors(circle), Theme.ink)).toBe(true)
+		expect(circle.Size).toBe(UDim2.fromOffset(40, 40))
+		rig.setViewport(Vector2.new(844, 390))
+		expect(circle.Size).toBe(UDim2.fromOffset(24, 24))
+	end)
+
+	it("keeps the egg icon for a carrier, with the dodge words, and hides the circle", function()
+		local rig = newRig()
+		rig.setCarrying("Rare")
+		rig.wake("Leo")
+		expect(rig.pill().Visible).toBe(true)
+		expect(rig.pillEgg().Visible).toBe(true)
+		expect(rig.pillText().Text).toBe(Messages.dodgeText)
+		expect(rig.tipCircle()).never.toBeNil()
+		expect((rig.tipCircle() :: Frame).Visible).toBe(false)
+	end)
+
+	it("hides both icons and both tips inside a garden, and brings them back when the view changes back", function()
+		local rig = newRig()
+		rig.wake("Leo")
+		rig.setInGarden(3)
+		expect(rig.tipCircle()).never.toBeNil()
+		expect((rig.tipCircle() :: Frame).Visible).toBe(false)
+		expect(rig.pill().Visible).toBe(false)
+		expect(rig.tipText().Text == Messages.dodgeText and rig.tip().Visible).toBe(false)
+		rig.setInGarden(0)
+		expect((rig.tipCircle() :: Frame).Visible).toBe(true)
+		expect(rig.tipText().Text).toBe(Messages.dodgeText)
+	end)
+
+	it("hides a carrier's egg pill inside a garden and shows it again outside", function()
+		local rig = newRig()
+		rig.setCarrying("Common")
+		rig.wake("Leo")
+		rig.setInGarden(2)
+		expect(rig.pill().Visible).toBe(false)
+		rig.setInGarden(0)
+		expect(rig.pill().Visible).toBe(true)
+		expect(rig.pillText().Text).toBe(Messages.dodgeText)
+	end)
+
+	it("turns the egg into the circle when the egg is lost while he is awake", function()
+		local rig = newRig()
+		rig.setCarrying("Common")
+		rig.wake("Leo")
+		rig.setCarrying(nil)
+		expect(rig.pill().Visible).toBe(false)
+		expect((rig.tipCircle() :: Frame).Visible).toBe(true)
+	end)
+
+	it("shows no circle while he sleeps", function()
+		local rig = newRig()
+		rig.wake("Leo")
+		rig.setPhase("Asleep")
+		expect(rig.tipCircle()).never.toBeNil()
+		expect((rig.tipCircle() :: Frame).Visible).toBe(false)
+	end)
+
+	it("makes no new HuntView watcher: it reads the view it is given", function()
+		local watch = HuntView.watch
+		local calls = 0
+		HuntView.watch = function(...)
+			calls += 1
+			return watch(...)
+		end
+		local ok, err = pcall(function()
+			local rig = newRig()
+			rig.wake("Leo")
+			rig.setInGarden(1)
+		end)
+		HuntView.watch = watch
+		expect(err).toBeNil()
+		expect(ok).toBe(true)
+		expect(calls).toBe(0)
 	end)
 end)

@@ -39,6 +39,7 @@ local Layout = require(script.Parent.Layout)
 local Theme = require(script.Parent.Theme)
 local Ui = require(script.Parent.Ui)
 local MessageParts = require(script.Parent.MessageParts)
+local HuntView = require(script.Parent.HuntView)
 
 local Messages = {}
 
@@ -62,6 +63,18 @@ function Messages.wokeText(name: any): string
 		return `{name} woke the Giant!`
 	end
 	return "The Giant woke up!"
+end
+
+-- A name as the phone banner shows it: up to `letters` letters whole (the phone's 12 by default), a longer one cut to
+-- its first letters minus one plus "…". Counts letters, not bytes, so a name with an emoji is never cut in half.
+function Messages.cutName(name: string, letters: number?): string
+	local limit = letters or Layout.phoneNameLetters
+	local count = utf8.len(name)
+	if count == nil or count <= limit then
+		return name
+	end
+	local cutAt = utf8.offset(name, limit) :: number -- the byte where letter number `limit` starts
+	return string.sub(name, 1, cutAt - 1) .. "…"
 end
 
 -- The Caught! card (spec section 6, "Caught"): the words, the second line and how long it shows.
@@ -115,6 +128,14 @@ export type ViewportLike = {
 	connect: (callback: () -> ()) -> () -> (),
 }
 
+-- The hunt view (HuntView.watch, Task 19) as far as this module uses it: `get` is its latest answer, and `connect` calls
+-- `callback` each time that answer may have changed and returns a function that stops that. This module makes no watcher
+-- of its own.
+export type HuntViewLike = {
+	get: () -> HuntView.View,
+	connect: (callback: () -> ()) -> () -> (),
+}
+
 export type Deps = {
 	parent: Instance, -- the player's screen (PlayerGui): Hud goes in it
 	player: PlayerLike, -- the local player: their Carrying attribute is the server's answer
@@ -125,6 +146,10 @@ export type Deps = {
 	slideTip: SlideTipLike, -- the SlideTip remote
 	giantState: Instance, -- ReplicatedStorage.GiantState: its Phase says when he wakes and WokenBy who woke him
 	viewport: ViewportLike,
+	-- While he is awake, its `tip` says which bottom tip shows: "carrier" the carry pill, "circle" the circle icon with
+	-- the dodge words, "none" neither (a player inside a garden). Left out, a carrier's pill shows while he is awake and
+	-- there is no circle.
+	huntView: HuntViewLike?,
 	-- Runs `callback` after `seconds` and returns a function that cancels it. Left out, the real clock is used.
 	after: ((seconds: number, callback: () -> ()) -> () -> ())?,
 }
@@ -250,8 +275,15 @@ function Messages.start(deps: Deps): Handle
 	end
 	trove:Add(hideBanner)
 
+	-- How many letters of a name the banner keeps on this screen (nil: all of it). Set by relayout.
+	local nameLetters: number? = nil
+
 	local function updateBannerWords()
-		parts.bannerText.Text = Messages.wokeText(deps.giantState:GetAttribute("WokenBy"))
+		local name: any = deps.giantState:GetAttribute("WokenBy")
+		if type(name) == "string" and nameLetters then
+			name = Messages.cutName(name, nameLetters)
+		end
+		parts.bannerText.Text = Messages.wokeText(name)
 	end
 
 	-- Shows the banner for Config.Wake.BannerSeconds. A banner that is already showing starts its seconds again.
@@ -319,17 +351,26 @@ function Messages.start(deps: Deps): Handle
 		end)
 	end
 
+	-- What the bottom tip shows while he is awake: the hunt view's `tip`, or nil if no view was given.
+	local function huntTip(): HuntView.Tip?
+		local huntView = deps.huntView
+		return if huntView then huntView.get().tip else nil
+	end
+
 	-- Shows the tip that fits now, or none. The 85% warning wins over everything; then the slide tip; then the carry
 	-- pill; then a missed grab; then the footprints tip, until the first grab.
 	local function renderTip()
 		maybeStartSlide()
 		local words: string? = nil
+		local circle = awake and huntTip() == "circle" and carriedRarity() == nil
 		if warningShowing then
 			words = Messages.standStillText
 		elseif slideShowing then
 			words = Messages.slideText
 		elseif carriedRarity() == nil then
-			if missedShowing then
+			if circle then
+				words = Messages.dodgeText
+			elseif missedShowing then
 				words = Messages.missedText
 			elseif not grabbedOnce then
 				words = Messages.footprintsText
@@ -338,6 +379,8 @@ function Messages.start(deps: Deps): Handle
 		if words ~= nil then
 			parts.tipText.Text = words
 		end
+		-- The circle icon goes with the dodge words only: a warning or slide tip that stands in front of them hides it.
+		parts.tipCircle.Visible = circle and words == Messages.dodgeText
 		parts.tip.Visible = words ~= nil and not (caughtShowing and phone) and not pillPinned
 	end
 
@@ -353,7 +396,10 @@ function Messages.start(deps: Deps): Handle
 		-- While he is awake, the carrier is told what to do, instead of where to go.
 		parts.text.Text = if awake then Messages.dodgeText else Messages.carryText(rarity)
 		parts.eggGradient.Color = MessageParts.eggColors(look)
-		parts.pill.Visible = not warningShowing and not slideShowing -- a tip takes its place for 3 seconds
+		-- A tip takes its place for 3 seconds. While he is awake, the pill shows for the "carrier" view only, so it
+		-- hides inside a garden.
+		local huntShows = not awake or huntTip() ~= "none"
+		parts.pill.Visible = not warningShowing and not slideShowing and huntShows
 		grabbedOnce = true
 		stopMissedTimer()
 		renderTip() -- they stand in the same place, and the carry pill wins
@@ -504,6 +550,10 @@ function Messages.start(deps: Deps): Handle
 		MessageParts.applyLayout(parts, layout.pill, layout.tip, layout.card)
 		MessageParts.applyBanner(parts, layout.banner)
 		MessageParts.applyCaught(parts, layout.caught)
+		nameLetters = layout.banner.nameLetters
+		if bannerShowing then
+			updateBannerWords()
+		end
 	end
 
 	relayout()
@@ -517,6 +567,9 @@ function Messages.start(deps: Deps): Handle
 	trove:Add(deps.caught.OnClientEvent:Connect(onCaught))
 	trove:Add(deps.slideTip.OnClientEvent:Connect(onSlideTip))
 	trove:Add(deps.viewport.connect(relayout))
+	if deps.huntView then
+		trove:Add(deps.huntView.connect(renderCarry)) -- the view changed: show the tip that fits it
+	end
 
 	return {
 		stop = function()

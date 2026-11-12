@@ -38,6 +38,11 @@ export type Parts = {
 	tip: Frame,
 	tipPadding: UIPadding,
 	tipStroke: UIStroke,
+	tipList: UIListLayout,
+	tipCircle: Frame, -- the red circle icon of the no-egg tip, left of its words
+	tipCircleRing: UIStroke, -- its Ink ring, outside its edge
+	tipCircleRim: Frame, -- holds the gold rim, inside the edge
+	tipCircleRimStroke: UIStroke,
 	tipText: TextLabel,
 	tipTextStroke: UIStroke,
 	card: Frame,
@@ -140,7 +145,23 @@ function MessageParts.build(hud: ScreenGui, hudTop: ScreenGui, words: Words): Pa
 	home.LayoutOrder = 3
 
 	local tip, tipStroke, tipPadding = bottomPlate("Tip", hud, Theme.tipTransparency)
+	local tipList = Instance.new("UIListLayout")
+	tipList.FillDirection = Enum.FillDirection.Horizontal
+	tipList.VerticalAlignment = Enum.VerticalAlignment.Center
+	tipList.SortOrder = Enum.SortOrder.LayoutOrder
+	tipList.Parent = tip
+	-- The no-egg tip's icon: a red circle with a gold rim and an Ink ring. It shows only when Messages says so.
+	local tipCircle = Ui.panel("TipCircle", tip, Theme.slamRed, UDim.new(0.5, 0))
+	tipCircle.LayoutOrder = 1
+	tipCircle.Visible = false
+	local tipCircleRing = Ui.outline(tipCircle, Theme.ink, 1)
+	local tipCircleRim = Ui.panel("TipCircleRim", tipCircle, Theme.slamRed, UDim.new(0.5, 0))
+	tipCircleRim.BackgroundTransparency = 1
+	tipCircleRim.AnchorPoint = Vector2.new(0.5, 0.5)
+	tipCircleRim.Position = UDim2.fromScale(0.5, 0.5)
+	local tipCircleRimStroke = Ui.outline(tipCircleRim, Theme.slamGold, 1)
 	local tipText, tipTextStroke = outlinedText("TipText", tip, words.footprintsText)
+	tipText.LayoutOrder = 2
 
 	-- The green card: an Ink shadow (the same shape, shifted down) behind a green body that is as big as its words.
 	local card = Ui.group("SafeCard", hudTop)
@@ -329,6 +350,11 @@ function MessageParts.build(hud: ScreenGui, hudTop: ScreenGui, words: Words): Pa
 		tip = tip,
 		tipPadding = tipPadding,
 		tipStroke = tipStroke,
+		tipList = tipList,
+		tipCircle = tipCircle,
+		tipCircleRing = tipCircleRing,
+		tipCircleRim = tipCircleRim,
+		tipCircleRimStroke = tipCircleRimStroke,
 		tipText = tipText,
 		tipTextStroke = tipTextStroke,
 	}
@@ -355,6 +381,12 @@ function MessageParts.applyLayout(parts: Parts, pill: Layout.Pill, tip: Layout.T
 	parts.tipPadding.PaddingRight = UDim.new(0, tip.paddingX)
 	parts.tipPadding.PaddingTop = UDim.new(0, tip.paddingY)
 	parts.tipPadding.PaddingBottom = UDim.new(0, tip.paddingY)
+	parts.tipList.Padding = UDim.new(0, tip.circleGap)
+	parts.tipCircle.Size = UDim2.fromOffset(tip.circleSize, tip.circleSize)
+	parts.tipCircleRing.Thickness = tip.circleRing
+	-- The rim's box starts one rim's width inside the circle, and its outline draws outward: it lies along the edge.
+	parts.tipCircleRim.Size = UDim2.new(1, -2 * tip.circleRim, 1, -2 * tip.circleRim)
+	parts.tipCircleRimStroke.Thickness = tip.circleRim
 	parts.tipText.TextSize = tip.textSize
 	parts.tipTextStroke.Thickness = tip.textOutline
 
@@ -407,8 +439,15 @@ end
 function MessageParts.applyBanner(parts: Parts, banner: Layout.Banner)
 	-- The outline is drawn outside the banner, so the banner's body ends one outline's thickness higher, to keep its
 	-- outer edge where the layout says.
-	parts.banner.AnchorPoint = Vector2.new(0.5, 1)
-	parts.banner.Position = UDim2.new(banner.centerX, 0, 1, -(banner.bottomOffset + banner.borderThickness))
+	-- A phone banner is pinned by its right edge, `jumpGap` left of the Jump column; the outline is outside it too.
+	local y = -(banner.bottomOffset + banner.borderThickness)
+	if banner.jumpGap then
+		parts.banner.AnchorPoint = Vector2.new(1, 1)
+		parts.banner.Position = UDim2.new(1, -(Layout.jumpColumn + banner.jumpGap + banner.borderThickness), 1, y)
+	else
+		parts.banner.AnchorPoint = Vector2.new(0.5, 1)
+		parts.banner.Position = UDim2.new(banner.centerX, 0, 1, y)
+	end
 	parts.banner.Rotation = banner.rotation
 	local radius = UDim.new(0, banner.cornerRadius)
 	parts.bannerShadow.Position = UDim2.fromOffset(0, banner.shadowOffset)

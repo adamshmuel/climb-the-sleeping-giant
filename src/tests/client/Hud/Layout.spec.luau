@@ -286,6 +286,13 @@ describe("Layout.forScreen: the safe-home card", function()
 	end)
 end)
 
+describe("Layout.forScreen: the no-egg tip's circle", function()
+	it("is 40 px across on a computer and 24 px on a phone", function()
+		expect(Layout.forScreen(Vector2.new(1280, 720)).tip.circleSize).toBe(40)
+		expect(Layout.forScreen(Vector2.new(750, 390)).tip.circleSize).toBe(24)
+	end)
+end)
+
 describe("Layout.forScreen: the wake banner", function()
 	it("is low and right of centre on a computer: bottom 100 px up, middle at 66% of the width", function()
 		local banner = Layout.forScreen(Vector2.new(1280, 720)).banner
@@ -297,7 +304,6 @@ describe("Layout.forScreen: the wake banner", function()
 		local banner = Layout.forScreen(Vector2.new(1280, 720)).banner
 		expect(banner.textSize).toBe(34)
 		expect(banner.secondTextSize).toBe(17)
-		expect(banner.showSecondLine).toBe(true)
 		expect(banner.paddingY).toBe(10)
 		expect(banner.paddingX).toBe(28)
 		expect(banner.borderThickness).toBe(5)
@@ -334,6 +340,25 @@ describe("Layout.forScreen: the wake banner", function()
 		expect(banner.shadowOffset).toBe(5)
 		expect(banner.cornerRadius).toBe(13)
 		expect(banner.rotation).toBe(-2)
+	end)
+
+	it("shows one line on every screen: no second line on a computer or a phone", function()
+		expect(Layout.forScreen(Vector2.new(1280, 720)).banner.showSecondLine).toBe(false)
+		expect(Layout.forScreen(Vector2.new(750, 390)).banner.showSecondLine).toBe(false)
+	end)
+
+	it("pins the phone banner's right edge 12 px left of the Jump column, which is 138 px wide", function()
+		expect(Layout.jumpColumn).toBe(138)
+		expect(Layout.forScreen(Vector2.new(750, 390)).banner.jumpGap).toBe(12)
+	end)
+
+	it("does not pin the computer banner to the Jump column", function()
+		expect(Layout.forScreen(Vector2.new(1280, 720)).banner.jumpGap).toBeNil()
+	end)
+
+	it("cuts a phone name over 12 letters, and never cuts on a computer", function()
+		expect(Layout.forScreen(Vector2.new(750, 390)).banner.nameLetters).toBe(12)
+		expect(Layout.forScreen(Vector2.new(1280, 720)).banner.nameLetters).toBeNil()
 	end)
 
 	it("never uses text under 14 px, on either screen", function()

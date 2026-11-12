@@ -3,6 +3,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 -- The little house is compared with `==` and checked for true, because Jest's failure messages break on emoji.
 local Hud = StarterPlayer.StarterPlayerScripts.Client.Hud
 local Messages = require(Hud.Messages)
+local HuntView = require(Hud.HuntView)
 
 -- Everything a test makes is destroyed afterwards, so the real place is never changed.
 local madeInstances: { Instance } = {}
@@ -67,6 +68,8 @@ export type Rig = {
 	handle: Messages.Handle,
 	setCarrying: (value: any) -> (),
 	setPhase: (phase: string) -> (),
+	-- The player's InGarden attribute (the garden they stand in, 0 for none); HuntView's view follows it.
+	setInGarden: (garden: number) -> (),
 	setWokenBy: (name: any) -> (),
 	-- What the server does on a wake-up: WokenBy first, then Phase.
 	wake: (name: string?) -> (),
@@ -79,6 +82,7 @@ export type Rig = {
 	pillHome: () -> TextLabel,
 	tip: () -> Frame,
 	tipText: () -> TextLabel,
+	tipCircle: () -> Frame?,
 	hudTop: () -> ScreenGui?,
 	card: () -> Frame?,
 	cardText: () -> TextLabel,
@@ -122,7 +126,37 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 		end,
 	}
 
-	local handle = Messages.start({
+	-- The view the game's HuntView.watch makes (Task 19), read from the same fake attributes: `get` is its latest
+	-- answer and `connect` runs the callback each time the phase or one of the attributes changes. No watcher is made.
+	local function viewNow(): HuntView.View
+		local phase: any = giantState:GetAttribute("Phase")
+		local inGarden: any = attributes:GetAttribute("InGarden")
+		local plotIndex: any = attributes:GetAttribute("PlotIndex")
+		return HuntView.read({
+			phase = if type(phase) == "string" then phase else "Asleep",
+			carrying = attributes:GetAttribute("Carrying") ~= nil,
+			inGarden = if type(inGarden) == "number" then inGarden else 0,
+			plotIndex = if type(plotIndex) == "number" then plotIndex else nil,
+			floating = attributes:GetAttribute("Floating") == true,
+		})
+	end
+	local huntView = {
+		get = viewNow,
+		connect = function(callback: () -> ()): () -> ()
+			local connections = {
+				giantState:GetAttributeChangedSignal("Phase"):Connect(callback),
+				attributes:GetAttributeChangedSignal("Carrying"):Connect(callback),
+				attributes:GetAttributeChangedSignal("InGarden"):Connect(callback),
+			}
+			return function()
+				for _, connection in connections do
+					connection:Disconnect()
+				end
+			end
+		end,
+	}
+
+	local deps: any = {
 		parent = parent,
 		player = me,
 		grabMissed = { OnClientEvent = grabMissed },
@@ -131,6 +165,7 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 		caught = { OnClientEvent = caught },
 		slideTip = { OnClientEvent = slideTip },
 		giantState = giantState,
+		huntView = huntView,
 		viewport = {
 			get = function()
 				return viewportSize
@@ -150,7 +185,8 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 				timer.cancelled = true
 			end
 		end,
-	})
+	}
+	local handle: Messages.Handle = Messages.start(deps)
 	table.insert(stops, handle.stop)
 
 	local function find<T>(name: string): T
@@ -179,6 +215,10 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 		end,
 		setPhase = function(phase: string)
 			giantState:SetAttribute("Phase", phase)
+			task.wait()
+		end,
+		setInGarden = function(garden: number)
+			attributes:SetAttribute("InGarden", garden)
 			task.wait()
 		end,
 		setWokenBy = function(name: any)
@@ -222,6 +262,9 @@ local function newRig(viewport: Vector2?, startPhase: string?): Rig
 		end,
 		tipText = function()
 			return find("TipText")
+		end,
+		tipCircle = function()
+			return find("TipCircle")
 		end,
 		hudTop = function()
 			return parent:FindFirstChild("HudTop") :: ScreenGui?
