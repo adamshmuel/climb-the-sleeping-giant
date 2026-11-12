@@ -155,20 +155,44 @@ function View.withPitch(current: CFrame, focus: Vector3, pitchDegrees: number): 
 	return View.spawnView(focus, current.LookVector, distance, pitchDegrees)
 end
 
--- How far the camera's point is moved `seconds` after he woke: left-right and up-down (never forward or back), fading
--- out over Config.Wake.ShakeSeconds. It is exactly zero before 0 and from the end on, and its length is never more
--- than Config.Wake.ShakeStuds (the two waves together can reach the square root of 2, so they are scaled by it).
-function View.shakeOffset(seconds: number): Vector3
-	local total = Config.Wake.ShakeSeconds
+-- The rumble: left-right and up-down (never forward or back), `studs` at most, fading out in a straight line over
+-- `total` seconds. It is exactly zero before 0 and from `total` on. The two waves together can reach the square root of
+-- 2, so they are scaled by it.
+local function wave(seconds: number, total: number, studs: number): Vector3
 	if seconds <= 0 or seconds >= total then
 		return Vector3.zero
 	end
-	local scale = Config.Wake.ShakeStuds * (1 - seconds / total) / math.sqrt(2)
+	local scale = studs * (1 - seconds / total) / math.sqrt(2)
 	return Vector3.new(
 		math.sin(2 * math.pi * SHAKE_SIDEWAYS_HERTZ * seconds),
 		math.sin(2 * math.pi * SHAKE_UPDOWN_HERTZ * seconds),
 		0
 	) * scale
+end
+
+-- How far the camera's point is moved `seconds` after he woke: at most Config.Wake.WakeShakeStuds, fading out over
+-- Config.Wake.WakeShakeSeconds.
+function View.shakeOffset(seconds: number): Vector3
+	return wave(seconds, Config.Wake.WakeShakeSeconds, Config.Wake.WakeShakeStuds)
+end
+
+-- How big a slam shake is `distance` studs from the landing: Config.Wake.SlamShakeStuds within
+-- SlamShakeFullWithinStuds, then in a straight line down to nothing at SlamShakeNoneFromStuds and beyond.
+function View.slamShakeStuds(distance: number): number
+	local wake = Config.Wake
+	local full, none = wake.SlamShakeFullWithinStuds, wake.SlamShakeNoneFromStuds
+	if distance <= full then
+		return wake.SlamShakeStuds
+	elseif distance >= none then
+		return 0
+	end
+	return wake.SlamShakeStuds * (none - distance) / (none - full)
+end
+
+-- The slam shake's offset `seconds` after the landing, `distance` studs away: the same rumble, as big as
+-- slamShakeStuds(distance), fading out over Config.Wake.SlamShakeSeconds.
+function View.slamShakeOffset(seconds: number, distance: number): Vector3
+	return wave(seconds, Config.Wake.SlamShakeSeconds, View.slamShakeStuds(distance))
 end
 
 -- The top centre of a spawn spot: its middle, half its height up.

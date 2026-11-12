@@ -54,6 +54,9 @@ local function newSignal()
 				handler(...)
 			end
 		end,
+		count = function(_self: any): number
+			return #handlers
+		end,
 	}
 end
 

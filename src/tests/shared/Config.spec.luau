@@ -197,9 +197,15 @@ describe("Config", function()
 		expect(Config.Wake.HeavySleepSeconds).toBe(45)
 	end)
 
-	it("the wake-up camera shake is 0.5 studs for 0.5 s", function()
-		expect(Config.Wake.ShakeStuds).toBe(0.5)
-		expect(Config.Wake.ShakeSeconds).toBe(0.5)
+	it("the old 0.5 stud wake shake keys are gone", function()
+		local wake: any = Config.Wake
+		expect(wake.ShakeStuds).toBe(nil)
+		expect(wake.ShakeSeconds).toBe(nil)
+	end)
+
+	it("the wake shake is 1.5 studs for 1 s", function()
+		expect(Config.Wake.WakeShakeStuds).toBe(1.5)
+		expect(Config.Wake.WakeShakeSeconds).toBe(1.0)
 	end)
 
 	it("a bounced player's camera looks 30 degrees up while floating", function()

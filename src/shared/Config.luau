@@ -81,8 +81,8 @@ export type Config = {
 		HandAboveStuds: number,
 		BannerSeconds: number,
 		HeavySleepSeconds: number,
-		ShakeStuds: number,
-		ShakeSeconds: number,
+		WakeShakeStuds: number,
+		WakeShakeSeconds: number,
 		TumbleDownSeconds: number,
 		TumbleStillSeconds: number,
 		TumbleUpSeconds: number,
@@ -260,8 +260,8 @@ local config: Config = {
 		HandAboveStuds = 45, -- and this far over it
 		BannerSeconds = 3,
 		HeavySleepSeconds = 45,
-		ShakeStuds = 0.5,
-		ShakeSeconds = 0.5,
+		WakeShakeStuds = 1.5, -- the wake shake: this far at most, fading out over WakeShakeSeconds (spec Rule 65)
+		WakeShakeSeconds = 1.0,
 		TumbleDownSeconds = 0.15,
 		TumbleStillSeconds = 0.6,
 		TumbleUpSeconds = 0.25,

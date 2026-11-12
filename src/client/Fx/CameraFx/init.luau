@@ -15,8 +15,8 @@
 --    adds to the point it follows, so the camera and that point move together and the look direction never changes. It
 --    eases back to 0 from the first move or the first camera turn, whichever comes first.
 --
--- The small screen shake when he wakes (spec Rule 12, "Waking bounces everyone off") is here too: shakeOnWake moves
--- Humanoid.CameraOffset for 0.5 seconds, never by more than 0.5 studs, the same way, so the shake is never mistaken for
+-- The screen shake when he wakes (spec Rule 12, "Waking bounces everyone off") is here too: shakeOnWake moves
+-- Humanoid.CameraOffset for 1 second, never by more than 1.5 studs, the same way, so the shake is never mistaken for
 -- the player turning the camera. The raise and the shake both write Humanoid.CameraOffset, so a single writer adds them
 -- up (see `setHeight` and `setShake`): neither can undo the other.
 
@@ -55,6 +55,8 @@ CameraFx.firstMove = View.firstMove
 CameraFx.awayFromEgg = View.awayFromEgg
 CameraFx.withPitch = View.withPitch
 CameraFx.shakeOffset = View.shakeOffset
+CameraFx.slamShakeStuds = View.slamShakeStuds
+CameraFx.slamShakeOffset = View.slamShakeOffset
 CameraFx.renderBinder = Ease.renderBinder
 CameraFx.newEaseBack = Ease.newEaseBack
 CameraFx.newHeightEase = Ease.newHeightEase

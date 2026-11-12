@@ -432,7 +432,7 @@ describe("CameraFx.watch", function()
 			shake.frame(STEP)
 			expect(near(rig.humanoid.CameraOffset, RAISE + CameraFx.shakeOffset(shake.seconds()))).toBe(true)
 			expect(rig.humanoid.CameraOffset == RAISE).toBe(false)
-			for _ = 1, 8 do
+			for _ = 1, 15 do
 				shake.frame(STEP)
 			end
 			expect(rig.humanoid.CameraOffset == RAISE).toBe(true)
@@ -451,10 +451,10 @@ describe("CameraFx.watch", function()
 			rig.moving = false
 			local easeStart = rig.clock
 			local last = RAISE.Y
-			while rig.heightStep or shake.seconds() < Config.Wake.ShakeSeconds + STEP do
+			while rig.heightStep or shake.seconds() < Config.Wake.WakeShakeSeconds + STEP do
 				shake.frame(1 / 60)
 				local offset = rig.humanoid.CameraOffset
-				local shaking = shake.seconds() < Config.Wake.ShakeSeconds
+				local shaking = shake.seconds() < Config.Wake.WakeShakeSeconds
 				-- What is left when the shake's own wiggle is taken away is the height: straight up, never more than before.
 				local rest = offset - (if shaking then CameraFx.shakeOffset(shake.seconds()) else Vector3.zero)
 				expect(near(Vector3.new(0, rest.Y, 0), rest)).toBe(true)
@@ -484,12 +484,12 @@ describe("CameraFx.watch", function()
 					rig.frame(FRAME)
 				end
 				shake.wake()
-				-- The ease ends (0.6 s) while the shake (until 0.8 s) goes on: the offset is then only the wiggle.
+				-- The ease ends (0.6 s) while the shake (until 1.0 s) goes on: the offset is then only the wiggle.
 				while rig.heightStep do
 					shake.frame(FRAME)
 				end
 				expect(near(rig.humanoid.CameraOffset, CameraFx.shakeOffset(shake.seconds()))).toBe(true)
-				while shake.seconds() < Config.Wake.ShakeSeconds + STEP do
+				while shake.seconds() < Config.Wake.WakeShakeSeconds + STEP do
 					shake.frame(FRAME)
 				end
 				expect(rig.humanoid.CameraOffset == Vector3.zero).toBe(true)

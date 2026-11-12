@@ -78,7 +78,7 @@ Each module below gets one optional setting, `playSound: ((name: string, at: Vec
 | `ZzzPop` | The Z Z Z pop like bubbles (at the Z Z Z anchor) | `src/client/Fx/GiantFx.luau` | 11 |
 | `LieDown` | He lies back down (Phase leaves Awake) | `src/client/Fx/GiantFx.luau` | 11 |
 | `WakeBirds` | The birds burst out (at the middle of the birds' area) | `src/client/Fx/WakeWorld.luau` (new) | 13 |
-| `WakeRumble` | The wake shake starts. It is called even with Reduce Motion on, because only the shake is turned off | `src/client/Fx/CameraFx.luau` | 14 |
+| `WakeRumble` | The wake shake starts. It is called even with Reduce Motion on, because only the shake is turned off | `src/client/Fx/CameraFx/Shake.luau` | 14 |
 | `Bonk` | A player is bonked (at their character) | `src/client/Fx/BonkFx.luau` (new) | 15 |
 | `SlamCircle` | A red circle appears (at its point) | `src/client/Fx/SlamFx.luau` | 16 |
 | `SlamThud` | A fist lands (at its point) | `src/client/Fx/SlamFx.luau` | 16 |
@@ -246,7 +246,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 14: The wake shake and the slam shake**
 - Spec rules: Rule 65 (The wake shakes the screen); Rule 12 (Waking bounces everyone off): the V1 shake replaced; section 5, "Wake shake", "Slam shake"; Check C2 (no shake with Reduce Motion).
-- Files: `src/client/Fx/CameraFx/` (`Shake.luau`, `View.luau`), `src/shared/Config.luau`, `src/client/init.client.luau`, `src/tests/client/Fx/CameraFx/ShakeAndSpot.spec.luau` and `WatchTurnAndRaise.spec.luau` (both read `ShakeStuds` and `ShakeSeconds`), `src/tests/shared/Config.spec.luau`.
+- Files: `src/client/Fx/CameraFx/` (`Shake.luau`, `View.luau`, `init.luau`), `src/shared/Config.luau`, `src/client/init.client.luau`, `src/tests/client/Fx/CameraFx/ShakeAndSpot.spec.luau` and `WatchTurnAndRaise.spec.luau` (both read `ShakeStuds` and `ShakeSeconds`), `src/tests/client/Fx/CameraFx/ShakeSizes.spec.luau` (new), `src/tests/shared/Config.spec.luau`.
 - What changes: the wake shake is 1.5 studs fading to 0 over 1.0 s: `Config.Wake.ShakeStuds` and `ShakeSeconds` are replaced by `WakeShakeStuds` (1.5) and `WakeShakeSeconds` (1.0) here, not in Task 1. Each `SlamLanded` (or the landing time, whichever comes first) shakes by 1 stud when the fist lands within 15 studs across the ground of the player's character, shrinking evenly to nothing at 60 studs, fading over 0.4 s. A new shake replaces one still fading. With Reduce Motion on, nothing moves. Both still go through the one `CameraOffset` writer (V1). Sound hook `WakeRumble`.
 - Failing tests first: the wake shake's size is never over 1.5 and is 0 from 1.0 s; a slam 10 studs away peaks at 1, 37.5 studs at 0.5, 60 at 0; with Reduce Motion on the offset never changes, and `WakeRumble` is still called once.
 - Done when: the tests pass, and in Play on the iPhone 14 the first red circle (at 2.3 s) is easy to see after the shake (screenshot at 2.4 s).

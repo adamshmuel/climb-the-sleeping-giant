@@ -135,9 +135,9 @@ describe("CameraFx.shakeOffset", function()
 		return found
 	end
 
-	it("never moves the camera more than 0.5 studs, from -0.1 s to 0.7 s", function()
-		for _, sample in samples(-0.1, 0.7) do
-			expect(sample.offset.Magnitude <= Config.Wake.ShakeStuds + 1e-9).toBe(true)
+	it("never moves the camera more than 1.5 studs, from -0.1 s to 1.2 s", function()
+		for _, sample in samples(-0.1, 1.2) do
+			expect(sample.offset.Magnitude <= Config.Wake.WakeShakeStuds + 1e-9).toBe(true)
 		end
 	end)
 
@@ -146,10 +146,10 @@ describe("CameraFx.shakeOffset", function()
 		expect(CameraFx.shakeOffset(-0.001)).toBe(Vector3.zero)
 	end)
 
-	it("is exactly zero from 0.5 seconds on", function()
-		expect(Config.Wake.ShakeSeconds).toBe(0.5)
-		expect(CameraFx.shakeOffset(0.5)).toBe(Vector3.zero)
-		expect(CameraFx.shakeOffset(0.6)).toBe(Vector3.zero)
+	it("is exactly zero from 1.0 seconds on", function()
+		expect(Config.Wake.WakeShakeSeconds).toBe(1.0)
+		expect(CameraFx.shakeOffset(1.0)).toBe(Vector3.zero)
+		expect(CameraFx.shakeOffset(1.1)).toBe(Vector3.zero)
 		expect(CameraFx.shakeOffset(30)).toBe(Vector3.zero)
 	end)
 
@@ -161,9 +161,9 @@ describe("CameraFx.shakeOffset", function()
 		expect(biggest > 0.3).toBe(true)
 	end)
 
-	it("fades out: it never goes above what is left of the 0.5 studs", function()
-		for _, sample in samples(0, 0.495) do
-			local left = Config.Wake.ShakeStuds * (1 - sample.seconds / Config.Wake.ShakeSeconds)
+	it("fades out: it never goes above what is left of the 1.5 studs", function()
+		for _, sample in samples(0, 0.995) do
+			local left = Config.Wake.WakeShakeStuds * (1 - sample.seconds / Config.Wake.WakeShakeSeconds)
 			expect(sample.offset.Magnitude <= left + 1e-9).toBe(true)
 		end
 	end)
@@ -297,30 +297,30 @@ describe("CameraFx.shakeOnWake", function()
 		expect(rig.humanoid.CameraOffset == SAVED).toBe(false)
 	end)
 
-	it("never moves the camera offset more than 0.5 studs from the saved one", function()
+	it("never moves the camera offset more than 1.5 studs from the saved one", function()
 		local rig = newRig()
 		rig.setPhase("Awake")
 		for _ = 1, 60 do
 			rig.advance(0.01)
-			expect((rig.humanoid.CameraOffset - SAVED).Magnitude <= Config.Wake.ShakeStuds + 1e-4).toBe(true)
+			expect((rig.humanoid.CameraOffset - SAVED).Magnitude <= Config.Wake.WakeShakeStuds + 1e-4).toBe(true)
 		end
 	end)
 
-	it("puts the saved offset back exactly at 0.5 seconds and lets go of the step", function()
+	it("puts the saved offset back exactly at 1.0 seconds and lets go of the step", function()
 		local rig = newRig()
 		rig.setPhase("Awake")
-		rig.advance(0.25)
+		rig.advance(0.5)
 		expect(rig.step:count()).toBe(1)
-		rig.advance(0.25)
+		rig.advance(0.5)
 		expect(rig.humanoid.CameraOffset == SAVED).toBe(true)
 		expect(rig.step:count()).toBe(0)
 	end)
 
-	it("takes 0.5 seconds of the clock, however many frames that is", function()
+	it("takes 1.0 seconds of the clock, however many frames that is", function()
 		local rig = newRig()
 		rig.setPhase("Awake")
-		-- 1/16 of a second is exact in binary, so eight frames are exactly 0.5 seconds.
-		for _ = 1, 7 do
+		-- 1/16 of a second is exact in binary, so sixteen frames are exactly 1.0 seconds.
+		for _ = 1, 15 do
 			rig.advance(0.0625)
 		end
 		expect(rig.humanoid.CameraOffset == SAVED).toBe(false)
@@ -397,13 +397,13 @@ describe("CameraFx.shakeOnWake", function()
 	it("shakes again at the next wake-up, from the offset the humanoid has then", function()
 		local rig = newRig()
 		rig.setPhase("Awake")
-		rig.advance(0.5)
+		rig.advance(1.0)
 		rig.setPhase("HeavySleep")
 		rig.setPhase("Asleep")
 		rig.setPhase("Awake")
 		rig.advance(0.01)
 		expect(near(rig.humanoid.CameraOffset, SAVED + CameraFx.shakeOffset(0.01))).toBe(true)
-		rig.advance(0.49)
+		rig.advance(0.99)
 		expect(rig.humanoid.CameraOffset == SAVED).toBe(true)
 	end)
 

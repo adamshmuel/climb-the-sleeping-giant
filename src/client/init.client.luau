@@ -126,12 +126,25 @@ if server then
 	script.Destroying:Once(function()
 		rescueFx.destroy()
 	end)
-	-- When he wakes, the screen shakes a little (the camera's point moves by at most 0.5 studs for 0.5 seconds).
+	-- When he wakes, the screen shakes (the camera's point moves by at most 1.5 studs for 1 second), and each slam shakes it
+	-- by how near it lands (at most 1 stud for 0.4 seconds, none from 60 studs). Reduce Motion turns both off. No wake
+	-- sound yet: WakeRumble waits for plan 7, so no playSound is passed.
+	-- The two slam remotes, as plain signals (the shaker's optional fields don't take an engine signal directly).
+	local slamWarningSignal: SlamFx.SignalLike = server.SlamWarning.OnClientEvent
+	local slamLandedSignal: SlamFx.SignalLike = server.SlamLanded.OnClientEvent
 	local shaker = CameraFx.shakeOnWake({
 		giantState = server.GiantState,
 		player = Players.LocalPlayer,
 		step = RunService.RenderStepped,
 		now = os.clock,
+		slamWarning = { OnClientEvent = slamWarningSignal },
+		slamLanded = { OnClientEvent = slamLandedSignal },
+		serverNow = function()
+			return Workspace:GetServerTimeNow()
+		end,
+		reducedMotion = function(): boolean
+			return GuiService.ReducedMotionEnabled
+		end,
 	})
 	script.Destroying:Once(function()
 		bouncedConnection:Disconnect()
