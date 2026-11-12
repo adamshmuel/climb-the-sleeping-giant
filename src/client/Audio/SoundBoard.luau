@@ -3,7 +3,7 @@
 -- AudioPlayer per file to copy from, and plays a row by copying its player, wiring the copy to a bus ("Just for you") or
 -- to an emitter at a place ("Whole valley", "Nearby"), and removing everything when the sound ends or is stopped.
 -- Everything it can't drive in a test is passed in: the speaker output, where world attachments go, the "start playing"
--- step, "is the file ready", "tell me when it ended" and the clock. Fades are Task 6, so none are here.
+-- step, "is the file ready", "tell me when it ended" and the clock. Fades are the music player's (Task 6), so none are here.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -19,11 +19,15 @@ export type Deps = {
 	ended: (player: AudioPlayer, callback: () -> ()) -> Disconnectable, -- player.Ended in the game
 	now: () -> number,
 }
-export type PlayOptions = { thud: number? } -- the flump's thud size (+20, +30, +40 or more)
+export type PlayOptions = {
+	thud: number?, -- the flump's thud size (+20, +30, +40 or more)
+	into: Instance?, -- a Just for you row wires here instead of to its bus (Music's faders)
+}
 export type LogRecord = { row: string, time: number, place: Vector3? }
 export type Board = {
-	play: (rowName: string, at: Vector3?, options: PlayOptions?) -> (),
+	play: (rowName: string, at: Vector3?, options: PlayOptions?) -> AudioPlayer?, -- the copy, nil when skipped
 	stop: (rowName: string) -> (),
+	music: Instance, -- the Music bus
 	log: { LogRecord }, -- the last LOG_LIMIT plays, oldest first
 	destroy: () -> (),
 }
@@ -75,6 +79,7 @@ function SoundBoard.start(deps: Deps): Board
 		item.Parent = parent
 	end
 
+	deps.root:SetAttribute("PlayCount", 0) -- the Play check's signals: how many plays, and the latest one
 	local music = build(Instance.new("AudioFader"), "Music", deps.root)
 	local effects = build(Instance.new("AudioFader"), "Effects", deps.root)
 	wire(music, deps.output, deps.root)
@@ -116,18 +121,18 @@ function SoundBoard.start(deps: Deps): Board
 		end
 	end
 
-	local function play(rowName: string, at: Vector3?, options: PlayOptions?)
+	local function play(rowName: string, at: Vector3?, options: PlayOptions?): AudioPlayer?
 		local entry = SoundList.byName(rowName)
 		if entry == nil then
-			return
+			return nil
 		end
 		local template = templates[entry.id]
 		if template == nil or not deps.isReady(template) then
-			return
+			return nil
 		end
 		local inWorld = entry.group ~= "JustForYou"
 		if inWorld and at == nil then
-			return
+			return nil
 		end
 		local list = active[rowName]
 		if list == nil then
@@ -137,7 +142,7 @@ function SoundBoard.start(deps: Deps): Board
 		if entry.oneAtATime then
 			stop(rowName)
 		elseif #list >= Config.Audio.MaxCopies then
-			return
+			return nil
 		end
 
 		local loudness = entry.loudness
@@ -169,7 +174,7 @@ function SoundBoard.start(deps: Deps): Board
 			wire(copy, emitter, copy)
 			attachment = place
 		else
-			wire(copy, if isTune(entry) then music else effects, copy)
+			wire(copy, (options and options.into) or (if isTune(entry) then music else effects), copy)
 		end
 
 		local item: Active = { copy = copy, attachment = attachment, connection = { Disconnect = function() end } }
@@ -183,6 +188,10 @@ function SoundBoard.start(deps: Deps): Board
 		if #log > LOG_LIMIT then
 			table.remove(log, 1)
 		end
+		local count: any = deps.root:GetAttribute("PlayCount")
+		deps.root:SetAttribute("PlayCount", (if type(count) == "number" then count else 0) + 1)
+		deps.root:SetAttribute("LastPlay", string.format("%s @ %.2f", rowName, deps.now()))
+		return copy
 	end
 
 	local function destroy()
@@ -195,7 +204,7 @@ function SoundBoard.start(deps: Deps): Board
 		table.clear(made)
 	end
 
-	return { play = play, stop = stop, log = log, destroy = destroy }
+	return { play = play, stop = stop, music = music, log = log, destroy = destroy }
 end
 
 return SoundBoard

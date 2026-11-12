@@ -37,6 +37,7 @@ local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
+local Music = require(script.Audio.Music)
 local SoundBoard = require(script.Audio.SoundBoard)
 local BodyBeams = require(script.World.BodyBeams)
 local EggFade = require(script.World.EggFade)
@@ -49,14 +50,14 @@ local SpotLabels = require(script.World.SpotLabels)
 local NET_WAIT_SECONDS = 15
 
 -- The sound board (plan 7): the buses and one player per sound file, built once on this device, with one real speaker
--- output. It is kept in _soundBoard for the later audio tasks, which call play with a row's name. Nothing plays yet.
+-- output. Music (Task 6) plays the two tunes on it, below; the later audio tasks call play with a row's name.
 local soundRoot = Instance.new("Folder")
 soundRoot.Name = "SoundBoard"
 soundRoot.Parent = SoundService
 local speakers = Instance.new("AudioDeviceOutput")
 speakers.Name = "Speakers"
 speakers.Parent = soundRoot
-local _soundBoard = SoundBoard.start({
+local soundBoard = SoundBoard.start({
 	root = soundRoot,
 	output = speakers,
 	worldParent = Workspace.Terrain,
@@ -647,4 +648,35 @@ if server then
 		end,
 	})
 	script.Destroying:Once(flowerShake.destroy)
+end
+
+-- The music (plan 7 Task 6): the calm tune plays for the session and follows the sleep meter; the chase tune follows the
+-- wake. It plays on the sound board above, once this player's character has spawned.
+if server then
+	-- The Warning remote, passed on as a plain signal (the module's field doesn't take an engine signal directly).
+	local musicWarningSignal: Music.SignalLike = {
+		Connect = function(_self: any, callback: (...any) -> ())
+			local connection = server.Warning.OnClientEvent:Connect(callback)
+			return {
+				Disconnect = function()
+					connection:Disconnect()
+				end,
+			}
+		end,
+	}
+	local music = Music.start({
+		board = soundBoard,
+		root = soundRoot,
+		step = RunService.RenderStepped,
+		giantState = server.GiantState,
+		player = Players.LocalPlayer,
+		warning = { OnClientEvent = musicWarningSignal },
+		serverNow = function()
+			return Workspace:GetServerTimeNow()
+		end,
+		hasCharacter = function()
+			return Players.LocalPlayer.Character ~= nil
+		end,
+	})
+	script.Destroying:Once(music.destroy)
 end

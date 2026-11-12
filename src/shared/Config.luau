@@ -214,10 +214,12 @@ export type Config = {
 		TiptoeLimitLegendary: number,
 		ColourWords: { [RarityName]: string },
 	},
-	-- Sound (spec 7 section 5, "Other values" and "The three hearing groups"; plan 7 Task 1). The muffled cutoffs belong to
-	-- Task 6. The per-sound loudness, speed and length are in client/Audio/SoundList.
+	-- Sound (spec 7 section 5, "Other values" and "The three hearing groups"; plan 7 Tasks 1 and 6). The per-sound
+	-- loudness, speed and length are in client/Audio/SoundList.
 	Audio: {
 		MusicFadeSeconds: number,
+		MuffledCutoffHz: number,
+		ClearCutoffHz: number,
 		SnoreStopSeconds: number,
 		ThinnedMusicFactor: number,
 		LightSnoreFactor: number,
@@ -453,6 +455,10 @@ local config: Config = {
 	},
 	Audio = {
 		MusicFadeSeconds = 1, -- the music change fade (spec 7 section 5, "Music change fade")
+		-- The low-pass filter's cutoff (Lowpass24dB) when the music is fully muffled, and when it is clear (designer,
+		-- 2026-11-12, work/p7/designer-answers.md; plan 7 Task 6).
+		MuffledCutoffHz = 1000,
+		ClearCutoffHz = 22000,
 		SnoreStopSeconds = 0.1, -- the snore stops this fast at 85%, so it turns into the snorts
 		ThinnedMusicFactor = 0.5, -- the music at 60% to 84%: half loudness (muffled by Task 6)
 		LightSnoreFactor = 0.5, -- the snore at 60% to 84%: half loudness, after a 2 s stop

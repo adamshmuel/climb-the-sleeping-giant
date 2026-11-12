@@ -8,6 +8,7 @@ local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlo
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local SoundList = require(StarterPlayer.StarterPlayerScripts.Client.Audio.SoundList)
 local SoundBoard = require(StarterPlayer.StarterPlayerScripts.Client.Audio.SoundBoard)
 
 -- Float numbers like 0.7 * 2 compare to about 0.01 (luau.md, "Test first").
@@ -323,6 +324,46 @@ describe("SoundBoard", function()
 		expect(#rig.board.log).toBe(LOG_LIMIT)
 		expect(rig.board.log[1].time).toBeCloseTo(6, PRECISION)
 		expect(rig.board.log[LOG_LIMIT].time).toBeCloseTo(LOG_LIMIT + 5, PRECISION)
+	end)
+
+	it("returns the copy it started, and nil when it skips a play", function()
+		local rig = newRig()
+		local copy = rig.board.play("Grab pluck")
+		expect(copy).toBe(lastCopy(rig))
+		expect(rig.board.play("No such row")).toBe(nil)
+		expect(rig.board.play("Snore (loop)")).toBe(nil) -- a world row without a place
+		local row = SoundList.byName("Grab pluck") :: SoundList.Entry
+		rig.notReady[`rbxassetid://{row.id}`] = true
+		expect(rig.board.play("Grab pluck")).toBe(nil)
+		expect(#rig.started).toBe(1)
+	end)
+
+	it("wires a Just for you copy into the instance given in options.into, and not to its bus", function()
+		local rig = newRig()
+		local fader = Instance.new("AudioFader")
+		local options: SoundBoard.PlayOptions = { into = fader :: Instance }
+		local copy = rig.board.play("Calm tune (loop)", nil, options)
+		expect(copy).never.toBe(nil)
+		local wires = wiresFrom(rig, copy :: AudioPlayer)
+		expect(#wires).toBe(1)
+		expect(wires[1].TargetInstance).toBe(fader)
+		fader:Destroy()
+	end)
+
+	it("exposes the music bus, and counts every play in the folder's PlayCount and LastPlay", function()
+		local rig = newRig()
+		expect(rig.board.music).toBe(bus(rig, "Music"))
+		expect(rig.root:GetAttribute("PlayCount")).toBe(0)
+		rig.setTime(3.14159)
+		rig.board.play("Grab pluck")
+		expect(rig.root:GetAttribute("PlayCount")).toBe(1)
+		expect(rig.root:GetAttribute("LastPlay")).toBe("Grab pluck @ 3.14")
+		rig.board.play("No such row") -- a skipped play counts for nothing
+		expect(rig.root:GetAttribute("PlayCount")).toBe(1)
+		rig.setTime(7)
+		rig.board.play("Snore (loop)", PLACE)
+		expect(rig.root:GetAttribute("PlayCount")).toBe(2)
+		expect(rig.root:GetAttribute("LastPlay")).toBe("Snore (loop) @ 7.00")
 	end)
 
 	it("makes no speaker output and starts only through startPlaying", function()
