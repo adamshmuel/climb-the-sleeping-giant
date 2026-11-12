@@ -114,10 +114,19 @@ type Shown = {
 	touch: boolean, -- a touch prompt: only these pin
 	placed: PillPin.State,
 	pinConnection: ConnectionLike?,
+	-- Roblox hides a prompt and shows it again at once when the input type changes. A pressed pill waits one frame
+	-- after a hide: a re-show in that frame keeps it, otherwise the next frame removes it.
+	hiding: boolean,
+	hideConnection: ConnectionLike?,
 	-- Worked out when the pill shows and when the screen changes, so the frame check doesn't ask the layout each frame.
 	pillHeight: number, -- keyDiameter + 2 * paddingY
 	billboardWidth: number, -- the room the pill floats in
 }
+
+-- What the key circle says: the hand for a finger, the key's name for a keyboard.
+local function keyLabelFor(prompt: PromptLike, inputType: Enum.ProximityPromptInputType): string
+	return if inputType == Enum.ProximityPromptInputType.Touch then HAND else prompt.KeyboardKeyCode.Name
+end
 
 -- Builds the prompt's pieces for one egg spot (sizes come later, from the layout).
 local function build(layer: ScreenGui, prompt: PromptLike, inputType: Enum.ProximityPromptInputType): Parts
@@ -169,8 +178,7 @@ local function build(layer: ScreenGui, prompt: PromptLike, inputType: Enum.Proxi
 
 	local key = Ui.panel("Key", content, Theme.white, UDim.new(0.5, 0))
 	key.LayoutOrder = 1
-	local keyLabel = if inputType == Enum.ProximityPromptInputType.Touch then HAND else prompt.KeyboardKeyCode.Name
-	local keyText = Ui.text("KeyText", key, keyLabel, 1, Theme.ink)
+	local keyText = Ui.text("KeyText", key, keyLabelFor(prompt, inputType), 1, Theme.ink)
 	keyText.Size = UDim2.fromScale(1, 1)
 
 	local words = Ui.text("GrabText", content, WORDS, 1, Theme.white)
@@ -270,6 +278,10 @@ function GrabPrompt.start(deps: Deps): Handle
 			current.pinConnection:Disconnect()
 			current.pinConnection = nil
 		end
+		if current.hideConnection then
+			current.hideConnection:Disconnect()
+			current.hideConnection = nil
+		end
 		-- A finger still down when the prompt goes away would leave the hold stuck, so let go for it.
 		if current.pressed then
 			current.pressed = false
@@ -349,6 +361,17 @@ function GrabPrompt.start(deps: Deps): Handle
 		)
 	end
 
+	-- A touch pill follows the frames to see whether it must pin to the screen. Does nothing if it already does.
+	local function startPin(current: Shown)
+		if deps.project == nil or not current.touch or current.pinConnection ~= nil then
+			return
+		end
+		current.pinConnection = deps.step:Connect(function()
+			evaluate(current)
+		end)
+		evaluate(current)
+	end
+
 	local press: () -> () = function() end
 	local release: () -> () = function() end
 
@@ -363,6 +386,34 @@ function GrabPrompt.start(deps: Deps): Handle
 		then
 			return
 		end
+		local existing = shown
+		if existing and existing.prompt == prompt then
+			-- Roblox shows the same prompt again when the input type changes (keyboard to finger). Keep the pill and
+			-- the press that is on it: rebuilding would let go of the press and lose the first touch.
+			existing.touch = inputType == Enum.ProximityPromptInputType.Touch
+			existing.parts.keyText.Text = keyLabelFor(prompt, inputType)
+			local wasHiding = existing.hiding
+			existing.hiding = false
+			if existing.hideConnection then
+				existing.hideConnection:Disconnect()
+				existing.hideConnection = nil
+			end
+			if existing.touch then
+				startPin(existing)
+			else
+				if existing.pinConnection then
+					existing.pinConnection:Disconnect()
+					existing.pinConnection = nil
+				end
+				evaluate(existing)
+			end
+			-- Roblox may have ended the hold when it hid the prompt: start it again so it keeps going.
+			if existing.pressed and wasHiding then
+				prompt:InputHoldEnd()
+				prompt:InputHoldBegin()
+			end
+			return
+		end
 		remove() -- one prompt at a time: the one Roblox showed last
 		local parts = build(layer, prompt, inputType)
 		local current: Shown = {
@@ -374,6 +425,8 @@ function GrabPrompt.start(deps: Deps): Handle
 			touch = inputType == Enum.ProximityPromptInputType.Touch,
 			placed = "following",
 			pinConnection = nil,
+			hiding = false,
+			hideConnection = nil,
 			pillHeight = 0,
 			billboardWidth = 0,
 		}
@@ -390,17 +443,30 @@ function GrabPrompt.start(deps: Deps): Handle
 			end
 		end)
 		relayout()
-		if deps.project ~= nil and current.touch then
-			current.pinConnection = deps.step:Connect(function()
-				evaluate(current)
-			end)
-			evaluate(current)
-		end
+		startPin(current)
 	end
 
 	local function onHidden(prompt: PromptLike)
-		if shown and shown.prompt == prompt then
+		local current = shown
+		if current == nil or current.prompt ~= prompt then
+			return
+		end
+		if not current.pressed then
 			remove()
+			return
+		end
+		-- A pressed pill waits one frame: Roblox shows the same prompt again right after a hide when the input
+		-- type changes, and the press must survive that.
+		current.hiding = true
+		if current.hideConnection == nil then
+			current.hideConnection = deps.step:Connect(function()
+				if shown == current and current.hiding then
+					remove()
+				elseif current.hideConnection then
+					current.hideConnection:Disconnect()
+					current.hideConnection = nil
+				end
+			end)
 		end
 	end
 
