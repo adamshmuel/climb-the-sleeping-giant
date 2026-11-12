@@ -104,6 +104,7 @@ export type Config = {
 		OwnFistTransparency: number,
 		BonkStarTurnSeconds: number,
 		BounceCameraUpDegrees: number,
+		LadderGraceSeconds: { [string]: number },
 	},
 	Home: {
 		EggsShown: number,
@@ -284,6 +285,9 @@ local config: Config = {
 		BonkStarTurnSeconds = 0.8,
 		-- A bounced player's camera pitch while floating, measured from level (up is positive). The spawn view's is 21.
 		BounceCameraUpDegrees = 30,
+		-- Rule 60, the ladder grace: from a player's first touch of a ladder in one wake-up, no circle is aimed at them for
+		-- this long. One number per ladder in Ladders.Models. Measured in plan 3 Task 15b (end: feet at the top) plus 1 s.
+		LadderGraceSeconds = { BootLadder_Left = 4.8, BootLadder_Right = 4.8, BeardLadder = 5.2, CapLadder = 3.4 },
 	},
 	Home = { EggsShown = 12, CardSeconds = 3 },
 	Labels = { HideBeyondStuds = 75, MaxWidthPx = 130, MaxHeightPx = 36, MaxTextPx = 30 },

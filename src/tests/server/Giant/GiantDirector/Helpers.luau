@@ -71,6 +71,9 @@ export type Harness = {
 	showSpots: { Vector3 },
 	gates: { [number]: Vector3 }, -- the Safe Gate of each player's own garden (none unless the test says so)
 	onLadder: { [number]: boolean }, -- who the tracker has on a ladder (nobody unless the test says so)
+	-- Who is on which ladder: the tick stamps `onLadder = true` and `ladder = <name>` on that player's sample, as
+	-- Zones.locateClimber makes them. A name from Config.Ladders.Models. Nobody unless the test says so; set to nil to drop.
+	ladders: { [number]: string },
 	bonks: { BonkCall },
 	slammedCalls: { SlammedCall },
 }
@@ -140,6 +143,7 @@ local function newHarness(startMeter: number?): Harness
 		showSpots = table.clone(SHOW_SPOTS),
 		gates = {},
 		onLadder = {},
+		ladders = {},
 		bonks = {},
 		slammedCalls = {},
 		director = nil :: any,
@@ -147,6 +151,16 @@ local function newHarness(startMeter: number?): Harness
 	harness.director = GiantDirector.new({
 		tick = function()
 			harness.landing = false
+			for _, sample in harness.samples do
+				local ladder = harness.ladders[sample.userId]
+				if ladder ~= nil then
+					sample.onLadder = true
+					sample.ladder = ladder
+				elseif sample.ladder ~= nil then
+					sample.onLadder = nil -- dropped off: the tracker would say so
+					sample.ladder = nil
+				end
+			end
 			return harness.samples
 		end,
 		players = function()

@@ -19,6 +19,7 @@ export type Player = {
 	joinedThisWake: boolean?, -- true: joined after he woke, never a target
 	appearedAgo: number?, -- seconds since a catch or a new character put them at the door, nil = never appeared
 	bonkedLast: boolean?, -- true: the slam before bonked them, not a target now
+	inLadderGrace: boolean?, -- true: still inside their ladder grace (Rule 60), not a target now
 }
 -- A slam's circle as the hit test sees it: the hand's centre and the surface point it lands on.
 export type HandCircle = { centre: Vector3, point: Vector3 }
@@ -69,24 +70,32 @@ local function isClearOfGardens(centre: Vector3, gardens: { Zones.GardenBox }): 
 end
 
 -- Could this player be aimed at? On the ground (not floating), outside the gardens, not someone who joined after he woke,
--- not bonked by the slam before, and not still at the door (less than DoorSeconds since they appeared there).
+-- not bonked by the slam before, not still inside their ladder grace (Rule 60), and not still at the door (less than
+-- DoorSeconds since they appeared there).
 -- Whether they carry an egg does not matter here: carriers are preferred in pickTarget.
 local function canBeTargeted(player: Player): boolean
-	if player.floating or player.inGarden or player.joinedThisWake == true or player.bonkedLast == true then
+	if
+		player.floating
+		or player.inGarden
+		or player.joinedThisWake == true
+		or player.bonkedLast == true
+		or player.inLadderGrace == true
+	then
 		return false
 	end
 	local appearedAgo = player.appearedAgo
 	return appearedAgo == nil or appearedAgo >= Config.Wake.DoorSeconds
 end
 
--- Would a circle aimed at this player land before they could move? Yes for a player the slam before bonked, and for
--- one who appeared at the door less than DoorSeconds ago (Rules 62 and 63). The director then plans a show slam
+-- Would a circle aimed at this player land before they could move? Yes for a player the slam before bonked, for one
+-- still inside their ladder grace (Rule 60), and for one who appeared at the door less than DoorSeconds ago (Rules 62
+-- and 63). The director then plans a show slam
 -- instead of a warning at them. Players on the ground outside the gardens only; a late joiner is never aimed at.
 function Slams.isProtected(player: Player): boolean
 	if player.floating or player.inGarden or player.joinedThisWake == true then
 		return false
 	end
-	if player.bonkedLast == true then
+	if player.bonkedLast == true or player.inLadderGrace == true then
 		return true
 	end
 	local appearedAgo = player.appearedAgo

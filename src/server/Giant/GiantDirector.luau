@@ -15,6 +15,7 @@ local Signal = require(ReplicatedStorage.Packages.Signal)
 local Carry = require(script.Parent.Parent.Eggs.Carry)
 local BounceOff = require(script.Parent.BounceOff)
 local GiantCycle = require(script.Parent.GiantCycle)
+local LadderGrace = require(script.Parent.LadderGrace)
 local Noise = require(script.Parent.Noise)
 local PlayerInfo = require(script.Parent.Parent.Players.PlayerInfo)
 local PlayerTracker = require(script.Parent.Parent.Players.PlayerTracker)
@@ -172,6 +173,8 @@ function GiantDirector.new(deps: Deps): Director
 	local lastCentre: Vector3? = nil
 	-- Who the last slam of this wake-up bonked: the next slam never aims at them (Rule 62).
 	local bonkedByLast: { [number]: boolean } = {}
+	-- Who has stepped on a ladder in this wake-up, and until when no circle is aimed at them (Rule 60). Cleared at each wake-up.
+	local grace = LadderGrace.new(Config.Wake.LadderGraceSeconds)
 
 	-- Sends every player on the giant to a landing spot. They are moved while he is still asleep, before anything
 	-- tells the clients that he moves, so nobody is standing on him when he does.
@@ -215,6 +218,7 @@ function GiantDirector.new(deps: Deps): Director
 					landedAgo = deps.landedAgo(sample.userId),
 					joinedThisWake = joinedAt ~= nil and joinedAt > wokeAt,
 					bonkedLast = bonkedByLast[sample.userId] == true,
+					inLadderGrace = grace:active(sample.userId, now),
 					appearedAgo = if appearedAt ~= nil then now - appearedAt else nil,
 				})
 			end
@@ -276,7 +280,14 @@ function GiantDirector.new(deps: Deps): Director
 	-- Plays the part of the wake-up timeline that falls between the last tick and this one. Returns when the
 	-- timeline is over (he is Asleep again at 0).
 	local function runTimeline(running: Timeline, samples: { PlayerTracker.Sample }, byId: { [number]: PlayerInfo })
-		local elapsed = deps.now() - running.wokeAt
+		local now = deps.now()
+		local elapsed = now - running.wokeAt
+		-- Only the first touch of a ladder in this wake-up counts (LadderGrace ignores the later ones).
+		for _, sample in samples do
+			if sample.onLadder and sample.ladder ~= nil then
+				grace:touch(sample.userId, sample.ladder, now)
+			end
+		end
 		-- Built the first time a slam event needs it, so the ticks without one never ask who is floating.
 		local players: { Slams.Player }? = nil
 		for _, event in GiantCycle.eventsBetween(running.lastElapsed, elapsed) do
@@ -494,6 +505,7 @@ function GiantDirector.new(deps: Deps): Director
 			timeline = { wokeAt = wokeAt, lastElapsed = 0 }
 			table.clear(plannedSlams)
 			table.clear(bonkedByLast)
+			grace:clear()
 			lastTarget = nil
 			lastCentre = nil
 			state:SetAttribute("WokenBy", name)

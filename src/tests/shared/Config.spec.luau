@@ -155,6 +155,28 @@ describe("Config", function()
 		expect(Config.Wake.SlamShakeSeconds).toBe(0.4)
 	end)
 
+	it("the ladder grace has a positive number of seconds for every ladder, and no other key", function()
+		local seconds = Config.Wake.LadderGraceSeconds
+		local names: { [string]: boolean } = {}
+		for _, ladder in Config.Ladders.Models do
+			names[ladder] = true
+			expect(type(seconds[ladder])).toBe("number")
+			expect(seconds[ladder] > 0).toBe(true)
+		end
+		for key in seconds do
+			expect(names[key]).toBe(true)
+		end
+	end)
+
+	-- Source: work/p3t15b/step6-note.md (Play B, 2026-11-12), end B (feet at the top) rounded up to 0.1 s, plus 1 s.
+	it("the ladder grace is each ladder's measured climb time plus 1 s", function()
+		local seconds = Config.Wake.LadderGraceSeconds
+		expect(seconds.BootLadder_Left).toBeCloseTo(4.8, 2)
+		expect(seconds.BootLadder_Right).toBeCloseTo(4.8, 2)
+		expect(seconds.BeardLadder).toBeCloseTo(5.2, 2)
+		expect(seconds.CapLadder).toBeCloseTo(3.4, 2)
+	end)
+
 	it("the head tips for 0.3 s", function()
 		expect(Config.Wake.HeadTipSeconds).toBe(0.3)
 	end)

@@ -1,7 +1,9 @@
 --!strict
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local GiantCycle = require(game:GetService("ServerScriptService").Server.Giant.GiantCycle)
+local Slams = require(game:GetService("ServerScriptService").Server.Giant.Slams)
 local Helpers = require(script.Parent.Helpers)
 type Harness = Helpers.Harness
 local MEADOW_POINTS = Helpers.MEADOW_POINTS
@@ -544,5 +546,108 @@ describe("GiantDirector slammed signal", function()
 		stepAt(harness, WARN[1])
 		stepAt(harness, LAND[1])
 		expect(slams).toEqual({})
+	end)
+end)
+
+-- Rule 60, the ladder grace. A solo player with no egg stands at the door spot, so a circle aimed at them lands on DOOR
+-- and a show slam lands 35 to 45 studs from it (Hunt.spec). They touch BootLadder_Left on the first tick after he wakes.
+describe("GiantDirector ladder grace", function()
+	local LADDER = "BootLadder_Left"
+	local DOOR = Helpers.DOOR
+	local TOUCH_AT = 0.1 -- seconds after he woke when the player first stands on the ladder
+	local GRACE = Config.Wake.LadderGraceSeconds[LADDER]
+
+	-- The first slam whose warning comes after the grace ends: its circle is aimed at them.
+	local function firstSlamAfterGrace(): number
+		for index = 1, #WARN do
+			if WARN[index] > TOUCH_AT + GRACE then
+				return index
+			end
+		end
+		error("no slam warns after the grace")
+	end
+
+	local function centreOf(harness: Harness, slam: number): Vector3
+		return harness.surfaceCalls[slam]
+	end
+
+	local function expectShowSlam(harness: Harness, slam: number)
+		local distance = Slams.flatDistance(centreOf(harness, slam), DOOR)
+		expect(distance).toBeGreaterThanOrEqual(Config.Wake.ShowSlamNearStuds)
+		expect(distance).toBeLessThanOrEqual(Config.Wake.ShowSlamFarStuds)
+	end
+
+	-- A solo no-egg player at DOOR who steps onto the ladder at TOUCH_AT.
+	local function climberHarness(): Harness
+		local harness = slamHarness({ { id = 1, position = DOOR, carrying = false } })
+		harness.ladders[1] = LADDER
+		stepAt(harness, TOUCH_AT)
+		return harness
+	end
+
+	it("gives a solo player in their grace a show slam, and no bonk", function()
+		local harness = climberHarness()
+		expect(WARN[1] < TOUCH_AT + GRACE).toBe(true)
+		stepAt(harness, WARN[1])
+		expect(centreOf(harness, 1)).never.toEqual(DOOR)
+		expectShowSlam(harness, 1)
+		stepAt(harness, LAND[1])
+		expect(#harness.bonks).toBe(0)
+	end)
+
+	it("puts the circle on them again once the grace is over", function()
+		local harness = climberHarness()
+		local later = firstSlamAfterGrace()
+		for index = 1, later - 1 do
+			stepAt(harness, WARN[index])
+			expectShowSlam(harness, index) -- still in the grace
+			stepAt(harness, LAND[index])
+		end
+		stepAt(harness, WARN[later])
+		expect(centreOf(harness, later)).toEqual(DOOR)
+	end)
+
+	it("does not restart the grace when they grab, drop and grab again", function()
+		local harness = climberHarness()
+		local later = firstSlamAfterGrace()
+		harness.ladders[1] = nil -- they let go
+		stepAt(harness, 1)
+		stepAt(harness, WARN[1])
+		expectShowSlam(harness, 1) -- off the ladder, but the grace runs from the first touch
+		harness.ladders[1] = LADDER -- and grab again
+		stepAt(harness, WARN[1] + 0.2)
+		stepAt(harness, LAND[1])
+		for index = 2, later - 1 do
+			stepAt(harness, WARN[index])
+			stepAt(harness, LAND[index])
+		end
+		stepAt(harness, WARN[later])
+		expect(centreOf(harness, later)).toEqual(DOOR)
+	end)
+
+	it("starts a fresh grace at a new wake-up", function()
+		local harness = climberHarness()
+		harness.state:SetAttribute("Meter", 0)
+		harness.state:SetAttribute("Phase", "Asleep")
+		stepAt(harness, WARN[1] + 0.1) -- the reset ends the timeline
+		harness.state:SetAttribute("Meter", 100)
+		stepAt(harness, 200) -- he wakes again
+		stepAt(harness, 200 + TOUCH_AT) -- they are still on the ladder: the first touch of this wake-up
+		local before = #harness.surfaceCalls
+		stepAt(harness, 200 + WARN[1]) -- slam 1 of the new wake-up, inside the new grace
+		expect(#harness.surfaceCalls).toBe(before + 1)
+		expectShowSlam(harness, before + 1)
+	end)
+
+	it("keeps the circle of a slam that was aimed before they stepped on the ladder", function()
+		local harness = slamHarness({ { id = 1, position = DOOR, carrying = false } })
+		stepAt(harness, WARN[1]) -- aimed at them: they are not on a ladder yet
+		expect(centreOf(harness, 1)).toEqual(DOOR)
+		harness.ladders[1] = LADDER
+		stepAt(harness, WARN[1] + 0.2)
+		stepAt(harness, LAND[1])
+		expect(centreOf(harness, 1)).toEqual(DOOR)
+		expect(#harness.bonks).toBe(1)
+		expect(harness.bonks[1].userId).toBe(1)
 	end)
 end)
