@@ -27,7 +27,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Wake-up (V2 spec 6) | Task 19: RUN HOME! | ☑ done 2026-11-12 (HuntView 21/0, SpotLabels 85/0, RunHome 16/0; full run 3789/1, standing red only; Play A: pill right of the meter on computer and two phones, gaps 13.5/10/10; Play B: shows 0.01 s after the wake for a carrier on BootLadder_Left and hides the moment the egg is lost; designer matched the shots. Review round 2 fixed the pill's label box (it was 58 px low). The player list check moved to Task 23 item 13 (product ruling)) | builder, code_lead, designer |
 | Wake-up (V2 spec 6) | Task 20: Red edges while he hunts | ☑ done 2026-11-12 (RedEdges 34/0; full run 3845/1, standing red only; computer shows in 0.003 s, fades in about 0.47 s; two phones 0 px² over Jump and stick; designer approved the shots) | builder, code_lead, designer |
 | Wake-up (V2 spec 6) | Task 21: Analytics for the hunt | ☑ done (2026-11-12; full run 3575/1, standing red only) | code_lead |
-| Wake-up (V2 spec 6) | Task 22: A whole session with wake-ups | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 22 (card: work/p6t22/t22-card.md): A whole session with wake-ups | ☑ done 2026-11-12 (WakeUpSession 1/0 with three wake-ups, a joiner and the door window; red with the breather off, green restored; full run 3903/1, standing red only) | builder, code_lead |
 | Wake-up (V2 spec 6) | Task 23: The Play proof | ☐ not started | |
 
 ## Notes for the next V2 review

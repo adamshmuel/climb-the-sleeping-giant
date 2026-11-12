@@ -316,7 +316,8 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 22: A whole session with wake-ups**
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests"); section 10's solo number ("at least half of all slams have a target").
-- Files: `src/tests/server/Sessions/WakeUpSession.spec.luau` (new).
+- Files: `src/tests/server/Sessions/WakeUpSession.spec.luau` (new), and a new `HuntRig.luau` beside `GiantRig.luau` only if the real Bonker, ShowSpots and gates can't be wired into it.
+- Card: `work/p6t22/t22-card.md` (3 steps, 56 min, 24 Studio calls; YAGNI table `work/p6t22/t22-yagni.md`). Step 1 wake-up 1, Step 2 wake-ups 2 and 3, Step 3 the breather proof: the `bonkedLast` field in `GiantDirector.luau` (the breather is `bonkedByLast`; `Config.Wake.BreatherSlams` is read by no code, and Config is frozen) is set to false once, shown red, restored.
 - The test: brand-new players with the real `GiantDirector`, `GiantCycle`, `Slams`, `ShowSpots` (on a small fake meadow), `Bonker`, `Catcher` and `Analytics` (fake service), and a stand-in tracker. A solo player joins, banks a Common, and wakes him on purpose. They stand still: they are bonked on slams 1, 3 and 5, never pushed, with show slams 35 to 45 studs away between; at least 3 of 6 slams have a target. Heavy Sleep ends, and they keep going: they carry an Uncommon into a second wake-up, are caught, get no circle for 3 s at the door, then run home dodging. A second player joins during the second wake-up and is never targeted; in the third wake-up the carrier is hunted first and the other player second.
 - Failing test first: the test itself. The builder turns the breather off once on purpose and shows it fail.
 - Done when: the test passes, and the report gives each wake-up's 6 slams (target kind, result).
