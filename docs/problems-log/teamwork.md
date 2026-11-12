@@ -274,3 +274,4 @@ About handing work between agents, agent memory, and task sizes. The map is `doc
 - 13:52 2026-11-12, veto check, plan 3 Task 15b (50 min no commit): keep going; full run and final review run side by side, commit next.
 
 - 2026-11-12 15:17: Veto check, plan 6 Task 19 (31 min with no commit; review round 1 fixes done, full run passed). Kept going: code_lead does its Play read and approves in one turn (no extra rounds). Time saved: about 5 min.
+- **2026-11-12 15:57, plan 6 Task 20:** a designer ruling (phone strip fades) adds 2 steps, so the task is planned at 74 min instead of 52, which is past the 60-minute limit. Veto: keep it as one task. Splitting it into a Task 20b only adds a review round. The added steps are new scope, not a stuck approach. Time saved: about 10 min (one review round).

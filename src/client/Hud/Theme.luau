@@ -134,4 +134,14 @@ Theme.runHome = {
 Theme.tickColor = Color3.new(1, 1, 1)
 Theme.tickTransparency = 0.2
 
+-- The red edges while he hunts (style guide wake-up.md, "Red edges"). `color` is wake red; `solid` is how solid the gradient
+-- is at the screen edge (55%); the pulse goes from band transparency 0 (full strength) to `weakest` (0.6, strength 40%) and
+-- back; `steady` is the band transparency with Reduce Motion on (0.3, strength 70%).
+Theme.redEdge = table.freeze({
+	color = Color3.fromHex("FF3B4E"),
+	solid = 0.55,
+	weakest = 0.6,
+	steady = 0.3,
+})
+
 return Theme

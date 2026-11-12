@@ -8,9 +8,33 @@ local Layout = {}
 local PHONE_SHORT_SIDE = 500
 
 -- Roblox's Jump button column on a phone: pixels from the right edge of the safe area to the column's left edge
--- (style guide wake-up.md, "Wake banner on phones"). The phone wake banner ends `banner.jumpGap` left of it. Measured
--- against the real column in Play A of plan 6 Task 18.
+-- (style guide wake-up.md, "Wake banner on phones"). The phone wake banner ends `banner.jumpGap` left of it. 138 is the
+-- style guide's design value (the designer owns it), not a measurement: in Play the real Jump button sits 95 px from the
+-- right edge.
 Layout.jumpColumn = 138
+
+-- The red edges while he hunts (style guide wake-up.md, "Red edges"; spec 6 Rule 68). Every size is a fraction of the screen.
+--  `depth`: how deep each band is, as a fraction of the screen height, on every edge (the side bands use RelativeYY).
+--  `phoneSideHeight`: the side bands on a phone stop this far down, 45% above the bottom, so the thumbstick and Jump button
+--                     corners get no red.
+--  `phoneBottomFrom`, `phoneBottomTo`: the phone's bottom band covers only the middle, 28% to 72% of the width.
+--  `fadeSeconds`: the time to fade fully in or out.  `pulseSeconds`: one pulse, full strength to 40% and back.
+--  `displayOrder`: below the Hud and HudTop screens (0), so every button and pill is drawn over the red.
+Layout.redEdges = table.freeze({
+	depth = 0.14,
+	phoneSideHeight = 0.55,
+	phoneBottomFrom = 0.28,
+	phoneBottomTo = 0.72,
+	-- Phone only: each faded end is `stripCount` strips (designer ruling, style guide wake-up.md "Red edges on phones").
+	-- The side bands fade over their last `sideFadeShare` of the length, the bottom band over the first and the last
+	-- `bottomFadeShare` of its width.
+	stripCount = 4,
+	sideFadeShare = 0.2,
+	bottomFadeShare = 0.25,
+	fadeSeconds = 0.5,
+	pulseSeconds = 1,
+	displayOrder = -1,
+})
 
 -- A phone shows a name on the wake banner up to this many letters whole; a longer one is cut to one letter fewer and an
 -- ellipsis, so the banner stays on one line, left of the Jump column.

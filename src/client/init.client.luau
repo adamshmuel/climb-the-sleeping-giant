@@ -31,6 +31,7 @@ local HuntView = require(script.Hud.HuntView)
 local Layout = require(script.Hud.Layout)
 local MeterZs = require(script.Hud.MeterZs)
 local MeterZsView = require(script.Hud.MeterZsView)
+local RedEdges = require(script.Hud.RedEdges)
 local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
@@ -183,6 +184,27 @@ if server then
 	script.Destroying:Once(function()
 		stopRunHome()
 		runHome.destroy()
+	end)
+	-- The red edges while he hunts you (spec 6 Rule 68): the same view's `edges`, through one more listener.
+	local redEdges = RedEdges.new(playerGui, {
+		step = RunService.RenderStepped,
+		now = os.clock,
+		screenSize = function(): Vector2
+			local camera = Workspace.CurrentCamera
+			return if camera then camera.ViewportSize else Vector2.new(1280, 720)
+		end,
+		reducedMotion = function(): boolean
+			return GuiService.ReducedMotionEnabled
+		end,
+	})
+	local function showRedEdges()
+		redEdges.setEdges(latestView.edges)
+	end
+	viewListeners[showRedEdges] = true
+	redEdges.setEdges(latestView.edges)
+	script.Destroying:Once(function()
+		viewListeners[showRedEdges] = nil
+		redEdges.destroy()
 	end)
 	SleepMeterUi.start({
 		onLayout = function(screen: Layout.Screen, meterRight: number)
