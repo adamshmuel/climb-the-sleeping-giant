@@ -13,7 +13,7 @@
 - [Checked only by playing](#checked-only-by-playing)
 - [Answers (2026-10-19)](#answers-2026-10-19)
 
-**Status: written** (2026-10-19). Not started. Updated the same day with product's check of its two build decisions and designer's answers (`docs/specs/v2/research/decisions-plans.md`); nothing waits any more. It is built after plans 1 to 5, because it changes pieces they build: the ladder warning (plan 3, Tasks 15a and 15b), the stuck rescue's red-circle guard (plan 2, Task 12) and his right arm with the cuff that rides it (plan 5, Task 9).
+**Status: written** (2026-10-19), checked against the code on 2026-11-12 (file paths, what plans 2 to 5 built, a "Stands on:" line on every task). Not started. Updated the same day with product's check of its two build decisions and designer's answers (`docs/specs/v2/research/decisions-plans.md`); nothing waits any more. It is built after plans 1 to 5, because it changes pieces they build: the ladder warning (plan 3, Tasks 15a and 15b), the stuck rescue's red-circle guard (plan 2, Task 12) and his right arm with the cuff that rides it (plan 5, Task 9).
 
 How `docs/specs/v2/wake-up.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md`.
 
@@ -47,7 +47,7 @@ Words used here (the spec's own words, such as carrier, slam, target, bonk and r
 | What "appeared" means (Rule 62: No bonk at the door) | The moment `Catcher` moves a caught player onto their spawn spot, or the moment a new character is added (a respawn, or a Reset while he's awake). The server keeps one time per player and forgets it when they leave | Both are the "door" the spec protects. A Reset while he's awake respawns the player (spec 2, Rule 32), so it counts too |
 | What "joined during this wake-up" means | The player's join time on the server is at or after the moment he woke | The server knows both times. A player who joins while he's awake is never a target in that wake-up |
 | Who the hand hits (Rule 13, third bullet) | Every player whose middle is inside the circle's outline seen from above (at most 15 studs from the circle's centre across the ground) and between 1 stud below **the circle's surface right under that player** and 45 studs above it (the height the fist falls from). That surface is found with one ray straight down at the player's spot, starting 45 studs above the circle's centre surface point, with `SlamSurface`'s own filter (through ladders and anything steeper than 70°), so it is the same surface the circle's pieces lie on there. Never a player in any garden, a player floating, or one who touched down less than 1.5 s before (as in V1). A carrier is caught; a player with no egg is bonked. **Accepted by product on 2026-10-19,** with this condition: the 1 and 45 studs are measured from the circle's surface under each player, not from the centre's height | V1 caught only 10 studs above or below the target's middle, so a player high on a ladder escaped. The fist starts 45 studs up (`SlamFx.FIST_DROP_HEIGHT`) and sweeps down through everyone under it. The circle follows his curved body, so its edge can sit several studs lower than its centre: measured from the centre's height, a player at a low edge would escape. A player under a bridge is below the surface the ray finds there (the bridge), so isn't under the hand |
-| One shape for "under the hand" | `Slams.underHand(position, circle, surfaceUnder)` is the only place that says it (`surfaceUnder`: the height of the circle's surface at that player's spot, from `SlamSurface.under(circle, position)`). The director uses it for hits, and plan 2's stuck rescue uses it for its red-circle guard (Rule 28: Stuck players are rescued) | The rescue must never move a player out from under a hand, so both must use the same shape |
+| One shape for "under the hand" | `Slams.underHand(position, circle, surfaceUnder)` is the only place that says it (its maths lives in the pure shared module `src/shared/HandShape.luau`, so `SlamFx` on each device uses the same shape in Task 16; code_lead, 2026-11-12) (`surfaceUnder`: the height of the circle's surface at that player's spot, from `SlamSurface.under(circle, position)`). The director uses it for hits, and plan 2's stuck rescue uses it for its red-circle guard (Rule 28: Stuck players are rescued) | The rescue must never move a player out from under a hand, so both must use the same shape |
 | Where a show slam lands near a protected player | Pick a centre whose distance from that player (across the ground) is 35 to 45 studs. It must: stand at least 1 stud outside every garden (as V1); cover no player and no landing spot; and stay at least 1 stud clear of the straight line from every protected player to their own garden's Safe Gate: its centre at least **half the circle's width plus 1** (16 studs today, from `Config` so it follows the 30-stud width) from that line. Only the stretch from the player to their gate counts, never the line past the gate. Among the spots that fit, a random one. If none fits, the fitting spot nearest to that player out to 60 studs. If none again, V1's empty-meadow pick. **Accepted by product on 2026-10-19,** with both conditions | Rule 60 point 3 and section 8, "A show slam near a protected player can't find a clear spot". Product's conditions: the way home is the player-to-gate stretch only, and the margin is worked out from the circle's width, not typed in |
 | Which protected player a show slam lands near | The one bonked by the slam before, if any; otherwise the protected player nearest to his face | Rule 60 |
 | The meadow spots a show slam can use | `Giant/ShowSpots` builds them once when the server starts: a grid every 4 studs over the meadow, keeping each point whose straight-down ray (the same filter as `SlamSurface`) hits dry ground (Terrain that isn't water, or a solid meadow part), is in the Meadow zone and is clear of every garden. Built once, never while players play | The V1 meadow route points are only 18, too few to find one 35 to 45 studs from any player. Measured in Studio on 2026-10-19: the meadow has a pond (Terrain water) and lily pads, so the ray's material must be checked |
@@ -92,10 +92,11 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 1: The new slam times and the wake-up numbers**
 - Spec rules: Rule 64 (He gets faster), section 5 (every number).
-- Files: `src/shared/Config.luau`, `src/server/Giant/GiantCycle.luau`, `src/tests/shared/Config.spec.luau`, `src/tests/server/Giant/GiantCycle.spec.luau`.
-- What changes: `Config.Wake` gets `SlamWarningTimes` (see "Decisions") and the spec's numbers: the tumble (0.15, 0.6 and 0.25 s), the show slam distance (35 to 45 studs, out to 60), the door time (3 s), the breather (1 slam), the wake shake (1.5 studs over 1.0 s), the slam shake (1 stud within 15 studs, nothing from 60, over 0.4 s), the head tip (0.3 s), the fist's see-through (0.9) and the bonk stars (one turn every 0.8 s). `ShakeStuds` and `ShakeSeconds` are replaced. `GiantCycle.slams()` reads the list.
+- Files: `src/shared/Config.luau`, `src/server/Giant/GiantCycle.luau`, `src/tests/shared/Config.spec.luau`, `src/tests/server/Giant/GiantCycle.spec.luau`, `src/tests/server/Giant/GiantDirector/Slams.spec.luau` (its V1 tables on lines 45 to 49 and about 25 `stepAt(harness, 2.5)` / `3.5` calls; they read the times from `GiantCycle.slams()` instead of typing them).
+- What changes: `Config.Wake` gets `SlamWarningTimes` (see "Decisions") and the spec's numbers: the tumble (0.15, 0.6 and 0.25 s), the show slam distance (35 to 45 studs, out to 60), the door time (3 s), the breather (1 slam), the slam shake (1 stud within 15 studs, nothing from 60, over 0.4 s), the head tip (0.3 s), the fist's see-through (0.9) and the bonk stars (one turn every 0.8 s). `FirstSlamWarningAt` and `SlamInterval` go. `GiantCycle.slams()` reads the list. The wake shake's numbers stay as they are: `CameraFx` reads `ShakeStuds` and `ShakeSeconds` today, so Task 14 changes them with the shake (code_lead, 2026-11-12).
 - Failing tests first: there are 6 slams; circles at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 s; fists at 3.8, 6.3, 8.7, 10.9, 13.0 and 15.0 s; every fist lands 1.5 s after its circle; each gap is shorter than or equal to the one before; the 6th fist lands before Heavy Sleep starts (the existing "warning, landing, then phase" order); each new Config value equals its section 5 number.
 - Done when: the tests pass, and every older test that read the V1 times is listed in the report with what replaced it (spec risk row "Many tests break").
+- Stands on: nothing (spec 6 is approved; `Config.Wake` and `GiantCycle` are built since V1).
 
 **Task 2: Who can be a target**
 - Spec rules: Rule 60 (Carriers first), points 1 and 2 and the last sentence; Rule 62 (No bonk at the door); Rule 63 (A bonk gives a breather), the "not the target" part; Rule 13, first bullet. Checks A1 (the next slam doesn't aim at them) and B1.
@@ -111,11 +112,12 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   7. A player bonked by the last slam isn't the next target, and is the one after.
   8. A player in a garden or floating is never a target.
 - Done when: the tests pass.
+- Stands on: nothing (a pure picker on made-up players; plan 3 Task 15b adds its ladder grace to this picker later).
 
 **Task 3: Who the hand hits**
 - Spec rules: Rule 13, third and fifth bullets ("everyone inside the circle's outline ... at any height", "Never hit"); Rule 61 (The bonk is harmless): who is bonked; Check B2; Check D1 (hit on a ladder); edge cases "A carrier and a player with no egg are both inside one circle", "The target steps into a garden while their circle is showing", "The target leaves the game while their circle is showing".
-- Files: `src/server/Giant/Slams.luau`, `src/server/Giant/SlamSurface.luau` (`under`: the circle's surface at a player's spot), `src/server/Players/StuckWatch.luau` (plan 2, Task 12), their tests.
-- What changes: `Slams.underHand(position, circle, surfaceUnder)` and `SlamSurface.under(circle, position)` (see "Who the hand hits" and "One shape for under the hand" in "Decisions"). `Slams.hits(players, circle)` returns two lists, `caught` (carriers) and `bonked` (no egg), in the players' order. A circle now holds its centre and its surface point. V1's `Slams.caught` goes. `StuckWatch`'s red-circle guard calls `underHand`.
+- Files: `src/shared/HandShape.luau` (new, pure: the shape), `src/server/Giant/Slams.luau`, `src/server/Giant/SlamSurface.luau` (`under`: the circle's surface at a player's spot), `src/server/Giant/RedCircles.luau` (the stuck rescue's red-circle guard, plan 2 Task 12; it calls `Slams.inCircle` today) and its caller `src/server/init.server.luau` (lines about 262 and 364), their tests (`src/tests/server/Giant/Slams.spec.luau`, `SlamSurface` tests, `src/tests/server/Giant/RedCircles.spec.luau`).
+- What changes: `Slams.underHand(position, circle, surfaceUnder)` and `SlamSurface.under(circle, position)` (see "Who the hand hits" and "One shape for under the hand" in "Decisions"). `Slams.hits(players, circle)` returns two lists, `caught` (carriers) and `bonked` (no egg), in the players' order. A circle now holds its centre and its surface point. V1's `Slams.caught` stays until Task 8 moves the director onto `hits`, then goes. `RedCircles`' guard calls `underHand`.
 - Failing tests first:
   1. A carrier 30 studs up, straight over the circle, is caught; at 46 studs up, isn't.
   2. A player with no egg inside the circle is bonked, not caught.
@@ -126,7 +128,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   6. In a garden, floating, or touched down 1.4 s ago: never hit. Touched down 1.5 s ago: hit.
   7. The stuck rescue's guard blocks a player 30 studs over a circle that hasn't landed (plan 2's test, with the new shape).
 - Done when: the tests pass.
-- Stands on: plan 3 (`docs/plans/v2/gardens-and-ways-up.md`) Task 15a (the ladder and steep skip that `SlamSurface.under` uses).
+- Stands on: plan 3 (`docs/plans/v2/gardens-and-ways-up.md`) Task 15a (the ladder and steep skip that `SlamSurface.under` uses; not built on 2026-11-12, today's `SlamSurface.below` has no skip).
 
 **Task 4: Show slams near a protected player**
 - Spec rules: Rule 60 (Carriers first), point 3; Rule 63 (A bonk gives a breather), the "lands for show near them" part; Check A1 ("lands for show 35 to 45 studs away ... never on their way home ... Every slam lands where the solo player can see it"); section 8, "A show slam near a protected player can't find a clear spot" and "A solo player is in a garden when he wakes".
@@ -142,13 +144,15 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   6. The 35–45 ring is full: the nearest fitting spot out to 60; none to 60: V1's pick.
   7. A solo player in a garden: V1's empty-meadow pick.
 - Done when: the tests pass.
+- Stands on: Task 1 (the show slam distances in `Config.Wake`), Task 2 (who is protected).
 
 **Task 5: The meadow spots for show slams**
 - Spec rules: Rule 60 (Carriers first), point 3 ("a meadow spot"), on the real world.
-- Files: `src/server/Giant/ShowSpots.luau` (new), `src/server/init.server.luau`, `src/tests/server/Giant/ShowSpots.spec.luau` (new), `src/tests/server/World/RealWorld.spec.luau`.
+- Files: `src/server/Giant/ShowSpots.luau` (new), `src/server/init.server.luau`, `src/tests/server/Giant/ShowSpots.spec.luau` (new), `src/tests/server/World/RealWorld/ShowSpots.spec.luau` (new; `RealWorld.spec` is now a folder).
 - What it does: builds the grid of meadow spots once at start (see "The meadow spots a show slam can use" in "Decisions") and gives the director the list.
 - Failing tests first: on a fake world with grass, a pond (Terrain water), a garden box and a part of the giant, spots sit only on the dry grass outside the garden; the grid is 4 studs apart. Real world: more than 1,000 spots; none on water or lily pads, in a garden or on him; from each garden's spawn spot, at least 10 spots lie 35 to 45 studs away and off the line to its gate.
 - Done when: the tests pass, and the report gives the spot count and the start-up time it takes (it must stay under 1 second in Play on the Server).
+- Stands on: Task 1 (the show slam distances), Task 4 (`pickShow`, for the real-world line test), plan 3 Task 7 (the Meadow zone, built), build order steps 4 and 6 (the meadow ground and the nests, built).
 
 **Task 6: The circle under anyone, on the first walkable surface**
 - Spec rules: Rule 13, second bullet ("the first walkable surface straight below the target ... never on ladder rungs and never stands upright"); section 8, "A player with no egg is the target on a ladder"; spec 5, section 8, "The red slam circle under a sliding player" and "A player stands where his arm rests while it is raised" (no circle on the resting shape).
@@ -164,10 +168,11 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What it does: `Bonker:bonk(player, onLadder)` sets `Bonked` to `"Ground"` or `"Ladder"` and clears it after the tumble time (1.0 s), with a Trove per player, cleared when they leave or get a new character. `Carry.speed` gives 0 while `Bonked` is set, and `Carry` turns jumping off for that time. It fires a `bonked` Signal (player) for Analytics. Nothing else about the player changes.
 - Failing tests first (fake clock, fake players): the attribute is `"Ground"` for 1.0 s and then gone; `"Ladder"` for a climber; walking speed 0 and no jump during it, back to the right speed after (also with Tiptoe and an egg's slowdown); the character is never moved; a player who leaves mid-bonk leaves nothing behind; a new character clears it.
 - Done when: the tests pass, and in Play on the Server a player made to stand on a test `TrussPart` holds on, still, for 1 s with walking speed 0 (Roblox's climbing at walking speed 0 is checked here first, before any client work).
+- Stands on: Task 1 (the tumble times), plan 3 Task 3 (who is on a ladder, built).
 
 **Task 8: The director hunts everyone**
 - Spec rules: Rule 13 (Hand slams hunt everyone outside a garden), all of it on the server; Rule 60, Rule 62, Rule 63 together; Checks A1, A2, B1, B2; edge cases "A player leaves a garden while he's awake", "A player grabs an egg while he's awake", "A caught player appears at their spawn spot outside the gate", "A player joins while he's awake", "The fist lands on the bounce landing spots".
-- Files: `src/server/Giant/GiantDirector.luau`, `src/server/init.server.luau`, `src/tests/server/Giant/GiantDirector.spec.luau`.
+- Files: `src/server/Giant/GiantDirector.luau`, `src/server/Giant/Slams.luau` (V1's `caught` goes), `src/server/init.server.luau`, `src/tests/server/Giant/GiantDirector/Hunt.spec.luau` (new, with the folder's `Helpers.luau`; `GiantDirector/Slams.spec.luau` is 495 lines and keeps its tests).
 - What changes: new settings `joinedAt(userId)`, `appearedAt(userId)`, `showSpots`, `gates` and `bonk(userId, onLadder)`. Each warning plans with Tasks 2 and 4; each landing uses `Slams.hits`: carriers go to `catch`, players with no egg to `bonk` (with whether the tracker has them on a ladder); the bonked list is kept for the next slam's breather. `slammed` fires with (target id or nil, target kind "Carrier", "No egg" or "None", caught ids, bonked ids). `init.server.luau` keeps each player's join time and appear time (`Catcher`'s move and `CharacterAdded`), and forgets them on leave.
 - Failing tests first (fake players, fake clock, brand-new players):
   1. A solo player with no egg standing still for a whole wake-up: slams 1, 3 and 5 aim at them and bonk them; 2, 4 and 6 land for show 35 to 45 studs away (Check A1, and the spec's "half is the floor").
@@ -178,6 +183,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   6. A player who grabs an egg at 6 s is the target of the next warning.
   7. The target leaves while their circle shows: the fist still lands and hits anyone else inside.
 - Done when: the tests pass.
+- Stands on: Tasks 1, 2, 3, 4, 5 (`showSpots`) and 7 (`bonk`).
 
 **Task 9: The server says who is in a garden and who floats**
 - Spec rules: Rule 67 (RUN HOME!) and Rule 68 (Red edges while he hunts): "outside a garden", "the moment they touch down"; section 8, "A player leaves a garden while he's awake".
@@ -185,12 +191,14 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What changes: the tracker writes `InGarden` (garden number, 0 if none) on each Player, and `Floater` writes `Floating`, only when the value changes (see "Decisions").
 - Failing tests first: walking into garden 3 sets `InGarden` to 3 once, walking out sets 0 once; nothing is written on a tick where nothing changed; `Floating` is true from the float's start until it lets go, then false.
 - Done when: the tests pass.
+- Stands on: nothing (`PlayerTracker` and `Floater` are built).
 
 ### Part 2: World prep
 
 **Task 10: World prep: the wake pieces**
 - Spec rules: Rule 66 (His face wakes first) and Rule 69 (The world reacts): the pieces; spec 5, section 8 (the arm's resting shape).
-- Files: `tools/world/25-wake-pieces.luau` (new), `src/server/World/WorldIndex.luau` (the world contract), `src/tests/server/World/WorldIndex.spec.luau`, `src/tests/server/World/RealWorld.spec.luau`.
+- Files: `tools/world/25-wake-pieces.luau` (new), `src/server/World/WorldIndex.luau` (the world contract, 790 lines: the card plans a helper module if it passes about 880), `src/tests/server/World/WorldIndex.spec.luau`, `src/tests/server/World/RealWorld/WakePieces.spec.luau` (new).
+- Before the card: one read-only Edit call lists `Workspace.Mockup_WakeUp` today. V2 setup 4's script `11c-mockup-avatars-away` already moved its avatar to `ServerStorage.ArtLibrary.MockupAvatars`, and scripts `11a` and `11b` changed mockup parts, so the list below is checked against what is there.
 - Mockup pieces (V2 setup 1, `docs/plans/v2/index.md`): every piece this task moves or copies out of a `Mockup_` folder gets back its own values from its `MockupCanCollide`, `MockupCanQuery` and `MockupCanTouch` attributes, or the values this task names for it, and then loses the three attributes. A test checks that each solid piece (a ledge, a guard, a deck) arrives solid. Otherwise it arrives not solid, because V2 setup 1 switched every mockup part off.
 - What the script does, from `Workspace.Mockup_WakeUp` (see "Decisions"):
   - moves `AwakeMouth` into `World.Giant`, at the style guide's asleep-pose spot: Mouth (0, 80.3, −15.6) and Tongue (0, 77.0, −16.7), at −25° (designer, 2026-10-19). Studio's copy sits in the awake pose, so if the parts are copied from it, they are first turned back +12° around the head pivot `Awake_HeadPivot` (0, 78, 18). Hidden, no collision;
@@ -202,19 +210,21 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   - moves the rest of `Mockup_WakeUp` (the avatar, the props, `Saved` and the 3 ModuleScripts) to `ServerStorage.ArtLibrary`.
 - Failing tests first: the world contract reports a missing `AwakeMouth`, `Bang`, `ZPop`, `WakeDust` (7 spots), `WakeBirds` (24 birds) or `RightArmRest` piece; on the real world, after the script: `AwakeMouth.Mouth` is within 0.1 studs of (0, 80.3, −15.6) and its Tongue of (0, 77.0, −16.7); no part of `AwakeMouth` collides; at least 100 flower models are marked and nothing else is; `Mockup_WakeUp` is gone from the Workspace.
 - Done when: the script runs twice (the second run says "already done"), the tests pass, and **Adam saves the place**. Screenshots from garden 4 (computer and the iPhone 14) show the sleeping giant with no mouth, no "!", no birds and no mockup avatar. The main chat sends them to designer.
+- Stands on: build order steps 4 and 6 (the ground and the nests, built), plan 5 Task 9 (the `RidesRightArm` pieces, built).
 
 ### Part 3: What players see (client)
 
 **Task 11: His face wakes**
 - Spec rules: Rule 66 (His face wakes first); Rule 69 (The world reacts): the Z Z Z pop; section 5, "Head tip", "'!' badge", "Z Z Z bubble pop"; Check C1, first two points.
-- Files: `src/client/Fx/GiantFx.luau`, `src/tests/client/Fx/GiantFx.spec.luau`.
+- Files: `src/client/Fx/GiantFx/` (`init.luau`, `Pose.luau`, `Find.luau`), `src/tests/client/Fx/GiantFx/WakeFace.spec.luau` (new, with the folder's `Helpers.luau`).
 - What changes: at the wake the eyes swap (V1), `AwakeMouth` shows and tips with the head pieces, the head tips over 0.3 s, the "!" grows in over 0.15 s with a small overshoot, stays 1.5 s and fades over 0.3 s, and the Z Z Z hide while the bubble pop shows for 0.4 s. When he lies down the mouth hides. Sound hooks `WakeEyes`, `WakeRoar`, `ZzzPop` and `LieDown`.
 - Failing tests first (fake giant, fake clock): the mouth is hidden asleep and shown awake, and moves exactly with the head; the head is fully tipped at 0.3 s; the "!" scale is 0 at 0 s, above 1 just after 0.15 s (the overshoot), 1 at 1.0 s, and gone at 1.95 s; the bubble pop is gone at 0.4 s; a player who joins while he's awake sees the mouth and no "!"; each hook is called once at its moment.
 - Done when: the tests pass, and in Play the wake from garden 4 (computer and the iPhone 14) matches `view-wake-face.png` and `view-phone-wake-face.png`. The main chat sends the shots to designer.
+- Stands on: Task 1 (the head tip time), Task 10 (the mouth, "!" and Z Z Z pieces).
 
 **Task 12: His arm between slams, and back to sleep**
 - Spec rules: Rule 64 (He gets faster), the arm; Rule 100 (Nothing you stand on moves while he sleeps), spec 5, the unlock waiting for the arm (product's condition, `decisions-plans.md`).
-- Files: `src/client/Fx/GiantFx.luau`, `src/client/init.client.luau`, `src/tests/client/Fx/GiantFx.spec.luau`.
+- Files: `src/client/Fx/GiantFx/` (`init.luau`, `Motion.luau`, `Ride.luau`), `src/client/init.client.luau`, `src/tests/client/Fx/GiantFx/ArmSwing.spec.luau` and `Plans.spec.luau` (its line 142 already checks `ArmReturnSeconds` against `slamSwingSeconds`; test 4 below sits next to it).
 - What changes: see "His arm between slams" and "His arm going back to sleep" in "Decisions". `GiantFx` gets the shared clock as a new setting.
 - Failing tests first (fake clock):
   1. A warning 2.0 s after the last one swings the arm from where it is to the new aim, with no jump (each frame's move is under one degree for a 60-frame second).
@@ -222,6 +232,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   3. With `PhaseEndsAt` at 15.0 on the shared clock and the Phase change arriving at 15.3, the arm is down at 15.5.
   4. Played through a whole wake-up with the new slam times, the arm is at rest at most `Config.Nests.ArmReturnSeconds` after the 6th fist lands (this test fails if a later change lengthens the return without raising that number).
 - Done when: the tests pass, and in Play a whole wake-up from garden 7 (computer) shows the arm and the cuff moving smoothly through all 6 slams and down by the time the cuff's beam comes back.
+- Stands on: Task 1 (the new slam times), plan 5 Task 9 (the cuff rides his arm, built).
 
 **Task 13: Birds and dust**
 - Spec rules: Rule 69 (The world reacts): the birds and the dust; section 5, "Birds", "Dust"; Check C1 (birds behind him, gone within 3 s).
@@ -229,13 +240,15 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What it does: at the wake, copies `Assets.WakeBirds` into the world, flies each bird up and away from the gardens at about 30 studs a second with its wings flapping 4 times a second, and removes them all at 3 s; each of the 7 dust spots emits 20 puffs once (`ParticleEmitter:Emit`). It plays with Reduce Motion on. Sound hook `WakeBirds`.
 - Failing tests first (fake clock): every bird moves away from the valley's middle and up; none is left at 3 s; each dust emitter gets one burst of 20; a second wake-up does it again; nothing is left after `stop`.
 - Done when: the tests pass, and in Play from gardens 1, 4 and 8 no bird passes between the garden and his face (screenshots at 0.5 s and 1.5 s, computer and the iPhone 14).
+- Stands on: Task 10 (`Assets.WakeBirds` and `WakeDust`).
 
 **Task 14: The wake shake and the slam shake**
 - Spec rules: Rule 65 (The wake shakes the screen); Rule 12 (Waking bounces everyone off): the V1 shake replaced; section 5, "Wake shake", "Slam shake"; Check C2 (no shake with Reduce Motion).
-- Files: `src/client/Fx/CameraFx.luau`, `src/client/init.client.luau`, `src/tests/client/Fx/CameraFx.spec.luau`.
-- What changes: the wake shake is 1.5 studs fading to 0 over 1.0 s. Each `SlamLanded` (or the landing time, whichever comes first) shakes by 1 stud when the fist lands within 15 studs across the ground of the player's character, shrinking evenly to nothing at 60 studs, fading over 0.4 s. A new shake replaces one still fading. With Reduce Motion on, nothing moves. Both still go through the one `CameraOffset` writer (V1). Sound hook `WakeRumble`.
+- Files: `src/client/Fx/CameraFx/` (`Shake.luau`, `View.luau`), `src/shared/Config.luau`, `src/client/init.client.luau`, `src/tests/client/Fx/CameraFx/ShakeAndSpot.spec.luau` and `WatchTurnAndRaise.spec.luau` (both read `ShakeStuds` and `ShakeSeconds`), `src/tests/shared/Config.spec.luau`.
+- What changes: the wake shake is 1.5 studs fading to 0 over 1.0 s: `Config.Wake.ShakeStuds` and `ShakeSeconds` are replaced by `WakeShakeStuds` (1.5) and `WakeShakeSeconds` (1.0) here, not in Task 1. Each `SlamLanded` (or the landing time, whichever comes first) shakes by 1 stud when the fist lands within 15 studs across the ground of the player's character, shrinking evenly to nothing at 60 studs, fading over 0.4 s. A new shake replaces one still fading. With Reduce Motion on, nothing moves. Both still go through the one `CameraOffset` writer (V1). Sound hook `WakeRumble`.
 - Failing tests first: the wake shake's size is never over 1.5 and is 0 from 1.0 s; a slam 10 studs away peaks at 1, 37.5 studs at 0.5, 60 at 0; with Reduce Motion on the offset never changes, and `WakeRumble` is still called once.
 - Done when: the tests pass, and in Play on the iPhone 14 the first red circle (at 2.3 s) is easy to see after the shake (screenshot at 2.4 s).
+- Stands on: Task 1 (the slam shake numbers and the first circle at 2.3 s).
 
 **Task 15: The bonk on screen**
 - Spec rules: Rule 61 (The bonk is harmless): the fall, the stars, the puff, the ladder hold, no card; section 5, "Tumble time", "Bonk stars"; Check A1 (the fall), Check C2 (stars stand still), Check D1 (on a ladder).
@@ -243,13 +256,15 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What it does: when a player's `Bonked` attribute is set, every device: for `"Ground"`, tips that character back about the heels through the root joint's `C0` (see "Decisions": 90° over 0.15 s, held 0.6 s, back over 0.25 s); for `"Ladder"`, no tip. Both show the star ring (a `BillboardGui` 5.5 × 2.6 studs, 2.4 studs over the head, 4 ⭐ labels going round once every 0.8 s; still with Reduce Motion on) and the small cream puff (style guide, "The bonk"). Everything goes when the attribute clears or the character goes. Sound hook `Bonk`.
 - Failing tests first: `BonkPose` gives 0° at 0 s, 90° at 0.15 s and 0.75 s, 0° at 1.0 s; the body's lowest point lands on the ground the feet stood on (within 0.3 studs) for R15 and R6 test rigs; the root part never moves; a ladder bonk never tips; 4 stars, turning, or still with Reduce Motion; no card or text appears; nothing is left after the attribute clears.
 - Done when: the tests pass, and in Play a player with no egg is bonked in the meadow and halfway up the left boot ladder (computer and the iPhone 14), compared with `wake-bonk-*.png` and `wake-bonk-ladder-*.png`. The main chat sends the shots to designer.
+- Stands on: Task 1 (the tumble and star times), Task 7 (the `Bonked` attribute), Task 8 (a real bonk in Play).
 
 **Task 16: The fist on your own screen, and the slam sounds' places**
 - Spec rules: Rule 13, fourth bullet (90% see-through for each player it hits); section 5, "The fist on your own screen"; Check D1 (not a screen of knuckles).
-- Files: `src/client/Fx/SlamFx.luau`, `src/client/Fx/Celebrations.luau`, their tests.
+- Files: `src/client/Fx/SlamFx.luau` (uses `src/shared/HandShape.luau` from Task 3), `src/client/Fx/Celebrations.luau`, their tests (`src/tests/client/Fx/SlamFx/`, `Celebrations.spec.luau`).
 - What changes: see "Who sees the fist see-through" in "Decisions". Sound hooks `SlamCircle` and `SlamThud` in `SlamFx`, and `Caught` in `Celebrations` (with the star puff).
 - Failing tests first: with the device's own middle under the hand at the landing, its fist is 0.9 see-through from the landing until its bottom is above the head, then solid; a player outside the circle sees it solid throughout; the fall is always solid; each hook is called once at its moment.
 - Done when: the tests pass, and in Play the bonk halfway up the left boot ladder, seen from that player's own screen, shows the player, the red ladder, the stars and the circle (screenshots, computer and the iPhone 14), while a second Studio player on the ground sees the fist solid.
+- Stands on: Task 1 (the see-through value), Task 3 (`HandShape`), Task 6 (`SlamFx`'s rays), Task 8 and plan 3 Task 15b (a real bonk on a ladder in Play).
 
 **Task 17: The flowers shake**
 - Spec rules: Rule 69 (The world reacts): "the flowers inside its circle must shake"; section 5, "Flower shake".
@@ -257,6 +272,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What it does: at each landing, every model marked `ShakesOnSlam` whose middle is inside the circle tips up to 12° away from the circle's centre, then springs back with two smaller wobbles, 0.5 s in all, about its own base, and ends exactly on its start pivot. It plays with Reduce Motion on.
 - Failing tests first: the tip peaks at 12° away from the centre; it is back on the start pivot at 0.5 s; a flower outside the circle never moves; two slams on one flower never leave it out of place.
 - Done when: the tests pass, and in Play a slam on a flower patch is screenshot from the circle's edge (computer and the iPhone 14).
+- Stands on: Task 10 (the `ShakesOnSlam` marks).
 
 **Task 18: The one-line wake banner and the bottom tip**
 - Spec rules: Rule 12 (Waking bounces everyone off): one line, the phone banner; Rule 67 (RUN HOME!): the bottom pill and tip; Check C4; section 5, "Wake banner on phones", "Bottom tip icon".
@@ -264,6 +280,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What changes: the banner shows only "💥 [Name] woke the Giant!" (or "The Giant woke up!"); on phones it is 14 px, its right edge pinned 12 px left of the Jump button column, and names over 12 letters are cut to 11 letters plus "…" (a name of exactly 12 is kept whole). While he's awake and the player is outside every garden: a carrier's pill says "Dodge the red circles!" with the egg icon (V1); a player with no egg sees the same words with the red-and-gold circle icon (40 px, phone 24 px). Inside a garden, neither shows.
 - Failing tests first: no second line on any screen; "Supercalifragilistic" shows as "Supercalifr…" on a phone and whole on a computer; the phone banner's right edge is 12 px left of the Jump column; the no-egg tip shows outside a garden and goes inside one (`InGarden`); it comes back on leaving; a carrier's pill keeps the egg icon.
 - Done when: the tests pass, and in Play on the small 4.7-inch phone (667 × 375) a 20-letter waker name ends before the Jump button and doesn't cover his face or the meter (screenshot, compared with `wake-face-phone.png`).
+- Stands on: Task 9 (`InGarden`), Task 19 (`HuntView`, which says when the bottom tip shows), so Task 18 is built after Task 19.
 
 **Task 19: RUN HOME!**
 - Spec rules: Rule 67 (RUN HOME!); Check B3; section 5, "'RUN HOME!' pill", "Egg words near 'RUN HOME!'"; edge case "A player grabs an egg while he's awake".
@@ -274,6 +291,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   - `SpotLabels` hides a label touching the pill as it does for the meter (0.15 s out and back).
 - Failing tests first: the pill shows for a landed carrier outside their garden; not while floating (it appears the moment `Floating` turns false); not inside their own garden; it goes when he lies down or the egg is lost; it appears at once when a player grabs an egg while he's awake; its position and size match the style guide on both screens; a label touching it fades.
 - Done when: the tests pass, and in Play (computer at 1280 wide, the iPhone 14 and the small 4.7-inch phone) the pill's box lies inside `GuiService.TopbarInset`, doesn't touch the meter or Roblox's player list, and matches `wake-run-*.png`. The report gives the measured boxes. The main chat sends the shots to designer.
+- Stands on: Task 9 (`InGarden` and `Floating`).
 
 **Task 20: Red edges while he hunts**
 - Spec rules: Rule 68 (Red edges while he hunts); Checks C1 (last point), C2 (steady with Reduce Motion), C3; section 5, "Red edges strength", "Red edges on phones", "Red edges pulse", "Red edges fade".
@@ -281,6 +299,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What it does: see "Where the red edges live" in "Decisions" and the style guide ("Red edges"): four bands in wake red, 55% solid at the edge fading to clear, 14% of the screen height deep; on phones the side bands stop 45% above the bottom and the bottom band covers only 28% to 72% of the width; a smooth pulse once a second between band transparency 0 and 0.6, or steady at 0.3 with Reduce Motion; a 0.5 s fade in or out when the player leaves or enters a garden and 0.5 s out when he lies down.
 - Failing tests first: the band transparency at 0, 0.25, 0.5 and 1 s of the pulse; steady 0.3 with Reduce Motion; the fade reaches fully clear 0.5 s after entering a garden and back 0.5 s after leaving; the phone bands' sizes and positions; the gui's `DisplayOrder` is below `Hud` and `HudTop`; the gradient is set once and never changed.
 - Done when: the tests pass, and in Play on the iPhone 14 and the small 4.7-inch phone no red reaches the thumbstick or the Jump button, every button and pill is drawn over the red, and the middle stays bright (screenshots at the top of the pulse, compared with `wake-dodge-phone.png`).
+- Stands on: Task 9 (`InGarden`), Task 19 (`HuntView`).
 
 ### Part 4: Analytics, a whole session, and the Play proof
 
@@ -290,6 +309,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - What changes: "Slam" results "Caught" (caught at least one carrier), "Bonked" (bonked at least one, caught none), "Missed" (aimed at a player, hit nobody) and "Empty" (aimed at nobody); third breakdown "Target"; still valued at the number caught and logged on the same player as in V1 (the target, else the first player hit, else the longest-in-server player). "Bonked": once per bonked player, breakdown the server size ("1", "2-4" or "5-8"), from `Bonker`'s `bonked` Signal.
 - Failing tests first (fake AnalyticsService): one "Slam" per slam, 6 per wake-up; a bonk with no catch logs "Bonked" with Target "No egg"; a show slam logs "Empty" with Target "None"; a slam that catches one and bonks one logs "Caught", value 1; each bonked player logs one "Bonked" with the right server size; "GiantWoke" and "EggHome" are unchanged.
 - Done when: the tests pass, and in Play the console shows the "Slam" and "Bonked" lines of one wake-up.
+- Stands on: Task 7 (the `bonked` Signal), Task 8 (what `slammed` sends).
 
 **Task 22: A whole session with wake-ups**
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests"); section 10's solo number ("at least half of all slams have a target").
@@ -297,6 +317,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 - The test: brand-new players with the real `GiantDirector`, `GiantCycle`, `Slams`, `ShowSpots` (on a small fake meadow), `Bonker`, `Catcher` and `Analytics` (fake service), and a stand-in tracker. A solo player joins, banks a Common, and wakes him on purpose. They stand still: they are bonked on slams 1, 3 and 5, never pushed, with show slams 35 to 45 studs away between; at least 3 of 6 slams have a target. Heavy Sleep ends, and they keep going: they carry an Uncommon into a second wake-up, are caught, get no circle for 3 s at the door, then run home dodging. A second player joins during the second wake-up and is never targeted; in the third wake-up the carrier is hunted first and the other player second.
 - Failing test first: the test itself. The builder turns the breather off once on purpose and shows it fail.
 - Done when: the test passes, and the report gives each wake-up's 6 slams (target kind, result).
+- Stands on: Tasks 1 to 9 and 21, plan 3 Task 15b (the ladder grace in the picker).
 
 **Task 23: The Play proof**
 - Spec rules: the Checks that need Play (A1, A2, B1, B3, C1, C2, C3, C4, D1), section 6 (every state against its mockups), section 6's build-review check (the cap ladder), and spec 5 section 8's wake-up check (his arm's resting shape).
@@ -314,6 +335,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
   10. **Two wake-ups in a row** with the right cuff: the arm is down and the nest unlocked after each (plan 5's check, with this plan's faster slams).
   11. Every section 6 state against its `wake-*` mockup.
 - Done when: every shot is in the report with what it shows, compared with the spec and the mockups. The main chat sends them to designer.
+- Stands on: Tasks 1 to 22, plan 3 Task 15b (the ladder grace, built after Tasks 2, 4 and 8).
 
 ## Every rule is covered
 

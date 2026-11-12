@@ -113,13 +113,53 @@ describe("Config", function()
 		expect((Config.Meter :: any).NewPlayerEggsNeeded).toBe(nil)
 	end)
 
-	it("slams come every 2.5 s with a 1.5 s warning", function()
-		expect(Config.Wake.SlamInterval).toBe(2.5)
+	it("the 6 slam warnings come at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 s, each landing 1.5 s later", function()
+		expect(Config.Wake.SlamWarningTimes).toEqual({ 2.3, 4.8, 7.2, 9.4, 11.5, 13.5 })
 		expect(Config.Wake.SlamWarningSeconds).toBe(1.5)
 	end)
 
-	it("the first slam warning comes 1 s after waking", function()
-		expect(Config.Wake.FirstSlamWarningAt).toBe(1)
+	it("the old fixed slam rhythm is gone", function()
+		expect((Config.Wake :: any).FirstSlamWarningAt).toBe(nil)
+		expect((Config.Wake :: any).SlamInterval).toBe(nil)
+	end)
+
+	it("a slam throws a player down for 0.15 s, holds 0.6 s and lets them up for 0.25 s", function()
+		expect(Config.Wake.TumbleDownSeconds).toBe(0.15)
+		expect(Config.Wake.TumbleStillSeconds).toBe(0.6)
+		expect(Config.Wake.TumbleUpSeconds).toBe(0.25)
+	end)
+
+	it("a slam shows from 35 studs, full at 45 and never past 60", function()
+		expect(Config.Wake.ShowSlamNearStuds).toBe(35)
+		expect(Config.Wake.ShowSlamFarStuds).toBe(45)
+		expect(Config.Wake.ShowSlamMaxStuds).toBe(60)
+	end)
+
+	it("the door takes 3 s", function()
+		expect(Config.Wake.DoorSeconds).toBe(3)
+	end)
+
+	it("the breather is 1 slam", function()
+		expect(Config.Wake.BreatherSlams).toBe(1)
+	end)
+
+	it("the slam shake is 1 stud, full within 15 studs, none from 60, for 0.4 s", function()
+		expect(Config.Wake.SlamShakeStuds).toBe(1)
+		expect(Config.Wake.SlamShakeFullWithinStuds).toBe(15)
+		expect(Config.Wake.SlamShakeNoneFromStuds).toBe(60)
+		expect(Config.Wake.SlamShakeSeconds).toBe(0.4)
+	end)
+
+	it("the head tips for 0.3 s", function()
+		expect(Config.Wake.HeadTipSeconds).toBe(0.3)
+	end)
+
+	it("a player's own fist is 0.9 transparent", function()
+		expect(Config.Wake.OwnFistTransparency).toBe(0.9)
+	end)
+
+	it("the bonk stars turn once in 0.8 s", function()
+		expect(Config.Wake.BonkStarTurnSeconds).toBe(0.8)
 	end)
 
 	it("the giant stays awake 15 s and the red circle is 30 studs wide", function()
