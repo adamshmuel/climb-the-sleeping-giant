@@ -35,6 +35,7 @@ local Zones = require(script.Giant.Zones)
 local SafeSpots = require(script.Players.SafeSpots)
 local QuietDrops = require(script.Players.QuietDrops)
 local SlideWatch = require(script.Players.SlideWatch)
+local WayUpWatch = require(script.Players.WayUpWatch)
 local Spawning = require(script.Players.Spawning)
 local PressingHandler = require(script.Remotes.PressingHandler)
 local ResetHandler = require(script.Remotes.ResetHandler)
@@ -502,6 +503,16 @@ local gardenSpots: { Analytics.GardenSpot } = {}
 for _, garden in gardens do
 	table.insert(gardenSpots, { index = garden.index, spawnPosition = garden.spawnSpot.Position })
 end
+-- The tops of the ways up, for Analytics' "WayUp" event. Without them the event stays silent, and the game runs on.
+local waysUp, wayUpProblems = WorldIndex.readWaysUp(world)
+local wayUpTops: { WayUpWatch.Top } = {}
+if waysUp == nil then
+	warn(`[Analytics] no ways up read, so no "WayUp" events: {table.concat(wayUpProblems, "; ")}`)
+else
+	for _, wayUp in waysUp do
+		table.insert(wayUpTops, { name = wayUp.name, top = wayUp.top.position })
+	end
+end
 -- Each landed hand locks the right cuff nests for ArmReturnSeconds (Rule 100).
 director.slammed:Connect(function()
 	grab:noteFist()
@@ -521,6 +532,7 @@ analytics = Analytics.start({
 	refilled = grab.refilled,
 	slideEnded = slideEnded,
 	gardens = gardenSpots,
+	wayUps = wayUpTops,
 	now = os.clock,
 	newId = function()
 		return HttpService:GenerateGUID(false)

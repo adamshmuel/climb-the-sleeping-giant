@@ -60,6 +60,14 @@ export type Harness = {
 
 local OWN_GARDEN_SPAWN_X = 100 -- garden N's spawn spot is at X = N * 100, Z = 0, so every garden is far from the others
 
+-- Two ways up for the tests: where each top is. (The real tops come from WorldIndex.readWaysUp in the server's init.)
+local WAY_UP_LADDER = "BootLadder_Left"
+local WAY_UP_RAMP = "BootRamp"
+local WAY_UP_TOPS = {
+	{ name = WAY_UP_LADDER, top = Vector3.new(-50, 30, -60) },
+	{ name = WAY_UP_RAMP, top = Vector3.new(-24, 30, -100) },
+}
+
 local made: { Harness } = {}
 
 local players: { FakePlayer } = {}
@@ -200,6 +208,7 @@ local function newHarness(present: { FakePlayer }?): Harness
 		refilled = harness.refilled,
 		slideEnded = harness.slideEnded,
 		gardens = gardens,
+		wayUps = WAY_UP_TOPS,
 		now = function()
 			return harness.clock
 		end,
@@ -325,6 +334,9 @@ return {
 	FIELD_TWO = FIELD_TWO,
 	FIELD_THREE = FIELD_THREE,
 	OWN_GARDEN_SPAWN_X = OWN_GARDEN_SPAWN_X,
+	WAY_UP_LADDER = WAY_UP_LADDER,
+	WAY_UP_RAMP = WAY_UP_RAMP,
+	WAY_UP_TOPS = WAY_UP_TOPS,
 	awayFromHome = awayFromHome,
 	bank = bank,
 	callsOf = callsOf,

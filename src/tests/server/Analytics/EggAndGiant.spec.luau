@@ -58,6 +58,15 @@ describe("Analytics EggHome", function()
 		expect(type((events[1].fields :: any)[FIELD_TWO])).toBe("string")
 	end)
 
+	it("gives the server size as the third EggHome breakdown", function()
+		local harness, all = serverOf(3)
+		grab(harness, all[1], "Common")
+		bank(harness, all[1])
+		local events = callsOf(harness, "custom", all[1])
+		expect(#events).toBe(1)
+		expect((events[1].fields :: any)[FIELD_THREE]).toBe("2-4")
+	end)
+
 	it("logs one EggHome for every banked egg", function()
 		local harness = newHarness()
 		local mia = makePlayer(1, 3)
@@ -74,12 +83,23 @@ describe("Analytics EggHome", function()
 	end)
 end)
 
+-- Only the "GiantWoke" calls: a wake-up also logs "WakeWayUp" (plan 3 Task 16, tested in WayUps.spec).
+local function wokeCalls(harness: Harness): { Call }
+	local found: { Call } = {}
+	for _, call in harness.calls do
+		if call.eventName == "GiantWoke" then
+			table.insert(found, call)
+		end
+	end
+	return found
+end
+
 describe("Analytics GiantWoke", function()
 	it("logs once on the player who woke him, valued at the number of players, with the server size", function()
 		local harness, all = serverOf(3)
 		harness.woke:Fire("Bo", all[2].UserId, "Jump on him")
-		expect(#harness.calls).toBe(1)
-		local call = harness.calls[1]
+		expect(#wokeCalls(harness)).toBe(1)
+		local call = wokeCalls(harness)[1]
 		expect(call.method).toBe("custom")
 		expect(call.player).toBe(all[2])
 		expect(call.eventName).toBe("GiantWoke")
@@ -101,8 +121,8 @@ describe("Analytics GiantWoke", function()
 		it(`calls a server of {count} players "{size}"`, function()
 			local harness, all = serverOf(count)
 			harness.woke:Fire("Name", all[1].UserId, "Walking")
-			expect(harness.calls[1].value).toBe(count)
-			expect((harness.calls[1].fields :: any)[FIELD_ONE]).toBe(size)
+			expect(wokeCalls(harness)[1].value).toBe(count)
+			expect((wokeCalls(harness)[1].fields :: any)[FIELD_ONE]).toBe(size)
 		end)
 	end
 
@@ -110,23 +130,23 @@ describe("Analytics GiantWoke", function()
 		it(`passes the director's cause "{cause}" through`, function()
 			local harness, all = serverOf(2)
 			harness.woke:Fire("Name", all[1].UserId, cause)
-			expect((harness.calls[1].fields :: any)[FIELD_TWO]).toBe(cause)
+			expect((wokeCalls(harness)[1].fields :: any)[FIELD_TWO]).toBe(cause)
 		end)
 	end
 
 	it("logs on the player who joined first, with 'Waker left', when nobody is named", function()
 		local harness, all = serverOf(3)
 		harness.woke:Fire("", nil, "Waker left")
-		expect(#harness.calls).toBe(1)
-		expect(harness.calls[1].player).toBe(all[1])
-		expect(harness.calls[1].value).toBe(3)
-		expect((harness.calls[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
+		expect(#wokeCalls(harness)).toBe(1)
+		expect(wokeCalls(harness)[1].player).toBe(all[1])
+		expect(wokeCalls(harness)[1].value).toBe(3)
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
 	end)
 
 	it("says 'Waker left' when nobody is named, whatever cause came with it", function()
 		local harness, _all = serverOf(2)
 		harness.woke:Fire("", nil, "Walking")
-		expect((harness.calls[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
 	end)
 
 	it("takes the player who joined first by join time, even when that is not first in GetPlayers", function()
@@ -141,7 +161,7 @@ describe("Analytics GiantWoke", function()
 		harness.list = { late, early }
 		table.clear(harness.calls)
 		harness.woke:Fire("", nil, "Waker left")
-		expect(harness.calls[1].player).toBe(early)
+		expect(wokeCalls(harness)[1].player).toBe(early)
 	end)
 
 	it("counts players already there when it starts in GetPlayers order, before anyone who joins later", function()
@@ -153,15 +173,15 @@ describe("Analytics GiantWoke", function()
 		enter(harness, late)
 		table.clear(harness.calls)
 		harness.woke:Fire("", nil, "Waker left")
-		expect(harness.calls[1].player).toBe(second)
+		expect(wokeCalls(harness)[1].player).toBe(second)
 	end)
 
 	it("skips a player who has left when it looks for the one who has been there longest", function()
 		local harness, all = serverOf(3)
 		leave(harness, all[1])
 		harness.woke:Fire("", nil, "Waker left")
-		expect(harness.calls[1].player).toBe(all[2])
-		expect(harness.calls[1].value).toBe(2)
+		expect(wokeCalls(harness)[1].player).toBe(all[2])
+		expect(wokeCalls(harness)[1].value).toBe(2)
 	end)
 
 	it("logs 'Waker left' on the player who joined first when the named waker has left", function()
@@ -169,29 +189,29 @@ describe("Analytics GiantWoke", function()
 		local gone = all[3]
 		leave(harness, gone)
 		harness.woke:Fire("Cy", gone.UserId, "Jump on him")
-		expect(#harness.calls).toBe(1)
-		expect(harness.calls[1].player).toBe(all[1])
-		expect(harness.calls[1].value).toBe(2)
-		expect((harness.calls[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
+		expect(#wokeCalls(harness)).toBe(1)
+		expect(wokeCalls(harness)[1].player).toBe(all[1])
+		expect(wokeCalls(harness)[1].value).toBe(2)
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_TWO]).toBe("Waker left")
 	end)
 
 	it("calls the waker 'New' when they have no Rare home, in the third slot", function()
 		local harness, all = serverOf(2)
 		harness.woke:Fire("Ann", all[1].UserId, "Walking")
-		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("New")
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_THREE]).toBe("New")
 	end)
 
 	it("calls the waker 'Veteran' when they have a Rare home", function()
 		local harness, all = serverOf(2)
 		all[2].attributes.RareHome = true
 		harness.woke:Fire("Bo", all[2].UserId, "Jump off")
-		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("Veteran")
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_THREE]).toBe("Veteran")
 	end)
 
 	it("says 'Nobody' in the third slot when nobody is named", function()
 		local harness, _all = serverOf(2)
 		harness.woke:Fire("", nil, "Waker left")
-		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("Nobody")
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_THREE]).toBe("Nobody")
 	end)
 
 	it("says 'Nobody' in the third slot when the named waker has left", function()
@@ -199,7 +219,7 @@ describe("Analytics GiantWoke", function()
 		all[3].attributes.RareHome = true
 		leave(harness, all[3])
 		harness.woke:Fire("Cy", all[3].UserId, "Jump on him")
-		expect((harness.calls[1].fields :: any)[FIELD_THREE]).toBe("Nobody")
+		expect((wokeCalls(harness)[1].fields :: any)[FIELD_THREE]).toBe("Nobody")
 	end)
 
 	it("logs nothing when there is no player in the server", function()
@@ -214,15 +234,15 @@ describe("Analytics GiantWoke", function()
 		local harness, all = serverOf(2)
 		harness.woke:Fire("Ann", all[1].UserId, "Walking")
 		harness.woke:Fire("Bo", all[2].UserId, "Jump off")
-		expect(#harness.calls).toBe(2)
-		expect(harness.calls[1].player).toBe(all[1])
-		expect(harness.calls[2].player).toBe(all[2])
+		expect(#wokeCalls(harness)).toBe(2)
+		expect(wokeCalls(harness)[1].player).toBe(all[1])
+		expect(wokeCalls(harness)[2].player).toBe(all[2])
 	end)
 
 	it("logs one event per wake, not one for each player", function()
 		local harness, all = serverOf(5)
 		harness.woke:Fire("Ann", all[1].UserId, "Walking")
-		expect(#harness.calls).toBe(1)
+		expect(#wokeCalls(harness)).toBe(1)
 	end)
 end)
 

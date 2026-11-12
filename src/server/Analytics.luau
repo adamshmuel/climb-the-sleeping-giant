@@ -14,6 +14,7 @@ local Trove = require(ReplicatedStorage.Packages.Trove)
 local Rarity = require(ReplicatedStorage.Shared.Rarity)
 local PlayerInfo = require(script.Parent.Players.PlayerInfo)
 local PlayerTracker = require(script.Parent.Players.PlayerTracker)
+local WayUpWatch = require(script.Parent.Players.WayUpWatch)
 
 -- A Roblox event or a Signal, as far as Analytics uses it. (The connection it returns is typed `any`, because the checker
 -- doesn't accept a connection with more fields than a narrow stand-in; Trove only needs to disconnect it.)
@@ -80,6 +81,7 @@ export type Deps = {
 	refilled: SignalLike, -- Grab's signal: (rank, seconds waited past the countdown) when a new egg appears
 	slideEnded: SignalLike, -- (UserId, slide number this session) when a slide ends
 	gardens: { GardenSpot },
+	wayUps: { WayUpWatch.Top }, -- each way up's name and where its top is (WorldIndex.readWaysUp; plan 3 Task 16)
 	now: () -> number, -- os.clock; it tells who has been in the server longest
 	newId: () -> string, -- makes the session id of one heist (HttpService:GenerateGUID(false))
 	warn: ((message: string) -> ())?, -- where a failed call is reported; the global warn if left out
@@ -122,7 +124,8 @@ local HEIST_HOME_NAME = "Home"
 local LEFT_GARDEN_STUDS = 10
 
 -- The custom events. Each has up to three breakdown slots, and the slots mean different things on different events:
---   "EggHome":        CustomField01 = the egg's rarity, CustomField02 = the garden number ("1" to "8").
+--   "EggHome":        CustomField01 = the egg's rarity, CustomField02 = the garden number ("1" to "8"),
+--                     CustomField03 = the server size.
 --   "PlayerCaught":   CustomField01 = the lost egg's rarity (no other slot).
 --   "GiantWoke":      CustomField01 = the server size ("1", "2-4" or "5-8"), CustomField02 = what filled the meter,
 --                     CustomField03 = who woke him ("New" = no Rare home yet, "Veteran", or "Nobody" if nobody can be named).
@@ -138,6 +141,10 @@ local LEFT_GARDEN_STUDS = 10
 --   "EggRefill":      CustomField01 = the rank, CustomField02 = the wait past the countdown ("0 s", "1–30 s" or "over 30 s"),
 --                     CustomField03 = the server size.
 --   "SlideOff":       CustomField01 = "Carrying" or "Empty", CustomField02 = "First", "Second" or "Later".
+--   "WayUp":          CustomField01 = the way up's name, CustomField02 = the player's garden number ("1" to "8"),
+--                     CustomField03 = "Carrying" or "Empty". One per climb from the Meadow to a way up's top.
+--   "WakeWayUp":      CustomField01 = the waker's last way up ("None" if they never climbed or nobody can be named),
+--                     CustomField02 = the server size.
 -- So never read one chart's slot as another's.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
@@ -152,6 +159,9 @@ local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, va
 local EVENT_UNSTUCK = "Unstuck" -- one per rescue, Reset on the giant or loop send home
 local EVENT_EGG_REFILL = "EggRefill" -- one per egg that appears again, logged on the player longest in the server
 local EVENT_SLIDE_OFF = "SlideOff" -- one per slide off the giant, on the sliding player
+local EVENT_WAY_UP = "WayUp" -- one per climb to the top of a way up
+local EVENT_WAKE_WAY_UP = "WakeWayUp" -- one per wake-up, on the player "GiantWoke" is logged on
+local NO_WAY_UP = "None" -- "WakeWayUp" and "WayUp": no way up or garden to name
 local CARRYING = "Carrying"
 local EMPTY = "Empty"
 -- "EggRefill" wait bands, in seconds waited past the countdown: under WAIT_NONE_UNDER, up to and including WAIT_LONG_OVER,
@@ -273,6 +283,9 @@ function Analytics.start(deps: Deps): Analytics
 	local records: { [number]: Record } = {}
 	local arrivals = 0
 
+	-- Which way up each player climbed last, and who has just climbed one.
+	local wayUpWatch = WayUpWatch.new(deps.wayUps)
+
 	-- Where each garden's spawn spot is, by garden number.
 	local spawnPositions: { [number]: Vector3? } = {}
 	for _, garden in deps.gardens do
@@ -373,6 +386,7 @@ function Analytics.start(deps: Deps): Analytics
 			records[player.UserId] = nil
 			record.cleanup()
 		end
+		wayUpWatch:forget(player.UserId)
 	end
 
 	trove:Add(players.PlayerAdded:Connect(function(player: PlayerLike)
@@ -436,6 +450,7 @@ function Analytics.start(deps: Deps): Analytics
 		if garden ~= nil then
 			fields[FIELD_TWO] = tostring(garden)
 		end
+		fields[FIELD_THREE] = Analytics.serverSize(#players:GetPlayers())
 		logCustom(player, EVENT_EGG_HOME, EVENT_VALUE, fields)
 	end))
 
@@ -543,6 +558,12 @@ function Analytics.start(deps: Deps): Analytics
 			[FIELD_ONE] = Analytics.serverSize(count),
 			[FIELD_TWO] = reported,
 			[FIELD_THREE] = who,
+		})
+		-- Only a named waker has a way up to report; when nobody is named it says "None".
+		local lastWayUp = if who ~= WAKER_NOBODY then wayUpWatch:lastOf(waker.UserId) else nil
+		logCustom(waker, EVENT_WAKE_WAY_UP, EVENT_VALUE, {
+			[FIELD_ONE] = lastWayUp or NO_WAY_UP,
+			[FIELD_TWO] = Analytics.serverSize(count),
 		})
 	end))
 
@@ -667,6 +688,21 @@ function Analytics.start(deps: Deps): Analytics
 	local function check(_self: Analytics, samples: { PlayerTracker.Sample })
 		if stopped then
 			return
+		end
+		local watched: { WayUpWatch.Sample } = {}
+		for _, sample in samples do
+			table.insert(watched, { userId = sample.userId, position = sample.position, zone = sample.zone })
+		end
+		for _, reached in wayUpWatch:check(watched) do
+			local climber = records[reached.userId]
+			if climber ~= nil then
+				local garden = numberFrom(climber.player:GetAttribute("PlotIndex"))
+				logCustom(climber.player, EVENT_WAY_UP, EVENT_VALUE, {
+					[FIELD_ONE] = reached.name,
+					[FIELD_TWO] = if garden ~= nil then tostring(garden) else NO_WAY_UP,
+					[FIELD_THREE] = if carries(climber.player) then CARRYING else EMPTY,
+				})
+			end
 		end
 		for _, sample in samples do
 			local record = records[sample.userId]
