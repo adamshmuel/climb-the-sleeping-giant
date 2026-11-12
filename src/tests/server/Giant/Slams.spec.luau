@@ -23,6 +23,9 @@ local function player(userId: number, x: number, z: number, changes: { [string]:
 		inGarden = false,
 		floating = false,
 		landedAgo = nil,
+		joinedThisWake = false,
+		bonkedLast = false,
+		appearedAgo = nil,
 	}
 	if changes then
 		for key, value in changes do
@@ -104,9 +107,66 @@ describe("Slams.pickTarget", function()
 		expect(target and target.userId).toBe(2)
 	end)
 
-	it("a player who carries nothing is never a target, even if nearest", function()
+	it("a carrier is the target even when a player with no egg is nearer to him", function()
 		local target = Slams.pickTarget({ player(1, 5, 0, { carrying = false }), player(2, 80, 0) }, FACE, nil)
 		expect(target and target.userId).toBe(2)
+	end)
+
+	it("a solo player with no egg in the meadow is the target", function()
+		local target = Slams.pickTarget({ player(1, 5, 0, { carrying = false }) }, FACE, nil)
+		expect(target and target.userId).toBe(1)
+	end)
+
+	it("when the carrier is in a garden, the player with no egg is next", function()
+		local carrier = player(1, 80, 0, { inGarden = true })
+		local target = Slams.pickTarget({ carrier, player(2, 5, 0, { carrying = false }) }, FACE, nil)
+		expect(target and target.userId).toBe(2)
+	end)
+
+	it("two players with no egg: the nearer first, and the other when the nearer was the last target", function()
+		local near = player(1, 10, 0, { carrying = false })
+		local far = player(2, 60, 0, { carrying = false })
+		local first = Slams.pickTarget({ far, near }, FACE, nil)
+		local afterNear = Slams.pickTarget({ far, near }, FACE, 1)
+		local afterFar = Slams.pickTarget({ far, near }, FACE, 2)
+		expect(first and first.userId).toBe(1)
+		expect(afterNear and afterNear.userId).toBe(2)
+		expect(afterFar and afterFar.userId).toBe(1)
+	end)
+
+	it("a player who appeared at the door less than DoorSeconds ago is not a target, at DoorSeconds is", function()
+		local almost = player(1, 5, 0, { appearedAgo = Config.Wake.DoorSeconds - 0.1 })
+		local exactly = player(1, 5, 0, { appearedAgo = Config.Wake.DoorSeconds })
+		local other = player(2, 80, 0)
+		local early = Slams.pickTarget({ almost, other }, FACE, nil)
+		local ready = Slams.pickTarget({ exactly, other }, FACE, nil)
+		expect(early and early.userId).toBe(2)
+		expect(ready and ready.userId).toBe(1)
+	end)
+
+	it("a player who joined this wake-up is never a target", function()
+		local joined = player(1, 5, 0, { joinedThisWake = true })
+		local target = Slams.pickTarget({ joined, player(2, 80, 0) }, FACE, nil)
+		expect(target and target.userId).toBe(2)
+		expect(Slams.pickTarget({ joined }, FACE, nil)).toBeNil()
+	end)
+
+	it("a player the last slam bonked is skipped, and is the target again when not bonked", function()
+		local other = player(2, 80, 0)
+		local skipped = Slams.pickTarget({ player(1, 5, 0, { bonkedLast = true }), other }, FACE, nil)
+		local again = Slams.pickTarget({ player(1, 5, 0, { bonkedLast = false }), other }, FACE, nil)
+		expect(skipped and skipped.userId).toBe(2)
+		expect(again and again.userId).toBe(1)
+	end)
+
+	it("a player in a garden or floating is never a target, with or without an egg", function()
+		local nobody = {
+			player(1, 5, 0, { inGarden = true }),
+			player(2, 5, 0, { floating = true }),
+			player(3, 5, 0, { inGarden = true, carrying = false }),
+			player(4, 5, 0, { floating = true, carrying = false }),
+		}
+		expect(Slams.pickTarget(nobody, FACE, nil)).toBeNil()
 	end)
 
 	it("a player who landed a moment ago can still be a target (only floating players are skipped)", function()
@@ -116,7 +176,7 @@ describe("Slams.pickTarget", function()
 
 	it("nobody fits: nil", function()
 		local nobody = {
-			player(1, 5, 0, { carrying = false }),
+			player(1, 5, 0, { joinedThisWake = true }),
 			player(2, 5, 0, { floating = true }),
 			player(3, 5, 0, { inGarden = true }),
 		}
@@ -397,7 +457,7 @@ describe("Slams.plan", function()
 	end)
 
 	it("no carrier gives an empty-meadow circle with no target", function()
-		local players = { player(1, 0, 0, { carrying = false }) }
+		local players = { player(1, 0, 0, { carrying = false, joinedThisWake = true }) }
 		local result = Slams.plan(players, FACE, { westGarden() }, meadow, {}, nil, nil, first)
 		expect(result.target).toBeNil()
 		expect(result.centre == meadow[1]).toBe(true)

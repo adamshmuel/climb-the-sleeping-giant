@@ -100,7 +100,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 2: Who can be a target**
 - Spec rules: Rule 60 (Carriers first), points 1 and 2 and the last sentence; Rule 62 (No bonk at the door); Rule 63 (A bonk gives a breather), the "not the target" part; Rule 13, first bullet. Checks A1 (the next slam doesn't aim at them) and B1.
-- Files: `src/server/Giant/Slams.luau` (pure), `src/tests/server/Giant/Slams.spec.luau`.
+- Files: `src/server/Giant/Slams.luau` (pure), `src/tests/server/Giant/Slams.spec.luau`, `src/tests/server/Giant/GiantDirector/Slams.spec.luau` (its 5 "nobody can be targeted" tests set their no-egg player floating, so they stay empty-meadow slams until Task 8).
 - What changes: `Slams.Player` gains `joinedThisWake`, `appearedAgo` (seconds since they appeared, nil if not this wake-up) and `bonkedLast`. `Slams.pickTarget` follows "Who can be a target" in "Decisions". Players with no egg can now be targets.
 - Failing tests first (one behaviour each, brand-new players):
   1. A solo player with no egg in the meadow is the target.
@@ -132,7 +132,7 @@ The chase music for the 15 seconds gets no hook: plan 7's music reads `GiantStat
 
 **Task 4: Show slams near a protected player**
 - Spec rules: Rule 60 (Carriers first), point 3; Rule 63 (A bonk gives a breather), the "lands for show near them" part; Check A1 ("lands for show 35 to 45 studs away ... never on their way home ... Every slam lands where the solo player can see it"); section 8, "A show slam near a protected player can't find a clear spot" and "A solo player is in a garden when he wakes".
-- Files: `src/server/Giant/Slams.luau` (pure), `src/tests/server/Giant/Slams.spec.luau`.
+- Files: `src/server/Giant/Slams.luau` (pure), `src/tests/server/Giant/Slams.spec.luau`, `src/tests/server/Giant/GiantDirector/Slams.spec.luau` (its 5 "nobody can be targeted" tests set their no-egg player floating, so they stay empty-meadow slams until Task 8).
 - What changes: `Slams.pickShow(spots, players, protected, gates, gardens, landingSpots, anchor, pick)` follows "Where a show slam lands near a protected player" and "Which protected player" in "Decisions". `Slams.plan` uses it when nobody can be targeted but someone is protected, and V1's `pickEmpty` when nobody is outside a garden.
 - Failing tests first (a fake list of spots on a flat grid):
   1. A solo player just bonked: the show slam's centre is 35 to 45 studs from them.

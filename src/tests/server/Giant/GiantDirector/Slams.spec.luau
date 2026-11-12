@@ -238,7 +238,7 @@ describe("GiantDirector slams", function()
 		expect(catchIds(harness)).toEqual({ 1 })
 	end)
 
-	it("never aims at, or catches, a player who carries nothing", function()
+	it("aims at a carrier, not a nearer player who carries nothing, and catches only the carrier", function()
 		local harness = slamHarness({
 			{ id = 1, position = NEAR, carrying = false }, -- nearest to him, but carries nothing
 			{ id = 2, position = FAR },
@@ -276,6 +276,7 @@ describe("GiantDirector slams", function()
 
 	it("slams meadow points when nobody carries, one the fake pick chooses, and catches no one", function()
 		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
 		harness.pickChoice = 2
 		stepAt(harness, WARN[1])
 		expect(harness.pickCounts).toEqual({ 3 })
@@ -288,6 +289,7 @@ describe("GiantDirector slams", function()
 
 	it("passes the last empty slam's point on, so the next empty slam picks another point", function()
 		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
 		harness.pickChoice = 2
 		stepAt(harness, WARN[1])
 		stepAt(harness, WARN[2])
@@ -330,6 +332,7 @@ describe("GiantDirector slams", function()
 
 	it("forgets the last empty point at a new wake-up", function()
 		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
 		harness.pickChoice = 2
 		stepAt(harness, WARN[1])
 		harness.state:SetAttribute("Meter", 0)
@@ -451,6 +454,7 @@ describe("GiantDirector slammed signal", function()
 
 	it("says no target and an empty list for a slam on the empty meadow", function()
 		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
 		local slams = watchSlams(harness)
 		stepAt(harness, WARN[1])
 		stepAt(harness, LAND[1])
@@ -461,10 +465,12 @@ describe("GiantDirector slammed signal", function()
 
 	it("says who an empty-meadow slam caught when a carrier walked under it", function()
 		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
 		local slams = watchSlams(harness)
 		stepAt(harness, WARN[1])
 		-- Player 1 picks up an egg and stands where the circle will land (the first meadow point).
 		harness.infos[1].carrying = "Common"
+		harness.floating[1] = false
 		moveTo(harness, 1, MEADOW_POINTS[1])
 		stepAt(harness, LAND[1])
 		expect(slams).toEqual({ { target = nil, caught = { 1 }, catchesBefore = 1 } })

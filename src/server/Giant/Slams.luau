@@ -15,6 +15,9 @@ export type Player = {
 	inGarden: boolean,
 	floating: boolean, -- still floating down after the bounce-off
 	landedAgo: number?, -- seconds since the bounce-off float touched down, nil if it hasn't in this wake-up
+	joinedThisWake: boolean?, -- true: joined after he woke, never a target
+	appearedAgo: number?, -- seconds since a catch or a new character put them at the door, nil = not this wake-up
+	bonkedLast: boolean?, -- true: the slam before bonked them, not a target now
 }
 export type Circle = { centre: Vector3, target: number? } -- target is the user id aimed at, nil for an empty-meadow slam
 
@@ -63,28 +66,40 @@ local function isClearOfGardens(centre: Vector3, gardens: { Zones.GardenBox }): 
 	return true
 end
 
--- Could this player be aimed at? Only a carrier who is on the ground (not floating) and outside the gardens.
+-- Could this player be aimed at? On the ground (not floating), outside the gardens, not someone who joined after he woke,
+-- not bonked by the slam before, and not still at the door (less than DoorSeconds since they appeared there).
+-- Whether they carry an egg does not matter here: carriers are preferred in pickTarget.
 local function canBeTargeted(player: Player): boolean
-	return player.carrying and not player.floating and not player.inGarden
+	if player.floating or player.inGarden or player.joinedThisWake == true or player.bonkedLast == true then
+		return false
+	end
+	local appearedAgo = player.appearedAgo
+	return appearedAgo == nil or appearedAgo >= Config.Wake.DoorSeconds
 end
 
--- The carrier nearest to him across the ground, skipping the last target if anyone else can be aimed at. A tie goes to
--- the lower user id, so the answer does not depend on the order of the list.
+-- Carriers first: the target is picked from the players who carry an egg, and only when none can be aimed at, from the
+-- others. Inside that group it is the player nearest to him across the ground, skipping the last target if anyone else in
+-- the group can be aimed at. A tie goes to the lower user id, so the answer does not depend on the order of the list.
 function Slams.pickTarget(players: { Player }, giantFace: Vector3, lastTarget: number?): Player?
-	local eligible: { Player } = {}
-	local othersThanLast = 0
+	local carriers: { Player } = {}
+	local others: { Player } = {}
 	for _, player in players do
 		if canBeTargeted(player) then
-			table.insert(eligible, player)
-			if player.userId ~= lastTarget then
-				othersThanLast += 1
-			end
+			table.insert(if player.carrying then carriers else others, player)
+		end
+	end
+	local group: { Player } = if #carriers > 0 then carriers else others
+
+	local othersThanLast = 0
+	for _, player in group do
+		if player.userId ~= lastTarget then
+			othersThanLast += 1
 		end
 	end
 
 	local best: Player? = nil
 	local bestDistance = math.huge
-	for _, player in eligible do
+	for _, player in group do
 		if player.userId == lastTarget and othersThanLast > 0 then
 			continue
 		end
@@ -212,7 +227,8 @@ end
 function Slams.caught(players: { Player }, centre: Vector3): { number }
 	local caught: { number } = {}
 	for _, player in players do
-		if not canBeTargeted(player) then
+		-- Unchanged for now: only carriers on the ground and outside the gardens (the catch rules change in a later task).
+		if not player.carrying or player.floating or player.inGarden then
 			continue
 		end
 		local landedAgo = player.landedAgo
