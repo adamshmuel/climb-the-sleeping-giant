@@ -592,12 +592,19 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Failing tests first: one climb gives one "WayUp"; walking on to the boot top and back gives no second one; a second climb after the meadow gives a second; a wake logs "WakeWayUp" with the waker's last way up; a waker who never climbed logs "None"; "EggHome" has the server size. All with a fake AnalyticsService.
 - Done when: the tests pass, and in Play the console shows one "WayUp" line per climb.
 
-**Task 17: A whole session through every garden**
+**Task 17: A whole session through every garden** (shrunk by a YAGNI check, 2026-11-12; "YAGNI" = don't build what players won't miss; card `work/p3t17/t17-card.md`, table `work/p3t17/t17-yagni.md`)
+- Stands on: plan 3 Tasks 1 and 16 and plan 4 Task 12 (all committed), `FairnessCheck` and `HeistScore` (built), the reach walk (Task 12b, built).
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests").
-- Files: `src/tests/server/Sessions/WaysUpSession.spec.luau` (new).
-- The test: a brand-new solo player with the real `PlotAssigner`, `Zones` (the real zone and ladder boxes, read only), `Noise`, `SleepMeter`, `GiantDirector` and `WayUpWatch`, and a stand-in for the tracker that walks a character along the real footprint route at 16 studs a second (11.2 on ladders, slower with an egg). They join (a middle garden), bank the Common, climb their garden's way up for the Uncommon, then go for Rare egg 1 over the lap plank and the landing and bring it home, and then keep going: a second Rare heist, and a third through another garden's way up. Checks: the meter peaks between 60 and 80 on each Rare heist and never wakes him; climbing is louder per second than walking the same zone; "WayUp" is logged once per climb; standing at a ladder's foot adds nothing.
-- Failing test first: the test itself. The builder removes the ladder multiplier once on purpose and shows it fail.
-- Done when: the test passes.
+- Files: `src/tests/server/Sessions/WaysUpSession.spec.luau` (new). No `src/` change.
+- Already covered by existing specs, so dropped:
+  1. Garden groups (checks B1, B2, B3, 8 joins): `Players/PlotAssigner.spec`.
+  2. Climbing louder than walking, and the ladder multiplier: `Giant/Noise.spec` and `shared/Config.spec`.
+  3. Standing at a ladder's foot or on a ladder adds nothing: `Giant/Noise.spec`.
+  4. "WayUp" logged once per climb: `Players/WayUpWatch.spec` and `Analytics/WayUps.spec`.
+  5. The meter peaks between 60 and 80 on a Rare heist: `World/FairnessCheck.spec` and `World/HeistScore.spec` (and Task 18's bot walk in Play).
+- The test (new): a brand-new solo player with the real `PlotAssigner`, `Noise`, `SleepMeter`, `GiantDirector`, `WayUpWatch` and `Analytics`, and a stand-in tracker (16 studs a second, 11.2 on ladders, slower with an egg). They join, bank the Common, then make three heists in a row: Rare egg 1 through their own way up twice, then once through another way up. Checks: the meter never wakes him; it drains between heists; "WayUp" is logged 3 times; each egg banks.
+- Failing test first: all the code is built, so the test passes when written. The red proof works through the test's own samples, because `Config` is frozen and can't be changed from a test: heist 1 runs twice, once with the real ladder samples and once with every sample off the ladder (the same as a multiplier of 1). The check says the peak with the ladder is higher. To show it can fail, the builder makes the second run use the ladder samples too once, shows the red, and puts it back. `Config.spec` already pins the multiplier's value of 1.3 (ruling 2026-11-12).
+- Done when: the test passes and was shown to fail once on purpose.
 
 **Task 18: The bot walk on the new ways up**
 - Spec rules: Rule 24 (A bot walks every way), for this spec: Rule 15 (The climb needs no jump), Rule 41's Play proof, Rule 45's fourth proof. Checks C1, C3, D1, D2, D3, D4.
