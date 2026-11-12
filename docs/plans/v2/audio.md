@@ -146,7 +146,8 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
   8. Music button off: both tunes silent at once, and the chase never starts in the next wake.
   9. A free save at 88% (the meter drops to 70 while the warning replays): still silent until the replayed warning ends, then back to the tune for the meter.
 - Done when: the tests pass.
-- Stands on: Task 1 (`Config.Audio`); Rule 89 as changed 2026-11-12 (final).
+- The warning's length is the 85% bubble's own length without Reduce Motion (`Bubble85.showSeconds(false)`, 3.3 s), so Reduce Motion never changes a sound (Rule 88: The game reads without sound). The chase loop numbers are read from `SoundList`, not copied (code_lead, 2026-11-12; card `work/p7/task5-card.md`).
+- Stands on: Task 1 (`Config.Audio`); Rule 89 as changed 2026-11-12; `Fx/Bubble85` (plan 6, done). All final.
 
 **Task 6: The music plays**
 - Spec rules: Rule 89 (Music follows the meter), Rule 93 (Chase music), on the board; section 5, "Tune checks", "Tune length"; section 2 (the tune "starts quietly").
