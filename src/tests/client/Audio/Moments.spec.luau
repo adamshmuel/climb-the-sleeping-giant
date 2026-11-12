@@ -28,6 +28,7 @@ type Rig = {
 	positions: { [Instance]: Vector3 },
 	localPlayer: Instance,
 	eggHome: BindableEvent,
+	eggPop: BindableEvent,
 	addPlayer: (position: Vector3?) -> Instance,
 	setFloating: (player: Instance, floating: boolean) -> (),
 }
@@ -56,6 +57,8 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	localPlayer:SetAttribute("Carrying", carryingAtStart)
 	local eggHome = Instance.new("BindableEvent")
 	table.insert(made, eggHome)
+	local eggPop = Instance.new("BindableEvent") -- plan 7 Task 12: the EggPop remote
+	table.insert(made, eggPop)
 	local played: { Call } = {}
 	local stopped: { string } = {}
 	local later: { Later } = {}
@@ -85,6 +88,10 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	if hearEggHome ~= nil then
 		hearEggHome({ OnClientEvent = eggHome.Event })
 	end
+	local hearEggPop = (handle :: any).hearEggPop
+	if hearEggPop ~= nil then
+		hearEggPop({ OnClientEvent = eggPop.Event })
+	end
 	local function addPlayer(position: Vector3?): Instance
 		local player = Instance.new("Folder")
 		player.Parent = players
@@ -102,6 +109,7 @@ local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 		positions = positions,
 		localPlayer = localPlayer,
 		eggHome = eggHome,
+		eggPop = eggPop,
 		addPlayer = addPlayer,
 		setFloating = function(player: Instance, floating: boolean)
 			player:SetAttribute("Floating", floating)
@@ -532,6 +540,57 @@ describe("Moments.hearEggHome (the egg-home sounds)", function()
 		local rig = newRig()
 		rig.handle.destroy()
 		rig.eggHome:Fire(rig.localPlayer, "Legendary", Vector3.new(0, 0, 0))
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+end)
+
+-- Plan 7 Task 12 (Rules 94 and 95): the sparkle pop when an egg refills, the egg's "pop" when a lost egg goes back or is gone.
+-- Both play at the position the server sends (Nearby rows).
+describe("Moments.hearEggPop (the egg pops)", function()
+	local SPARKLE = "Sparkle pop"
+	local EGG_POP = 'Egg "pop"'
+
+	it("plays one Sparkle pop at the position for a Refill", function()
+		local rig = newRig()
+		rig.eggPop:Fire(PLACE, "Refill")
+		task.wait()
+		expect(rows(rig)).toEqual({ SPARKLE })
+		expect(rig.played[1].at).toEqual(PLACE)
+	end)
+
+	for _, kind in { "Back", "Gone" } do
+		it(`plays one Egg "pop" at the position for {kind}`, function()
+			local rig = newRig()
+			rig.eggPop:Fire(PLACE, kind)
+			task.wait()
+			expect(rows(rig)).toEqual({ EGG_POP })
+			expect(rig.played[1].at).toEqual(PLACE)
+		end)
+	end
+
+	it("plays nothing for a kind that is not Refill, Back or Gone", function()
+		local rig = newRig()
+		rig.eggPop:Fire(PLACE, "Boom")
+		rig.eggPop:Fire(PLACE, 5)
+		rig.eggPop:Fire(PLACE, nil)
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing when the position is not a Vector3", function()
+		local rig = newRig()
+		rig.eggPop:Fire("far away", "Refill")
+		rig.eggPop:Fire(nil, "Back")
+		rig.eggPop:Fire(5, "Gone")
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing after destroy", function()
+		local rig = newRig()
+		rig.handle.destroy()
+		rig.eggPop:Fire(PLACE, "Refill")
 		task.wait()
 		expect(#rig.played).toBe(0)
 	end)

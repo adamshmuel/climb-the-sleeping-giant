@@ -692,6 +692,72 @@ describe("Grab returned signal", function()
 	end)
 end)
 
+-- Plan 7 Task 12 (Rules 94 and 95): `popped` fires (position, kind) so every device can play the egg's sound at the nest.
+describe("Grab popped", function()
+	type Pop = { position: Vector3, kind: string }
+
+	local function listen(rig: Rig): { Pop }
+		local pops: { Pop } = {}
+		rig.grab.popped:Connect(function(position: Vector3, kind: string)
+			table.insert(pops, { position = position, kind = kind })
+		end)
+		return pops
+	end
+
+	it("fires one Refill at the refilled nest's position after the refill", function()
+		local rig = newRig()
+		local pops = listen(rig)
+		rig.trigger("Common_1", rig.playerAt(1, "Common_1"))
+		rig.setTime(START_TIME + 9.9)
+		rig.grab:step()
+		expect(#pops).toBe(0)
+		rig.setTime(START_TIME + 10)
+		rig.grab:step()
+		expect(#pops).toBe(1)
+		expect(pops[1].kind).toBe("Refill")
+		expect(pops[1].position).toEqual(rig.spots.Common_2.cframe.Position)
+	end)
+
+	it("fires Back at the nest when a returned egg finds its nest free", function()
+		local rig = newRig()
+		local pops = listen(rig)
+		local player = rig.playerAt(1, "Common_1")
+		rig.trigger("Common_1", player)
+		rig.grab:returnEgg(player)
+		expect(#pops).toBe(1)
+		expect(pops[1].kind).toBe("Back")
+		expect(pops[1].position).toEqual(rig.spots.Common_1.cframe.Position)
+	end)
+
+	it("fires Gone at the old nest when the slot already refilled", function()
+		local rig = newRig()
+		local player = rig.playerAt(1, "Common_1")
+		rig.trigger("Common_1", player)
+		rig.setTime(START_TIME + 10)
+		rig.grab:step()
+		local pops = listen(rig) -- listens after the refill, so only the return counts
+		rig.grab:returnEgg(player)
+		expect(#pops).toBe(1)
+		expect(pops[1].kind).toBe("Gone")
+		expect(pops[1].position).toEqual(rig.spots.Common_1.cframe.Position)
+	end)
+
+	it("fires nothing for a player who carries nothing", function()
+		local rig = newRig()
+		local pops = listen(rig)
+		rig.grab:returnEgg(rig.playerAt(1, "Common_1"))
+		expect(#pops).toBe(0)
+	end)
+
+	it("is destroyed when Grab stops", function()
+		local rig = newRig()
+		local connection = rig.grab.popped:Connect(function() end)
+		expect(connection.Connected).toBe(true)
+		rig.grab:stop()
+		expect(connection.Connected).toBe(false)
+	end)
+end)
+
 describe("Grab.stop", function()
 	it("disconnects, destroys the prompts and removes every egg, on the spots and on backs", function()
 		local rig = newRig()

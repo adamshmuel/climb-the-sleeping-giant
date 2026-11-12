@@ -99,6 +99,16 @@ describe("Net.setup", function()
 		expect((pressing :: Instance):IsA("RemoteEvent")).toBe(true)
 	end)
 
+	it("has an EggPop remote, made like Caught and returned by setup", function()
+		local parent = newParent()
+		local result = Net.setup(parent)
+		local pop = (parent:FindFirstChild("Remotes") :: Instance):FindFirstChild(Net.EggPopName)
+		expect(Net.EggPopName).toBe("EggPop")
+		expect(pop).never.toBeNil()
+		expect((pop :: Instance):IsA("RemoteEvent")).toBe(true)
+		expect((result :: any).EggPop).toBe(pop)
+	end)
+
 	it("creates GiantState with Meter 0 and Phase Asleep", function()
 		local parent = newParent()
 		Net.setup(parent)
@@ -134,7 +144,7 @@ describe("Net.setup", function()
 		local first = Net.setup(parent)
 		first.GiantState:SetAttribute("Meter", 42)
 		local second = Net.setup(parent)
-		expect(#parent:GetDescendants()).toBe(14) -- the Remotes folder, 12 remotes and GiantState
+		expect(#parent:GetDescendants()).toBe(15) -- the Remotes folder, 13 remotes and GiantState
 		expect(second.GiantState).toBe(first.GiantState)
 		expect(second.Warning).toBe(first.Warning)
 		expect(second.SetTiptoe).toBe(first.SetTiptoe)
@@ -195,6 +205,14 @@ describe("Net.waitForClient", function()
 			expect(made.SetPressing).toBe(remotes:FindFirstChild("SetPressing"))
 		end
 	)
+
+	it("finds the EggPop remote under Remotes", function()
+		local parent = serverMade()
+		local made = Net.waitForClient(parent, 1) :: Net.Made
+		local remotes = parent:FindFirstChild("Remotes") :: Instance
+		expect((made :: any).EggPop).never.toBeNil()
+		expect((made :: any).EggPop).toBe(remotes:FindFirstChild("EggPop"))
+	end)
 
 	it("waits for items that arrive a little later", function()
 		local parent = newParent()
@@ -287,7 +305,7 @@ describe("Net.waitForClient", function()
 		expect(messages[1]).toContain("Remotes.Bounced")
 	end)
 
-	for _, name in { "SlamWarning", "SlamLanded", "Caught" } do
+	for _, name in { "SlamWarning", "SlamLanded", "Caught", "EggPop" } do
 		it(`returns nil and names {name} when only that remote is missing`, function()
 			local parent = serverMade()
 			local remotes = parent:FindFirstChild("Remotes") :: Instance

@@ -211,3 +211,21 @@ describe("Cues.forName (grab and egg home)", function()
 		expect(found.also).toEqual({ FANFARE, CHEER })
 	end)
 end)
+
+describe("Cues.forName (the egg pop)", function()
+	it("gives SparklePop the Sparkle pop row at the row's own speed and no extra row", function()
+		local found = Cues.forName("SparklePop") :: Cues.Cue
+		expect(found.row).toBe("Sparkle pop")
+		expect(found.speed).toBe(nil)
+		expect(found.also).toBe(nil)
+		expect(SoundList.byName(found.row)).never.toBe(nil)
+	end)
+
+	it('gives EggPop the Egg "pop" row at the row\'s own speed and no extra row', function()
+		local found = Cues.forName("EggPop") :: Cues.Cue
+		expect(found.row).toBe('Egg "pop"')
+		expect(found.speed).toBe(nil)
+		expect(found.also).toBe(nil)
+		expect(SoundList.byName(found.row)).never.toBe(nil)
+	end)
+end)

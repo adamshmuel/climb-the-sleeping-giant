@@ -391,6 +391,9 @@ local catcher = Catcher.new({
 		net.Caught:FireAllClients(player)
 	end,
 })
+grab.popped:Connect(function(position, kind)
+	net.EggPop:FireAllClients(position, kind)
+end)
 catcher.caught:Connect(function(player)
 	noteAppeared(player.UserId)
 end)

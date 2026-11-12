@@ -162,7 +162,6 @@ function NestPop.start(deps: Deps): () -> ()
 		end
 		stars.Parent = spot
 		starsEnd[stars] = deps.now() + STARS_SECONDS
-		-- plan 7: refill sound here
 		deps.emit(emitter, if still then STILL_STARS_COUNT else STARS_COUNT)
 	end
 

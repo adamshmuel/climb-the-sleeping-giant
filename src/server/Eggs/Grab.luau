@@ -41,6 +41,8 @@ export type PromptLike = {
 
 -- Why an egg went back: a hand slam caught the carrier, or anything else (they died, reset or left).
 export type ReturnReason = "Caught" | "Lost"
+-- What an egg's pop says: a nest refilled, a carried egg went back to its nest, or went home to a nest that had refilled.
+export type PopKind = "Refill" | "Back" | "Gone"
 
 export type Deps = {
 	spots: { WorldIndex.EggSpot },
@@ -88,6 +90,9 @@ export type Grab = {
 	-- Fires once per refill, after the egg shows on its nest: the egg's rarity and how many seconds the refill waited
 	-- after its countdown ended (0 on time, more when no nest was clear).
 	refilled: Signal.Signal<Config.RarityName, number>,
+	-- Fires where an egg pops (the nest's position) and why: "Refill" after each refill, "Back" when a returned egg
+	-- is on its nest again, "Gone" when its slot had already refilled elsewhere (fired at the old nest).
+	popped: Signal.Signal<Vector3, PopKind>,
 	-- Notes that one of his fists just landed (the director's `slammed`). The right cuff nests stay locked for
 	-- Config.Nests.ArmReturnSeconds after it, while his arm swings back.
 	noteFist: (self: Grab) -> (),
@@ -208,10 +213,16 @@ function Grab.start(deps: Deps): Grab
 	trove:Add(function()
 		refilled:Destroy()
 	end)
+	local popped = Signal.new() :: Signal.Signal<Vector3, PopKind>
+	trove:Add(function()
+		popped:Destroy()
+	end)
 	-- Each spot's rarity by name, so the egg that went back can be named (the server's own list, never the client's).
 	local rarityOfSpot: { [string]: Config.RarityName } = {}
+	local positionOfSpot: { [string]: Vector3 } = {}
 	for _, spot in deps.spots do
 		rarityOfSpot[spot.name] = spot.rarity
+		positionOfSpot[spot.name] = spot.cframe.Position
 	end
 	local limiter = RateLimiter.new(GRABS_PER_SECOND, 1, deps.now)
 	-- Everyone who carries an egg right now, so stop() can take every egg off every back.
@@ -321,6 +332,10 @@ function Grab.start(deps: Deps): Grab
 			spotModels:show(spotName, rootsNow())
 			refreshPrompt(spotName)
 		end
+		local nestPosition: Vector3? = positionOfSpot[spotName]
+		if nestPosition ~= nil and result ~= nil then
+			popped:Fire(nestPosition, if result == "back" then "Back" else "Gone")
+		end
 		local rarity: Config.RarityName? = rarityOfSpot[spotName]
 		if rarity ~= nil then
 			local reason: ReturnReason = if why ~= nil then why else "Lost"
@@ -380,6 +395,10 @@ function Grab.start(deps: Deps): Grab
 			spotModels:show(refill.nest, playersAt)
 			refreshPrompt(refill.nest)
 			refilled:Fire(refill.rank, refill.waited)
+			local nestPosition: Vector3? = positionOfSpot[refill.nest]
+			if nestPosition ~= nil then
+				popped:Fire(nestPosition, "Refill")
+			end
 		end
 	end
 
@@ -397,6 +416,7 @@ function Grab.start(deps: Deps): Grab
 		grabbed = grabbed,
 		returned = returned,
 		refilled = refilled,
+		popped = popped,
 		noteFist = noteFist,
 		step = step,
 		stop = stop,

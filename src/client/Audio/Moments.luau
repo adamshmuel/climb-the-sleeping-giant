@@ -25,6 +25,7 @@ export type Handle = {
 	play: (name: string, at: Vector3?) -> (),
 	stop: (name: string) -> (),
 	hearEggHome: (eggHome: { OnClientEvent: SignalLike }) -> (),
+	hearEggPop: (eggPop: { OnClientEvent: SignalLike }) -> (),
 	destroy: () -> (),
 }
 
@@ -138,6 +139,24 @@ function Moments.start(deps: Deps): Handle
 		)
 	end
 
+	-- An egg pops at a nest: the remote fires (position, kind). A new egg sparkles; a lost one pops. Anything else is
+	-- ignored.
+	local function hearEggPop(eggPop: { OnClientEvent: SignalLike })
+		table.insert(
+			connections,
+			eggPop.OnClientEvent:Connect(function(position: any, kind: any)
+				if typeof(position) ~= "Vector3" then
+					return
+				end
+				if kind == "Refill" then
+					play("SparklePop", position)
+				elseif kind == "Back" or kind == "Gone" then
+					play("EggPop", position)
+				end
+			end)
+		)
+	end
+
 	local function destroy()
 		alive = false
 		for _, connection in connections do
@@ -152,7 +171,7 @@ function Moments.start(deps: Deps): Handle
 		table.clear(perPlayer)
 	end
 
-	return { play = play, stop = stop, hearEggHome = hearEggHome, destroy = destroy }
+	return { play = play, stop = stop, hearEggHome = hearEggHome, hearEggPop = hearEggPop, destroy = destroy }
 end
 
 return Moments
