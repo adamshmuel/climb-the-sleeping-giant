@@ -7,7 +7,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
 | Audio (V2 spec 7) | Task 1: The sound list and the loudness scale | ☑ done | 2026-11-12: 30 rows, 26 ids, Config.Audio; full run 3938/1 (standing OnTheGiant red); code_lead APPROVED |
-| Audio (V2 spec 7) | Task 2: Every file loads, and is the one designer picked | ☐ not started | |
+| Audio (V2 spec 7) | Task 2: Every file loads, and is the one designer picked | ☑ done | 2026-11-12: 26 files load, makers and lengths match; full run 3943/1 (standing OnTheGiant red); code_lead APPROVED |
 | Audio (V2 spec 7) | Task 3: The sound board, and the muted session | ☐ not started | |
 | Audio (V2 spec 7) | Task 4: World prep: Roblox's character sounds on the newer objects | ☐ not started | |
 | Audio (V2 spec 7) | Task 5: What the music should be doing (waits for product: music during a free save) | ☐ not started | |
