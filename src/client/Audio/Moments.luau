@@ -33,15 +33,23 @@ function Moments.start(deps: Deps): Handle
 			return
 		end
 		local options = { speed = cue.speed, fade = cue.fade }
+		local function playRows()
+			deps.board.play(cue.row, at, options)
+			if cue.also ~= nil then
+				for _, row in cue.also do
+					deps.board.play(row, at, nil)
+				end
+			end
+		end
 		local delay = cue.delay
 		if delay ~= nil and delay > 0 then
 			deps.after(delay, function()
 				if alive then
-					deps.board.play(cue.row, at, options)
+					playRows()
 				end
 			end)
 		else
-			deps.board.play(cue.row, at, options)
+			playRows()
 		end
 	end
 

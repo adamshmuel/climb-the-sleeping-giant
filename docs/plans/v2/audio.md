@@ -199,15 +199,18 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 - Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes `playSound` to `SlamFx`, `BonkFx` and `Celebrations`), their tests.
 - What it does: `SlamCircle` plays the rising whoosh at the circle; `SlamThud` the fist thud at the circle (speed 0.8, heard across the valley); `Bonk` the bonk and the twinkle together at the player; `Caught` the caught whoosh, only on the caught player's own device.
 - Failing tests first: one circle and one landing give one whoosh and one thud at the circle's point; a bonk gives one bonk and one twinkle at that player; a catch of this player gives one whoosh with no place, and a catch of someone else gives nothing; with the music off, every slam sound still plays.
-- Done when: the tests pass, and a slam aimed at a player halfway up a boot ladder (aimed before they stepped on): the whoosh is heard from the ladder (spec 3, Check C4).
-- Stands on: plan 3 Task 15b (the circle under a player on a real ladder, and the ladder grace that decides when a slam aims at a climber).
+- Done when: the tests pass, and a muted Play slam, bonk and catch (Task 8's pattern): the whoosh and the thud each play once at the warning's point, the bonk and the twinkle together at the player, one caught whoosh with no place.
+- Changed 2026-11-12 (code_lead, how it is measured; what the player hears is unchanged): spec 3 Check C4's ladder whoosh is proven in two parts. Plan 3 Task 15b proved in Play that the circle lies on the surface below a climber; this task proves the whoosh plays at the warning's point. A climber halfway up a boot ladder is about 15 studs above it, which the nearby curve (`Config.Audio.NearbyCurve`: full to 10 studs, none at 80) plays at about 0.93. No ladder climb is repeated.
+- Stands on: Tasks 3 and 9 (approved 2026-11-12); plan 3 Task 15b (done 2026-11-12); plan 6's sound hooks in `SlamFx`, `BonkFx` and `Celebrations` (built).
 
 **Task 11: Grabbing and bringing eggs home**
 - Spec rules: Rule 95 (Egg sounds, grander for rarer eggs): the grab and the egg home.
-- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, their tests.
+- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes the local player and the `EggHome` remote to `Moments`), their tests.
 - What it does: when this player's own `Carrying` turns from nothing to a rank (the server's answer to a finished grab), the pluck plays, plus the shimmer for Rare, Epic or Legendary (the shared rank order, plan 1's `Rarity`). When `EggHome` names this player: the toot; plus the happy hit for Rare; plus the fanfare for Epic; plus the fanfare and the children's cheer for Legendary, all starting together.
-- Failing tests first: a Common grab gives a pluck only; a Rare grab gives a pluck and a shimmer; another player's grab gives nothing; an egg home of each rank gives exactly its layers, all at the same moment; another player's egg home gives nothing.
-- Done when: the tests pass.
+- Failing tests first: a Common grab gives a pluck only; a Rare grab gives a pluck and a shimmer; another player's grab gives nothing; an egg home of each rank gives exactly its layers, all at the same moment; another player's egg home gives nothing; a `Carrying` already set when `Moments` starts plays nothing.
+- Done when: the tests pass, and a muted Play (Task 10's pattern) shows a pluck alone for a Common grab, a pluck and a shimmer together for a Rare grab, and each egg home's layers together with no sound place.
+- Changed 2026-11-13 (code_lead, how it is measured; what the player hears is unchanged): the muted Play sets `Carrying` on the server and fires `EggHome` itself, as Task 10 fired its slams. The sounds listen only to that attribute and that remote; real grabs and banking were proven in plans 1 and 5.
+- Stands on: Tasks 3, 9 and 10 (approved 2026-11-12 and 2026-11-13); plan 1's `Rarity` and the `EggHome` remote (built).
 
 **Task 12: A new egg sparkles, a lost egg pops**
 - Spec rules: Rule 95 (Egg sounds, grander for rarer eggs): the sparkle pop; Rule 94 (Every slam is heard): the egg's "pop"; Rule 77 (Empty nests show no timer) and Rule 78 (A lost egg goes back to its nest), the moments; section 8 of spec 5, "A carrier is caught after their slot's egg has already refilled".

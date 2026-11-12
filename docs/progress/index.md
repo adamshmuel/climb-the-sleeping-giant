@@ -4,11 +4,11 @@ A short map of where the game stands. Each plan has its own progress file in thi
 
 **V1 (core heist):** done. All 51 tasks were approved, it passed Gate 4, and it is committed. Its rows, its Gate 4 hand-over and its commit list: `docs/progress/v1.md`.
 
-**V2 (Heist update):** 163 of 225 tasks done, setups included.
+**V2 (Heist update):** 173 of 225 tasks done, setups included.
 - New-player safety (plan 1) passed Gate 4 on 2026-10-19 and is committed.
 - Stuck safety (plan 2): all 67 tasks done. Its build review is still to come.
 - Plan 3 (gardens and ways up): every task done on 2026-11-12. Its build review is still to come.
-- Three audio tasks (5, 6 and 7) wait for answers from product and designer.
+- Audio (plan 7): Tasks 1 to 10 done; Task 11 (egg sounds) in progress.
 - The older, longer summary: [V2 status log](v2/history/v2-status-log.md).
 
 ## V2, plan by plan
@@ -22,8 +22,8 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | 4. Egg reachability | `v2/egg-reachability.md` | 16 of 22 | ◐ in progress (Tasks 1 to 4b, 6 to 8, 9a to 9d, 10, 12 and 13 done) |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 53 of 53 (recounted on 2026-11-12: Tasks 17w and 19c were marked ✅ and missed by the last count; Tasks 24 and 25 dropped as not needed) | ☑ all tasks done 2026-11-12 (23a, 21b and 23b that day); build review and Gate 4 still to come |
 | 6. Wake-up | `v2/wake-up.md` | 23 of 23 | ☑ done |
-| 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
-| **All of V2** | | **163 of 225** (setups included; recounted from every progress file on 2026-11-10, plan 5 recounted 2026-11-12; plan 5 Task 7 split in 3; plan 4 Task 13 split in 3 on 2026-11-11) | |
+| 7. Audio | `v2/audio.md` | 10 of 20 | ◐ in progress (Tasks 1 to 10 done on 2026-11-12 and 13; Task 11 next) |
+| **All of V2** | | **173 of 225** (setups included; recounted from every progress file on 2026-11-10, plan 5 recounted 2026-11-12; plan 5 Task 7 split in 3; plan 4 Task 13 split in 3 on 2026-11-11) | |
 
 Removed and dropped tasks are not counted.
 
@@ -37,7 +37,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 ## Tests that are red today
 
-1 accepted red: OnTheGiant "the walk area passes the walk-area check" (standing). Last full run, plan 6 Task 22 (2026-11-12): 3903 passed, 1 failed.
+1 accepted red: OnTheGiant "the walk area passes the walk-area check" (standing). Last full run, plan 7 Task 10 (2026-11-13): 4063 passed, 1 failed.
 
 The stuck scan is green: 114 stuck spots (plan 5 Task 13b), all on the rare list, the closed list or the accepted-for-now list. The beard wedge under the chin (-6.8, 81.5, -11) is the one "accepted for now" spot (spec Rule 22) until spec 10 (Launch polish) fixes it; the scan fails if any other spot joins it.
 

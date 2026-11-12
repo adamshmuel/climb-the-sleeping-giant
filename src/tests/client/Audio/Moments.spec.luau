@@ -102,7 +102,7 @@ local function runLater(rig: Rig)
 end
 
 -- The real board over fake engine deps: nothing is heard (SoundBoard.spec's rig, smaller).
-type RealRig = { board: SoundBoard.Board, started: { AudioPlayer } }
+type RealRig = { board: SoundBoard.Board, started: { AudioPlayer }, root: Folder, worldParent: Part }
 local function newRealBoard(): RealRig
 	local root = Instance.new("Folder")
 	local output = Instance.new("AudioFader")
@@ -129,7 +129,7 @@ local function newRealBoard(): RealRig
 			return 0
 		end,
 	})
-	return { board = board, started = started }
+	return { board = board, started = started, root = root, worldParent = worldParent }
 end
 
 describe("Moments.play (the wake sounds)", function()
@@ -332,5 +332,91 @@ describe("Moments: Reduce Motion changes no sound (Rule 88)", function()
 		expect(#off).toBe(1)
 		expect(off[1].row).toBe("Rumble")
 		expect(on).toEqual(off)
+	end)
+end)
+
+-- Plan 7 Task 10 (Rule 94, Every slam is heard): the slam, bonk and caught sounds.
+local WHOOSH = 'Circle warning "whoosh"'
+local THUD = "Fist thud"
+local BONK = "Bonk"
+local TWINKLE = "Bonk twinkle"
+local CAUGHT = 'Caught "whoosh"'
+
+describe("Moments: every slam is heard (Rule 94)", function()
+	it("plays one whoosh at the point for a slam circle, at once", function()
+		local rig = newRig()
+		rig.handle.play("SlamCircle", PLACE)
+		expect(#rig.played).toBe(1)
+		expect(rig.played[1].row).toBe(WHOOSH)
+		expect(rig.played[1].at).toEqual(PLACE)
+		expect(#rig.later).toBe(0)
+	end)
+
+	it("plays one thud at the point for a slam landing, at the row's own speed 0.8", function()
+		local real = newRealBoard()
+		local rig = newRig(real.board)
+		rig.handle.play("SlamThud", PLACE)
+		expect(#real.started).toBe(1)
+		expect(real.started[1].Name).toBe(`Copy {THUD}`)
+		expect(real.started[1].PlaybackSpeed).toBeCloseTo(0.8, PRECISION)
+		expect(#real.board.log).toBe(1)
+		expect(real.board.log[1].row).toBe(THUD)
+		expect(real.board.log[1].place).toEqual(PLACE)
+	end)
+
+	it("plays one bonk and one twinkle at the same place in the same frame", function()
+		local rig = newRig()
+		rig.handle.play("Bonk", PLACE)
+		expect(#rig.played).toBe(2)
+		expect(rig.played[1].row).toBe(BONK)
+		expect(rig.played[2].row).toBe(TWINKLE)
+		expect(rig.played[1].at).toEqual(PLACE)
+		expect(rig.played[2].at).toEqual(PLACE)
+		expect(#rig.later).toBe(0)
+	end)
+
+	it("plays the bonk and the twinkle through the real board, one copy each, at the place", function()
+		local real = newRealBoard()
+		local rig = newRig(real.board)
+		rig.handle.play("Bonk", PLACE)
+		expect(#real.started).toBe(2)
+		expect(#real.board.log).toBe(2)
+		expect(real.board.log[1].row).toBe(BONK)
+		expect(real.board.log[2].row).toBe(TWINKLE)
+		expect(real.board.log[1].place).toEqual(PLACE)
+		expect(real.board.log[2].place).toEqual(PLACE)
+		expect(real.board.log[1].time).toBe(real.board.log[2].time)
+	end)
+
+	it("plays one caught whoosh with no sound place", function()
+		local real = newRealBoard()
+		local rig = newRig(real.board)
+		rig.handle.play("Caught", nil)
+		expect(#real.started).toBe(1)
+		expect(real.started[1].Name).toBe(`Copy {CAUGHT}`)
+		expect(real.board.log[1].place).toBe(nil)
+		expect(#real.worldParent:GetChildren()).toBe(0)
+	end)
+
+	it("wires every slam copy away from the music bus, and the caught copy to the effects bus", function()
+		local real = newRealBoard()
+		local rig = newRig(real.board)
+		rig.handle.play("SlamCircle", PLACE)
+		rig.handle.play("SlamThud", PLACE)
+		rig.handle.play("Bonk", PLACE)
+		rig.handle.play("Caught", nil)
+		local effects = real.root:FindFirstChild("Effects")
+		expect(effects).never.toBe(nil)
+		expect(#real.started).toBe(5)
+		for _, copy in real.started do
+			for _, wire in copy:GetChildren() do
+				if wire:IsA("Wire") then
+					expect(wire.TargetInstance).never.toBe(real.board.music)
+				end
+			end
+		end
+		local caughtWire = real.started[5]:FindFirstChildWhichIsA("Wire")
+		expect(caughtWire).never.toBe(nil)
+		expect((caughtWire :: Wire).TargetInstance).toBe(effects)
 	end)
 end)

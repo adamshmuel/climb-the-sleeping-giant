@@ -70,3 +70,47 @@ describe("Cues.forName", function()
 		expect(Cues.forName("WakeRoar", withoutYawn)).never.toBe(nil) -- other rows still found
 	end)
 end)
+
+describe("Cues.forName (Plan 7 Task 10: every slam is heard)", function()
+	it("gives the four slam names their rows", function()
+		local expected: { [string]: string } = {
+			SlamCircle = 'Circle warning "whoosh"',
+			SlamThud = "Fist thud",
+			Bonk = "Bonk",
+			Caught = 'Caught "whoosh"',
+		}
+		for name, row in expected do
+			local found = Cues.forName(name)
+			expect(found).never.toBe(nil)
+			expect((found :: Cues.Cue).row).toBe(row)
+			expect(SoundList.byName(row)).never.toBe(nil)
+		end
+	end)
+
+	it("plays the thud at its row's own speed, 0.8", function()
+		local found = Cues.forName("SlamThud") :: Cues.Cue
+		local row = SoundList.byName(found.row) :: SoundList.Entry
+		expect(row.speed).toBeCloseTo(0.8, PRECISION)
+		expect(found.speed).toBe(nil)
+	end)
+
+	it("gives the bonk the twinkle as an extra row", function()
+		local found = Cues.forName("Bonk") :: Cues.Cue
+		expect(found.also).toEqual({ "Bonk twinkle" })
+		expect(SoundList.byName("Bonk twinkle")).never.toBe(nil)
+	end)
+
+	it("keeps the bonk and leaves the twinkle out when the twinkle row is gone", function()
+		local function withoutTwinkle(name: string): SoundList.Entry?
+			if name == "Bonk twinkle" then
+				return nil
+			end
+			return SoundList.byName(name)
+		end
+		local found = Cues.forName("Bonk", withoutTwinkle)
+		expect(found).never.toBe(nil)
+		local cue = found :: Cues.Cue
+		expect(cue.row).toBe("Bonk")
+		expect(table.find(cue.also or {}, "Bonk twinkle")).toBe(nil)
+	end)
+end)

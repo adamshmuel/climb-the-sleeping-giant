@@ -15,8 +15,8 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Audio (V2 spec 7) | Task 7: The snore follows his sleep | ☑ done | 2026-11-12: Snore 9/9, GiantFx 280/0, full run 4015/1 (only the standing red; t7-run-note.md), code review approved; muted session passed (task7-note.md Step 4). Its 3 stop-time misses (0.17-0.18 s against 0.15) are the Play client's ~15 fps frame plus the probe's sample gap, not code: accepted by code_lead |
 | Audio (V2 spec 7) | Task 8: The snorts and the mumble | ☑ done | 2026-11-12: GiantFx 289/0, Cues 4/0, SoundBoard 31/0, code review approved; full run 4034/1 (only the standing red); muted Play passed every line (snorts 1.00 then 0.90, mumble 1.08 s after the warning, stopped at the free save and the wake) |
 | Audio (V2 spec 7) | Task 9: The wake-up is loud, and the yawn | ☑ done | 2026-11-12: Cues 6/0, SoundBoard 32/0, Moments 16/0, WakeFace 14/0, GiantFx 289/0; code review approved after one fix (a leaving player's connection is dropped); full run 4053/1 (only the standing red); muted Play wake passed every line (sting, roar, rumble at W, birds W+0.20, pop W+0.26, rumble silent by W+0.93, one yawn at the lie-down) |
-| Audio (V2 spec 7) | Task 10: Every slam is heard | ◐ in progress | 2026-11-12: card work/p7/task10-card.md |
-| Audio (V2 spec 7) | Task 11: Grabbing and bringing eggs home | ☐ not started | |
+| Audio (V2 spec 7) | Task 10: Every slam is heard | ☑ done | builder, code_lead: Cues 10/0, Moments 22/0, SlamFx 132/0, BonkFx 30/0, Celebrations 45/0; review: one fix (SlamThud's copied speed removed); full run 4063/1 before the fix, narrow runs green after; muted Play passed on try 2: whoosh 3.01 at the warning point, thud 4.98 speed 0.80, bonk and twinkle 7.00 at the player, caught whoosh 11.02 with no place (2026-11-13) |
+| Audio (V2 spec 7) | Task 11: Grabbing and bringing eggs home | ◐ in progress | 2026-11-13: card work/p7/task11-card.md |
 | Audio (V2 spec 7) | Task 12: A new egg sparkles, a lost egg pops | ☐ not started | |
 | Audio (V2 spec 7) | Task 13: Your own thuds are heard | ☐ not started | |
 | Audio (V2 spec 7) | Task 14: Tiptoe is quiet, and clicks | ☐ not started | |

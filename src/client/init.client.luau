@@ -332,7 +332,8 @@ if server then
 			eggHome = { OnClientEvent = server.EggHome.OnClientEvent },
 			findEmitter = Celebrations.emitterInWorld(world),
 			caught = { OnClientEvent = server.Caught.OnClientEvent },
-			localPlayer = Players.LocalPlayer, -- only your own "Caught" plays a sound (none yet: plan 7)
+			localPlayer = Players.LocalPlayer, -- only your own "Caught" plays a sound
+			playSound = moments.play,
 			findSpawnSpot = findSpawnSpot,
 			poofTemplate = if assets then assets:FindFirstChild("CaughtPoof") else nil,
 			burst = function(emitter: ParticleEmitter, count: number)
@@ -432,8 +433,8 @@ if server then
 			warn("WakeWorld not started: Assets.WakeBirds or World.GiantFX.WakeDust is missing")
 		end
 		-- The bonk on screen: every player's `Bonked` attribute tips their body and shows stars and a puff (spec Rule 61).
-		-- No `playSound`: the named sounds come with plan 7.
 		local stopBonkFx = BonkFx.start({
+			playSound = moments.play,
 			players = function()
 				return Players:GetPlayers()
 			end,
@@ -654,6 +655,7 @@ local slamFist = if assets then assets:WaitForChild("SlamFist", NET_WAIT_SECONDS
 if server and slamFist and slamFist:IsA("Model") and footprintWorld then
 	local castHug, refreshHug = SlamFx.workspaceCastHug(Workspace, footprintWorld)
 	local slams = SlamFx.start({
+		playSound = moments.play,
 		slamWarning = { OnClientEvent = server.SlamWarning.OnClientEvent },
 		slamLanded = { OnClientEvent = server.SlamLanded.OnClientEvent },
 		fist = slamFist,

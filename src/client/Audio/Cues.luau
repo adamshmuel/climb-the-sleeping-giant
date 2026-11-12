@@ -6,12 +6,19 @@ local SoundList = require(script.Parent.SoundList)
 
 local Cues = {}
 
-export type Cue = { row: string, speed: number?, delay: number?, fade: { after: number, seconds: number }? }
+export type Cue = {
+	row: string,
+	speed: number?,
+	delay: number?,
+	fade: { after: number, seconds: number }?,
+	also: { string }?, -- extra rows played with it, at the same place (a row not in the list is left out)
+}
 
 local SNORT_ROW = "85% snort (two)"
 local MUMBLE_ROW = '"Mmm..." mumble'
 
--- Rule 92: the wake-up sounds, and the boing (Rule 86).
+-- Rule 92: the wake-up sounds, the boing (Rule 86), and Rule 94's slams: the whoosh, the thud, the bonk with its twinkle, the
+-- caught whoosh (just for you, so it has no place).
 local FIXED: { [string]: Cue } = {
 	Mumble = { row = MUMBLE_ROW },
 	WakeEyes = { row = '"!" sting' },
@@ -21,6 +28,10 @@ local FIXED: { [string]: Cue } = {
 	ZzzPop = { row = "Z Z Z popping", delay = 0.3 },
 	LieDown = { row = "Big yawn" },
 	Boing = { row = 'Bounce-off "boing"' },
+	SlamCircle = { row = 'Circle warning "whoosh"' },
+	SlamThud = { row = "Fist thud" }, -- the row's own speed (0.8) is used
+	Bonk = { row = "Bonk", also = { "Bonk twinkle" } },
+	Caught = { row = 'Caught "whoosh"' },
 }
 
 function Cues.forName(name: string, byName: ((string) -> SoundList.Entry?)?): Cue?
@@ -37,7 +48,17 @@ function Cues.forName(name: string, byName: ((string) -> SoundList.Entry?)?): Cu
 	if cue == nil or find(cue.row) == nil then
 		return nil
 	end
-	return table.clone(cue)
+	local found = table.clone(cue)
+	if cue.also ~= nil then
+		local kept: { string } = {}
+		for _, row in cue.also do
+			if find(row) ~= nil then
+				table.insert(kept, row)
+			end
+		end
+		found.also = kept
+	end
+	return found
 end
 
 return Cues
