@@ -26,6 +26,8 @@ type Rig = {
 	stopped: { string },
 	later: { Later },
 	positions: { [Instance]: Vector3 },
+	localPlayer: Instance,
+	eggHome: BindableEvent,
 	addPlayer: (position: Vector3?) -> Instance,
 	setFloating: (player: Instance, floating: boolean) -> (),
 }
@@ -45,9 +47,15 @@ afterEach(function()
 end)
 
 -- Moments over a recording board. `board` replaces the recorder (the real board, for the cap test).
-local function newRig(board: Moments.Board?): Rig
+local function newRig(board: Moments.Board?, carryingAtStart: string?): Rig
 	local players = Instance.new("Folder")
 	table.insert(made, players)
+	-- Plan 7 Task 11: the local player (a stand-in with a Carrying attribute) and the EggHome remote (a BindableEvent).
+	local localPlayer = Instance.new("Folder")
+	table.insert(made, localPlayer)
+	localPlayer:SetAttribute("Carrying", carryingAtStart)
+	local eggHome = Instance.new("BindableEvent")
+	table.insert(made, eggHome)
 	local played: { Call } = {}
 	local stopped: { string } = {}
 	local later: { Later } = {}
@@ -67,11 +75,16 @@ local function newRig(board: Moments.Board?): Rig
 			table.insert(later, { seconds = seconds, callback = callback })
 		end,
 		playerList = players,
+		localPlayer = localPlayer,
 		rootOf = function(player: Instance): Vector3?
 			return positions[player]
 		end,
 	})
 	table.insert(handles, handle)
+	local hearEggHome = (handle :: any).hearEggHome
+	if hearEggHome ~= nil then
+		hearEggHome({ OnClientEvent = eggHome.Event })
+	end
 	local function addPlayer(position: Vector3?): Instance
 		local player = Instance.new("Folder")
 		player.Parent = players
@@ -87,6 +100,8 @@ local function newRig(board: Moments.Board?): Rig
 		stopped = stopped,
 		later = later,
 		positions = positions,
+		localPlayer = localPlayer,
+		eggHome = eggHome,
 		addPlayer = addPlayer,
 		setFloating = function(player: Instance, floating: boolean)
 			player:SetAttribute("Floating", floating)
@@ -259,6 +274,7 @@ describe("Moments: the boings", function()
 			rootOf = function(_player: Instance): Vector3?
 				return PLACE
 			end,
+			localPlayer = players,
 		})
 		table.insert(handles, handle)
 		early:SetAttribute("Floating", true)
@@ -418,5 +434,105 @@ describe("Moments: every slam is heard (Rule 94)", function()
 		local caughtWire = real.started[5]:FindFirstChildWhichIsA("Wire")
 		expect(caughtWire).never.toBe(nil)
 		expect((caughtWire :: Wire).TargetInstance).toBe(effects)
+	end)
+end)
+
+-- Plan 7 Task 11 (Rule 95): the grab sound when the local player picks an egg up, the egg-home sounds when one is banked.
+-- Both are just for you: no sound place. A row's copy is made by the real board, so the recorder lists rows and places.
+local PLUCK = "Grab pluck"
+local SHIMMER = "Grab shimmer"
+local TOOT = "Egg home toot"
+local HAPPY = "Egg home, Rare: happy hit"
+local FANFARE = "Egg home, Epic and Legendary: fanfare"
+local CHEER = "Egg home, Legendary: children's cheer"
+
+local function rows(rig: Rig): { string }
+	local names: { string } = {}
+	for _, call in rig.played do
+		table.insert(names, call.row)
+	end
+	return names
+end
+
+local function pick(rig: Rig, rank: string?)
+	rig.localPlayer:SetAttribute("Carrying", rank)
+	task.wait() -- attribute changes reach listeners a moment after they are set
+end
+
+describe("Moments (the grab sound)", function()
+	it("plays one pluck when the local player picks up a Common egg", function()
+		local rig = newRig()
+		pick(rig, "Common")
+		expect(rows(rig)).toEqual({ PLUCK })
+		expect(rig.played[1].at).toBe(nil)
+	end)
+
+	it("plays the pluck and the shimmer in the same frame for a Rare egg", function()
+		local rig = newRig()
+		pick(rig, "Rare")
+		expect(rows(rig)).toEqual({ PLUCK, SHIMMER })
+		expect(rig.played[1].at).toBe(nil)
+		expect(rig.played[2].at).toBe(nil)
+		expect(#rig.later).toBe(0)
+	end)
+
+	it("plays nothing when another player's Carrying changes", function()
+		local rig = newRig()
+		local other = rig.addPlayer(Vector3.new(1, 2, 3))
+		other:SetAttribute("Carrying", "Rare")
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing for a Carrying that was already set at the start", function()
+		local rig = newRig(nil, "Rare")
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing after destroy", function()
+		local rig = newRig()
+		rig.handle.destroy()
+		pick(rig, "Common")
+		expect(#rig.played).toBe(0)
+	end)
+end)
+
+describe("Moments.hearEggHome (the egg-home sounds)", function()
+	local EXPECTED: { [string]: { string } } = {
+		Common = { TOOT },
+		Uncommon = { TOOT },
+		Rare = { TOOT, HAPPY },
+		Epic = { TOOT, FANFARE },
+		Legendary = { TOOT, FANFARE, CHEER },
+	}
+
+	for _, rank in { "Common", "Uncommon", "Rare", "Epic", "Legendary" } do
+		it(`plays exactly the {rank} egg-home rows in one frame with no place`, function()
+			local rig = newRig()
+			rig.eggHome:Fire(rig.localPlayer, rank, Vector3.new(0, 0, 0))
+			task.wait()
+			expect(rows(rig)).toEqual(EXPECTED[rank])
+			for _, call in rig.played do
+				expect(call.at).toBe(nil)
+			end
+			expect(#rig.later).toBe(0)
+		end)
+	end
+
+	it("plays nothing for another player's egg home", function()
+		local rig = newRig()
+		local other = rig.addPlayer(Vector3.new(1, 2, 3))
+		rig.eggHome:Fire(other, "Legendary", Vector3.new(0, 0, 0))
+		task.wait()
+		expect(#rig.played).toBe(0)
+	end)
+
+	it("plays nothing after destroy", function()
+		local rig = newRig()
+		rig.handle.destroy()
+		rig.eggHome:Fire(rig.localPlayer, "Legendary", Vector3.new(0, 0, 0))
+		task.wait()
+		expect(#rig.played).toBe(0)
 	end)
 end)

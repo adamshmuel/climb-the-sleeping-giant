@@ -114,3 +114,100 @@ describe("Cues.forName (Plan 7 Task 10: every slam is heard)", function()
 		expect(table.find(cue.also or {}, "Bonk twinkle")).toBe(nil)
 	end)
 end)
+
+local RANKS = { "Common", "Uncommon", "Rare", "Epic", "Legendary" }
+local PLUCK = "Grab pluck"
+local SHIMMER = "Grab shimmer"
+local TOOT = "Egg home toot"
+local HAPPY = "Egg home, Rare: happy hit"
+local FANFARE = "Egg home, Epic and Legendary: fanfare"
+local CHEER = "Egg home, Legendary: children's cheer"
+
+-- Plan 7 Task 11 (Rule 95): the grab and egg-home sounds, grander for rarer eggs.
+describe("Cues.grabName", function()
+	it("gives Common and Uncommon the plain grab", function()
+		expect(Cues.grabName("Common")).toBe("Grab")
+		expect(Cues.grabName("Uncommon")).toBe("Grab")
+	end)
+
+	it("gives Rare, Epic and Legendary the shimmering grab", function()
+		expect(Cues.grabName("Rare")).toBe("GrabShimmer")
+		expect(Cues.grabName("Epic")).toBe("GrabShimmer")
+		expect(Cues.grabName("Legendary")).toBe("GrabShimmer")
+	end)
+
+	it("gives a name that is not a rank, nil and a number nothing", function()
+		expect(Cues.grabName("Shiny")).toBe(nil)
+		expect(Cues.grabName(nil)).toBe(nil)
+		expect(Cues.grabName(5)).toBe(nil)
+	end)
+end)
+
+describe("Cues.homeName", function()
+	it("gives Common and Uncommon the plain home toot", function()
+		expect(Cues.homeName("Common")).toBe("Home")
+		expect(Cues.homeName("Uncommon")).toBe("Home")
+	end)
+
+	it("gives Rare, Epic and Legendary their own names", function()
+		expect(Cues.homeName("Rare")).toBe("HomeRare")
+		expect(Cues.homeName("Epic")).toBe("HomeEpic")
+		expect(Cues.homeName("Legendary")).toBe("HomeLegendary")
+	end)
+
+	it("gives a name that is not a rank, nil and a number nothing", function()
+		expect(Cues.homeName("Shiny")).toBe(nil)
+		expect(Cues.homeName(nil)).toBe(nil)
+		expect(Cues.homeName(5)).toBe(nil)
+	end)
+
+	it("gives every rank a name that plays a cue", function()
+		for _, rank in RANKS do
+			local name = Cues.homeName(rank)
+			expect(name).never.toBe(nil)
+			expect(Cues.forName(name :: string)).never.toBe(nil)
+			expect(Cues.forName(Cues.grabName(rank) :: string)).never.toBe(nil)
+		end
+	end)
+end)
+
+describe("Cues.forName (grab and egg home)", function()
+	it("gives Grab the pluck at the row's own speed and no extra row", function()
+		local found = Cues.forName("Grab") :: Cues.Cue
+		expect(found.row).toBe(PLUCK)
+		expect(found.speed).toBe(nil)
+		expect(found.also).toBe(nil)
+	end)
+
+	it("gives GrabShimmer the pluck and the shimmer", function()
+		local found = Cues.forName("GrabShimmer") :: Cues.Cue
+		expect(found.row).toBe(PLUCK)
+		expect(found.speed).toBe(nil)
+		expect(found.also).toEqual({ SHIMMER })
+	end)
+
+	it("gives Home the toot alone", function()
+		local found = Cues.forName("Home") :: Cues.Cue
+		expect(found.row).toBe(TOOT)
+		expect(found.speed).toBe(nil)
+		expect(found.also).toBe(nil)
+	end)
+
+	it("gives HomeRare the toot and the happy hit", function()
+		local found = Cues.forName("HomeRare") :: Cues.Cue
+		expect(found.row).toBe(TOOT)
+		expect(found.also).toEqual({ HAPPY })
+	end)
+
+	it("gives HomeEpic the toot and the fanfare", function()
+		local found = Cues.forName("HomeEpic") :: Cues.Cue
+		expect(found.row).toBe(TOOT)
+		expect(found.also).toEqual({ FANFARE })
+	end)
+
+	it("gives HomeLegendary the toot, the fanfare and the cheer", function()
+		local found = Cues.forName("HomeLegendary") :: Cues.Cue
+		expect(found.row).toBe(TOOT)
+		expect(found.also).toEqual({ FANFARE, CHEER })
+	end)
+end)

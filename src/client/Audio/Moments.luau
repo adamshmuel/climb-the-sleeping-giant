@@ -15,10 +15,16 @@ export type Deps = {
 	after: (seconds: number, callback: () -> ()) -> (), -- task.delay in the game
 	playerList: Instance, -- Players in the game
 	rootOf: (player: Instance) -> Vector3?,
+	localPlayer: Instance, -- this device's player: their Carrying and their egg home are heard (Rule 95)
+}
+-- The EggHome remote's signal, as far as this module uses it (same shape as Celebrations').
+export type SignalLike = {
+	Connect: (self: any, callback: (...any) -> ()) -> RBXScriptConnection,
 }
 export type Handle = {
 	play: (name: string, at: Vector3?) -> (),
 	stop: (name: string) -> (),
+	hearEggHome: (eggHome: { OnClientEvent: SignalLike }) -> (),
 	destroy: () -> (),
 }
 
@@ -26,6 +32,7 @@ function Moments.start(deps: Deps): Handle
 	local connections: { RBXScriptConnection } = {}
 	local perPlayer: { [Instance]: RBXScriptConnection? } = {} -- each player's Floating listener, gone when they leave
 	local alive = true
+	local carrying = deps.localPlayer:GetAttribute("Carrying") ~= nil -- an egg already carried at start is not a grab
 
 	local function play(name: string, at: Vector3?)
 		local cue = Cues.forName(name)
@@ -101,6 +108,36 @@ function Moments.start(deps: Deps): Handle
 		end)
 	)
 
+	-- Plan 7 Task 11 (Rule 95): the grab. Only a change from nothing to an egg plays, so an egg already carried at start is silent.
+	table.insert(
+		connections,
+		deps.localPlayer:GetAttributeChangedSignal("Carrying"):Connect(function()
+			if deps.localPlayer:GetAttribute("Carrying") ~= nil and not carrying then
+				local name = Cues.grabName(deps.localPlayer:GetAttribute("Carrying"))
+				if name ~= nil then
+					play(name, nil)
+				end
+			end
+			carrying = deps.localPlayer:GetAttribute("Carrying") ~= nil
+		end)
+	)
+
+	-- The egg home: the remote fires (player, rarity, position); only this device's own player is heard.
+	local function hearEggHome(eggHome: { OnClientEvent: SignalLike })
+		table.insert(
+			connections,
+			eggHome.OnClientEvent:Connect(function(player: any, rank: any)
+				if player ~= deps.localPlayer then
+					return
+				end
+				local name = Cues.homeName(rank)
+				if name ~= nil then
+					play(name, nil)
+				end
+			end)
+		)
+	end
+
 	local function destroy()
 		alive = false
 		for _, connection in connections do
@@ -115,7 +152,7 @@ function Moments.start(deps: Deps): Handle
 		table.clear(perPlayer)
 	end
 
-	return { play = play, stop = stop, destroy = destroy }
+	return { play = play, stop = stop, hearEggHome = hearEggHome, destroy = destroy }
 end
 
 return Moments

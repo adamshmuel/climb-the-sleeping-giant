@@ -214,10 +214,12 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 12: A new egg sparkles, a lost egg pops**
 - Spec rules: Rule 95 (Egg sounds, grander for rarer eggs): the sparkle pop; Rule 94 (Every slam is heard): the egg's "pop"; Rule 77 (Empty nests show no timer) and Rule 78 (A lost egg goes back to its nest), the moments; section 8 of spec 5, "A carrier is caught after their slot's egg has already refilled".
-- Files: `src/shared/Net.luau` (`EggPop`), `src/server/Eggs/Grab.luau` (a `popped` Signal: the nest's position and the kind), `src/server/init.server.luau` (fires `EggPop` to everyone), `src/client/Fx/NestPop.luau` (its plan 5 sound place is removed), `src/client/Audio/Moments.luau`, their tests.
+- Files: `src/shared/Net.luau` (`EggPop`), `src/server/Eggs/Grab.luau` (a `popped` Signal: the nest's position and the kind), `src/server/init.server.luau` (fires `EggPop` to everyone), `src/client/Fx/NestPop.luau` (its plan 5 sound place is removed: today only the comment at line 165), `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes `EggPop` to `Moments`), their tests.
 - What it does: the server fires `EggPop` with `"Refill"` when a countdown puts a new egg on a nest, `"Back"` when a lost egg goes back (`returnEgg` gives "back"), and `"Gone"` when it disappears instead. Each device plays the sparkle pop for a refill and the egg pop for the other two, at the nest. The client checks the two values' types and ignores anything else.
 - Failing tests first: a refill fires one `popped` "Refill" with the nest's position; a catch with the nest free fires "Back"; a catch after the slot already refilled fires "Gone" at the old nest; the client plays the sparkle for "Refill", the egg pop for "Back" and "Gone", and nothing for a bad kind or a non-`Vector3` position.
-- Done when: the tests pass.
+- Done when: the tests pass, and a muted Play (Task 10's pattern) shows one sparkle pop for a "Refill" and one egg pop each for "Back" and "Gone", each with a sound place at the nest.
+- Changed 2026-11-13 (code_lead, how it is measured; what the player hears is unchanged): the muted Play fires `EggPop` from the server itself, as Tasks 10 and 11 forced their events; the server's refill, back and gone moments are proven by `Grab`'s unit tests.
+- Stands on: Tasks 3, 9, 10 and 11 (approved 2026-11-12 and 13); plan 5's refills, `returnEgg` and `NestPop` (built).
 
 ### Part 4: The player's own sounds
 

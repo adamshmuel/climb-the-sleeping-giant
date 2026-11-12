@@ -103,6 +103,7 @@ local moments = Moments.start({
 		local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
 		return if root ~= nil and root:IsA("BasePart") then root.Position else nil
 	end,
+	localPlayer = Players.LocalPlayer,
 })
 script.Destroying:Once(moments.destroy)
 
@@ -328,6 +329,7 @@ if server then
 	-- never stream out (they are Persistent), but the finder looks again every time and skips what isn't there.
 	if world then
 		local findSpawnSpot = Celebrations.spawnSpotInWorld(world)
+		moments.hearEggHome({ OnClientEvent = server.EggHome.OnClientEvent }) -- the egg-home sounds (plan 7 Task 11)
 		Celebrations.start({
 			eggHome = { OnClientEvent = server.EggHome.OnClientEvent },
 			findEmitter = Celebrations.emitterInWorld(world),
