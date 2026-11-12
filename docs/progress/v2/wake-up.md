@@ -28,7 +28,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Wake-up (V2 spec 6) | Task 20: Red edges while he hunts | ☑ done 2026-11-12 (RedEdges 34/0; full run 3845/1, standing red only; computer shows in 0.003 s, fades in about 0.47 s; two phones 0 px² over Jump and stick; designer approved the shots) | builder, code_lead, designer |
 | Wake-up (V2 spec 6) | Task 21: Analytics for the hunt | ☑ done (2026-11-12; full run 3575/1, standing red only) | code_lead |
 | Wake-up (V2 spec 6) | Task 22 (card: work/p6t22/t22-card.md): A whole session with wake-ups | ☑ done 2026-11-12 (WakeUpSession 1/0 with three wake-ups, a joiner and the door window; red with the breather off, green restored; full run 3903/1, standing red only) | builder, code_lead |
-| Wake-up (V2 spec 6) | Task 23: The Play proof | ☐ not started | |
+| Wake-up (V2 spec 6) | Task 23: The Play proof (cards: `work/p6t23/t23-card.md` Steps 1 to 3, `work/p6t23/t23-card2.md` Step 4; card 3 dropped by product's scope ruling; Step 3 A2 dodge: 4 of 5 aimed slams dodged, 1 bonk on sloping ground at the world's edge, a bot-route fault per code_lead, accepted by product from the 4 clean dodges and the unit tests, Rule 63 breather seen) | ☑ done 2026-11-12 (Step 4: a real E-hold grab, then a carrier run from Nest_Meadow_6a to the Plot_6 gate through a wake-up, 0 stalls, slowest speed 12.8 (limit 8), the arm's offset 0.000; banking is proven by earlier Play checks; the gate arrival is proven by the log, not the shots; the run past his raised arm moved to step 8's build review) | builder, code_lead, product |
 
 ## Notes for the next V2 review
 
