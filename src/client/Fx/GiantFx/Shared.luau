@@ -20,6 +20,9 @@ export type WarningLike = { OnClientEvent: SignalLike }
 -- What the Zs on the meter should show: the world Z Z Z's look now (`hidden` is the 85 warning and when he is awake).
 export type Sign = "shown" | "faded" | "hidden" | "heavy"
 
+-- What the snore (client/Audio/Snore) should do: the same look as the snore puffs ("Off" is quiet, awake or the 60 pause).
+export type Puffs = "Normal" | "Heavy" | "Off"
+
 export type Deps = {
 	world: Instance, -- Workspace.World
 	warning: WarningLike, -- the Warning remote
@@ -38,6 +41,8 @@ export type Deps = {
 	reducedMotion: () -> boolean, -- GuiService.ReducedMotionEnabled: the bubble just appears and goes
 	-- Told the sign at the start and each time it changes, at the moments the world Z Z Z change (the Zs on the meter).
 	onSignsChanged: ((sign: Sign) -> ())?,
+	-- Told the snore state at the start and each time it changes (plan 7 Task 7).
+	onPuffsChanged: ((puffs: Puffs) -> ())?,
 	-- Plays a sound by name (`at` is the place it comes from, or nil for no place). If left out, nothing plays.
 	playSound: ((name: string, at: Vector3?) -> ())?,
 }

@@ -81,6 +81,7 @@ export type Rig = {
 	setCameraRightZ: (z: number) -> (),
 	setReducedMotion: (reduced: boolean) -> (),
 	signs: { string }, -- every look the meter Zs were told to take (onSignsChanged), in order
+	puffs: { string }, -- every state the snore was told ("Normal", "Heavy", "Off": onPuffsChanged), in order
 	state: Folder,
 	warning: any,
 	slamWarning: any,
@@ -376,6 +377,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 	local cameraRightZ = 0
 	local reducedMotion = false
 	local signs: { string } = {}
+	local puffs: { string } = {}
 	-- The stand-in for "is the arm's path clear of his body?": clear unless a test says otherwise. It records its calls.
 	local function clearAlways(_shoulder: Vector3, _direction: Vector3): boolean
 		return true
@@ -433,6 +435,9 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 		onSignsChanged = function(sign: string)
 			table.insert(signs, sign)
 		end,
+		onPuffsChanged = function(puffState: string)
+			table.insert(puffs, puffState)
+		end,
 		playSound = if withSound ~= false
 			then function(name: string, at: Vector3?)
 				table.insert(sounds, { name = name, at = at, time = clock - 100 })
@@ -473,6 +478,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?,
 			reducedMotion = reduced
 		end,
 		signs = signs,
+		puffs = puffs,
 		state = state,
 		warning = warning,
 		slamWarning = slamWarning,

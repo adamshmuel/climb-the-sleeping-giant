@@ -12,7 +12,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 | Audio (V2 spec 7) | Task 4: World prep: Roblox's character sounds on the newer objects | ☑ done | 2026-11-12: SoundSettings check (7 tests), world script 26 set CharacterSoundsUseNewApi to Enabled (backup WorldBackups.p7t4), second run "already done"; full run 3974/1 (standing OnTheGiant red); code_lead APPROVED. Adam saves the place at the commit |
 | Audio (V2 spec 7) | Task 5: What the music should be doing | ☑ done | builder (MusicMix 15/0); runner (full run 3989/1, only the standing red); code_lead APPROVED 2026-11-12 |
 | Audio (V2 spec 7) | Task 6: The music plays | ☑ done | 2026-11-12: Music + SoundBoard tests green; full run 4003/1 (standing OnTheGiant red, t4fix-run-note.md, Task 6 code in the tree); muted session round 3 all pass: half and 1000 Hz at 60%, silent 14.05-18.25 s after the 85% Warning, back at 50%, chase 0 to 1 from 1 s after the wake (one copy); calm tune at spawn kept, no delay (product ruling); code_lead APPROVED |
-| Audio (V2 spec 7) | Task 7: The snore follows his sleep (waits for designer: the puff timing) | ☐ not started | |
+| Audio (V2 spec 7) | Task 7: The snore follows his sleep | ☑ done | 2026-11-12: Snore 9/9, GiantFx 280/0, full run 4015/1 (only the standing red; t7-run-note.md), code review approved; muted session passed (task7-note.md Step 4). Its 3 stop-time misses (0.17-0.18 s against 0.15) are the Play client's ~15 fps frame plus the probe's sample gap, not code: accepted by code_lead |
 | Audio (V2 spec 7) | Task 8: The snorts and the mumble | ☐ not started | |
 | Audio (V2 spec 7) | Task 9: The wake-up is loud, and the yawn | ☐ not started | |
 | Audio (V2 spec 7) | Task 10: Every slam is heard | ☐ not started | |

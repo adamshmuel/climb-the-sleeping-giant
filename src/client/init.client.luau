@@ -38,6 +38,7 @@ local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
 local Music = require(script.Audio.Music)
+local Snore = require(script.Audio.Snore)
 local SoundBoard = require(script.Audio.SoundBoard)
 local BodyBeams = require(script.World.BodyBeams)
 local EggFade = require(script.World.EggFade)
@@ -319,6 +320,37 @@ if server then
 		local function currentCamera(): Camera?
 			return Workspace.CurrentCamera
 		end
+		-- The snore (plan 7 Task 7): GiantFx says when the puffs are on, and the snore plays from his mouth while they are.
+		local mouthPart: BasePart? = nil
+		local function snoreMouth(): Vector3?
+			if mouthPart == nil or mouthPart.Parent == nil then
+				local giant = world:FindFirstChild("Giant")
+				local awake = if giant then giant:FindFirstChild("AwakeMouth") else nil
+				local found = if awake then awake:FindFirstChild("Mouth") else nil
+				mouthPart = if found and found:IsA("BasePart") then found else nil
+			end
+			return if mouthPart ~= nil then mouthPart.Position else nil
+		end
+		local snore = Snore.start({
+			board = soundBoard,
+			step = RunService.RenderStepped,
+			now = os.clock,
+			meter = function(): number
+				local value: any = server.GiantState:GetAttribute("Meter")
+				return if type(value) == "number" then value else 0
+			end,
+			mouth = snoreMouth,
+			random = math.random,
+			looped = function(copy: AudioPlayer, callback: () -> ()): SoundBoard.Disconnectable
+				local connection = copy.Looped:Connect(callback)
+				return {
+					Disconnect = function()
+						connection:Disconnect()
+					end,
+				}
+			end,
+		})
+		script.Destroying:Once(snore.destroy)
 		GiantFx.start({
 			world = world,
 			warning = { OnClientEvent = server.Warning.OnClientEvent },
@@ -345,6 +377,7 @@ if server then
 			onSignsChanged = function(sign: GiantFx.Sign)
 				meterZs.setLook(MeterZsView.look(sign))
 			end,
+			onPuffsChanged = snore.setPuffs,
 		})
 		-- The world reacts to the wake: 24 birds fly off behind him and 7 dust spots on his body puff. Without its assets it
 		-- is not started.

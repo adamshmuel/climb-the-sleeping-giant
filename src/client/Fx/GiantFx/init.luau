@@ -3,7 +3,7 @@
 -- rows of section 6). The server fires Warning with 60 or 85 when the meter rises past that mark. Then, on each
 -- player's own device, this module moves its own copy of the giant. The server never moves him.
 --   * 60: his eyelids flutter twice (each lid lifts and a white slice of eye shows), and the floating Z Z Z hold still
---     and fade to half for 2 seconds.
+--     and fade to half for 2 seconds, and the snore puffs (and the snore, onPuffsChanged) stop for those 2 seconds.
 --   * 85: the Z Z Z and the snore puffs stop, a bubble beside his nose (World.GiantFX.SnoreEmitter.Warning85Bubble)
 --     says "Mmm... my eggs..." for 3 seconds and fades out over 0.3 more, and he snorts twice from his nose: a burst of
 --     20 puffs, and another 0.5 seconds later. Nothing he sleeps on moves (spec Rule 100, "Nothing you stand on moves
@@ -73,6 +73,7 @@ export type WarningLike = Shared.WarningLike
 export type Deps = Shared.Deps
 export type Handle = Shared.Handle
 export type Sign = Shared.Sign
+export type Puffs = Shared.Puffs
 
 GiantFx.flutterSeconds = Shared.flutterSeconds
 GiantFx.flutterCount = Shared.flutterCount
@@ -164,6 +165,7 @@ function GiantFx.start(deps: Deps): Handle
 
 	-- The look of the Z Z Z now, told to the Zs on the meter whenever it differs from the last one told.
 	local lastSign: Shared.Sign? = nil
+	local lastPuffs: Shared.Puffs? = nil
 	local function notifySigns()
 		local sign: Shared.Sign = "shown"
 		if state.quiet or state.awake then
@@ -178,6 +180,20 @@ function GiantFx.start(deps: Deps): Handle
 			local tell = deps.onSignsChanged
 			if tell ~= nil then
 				tell(sign)
+			end
+		end
+		-- The snore follows the puffs (plan 7 Task 7): off for quiet, awake and the 2 s pause at 60, else Normal or Heavy.
+		local puffs: Shared.Puffs = "Normal"
+		if state.quiet or state.awake or state.fadeAt ~= nil then
+			puffs = "Off"
+		elseif state.heavy then
+			puffs = "Heavy"
+		end
+		if puffs ~= lastPuffs then
+			lastPuffs = puffs
+			local tellPuffs = deps.onPuffsChanged
+			if tellPuffs ~= nil then
+				tellPuffs(puffs)
 			end
 		end
 	end
@@ -197,7 +213,7 @@ function GiantFx.start(deps: Deps): Handle
 		end
 		local puff = find.snorePuff()
 		if puff ~= nil then
-			if state.quiet or state.awake then
+			if state.quiet or state.awake or state.fadeAt ~= nil then
 				sleepSigns.setEnabled(puff, false)
 			else
 				sleepSigns.restoreEnabled(puff)
@@ -266,7 +282,7 @@ function GiantFx.start(deps: Deps): Handle
 			if seconds >= Shared.fadeSeconds then
 				state.fadeAt = nil
 				sleepSigns.paintLetters(nil)
-				notifySigns()
+				applyState() -- notifies the Zs, and the puffs and the snore come back
 			else
 				sleepSigns.paintLetters(seconds)
 			end

@@ -176,10 +176,12 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 8: The snorts and the mumble**
 - Spec rules: Rule 91 (The mumble); Rule 17 (A free save replays the 85% warning); section 5, "The 85% sound timing"; section 8, "A free save happens while the first mumble is still playing", "The meter passes 85% while a replayed warning is still showing".
-- Files: `src/client/Fx/GiantFx.luau` (new sound places `Snort` at each snort burst, with 1 or 2, and `Mumble` 1.0 s into the warning), `src/client/Audio/Cues.luau` (new, pure: each sound place's name to its rows, speed and place), `src/client/init.client.luau`, their tests.
+- Files: the `src/client/Fx/GiantFx/` folder: `init.luau` and `Shared.luau` (new sound places `Snort1` and `Snort2` at the snort bursts, from his nose, and `Mumble` 1.0 s into the warning, from his mouth; a new `stopSound` dep stops a playing mumble), `Find.luau` (one `mouthAt()` that `WakeFace` also uses, so the mouth lookup is not written twice), `src/client/Audio/Cues.luau` (new, pure: each sound place's name to its row and speed), `src/client/Audio/SoundBoard.luau` (a `speed` play option; a row with `fileEnd` plays only to that point, with its `endFade`: today the board skips both), `src/client/init.client.luau`, their tests.
+- Changed 2026-11-12 (code_lead, Task 8 card): the board must honour the snort's cut (spec section 5, "3.46 s to 3.86 s, with a 0.05 s fade at the end"), which no task built. `AudioPlayer.PlaybackRegion` (Roblox docs) gives the cut. Whether `Ended` fires at the region's end is checked in the muted session.
 - What it does: the first snort plays at speed 1 and the second at 0.9, from his nose; the mumble plays once from his mouth at 1.0 s. A replay stops a playing mumble and starts both again. A wake-up before the second snort cancels it (plan 1) and stops a playing mumble, because the bubble goes when he wakes and the mumble must end before the bubble does.
 - Failing tests first (fake clock): `Snort` 1 at 0 s and `Snort` 2 at 0.5 s, `Mumble` at 1.0 s, each once; a replay at 1.5 s stops the first mumble and starts the snorts and mumble again; a pass of 85% during a replay starts nothing (the server sends nothing then: plan 1, Task 5); a wake at 0.3 s plays no second snort and no mumble; `Cues` gives snort 1 at speed 1 and snort 2 at 0.9, both one at a time.
-- Done when: the tests pass.
+- Done when: the tests pass, and in a muted session (85, a free save 1.5 s later, then 85 with a wake about 0.6 s after) the board's copies show the snorts at speed 1 and 0.9, 0.5 s apart, each gone within 0.6 s, one mumble at 1.0 s stopped by the replay, and no mumble before the wake.
+- Stands on: Task 3 (the sound board), Task 1 (the snort and mumble rows), Task 6 (the board's `play` hands back the copy), Task 7 (the snore stops at 85; approved 2026-11-12). All final.
 
 ### Part 3: The wake-up, the slams and the eggs
 
