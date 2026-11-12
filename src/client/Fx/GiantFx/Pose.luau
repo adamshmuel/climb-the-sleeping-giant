@@ -55,7 +55,7 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 		return math.clamp(state.poseAge + state.poseDirection * (now - state.poseClock), 0, Shared.poseSeconds)
 	end
 
-	-- Everything that tips with the head: the head, the nightcap, both lids and the awake eyes.
+	-- Everything that tips with the head: the head, the nightcap, both lids, the awake eyes and the mouth.
 	local function headPieces(): { Model }
 		local found: { Model } = {}
 		for _, name in HEAD_PIECE_NAMES do
@@ -70,6 +70,10 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 		local eyes = find.child(find.giant(), "AwakeEyes")
 		if eyes ~= nil and eyes:IsA("Model") then
 			table.insert(found, eyes)
+		end
+		local mouth = find.mouth()
+		if mouth ~= nil then
+			table.insert(found, mouth)
 		end
 		return found
 	end
@@ -124,11 +128,12 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 			return
 		end
 		local share = Motion.poseShare(age)
+		local headShare = Motion.headShare(age, state.poseDirection >= 0)
 		local pivot: any = model:GetAttribute(HEAD_PIVOT_ATTRIBUTE)
 		local tilt: any = model:GetAttribute(HEAD_TILT_ATTRIBUTE)
 		local headTurn: CFrame? = nil
-		if share > 0 and typeof(pivot) == "Vector3" and type(tilt) == "number" then
-			headTurn = Motion.headTurn(pivot, tilt, share)
+		if headShare > 0 and typeof(pivot) == "Vector3" and type(tilt) == "number" then
+			headTurn = Motion.headTurn(pivot, tilt, headShare)
 		end
 		for _, piece in headPieces() do
 			local start = startPivotOf(piece)
@@ -151,8 +156,11 @@ function Pose.new(state: Shared.State, find: Find.Finders, ride: Ride.Rider)
 				end
 			end
 		end
-		local waking = find.child(find.giant(), "AwakeEyes")
-		if waking ~= nil then
+		local awakeGroups: { Instance } = {}
+		for _, group in { find.child(find.giant(), "AwakeEyes"), find.mouth() } do
+			table.insert(awakeGroups, group)
+		end
+		for _, waking in awakeGroups do
 			for _, part in waking:GetDescendants() do
 				if part:IsA("BasePart") and part:GetAttribute(SHOWN_WHEN_AWAKE) == true then
 					if state.startLook[part] == nil then

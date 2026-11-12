@@ -13,6 +13,7 @@ local RAISE_DEGREES = Helpers.RAISE_DEGREES
 local SHOULDER = Helpers.SHOULDER
 local cleanUp = Helpers.cleanUp
 local degreesBetween = Helpers.degreesBetween
+local finishFace = Helpers.finishFace
 local made = Helpers.made
 local newRig = Helpers.newRig
 local samePlace = Helpers.samePlace
@@ -37,6 +38,7 @@ describe("GiantFx.start: the arm swing", function()
 		local rig = newRig()
 		rig.setState(100, "Awake")
 		rig.advance(0.5)
+		finishFace(rig) -- the wake face keeps the step connected after the pose; wait it out
 		return rig
 	end
 

@@ -56,6 +56,7 @@ local BubbleLook = require(script.BubbleLook)
 local SleepSigns = require(script.SleepSigns)
 local Pose = require(script.Pose)
 local Ride = require(script.Ride)
+local WakeFace = require(script.WakeFace)
 
 local FLUTTER = Shared.FLUTTER
 local FADE_LETTERS = Shared.FADE_LETTERS
@@ -83,6 +84,7 @@ GiantFx.fadeTo = Shared.fadeTo
 GiantFx.fadeInSeconds = Shared.fadeInSeconds
 GiantFx.comeBackAtMeter = Shared.comeBackAtMeter
 GiantFx.poseSeconds = Shared.poseSeconds
+GiantFx.headTipSeconds = Shared.headTipSeconds
 GiantFx.heavyLetterScale = Shared.heavyLetterScale
 GiantFx.heavyPuffRateScale = Shared.heavyPuffRateScale
 GiantFx.heavyPuffSizeScale = Shared.heavyPuffSizeScale
@@ -97,6 +99,7 @@ GiantFx.slamFixedOutDegrees = Shared.slamFixedOutDegrees
 
 GiantFx.warningPlan = Motion.warningPlan
 GiantFx.poseShare = Motion.poseShare
+GiantFx.headShare = Motion.headShare
 GiantFx.slamTurn = Motion.slamTurn
 GiantFx.slamShare = Motion.slamShare
 GiantFx.slamFixedAim = Motion.slamFixedAim
@@ -142,6 +145,9 @@ function GiantFx.start(deps: Deps): Handle
 		slamPoint = nil,
 		heavy = false,
 		shrinkAt = nil,
+		faceAt = nil,
+		faceLook = {},
+		faceSize = {},
 		startBubble = {},
 		bubbleWatch = {},
 	}
@@ -152,6 +158,7 @@ function GiantFx.start(deps: Deps): Handle
 	local ride = Ride.new(state, deps)
 	state.trove:Add(ride.destroy)
 	local pose = Pose.new(state, find, ride)
+	local wakeFace = WakeFace.new(state, deps, find)
 
 	-- The look of the Z Z Z now, told to the Zs on the meter whenever it differs from the last one told.
 	local lastSign: Shared.Sign? = nil
@@ -308,6 +315,9 @@ function GiantFx.start(deps: Deps): Handle
 			state.slamAt = nil
 			state.slamPoint = nil
 		end
+		if state.faceAt ~= nil then
+			wakeFace.update(now)
+		end
 		ride.update(now)
 		if
 			state.flutterAt == nil
@@ -319,6 +329,7 @@ function GiantFx.start(deps: Deps): Handle
 			and state.poseDirection == 0
 			and state.slamAt == nil
 			and state.shrinkAt == nil
+			and state.faceAt == nil
 			and not ride.busy()
 		then
 			disconnectStep()
@@ -445,6 +456,7 @@ function GiantFx.start(deps: Deps): Handle
 		pose.setEyes(true)
 		applyState()
 		startPose(1)
+		wakeFace.start(deps.now())
 		ride.update(deps.now())
 	end
 
@@ -452,6 +464,7 @@ function GiantFx.start(deps: Deps): Handle
 	local function onSleepAgain()
 		state.awake = false
 		pose.setEyes(false)
+		wakeFace.finish(true)
 		applyState()
 		startPose(-1)
 		ride.update(deps.now())
@@ -484,6 +497,7 @@ function GiantFx.start(deps: Deps): Handle
 		state.poseDirection = 0
 		state.slamAt = nil
 		state.slamPoint = nil
+		wakeFace.finish(false)
 		pose.placeLids(0)
 		for piece, start in state.startPivots do
 			piece:PivotTo(start)

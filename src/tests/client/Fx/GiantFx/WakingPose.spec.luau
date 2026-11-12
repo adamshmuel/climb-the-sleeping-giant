@@ -7,6 +7,7 @@ local GiantFx = require(Client.Fx.GiantFx)
 local Helpers = require(script.Parent.Helpers)
 type Rig = Helpers.Rig
 local HEAD_PIVOT = Helpers.HEAD_PIVOT
+local finishFace = Helpers.finishFace
 local HEAD_TILT_DEGREES = Helpers.HEAD_TILT_DEGREES
 local RAISE_DEGREES = Helpers.RAISE_DEGREES
 local SHOULDER = Helpers.SHOULDER
@@ -45,15 +46,16 @@ describe("GiantFx.start: the waking pose", function()
 		expect(samePlace(rig.arm:GetPivot(), GiantFx.armRaise(SHOULDER, RAISE_DEGREES, 1) * rig.armStart)).toBe(true)
 	end)
 
-	it("is half way, with the easing, at 0.25 seconds", function()
+	it("has the arm half way, with the easing, and the head on its own 0.3 s tip, at 0.25 seconds", function()
 		local rig = newRig()
 		rig.setState(100, "Awake")
 		rig.advance(0.25)
 		local share = GiantFx.poseShare(0.25)
 		expect(share).toBeCloseTo(0.5, 6)
-		expect(samePlace(rig.head:GetPivot(), GiantFx.headTurn(HEAD_PIVOT, HEAD_TILT_DEGREES, share) * rig.headStart)).toBe(
-			true
-		)
+		local headShare = GiantFx.headShare(0.25, true)
+		expect(
+			samePlace(rig.head:GetPivot(), GiantFx.headTurn(HEAD_PIVOT, HEAD_TILT_DEGREES, headShare) * rig.headStart)
+		).toBe(true)
 		expect(samePlace(rig.arm:GetPivot(), GiantFx.armRaise(SHOULDER, RAISE_DEGREES, share) * rig.armStart)).toBe(
 			true
 		)
@@ -181,6 +183,7 @@ describe("GiantFx.start: the waking pose", function()
 		expect(rig.bubble.Enabled).toBe(false)
 		expect(samePlace(rig.arm:GetPivot(), GiantFx.armRaise(SHOULDER, RAISE_DEGREES, 1) * rig.armStart)).toBe(true)
 		expect(rig.leftSliver.Transparency).toBe(1)
+		finishFace(rig) -- the wake face keeps the step connected after the pose
 		expect(rig.step:count()).toBe(0)
 	end)
 
@@ -191,6 +194,7 @@ describe("GiantFx.start: the waking pose", function()
 		rig.advance(0.25)
 		expect(rig.step:count()).toBe(1)
 		rig.advance(0.25)
+		finishFace(rig) -- the wake face keeps the step connected after the pose
 		expect(rig.step:count()).toBe(0)
 	end)
 
@@ -225,6 +229,7 @@ describe("GiantFx.start: the waking pose", function()
 		rig.arm.Parent = nil
 		rig.setState(100, "Awake")
 		rig.advance(0.5)
+		finishFace(rig) -- the wake face keeps the step connected after the pose
 		expect(rig.step:count()).toBe(0)
 	end)
 

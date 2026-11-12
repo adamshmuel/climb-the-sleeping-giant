@@ -37,6 +37,8 @@ export type Deps = {
 	reducedMotion: () -> boolean, -- GuiService.ReducedMotionEnabled: the bubble just appears and goes
 	-- Told the sign at the start and each time it changes, at the moments the world Z Z Z change (the Zs on the meter).
 	onSignsChanged: ((sign: Sign) -> ())?,
+	-- Plays a sound by name (`at` is the place it comes from, or nil for no place). If left out, nothing plays.
+	playSound: ((name: string, at: Vector3?) -> ())?,
 }
 
 -- What start gives back: `stop` puts every piece back as it was and disconnects everything.
@@ -112,6 +114,11 @@ export type State = {
 	-- Sleep ended (by deps.now), or nil when they are not shrinking.
 	heavy: boolean,
 	shrinkAt: number?,
+	-- The face on waking: when the "!" and the pop started (by deps.now), or nil. And how the "!" looked before it
+	-- was shown (each piece's transparency and the gui's size), so the fade and the end can put it back.
+	faceAt: number?,
+	faceLook: { [Instance]: number },
+	faceSize: { [BillboardGui]: UDim2 },
 
 	-- How each bubble was before this module changed it.
 	startBubble: { [BillboardGui]: BubbleStart },
@@ -152,7 +159,9 @@ Shared.fadeEdgeSeconds = 0.2 -- the way down to half and the way back
 Shared.fadeTo = 0.5 -- half see-through
 Shared.fadeInSeconds = 0.2 -- the letters of the Z Z Z come back from fully see-through over this long, after a replay
 Shared.comeBackAtMeter = 75
-Shared.poseSeconds = 0.5 -- the head tip and the fist raise, on waking and on going back to sleep
+Shared.poseSeconds = 0.5 -- the fist raise on waking, and the head tip and the fist on going back to sleep
+-- The head tips forward this fast on waking (spec Rule 66); it goes back over poseSeconds. Never a second number.
+Shared.headTipSeconds = Config.Wake.HeadTipSeconds
 -- Heavy Sleep: how much bigger the Z Z Z sign is (designer: 2.5 times, because the style guide asks for "much bigger").
 Shared.heavyLetterScale = 2.5
 -- How many times as many snore puffs come per second (spec: 3 times as many).

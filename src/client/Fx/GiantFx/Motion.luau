@@ -31,6 +31,12 @@ function Motion.poseShare(seconds: number): number
 	return smooth(seconds / Shared.poseSeconds)
 end
 
+-- How far the head is tipped, from 0 (at rest) to 1 (tipped), `age` seconds into the pose. Going forward it tips over
+-- headTipSeconds; going back it returns over poseSeconds.
+function Motion.headShare(age: number, forward: boolean): number
+	return smooth(age / (if forward then Shared.headTipSeconds else Shared.poseSeconds))
+end
+
 -- The turn about `shoulder` that swings the arm toward a target: it turns the direction `from` toward the direction
 -- (toward - shoulder) by `share` of the angle between them. At share 0 it is the identity, and at share 1 `from` points
 -- exactly at the target. Put it in front of the arm's other turns: slamTurn * armRaise * start. Directions that are

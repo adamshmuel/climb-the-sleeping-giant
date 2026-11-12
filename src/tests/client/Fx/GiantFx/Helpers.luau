@@ -104,7 +104,20 @@ export type Rig = {
 	headStart: CFrame,
 	capStart: CFrame,
 	awakeEyesStart: CFrame,
+	mouth: Model, -- World.Giant.AwakeMouth
+	mouthParts: { Part }, -- its Mouth and Tongue, both marked ShownWhenAwake
+	mouthStart: CFrame,
+	bangAnchor: Part, -- World.GiantFX.BangAnchor
+	bang: BillboardGui, -- BangAnchor.Bang
+	zpop: BillboardGui, -- BangAnchor.ZPop
+	bangSize: UDim2, -- what Bang's size was at the start
+	zpopSize: UDim2,
+	bangLooks: { [Instance]: number }, -- each Frame's BackgroundTransparency and UIStroke's Transparency in Bang, at the start
+	sounds: { SoundCall }, -- every playSound call, in order
 }
+
+-- One playSound call the module made: the name, the place (nil for no place) and the seconds since the rig was built.
+export type SoundCall = { name: string, at: Vector3?, time: number }
 
 -- Where the fake giant stands: the same pivot as the real one, with no turn (he faces -Z, his right is +X).
 local GIANT_PIVOT = CFrame.new(0, -3, 0)
@@ -140,8 +153,9 @@ local function newLid(name: string, parent: Instance, x: number): (Model, Part)
 end
 
 -- A stand-in for the giant's pieces, the state folder, the Warning remote, the frame step and a fake clock, so a
--- test can drive all of them. `withFx` false builds the world without GiantFX (it streams in later).
-local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?): Rig
+-- test can drive all of them. `withFx` false builds the world without GiantFX (it streams in later). `withSound` false
+-- leaves the playSound setting out.
+local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?, withSound: boolean?): Rig
 	local world = made(Instance.new("Folder"))
 	local giant = Instance.new("Model")
 	giant.Name = "Giant"
@@ -199,6 +213,22 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 	stray.CFrame = CFrame.new(0, 90, -2)
 	stray.Parent = awakeEyes
 	awakeEyes.Parent = giant
+	-- The awake mouth, as in the place (World.Giant.AwakeMouth): parts that show when he is awake.
+	local mouth = Instance.new("Model")
+	mouth.Name = "AwakeMouth"
+	local mouthParts: { Part } = {}
+	for index, name in { "Mouth", "Tongue" } do
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Anchored = true
+		part.Size = Vector3.new(4, 2, 1)
+		part.CFrame = CFrame.new(0, 80 + index, -4)
+		part.Transparency = 1
+		part:SetAttribute("ShownWhenAwake", true)
+		part.Parent = mouth
+		table.insert(mouthParts, part)
+	end
+	mouth.Parent = giant
 	local sleepParts: { BasePart } = {}
 	local sleepLooks: { number } = {}
 	for _, descendant in eyes:GetDescendants() do
@@ -289,6 +319,42 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 	tailStroke.Transparency = 0
 	tailStroke.Parent = bubbleTail
 	bubble.Parent = snoreEmitter
+	-- The "!" and the bubble pop, as in the place (World.GiantFX.BangAnchor): two guis made of Frames and outlines, sized
+	-- by scale, off at the start. Their looks are not 0, so a test can tell a restored look from a default.
+	local bangAnchor = Instance.new("Part")
+	bangAnchor.Name = "BangAnchor"
+	bangAnchor.Anchored = true
+	bangAnchor.CFrame = CFrame.new(-8, 104, -22)
+	bangAnchor.Parent = fx
+	local bangLooks: { [Instance]: number } = {}
+	local function newPopGui(name: string, studs: number): BillboardGui
+		local gui = Instance.new("BillboardGui")
+		gui.Name = name
+		gui.Enabled = false
+		gui.Size = UDim2.fromScale(studs, studs)
+		local disc = Instance.new("Frame")
+		disc.Name = "Disc"
+		disc.Size = UDim2.fromScale(1, 1)
+		disc.BackgroundTransparency = 0.1
+		disc.Parent = gui
+		local mark = Instance.new("Frame")
+		mark.Name = "Mark"
+		mark.Size = UDim2.fromScale(0.2, 0.6)
+		mark.BackgroundTransparency = 0.3
+		mark.Parent = disc
+		local outline = Instance.new("UIStroke")
+		outline.Transparency = 0.2
+		outline.Parent = disc
+		if name == "Bang" then
+			bangLooks[disc] = disc.BackgroundTransparency
+			bangLooks[mark] = mark.BackgroundTransparency
+			bangLooks[outline] = outline.Transparency
+		end
+		gui.Parent = bangAnchor
+		return gui
+	end
+	local bang = newPopGui("Bang", 22)
+	local zpop = newPopGui("ZPop", 18)
 	made(fx)
 	if withFx ~= false then
 		fx.Parent = world
@@ -316,6 +382,8 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 	local bursts: { Burst } = {}
 	-- The stand-in for ParticleEmitter:Clear: a real emitter can't be asked either.
 	local clears: { ParticleEmitter } = {}
+	-- The stand-in for the sound setting: it records each call with the seconds since the rig was built.
+	local sounds: { SoundCall } = {}
 
 	-- Where the pieces are before the module starts: a module that starts while he is awake moves them at once.
 	local armStart = arm:GetPivot()
@@ -324,6 +392,7 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 	local headStart = head:GetPivot()
 	local capStart = cap:GetPivot()
 	local awakeEyesStart = awakeEyes:GetPivot()
+	local mouthStart = mouth:GetPivot()
 
 	local handle = GiantFx.start({
 		world = world,
@@ -357,6 +426,11 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 		onSignsChanged = function(sign: string)
 			table.insert(signs, sign)
 		end,
+		playSound = if withSound ~= false
+			then function(name: string, at: Vector3?)
+				table.insert(sounds, { name = name, at = at, time = clock - 100 })
+			end
+			else nil,
 	})
 	table.insert(stops, handle.stop)
 
@@ -426,6 +500,16 @@ local function newRig(withFx: boolean?, startPhase: string?, withNose: boolean?)
 		headStart = headStart,
 		capStart = capStart,
 		awakeEyesStart = awakeEyesStart,
+		mouth = mouth,
+		mouthParts = mouthParts,
+		mouthStart = mouthStart,
+		bangAnchor = bangAnchor,
+		bang = bang,
+		zpop = zpop,
+		bangSize = bang.Size,
+		zpopSize = zpop.Size,
+		bangLooks = bangLooks,
+		sounds = sounds,
 	}
 end
 
@@ -450,6 +534,17 @@ end
 -- out to his right, as a direction in the giant's own axes (he faces -Z, his right is +X).
 local FIXED_DIRECTION = Vector3.new(0.4226, -0.3100, -0.8517)
 
+-- Moves the clock on until the wake face (the "!") has finished by itself, so the step is let go of. The end time comes
+-- from the game's own code: the "!" goes off when its face is over. Gives up after 10 seconds.
+local function finishFace(rig: Rig)
+	for _ = 1, 200 do
+		if not rig.bang.Enabled then
+			return
+		end
+		rig.advance(0.05)
+	end
+end
+
 return {
 	FIXED_DIRECTION = FIXED_DIRECTION,
 	GIANT_PIVOT = GIANT_PIVOT,
@@ -459,6 +554,7 @@ return {
 	SHOULDER = SHOULDER,
 	cleanUp = cleanUp,
 	degreesBetween = degreesBetween,
+	finishFace = finishFace,
 	made = made,
 	newRig = newRig,
 	samePlace = samePlace,

@@ -17,6 +17,8 @@ export type Finders = {
 	snorePuff: () -> ParticleEmitter?,
 	snortPuff: () -> ParticleEmitter?,
 	bubble: () -> BillboardGui?,
+	mouth: () -> Model?,
+	bang: () -> any,
 }
 
 function Find.new(deps: Shared.Deps): Finders
@@ -88,6 +90,19 @@ function Find.new(deps: Shared.Deps): Finders
 		return nil
 	end
 
+	local function mouth(): Model?
+		local found = child(giant(), "AwakeMouth")
+		if found ~= nil and found:IsA("Model") then
+			return found
+		end
+		return nil
+	end
+
+	-- The "!" badge's anchor part (the Bang and ZPop guis sit on it).
+	local function bang(): any
+		return child(fx(), "BangAnchor")
+	end
+
 	return {
 		child = child,
 		giant = giant,
@@ -98,6 +113,8 @@ function Find.new(deps: Shared.Deps): Finders
 		snorePuff = snorePuff,
 		snortPuff = snortPuff,
 		bubble = bubble,
+		mouth = mouth,
+		bang = bang,
 	}
 end
 
