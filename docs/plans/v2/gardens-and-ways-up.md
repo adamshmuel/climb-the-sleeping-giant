@@ -66,7 +66,7 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 1: Gardens are handed out in two groups**
 - Spec rules: Rule 34 (Gardens are handed out in two groups). Checks B1, B2, B3. Edge case "8 players join at once".
-- Files: `src/server/Players/PlotAssigner.luau` (pure), `src/server/Players/Spawning.luau`, `src/shared/Config.luau` (`Config.Gardens`: `MiddleFirst = {3, 4, 5, 6}`, `Outer = {1, 2, 7, 8}`), `PlotAssigner.spec`, `Spawning.spec`.
+- Files: `src/server/Players/PlotAssigner.luau` (pure), `src/server/Players/Spawning.luau`, `src/shared/Config.luau` (adds a new top-level `Config.Gardens`: `MiddleFirst = {3, 4, 5, 6}`, `Outer = {1, 2, 7, 8}`; today `Gardens` exists only inside `Config.WaysUp`), `PlotAssigner.spec`, `Spawning.spec`. Each garden's spawn carries its number in the `PlotIndex` attribute (checked 2026-11-12).
 - What changes: `PlotAssigner.new(count, pick)` takes a `pick(n)` function that returns a whole number from 1 to n, so a test can choose the "random" answer. `assign` picks at random among the free middle gardens; only when all four are taken, among the free outer ones. Nobody is moved when a garden frees up. `Spawning` passes `Random.new():NextInteger(1, n)`.
 - Failing tests first:
   1. Check B1: with an empty server, 12 joins (each one leaving again) always get 3, 4, 5 or 6, and with a fake `pick` that cycles, not the same one every time.
@@ -583,12 +583,12 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 
 **Task 16: Which way up players climb**
 - Spec rules: section 10 ("Success signals").
-- Files: `src/server/Players/WayUpWatch.luau` (new, pure), `src/server/Analytics.luau`, `src/server/init.server.luau`, tests for both.
+- Files: `src/server/Players/WayUpWatch.luau` (new, pure), `src/server/Analytics.luau`, `src/server/init.server.luau` (it doesn't read the ways up today: get the `WayUpTop` points with `WorldIndex.readWaysUp`, checked 2026-11-12), tests for both.
 - What it does:
   - `WayUpWatch` says when a player reaches the top of a way up: within 4 studs across and 3 up or down of a `WayUpTop` point, after being in the meadow. It counts once, and again only after they have been back in the meadow. It keeps each player's last way up and forgets them when they leave.
   - **"WayUp"** (new): once per climb. Breakdowns: the way up, the garden ("1" to "8"), and "Carrying" or "Empty".
   - **"WakeWayUp"** (new): once per wake-up, from the director's `woke` Signal. Breakdowns: the waker's last way up ("None" if they never climbed, or nobody is named), and the server size ("1", "2-4", "5-8").
-  - **"EggHome"** gets its third breakdown: the server size.
+  - **"EggHome"** (the event logged when an egg is banked) has 2 breakdowns today; the server size becomes its third.
 - Failing tests first: one climb gives one "WayUp"; walking on to the boot top and back gives no second one; a second climb after the meadow gives a second; a wake logs "WakeWayUp" with the waker's last way up; a waker who never climbed logs "None"; "EggHome" has the server size. All with a fake AnalyticsService.
 - Done when: the tests pass, and in Play the console shows one "WayUp" line per climb.
 

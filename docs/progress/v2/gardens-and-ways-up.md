@@ -6,7 +6,7 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 
 | Feature (spec) | Task | Status | Checked by |
 |---|---|---|---|
-| Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☐ not started | |
+| Gardens and ways up (V2 spec 3) | Task 1: Gardens are handed out in two groups | ☑ done 2026-11-12: middle gardens 3 to 6 first, then 1, 2, 7, 8; new tests in PlotAssigner, Spawning and Config specs; full run 3856 passed, 1 failed (the standing walk-area red); Play solo join got garden 4 | builder, runner, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 2: The ladder multiplier (stands on nothing) | ☑ done | builder / code_lead (full run 3277/1, only the walk-area red) |
 | Gardens and ways up (V2 spec 3) | Task 3: The server knows who is on a ladder | ☑ done 2026-11-11: 11 new tests; full run 3395 passed, 1 failed (the standing walk-area red); ladder re-check passed both tries | builder, runner, code_lead |
 | Gardens and ways up (V2 spec 3) | Task 3b: A boot-ladder climb is loud from the first rung | ☑ done (3396/1, 1 new test; Play: meter +3.1 a second from the first rung) | builder, code_lead |

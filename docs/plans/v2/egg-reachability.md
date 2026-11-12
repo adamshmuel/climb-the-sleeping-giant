@@ -239,7 +239,7 @@ Words used here (the spec's own words, such as nest, rank, band and difficulty s
 **Task 12: Analytics for ranks**
 - Stands on: plan 6 Task 8 (the director that fires `woke`, built).
 - Spec rules: section 10 ("Success signals").
-- Files: `src/server/Analytics.luau`, `src/server/Eggs/Grab.luau` (its `grabbed` Signal already gives the rarity), `src/server/init.server.luau` (connects "WakeRank" to the director's `woke` Signal, as plan 3 did for "WakeWayUp"), `Analytics.spec`.
+- Files: `src/server/Analytics.luau`, `src/server/init.server.luau` (connects "WakeRank" to the director's `woke` Signal, as plan 3 did for "WakeWayUp"), and new test files in `src/tests/server/Analytics/` (one per event). `src/server/Eggs/Grab.luau` needs no edit: Analytics already listens to its `grabbed` Signal, which gives the rarity (checked 2026-11-12).
 - What it logs:
   - **"EggGrab"** (new): every grab, with the rank and the server size ("1", "2-4", "5-8");
   - **"EggHome"** and **"PlayerCaught"**: their rarity breakdown now also says "Epic" and "Legendary" (a test proves it);

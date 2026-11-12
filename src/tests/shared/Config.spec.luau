@@ -466,4 +466,18 @@ describe("Config", function()
 	it("every table inside Config is frozen", function()
 		expect(isDeepFrozen(Config)).toBe(true)
 	end)
+
+	it("Rule 34: the middle gardens are 3 to 6, and the two groups hold gardens 1 to 8 once each", function()
+		expect(Config.Gardens.MiddleFirst).toEqual({ 3, 4, 5, 6 })
+		local seen: { [number]: number } = {}
+		for _, group in { Config.Gardens.MiddleFirst, Config.Gardens.Outer } do
+			for _, garden in group do
+				seen[garden] = (seen[garden] or 0) + 1
+			end
+		end
+		for garden = 1, 8 do
+			expect(seen[garden]).toBe(1)
+		end
+		expect(#Config.Gardens.MiddleFirst + #Config.Gardens.Outer).toBe(8)
+	end)
 end)

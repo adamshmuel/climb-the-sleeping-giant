@@ -156,6 +156,11 @@ export type Config = {
 		Models: { string },
 		NearStuds: number,
 	},
+	-- Rule 34: the order gardens are handed out. A join takes a random free MiddleFirst garden, then an Outer one.
+	Gardens: {
+		MiddleFirst: { number },
+		Outer: { number },
+	},
 	WaysUp: { WayUpConfig },
 	-- Egg nests: every number of spec 5 section 5 that the nest placement and its checks read (Rules 71 to 82).
 	Nests: {
@@ -356,6 +361,8 @@ local config: Config = {
 		Models = { "BeardLadder", "CapLadder", "BootLadder_Left", "BootLadder_Right" },
 		NearStuds = 2, -- at walk speed 16 one 0.1 s tick moves 1.6 studs, so 2 is a margin a player can't feel
 	},
+	-- Rule 34 (Gardens are handed out in two groups): the middle four first, the outer four only when they are full.
+	Gardens = { MiddleFirst = { 3, 4, 5, 6 }, Outer = { 1, 2, 7, 8 } },
 	-- The four ways up from the gardens to the first boot top (Rule 35 and section 5, "The four ways up and their
 	-- gardens"), in garden order. Name: the value of the route points' WayUpFoot and WayUpTop attributes. Gardens: the
 	-- gardens that use it. WalkLimitSeconds: the longest walk from each of those gardens to the way up's foot (one number
