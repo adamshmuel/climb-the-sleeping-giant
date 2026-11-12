@@ -20,7 +20,7 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
 | 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 27 of 40 | ◐ in progress (Tasks 2, 3, 3b, 11, 12b, 13 and 4a to 8f done; 4b to 4d, 10 and 14 removed or merged; still open: 1, 15a to 19) |
 | 4. Egg reachability | `v2/egg-reachability.md` | 15 of 22 | ◐ in progress (Tasks 1 to 4b, 6 to 8, 9a to 9d and 10 done; Task 13 split into 13a, 13b, 13c; 13a done; next: plan 5 Task 22, then 13b and 13c; 12 after plan 6 Task 8) |
-| 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 49 of 55 (recounted from its progress file on 2026-11-11; 20b added) | ◐ in progress (everything up to 20b done; next: 22; 21b, 23a and 23b wait on plan 6; 24 and 25 only if a check needs them) |
+| 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 49 of 55 (recounted from its progress file on 2026-11-11; 20b added) | ◐ in progress (everything up to 20b done; next: 21b and 23b wait on plan 6; 23a done 2026-11-12; 24 and 25 only if a check needs them) |
 | 6. Wake-up | `v2/wake-up.md` | 0 of 23 | ☐ not started |
 | 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
 | **All of V2** | | **137 of 227** (setups included; recounted from every progress file on 2026-11-10; plan 5 Task 7 split in 3; plan 4 Task 13 split in 3 on 2026-11-11) | |

@@ -3,7 +3,7 @@
 -- Listens to the local attribute P4t13Pose; sets P4t13PoseDone to the pose text plus facts, or `FIRED <pose>: <reason>`.
 --   gate:<g>     stand 3 studs over Plot_<g>.SpawnSpot facing the giant.   carry:<nest> as `by`, grab, 5 studs back.
 --   by:<nest>    start the trip (PlotIndex 4, meter held), stand on the floor cell nearest 4 studs from the prompt,
---                camera on the nest, wait for PromptShown (3 s). `by:Epic` / `by:Legendary` (a rank) use the nest that
+--                camera on the nest, wait for PromptShown (3 s). `by:Epic` / `by:Legendary` / `by:Uncommon` (a rank) use the nest that
 --                holds an egg of that rank now (waits up to 70 s). Done text adds the shot camera numbers.
 --   home:<nest> was cut (product, 13c-state-ruling.md Item 1).
 local CHECK_ONLY = false
@@ -112,15 +112,20 @@ local function goBy(nestName: string): (Instance?, ProximityPrompt?, Vector3, nu
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { player.Character :: Instance, nest }
 	-- Floor cells within 6 studs whose standing root is nearest NEST_SIDE studs from the prompt (rays, 2026-11-11).
+	local plankName: string? = if string.find(nestName, "^Nest_LapFold_") == nil
+		then nil
+		elseif string.find(nestName, "Left", 1, true) ~= nil then "LapPlank_Left"
+		else "LapPlank_Right"
 	local floor: Vector3? = nil
 	local bestMiss = math.huge
 	for dx = -6, 6 do
 		for dz = -6, 6 do
 			local hit = Workspace:Raycast(at + Vector3.new(dx, 15, dz), Vector3.new(0, -30, 0), params)
+			local onPlank = plankName == nil or (hit ~= nil and hit.Instance:FindFirstAncestor(plankName) ~= nil)
 			local miss = if hit ~= nil and hit.Normal.Y > 0.7
 				then math.abs((hit.Position + Vector3.new(0, lift, 0) - reach).Magnitude - NEST_SIDE)
 				else math.huge
-			if hit ~= nil and miss < bestMiss and Vector3.new(dx, 0, dz).Magnitude >= 2 then
+			if hit ~= nil and onPlank and miss < bestMiss and Vector3.new(dx, 0, dz).Magnitude >= 2 then
 				bestMiss, floor, out = miss, hit.Position, Vector3.new(dx, 0, dz).Unit
 			end
 		end
@@ -239,7 +244,7 @@ local function run(pose: string)
 	if not ok then
 		return fire(pose, `giant not held ({why})`)
 	end
-	if (kind == "by" or kind == "carry") and (arg == "Epic" or arg == "Legendary") then
+	if (kind == "by" or kind == "carry") and (arg == "Epic" or arg == "Legendary" or arg == "Uncommon") then
 		local nest = waitingNest(arg)
 		if nest == nil then
 			return fire(pose, `no {arg} egg waiting in 70 s`)
