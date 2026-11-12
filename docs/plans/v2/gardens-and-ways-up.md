@@ -601,21 +601,21 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
   2. Climbing louder than walking, and the ladder multiplier: `Giant/Noise.spec` and `shared/Config.spec`.
   3. Standing at a ladder's foot or on a ladder adds nothing: `Giant/Noise.spec`.
   4. "WayUp" logged once per climb: `Players/WayUpWatch.spec` and `Analytics/WayUps.spec`.
-  5. The meter peaks between 60 and 80 on a Rare heist: `World/FairnessCheck.spec` and `World/HeistScore.spec` (and Task 18's bot walk in Play).
+  5. The meter peaks between 60 and 80 on a Rare heist: `World/FairnessCheck.spec` and `World/HeistScore.spec`, Task 12b and plan 4 Task 13b's real peaks.
 - The test (new): a brand-new solo player with the real `PlotAssigner`, `Noise`, `SleepMeter`, `GiantDirector`, `WayUpWatch` and `Analytics`, and a stand-in tracker (16 studs a second, 11.2 on ladders, slower with an egg). They join, bank the Common, then make three heists in a row: Rare egg 1 through their own way up twice, then once through another way up. Checks: the meter never wakes him; it drains between heists; "WayUp" is logged 3 times; each egg banks.
 - Failing test first: all the code is built, so the test passes when written. The red proof works through the test's own samples, because `Config` is frozen and can't be changed from a test: heist 1 runs twice, once with the real ladder samples and once with every sample off the ladder (the same as a multiplier of 1). The check says the peak with the ladder is higher. To show it can fail, the builder makes the second run use the ladder samples too once, shows the red, and puts it back. `Config.spec` already pins the multiplier's value of 1.3 (ruling 2026-11-12).
 - Done when: the test passes and was shown to fail once on purpose.
 
 **Task 18: The bot walk on the new ways up**
 - Spec rules: Rule 24 (A bot walks every way), for this spec: Rule 15 (The climb needs no jump), Rule 41's Play proof, Rule 45's fourth proof. Checks C1, C3, D1, D2, D3, D4.
-- Files: `tools/play/bot-walk-legs.luau`, `tools/play/bot-walk.luau` (both from plan 2, Task 8).
-- What it adds:
-  - legs up and down all four ways up, from the meadow to Rare egg 1 and back, and step-offs along every new edge;
-  - **skin tries:** from each boot top, walk straight at Rare egg 1 up his skin; it must stop at a guard and walk back to the plank (Check D2);
-  - **jump tries:** from points every 3 studs along every lap plank and boot top, a jump toward the nearest belly ramp; each must land back on where it started or in the meadow, never on a ramp (Check D4, Rule 45 point 2). The thud is recorded;
-  - **meter peaks:** a solo walking heist along the footprint route (the bot walks the route points), the meter logged every 0.1 s from the Server, for Rare egg 1 and an Uncommon through each way up. Each peak is compared with Task 12's footprint-route peak for the same way up, and the quietest-route peak is shown beside it.
-- Failing test first: none (a Play tool). One jump leg made to fail on purpose (a test plank across the gap, made in Play only) proves it can fail.
-- Done when: every leg passes, the peak table is in the report (bot peak against Task 12's footprint-route peak; a gap over 5 points is reported), and Rare egg 1 peaks between 60% and 80% through all four ways up. A peak over 77% is reported as section 5's trigger.
+- Files: `scripts/bot-walk/t18-tries.luau` and `scripts/bot-walk/t18-judge.luau` (new; the pattern is `t22-jumps.luau`, `client-a.luau`, `t22-judge.luau`). No `src/` change.
+- What it adds (cut by a YAGNI check on 2026-11-12; the table is `work/p3t18/t18-yagni.md`, the card `work/p3t18/t18-card.md`, 2 steps, about 36 min, Sonnet, files `scripts/bot-walk/t18-tries.luau` and `t18-judge.luau`, copied from `t22-jumps.luau`):
+  - **skin tries** (Check D2): from each boot top, a real character walks at Rare egg 1 up his skin and must stop (2 tries). The route search on the real world already runs every test run (`World/RealWorld/WaysUpWalk.spec`); this adds a real walk in Play;
+  - **jump tries** (Check D4, Rule 45 point 2): 1 jump every 3 studs along both lap planks and the boot tops toward the belly ramps; each must not land on a ramp or the belly. The thud is recorded. The static check runs every test run (`World/RealWorld/WaysUpJump.spec`) and plan 5 Task 22 part 22-2 landed 24 of 24 sparse jumps; the dense Play sampling is new;
+  - **dropped as covered:** the legs up and down all four ways (plan 4 Task 13b, 44 trips, giant asleep; Task 12b; plan 5 Task 22-1), the step-offs (plan 5 Task 22-1, stuck safety Task 8c) and the meter peaks (`World/FairnessCheck.spec`, `World/HeistScore.spec`, Task 12b, plan 4 Task 13b). Rule 41 stays proven by those.
+- Failing test first: none (a Play tool). One jump row made to fail on purpose (a test part across the gap, made in Play only, destroyed after) proves it can fail.
+- Done when: the 2 skin tries and every jump try pass in Play, and the fail row printed FAIL once.
+- Result (2026-11-12): X1 printed FAIL; jump rows 15 of 20 landed clear. The 5 rows at the plank ends (PL4 to PL6, PR5, PR6) landed on the belly ramps' foot pieces level with the lap landing (y 33.7 to 34.1), the normal walk, so they skip nothing (Rule 45 point 2 is about skipping the walk). The 2 skin tries stayed at or under y 28.1 and never reached the belly, but failed the judge's "back within 6 studs" rule because the bot never walked back. product and code_lead: both are judge-rule faults, not game faults; the main chat accepted it as a pass with no rerun (veto, 2026-11-12). The scripts keep their first rules; a later rerun must use code_lead's rules: skin passes when max y stays at or under 34 and the feet end on the boots, the meadow or a plank deck; a ramp landing passes when the feet are no higher than the lap landing's top + 1.5.
 
 **Task 19: The Play proof**
 - Stands on: Task 8 (the measured spawn spots, moved if test 2b moved one), designer's new gate-1 and gate-2 spawn mockups that show the boot ladder (asked by product on 2026-11-03, made before this task), and every task before it (build order step 7b).
