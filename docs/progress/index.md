@@ -4,10 +4,10 @@ A short map of where the game stands. Each plan has its own progress file in thi
 
 **V1 (core heist):** done. All 51 tasks were approved, it passed Gate 4, and it is committed. Its rows, its Gate 4 hand-over and its commit list: `docs/progress/v1.md`.
 
-**V2 (Heist update):** 160 of 225 tasks done, setups included.
+**V2 (Heist update):** 161 of 225 tasks done, setups included.
 - New-player safety (plan 1) passed Gate 4 on 2026-10-19 and is committed.
 - Stuck safety (plan 2): all 67 tasks done. Its build review is still to come.
-- Plan 3 (gardens and ways up) is in progress.
+- Plan 3 (gardens and ways up): every task done on 2026-11-12. Its build review is still to come.
 - Three audio tasks (5, 6 and 7) wait for answers from product and designer.
 - The older, longer summary: [V2 status log](v2/history/v2-status-log.md).
 
@@ -18,16 +18,16 @@ A short map of where the game stands. Each plan has its own progress file in thi
 | V2 setups 1 to 7b | `v2/setups.md` | 8 of 8 | ☑ done |
 | 1. New-player safety | `v2/new-player-safety.md` | 13 of 13 | ☑ built; passed Gate 4 on 2026-10-19 and committed |
 | 2. Stuck safety | `v2/stuck-safety.md` | 67 of 67 | ◐ all tasks done; build review and Gate 4 still to come |
-| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 33 of 40 | ◐ in progress (Tasks 1, 2, 3, 3b, 11, 12b, 13, 15a, 15b, 16, 17, 18 and 4a to 8f done; 4b to 4d, 10 and 14 removed or merged; still open: 19) |
+| 3. Gardens and ways up | `v2/gardens-and-ways-up.md` | 34 of 40 | ☑ every task done (4b to 4d, 10 and 14 removed or merged); next: the build review |
 | 4. Egg reachability | `v2/egg-reachability.md` | 16 of 22 | ◐ in progress (Tasks 1 to 4b, 6 to 8, 9a to 9d, 10, 12 and 13 done) |
 | 5. Egg nests and climbing | `v2/egg-nests-and-climbing.md` | 53 of 53 (recounted on 2026-11-12: Tasks 17w and 19c were marked ✅ and missed by the last count; Tasks 24 and 25 dropped as not needed) | ☑ all tasks done 2026-11-12 (23a, 21b and 23b that day); build review and Gate 4 still to come |
 | 6. Wake-up | `v2/wake-up.md` | 21 of 23 | ◐ in progress |
 | 7. Audio | `v2/audio.md` | 0 of 20 | ☐ not started |
-| **All of V2** | | **160 of 225** (setups included; recounted from every progress file on 2026-11-10, plan 5 recounted 2026-11-12; plan 5 Task 7 split in 3; plan 4 Task 13 split in 3 on 2026-11-11) | |
+| **All of V2** | | **161 of 225** (setups included; recounted from every progress file on 2026-11-10, plan 5 recounted 2026-11-12; plan 5 Task 7 split in 3; plan 4 Task 13 split in 3 on 2026-11-11) | |
 
 Removed and dropped tasks are not counted.
 
-**Next:** plan 3's tasks in build order step 2 of `docs/plans/v2/index.md`. Stuck safety's build review, with the hand check of the grab pill on the phone (`work/t16b/step1-review.md`), is step 8.
+**Next:** plan 6 (wake-up) Tasks 22 and 23, then build order step 8 of `docs/plans/v2/index.md`. Stuck safety's build review, with the hand check of the grab pill on the phone (`work/t16b/step1-review.md`), is step 8.
 
 **Place file:** Adam saves `climb-the-sleeping-giant.rbxl` with File → Download a Copy; it was last committed in 214062ed (2026-11-03), so plan 3's world changes from Task 4a on are not in git yet. The old per-task save list: [V2 status log](v2/history/v2-status-log.md#the-old-place-file-paragraph-with-its-per-task-save-list).
 

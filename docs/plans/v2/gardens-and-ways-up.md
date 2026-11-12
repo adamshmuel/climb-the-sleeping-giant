@@ -617,18 +617,23 @@ Words used here (the spec's own words, such as lap landing, belly ramp and rail 
 - Done when: the 2 skin tries and every jump try pass in Play, and the fail row printed FAIL once.
 - Result (2026-11-12): X1 printed FAIL; jump rows 15 of 20 landed clear. The 5 rows at the plank ends (PL4 to PL6, PR5, PR6) landed on the belly ramps' foot pieces level with the lap landing (y 33.7 to 34.1), the normal walk, so they skip nothing (Rule 45 point 2 is about skipping the walk). The 2 skin tries stayed at or under y 28.1 and never reached the belly, but failed the judge's "back within 6 studs" rule because the bot never walked back. product and code_lead: both are judge-rule faults, not game faults; the main chat accepted it as a pass with no rerun (veto, 2026-11-12). The scripts keep their first rules; a later rerun must use code_lead's rules: skin passes when max y stays at or under 34 and the feet end on the boots, the meadow or a plank deck; a ramp landing passes when the feet are no higher than the lap landing's top + 1.5.
 
-**Task 19: The Play proof**
-- Stands on: Task 8 (the measured spawn spots, moved if test 2b moved one), designer's new gate-1 and gate-2 spawn mockups that show the boot ladder (asked by product on 2026-11-03, made before this task), and every task before it (build order step 7b).
+**Task 19: The Play proof** (cut by a YAGNI check, 2026-11-12; "YAGNI" = do not build what players will not miss; table `work/p3t19/t19-yagni.md`; two cards, because one was over the 1 hour limit: part 1 `work/p3t19/t19-card.md`, 3 steps, 44 min; part 2 `work/p3t19/t19b-card.md`, 2 steps, 36 min)
+- Stands on: Task 8 (the spawn spots, done 2026-11-10), designer's gate-1 and gate-2 mockups (exist: `docs/design/v2/mockups/wayup-gate1-*.png`, `wayup-gate2-*.png`), every task before it (all done), and plan 6 Tasks 5 to 21 (done).
 - Spec rules: Rule 44 (Your way up is in view from home), Rule 36 (The lap planks), conditions 4 and 5, Rule 43 (Landing spots on every side), Check C3, section 6.
-- Files: none (a Play check). Screenshots go in the report.
-- What is checked, in Play, on a computer and the iPhone 14 in the device simulator, sound muted:
-  1. **Rule 44:** the spawn view from all 8 gardens (gardens 1, 2, 7 and 8 now face a boot ladder; compared with designer's new gate-1 and gate-2 spawn mockups), after the camera eases back: the foot or top of that garden's way up is on screen, and no new piece stands between the spawn spot and his face or the Z Z Z (16 screenshots).
-  2. **Section 6:** each state against its mockups: spawn at gardens 3, 1 and 5, climbing down with an Uncommon, stepping off a ladder top, crossing a lap plank, the fork both ways.
-  3. **Condition 5:** walking a lap plank beside its rail guard with the camera behind: the camera doesn't snap in.
-  4. **Condition 4 and Rule 43:** he wakes while a player stands on a plank by a rail guard, and while one is on a boot ladder: the float never catches, and the ladder player lands on that side.
-  5. **Check C3:** a boot ladder climbed on the phone simulator, then the boot top and the lap plank, with no jump (spec check C3, 2026-11-03).
-  6. The two weak spots designer named: whether a far "Uncommon" label sits half behind the Tiptoe button on a lap plank, and whether the far boot's labels stack at a ladder top.
-- Done when: every shot is in the report with what it shows, and the main chat sends them to designer.
+- Files: `scripts/bot-walk/t19-plank.luau`, `t19-wake.luau`, `t19-ladder.luau` (new; patterns `p15b2-server`, `nest-pose.luau`, `nest-ladder.luau`, `client-a.luau`). No `src/` change. Screenshots in `work/p3t19/shots/` and the notes.
+- What is checked (kept after the YAGNI check):
+  - **Part 1, computer:** Rule 44 spawn views from all 8 gardens, shot in Edit from designer's `gate-1` to `gate-8` cameras (this includes section 6's spawn at gardens 3, 1 and 5); condition 5, the camera distance while the bot walks the left lap plank; condition 4, he wakes with a player on the plank by the rail guard, and the float lands without catching.
+  - **Part 2, phone simulator:** Rule 44 spawn views for garden 7 (gardens 1, 2 and 8 stand on plan 3 Task 13c and designer's verdict); Check C3, the right boot ladder, the boot top and the lap plank with no jump (the thumbstick itself is not testable in Studio); Rule 43, he wakes with a player on the ladder and they land on that side; the two weak spots (a far "Uncommon" label against the Tiptoe button on a lap plank; the far boot's labels at a ladder top).
+  - **Dropped:** phone views for gardens 1 to 6 and 8 (covered by 13c), the fork both ways (Task 6a shots), the descent with an Uncommon (plan 4 Task 12 and Task 15b, same look as the ladder-top shot). 16 spawn shots became 9.
+- Done when: every shot is in the notes with what it shows and the main chat sends them to designer; the 3 plank numbers and the ladder bounce are in the notes.
+- Result (2026-11-12, notes in `work/p3t19/`): passed.
+  - All 8 spawn views passed. The camera never came closer than 11.9 studs on the plank. The plank wake landed on LandingSpot_6.
+  - On the phone, garden 7 and 8 views show 21 of 21 rungs.
+  - The right boot ladder climb (Check C3) reached the boot top at 4.65 s with no jump and walked on to the lap landing. The first run's miss was the bot's own boot-top check, fixed in `t19-ladder.luau`.
+  - A wake from the ladder top (Rule 43) landed on LandingSpot_10, 0 studs off.
+- product's ruling (2026-11-12):
+  - The wake from the middle rung is covered: the top rung is the worst case, and it passed.
+  - The two label shots (the far "Uncommon" label on a lap plank, the far boot's labels at a ladder top) move to the build review, which spec 3 section 6 already gives them.
 
 ## Every rule is covered
 
