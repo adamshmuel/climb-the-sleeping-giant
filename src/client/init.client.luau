@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -36,6 +37,7 @@ local RunHome = require(script.Hud.RunHome)
 local SleepMeterUi = require(script.Hud.SleepMeterUi)
 local Ui = require(script.Hud.Ui)
 local TiptoeButton = require(script.Hud.TiptoeButton)
+local SoundBoard = require(script.Audio.SoundBoard)
 local BodyBeams = require(script.World.BodyBeams)
 local EggFade = require(script.World.EggFade)
 local Footprints = require(script.World.Footprints)
@@ -45,6 +47,35 @@ local SpotLabels = require(script.World.SpotLabels)
 
 -- Seconds to wait for the server's remotes and the giant's state before carrying on without them.
 local NET_WAIT_SECONDS = 15
+
+-- The sound board (plan 7): the buses and one player per sound file, built once on this device, with one real speaker
+-- output. It is kept in _soundBoard for the later audio tasks, which call play with a row's name. Nothing plays yet.
+local soundRoot = Instance.new("Folder")
+soundRoot.Name = "SoundBoard"
+soundRoot.Parent = SoundService
+local speakers = Instance.new("AudioDeviceOutput")
+speakers.Name = "Speakers"
+speakers.Parent = soundRoot
+local _soundBoard = SoundBoard.start({
+	root = soundRoot,
+	output = speakers,
+	worldParent = Workspace.Terrain,
+	startPlaying = function(player: AudioPlayer)
+		player:Play()
+	end,
+	isReady = function(player: AudioPlayer): boolean
+		return player.IsReady
+	end,
+	ended = function(player: AudioPlayer, callback: () -> ()): SoundBoard.Disconnectable
+		local connection = player.Ended:Connect(callback)
+		return {
+			Disconnect = function()
+				connection:Disconnect()
+			end,
+		}
+	end,
+	now = os.clock,
+})
 
 -- The route and the egg spots never stream out (they are Persistent), so they are there at once. The camera needs them from
 -- the very first spawn, to turn the player away from the egg the footprints lead to. The footprints below use the same ones.

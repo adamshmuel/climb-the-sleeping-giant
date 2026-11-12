@@ -75,12 +75,11 @@ local EXPECTED: { Row } = {
 }
 
 local function find(name: string): SoundList.Entry
-	for _, entry in SoundList.entries do
-		if entry.name == name then
-			return entry
-		end
+	local entry = SoundList.byName(name)
+	if entry == nil then
+		error(`no sound named {name}`)
 	end
-	error(`no sound named {name}`)
+	return entry
 end
 
 -- The volume a curve gives at a distance: straight lines between its points, flat beyond the first and last.
@@ -247,5 +246,17 @@ describe("the hearing curves", function()
 		local curve = Config.Audio.NearbyCurve
 		expect(curveAt(curve, 10)).toBeCloseTo(1, PRECISION)
 		expect(curveAt(curve, 80)).toBeCloseTo(0, PRECISION)
+	end)
+end)
+
+describe("SoundList.byName", function()
+	it("finds a row by its name", function()
+		local found = SoundList.byName("Bonk")
+		expect(found).never.toBe(nil)
+		expect((found :: SoundList.Entry).id).toBe(9113496949)
+	end)
+
+	it("gives nil for a name that is not in the list", function()
+		expect(SoundList.byName("No such sound")).toBeNil()
 	end)
 end)

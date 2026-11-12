@@ -135,6 +135,16 @@ SoundList.entries = {
 	entry("Music button click", CLICK_ID, RBX, YOU, 0.4, 0.4),
 } :: { Entry }
 
+local byName: { [string]: Entry } = {}
+for _, row in SoundList.entries do
+	byName[row.name] = row
+end
+
+-- The one lookup of a row by its name; nil for a name that is not in the list.
+function SoundList.byName(name: string): Entry?
+	return byName[name]
+end
+
 -- The AudioPlayer volume for a spec loudness: twice the number (the spec's scale is the old Sound's, where 0.5 plays a
 -- file as recorded; AudioPlayer's 1.0 does). The biggest, 3.8, becomes 7.6; the limit is 10.
 function SoundList.playerVolume(specLoudness: number): number

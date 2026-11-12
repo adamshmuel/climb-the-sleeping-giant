@@ -8,10 +8,10 @@ Status: ☐ not started · ◐ in progress · ☑ done. "Checked by" lists who h
 |---|---|---|---|
 | Audio (V2 spec 7) | Task 1: The sound list and the loudness scale | ☑ done | 2026-11-12: 30 rows, 26 ids, Config.Audio; full run 3938/1 (standing OnTheGiant red); code_lead APPROVED |
 | Audio (V2 spec 7) | Task 2: Every file loads, and is the one designer picked | ☑ done | 2026-11-12: 26 files load, makers and lengths match; full run 3943/1 (standing OnTheGiant red); code_lead APPROVED |
-| Audio (V2 spec 7) | Task 3: The sound board, and the muted session | ☐ not started | |
+| Audio (V2 spec 7) | Task 3: The sound board, and the muted session | ◐ in progress | 2026-11-12: board code (22 + 2 tests) code_lead APPROVED, full run 3967/1 (standing OnTheGiant red); muted session (3 runs, task3b) next |
 | Audio (V2 spec 7) | Task 4: World prep: Roblox's character sounds on the newer objects | ☐ not started | |
-| Audio (V2 spec 7) | Task 5: What the music should be doing (waits for product: music during a free save) | ☐ not started | |
-| Audio (V2 spec 7) | Task 6: The music plays (waits for designer: the numbers for "muffled") | ☐ not started | |
+| Audio (V2 spec 7) | Task 5: What the music should be doing | ☐ not started | |
+| Audio (V2 spec 7) | Task 6: The music plays | ☐ not started | |
 | Audio (V2 spec 7) | Task 7: The snore follows his sleep (waits for designer: the puff timing) | ☐ not started | |
 | Audio (V2 spec 7) | Task 8: The snorts and the mumble | ☐ not started | |
 | Audio (V2 spec 7) | Task 9: The wake-up is loud, and the yawn | ☐ not started | |
