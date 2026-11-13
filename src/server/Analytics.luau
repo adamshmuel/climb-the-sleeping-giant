@@ -14,6 +14,7 @@ local Trove = require(ReplicatedStorage.Packages.Trove)
 local Rarity = require(ReplicatedStorage.Shared.Rarity)
 local PlayerInfo = require(script.Parent.Players.PlayerInfo)
 local PlayerTracker = require(script.Parent.Players.PlayerTracker)
+local WayUpWatch = require(script.Parent.Players.WayUpWatch)
 
 -- A Roblox event or a Signal, as far as Analytics uses it. (The connection it returns is typed `any`, because the checker
 -- doesn't accept a connection with more fields than a narrow stand-in; Trove only needs to disconnect it.)
@@ -72,10 +73,16 @@ export type Deps = {
 	banked: SignalLike, -- Banking's signal: (player, rarity) after EggsHome went up
 	caught: SignalLike, -- Catcher's signal: (player, rarity of the lost egg)
 	woke: SignalLike, -- the director's signal: (display name, waker's UserId or nil, cause)
-	slammed: SignalLike, -- the director's signal: (UserId the slam was aimed at or nil, UserIds it caught) as the hand lands
+	slammed: SignalLike, -- the director's signal: (UserId the slam was aimed at or nil, target kind, UserIds it caught, UserIds it bonked) as the hand lands
+	bonked: SignalLike, -- Bonker's signal: (player) when a bonk starts
 	saved: SignalLike, -- the director's signal: (UserId, zone) when a player's free save is spent
 	returned: SignalLike, -- Grab's signal: (player, rarity, "Caught" or "Lost") when a carried egg goes back
+	unstuck: SignalLike, -- Recovery's signal: (player, how, zone) just before a rescue, a Reset on the giant or a loop send home
+	refilled: SignalLike, -- Grab's signal: (rank, seconds waited past the countdown) when a new egg appears
+	slideEnded: SignalLike, -- (UserId, slide number this session) when a slide ends
+	musicToggled: SignalLike, -- MusicHandler's signal: (UserId, on) when a player turns their music off or on
 	gardens: { GardenSpot },
+	wayUps: { WayUpWatch.Top }, -- each way up's name and where its top is (WorldIndex.readWaysUp; plan 3 Task 16)
 	now: () -> number, -- os.clock; it tells who has been in the server longest
 	newId: () -> string, -- makes the session id of one heist (HttpService:GenerateGUID(false))
 	warn: ((message: string) -> ())?, -- where a failed call is reported; the global warn if left out
@@ -118,15 +125,32 @@ local HEIST_HOME_NAME = "Home"
 local LEFT_GARDEN_STUDS = 10
 
 -- The custom events. Each has up to three breakdown slots, and the slots mean different things on different events:
---   "EggHome":        CustomField01 = the egg's rarity, CustomField02 = the garden number ("1" to "8").
+--   "EggHome":        CustomField01 = the egg's rarity, CustomField02 = the garden number ("1" to "8"),
+--                     CustomField03 = the server size.
 --   "PlayerCaught":   CustomField01 = the lost egg's rarity (no other slot).
 --   "GiantWoke":      CustomField01 = the server size ("1", "2-4" or "5-8"), CustomField02 = what filled the meter,
 --                     CustomField03 = who woke him ("New" = no Rare home yet, "Veteran", or "Nobody" if nobody can be named).
---   "Slam":           CustomField01 = the result ("Caught", "Missed" or "Empty"), CustomField02 = the server size.
+--   "Slam":           CustomField01 = the result ("Caught", "Bonked", "Missed" or "Empty"), CustomField02 = the server size,
+--                     CustomField03 = what the hand was aimed at (the target kind), valued at the number caught.
+--   "Bonked":         CustomField01 = the server size (no other slot), valued 1, one per bonked player.
 --   "FreeSaveUsed":   CustomField01 = where ("Boots", "Belly" or "Higher"; "Meadow" would be a bug), CustomField02 = the
 --                     player's eggs home ("0", "1" or "2+"), CustomField03 = the egg they carried ("None" or its rarity).
 --   "FreeSaveResult": CustomField01 = how that egg's heist ended ("Home", "Woke him", "Caught" or "Lost"), valued at the
 --                     seconds since the save (no other slot).
+--   "Unstuck":        CustomField01 = how ("Rescue", "Reset on giant" or "Loop home"), CustomField02 = the zone the player
+--                     was in, CustomField03 = "Carrying" or "Empty".
+--   "EggRefill":      CustomField01 = the rank, CustomField02 = the wait past the countdown ("0 s", "1–30 s" or "over 30 s"),
+--                     CustomField03 = the server size.
+--   "SlideOff":       CustomField01 = "Carrying" or "Empty", CustomField02 = "First", "Second" or "Later".
+--   "WayUp":          CustomField01 = the way up's name, CustomField02 = the player's garden number ("1" to "8"),
+--                     CustomField03 = "Carrying" or "Empty". One per climb from the Meadow to a way up's top.
+--   "WakeWayUp":      CustomField01 = the waker's last way up ("None" if they never climbed or nobody can be named),
+--                     CustomField02 = the server size.
+--   "EggGrab":        CustomField01 = the rank of the egg grabbed, CustomField02 = the server size. One per grab.
+--   "MusicOff"/"MusicOn": CustomField01 = the server size, valued at the whole minutes since the player joined.
+--   "WakeRank":       CustomField01 = the rank the waker carried when he woke ("None" if empty-handed or nobody can be
+--                     named), CustomField02 = the server size. One per wake-up, logged next to "GiantWoke" (which has
+--                     no slot left).
 -- So never read one chart's slot as another's.
 local FIELD_ONE = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local FIELD_TWO = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
@@ -135,8 +159,34 @@ local EVENT_EGG_HOME = "EggHome"
 local EVENT_GIANT_WOKE = "GiantWoke"
 local EVENT_PLAYER_CAUGHT = "PlayerCaught"
 local EVENT_SLAM = "Slam" -- one per hand slam, valued at the number of players it caught
+local EVENT_BONKED = "Bonked" -- one per player a slam bonked
 local EVENT_FREE_SAVE_USED = "FreeSaveUsed" -- one per free save
 local EVENT_FREE_SAVE_RESULT = "FreeSaveResult" -- one per save by a carrier, valued at the seconds since the save
+local EVENT_UNSTUCK = "Unstuck" -- one per rescue, Reset on the giant or loop send home
+local EVENT_EGG_REFILL = "EggRefill" -- one per egg that appears again, logged on the player longest in the server
+local EVENT_SLIDE_OFF = "SlideOff" -- one per slide off the giant, on the sliding player
+local EVENT_WAY_UP = "WayUp" -- one per climb to the top of a way up
+local EVENT_WAKE_WAY_UP = "WakeWayUp" -- one per wake-up, on the player "GiantWoke" is logged on
+local EVENT_EGG_GRAB = "EggGrab" -- one per egg grabbed, on the grabber
+local EVENT_WAKE_RANK = "WakeRank" -- one per wake-up, on the player "GiantWoke" is logged on
+local EVENT_MUSIC_OFF = "MusicOff" -- one per tap that turns the music off, valued at the whole minutes since the player joined
+local EVENT_MUSIC_ON = "MusicOn" -- one per tap that turns it back on, valued the same way
+local SECONDS_PER_MINUTE = 60
+local NO_WAY_UP = "None" -- "WakeWayUp" and "WayUp": no way up or garden to name
+local NO_RANK = "None" -- "WakeRank": the waker carried nothing, or nobody can be named
+local CARRYING = "Carrying"
+local EMPTY = "Empty"
+-- "EggRefill" wait bands, in seconds waited past the countdown: under WAIT_NONE_UNDER, up to and including WAIT_LONG_OVER,
+-- and longer.
+local WAIT_NONE_UNDER = 1
+local WAIT_LONG_OVER = 30
+local WAIT_NONE = "0 s"
+local WAIT_SHORT = "1–30 s"
+local WAIT_LONG = "over 30 s"
+-- "SlideOff" slide numbers: the 1st, the 2nd, and every later one.
+local SLIDE_FIRST = "First"
+local SLIDE_SECOND = "Second"
+local SLIDE_LATER = "Later"
 -- Every event of these counts once, so the value is 1 (except "GiantWoke", valued at the number of players, "Slam",
 -- valued at the number of players it caught, and "FreeSaveResult", valued at the seconds since the save).
 local EVENT_VALUE = 1
@@ -179,6 +229,8 @@ local RESULT_LOST = "Lost"
 -- What a "Slam" did, as the chart's result breakdown says it.
 -- It caught at least one carrier, whoever it was aimed at (this is the number the success target counts):
 local SLAM_CAUGHT = "Caught"
+-- It caught nobody but bonked at least one player (a player with no egg):
+local SLAM_BONKED = "Bonked"
 -- It was aimed at a carrier and caught nobody (the carrier ran, or the circle was dodged):
 local SLAM_MISSED = "Missed"
 -- It was aimed at nobody (no carrier was outside the gardens) and caught nobody, so it is left out of the success target:
@@ -215,6 +267,16 @@ function Analytics.serverSize(playerCount: number): string
 	return SIZE_ONE
 end
 
+-- The "EggRefill" wait band for this many seconds waited past the countdown.
+function Analytics.waitBand(waited: number): string
+	if waited < WAIT_NONE_UNDER then
+		return WAIT_NONE
+	elseif waited <= WAIT_LONG_OVER then
+		return WAIT_SHORT
+	end
+	return WAIT_LONG
+end
+
 -- A number from a player's attribute, or nil if it holds anything else.
 local function numberFrom(value: any): number?
 	if type(value) == "number" and value == value then
@@ -232,6 +294,9 @@ function Analytics.start(deps: Deps): Analytics
 
 	local records: { [number]: Record } = {}
 	local arrivals = 0
+
+	-- Which way up each player climbed last, and who has just climbed one.
+	local wayUpWatch = WayUpWatch.new(deps.wayUps)
 
 	-- Where each garden's spawn spot is, by garden number.
 	local spawnPositions: { [number]: Vector3? } = {}
@@ -333,6 +398,7 @@ function Analytics.start(deps: Deps): Analytics
 			records[player.UserId] = nil
 			record.cleanup()
 		end
+		wayUpWatch:forget(player.UserId)
 	end
 
 	trove:Add(players.PlayerAdded:Connect(function(player: PlayerLike)
@@ -353,7 +419,7 @@ function Analytics.start(deps: Deps): Analytics
 		watchPlayer(player)
 	end
 
-	trove:Add(deps.grabbed:Connect(function(player: PlayerLike, _rarity: Config.RarityName)
+	trove:Add(deps.grabbed:Connect(function(player: PlayerLike, rarity: Config.RarityName)
 		local record = records[player.UserId]
 		if stopped or record == nil then
 			return
@@ -364,6 +430,10 @@ function Analytics.start(deps: Deps): Analytics
 		local heist: Heist = if open == nil or open.step >= HEIST_GRABBED then openHeist() else open
 		record.heist = heist
 		logHeistStep(record, heist, HEIST_GRABBED, HEIST_GRABBED_NAME)
+		logCustom(player, EVENT_EGG_GRAB, EVENT_VALUE, {
+			[FIELD_ONE] = rarity,
+			[FIELD_TWO] = Analytics.serverSize(#players:GetPlayers()),
+		})
 	end))
 
 	trove:Add(deps.banked:Connect(function(player: PlayerLike, rarity: Config.RarityName)
@@ -396,6 +466,7 @@ function Analytics.start(deps: Deps): Analytics
 		if garden ~= nil then
 			fields[FIELD_TWO] = tostring(garden)
 		end
+		fields[FIELD_THREE] = Analytics.serverSize(#players:GetPlayers())
 		logCustom(player, EVENT_EGG_HOME, EVENT_VALUE, fields)
 	end))
 
@@ -407,6 +478,19 @@ function Analytics.start(deps: Deps): Analytics
 			return
 		end
 		closeFreeSave(record, if why == "Caught" then RESULT_CAUGHT else RESULT_LOST)
+	end))
+
+	-- A player was moved or sent home to get unstuck. It is told before the move, so the egg is still carried. It never
+	-- touches a free save's result: a move keeps the egg, and a send home closes it through `returned`.
+	trove:Add(deps.unstuck:Connect(function(player: PlayerLike, how: string, zone: string)
+		if stopped then
+			return
+		end
+		logCustom(player, EVENT_UNSTUCK, EVENT_VALUE, {
+			[FIELD_ONE] = how,
+			[FIELD_TWO] = zone,
+			[FIELD_THREE] = if carries(player) then CARRYING else EMPTY,
+		})
 	end))
 
 	-- A free save was spent. Everything is read now, from the server's own attributes: where they were, their eggs home
@@ -469,12 +553,21 @@ function Analytics.start(deps: Deps): Analytics
 		if wokenBy ~= nil then
 			waker = players:GetPlayerByUserId(wokenBy)
 		end
+		-- The rank carried is read first, before any other handler can take the egg off his back.
+		local carriedRank = NO_RANK
+		if waker ~= nil then
+			local carrying = waker:GetAttribute("Carrying")
+			if type(carrying) == "string" and carrying ~= "" then
+				carriedRank = carrying
+			end
+		end
 		local reported = cause
 		local who = WAKER_NOBODY
 		if waker == nil then
 			-- Nobody can be named, or the waker is gone: the player here longest carries it, so no wake goes missing.
 			waker = longestInServer()
 			reported = CAUSE_WAKER_LEFT
+			carriedRank = NO_RANK
 		else
 			who = if PlayerInfo.fromPlayer(waker).rareHome then WAKER_VETERAN else WAKER_NEW
 			-- The waker's own noise woke him, so a save they were carrying on ends here.
@@ -491,12 +584,22 @@ function Analytics.start(deps: Deps): Analytics
 			[FIELD_TWO] = reported,
 			[FIELD_THREE] = who,
 		})
+		logCustom(waker, EVENT_WAKE_RANK, EVENT_VALUE, {
+			[FIELD_ONE] = carriedRank,
+			[FIELD_TWO] = Analytics.serverSize(count),
+		})
+		-- Only a named waker has a way up to report; when nobody is named it says "None".
+		local lastWayUp = if who ~= WAKER_NOBODY then wayUpWatch:lastOf(waker.UserId) else nil
+		logCustom(waker, EVENT_WAKE_WAY_UP, EVENT_VALUE, {
+			[FIELD_ONE] = lastWayUp or NO_WAY_UP,
+			[FIELD_TWO] = Analytics.serverSize(count),
+		})
 	end))
 
 	-- "Slam": once per slam, as the hand lands. The result comes from what the hand did. It is logged on the target, if
 	-- they are still here; otherwise on the first caught player still here (an empty-meadow slam that a carrier walked
-	-- under), otherwise on the player who has been here longest, so no slam goes missing.
-	trove:Add(deps.slammed:Connect(function(target: number?, caught: { number })
+	-- under), then the first bonked one, otherwise on the player who has been here longest, so no slam goes missing.
+	trove:Add(deps.slammed:Connect(function(target: number?, kind: string, caught: { number }, bonked: { number })
 		if stopped then
 			return
 		end
@@ -507,6 +610,8 @@ function Analytics.start(deps: Deps): Analytics
 		local result = SLAM_EMPTY
 		if #caught > 0 then
 			result = SLAM_CAUGHT
+		elseif #bonked > 0 then
+			result = SLAM_BONKED
 		elseif target ~= nil then
 			result = SLAM_MISSED
 		end
@@ -520,6 +625,14 @@ function Analytics.start(deps: Deps): Analytics
 					break
 				end
 			end
+			if logOn == nil then
+				for _, userId in bonked do
+					logOn = players:GetPlayerByUserId(userId)
+					if logOn ~= nil then
+						break
+					end
+				end
+			end
 		end
 		if logOn == nil then
 			logOn = longestInServer()
@@ -530,6 +643,74 @@ function Analytics.start(deps: Deps): Analytics
 		logCustom(logOn, EVENT_SLAM, #caught, {
 			[FIELD_ONE] = result,
 			[FIELD_TWO] = Analytics.serverSize(count),
+			[FIELD_THREE] = kind,
+		})
+	end))
+
+	-- "Bonked": one per player a bonk starts on (Rule 70), logged on that player.
+	trove:Add(deps.bonked:Connect(function(player: PlayerLike)
+		if stopped then
+			return
+		end
+		local count = #players:GetPlayers()
+		if count == 0 then
+			return
+		end
+		logCustom(player, EVENT_BONKED, EVENT_VALUE, {
+			[FIELD_ONE] = Analytics.serverSize(count),
+		})
+	end))
+
+	-- A refill has no player, so it is logged on the player longest in the server (none: no line).
+	trove:Add(deps.refilled:Connect(function(rank: string, waited: number)
+		if stopped then
+			return
+		end
+		local count = #players:GetPlayers()
+		local logOn = longestInServer()
+		if count == 0 or logOn == nil then
+			return
+		end
+		logCustom(logOn, EVENT_EGG_REFILL, EVENT_VALUE, {
+			[FIELD_ONE] = rank,
+			[FIELD_TWO] = Analytics.waitBand(waited),
+			[FIELD_THREE] = Analytics.serverSize(count),
+		})
+	end))
+
+	-- A slide ends: logged on the sliding player, with whether they carried an egg and which slide it was.
+	trove:Add(deps.slideEnded:Connect(function(userId: number, slideNumber: number)
+		if stopped then
+			return
+		end
+		local record = records[userId]
+		if record == nil then
+			return
+		end
+		local which = SLIDE_LATER
+		if slideNumber == 1 then
+			which = SLIDE_FIRST
+		elseif slideNumber == 2 then
+			which = SLIDE_SECOND
+		end
+		logCustom(record.player, EVENT_SLIDE_OFF, EVENT_VALUE, {
+			[FIELD_ONE] = if carries(record.player) then CARRYING else EMPTY,
+			[FIELD_TWO] = which,
+		})
+	end))
+
+	-- The music button: logged on the player who tapped, valued at the whole minutes (rounded down) since they joined.
+	trove:Add(deps.musicToggled:Connect(function(userId: number, on: boolean)
+		if stopped then
+			return
+		end
+		local record = records[userId]
+		if record == nil then
+			return
+		end
+		local minutes = math.floor((deps.now() - record.joinedAt) / SECONDS_PER_MINUTE)
+		logCustom(record.player, if on then EVENT_MUSIC_ON else EVENT_MUSIC_OFF, minutes, {
+			[FIELD_ONE] = Analytics.serverSize(#players:GetPlayers()),
 		})
 	end))
 
@@ -551,6 +732,21 @@ function Analytics.start(deps: Deps): Analytics
 	local function check(_self: Analytics, samples: { PlayerTracker.Sample })
 		if stopped then
 			return
+		end
+		local watched: { WayUpWatch.Sample } = {}
+		for _, sample in samples do
+			table.insert(watched, { userId = sample.userId, position = sample.position, zone = sample.zone })
+		end
+		for _, reached in wayUpWatch:check(watched) do
+			local climber = records[reached.userId]
+			if climber ~= nil then
+				local garden = numberFrom(climber.player:GetAttribute("PlotIndex"))
+				logCustom(climber.player, EVENT_WAY_UP, EVENT_VALUE, {
+					[FIELD_ONE] = reached.name,
+					[FIELD_TWO] = if garden ~= nil then tostring(garden) else NO_WAY_UP,
+					[FIELD_THREE] = if carries(climber.player) then CARRYING else EMPTY,
+				})
+			end
 		end
 		for _, sample in samples do
 			local record = records[sample.userId]

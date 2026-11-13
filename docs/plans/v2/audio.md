@@ -1,5 +1,20 @@
 # Plan: Audio (V2, spec 7)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [Nobody listens, ever, in this plan](#nobody-listens-ever-in-this-plan)
+- [Decisions for the build](#decisions-for-the-build)
+- [Every sound, and what the screen shows with it](#every-sound-and-what-the-screen-shows-with-it)
+- [Tasks](#tasks)
+  - [Part 1: The sound list, the files and the sound board](#part-1-the-sound-list-the-files-and-the-sound-board) (Tasks 1 to 4)
+  - [Part 2: Music and the giant's sleep](#part-2-music-and-the-giants-sleep) (Tasks 5 to 8)
+  - [Part 3: The wake-up, the slams and the eggs](#part-3-the-wake-up-the-slams-and-the-eggs) (Tasks 9 to 12)
+  - [Part 4: The player's own sounds](#part-4-the-players-own-sounds) (Tasks 13, 14, 15)
+  - [Part 5: The music button](#part-5-the-music-button) (Tasks 16, 17)
+  - [Part 6: A whole session, the Gate 4 sound check, and the Play proof](#part-6-a-whole-session-the-gate-4-sound-check-and-the-play-proof) (Tasks 18, 19, 20)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing (or by listening)](#checked-only-by-playing-or-by-listening)
+- [Questions](#questions)
+
 **Status: written** (2026-10-19). Not started. It is built last, after plans 1 to 6, because it connects sound to pieces they build: the 85% snort (plan 1, Task 8), the rescue puff (plan 2, Task 14), the nests and their refills (plan 5), and the wake-up's sound places (plan 6, "Sound hooks for plan 7").
 
 How `docs/specs/v2/audio.md` gets built, as small tasks in test-first order (a failing test first, then the code that makes it pass). How the code is organised is in `docs/architecture.md` (section 10 is about sound).
@@ -41,8 +56,8 @@ Nobody has heard any of these sounds. The first listen is Adam's Gate 4 playtest
 | The music's first second | The calm tune and the snore start only once the player's character has spawned and their files are loaded, and the calm tune fades in over the 1-second music fade | Section 2: the tune "starts quietly". It also keeps the first sound of a session well after the session's mute (below) |
 | Which device decides | Every sound is played by each player's own device, from what it already gets: the giant's state, the existing remotes, player attributes, and two new server-to-client remotes (`Thud`, `EggPop`). The server never plays a sound | Sound is a look, like the giant's movements. The server only decides |
 | New remotes | Server to everyone: `Thud` (where, and the noise it added, Task 13) and `EggPop` (the nest's position, and `"Refill"`, `"Back"` or `"Gone"`, Task 12). The server never listens to them. Client to server: `SetMusic` (on: true or false), only for analytics (Task 17) | A thud and an egg going back are worked out only on the server, so the devices need to be told. A nest's `Waiting` attribute can't say whether its new egg is a refill (a sparkle) or a lost egg coming back (a pop) |
-| **How a test session is muted** (Rule 99) | The first call of every Play session, before anything else, is a Client `execute_luau` that: (1) cuts every `Wire` whose target is an `AudioDeviceOutput` (sets its `TargetInstance` to nil), now and every time a wire is added or changed, for the rest of that session; (2) routes every old `Sound` into one `SoundGroup` at Volume 0, now and when added (the V1 way, for anything of Roblox's still on the old objects); (3) reports how many it cut. It is typed into the call each time. **It is never saved in any file, script, place or setting**, so the published game always plays sound | It catches Roblox's own listener wire, our own outputs and every sound added later. Task 3 proves in Play that the cut is in place before the game could make its first sound |
-| What the team checks instead of listening | That each sound *started* at its moment: in a muted session, a Client `execute_luau` reads the board's log of what it played and when (`SoundBoard.log`, kept only for the last 200 plays) | "Each sound starts at its moment" (section 9, "Sound out of step with the screen") is checked without anyone hearing it |
+| **How a test session is muted** (Rule 99) | The first call of every Play session, before anything else, is a Client `execute_luau` that: (1) cuts every `Wire` whose target is an `AudioDeviceOutput` (sets its `TargetInstance` to nil), now and every time a wire is added or changed, for the rest of that session; (2) routes every old `Sound` into one `SoundGroup` at Volume 0, now and when added (the V1 way, for anything of Roblox's still on the old objects); (3) reports how many it cut. Its text lives only in the git-ignored job file `work/p7/task3b-mute.luau` and is pasted into the call each time (code_lead, 2026-11-12). **It is never in `src/`, `tools/`, the place or a setting**, so the published game always plays sound | It catches Roblox's own listener wire, our own outputs and every sound added later. Task 3 proves in Play that the cut is in place before the game could make its first sound |
+| What the team checks instead of listening | That each sound *started* at its moment: in a muted session, a Client `execute_luau` reads two attributes the board sets on its folder in `SoundService`: `PlayCount` (how many sounds it has started) and `LastPlay` (the last row and its time). A job can't reach the board's own `log` table, which tests read | "Each sound starts at its moment" (section 9, "Sound out of step with the screen") is checked without anyone hearing it |
 | Plan 5's two sound places | `Fx/NestPop`'s place gets no sound: the pop can't tell a refill from an egg coming back, so `EggPop` decides (Task 12), and the unused place is removed. `Hud/Messages`' slide-tip place gets no sound: spec 7 gives the tip none, and the slide's own thud already plays the flump (Rule 96). Task 13 removes it | No sound place is left unconnected |
 | Plan 6's `Caught` place | It is called only on the caught player's own device ("Just for you"). Plan 6's table says so (updated with this plan) | The caught "whoosh" is just for them (Rule 94) |
 | New world script | `26-sound-setup` | 12 to 25 are taken by plans 1 to 6 |
@@ -89,6 +104,7 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 - What it does: one entry per sound row, copied from the spec's table: its name, asset id, maker, group, the spec's loudness, its speed (or speed range), where it starts, its loop part, its length as designer measured it, and "one at a time" for the mumble and the snort. The snort is the snore's file from 3.46 s to 3.86 s with a 0.05 s fade at its end. The flump has three loudnesses. `SoundList.playerVolume(specLoudness)` gives twice the number. `Config.Audio` holds every other number in section 5: the 1 s music fade, the 0.1 s snore stop, half loudness for the thinned music and the light snore, a quarter for Tiptoe footsteps, 3 copies, the 1 s chase start, the snore speed ranges (0.95–1.05, Heavy Sleep 0.76–0.84), the 85% times (snorts at 0 and 0.5 s, mumble at 1.0 s), and the two hearing curves.
 - Failing tests first: there are 30 rows (26 different files), each matching its section 5 row; every maker is Roblox, ProSoundEffects or APMOfficial; every row has one of the three groups; `playerVolume` doubles (0.2 → 0.4, 3.8 → 7.6) and every converted volume is above 0 and at most 10; the yawn's file is neither the roar's nor the mumble's; the snort's part ends before its file's length; the calm tune loops from 0.05 to 127.7 s and the chase tune from 0.3 to 102.35 s; the Whole valley curve gives 1 at 60 studs, at least a third at 200 and 0.2 at 1,000; the Nearby curve gives 1 at 10 and 0 at 80.
 - Done when: the tests pass.
+- Stands on: spec 7 section 5 as changed 2026-11-12 (only the snore row's words changed, no number), and designer's measured lengths in `docs/specs/v2/research/decisions-audio.md` section 2. Both final.
 
 **Task 2: Every file loads, and is the one designer picked**
 - Spec rules: Rule 85 (Only free audio from Roblox and its partners); section 8, "A sound doesn't load" ("The build check loads ... every sound once ... and fails if one doesn't load"); section 9, "A sound disappears".
@@ -99,24 +115,27 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 3: The sound board, and the muted session**
 - Spec rules: Rule 86 (Three ways to hear): the groups and the 3-copy limit; Rule 99 (Studio tests mute at runtime only); section 8, "A sound doesn't load", "8 players are bounced off at once", "Reduce Motion is on".
-- Files: `src/client/Audio/SoundBoard.luau` (new), `src/client/Audio/HearingGroups.luau` (new, pure: the two curves), `src/client/init.client.luau` (starts the board, with no sound place connected yet), their tests.
+- Files: `src/client/Audio/SoundBoard.luau` (new), `src/client/Audio/SoundList.luau` (`byName`, the one lookup by row name), `src/client/init.client.luau` (starts the board, with no sound place connected yet), their tests. The two curves are already `Config.Audio.WholeValleyCurve` and `NearbyCurve` (Task 1), so there is no `HearingGroups` module (code_lead, 2026-11-12).
 - What it does: `SoundBoard.start(deps)` builds, on this device only, in a folder in `SoundService`: a music bus and an effects bus (each an `AudioFader`), our own speaker output, and one loaded `AudioPlayer` per row to copy from. `play(rowName, at?, options?)` copies the row's player, sets its converted volume and speed, and wires it to the effects bus ("Just for you") or to an `AudioEmitter` on a new attachment at `at` with its group's curve; it removes everything when the sound ends. `stop(rowName)` stops a row. It keeps `log` (what played, when, where; the last 200). The speaker output and the "start playing" step are passed in.
 - Failing tests first (fake output, fake start, fake clock): a "Just for you" row is wired to the effects bus and never to an emitter; a "Whole valley" row gets an emitter at the given place with the curve; a 4th copy of one row while 3 play is skipped, but a different row still plays; a "one at a time" row stops the old copy first; a row whose file isn't ready is skipped with no error; everything a sound made is gone after it ends; `log` records each play; no test makes a speaker output.
 - Done when: the tests pass, and in a **muted session** run 3 times (computer, sound board started, nothing playing yet): the report shows the mute call's count of cut wires (Roblox's own listener wire and our output's wire), that a wire added after the mute is cut too, and whether the character had spawned when the mute ran. If the character had already spawned in any run, the builder stops and tells code_lead before Task 5 (the first task that plays a sound in Play).
+- Result (2026-11-12, `work/p7/task3b-note.md`): 3 wires cut in every run, later wires cut too, and the character **had** spawned before the mute in all 3 runs. code_lead's ruling: fine for Tasks 4 and 5, because the board plays nothing yet. Task 6, the first task that plays a tune, adds a play counter the mute reads (below). A board copy is not ready at once (ready after 0.05–0.07 s); measured: `Play`, `TimePosition` and `LoopRegion` set before it is ready all hold, so the board needs no change.
 
 **Task 4: World prep: Roblox's character sounds on the newer objects**
 - Spec rules: Rule 96 (Your own noise is heard): "Walking, climbing and jumping otherwise use Roblox's normal character sounds"; Rule 99 (one way to mute).
-- Files: `tools/world/26-sound-setup.luau` (new), `src/server/World/WorldIndex.luau` (the world contract), `src/tests/server/World/RealWorld.spec.luau`.
+- Files: `tools/world/26-sound-setup.luau` (new), `src/server/World/SoundSettings.luau` (new: the sound part of the world contract; `WorldIndex.luau` is already 880 lines), `src/tests/server/World/SoundSettings.spec.luau` (new), `src/tests/server/World/RealWorld/SoundSettings.spec.luau` (new).
 - What the script does: sets `SoundService.CharacterSoundsUseNewApi` to `Enabled` (Roblox docs, checked 2026-10-19: Roblox then makes character sounds with `AudioPlayer`s and `AudioEmitter`s) and checks `DefaultListenerLocation` is `Camera`.
 - Failing tests first: the world contract reports a place whose `CharacterSoundsUseNewApi` isn't `Enabled`, or whose listener location is `None`. A real-world test for Rule 99: the place holds no audio object, `Sound`, `SoundGroup` or `AudioFader` at Volume 0 (today it holds none at all, checked 2026-10-19).
+- The place's sound settings are checked only by the Edit-mode tests, because a game script can't read `DefaultListenerLocation` (it needs the PluginOrOpenCloud capability; the first start-up warning killed the server in Play, product ruling 2026-11-12, fixed by `work/p7/task4-fix-card.md`).
 - Done when: the script runs twice (the second run says "already done"), the tests pass, and **Adam saves the place**.
+- Stands on: spec 7 Rules 96 and 99 (final); Task 3's muted session (done 2026-11-12), which showed Roblox's own listener sits on the camera (`Workspace.Camera.AudioListener`), so the listener check matches the place today.
 
 ### Part 2: Music and the giant's sleep
 
 **Task 5: What the music should be doing**
 - Spec rules: Rule 89 (Music follows the meter); Rule 93 (Chase music); section 5, "Music change fade", "Thinned music", "Silence at 85%", "Chase tune start"; section 8, "The meter hovers at 59–61%", "A player joins at 85% or more", "A player joins while he's awake", "A player stands in their garden during the wake".
 - Files: `src/client/Audio/MusicMix.luau` (new, pure), `src/tests/client/Audio/MusicMix.spec.luau` (new).
-- What it does: from the giant's `Phase`, `Meter` and `PhaseEndsAt`, the 85% silence (from an 85% warning until the meter is under 75%, like the Z Z Z; see "Questions"), the player's `InGarden`, the music button and the time, it says how loud each tune should be, how muffled the music is (0 clear, 1 fully muffled), and where the chase tune should be in its file. Each change moves toward its target over the 1 s fade.
+- What it does: from the giant's `Phase`, `Meter` and `PhaseEndsAt`, the 85% silence (from every 85% warning, first or replayed, until that warning ends (the bubble is gone) **and** the meter is under 75%: Rule 89, spec line 126, product's answer 2026-11-12), the player's `InGarden`, the music button and the time, it says how loud each tune should be, how muffled the music is (0 clear, 1 fully muffled), and where the chase tune should be in its file. Each change moves toward its target over the 1 s fade.
 - Failing tests first (fake clock, brand-new player):
   1. Asleep at 10%: calm full, clear; chase silent.
   2. Passing 60%: calm reaches half and fully muffled 1 s later, never in one jump; back under 60%: back to full over 1 s.
@@ -126,96 +145,117 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
   6. Awake and in a garden: chase at half and muffled within 1 s; out again: full within 1 s.
   7. Lie-down: chase fades out over 1 s as calm fades back in; Heavy Sleep: calm full and clear.
   8. Music button off: both tunes silent at once, and the chase never starts in the next wake.
+  9. A free save at 88% (the meter drops to 70 while the warning replays): still silent until the replayed warning ends, then back to the tune for the meter.
 - Done when: the tests pass.
-- Waits for product (the music during a free save's replayed warning; "Questions").
+- The warning's length is the 85% bubble's own length without Reduce Motion (`Bubble85.showSeconds(false)`, 3.3 s), so Reduce Motion never changes a sound (Rule 88: The game reads without sound). The chase loop numbers are read from `SoundList`, not copied (code_lead, 2026-11-12; card `work/p7/task5-card.md`).
+- Stands on: Task 1 (`Config.Audio`); Rule 89 as changed 2026-11-12; `Fx/Bubble85` (plan 6, done). All final.
 
 **Task 6: The music plays**
 - Spec rules: Rule 89 (Music follows the meter), Rule 93 (Chase music), on the board; section 5, "Tune checks", "Tune length"; section 2 (the tune "starts quietly").
-- Files: `src/client/Audio/Music.luau` (new), `src/client/init.client.luau`, `src/tests/client/Audio/Music.spec.luau` (new).
-- What it does: two looping tune players on the music bus, each through its own fader, then one low-pass `AudioFilter` for "muffled" (values in "Questions", designer). Each frame it applies `MusicMix`. The calm tune loops 0.05–127.7 s and the chase 0.3–102.35 s (`LoopRegion`). Nothing starts until the character has spawned and both files are ready; the calm tune then fades in over 1 s.
-- Failing tests first (fake board, fake clock): the calm tune's fader follows `MusicMix` frame by frame; the filter's cutoff moves between clear and muffled over 1 s; loop parts are set; the chase starts at the file time `MusicMix` gives; nothing plays before the character spawns.
-- Done when: the tests pass, and in a muted session the board's log and the faders' values (read by a Client `execute_luau`) show the calm tune playing from spawn, half and muffled after a forced 60% (the meter written on the Server), silent by 1 s after 85%, and the chase starting 1 s after a wake.
-- Waits for designer (the numbers for "muffled"; "Questions").
+- Files: `src/client/Audio/Music.luau` (new), `src/client/Audio/SoundBoard.luau` (the `PlayCount` and `LastPlay` attributes on its folder), `src/client/init.client.luau`, `src/tests/client/Audio/Music.spec.luau` (new), `src/tests/client/Audio/SoundBoard.spec.luau`.
+- What it does: two looping tune players on the music bus, each through its own fader, then one low-pass `AudioFilter` for "muffled": `Lowpass24dB`, 1,000 Hz when fully muffled and 22,000 Hz when clear, moved over the same 1 s fade, for the chase tune in a garden too (designer's answer 2026-11-12, `work/p7/designer-answers.md`). The two cutoffs go in `Config.Audio`. If players don't notice it (the spec's "Thinned music" trigger), designer's next step is 500 Hz and a third of the loudness. Each frame it applies `MusicMix`. The calm tune loops 0.05–127.7 s and the chase 0.3–102.35 s (`LoopRegion`). Nothing starts until the character has spawned and both files are ready; the calm tune then fades in over 1 s.
+- Failing tests first (fake board, fake clock): the calm tune's fader follows `MusicMix` frame by frame; the filter's cutoff moves between clear and muffled over 1 s; loop parts are set; the chase starts at the file time `MusicMix` gives; nothing plays before the character spawns; each board play adds 1 to the folder's `PlayCount` and sets `LastPlay` to the row and time.
+- Done when: the tests pass; the session's mute paste also reads `PlayCount`, which must be 0 when the mute runs (Task 3 found the character spawns before the mute; if it is above 0, code_lead takes the measured gap and a start-delay option to product, because a delay is something players feel); and in a muted session the board's `PlayCount`/`LastPlay` and the faders' values (read by a Client `execute_luau`) show the calm tune playing from spawn, half and muffled (filter at 1,000 Hz) after a forced 60% (the meter written on the Server), silent by 1 s after 85%, and the chase starting 1 s after a wake.
+- Chase player (code_lead, 2026-11-12): `MusicMix` gives no chase file time outside Awake, so the chase copy is started and seeked only when a file time first appears while no copy plays, keeps playing through its fade-out after he lies down, and is stopped only when its loudness reaches 0. Never seek it mid-fade. The board's `play` returns the copy and takes a fader to wire into.
+- Music at spawn (product, 2026-11-12): the calm tune starts at spawn, quietly, with no start delay (spec story A and section 2). A delay would give real players silent seconds. In a Studio test session the tune can play for about 10 s before the mute paste lands; that is test-only and meets Rule 99 (Studio tests mute at runtime only). Ruling: `work/p7/product-t6-gap-ruling.md`.
+- Stands on: Task 3 (the sound board), Task 5 (`MusicMix`); designer's muffled numbers (final, 2026-11-12).
 
 **Task 7: The snore follows his sleep**
 - Spec rules: Rule 90 (The snore follows his sleep); Rule 17 (A free save replays the 85% warning): the snore stays off until the replay ends; section 5, "Snore at 60–84%", "Snore speed"; section 8, "The meter hovers at 59–61%".
-- Files: `src/client/Fx/GiantFx.luau` (tells who listens how the snore puffs are: "Normal", "Heavy" or "Off", and when they restart), `src/client/Audio/Snore.luau` (new), `src/client/init.client.luau`, their tests.
-- What it does: one snore player on an emitter at his mouth. It plays exactly while `GiantFx` says the snore puffs show: full while asleep under 60%; stopped for the 2-second pause at 60%, then at half loudness from 60% to 84%; off within 0.1 s at the 85% warning; off while awake; the Heavy Sleep snore (its own loudness and speeds) while Heavy Sleep lasts; after a free save, off until the replayed warning ends. Each time the loop starts again (`AudioPlayer.Looped`, Roblox docs), it picks a new speed in its range (the random pick is passed in), and the puffs start again with it (designer's puff timing, see "Questions").
+- Files: the `src/client/Fx/GiantFx/` folder, `init.luau` and `Shared.luau` (tells who listens how the snore puffs are: "Normal", "Heavy" or "Off"; the puffs now also stop for the 2-second Z Z Z pause at 60%), `src/client/Audio/Snore.luau` (new), `src/client/init.client.luau`, their tests (`src/tests/client/Audio/Snore.spec.luau` new; `src/tests/client/Fx/GiantFx/Warnings.spec.luau`, whose "puffs on" check at 60% changes with designer's answer 2).
+- What it does: one snore player on an emitter at his mouth. It plays exactly while `GiantFx` says the snore puffs show: full while asleep under 60%; stopped for the 2-second pause at 60%, then at half loudness from 60% to 84%; off within 0.1 s at the 85% warning; off while awake; the Heavy Sleep snore (its own loudness and speeds) while Heavy Sleep lasts; after a free save, off until the replayed warning ends. Each time the loop starts again (`AudioPlayer.Looped`, Roblox docs), it picks a new speed in its range (the random pick is passed in). The puffs stay on, steady, while the loop plays: nothing restarts them at each loop (spec line 191; designer's answer 1). At 60% the puff emitter stops for the same 2 s as the snore (puffs already in the air finish), then comes back at the normal rate with the half-loud snore (designer's answer 2; Rule 90 stands with no exception).
 - Failing tests first (fake board, fake `GiantFx`, fake clock, fixed random):
   1. Asleep at 10%: the snore plays at its full volume.
-  2. Passing 60%: silent for 2 s, then at half.
+  2. Passing 60%: silent for 2 s, then at half; `GiantFx` reports the puffs "Off" for the same 2 s.
   3. The 85% warning: silent within 0.1 s, not 1 s; back when the puffs come back.
   4. Awake: off. Heavy Sleep: the Heavy Sleep volume and a speed from 0.76 to 0.84; back to normal when Heavy Sleep ends.
   5. A free save: off until the replay ends, then back only if the meter is under 75.
-  6. Every loop restart gets a new speed from 0.95 to 1.05, and tells the puffs to restart.
+  6. Every loop restart gets a new speed from 0.95 to 1.05, and the puffs stay on through it (never restarted).
 - Done when: the tests pass, and in a muted session the board's log shows the snore's on and off times matching the puffs through 60%, 85% and a wake-up.
-- Waits for designer (the puff timing and the 60% pause; "Questions").
+- Stands on: Task 3 (the sound board), Task 1 (snore speeds), Task 6 (the board's `play` hands back the copy); designer's puff answers and spec line 191 (final, 2026-11-12).
 
 **Task 8: The snorts and the mumble**
 - Spec rules: Rule 91 (The mumble); Rule 17 (A free save replays the 85% warning); section 5, "The 85% sound timing"; section 8, "A free save happens while the first mumble is still playing", "The meter passes 85% while a replayed warning is still showing".
-- Files: `src/client/Fx/GiantFx.luau` (new sound places `Snort` at each snort burst, with 1 or 2, and `Mumble` 1.0 s into the warning), `src/client/Audio/Cues.luau` (new, pure: each sound place's name to its rows, speed and place), `src/client/init.client.luau`, their tests.
+- Files: the `src/client/Fx/GiantFx/` folder: `init.luau` and `Shared.luau` (new sound places `Snort1` and `Snort2` at the snort bursts, from his nose, and `Mumble` 1.0 s into the warning, from his mouth; a new `stopSound` dep stops a playing mumble), `Find.luau` (one `mouthAt()` that `WakeFace` also uses, so the mouth lookup is not written twice), `src/client/Audio/Cues.luau` (new, pure: each sound place's name to its row and speed), `src/client/Audio/SoundBoard.luau` (a `speed` play option; a row with `fileEnd` plays only to that point, with its `endFade`: today the board skips both), `src/client/init.client.luau`, their tests.
+- Changed 2026-11-12 (code_lead, Task 8 card): the board must honour the snort's cut (spec section 5, "3.46 s to 3.86 s, with a 0.05 s fade at the end"), which no task built. `AudioPlayer.PlaybackRegion` (Roblox docs) gives the cut. Whether `Ended` fires at the region's end is checked in the muted session.
 - What it does: the first snort plays at speed 1 and the second at 0.9, from his nose; the mumble plays once from his mouth at 1.0 s. A replay stops a playing mumble and starts both again. A wake-up before the second snort cancels it (plan 1) and stops a playing mumble, because the bubble goes when he wakes and the mumble must end before the bubble does.
 - Failing tests first (fake clock): `Snort` 1 at 0 s and `Snort` 2 at 0.5 s, `Mumble` at 1.0 s, each once; a replay at 1.5 s stops the first mumble and starts the snorts and mumble again; a pass of 85% during a replay starts nothing (the server sends nothing then: plan 1, Task 5); a wake at 0.3 s plays no second snort and no mumble; `Cues` gives snort 1 at speed 1 and snort 2 at 0.9, both one at a time.
-- Done when: the tests pass.
+- Done when: the tests pass, and in a muted session (85, a free save 1.5 s later, then 85 with a wake about 0.6 s after) the board's copies show the snorts at speed 1 and 0.9, 0.5 s apart, each gone within 0.6 s, one mumble at 1.0 s stopped by the replay, and no mumble before the wake.
+- Stands on: Task 3 (the sound board), Task 1 (the snort and mumble rows), Task 6 (the board's `play` hands back the copy), Task 7 (the snore stops at 85; approved 2026-11-12). All final.
 
 ### Part 3: The wake-up, the slams and the eggs
 
 **Task 9: The wake-up is loud, and the yawn**
 - Spec rules: Rule 92 (The wake-up is loud); Rule 88 (The game reads without sound): Reduce Motion changes no sound; Rule 86 (Three ways to hear): 8 boings; section 8, "8 players are bounced off at once", "Reduce Motion is on", "A player joins while he's awake".
-- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau` (new: plays the cues for the sound places and for player attributes), `src/client/init.client.luau` (passes `playSound` to `GiantFx`, `WakeWorld` and `CameraFx`), their tests.
+- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/SoundBoard.luau` (a fade option), `src/client/Audio/Moments.luau` (new: plays the cues for the sound places and for player attributes; the `playCue`/`stopCue` pair moves here from `init.client`), `src/client/Fx/GiantFx/WakeFace.luau` (`LieDown` is played at his mouth: the yawn is a whole-valley row, and the board skips a world row with no place), `src/client/init.client.luau` (passes the play function to `GiantFx`, `WakeWorld` and `CameraFx`), their tests.
+- Changed 2026-11-12 (code_lead): the hooks all fire at 0 s, so `Cues` gives the birds a 0.2 s delay and the Z Z Z pop 0.3 s; `Moments` schedules them. Done when also has a muted Play wake (Task 8's pattern).
 - What it does: connects plan 6's `WakeEyes` (the sting), `WakeRoar` (the roar, speed 0.8), `WakeRumble` (the rumble, faded out over 1 s), `WakeBirds`, `ZzzPop` and `LieDown` (the yawn, speed 0.8). A player whose `Floating` turns true gets a boing at them. If the yawn row is ever taken out of the list (Rule 92's fallback), `LieDown` plays nothing; the Heavy Sleep snore starts at the lie-down anyway (Task 7).
 - Failing tests first (fake board, fake clock, a whole wake from the real `GiantFx` with fakes around it): the sting, roar and rumble start at 0 s, the birds at 0.2 s, the Z Z Z pop at 0.3 s, each once; the rumble is silent from 1.0 s; with Reduce Motion on, exactly the same sounds at the same times; 8 players floating at once give 3 boings; a player who joins mid-wake hears no roar; at the lie-down one yawn from his mouth; with the yawn row removed, nothing plays at the lie-down and the Heavy Sleep snore still starts.
-- Done when: the tests pass.
+- Done when: the tests pass, and a muted Play wake shows each wake row once at its time, the rumble silent by 1 s, and one yawn at the lie-down.
+- Stands on: Tasks 3, 6, 7 and 8 (approved 2026-11-12); plan 6's sound hooks in `WakeFace`, `CameraFx/Shake` and `WakeWorld` (built).
 
 **Task 10: Every slam is heard**
 - Spec rules: Rule 94 (Every slam is heard): the whoosh, the thud, the bonk with its twinkle, the caught whoosh; section 8, "The music is off and he wakes".
 - Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes `playSound` to `SlamFx`, `BonkFx` and `Celebrations`), their tests.
 - What it does: `SlamCircle` plays the rising whoosh at the circle; `SlamThud` the fist thud at the circle (speed 0.8, heard across the valley); `Bonk` the bonk and the twinkle together at the player; `Caught` the caught whoosh, only on the caught player's own device.
 - Failing tests first: one circle and one landing give one whoosh and one thud at the circle's point; a bonk gives one bonk and one twinkle at that player; a catch of this player gives one whoosh with no place, and a catch of someone else gives nothing; with the music off, every slam sound still plays.
-- Done when: the tests pass.
+- Done when: the tests pass, and a muted Play slam, bonk and catch (Task 8's pattern): the whoosh and the thud each play once at the warning's point, the bonk and the twinkle together at the player, one caught whoosh with no place.
+- Changed 2026-11-12 (code_lead, how it is measured; what the player hears is unchanged): spec 3 Check C4's ladder whoosh is proven in two parts. Plan 3 Task 15b proved in Play that the circle lies on the surface below a climber; this task proves the whoosh plays at the warning's point. A climber halfway up a boot ladder is about 15 studs above it, which the nearby curve (`Config.Audio.NearbyCurve`: full to 10 studs, none at 80) plays at about 0.93. No ladder climb is repeated.
+- Stands on: Tasks 3 and 9 (approved 2026-11-12); plan 3 Task 15b (done 2026-11-12); plan 6's sound hooks in `SlamFx`, `BonkFx` and `Celebrations` (built).
 
 **Task 11: Grabbing and bringing eggs home**
 - Spec rules: Rule 95 (Egg sounds, grander for rarer eggs): the grab and the egg home.
-- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, their tests.
+- Files: `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes the local player and the `EggHome` remote to `Moments`), their tests.
 - What it does: when this player's own `Carrying` turns from nothing to a rank (the server's answer to a finished grab), the pluck plays, plus the shimmer for Rare, Epic or Legendary (the shared rank order, plan 1's `Rarity`). When `EggHome` names this player: the toot; plus the happy hit for Rare; plus the fanfare for Epic; plus the fanfare and the children's cheer for Legendary, all starting together.
-- Failing tests first: a Common grab gives a pluck only; a Rare grab gives a pluck and a shimmer; another player's grab gives nothing; an egg home of each rank gives exactly its layers, all at the same moment; another player's egg home gives nothing.
-- Done when: the tests pass.
+- Failing tests first: a Common grab gives a pluck only; a Rare grab gives a pluck and a shimmer; another player's grab gives nothing; an egg home of each rank gives exactly its layers, all at the same moment; another player's egg home gives nothing; a `Carrying` already set when `Moments` starts plays nothing.
+- Done when: the tests pass, and a muted Play (Task 10's pattern) shows a pluck alone for a Common grab, a pluck and a shimmer together for a Rare grab, and each egg home's layers together with no sound place.
+- Changed 2026-11-13 (code_lead, how it is measured; what the player hears is unchanged): the muted Play sets `Carrying` on the server and fires `EggHome` itself, as Task 10 fired its slams. The sounds listen only to that attribute and that remote; real grabs and banking were proven in plans 1 and 5.
+- Stands on: Tasks 3, 9 and 10 (approved 2026-11-12 and 2026-11-13); plan 1's `Rarity` and the `EggHome` remote (built).
 
 **Task 12: A new egg sparkles, a lost egg pops**
 - Spec rules: Rule 95 (Egg sounds, grander for rarer eggs): the sparkle pop; Rule 94 (Every slam is heard): the egg's "pop"; Rule 77 (Empty nests show no timer) and Rule 78 (A lost egg goes back to its nest), the moments; section 8 of spec 5, "A carrier is caught after their slot's egg has already refilled".
-- Files: `src/shared/Net.luau` (`EggPop`), `src/server/Eggs/Grab.luau` (a `popped` Signal: the nest's position and the kind), `src/server/init.server.luau` (fires `EggPop` to everyone), `src/client/Fx/NestPop.luau` (its plan 5 sound place is removed), `src/client/Audio/Moments.luau`, their tests.
+- Files: `src/shared/Net.luau` (`EggPop`), `src/server/Eggs/Grab.luau` (a `popped` Signal: the nest's position and the kind), `src/server/init.server.luau` (fires `EggPop` to everyone), `src/client/Fx/NestPop.luau` (its plan 5 sound place is removed: today only the comment at line 165), `src/client/Audio/Cues.luau`, `src/client/Audio/Moments.luau`, `src/client/init.client.luau` (passes `EggPop` to `Moments`), their tests.
 - What it does: the server fires `EggPop` with `"Refill"` when a countdown puts a new egg on a nest, `"Back"` when a lost egg goes back (`returnEgg` gives "back"), and `"Gone"` when it disappears instead. Each device plays the sparkle pop for a refill and the egg pop for the other two, at the nest. The client checks the two values' types and ignores anything else.
 - Failing tests first: a refill fires one `popped` "Refill" with the nest's position; a catch with the nest free fires "Back"; a catch after the slot already refilled fires "Gone" at the old nest; the client plays the sparkle for "Refill", the egg pop for "Back" and "Gone", and nothing for a bad kind or a non-`Vector3` position.
-- Done when: the tests pass.
+- Done when: the tests pass, and a muted Play (Task 10's pattern) shows one sparkle pop for a "Refill" and one egg pop each for "Back" and "Gone", each with a sound place at the nest.
+- Changed 2026-11-13 (code_lead, how it is measured; what the player hears is unchanged): the muted Play fires `EggPop` from the server itself, as Tasks 10 and 11 forced their events; the server's refill, back and gone moments are proven by `Grab`'s unit tests.
+- Stands on: Tasks 3, 9, 10 and 11 (approved 2026-11-12 and 13); plan 5's refills, `returnEgg` and `NestPop` (built).
 
 ### Part 4: The player's own sounds
 
 **Task 13: Your own thuds are heard**
 - Spec rules: Rule 96 (Your own noise is heard): the flump, louder for bigger thuds; Rule 84 (A slide is a fall, and the first one gets a tip): a slide's thud flumps too.
-- Files: `src/shared/Net.luau` (`Thud`), `src/server/Giant/GiantDirector.luau` (a `thudded` Signal when a thud's noise is added to the meter: the player's position and the noise), `src/server/init.server.luau` (fires `Thud` to everyone), `src/client/Audio/Moments.luau`, `src/client/Hud/Messages.luau` (its plan 5 slide-tip sound place is removed), their tests.
-- What it does: every thud that adds to the meter (only while he's asleep, as the noise rules say) fires `Thud`. Each device plays the flump at that spot: loudness 0.5 for a +20 thud, 0.7 for +30, 0.85 for +40 or more (by the nearest band: under 25 is +20, under 35 is +30).
+- Files: `src/shared/Net.luau` (`Thud`), `src/server/Giant/GiantDirector.luau` (a `thudded` Signal when a thud's noise is added to the meter: the player's position and the noise), `src/server/init.server.luau` (fires `Thud` to everyone), `src/client/Audio/Cues.luau` (`Thud` → the flump row), `src/client/Audio/Moments.luau` (`hearThud`), `src/client/init.client.luau` (passes `Thud` to `Moments`), `src/client/Hud/Messages.luau` (its plan 5 slide-tip sound place, today only the comment at line 346, is removed), their tests (`Net.spec`, `GiantDirector/MeterAndWarnings.spec`, `Cues.spec`, `Moments.spec`).
+- What it does: every thud that adds to the meter (only while he's asleep, as the noise rules say) fires `Thud`. Each device plays the flump at that spot: loudness 0.5 for a +20 thud, 0.7 for +30, 0.85 for +40 or more (`SoundBoard`'s `thud` option, built in Task 3, picks the biggest listed size the thud reaches; a thud is only ever 20, 30, 40 or 60, `JumpBurst` 20 times the zone's multiplier, so this equals the nearest band).
 - Failing tests first: a Boots jump fires one `thudded` with 20, a Belly jump 30, a Nightcap jump 60; a thud while he's awake fires nothing; a meadow jump fires nothing; the client plays one flump with the right loudness for 20, 30, 40 and 60; a bad payload plays nothing.
-- Done when: the tests pass.
+- Done when: the tests pass, and a muted Play (Task 10's pattern) shows one flump copy at the player for each forced `Thud` (+20, +30, +40, +60) with Volume 1.0, 1.4, 1.7 and 1.7 (the spec's loudness doubled), and nothing for a bad payload.
+- Changed 2026-11-13 (code_lead): the muted Play was added, as for Tasks 10 to 12 (nobody approves what they haven't seen run); the force fires `Thud` itself, the server path is proven by the tests. Specs: unchanged.
+- Stands on: Tasks 3, 9 and 12 (approved 2026-11-12 and 13: the board's `thud` option, `Moments`, the remote pattern); plan 5's thuds, slides and `Messages` (built).
 
 **Task 14: Tiptoe is quiet, and clicks**
 - Spec rules: Rule 96 (Your own noise is heard): "While Tiptoe is on, the player's own footsteps must play at a quarter of their normal loudness", the click; Rule 9 (Tiptoe is quiet); section 8, "Two players turn Tiptoe on at the same time".
-- Files: `src/client/Audio/Footsteps.luau` (new), `src/client/Audio/Moments.luau`, `src/client/init.client.luau`, their tests.
+- Files: `src/client/Audio/Footsteps.luau` (new; it plays the click through the board itself, so `Moments` is unchanged), `src/client/init.client.luau`, `src/tests/client/Audio/Footsteps.spec.luau` (new).
 - What it does: first, in a muted session, the builder finds the footstep sound Roblox makes in the character with the newer objects (Task 4) and writes its name and class in the report. Then: while this player's own `Tiptoe` is true, that footstep player's volume is a quarter of what Roblox set, and back when it turns off, also after a respawn. Each change of this player's own `Tiptoe` (the server's answer, the moment the button changes) plays the click, but not the value the player joins with.
 - Failing tests first (a fake character holding a footstep player with the found name): Tiptoe on gives a quarter, off gives the original; a new character while Tiptoe is on gets a quarter at once; another player's Tiptoe changes nothing here; each change clicks once, joining doesn't.
-- Done when: the tests pass, and the report names Roblox's footstep sound. If Roblox makes no footstep sound that a script can find, the builder stops and tells code_lead.
+- Done when: the tests pass, the report names Roblox's footstep sound, and a muted Play (Task 10's pattern) shows `Running` and `Climbing` at a quarter while `Tiptoe` is forced on, back to its original when off, a quarter again on a new character made while on, and one `Copy Tiptoe click` for each change. If Roblox makes no footstep sound that a script can find, or rewrites its Volume while walking, the builder stops and tells code_lead.
+- Ruled 2026-11-13 (code_lead), from the find: Roblox's footsteps are the `AudioPlayer`s `Running` and `Climbing` under `HumanoidRootPart` (same footsteps file, Volume 0.65). Both go to a quarter, because the spec's own first-minute table calls the climbing sound "footsteps on the ladder rungs" and Rule 96 covers "the player's own footsteps"; Roblox keeping a changed Volume was proven for `Running` only. Specs: unchanged.
+- Changed 2026-11-13 (code_lead): the discovery became its own muted-Play step (`work/p7/task14-find.luau`) before the tests, the click moved from `Moments` into `Footsteps` (one module for one button), and the muted Play was added, as for Tasks 10 to 13. Specs: unchanged.
+- Stands on: Tasks 3, 4, 9 and 13 (approved 2026-11-12 and 13: the board and its click row, the newer sound objects, `Moments`, the probe-first Play pattern); plan 4/5's Tiptoe button and the player's `Tiptoe` attribute (built).
 
 **Task 15: The rescue poof**
 - Spec rules: Rule 97 (The rescue poof); Rule 33 (What a rescue looks like); section 8, "A rescue happens on a carrier during a wake".
-- Files: `src/client/Fx/RescueFx.luau` (new sound place `RescuePoof`, at each puff), `src/client/init.client.luau`, their tests.
-- What it does: each of the two puffs of a rescue plays one poof at its own spot.
-- Failing tests first: one `Rescued` gives exactly two poofs, one where the player was and one where they are now, at the moment the puffs start.
-- Done when: the tests pass.
+- Files: `src/client/Audio/Cues.luau` (`RescuePoof` → the row `Rescue "poof"`), `src/client/Audio/Moments.luau` (`hearRescued`), `src/client/init.client.luau` (passes `Rescued` to `Moments`), their tests (`Cues.spec`, `Moments.spec`). `RescueFx` is unchanged.
+- What it does: each of the two puffs of a rescue plays one poof at its own spot. `RescueFx` makes both puffs the moment `Rescued` arrives, so `Moments` hears the same remote and plays at the same two spots: where the player was (`from`) and where they land (`to`'s position). Like the puffs, it plays for every player's rescue and never reads the player.
+- Failing tests first: one `Rescued` gives exactly two poofs, one where the player was and one where they are now, at once; a bad payload (`from` not a `Vector3`, `to` not a `CFrame`) and after `destroy` → nothing.
+- Done when: the tests pass, and a muted Play (Task 10's pattern) shows two `Rescue "poof"` copies at Volume 1.20 (the spec's 0.6 doubled) and two sound places at `from` and `to` for one forced `Rescued`, and nothing for a bad payload.
+- Changed 2026-11-13 (code_lead): the poof moved from `RescueFx` to `Moments`, which already plays sounds at a spot from a remote (Tasks 11 to 13), so nothing is written twice; the muted Play was added, as for Tasks 10 to 14. Specs: unchanged.
+- Stands on: Tasks 3, 9 and 13 (approved 2026-11-12 and 13: the board and its poof row, `Moments`, the probe-first Play pattern); the stuck-safety plan's rescue, `Rescued` and `RescueFx` (built).
 
 ### Part 5: The music button
 
 **Task 16: The music button**
 - Spec rules: Rule 98 (The music button); section 5, "Music button height", "Small-phone move"; section 6 (all three states); section 8, "The music is off and he wakes", "A small phone", "Roblox adds or removes one of its own top-bar buttons".
-- Files: `src/client/Hud/MusicButton.luau` (new), `src/client/Hud/Layout.luau` (the button's size and whether it moves down), `src/client/Audio/Music.luau` (the music bus on and off), `src/client/init.client.luau`, their tests.
+- Files: `src/client/Hud/MusicButton.luau` (new), `src/client/Hud/Layout.luau` (the button's size and whether it moves down), `src/client/Hud/SleepMeterUi.luau` (tells where the meter's left edge is at its biggest), `src/client/Audio/Music.luau` (the music bus on and off), `src/client/init.client.luau`, their tests.
 - What it does, from the style guide ("The music button"):
   - a round button on `HudTop` (the meter's own screen), placed from `GuiService.TopbarInset` the way the meter already is: its left edge where Roblox's free top-bar space starts, centred in the top-bar band, 76% of the band's height;
   - Ink fill at 92%, a 2 px white ring, the blue 🎵 at 60% of its height, no word;
@@ -225,10 +265,14 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
   - Why `HudTop` and not its own `ScreenGui` with `TopbarSafeInsets` (designer's build line): the moved spot on small phones lies outside that area, and `HudTop` already follows `TopbarInset`. The button still sits right after Roblox's buttons and moves with them. designer knows (see "Questions").
 - Failing tests first: the button sits at `TopbarInset`'s left edge, centred in the band, 44 px tall in a 58 px band; it follows `TopbarInset` when it changes; on a 667 × 375 screen with the measured Roblox button it moves down one row, and on the iPhone 14 (844 × 390) it doesn't; a tap shows the off look, silences both tunes at once and clicks; a second tap brings them back; the snore and effects are untouched; after a respawn the choice is the same.
 - Done when: the tests pass, and in a muted session, on a computer (1280 wide), the iPhone 14 and the small 4.7-inch phone: screenshots of music on and off (off while he's awake, on the red edges), compared with `hud-music-desktop.png`, `hud-music-phone.png`, `hud-music-off-desktop.png`, `hud-music-off-phone.png` and `hud-music-small-phone.png`. The report gives the measured `TopbarInset`, Roblox's real button height, the button's box and its gap to the meter on each screen, and whether Roblox shows a backpack button. The main chat sends the shots to designer.
+- Changed 2026-11-13 (code_lead, how it is built; what the player sees is unchanged): `SleepMeterUi` tells the button where the meter's left edge is at its biggest (its pulse), so the 8 px gap holds while the meter pulses. The button never moves the meter. Card: `work/p7/task16-card.md`. Specs: unchanged. Step 1 measured (2026-11-13): Roblox's first button is 44 px at x 16, y 12 on computer and both phones, so the button's top lines up with it (y 12) and a moved button goes to x 16, y 64. It fits beside Roblox's buttons on the iPhone 14 and moves down on the 4.7-inch phone (`work/p7/task16-ruling.md`).
+- Stands on: Tasks 3 and 6 (approved 2026-11-12: the board's Music bus and `Music`); the sleep meter and `HudTop` (built, V2 wake-up plan). Step 2's test numbers stand on Step 1's measured top bar.
 
 **Task 17: The music button's analytics**
 - Spec rules: section 10 ("Success signals"): "MusicOff" and "MusicOn".
-- Files: `src/shared/Net.luau` (`SetMusic`), `src/server/Remotes/MusicHandler.luau` (new), `src/server/Analytics.luau`, `src/server/init.server.luau`, `src/client/Hud/MusicButton.luau` (sends each tap), their tests.
+- Files: `src/shared/Net.luau` (`SetMusic`), `src/server/Remotes/MusicHandler.luau` (new), `src/server/Analytics.luau`, `src/server/init.server.luau`, `src/client/Hud/MusicButton.luau` (sends each tap), `src/client/init.client.luau`; tests `Net.spec`, `MusicHandler.spec` (new), `Analytics/MusicEvents.spec` (new), `Analytics/Helpers.luau`, `MusicButton.spec`.
+- Stands on: Task 16 (approved 2026-11-13).
+- Changed 2026-11-13 (code_lead): Files line completed; the value is whole minutes, rounded down; Studio prints no event name, so the Play proof counts two new "event fired" console lines for two taps.
 - What it does: each tap sends `SetMusic(on)`. The server checks: `on` must be a boolean, or the message is ignored; at most 5 a second per player (`RateLimiter`); only a change from that player's last value counts (everyone starts with music on), so repeats log nothing; the record is forgotten when they leave. A change fires a Signal; `Analytics` logs "MusicOff" or "MusicOn", valued at the minutes since that player joined, with one breakdown, the server size ("1", "2-4" or "5-8"). The server changes nothing else: the music is only on that player's device.
 - Failing tests first (fake AnalyticsService, fake clock): a tap off after 3 minutes logs "MusicOff" with value 3 and the server size; on again logs "MusicOn"; a second "off" in a row logs nothing; a number, a string or nothing is ignored; the 6th message in one second is ignored; a player who leaves leaves nothing behind; "GiantWoke" and "EggHome" are unchanged.
 - Done when: the tests pass, and in a muted session the console shows one "MusicOff" and one "MusicOn" line for two taps.
@@ -237,7 +281,9 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 18: A whole session with sound**
 - Spec rules: every rule above together; `.claude/rules/tdd.md` ("Whole-session tests"); Rule 88 (The game reads without sound).
-- Files: `src/tests/client/Sessions/AudioSession.spec.luau` (new).
+- Files: `src/tests/client/Sessions/AudioSession.spec.luau` (new), `src/tests/client/Sessions/AudioRig.luau` (new, its stand-ins).
+- Stands on: Tasks 1 to 17.
+- Changed 2026-11-13 (code_lead): the stand-ins move to a helper file so neither file nears the line limit.
 - The test: a brand-new player with the real `SoundBoard` (fake output, fake start, fake clock), `Music`, `MusicMix`, `Snore`, `Cues`, `Moments`, `Footsteps` and `MusicButton`, and stand-ins for the remotes, the attributes and `GiantFx`'s sound places. They join at 10% (calm tune fading in, snore); grab and bank a Common (pluck, toot); jump on his boot (flump); pass 60% (snore pause, music half and muffled); turn Tiptoe on (click, quiet footsteps); pass 85% (snore off in 0.1 s, two snorts, music silent by 1 s, mumble at 1 s); get their free save (snorts and mumble again); keep going: bank a Rare (toot and hit); wake him (sting, roar, rumble, birds, Z Z Z, 8 bounced players give 3 boings, chase at 1 s); are bonked (bonk and twinkle), grab an egg, are caught (whoosh, the egg pops back); he lies down (yawn, Heavy Sleep snore, calm tune back); they turn the music off; in a second wake-up there is no chase tune but every effect plays.
 - Checks: every sound played matches its moment in the board's log; no row ever has more than 3 copies at once; every sound played comes with its on-screen partner from "Every sound, and what the screen shows with it" (the stand-ins record both); nothing was ever wired to a real speaker output.
 - Failing test first: the test itself. The builder breaks one task's rule on purpose once (for example, the snore's 0.1 s stop) and shows it fail.
@@ -245,9 +291,11 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 19: The Gate 4 sound check**
 - Spec rules: Rule 99 (Studio tests mute at runtime only): "a short sound check the team triggers while the game runs"; section 8, "Adam's Gate 4 playtest".
-- Files: `tools/play/sound-check.luau` (new; a Play tool, never part of the game, `docs/architecture.md` section 8).
+- Files: `tools/play/SoundCheck.luau` (new; a Play tool, never part of the game, `docs/architecture.md` section 8), `src/tests/server/Tools/SoundCheck.spec.luau` (new).
+- Stands on: Tasks 1 to 18.
+- Changed 2026-11-13 (code_lead): the logic goes in `SoundCheck.run(deps)` and is tested with fakes first, like the other tools in `tools/`; `SoundCheck.start(playerName)` only wires the real remotes. The wake-up moment runs only while he is Asleep.
 - What it does, run on the Server with `execute_luau` while a session runs, one moment at a time with a few seconds between: an egg home of each rank for the named player (`EggHome` fired with each rank, at their garden's first home spot), a free save (`Warning` fired with 85 and "FreeSave"), a rescue (`Rescued` fired for the player, from and to where they stand, so they don't move), and a wake-up for the yawn (`GiantState.Meter` written to 100; the director takes it, so he really wakes and lies down 15 s later). It saves nothing and changes nothing in the place. It doesn't mute and doesn't unmute: muting is the session's first call, and only in team sessions.
-- Failing test first: none (a tool). Its proof is Task 20, step 3.
+- Failing test first: `SoundCheck.spec` (each moment fires the right remote with the right values, in order) against an empty stub. Its Play proof is Task 20, step 3.
 - Done when: the script is reviewed, and its dry run in Task 20 shows every moment's sounds in the board's log.
 
 **Task 20: The Play proof**
@@ -297,19 +345,13 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 ## Questions
 
-- **For designer (Task 7 waits):**
-  1. The snore puffs today blow steadily while he sleeps; spec 7 says they "restart with each loop" of the 5.7-second snore file, so the snore is "timed with his snore puffs". At which times inside the file should the puffs burst (and how many each time), or do the steady puffs stay and only start again at each loop?
-  2. At 60% the spec stops the snore for 2 seconds while the Z Z Z pause, but today the snore puffs keep going then. Should the puffs pause for those 2 seconds too? (Rule 90 says the snore plays "exactly while his snore puffs show"; product is asked to confirm the reading below.)
-- **For designer (Task 6 waits):** what "muffled" is in numbers. code_lead's starting value: Roblox's low-pass filter (`AudioFilter`, `Lowpass24dB`) at 1,000 Hz, reached over the same 1-second fade, so the 300 to 1,000 Hz that phone speakers play stays.
-- **For designer (to know):**
-  - Every `AudioPlayer` volume is twice the spec's number, which makes your "0.5 plays a file as recorded" assumption exactly true in the build, so your crackle caps hold.
-  - The music button is placed on `HudTop` from `GuiService.TopbarInset`, not in its own `TopbarSafeInsets` screen, because the small-phone spot lies outside that area. It still sits right after Roblox's buttons and moves with them.
-  - The snore comes from his mouth's asleep spot (`AwakeMouth.Mouth`, placed by plan 6), and the Z Z Z pop from the floating Z Z Z spot.
-- **For product (Task 5 waits):** Rule 89 says the music is silent "85% or more" until the meter falls below 75%. A free save drops the meter to 70 while the 85% warning replays. code_lead's reading: the music is silent from every 85% warning, first or replayed, until that warning ends and the meter is under 75 (the same as the Z Z Z), so a replay is silent too. Right?
-- **For product (to confirm, with designer's answer 2):** Rule 90's "exactly while his snore puffs show" and its 60% stop: if designer keeps the puffs going at 60%, the rule needs "except the 2-second stop at 60%".
-- **For product (to know):**
-  - A mumble still playing when he wakes stops with the bubble, so it always ends before the bubble does (Rule 91).
-  - The grab pluck plays when the server's answer arrives (the carry pill shows), not when the hold ends on the device.
-  - The build check's "loads and plays every sound once, muted" is two steps: every file loads in the Edit-mode test run (Task 2), and every sound plays once inside a muted Play session (Task 20).
-  - Tiptoe quietens the player's own footsteps on their own device only, as Rule 96 says; other players hear a tiptoer's footsteps as normal.
-  - The slide tip gets no sound of its own; the slide's thud plays the flump.
+All closed on 2026-11-12 (`work/p7/designer-answers.md`, `work/p7/product-answers.md`).
+
+| Question | Answer | Where it went |
+|---|---|---|
+| designer, Task 7: snore puffs, bursts or steady? | Steady: the puffs stay on while the loop plays, nothing restarts them (Heavy Sleep keeps its own rate) | Task 7; spec line 191 |
+| designer, Task 7: do the puffs pause for the 2 s at 60%? | Yes, for the same 2 s as the snore | Task 7; Rule 90 stands as written |
+| designer, Task 6: "muffled" in numbers | `Lowpass24dB` at 1,000 Hz over the 1 s fade, back to 22,000 Hz over 1 s; fallback 500 Hz and a third of the loudness | Task 6 |
+| product, Task 5: music during a replayed 85% warning | Silent from every 85% warning until it ends **and** the meter is under 75 | Task 5 (test 9); Rule 89, spec line 126 |
+| product: Rule 90 with the 60% stop | No change needed (the puffs pause too) | Rule 90 |
+| designer and product, "to know" items | Both agreed with all of them | No change |

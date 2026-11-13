@@ -11,6 +11,8 @@
 --     0.4 seconds after the landing, then fades away over 0.3 seconds.
 --   * SlamLanded(slam number, the same point) comes on the server's landing tick. If it arrives before landsAt is
 --     reached on this device, the landing starts then, and everything after it is counted from that moment.
+--   * On your own screen the fist turns see-through while it is over your head (see ownBody in Deps), so it never hides
+--     the view of the ladder you are on. Other players always see it solid.
 -- The server decides who is caught; this module only draws. It never looks at the giant's Phase: the server sends no
 -- new warnings once he sleeps, and a slam that is already drawn finishes by itself.
 -- Everything it touches is passed in, so a test can give it stand-ins.
@@ -20,6 +22,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Theme = require(script.Parent.Parent.Hud.Theme)
 local SlamCircle = require(script.Parent.SlamCircle)
+local Config = require(ReplicatedStorage.Shared.Config)
+local HandShape = require(ReplicatedStorage.Shared.HandShape)
 
 local SlamFx = {}
 
@@ -70,6 +74,8 @@ local SPARKLES_LIFETIME = NumberRange.new(0.5, 0.9)
 -- The ray that finds the surface's slope: it starts above the point and looks a little way down.
 local NORMAL_RAY_START_ABOVE = 1
 local NORMAL_RAY_LENGTH = 2
+local ARM_REST_MARK = "RightArmRest" -- the attribute on his raised right arm's mesh (WorldIndex.loadWakePieces finds it)
+local MARKED_PART_CASTS = 4 -- the most rays one point casts, each one past a marked part
 
 -- The shapes this module needs, so tests can pass simple stand-ins. The real ones fit these shapes.
 export type SignalLike = {
@@ -86,6 +92,9 @@ export type PlayersLike = {
 -- A ray that finds what the circle lies on: gives where it hit and the surface's normal there, or nil twice for no hit.
 export type CastHug = (origin: Vector3, direction: Vector3) -> (Vector3?, Vector3?)
 
+-- This device's own character: the middle of its body and the Y of the top of its head.
+export type OwnBody = { middle: Vector3, headTopY: number }
+
 export type Deps = {
 	slamWarning: RemoteLike, -- (slam number, the point on the surface, landsAt on the server's clock)
 	slamLanded: RemoteLike, -- (slam number, the same point)
@@ -98,6 +107,8 @@ export type Deps = {
 	castHug: CastHug,
 	refreshHug: (() -> ())?,
 	onCircle: (point: Vector3) -> (),
+	ownBody: (() -> OwnBody?)?, -- this device's own body, or nil (none): the fist is see-through over its head
+	playSound: ((name: string, at: Vector3?) -> ())?, -- "SlamCircle" at the warning, "SlamThud" at the landing
 }
 
 -- What start gives back: `stop` removes everything and disconnects everything.
@@ -161,20 +172,26 @@ function SlamFx.workspaceSurfaceNormal(
 		if folder ~= nil then
 			table.insert(filter, folder)
 		end
-		params.FilterDescendantsInstances = filter
-		local result = workspace:Raycast(
-			point + Vector3.new(0, NORMAL_RAY_START_ABOVE, 0),
-			Vector3.new(0, -NORMAL_RAY_LENGTH, 0),
-			params
-		)
-		if result == nil then
-			return Vector3.yAxis
+		local origin = point + Vector3.new(0, NORMAL_RAY_START_ABOVE, 0)
+		local direction = Vector3.new(0, -NORMAL_RAY_LENGTH, 0)
+		-- His raised right arm is marked RightArmRest: no circle lies on it, so a ray that hits it goes on through it.
+		for _ = 1, MARKED_PART_CASTS do
+			params.FilterDescendantsInstances = filter
+			local result = workspace:Raycast(origin, direction, params)
+			if result == nil then
+				return Vector3.yAxis
+			end
+			if result.Instance:GetAttribute(ARM_REST_MARK) ~= true then
+				return result.Normal
+			end
+			table.insert(filter, result.Instance)
 		end
-		return result.Normal
+		return Vector3.yAxis
 	end
 end
 
--- The parts of his body a circle lies on (not his right arm, which moves during slams).
+-- The parts of his body a circle lies on (not his right arm, which moves during slams, and never a part marked
+-- RightArmRest).
 local GIANT_SOLID_NAMES = { "body_and_cushion", "head_with_beard", "legs_and_boots", "nightcap", "left_arm" }
 
 -- Everything a circle may lie on, as single parts: the meadow and the stream (the Terrain), his body, the two boot
@@ -192,7 +209,7 @@ function SlamFx.huggableParts(workspace: Workspace, world: Instance): { Instance
 					table.insert(list, body)
 				end
 				for _, descendant in body:GetDescendants() do
-					if descendant:IsA("BasePart") then
+					if descendant:IsA("BasePart") and descendant:GetAttribute(ARM_REST_MARK) ~= true then
 						table.insert(list, descendant)
 					end
 				end
@@ -262,6 +279,10 @@ type Slam = {
 	builder: SlamCircle.Builder?, -- still working out pieces, until the circle is finished
 	fist: Model?,
 	dust: Part?,
+	ownBody: boolean, -- at the landing, this device's body was under the hand, so its fist may be see-through
+	headTopY: number, -- the top of this device's head at the landing
+	seeThrough: boolean, -- the fist's parts are now see-through
+	originals: { [BasePart]: number }, -- each fist part's own transparency
 }
 
 -- Makes one piece of the circle: a thin Neon block that cannot be touched, collided with or hit by a ray.
@@ -438,10 +459,35 @@ function SlamFx.start(deps: Deps): Handle
 		end
 	end
 
+	-- Is this device's own body under the hand? One ray straight down from the hand's height over the slam point finds the
+	-- surface under the body (the circle's list: ladders are not in it); no hit counts as solid. Remembers the head's top.
+	local function decideOwnBody(slam: Slam)
+		if deps.ownBody == nil then
+			return
+		end
+		local body = deps.ownBody()
+		if body == nil then
+			return
+		end
+		local above = Config.Wake.HandAboveStuds
+		local hit = deps.castHug(slam.point + Vector3.new(0, above, 0), Vector3.new(0, -2 * above, 0))
+		if hit == nil then
+			return
+		end
+		if HandShape.contains(body.middle, slam.point, hit.Y) then
+			slam.ownBody = true
+			slam.headTopY = body.headTopY
+		end
+	end
+
 	-- The landing: the dust and sparkles burst, and the times after it are counted from `landTime`.
 	local function land(slam: Slam, landTime: number)
 		slam.landed = true
 		slam.landTime = landTime
+		decideOwnBody(slam)
+		if deps.playSound ~= nil then
+			deps.playSound("SlamThud", slam.point)
+		end
 		local dust = Instance.new("Part")
 		dust.Name = DUST_PART_NAME
 		dust.Size = Vector3.new(1, 1, 1)
@@ -465,6 +511,7 @@ function SlamFx.start(deps: Deps): Handle
 		local copy = deps.fist:Clone()
 		for _, descendant in copy:GetDescendants() do
 			if descendant:IsA("BasePart") then
+				slam.originals[descendant] = descendant.Transparency
 				descendant.Anchored = true
 				descendant.CanCollide = false
 				descendant.CanQuery = false
@@ -488,6 +535,16 @@ function SlamFx.start(deps: Deps): Handle
 		if height ~= nil then
 			local fist = slam.fist or makeFist(slam)
 			fist:PivotTo(CFrame.new(slam.point + Vector3.new(0, height, 0) - pivotToBottom) * fistTurn)
+			-- On this device's own screen the fist is see-through while its bottom is at or under the top of the head.
+			local wantSeeThrough = slam.ownBody and slam.point.Y + height <= slam.headTopY
+			if wantSeeThrough ~= slam.seeThrough then
+				slam.seeThrough = wantSeeThrough
+				for part, original in slam.originals do
+					part.Transparency = if wantSeeThrough
+						then math.max(original, Config.Wake.OwnFistTransparency)
+						else original
+				end
+			end
 		else
 			local gone = slam.fist
 			if gone ~= nil then
@@ -583,6 +640,10 @@ function SlamFx.start(deps: Deps): Handle
 			circle = circle,
 			pieces = {},
 			transparency = CIRCLE_TRANSPARENCY,
+			ownBody = false,
+			headTopY = 0,
+			seeThrough = false,
+			originals = {},
 		}
 		-- One ray finds the circle's middle and which way it faces. If it finds nothing, the circle is centred on the
 		-- point and faces straight up (its pieces still find their own surface).
@@ -601,6 +662,9 @@ function SlamFx.start(deps: Deps): Handle
 		-- The first pieces at once, so the circle shows on this very frame (the middle ray was one of the rays).
 		raysSpentAtWarning += 1 + build(slam, RAYS_A_FRAME - 1)
 		deps.onCircle(point)
+		if deps.playSound ~= nil then
+			deps.playSound("SlamCircle", point)
+		end
 	end
 
 	-- The server says the hand landed. If this device hasn't reached landsAt yet, the landing starts now.

@@ -8,24 +8,38 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local StarterPlayer = game:GetService("StarterPlayer")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
+local Signal = require(ReplicatedStorage.Packages.Signal)
 local Analytics = require(script.Analytics)
 local Banking = require(script.Eggs.Banking)
 local Carry = require(script.Eggs.Carry)
 local Grab = require(script.Eggs.Grab)
 local HomeDisplay = require(script.Eggs.HomeDisplay)
+local Bonker = require(script.Giant.Bonker)
 local Catcher = require(script.Giant.Catcher)
 local GiantDirector = require(script.Giant.GiantDirector)
+local ShowSpots = require(script.Giant.ShowSpots)
 local SlamSurface = require(script.Giant.SlamSurface)
 local Collisions = require(script.Players.Collisions)
 local Floater = require(script.Players.Floater)
 local JumpWatcher = require(script.Players.JumpWatcher)
 local PlayerInfo = require(script.Players.PlayerInfo)
 local PlayerTracker = require(script.Players.PlayerTracker)
+local Recovery = require(script.Players.Recovery)
+local RedCircles = require(script.Giant.RedCircles)
+local Zones = require(script.Giant.Zones)
+local SafeSpots = require(script.Players.SafeSpots)
+local QuietDrops = require(script.Players.QuietDrops)
+local SlideWatch = require(script.Players.SlideWatch)
+local WayUpWatch = require(script.Players.WayUpWatch)
 local Spawning = require(script.Players.Spawning)
+local PressingHandler = require(script.Remotes.PressingHandler)
+local ResetHandler = require(script.Remotes.ResetHandler)
+local MusicHandler = require(script.Remotes.MusicHandler)
 local TiptoeHandler = require(script.Remotes.TiptoeHandler)
 local WorldIndex = require(script.World.WorldIndex)
 
@@ -42,6 +56,12 @@ end
 -- If the world does not match what the code needs, this stops the server with a clear message.
 local gardens = WorldIndex.loadGardens(world)
 local zoneBoxes = WorldIndex.loadZones(world)
+-- The pillow counts as on the giant for a Reset (Rule 28), though it lies in the Meadow zone.
+local giantsThings = world:FindFirstChild("GiantsThings")
+local pillow = if giantsThings ~= nil then giantsThings:FindFirstChild("Pillow") else nil
+if pillow == nil then
+	error("Workspace.World.GiantsThings.Pillow is missing: the place file doesn't match the code")
+end
 
 -- The egg spots and the egg models are part of the world contract too.
 local eggSpots = WorldIndex.loadEggSpots(world)
@@ -49,6 +69,8 @@ local eggSpots = WorldIndex.loadEggSpots(world)
 local landingSpots = WorldIndex.loadLandingSpots(world)
 -- And the point on his face that bounced players turn to look at.
 local facePoint = WorldIndex.loadGiantFace(world)
+-- And the seam line under his belly that a slide is measured against (Rule 84).
+local seamLine = WorldIndex.loadSeamLine(world)
 -- So is the footprint route (each client draws its own footprints from it). The server uses its meadow points as the
 -- places where he slams when no one carries an egg; a place without a good route stops here with every problem listed.
 local meadowPoints: { Vector3 } = {}
@@ -69,6 +91,13 @@ local carriedEggOffset, carriedEggHeight = Carry.readCarriedEggLook(assets)
 -- The remotes and GiantState, which clients wait for.
 local net = Net.setup(ReplicatedStorage)
 
+-- The giant's phase, read from GiantState when asked. Anything unexpected counts as Awake, the safe way: Recovery then
+-- sends a player home, and Grab keeps the right cuff nests locked.
+local function readPhase(): Config.Phase
+	local phase = net.GiantState:GetAttribute("Phase")
+	return if phase == "Asleep" or phase == "HeavySleep" then phase else "Awake"
+end
+
 Collisions.start(Players, PhysicsService)
 Spawning.start(gardens, Players)
 
@@ -78,6 +107,14 @@ TiptoeHandler.start({
 	remote = { OnServerEvent = net.SetTiptoe.OnServerEvent },
 	players = Players,
 	now = os.clock,
+})
+-- The music button: a client says its music is on or off; only a real change reaches Analytics ("MusicOff"/"MusicOn").
+local musicToggled = Signal.new() :: Signal.Signal<number, boolean>
+MusicHandler.start({
+	remote = { OnServerEvent = net.SetMusic.OnServerEvent },
+	players = Players,
+	now = os.clock,
+	changed = musicToggled,
 })
 Carry.watchSpeed(Players)
 
@@ -94,6 +131,10 @@ local grab = Grab.start({
 	end,
 	now = function()
 		return Workspace:GetServerTimeNow()
+	end,
+	phase = readPhase,
+	zoneOf = function(position)
+		return Zones.zoneAt(position, zoneBoxes)
 	end,
 })
 
@@ -117,6 +158,47 @@ HomeDisplay.start({
 -- the giant's tick, below.
 local floater = Floater.start({ players = Players, facePoint = facePoint, now = os.clock })
 
+-- The set ways down off his head and boots make no thud (Rule 8). The judge is QuietDrops; it runs before slides:check.
+local quietDrops = QuietDrops.new({ ladders = WorldIndex.loadClimbParts(world), seam = seamLine })
+
+-- The first slide a player has gets a tip on their screen (Rule 84). The judge is SlideWatch; this only wires it.
+local slideEnded = Signal.new() :: Signal.Signal<number, number>
+local slides = SlideWatch.new({
+	seam = seamLine,
+	onSlide = function(userId: number, slideNumber: number)
+		slideEnded:Fire(userId, slideNumber)
+	end,
+	floating = function(userId: number): boolean
+		return floater:isFloating(userId)
+	end,
+	fireTip = function(userId: number)
+		local player = Players:GetPlayerByUserId(userId)
+		if player ~= nil then
+			net.SlideTip:FireClient(player)
+		end
+	end,
+})
+
+-- One reading per sample for the slide judge.
+local function slideReadings(samples: { PlayerTracker.Sample }): { SlideWatch.Reading }
+	local readings: { SlideWatch.Reading } = {}
+	for _, sample in samples do
+		table.insert(readings, {
+			userId = sample.userId,
+			position = sample.position,
+			falling = sample.falling,
+			thudFrom = sample.thudFrom :: string?,
+			moveGrace = sample.moveGrace,
+			onStitchedEdge = sample.onStitchedEdge,
+		})
+	end
+	return readings
+end
+Players.PlayerRemoving:Connect(function(player: Player)
+	slides:forget(player.UserId)
+	quietDrops:forget(player.UserId)
+end)
+
 -- Jumps: each character's Humanoid tells the server when it jumps, because a jump up the steep belly path is in the air
 -- for too short a time for the ground check to see, and a held Jump hops again within 0.3 s. The server notes where
 -- each jump took off. It runs for the whole life of the server, so nothing stops it.
@@ -126,6 +208,17 @@ local jumpWatcher = JumpWatcher.start({
 	rootPosition = JumpWatcher.rootPositionOf,
 })
 
+-- The ladder boxes are read once: the sleep meter tracks them, and the slam rays skip the ladder models they name.
+local ladderBoxes = WorldIndex.loadLadders(world)
+local ladderModels = SlamSurface.ladderParts(world:FindFirstChild("WalkSurfaces") :: Instance, ladderBoxes)
+-- The wake pieces are read once; the slam rays use the one part marked RightArmRest (the wake pieces live in
+-- ReplicatedStorage.Assets, not in the ServerStorage `assets` above).
+local sharedAssets = ReplicatedStorage:FindFirstChild("Assets")
+if sharedAssets == nil then
+	error("ReplicatedStorage.Assets is missing: the place file doesn't match the code")
+end
+local wakePieces = WorldIndex.loadWakePieces(world, sharedAssets)
+
 -- The giant's sleep meter: it reads every player's position ten times a second.
 local tracker = PlayerTracker.new({
 	getPlayers = function()
@@ -133,12 +226,169 @@ local tracker = PlayerTracker.new({
 	end,
 	zoneBoxes = zoneBoxes,
 	gardens = gardenBoxes,
+	ladderBoxes = ladderBoxes,
 	isGrounded = PlayerTracker.groundedByRay,
+	isStanding = PlayerTracker.standingByRay,
 	takeoffs = function(character: Model)
 		return jumpWatcher:took(character)
 	end,
 	now = os.clock,
 })
+
+-- What a slam's rays skip: every player's character (a player's own body is not the ground), the ladder models (a
+-- circle is never drawn on a ladder, Check C4) and, while he is awake, his raised right arm (a player under it gets the
+-- circle on the ground below). Built fresh each time, since characters come and go.
+local function slamRayIgnore(): { Instance }
+	local ignore: { Instance } = {}
+	for _, player in Players:GetPlayers() do
+		if player.Character ~= nil then
+			table.insert(ignore, player.Character)
+		end
+	end
+	for _, model in ladderModels do
+		table.insert(ignore, model)
+	end
+	return SlamSurface.rayIgnore(ignore, wakePieces.rightArm, readPhase() == "Awake")
+end
+
+-- The meadow spots a show slam may land on, built once at start.
+local showSpots = ShowSpots.build(Workspace, gardenBoxes, zoneBoxes, slamRayIgnore())
+
+-- The red circles shown and not landed yet: a rescue waits while the player stands in one (Rule 28).
+local redCircles = RedCircles.new()
+
+-- Moving back: it remembers each player's safe spots and puts a player back on the last one when they fall off the
+-- giant, are stuck or die. It reads each player's place on the giant's tick, below, right after the tracker.
+local recovery = Recovery.start({
+	players = Players,
+	safeSpots = SafeSpots.new(StarterPlayer.CharacterMaxSlopeAngle),
+	tracker = tracker,
+	sampleOf = function(player, now)
+		return Recovery.sampleOf(player, now, function(userId: number)
+			return floater:isFloating(userId)
+		end)
+	end,
+	fireRescued = function(player, from, to)
+		net.Rescued:FireAllClients(player, from, to)
+	end,
+	now = os.clock,
+	whereIs = function(player)
+		local character = player.Character
+		local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+		if root == nil or not root:IsA("BasePart") then
+			return nil
+		end
+		local ground = Recovery.groundOf(player)
+		return {
+			zone = Zones.zoneAt(root.Position, zoneBoxes),
+			onPillow = ground ~= nil and ground:IsDescendantOf(pillow),
+		}
+	end,
+	phase = readPhase,
+	sendHome = function(player)
+		local character = player.Character
+		local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+		if humanoid ~= nil then
+			humanoid.Health = 0
+		end
+	end,
+	falling = function(player)
+		local character = player.Character
+		local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+		return humanoid ~= nil and humanoid:GetState() == Enum.HumanoidStateType.Freefall
+	end,
+	floating = function(userId)
+		return floater:isFloating(userId)
+	end,
+	inRedCircle = function(position)
+		return redCircles:covers(position, Workspace:GetServerTimeNow(), function(circle, under)
+			return SlamSurface.under(Workspace, circle, under, slamRayIgnore())
+		end)
+	end,
+})
+-- Pressing to move: the client only says it started or stopped; Recovery does the watching.
+PressingHandler.start({
+	remote = { OnServerEvent = net.SetPressing.OnServerEvent },
+	players = Players,
+	setPressing = function(player, on)
+		recovery:setPressing(player, on)
+	end,
+	now = os.clock,
+})
+-- A Reset: the client only asks; Recovery decides between moving back and going home.
+ResetHandler.start({
+	remote = { OnServerEvent = net.RequestReset.OnServerEvent },
+	players = Players,
+	reset = function(player)
+		recovery:reset(player)
+	end,
+	now = os.clock,
+})
+
+-- The Safe Gate of each player's own garden, by user id. The gates are anchored, so each is read once; a player's entry
+-- follows their PlotIndex attribute (set when they spawn) and goes when they leave.
+local gateByPlot: { [number]: Vector3 } = {}
+for _, garden in gardens do
+	gateByPlot[garden.index] = garden.gate:GetPivot().Position
+end
+local gates: { [number]: Vector3 } = {}
+local gateWatchers: { [number]: RBXScriptConnection } = {}
+local function watchGate(player: Player)
+	local function refresh()
+		gates[player.UserId] = gateByPlot[player:GetAttribute("PlotIndex") :: any]
+	end
+	refresh()
+	gateWatchers[player.UserId] = player:GetAttributeChangedSignal("PlotIndex"):Connect(refresh)
+end
+-- When each player joined and when they last appeared at their door (joined, a new character, or caught), in the
+-- director's clock. The director reads them for Rules 62 and 5 (a late joiner is never a target that wake-up).
+local joinTimes: { [number]: number } = {}
+local appearTimes: { [number]: number } = {}
+local function noteJoined(player: Player)
+	joinTimes[player.UserId] = Workspace:GetServerTimeNow()
+end
+local function noteAppeared(userId: number)
+	appearTimes[userId] = Workspace:GetServerTimeNow()
+end
+local function watchAppearing(player: Player)
+	player.CharacterAdded:Connect(function()
+		noteAppeared(player.UserId)
+	end)
+end
+Players.PlayerAdded:Connect(function(player: Player)
+	noteJoined(player)
+	watchAppearing(player)
+	watchGate(player)
+end)
+for _, player in Players:GetPlayers() do
+	noteJoined(player)
+	watchAppearing(player)
+	watchGate(player)
+end
+Players.PlayerRemoving:Connect(function(player: Player)
+	gates[player.UserId] = nil
+	local watcher: RBXScriptConnection? = gateWatchers[player.UserId]
+	if watcher ~= nil then
+		watcher:Disconnect()
+		gateWatchers[player.UserId] = nil
+	end
+	joinTimes[player.UserId] = nil
+	appearTimes[player.UserId] = nil
+end)
+
+-- The bonk (Rule 61): the tumble mark a slam's hit puts on a player with no egg.
+local bonker = Bonker.new({
+	players = Players,
+	delay = function(seconds: number, callback: () -> ())
+		local thread = task.delay(seconds, callback)
+		return function()
+			task.cancel(thread)
+		end
+	end,
+})
+
+-- Who was on a ladder at the last tick (the bonk is told, Rule 61).
+local onLadderNow: { [number]: boolean } = {}
 
 -- A caught carrier's egg goes back, and they are put on their own spawn spot facing him.
 local catcher = Catcher.new({
@@ -150,6 +400,12 @@ local catcher = Catcher.new({
 		net.Caught:FireAllClients(player)
 	end,
 })
+grab.popped:Connect(function(position, kind)
+	net.EggPop:FireAllClients(position, kind)
+end)
+catcher.caught:Connect(function(player)
+	noteAppeared(player.UserId)
+end)
 -- The analytics events (spec section 10). It is made after the director below, because it listens to his `woke` signal;
 -- the director's tick passes it every player's place, so it waits here until then.
 local analytics: Analytics.Analytics? = nil
@@ -158,7 +414,14 @@ local slamRandom = Random.new()
 local director = GiantDirector.new({
 	tick = function()
 		local samples = tracker:tick()
+		table.clear(onLadderNow)
+		for _, sample in samples do
+			onLadderNow[sample.userId] = sample.onLadder == true
+		end
+		quietDrops:check(samples)
+		recovery:step()
 		banking:check(samples)
+		slides:check(slideReadings(samples))
 		if analytics ~= nil then
 			analytics:check(samples)
 		end
@@ -207,16 +470,10 @@ local director = GiantDirector.new({
 		return slamRandom:NextInteger(1, count)
 	end,
 	surfaceBelow = function(centre: Vector3)
-		-- The ray ignores every player's character: a player's own body is not the ground.
-		local characters: { Instance } = {}
-		for _, player in Players:GetPlayers() do
-			if player.Character ~= nil then
-				table.insert(characters, player.Character)
-			end
-		end
-		return SlamSurface.below(Workspace, centre, characters)
+		return SlamSurface.below(Workspace, centre, slamRayIgnore())
 	end,
-	fireSlamWarning = function(slam: number, point: Vector3, landsAt: number)
+	fireSlamWarning = function(slam: number, point: Vector3, landsAt: number, centre: Vector3)
+		redCircles:add(point, centre, landsAt)
 		net.SlamWarning:FireAllClients(slam, point, landsAt)
 	end,
 	fireSlamLanded = function(slam: number, point: Vector3)
@@ -224,6 +481,23 @@ local director = GiantDirector.new({
 	end,
 	catch = function(userId: number)
 		catcher:catch(userId)
+	end,
+	joinedAt = function(userId: number)
+		return joinTimes[userId]
+	end,
+	appearedAt = function(userId: number)
+		return appearTimes[userId]
+	end,
+	showSpots = showSpots,
+	gates = gates,
+	bonk = function(userId: number, onLadder: boolean)
+		local player = Players:GetPlayerByUserId(userId)
+		if player ~= nil then
+			bonker:bonk(player, onLadder)
+		end
+	end,
+	onLadder = function(userId: number)
+		return onLadderNow[userId] == true
 	end,
 	spendSave = function(userId: number)
 		-- On the Player, not the character, so being caught, resetting or respawning never gives the save back (Rule 18).
@@ -241,6 +515,24 @@ local gardenSpots: { Analytics.GardenSpot } = {}
 for _, garden in gardens do
 	table.insert(gardenSpots, { index = garden.index, spawnPosition = garden.spawnSpot.Position })
 end
+-- The tops of the ways up, for Analytics' "WayUp" event. Without them the event stays silent, and the game runs on.
+local waysUp, wayUpProblems = WorldIndex.readWaysUp(world)
+local wayUpTops: { WayUpWatch.Top } = {}
+if waysUp == nil then
+	warn(`[Analytics] no ways up read, so no "WayUp" events: {table.concat(wayUpProblems, "; ")}`)
+else
+	for _, wayUp in waysUp do
+		table.insert(wayUpTops, { name = wayUp.name, top = wayUp.top.position })
+	end
+end
+-- Each landed hand locks the right cuff nests for ArmReturnSeconds (Rule 100).
+director.slammed:Connect(function()
+	grab:noteFist()
+end)
+-- A landing thud that makes noise is heard by everyone (Rules 96 and 84).
+director.thudded:Connect(function(position, noise)
+	net.Thud:FireAllClients(position, noise)
+end)
 analytics = Analytics.start({
 	service = AnalyticsService,
 	players = Players,
@@ -249,9 +541,15 @@ analytics = Analytics.start({
 	caught = catcher.caught,
 	woke = director.woke,
 	slammed = director.slammed,
+	bonked = bonker.bonked,
 	saved = director.saved,
 	returned = grab.returned,
+	unstuck = recovery.unstuck,
+	refilled = grab.refilled,
+	slideEnded = slideEnded,
+	musicToggled = musicToggled,
 	gardens = gardenSpots,
+	wayUps = wayUpTops,
 	now = os.clock,
 	newId = function()
 		return HttpService:GenerateGUID(false)

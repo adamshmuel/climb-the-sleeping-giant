@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""PreToolUse hook (Bash): enforce the git rules in .claude/rules/git.md.
+
+Blocks staging everything, commit -a, push, --amend, rebase, reset --hard,
+git clean, any history change from a subagent (only the main chat commits),
+and AI attribution in a commit. Warns when a commit title is over 50 characters.
+Blocks a commit while a doc names a removed piece as if it exists (docs-check.py --removed).
+Blocks a game commit when rulings in work/ came since the last commit and no spec,
+design, plan or idea doc is staged, unless the message says "Specs: unchanged".
+"""
+
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+SEPARATORS = {";", "&&", "||", "|", "&", "(", ")"}
+GIT_VALUE_FLAGS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
+ALL_PATHS = {"-A", "--all", ".", "-u", "--update", ":/", "*"}
+COMMIT_VALUE_FLAGS = {"-m", "--message", "-F", "--file", "-C", "-c", "--author", "--date", "-t", "--template"}
+AGENT_BLOCKED = {"commit", "merge", "push", "rebase", "reset", "cherry-pick", "revert", "am", "tag"}
+# "Claude" as a name, never inside CLAUDE.md or a .claude/ path.
+ATTRIBUTION = re.compile(
+    r"co-authored-by|generated with|(?<![./\w])claude(?![.\w/-])|anthropic|\bAI\b",
+    re.IGNORECASE,
+)
+TITLE_MAX = 50
+
+
+def words_of(command):
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        return list(lexer)
+    except ValueError:
+        return command.split()
+
+
+def git_commands(words):
+    """Yield (subcommand, args) for each git command in the line."""
+    start = True
+    i = 0
+    while i < len(words):
+        w = words[i]
+        if w in SEPARATORS:
+            start = True
+            i += 1
+            continue
+        if start and w == "git":
+            j = i + 1
+            while j < len(words) and words[j].startswith("-"):
+                j += 2 if words[j] in GIT_VALUE_FLAGS else 1
+            k = j + 1
+            while k < len(words) and words[k] not in SEPARATORS:
+                k += 1
+            if j < len(words) and words[j] not in SEPARATORS:
+                yield words[j], words[j + 1 : k]
+            i = k
+            continue
+        start = False
+        i += 1
+
+
+def commit_parts(args):
+    """Return (stages_all, messages) for git commit's arguments."""
+    stages_all = False
+    messages = []
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--all":
+            stages_all = True
+        elif a in COMMIT_VALUE_FLAGS:
+            if a in ("-m", "--message") and i + 1 < len(args):
+                messages.append(args[i + 1])
+            i += 1
+        elif re.fullmatch(r"-[a-zA-Z]+", a):
+            if "a" in a[1:]:
+                stages_all = True
+            if a.endswith("m") and i + 1 < len(args):
+                messages.append(args[i + 1])
+                i += 1
+        i += 1
+    return stages_all, messages
+
+
+def check(command, from_agent):
+    """Return (deny_reason, warning)."""
+    warning = None
+    for sub, args in git_commands(words_of(command)):
+        if from_agent and sub in AGENT_BLOCKED:
+            return f"Only the main chat runs `git {sub}` (git.md, \"Commits\"). Report the change instead.", None
+        if sub == "add" and ALL_PATHS & set(args):
+            return "Stage files by name (`git add <path> ...`), never everything (git.md, \"Commits\").", None
+        if sub == "push":
+            return "Only Adam pushes (git.md, \"Never\"). Tell him it's ready to push.", None
+        if sub == "rebase" or (sub == "commit" and "--amend" in args) or (sub == "reset" and "--hard" in args):
+            return "Never rewrite existing commits: no rebase, --amend or reset --hard (git.md, \"Never\").", None
+        if sub == "clean":
+            return "`git clean` can delete the untracked work/ folder. Remove files by name instead.", None
+        if sub == "commit":
+            stages_all, messages = commit_parts(args)
+            if stages_all:
+                return "Stage files by name, never with commit -a (git.md, \"Commits\").", None
+            if ATTRIBUTION.search(command.replace("CLAUDE.md", "")):
+                return "No AI attribution or AI mention in commits (git.md, \"No AI attribution\"). Remove it and commit again.", None
+            if messages and len(messages[0].splitlines()[0]) > TITLE_MAX:
+                warning = f"The commit title is over {TITLE_MAX} characters (git.md, \"Commits\"). Shorten it next time."
+    return None, warning
+
+
+def stale_docs(cwd):
+    """Lines that name a removed piece as if it exists (docs-check.py --removed), or None."""
+    top = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    # The checker next to this hook, never one taken from the repo (it could be any code).
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs-check.py")
+    if not top or not os.path.isfile(os.path.join(top, "docs", "removed-pieces.md")):
+        return None
+    run = subprocess.run([sys.executable, "-I", script, "--removed", top], capture_output=True, text=True)
+    return run.stdout.strip() if run.returncode else None
+
+
+SPEC_DOCS = ("docs/specs/", "docs/design/", "docs/plans/", "docs/ideas/")
+GAME_PATHS = ("src/", "tools/", "docs/")
+UNCHANGED = "Specs: unchanged"
+
+
+def unsynced_rulings(cwd, command):
+    """Rulings written since the last commit when a game commit stages no spec, design, plan or idea doc.
+
+    Adam (2026-11-10): any change by the main chat or an owner that needs a spec update gets it,
+    so the docs are always current. A commit that truly changes no doc says "Specs: unchanged".
+    """
+    if UNCHANGED in command:
+        return None
+    git = ["git", "-C", cwd]
+    top = subprocess.run(git + ["rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    if not top:
+        return None
+    staged = subprocess.run(git + ["diff", "--cached", "--name-only"], capture_output=True, text=True).stdout.split()
+    if not any(p.startswith(GAME_PATHS) for p in staged) or any(p.startswith(SPEC_DOCS) for p in staged):
+        return None
+    last = subprocess.run(git + ["log", "-1", "--format=%ct"], capture_output=True, text=True).stdout.strip()
+    since = int(last) if last.isdigit() else 0
+    found = []
+    for root, _, files in os.walk(os.path.join(top, "work")):
+        for name in files:
+            if name.endswith(".md") and ("ruling" in name or "veto" in name):
+                path = os.path.join(root, name)
+                if os.path.getmtime(path) > since:
+                    found.append(os.path.relpath(path, top))
+    return sorted(found) or None
+
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+    except ValueError:
+        print("git-guard: hook input was not JSON", file=sys.stderr)
+        return
+    command = (data.get("tool_input") or {}).get("command") or ""
+    if "git" not in command:
+        return
+    reason, warning = check(command, bool(data.get("agent_id")))
+    if not reason and any(sub == "commit" for sub, _ in git_commands(words_of(command))):
+        lines = stale_docs(data.get("cwd") or os.getcwd())
+        if lines:
+            reason = (
+                "Docs still name a removed piece as if it exists (docs/removed-pieces.md). Fix these lines "
+                "before the commit, or say on the line that the piece is gone:\n" + lines
+            )
+        else:
+            rulings = unsynced_rulings(data.get("cwd") or os.getcwd(), command)
+            if rulings:
+                reason = (
+                    "Rulings were written since the last commit, but no spec, design, plan or idea doc is staged "
+                    "(agent-workflow.md, \"Docs stay current\"). Update and stage the doc lines each ruling changes, or, "
+                    f"if none changes a doc, add \"{UNCHANGED}\" to the commit message body:\n" + "\n".join(rulings)
+                )
+    if reason:
+        out = {"permissionDecision": "deny", "permissionDecisionReason": reason}
+    elif warning:
+        out = {"additionalContext": warning}
+    else:
+        return
+    out["hookEventName"] = "PreToolUse"
+    print(json.dumps({"hookSpecificOutput": out}))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,11 @@
 # Plan: New-player safety (V2, spec 1)
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [What changes, in short](#what-changes-in-short)
+- [Tasks](#tasks) (Tasks 1, 2, 3, 4, 12, 5, 6, 7, 8, 9, 10, 11, 13)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+
 **Status: built** (2026-10-19). All 13 tasks are done and approved. Next: its build review, then Gate 4. It is the first V2 plan: its Task 1 is where V2 coding started.
 
 How `docs/specs/v2/new-player-safety.md` gets built, as small tasks in test-first order. How the code is organised is in `docs/architecture.md`.
@@ -130,7 +136,7 @@ Words used here:
   2. `GiantFX.SnoreEmitter.Warning85Bubble` exists, is off, and says "Mmm... my eggs...", with a tail.
   3. Nothing named `Mockup_Warning85` is left in the Workspace.
   4. Every part of his eyelids (`Giant.SleepEyes`) has `CanCollide` and `CanQuery` off, so nobody can stand on a lid (designer's check of 2026-10-18). This one passes at once (all 20 lid parts are already off on 2026-10-19), so the builder proves it can fail: switch one lid's `CanQuery` on in Edit, watch it go red, switch it back.
-- Done when: the tests pass, the second run says "already done", and `docs/progress.md` says the place has unsaved world changes (Adam saves it).
+- Done when: the tests pass, the second run says "already done", and `docs/progress/index.md` ("Place file") says the place has unsaved world changes (Adam saves it).
 
 **Task 8: The 85% warning: a double snort, no arm twitch**
 - Spec rules: Rule 100 (Nothing you stand on moves while he sleeps), Rule 17 (A free save replays the 85% warning): the snort values. Rule 10 (He warns before he wakes).

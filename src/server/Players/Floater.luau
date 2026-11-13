@@ -21,6 +21,8 @@ export type SignalLike = {
 export type PlayerLike = {
 	UserId: number,
 	Character: Model?,
+	GetAttribute: ((self: any, name: string) -> any)?,
+	SetAttribute: ((self: any, name: string, value: any) -> ())?,
 }
 
 export type PlayersLike = {
@@ -99,6 +101,17 @@ function Floater.start(deps: Deps): Floater
 	-- When each player's last float touched down (on `deps.now`'s clock). Only a float that ended on its own is here.
 	local touchdowns: { [number]: number } = {}
 
+	-- Writes the player's `Floating` attribute, only when it differs. A player with no SetAttribute is skipped.
+	local function setFloating(player: PlayerLike, value: boolean)
+		local getAttribute, setAttribute = player.GetAttribute, player.SetAttribute
+		if getAttribute == nil or setAttribute == nil then
+			return
+		end
+		if getAttribute(player, "Floating") ~= value then
+			setAttribute(player, "Floating", value)
+		end
+	end
+
 	-- Removes the push and its attachment, and forgets the player. Safe if the character is already gone.
 	-- `landed` is true when the float ended by itself (low enough, or its time was up): that starts the touchdown time.
 	local function release(userId: number, landed: boolean)
@@ -114,6 +127,7 @@ function Floater.start(deps: Deps): Floater
 		end
 		existing.velocity:Destroy()
 		existing.attachment:Destroy()
+		setFloating(existing.player, false)
 	end
 
 	local function float(_self: Floater, player: PlayerLike, spot: WorldIndex.LandingSpot): Vector3?
@@ -165,6 +179,7 @@ function Floater.start(deps: Deps): Floater
 			restHeight = restHeight,
 			startedAt = deps.now(),
 		}
+		setFloating(player, true)
 		return look
 	end
 

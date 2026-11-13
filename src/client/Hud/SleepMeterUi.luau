@@ -62,6 +62,7 @@ export type Deps = {
 	topbarInset: TopbarLike,
 	createTween: (instance: Instance, info: TweenInfo, goal: { [string]: any }) -> TweenLike, -- TweenService:Create in the game
 	now: () -> number, -- the server's clock (Workspace:GetServerTimeNow())
+	onLayout: ((screen: Layout.Screen, meterRight: number, meterLeft: number) -> ())?, -- told on each layout, so the Zs and the music button can sit by the meter (meterLeft is its left edge at its biggest)
 }
 
 type Parts = {
@@ -314,6 +315,9 @@ function SleepMeterUi.start(deps: Deps): () -> ()
 		local width = deps.viewport.get().X
 		local centerX = Layout.meterCenterX(width, screen.meter.width, deps.topbarInset.get(), PULSE_SCALE)
 		applyLayout(parts, screen.meter, centerX - width / 2)
+		if deps.onLayout then
+			deps.onLayout(screen, centerX + screen.meter.width / 2, centerX - screen.meter.width * PULSE_SCALE / 2)
+		end
 		if look then
 			paintBar(parts, look.barStyle, look.fill)
 		end

@@ -1,0 +1,653 @@
+--!strict
+local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
+local describe, it, expect, afterEach = JestGlobals.describe, JestGlobals.it, JestGlobals.expect, JestGlobals.afterEach
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+local GiantCycle = require(game:GetService("ServerScriptService").Server.Giant.GiantCycle)
+local Slams = require(game:GetService("ServerScriptService").Server.Giant.Slams)
+local Helpers = require(script.Parent.Helpers)
+type Harness = Helpers.Harness
+local MEADOW_POINTS = Helpers.MEADOW_POINTS
+local START_CLOCK = Helpers.START_CLOCK
+local addPlayer = Helpers.addPlayer
+local cleanUp = Helpers.cleanUp
+local newHarness = Helpers.newHarness
+local placed = Helpers.placed
+local sample = Helpers.sample
+
+afterEach(cleanUp)
+
+-- A slam time such as 2.3 is not exact in binary: START_CLOCK + 2.3 - START_CLOCK can come out a hair under 2.3 and the
+-- tick would not reach the event. Every tick here lands this much past the time asked for.
+local TICK_SLACK = 1e-6
+
+local function stepAt(harness: Harness, secondsSinceWoke: number)
+	Helpers.stepAt(harness, secondsSinceWoke + TICK_SLACK)
+end
+
+-- Seconds rounded to the millisecond, so a time read back from the clock equals the time typed (2.3, not 2.2999999).
+local function toMillis(seconds: number): number
+	return math.floor(seconds * 1000 + 0.5) / 1000
+end
+
+local function allToMillis(times: { number }): { number }
+	local result: { number } = {}
+	for _, seconds in times do
+		table.insert(result, toMillis(seconds))
+	end
+	return result
+end
+
+-- Wakes him with these people standing still in the meadow, at START_CLOCK. Everyone carries a Common egg unless
+-- `carrying` is false.
+type Person = { id: number, position: Vector3, carrying: boolean? }
+
+local function slamHarness(people: { Person }): Harness
+	local harness = newHarness(100)
+	for _, person in people do
+		addPlayer(
+			harness,
+			person.id,
+			`Player{person.id}`,
+			{ carrying = if person.carrying == false then nil else "Common" }
+		)
+		table.insert(harness.samples, placed(sample(person.id, "Meadow", false), person.position))
+	end
+	harness.director:step()
+	return harness
+end
+
+local function moveTo(harness: Harness, userId: number, position: Vector3)
+	for index, existing in harness.samples do
+		if existing.userId == userId then
+			harness.samples[index] = placed(existing, position)
+		end
+	end
+end
+
+-- Every slam time comes from GiantCycle (Config.Wake.SlamWarningTimes), never typed here: WARN[n] is when slam n's
+-- warning comes and LAND[n] is when its hand lands (seconds since he woke).
+local WARN: { number } = {}
+local LAND: { number } = {}
+for _, slam in GiantCycle.slams() do
+	table.insert(WARN, slam.warnAt)
+	table.insert(LAND, slam.landsAt)
+end
+
+-- Every time when a slam's warning comes or its hand lands, in order.
+local SLAM_TIMES: { number } = {}
+for index = 1, #WARN do
+	table.insert(SLAM_TIMES, WARN[index])
+	table.insert(SLAM_TIMES, LAND[index])
+end
+table.sort(SLAM_TIMES)
+
+local function runAllSlams(harness: Harness)
+	for _, seconds in SLAM_TIMES do
+		stepAt(harness, seconds)
+	end
+end
+
+local function secondsOf(calls: { any }): { number }
+	local result: { number } = {}
+	for _, call in calls do
+		table.insert(result, toMillis(call.clock - START_CLOCK))
+	end
+	return result
+end
+
+local function catchIds(harness: Harness): { number }
+	local ids: { number } = {}
+	for _, call in harness.catches do
+		table.insert(ids, call.userId)
+	end
+	return ids
+end
+
+-- Where the nearest carrier stands, 76 studs from his face across the ground.
+local NEAR = Vector3.new(30, 5, 70)
+
+-- A second carrier, farther from his face (about 108 studs).
+local FAR = Vector3.new(-40, 5, -100)
+
+describe("GiantDirector slams", function()
+	it("sends the 6 warnings at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 seconds", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		runAllSlams(harness)
+		expect(#harness.slamWarnings).toBe(6)
+		expect(secondsOf(harness.slamWarnings)).toEqual(allToMillis(WARN))
+		for index, call in harness.slamWarnings do
+			expect(call.slam).toBe(index)
+		end
+	end)
+
+	it("lands each slam 1.5 seconds after its warning, with the same point", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		runAllSlams(harness)
+		expect(#harness.slamLandings).toBe(6)
+		expect(secondsOf(harness.slamLandings)).toEqual(allToMillis(LAND))
+		for index, landing in harness.slamLandings do
+			expect(landing.slam).toBe(index)
+			expect(landing.point).toEqual(harness.slamWarnings[index].point)
+		end
+	end)
+
+	it("sends landsAt as the clock when he woke plus the landing's seconds", function()
+		local harness = newHarness(100)
+		addPlayer(harness, 1, "Mia", { carrying = "Common" })
+		harness.samples = { placed(sample(1, "Meadow", false), NEAR) }
+		harness.clock = START_CLOCK + 7
+		harness.director:step() -- he wakes with the clock at START_CLOCK + 7
+		for _, seconds in SLAM_TIMES do
+			harness.clock = START_CLOCK + 7 + seconds + TICK_SLACK
+			harness.director:step()
+		end
+		expect(#harness.slamWarnings).toBe(6)
+		for index, call in harness.slamWarnings do
+			expect(call.landsAt).toBe(START_CLOCK + 7 + LAND[index])
+		end
+	end)
+
+	it("sends the surface point below the planned centre, not the centre", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		harness.surfaceDrop = 12
+		stepAt(harness, WARN[1])
+		expect(harness.surfaceCalls[1]).toEqual(NEAR)
+		expect(harness.slamWarnings[1].point).toEqual(NEAR - Vector3.new(0, 12, 0))
+	end)
+
+	it("sends no slam events before the first warning, or when no one is awake", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1] - 0.1)
+		expect(#harness.slamWarnings).toBe(0)
+		expect(#harness.slamLandings).toBe(0)
+		expect(harness.floatingCalls).toBe(0)
+	end)
+
+	it("checks who is floating only on ticks that have a slam event", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, 0.5)
+		stepAt(harness, WARN[1] - 0.1)
+		expect(harness.floatingCalls).toBe(0)
+		stepAt(harness, WARN[1])
+		expect(harness.floatingCalls).toBeGreaterThan(0)
+	end)
+
+	it("aims at a carrier standing still in the meadow and catches them when the hand lands", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		expect(harness.surfaceCalls[1]).toEqual(NEAR)
+		expect(catchIds(harness)).toEqual({})
+		stepAt(harness, LAND[1])
+		expect(catchIds(harness)).toEqual({ 1 })
+	end)
+
+	it("does not catch a carrier who walked more than 15 studs from the circle by the landing tick", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		moveTo(harness, 1, NEAR + Vector3.new(0, 0, 20))
+		stepAt(harness, LAND[1])
+		expect(#harness.slamLandings).toBe(1)
+		expect(catchIds(harness)).toEqual({})
+	end)
+
+	it("still catches a carrier who walked 10 studs inside the circle", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		moveTo(harness, 1, NEAR + Vector3.new(0, 0, 10))
+		stepAt(harness, LAND[1])
+		expect(catchIds(harness)).toEqual({ 1 })
+	end)
+
+	it("measures the catch from the planned centre, not from the surface point 12 studs below", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		harness.surfaceDrop = 12
+		stepAt(harness, WARN[1])
+		stepAt(harness, LAND[1])
+		expect(catchIds(harness)).toEqual({ 1 })
+	end)
+
+	it("does not catch a carrier who is floating down when the hand lands", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		harness.floating[1] = true
+		stepAt(harness, LAND[1])
+		expect(#harness.slamLandings).toBe(1)
+		expect(catchIds(harness)).toEqual({})
+	end)
+
+	it("does not catch a carrier who has stepped into a garden when the hand lands", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		harness.samples = { placed(sample(1, "Meadow", false, nil, 3), NEAR) }
+		stepAt(harness, LAND[1])
+		expect(#harness.slamLandings).toBe(1)
+		expect(catchIds(harness)).toEqual({})
+	end)
+
+	it("does not catch a carrier who touched down 1.4 seconds before the hand lands", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		harness.landedAgo[1] = 1.4
+		stepAt(harness, LAND[1])
+		expect(catchIds(harness)).toEqual({})
+	end)
+
+	it("catches a carrier who touched down 2 seconds before the hand lands", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		harness.landedAgo[1] = 2
+		stepAt(harness, LAND[1])
+		expect(catchIds(harness)).toEqual({ 1 })
+	end)
+
+	it("aims at a carrier, not a nearer player who carries nothing, and catches only the carrier", function()
+		local harness = slamHarness({
+			{ id = 1, position = NEAR, carrying = false }, -- nearest to him, but carries nothing
+			{ id = 2, position = FAR },
+		})
+		stepAt(harness, WARN[1])
+		expect(harness.surfaceCalls[1]).toEqual(FAR)
+		stepAt(harness, LAND[1])
+		expect(catchIds(harness)).toEqual({ 2 })
+	end)
+
+	it("ignores a sample whose player is not in the player list", function()
+		local harness = slamHarness({ { id = 2, position = FAR } })
+		table.insert(harness.samples, placed(sample(99, "Meadow", false), NEAR))
+		stepAt(harness, WARN[1])
+		expect(harness.surfaceCalls[1]).toEqual(FAR)
+	end)
+
+	it("aims the second slam at the other carrier, and the third back at the first", function()
+		local harness = slamHarness({
+			{ id = 1, position = NEAR },
+			{ id = 2, position = FAR },
+		})
+		stepAt(harness, WARN[1])
+		stepAt(harness, WARN[2])
+		stepAt(harness, WARN[3])
+		expect(harness.surfaceCalls).toEqual({ NEAR, FAR, NEAR })
+	end)
+
+	it("aims every slam at a lone carrier", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		runAllSlams(harness)
+		expect(harness.surfaceCalls).toEqual({ NEAR, NEAR, NEAR, NEAR, NEAR, NEAR })
+		expect(catchIds(harness)).toEqual({ 1, 1, 1, 1, 1, 1 })
+	end)
+
+	it("slams meadow points when nobody carries, one the fake pick chooses, and catches no one", function()
+		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
+		harness.pickChoice = 2
+		stepAt(harness, WARN[1])
+		expect(harness.pickCounts).toEqual({ 3 })
+		expect(harness.surfaceCalls[1]).toEqual(MEADOW_POINTS[2])
+		expect(harness.slamWarnings[1].point).toEqual(MEADOW_POINTS[2] - Vector3.new(0, 3, 0))
+		stepAt(harness, LAND[1])
+		expect(#harness.slamLandings).toBe(1)
+		expect(catchIds(harness)).toEqual({})
+	end)
+
+	it("passes the last empty slam's point on, so the next empty slam picks another point", function()
+		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
+		harness.pickChoice = 2
+		stepAt(harness, WARN[1])
+		stepAt(harness, WARN[2])
+		-- The second slam may not repeat the first point, so only 2 points are left to pick from.
+		expect(harness.pickCounts).toEqual({ 3, 2 })
+		expect(harness.surfaceCalls[2]).toEqual(MEADOW_POINTS[3])
+	end)
+
+	it("keeps a garden's circle clear of the garden", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		-- A garden right on the carrier: the circle must be pushed toward his face until it is clear.
+		table.insert(
+			harness.gardens,
+			{ index = 1, cframe = CFrame.new(NEAR.X, 0, NEAR.Z), size = Vector3.new(20, 10, 20) }
+		)
+		stepAt(harness, WARN[1])
+		local centre = harness.surfaceCalls[1]
+		expect(centre).never.toEqual(NEAR)
+		-- Pushed toward his face across the ground: still at the carrier's height, and nearer to the face.
+		expect(centre.Y).toBe(NEAR.Y)
+		expect(math.sqrt(centre.X ^ 2 + centre.Z ^ 2)).toBeLessThan(math.sqrt(NEAR.X ^ 2 + NEAR.Z ^ 2))
+	end)
+
+	it("forgets the last target at a new wake-up", function()
+		local harness = slamHarness({
+			{ id = 1, position = NEAR },
+			{ id = 2, position = FAR },
+		})
+		stepAt(harness, WARN[1]) -- slam 1 aims at the nearest carrier (1); the last target is now 1
+		expect(harness.surfaceCalls).toEqual({ NEAR })
+		harness.state:SetAttribute("Meter", 0)
+		harness.state:SetAttribute("Phase", "Asleep")
+		stepAt(harness, WARN[1] + 0.1) -- the reset ends the timeline
+		harness.state:SetAttribute("Meter", 100)
+		stepAt(harness, 200) -- he wakes again
+		stepAt(harness, 200 + WARN[1]) -- slam 1 of the new wake-up
+		-- Without the memory of the last target this would aim at the other carrier.
+		expect(harness.surfaceCalls).toEqual({ NEAR, NEAR })
+	end)
+
+	it("forgets the last empty point at a new wake-up", function()
+		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
+		harness.pickChoice = 2
+		stepAt(harness, WARN[1])
+		harness.state:SetAttribute("Meter", 0)
+		harness.state:SetAttribute("Phase", "Asleep")
+		stepAt(harness, WARN[1] + 0.1)
+		harness.state:SetAttribute("Meter", 100)
+		stepAt(harness, 200)
+		stepAt(harness, 200 + WARN[1])
+		-- All 3 points are choices again: the point of the slam before the reset is not left out.
+		expect(harness.pickCounts).toEqual({ 3, 3 })
+		expect(harness.surfaceCalls[2]).toEqual(MEADOW_POINTS[2])
+	end)
+
+	it("sends no more slam events and catches no one after a reset to Asleep from outside", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, WARN[1])
+		harness.state:SetAttribute("Meter", 0)
+		harness.state:SetAttribute("Phase", "Asleep")
+		stepAt(harness, LAND[1])
+		stepAt(harness, WARN[2])
+		stepAt(harness, LAND[2])
+		expect(#harness.slamWarnings).toBe(1)
+		expect(#harness.slamLandings).toBe(0)
+		expect(catchIds(harness)).toEqual({})
+	end)
+
+	it("fires the landing before any catch, and each catch after its own landing", function()
+		local harness = slamHarness({
+			{ id = 1, position = NEAR },
+			{ id = 2, position = NEAR + Vector3.new(0, 0, 3) },
+		})
+		stepAt(harness, WARN[1])
+		stepAt(harness, LAND[1])
+		expect(harness.order).toEqual({ "W1", "L1", "catch1", "catch2" })
+	end)
+
+	it("lets the 6th slam's catches happen before Phase turns HeavySleep on the same tick", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		for _, seconds in SLAM_TIMES do
+			if seconds < LAND[6] then
+				stepAt(harness, seconds)
+			end
+		end
+		expect(#harness.catches).toBe(5)
+		stepAt(harness, LAND[6])
+		expect(#harness.catches).toBe(6)
+		expect(harness.catches[6].phase).toBe("Awake")
+		expect(harness.state:GetAttribute("Phase")).toBe("HeavySleep")
+	end)
+
+	it("plays every slam in order after one long tick", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		stepAt(harness, LAND[6])
+		expect(harness.order).toEqual({
+			"W1",
+			"L1",
+			"catch1",
+			"W2",
+			"L2",
+			"catch1",
+			"W3",
+			"L3",
+			"catch1",
+			"W4",
+			"L4",
+			"catch1",
+			"W5",
+			"L5",
+			"catch1",
+			"W6",
+			"L6",
+			"catch1",
+		})
+		expect(harness.state:GetAttribute("Phase")).toBe("HeavySleep")
+	end)
+
+	it("sends nothing more once he is in Heavy Sleep", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		runAllSlams(harness)
+		stepAt(harness, 20)
+		stepAt(harness, 40)
+		stepAt(harness, 60)
+		expect(#harness.slamWarnings).toBe(6)
+		expect(#harness.slamLandings).toBe(6)
+		expect(#harness.catches).toBe(6)
+	end)
+end)
+
+-- What the slammed signal said (the target, what it was aimed at, who was caught and who was bonked), and how many
+-- carriers had been caught (by the fake catch) when it said it.
+type SlammedCall = {
+	target: number?,
+	kind: string,
+	caught: { number },
+	bonked: { number },
+	catchesBefore: number,
+}
+
+-- Listens to the slammed signal of this harness's director. The connection goes with the director when it is destroyed.
+local function watchSlams(harness: Harness): { SlammedCall }
+	local calls: { SlammedCall } = {}
+	(harness.director :: any).slammed:Connect(
+		function(target: number?, kind: string, caught: { number }, bonked: { number })
+			table.insert(
+				calls,
+				{ target = target, kind = kind, caught = caught, bonked = bonked, catchesBefore = #harness.catches }
+			)
+		end
+	)
+	return calls
+end
+
+describe("GiantDirector slammed signal", function()
+	it("says who the slam was aimed at and who it caught, when the hand lands on a carrier", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		local slams = watchSlams(harness)
+		stepAt(harness, WARN[1])
+		expect(#slams).toBe(0)
+		stepAt(harness, LAND[1])
+		expect(slams).toEqual({ { target = 1, kind = "Carrier", caught = { 1 }, bonked = {}, catchesBefore = 1 } })
+	end)
+
+	it("says the target and an empty list when the carrier ran out of the circle", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		local slams = watchSlams(harness)
+		stepAt(harness, WARN[1])
+		moveTo(harness, 1, NEAR + Vector3.new(0, 0, 20))
+		stepAt(harness, LAND[1])
+		expect(slams).toEqual({ { target = 1, kind = "Carrier", caught = {}, bonked = {}, catchesBefore = 0 } })
+	end)
+
+	it("says no target and an empty list for a slam on the empty meadow", function()
+		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
+		local slams = watchSlams(harness)
+		stepAt(harness, WARN[1])
+		stepAt(harness, LAND[1])
+		expect(#slams).toBe(1)
+		expect(slams[1].target).toBeNil()
+		expect(slams[1].kind).toBe("None")
+		expect(slams[1].caught).toEqual({})
+		expect(slams[1].bonked).toEqual({})
+	end)
+
+	it("says who an empty-meadow slam caught when a carrier walked under it", function()
+		local harness = slamHarness({ { id = 1, position = Vector3.new(200, 5, 0), carrying = false } })
+		harness.floating[1] = true
+		local slams = watchSlams(harness)
+		stepAt(harness, WARN[1])
+		-- Player 1 picks up an egg and stands where the circle will land (the first meadow point).
+		harness.infos[1].carrying = "Common"
+		harness.floating[1] = false
+		moveTo(harness, 1, MEADOW_POINTS[1])
+		stepAt(harness, LAND[1])
+		expect(slams).toEqual({ { target = nil, kind = "None", caught = { 1 }, bonked = {}, catchesBefore = 1 } })
+	end)
+
+	it("fires once for each of the 6 slams, with the target each time", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		local slams = watchSlams(harness)
+		runAllSlams(harness)
+		expect(#slams).toBe(6)
+		for _, call in slams do
+			expect(call.target).toBe(1)
+			expect(call.kind).toBe("Carrier")
+			expect(call.caught).toEqual({ 1 })
+			expect(call.bonked).toEqual({})
+		end
+	end)
+
+	it("fires after every catch of that landing, and lists them all", function()
+		local harness = slamHarness({
+			{ id = 1, position = NEAR },
+			{ id = 2, position = NEAR + Vector3.new(0, 0, 3) },
+		})
+		local slams = watchSlams(harness)
+		stepAt(harness, WARN[1])
+		stepAt(harness, LAND[1])
+		expect(slams).toEqual({ { target = 1, kind = "Carrier", caught = { 1, 2 }, bonked = {}, catchesBefore = 2 } })
+	end)
+
+	it("fires nothing for a slam that has warned when he is put back to sleep from outside", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		local slams = watchSlams(harness)
+		stepAt(harness, WARN[1])
+		harness.state:SetAttribute("Meter", 0)
+		harness.state:SetAttribute("Phase", "Asleep")
+		stepAt(harness, LAND[1])
+		stepAt(harness, WARN[2])
+		expect(slams).toEqual({})
+	end)
+
+	it("fires once for a slam after one long tick, and the target is the one of the slam", function()
+		local harness = slamHarness({
+			{ id = 1, position = NEAR },
+			{ id = 2, position = FAR },
+		})
+		local slams = watchSlams(harness)
+		stepAt(harness, LAND[6])
+		expect(#slams).toBe(6)
+		-- The targets alternate: the nearest carrier first, never the same one twice in a row.
+		expect({ slams[1].target, slams[2].target, slams[3].target }).toEqual({ 1, 2, 1 })
+	end)
+
+	it("removes the slammed connections when the director is destroyed", function()
+		local harness = slamHarness({ { id = 1, position = NEAR } })
+		local slams = watchSlams(harness)
+		harness.director:destroy()
+		stepAt(harness, WARN[1])
+		stepAt(harness, LAND[1])
+		expect(slams).toEqual({})
+	end)
+end)
+
+-- Rule 60, the ladder grace. A solo player with no egg stands at the door spot, so a circle aimed at them lands on DOOR
+-- and a show slam lands 35 to 45 studs from it (Hunt.spec). They touch BootLadder_Left on the first tick after he wakes.
+describe("GiantDirector ladder grace", function()
+	local LADDER = "BootLadder_Left"
+	local DOOR = Helpers.DOOR
+	local TOUCH_AT = 0.1 -- seconds after he woke when the player first stands on the ladder
+	local GRACE = Config.Wake.LadderGraceSeconds[LADDER]
+
+	-- The first slam whose warning comes after the grace ends: its circle is aimed at them.
+	local function firstSlamAfterGrace(): number
+		for index = 1, #WARN do
+			if WARN[index] > TOUCH_AT + GRACE then
+				return index
+			end
+		end
+		error("no slam warns after the grace")
+	end
+
+	local function centreOf(harness: Harness, slam: number): Vector3
+		return harness.surfaceCalls[slam]
+	end
+
+	local function expectShowSlam(harness: Harness, slam: number)
+		local distance = Slams.flatDistance(centreOf(harness, slam), DOOR)
+		expect(distance).toBeGreaterThanOrEqual(Config.Wake.ShowSlamNearStuds)
+		expect(distance).toBeLessThanOrEqual(Config.Wake.ShowSlamFarStuds)
+	end
+
+	-- A solo no-egg player at DOOR who steps onto the ladder at TOUCH_AT.
+	local function climberHarness(): Harness
+		local harness = slamHarness({ { id = 1, position = DOOR, carrying = false } })
+		harness.ladders[1] = LADDER
+		stepAt(harness, TOUCH_AT)
+		return harness
+	end
+
+	it("gives a solo player in their grace a show slam, and no bonk", function()
+		local harness = climberHarness()
+		expect(WARN[1] < TOUCH_AT + GRACE).toBe(true)
+		stepAt(harness, WARN[1])
+		expect(centreOf(harness, 1)).never.toEqual(DOOR)
+		expectShowSlam(harness, 1)
+		stepAt(harness, LAND[1])
+		expect(#harness.bonks).toBe(0)
+	end)
+
+	it("puts the circle on them again once the grace is over", function()
+		local harness = climberHarness()
+		local later = firstSlamAfterGrace()
+		for index = 1, later - 1 do
+			stepAt(harness, WARN[index])
+			expectShowSlam(harness, index) -- still in the grace
+			stepAt(harness, LAND[index])
+		end
+		stepAt(harness, WARN[later])
+		expect(centreOf(harness, later)).toEqual(DOOR)
+	end)
+
+	it("does not restart the grace when they grab, drop and grab again", function()
+		local harness = climberHarness()
+		local later = firstSlamAfterGrace()
+		harness.ladders[1] = nil -- they let go
+		stepAt(harness, 1)
+		stepAt(harness, WARN[1])
+		expectShowSlam(harness, 1) -- off the ladder, but the grace runs from the first touch
+		harness.ladders[1] = LADDER -- and grab again
+		stepAt(harness, WARN[1] + 0.2)
+		stepAt(harness, LAND[1])
+		for index = 2, later - 1 do
+			stepAt(harness, WARN[index])
+			stepAt(harness, LAND[index])
+		end
+		stepAt(harness, WARN[later])
+		expect(centreOf(harness, later)).toEqual(DOOR)
+	end)
+
+	it("starts a fresh grace at a new wake-up", function()
+		local harness = climberHarness()
+		harness.state:SetAttribute("Meter", 0)
+		harness.state:SetAttribute("Phase", "Asleep")
+		stepAt(harness, WARN[1] + 0.1) -- the reset ends the timeline
+		harness.state:SetAttribute("Meter", 100)
+		stepAt(harness, 200) -- he wakes again
+		stepAt(harness, 200 + TOUCH_AT) -- they are still on the ladder: the first touch of this wake-up
+		local before = #harness.surfaceCalls
+		stepAt(harness, 200 + WARN[1]) -- slam 1 of the new wake-up, inside the new grace
+		expect(#harness.surfaceCalls).toBe(before + 1)
+		expectShowSlam(harness, before + 1)
+	end)
+
+	it("keeps the circle of a slam that was aimed before they stepped on the ladder", function()
+		local harness = slamHarness({ { id = 1, position = DOOR, carrying = false } })
+		stepAt(harness, WARN[1]) -- aimed at them: they are not on a ladder yet
+		expect(centreOf(harness, 1)).toEqual(DOOR)
+		harness.ladders[1] = LADDER
+		stepAt(harness, WARN[1] + 0.2)
+		stepAt(harness, LAND[1])
+		expect(centreOf(harness, 1)).toEqual(DOOR)
+		expect(#harness.bonks).toBe(1)
+		expect(harness.bonks[1].userId).toBe(1)
+	end)
+end)

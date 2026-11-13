@@ -10,6 +10,21 @@ local TELEPORT_DISTANCE = 20
 -- The speed is measured over this many seconds of real time. A whole second smooths out the bursts in which
 -- positions arrive.
 local SPEED_WINDOW_SECONDS = 1
+-- A player counts as moving only if their body went at least this many studs in a straight line over the last
+-- second (Rule 31: being stuck is silent). A body shaking in a gap goes nowhere, so it makes no walking noise.
+-- Players can't see this number.
+local MIN_TRIP = 1
+-- A body whose kept readings (at least MIN_COVERED_SECONDS of them) all lie within this many studs of the newest one
+-- is shaking in a pocket, not walking: no walking noise (Rule 31: being stuck is silent). It is the 1.6-stud gap plus
+-- 0.2. Measured in 3D, so a ladder climber still counts. Players can't see this number.
+local POCKET_SIZE = 1.8
+local MIN_COVERED_SECONDS = 0.9
+-- After the server moves a player (a rescue), the move and the drop that follows it are neither walking nor a fall.
+-- That grace ends once the body has been on the ground and still for this many ticks in a row (0.3 s)...
+local MOVE_SETTLE_TICKS = 3
+-- ...or once this many seconds have passed since the move: the server may see the device 0.4 s late, then the drop,
+-- then the settle ticks. A body still falling after that is a real fall. Players can't see this number.
+local MOVE_GRACE_SECONDS = 1.5
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -20,6 +35,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local LandingDetector = require(script.Parent.LandingDetector)
 local WorldIndex = require(script.Parent.Parent.World.WorldIndex)
 local Zones = require(script.Parent.Parent.Giant.Zones)
+
+local NO_LADDERS: { Zones.LadderBox } = {}
 
 -- What the tracker reads about one player each tick, for the host to use.
 export type Sample = {
@@ -32,25 +49,54 @@ export type Sample = {
 	zone: Config.ZoneName,
 	garden: number?,
 	thudFrom: Config.ZoneName?, -- set on the tick a thud is due: the highest zone the fall (or hop) left
+	falling: boolean, -- a fall is under way (the landing detector's state after this tick)
+	jumped: boolean?, -- a jump took off on this tick, or the fall under way began with a jump
+	quiet: boolean?, -- the fall ended a set way down, so its thud was dropped (QuietDrops)
+	moveGrace: boolean, -- true on a tick the server's move still excuses (see `moved`), the last one included
+	onStitchedEdge: boolean, -- standing on a part marked StitchedEdge; asked only on ticks where falling is false
+	-- The root is inside a ladder box and not standing on ground (Zones.locateClimber). The tracker always sets it;
+	-- it is optional only so hand-made samples in other tests need not say it.
+	onLadder: boolean?,
+	ladder: string?, -- which ladder, when onLadder
 }
 
 -- What the tracker needs from a player. A real Player fits, and tests pass simple stand-ins.
-export type PlayerLike = { UserId: number, Character: Model? }
+-- A real Player has GetAttribute and SetAttribute; the stand-ins in other tests may leave them out.
+export type PlayerLike = {
+	UserId: number,
+	Character: Model?,
+	GetAttribute: ((self: any, name: string) -> any)?,
+	SetAttribute: ((self: any, name: string, value: any) -> ())?,
+}
 
 export type Deps = {
 	getPlayers: () -> { PlayerLike },
 	zoneBoxes: { Zones.ZoneBox },
 	gardens: { Zones.GardenBox },
+	ladderBoxes: { Zones.LadderBox }?, -- left out means no ladders
 	isGrounded: (character: Model) -> boolean, -- injected, so tests can fake it
+	-- Is this character standing on ground that isn't a ladder's rungs? Left out, it is the same as `isGrounded`.
+	isStanding: ((character: Model) -> boolean)?,
 	-- Where this character's jumps took off since the last time it was asked, oldest first (JumpWatcher).
 	takeoffs: (character: Model) -> { Vector3 },
 	now: () -> number, -- the clock in seconds (os.clock), injected so tests can set the time by hand
+	-- Is this character standing on a StitchedEdge part? Left out, `PlayerTracker.onStitchedEdgeByRay` is used.
+	onStitchedEdge: ((character: Model) -> boolean)?,
 }
 
-export type Tracker = { tick: (self: Tracker) -> { Sample } }
+export type Tracker = {
+	tick: (self: Tracker) -> { Sample },
+	-- Tells the tracker the server moved this player (a rescue): the move and the drop after it count as neither
+	-- walking nor a fall. The grace lasts until the body is on the ground and still, 1.5 s at most.
+	moved: (self: Tracker, userId: number) -> (),
+}
 
 -- Where a character was at one moment, for measuring its speed.
 type Reading = { time: number, position: Vector3, grounded: boolean }
+
+-- A move the server made, still being waited out: when it happened, and how many ticks in a row the body has been
+-- on the ground and still since.
+type Grace = { since: number, stillTicks: number }
 
 -- What the tracker remembers about one player between ticks. A new character starts a new memory.
 type Memory = {
@@ -58,10 +104,12 @@ type Memory = {
 	lastPosition: Vector3?,
 	landing: LandingDetector.State,
 	readings: { Reading }, -- the last 1 s of readings, oldest first
+	ladderZone: Config.ZoneName?, -- the climber's zone on the tick before, if they were on a ladder; else nil
 }
 
 -- How far below the feet the ground check still says "on the ground", in studs.
 local GROUND_REACH = 0.5
+local MAX_TRUSS_CASTS = 4 -- standingByRay skips trusses one cast at a time, at most this many casts
 
 local PlayerTracker = {}
 
@@ -85,11 +133,12 @@ end
 -- longer than the way to the feet. Only solid parts count (RespectCanCollide), so the invisible zone boxes
 -- don't. Every character is left out, so one player standing on another's head is not "on the ground".
 -- A surface too steep to stand on (his steep sides) is not ground either, so brushing past him is no landing.
-function PlayerTracker.groundedByRay(character: Model): boolean
+-- With `skipTruss`, a hit on a TrussPart is left out and the ray is cast again (at most MAX_TRUSS_CASTS casts).
+local function groundHit(character: Model, skipTruss: boolean?): RaycastResult?
 	local root = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if root == nil or not root:IsA("BasePart") or humanoid == nil then
-		return false
+		return nil
 	end
 	local excluded: { Instance } = { character }
 	for _, player in Players:GetPlayers() do
@@ -102,7 +151,36 @@ function PlayerTracker.groundedByRay(character: Model): boolean
 	params.RespectCanCollide = true
 	local length = humanoid.HipHeight + root.Size.Y / 2 + GROUND_REACH
 	local hit = Workspace:Raycast(root.Position, Vector3.new(0, -length, 0), params)
+	local casts = 1
+	while skipTruss == true and hit ~= nil and hit.Instance:IsA("TrussPart") and casts < MAX_TRUSS_CASTS do
+		table.insert(excluded, hit.Instance)
+		params.ExcludeInstances = excluded
+		hit = Workspace:Raycast(root.Position, Vector3.new(0, -length, 0), params)
+		casts += 1
+	end
+	if skipTruss == true and hit ~= nil and hit.Instance:IsA("TrussPart") then
+		return nil -- still a truss after the last cast: no ground we could tell
+	end
+	return hit
+end
+
+function PlayerTracker.groundedByRay(character: Model): boolean
+	local hit = groundHit(character)
 	return hit ~= nil and PlayerTracker.isStandable(hit.Normal, StarterPlayer.CharacterMaxSlopeAngle)
+end
+
+-- Standing on ground that isn't a ladder's rungs (a TrussPart is always a ladder: Rule 80). The same ray as
+-- groundedByRay, but a hit on a TrussPart doesn't count: a ladder leaning 60 degrees has a face flatter than
+-- CharacterMaxSlopeAngle, so groundedByRay calls the rungs ground while the player climbs them.
+function PlayerTracker.standingByRay(character: Model): boolean
+	local hit = groundHit(character, true)
+	return hit ~= nil and PlayerTracker.isStandable(hit.Normal, StarterPlayer.CharacterMaxSlopeAngle)
+end
+
+-- Is the character standing on a part marked StitchedEdge? Same ray as groundedByRay, same characters left out.
+function PlayerTracker.onStitchedEdgeByRay(character: Model): boolean
+	local hit = groundHit(character)
+	return hit ~= nil and hit.Instance:GetAttribute("StitchedEdge") == true
 end
 
 -- Did the character move since the last tick? The distance is measured in 3D, so climbing straight up counts.
@@ -153,6 +231,25 @@ local function groundSpeedOf(readings: { Reading }): number
 	return moved.Magnitude / seconds
 end
 
+-- The straight line, in studs, from the oldest kept reading to the newest.
+local function tripOf(readings: { Reading }): number
+	return (readings[#readings].position - readings[1].position).Magnitude
+end
+
+-- True when the kept readings cover at least MIN_COVERED_SECONDS and every one lies within POCKET_SIZE of the newest.
+local function inPocket(readings: { Reading }): boolean
+	local newest = readings[#readings]
+	if newest.time - readings[1].time < MIN_COVERED_SECONDS then
+		return false
+	end
+	for _, reading in readings do
+		if (reading.position - newest.position).Magnitude > POCKET_SIZE then
+			return false
+		end
+	end
+	return true
+end
+
 -- The root part of a character that is alive and complete, or nil.
 local function livingRoot(character: Model?): BasePart?
 	if character == nil then
@@ -168,6 +265,8 @@ end
 
 function PlayerTracker.new(deps: Deps): Tracker
 	local memories: { [number]: Memory } = {}
+	local onStitchedEdge: (Model) -> boolean = deps.onStitchedEdge or PlayerTracker.onStitchedEdgeByRay
+	local graces: { [number]: Grace } = {} -- players the server moved, whose grace has not ended yet
 
 	local function tick(_self: Tracker): { Sample }
 		local samples: { Sample } = {}
@@ -181,37 +280,93 @@ function PlayerTracker.new(deps: Deps): Tracker
 				memories[userId] = nil -- they left, so forget them
 			end
 		end
+		for userId in graces do
+			if not present[userId] then
+				graces[userId] = nil
+			end
+		end
 		for _, player in players do
 			local character = player.Character
 			local root = livingRoot(character)
 			if character and root then
-				local place = Zones.locate(root.Position, deps.zoneBoxes, deps.gardens)
+				local grounded = deps.isGrounded(character)
+				-- Resting on a ladder's rungs is grounded for the ray but is not standing: the zone code asks "standing".
+				local standing = if deps.isStanding then deps.isStanding(character) else grounded
+				local place, ladder = Zones.locateClimber(
+					root.Position,
+					standing,
+					deps.zoneBoxes,
+					deps.gardens,
+					deps.ladderBoxes or NO_LADDERS
+				)
+				-- Falling noise keeps the plain zone on a ladder, so a let-go drop makes no thud (spec 3 Check C5).
+				-- Jumps still count the ladder's zone (memory.ladderZone below).
+				local landingZone: Config.ZoneName = if ladder
+					then Zones.locate(root.Position, deps.zoneBoxes, deps.gardens).zone
+					else place.zone
 				local memory = memories[player.UserId]
 				if memory == nil or memory.character ~= character then
 					memory = {
 						character = character,
 						lastPosition = nil,
-						landing = LandingDetector.new(place.zone),
+						landing = LandingDetector.new(landingZone),
 						readings = {},
+						ladderZone = nil,
 					}
 					memories[player.UserId] = memory
 				end
-				local moving = PlayerTracker.isMoving(memory.lastPosition, root.Position)
-				local grounded = deps.isGrounded(character)
-				recordReading(memory, deps.now(), root.Position, grounded)
-				memory.lastPosition = root.Position
-				local takeoffZones: { Config.ZoneName } = {}
-				for _, position in deps.takeoffs(character) do
-					table.insert(takeoffZones, Zones.locate(position, deps.zoneBoxes, deps.gardens).zone)
-				end
+				local verticalSpeed = root.AssemblyLinearVelocity.Y
+				local moving = false
 				local thudFrom: Config.ZoneName?
-				thudFrom, memory.landing = LandingDetector.step(
-					memory.landing,
-					grounded,
-					root.AssemblyLinearVelocity.Y,
-					place.zone,
-					takeoffZones
-				)
+				local takeoffZones: { Config.ZoneName } = {}
+				local jumped = false
+				local grace = graces[player.UserId]
+				local inGrace = grace ~= nil
+				if grace ~= nil then
+					-- The server moved them: the move and the drop after it are neither walking nor a fall. A thud owed
+					-- from before the move stays. The take-offs are still asked for, so the list is emptied now and
+					-- never comes back late.
+					deps.takeoffs(character)
+					local last = memory.lastPosition
+					local still = LandingDetector.isAtRest(grounded, verticalSpeed)
+						and last ~= nil
+						and (root.Position - last).Magnitude < MOVING_DISTANCE
+					grace.stillTicks = if still then grace.stillTicks + 1 else 0
+					if grace.stillTicks >= MOVE_SETTLE_TICKS or deps.now() - grace.since >= MOVE_GRACE_SECONDS then
+						graces[player.UserId] = nil -- this tick is still a grace tick
+					end
+					local fresh = LandingDetector.new(landingZone)
+					fresh.owed = memory.landing.owed
+					thudFrom, memory.landing = LandingDetector.step(fresh, grounded, verticalSpeed, landingZone, {})
+					table.clear(memory.readings)
+					recordReading(memory, deps.now(), root.Position, grounded)
+					memory.lastPosition = root.Position
+				else
+					local stepped = PlayerTracker.isMoving(memory.lastPosition, root.Position)
+					recordReading(memory, deps.now(), root.Position, grounded)
+					moving = stepped and tripOf(memory.readings) >= MIN_TRIP and not inPocket(memory.readings)
+					memory.lastPosition = root.Position
+					for _, position in deps.takeoffs(character) do
+						-- A jump off a ladder counts the ladder's zone: the tick before they were still on it.
+						local zone: Config.ZoneName = Zones.locate(position, deps.zoneBoxes, deps.gardens).zone
+						if memory.ladderZone ~= nil then
+							zone = Zones.higher(zone, memory.ladderZone)
+						end
+						table.insert(takeoffZones, zone)
+					end
+					thudFrom, memory.landing =
+						LandingDetector.step(memory.landing, grounded, verticalSpeed, landingZone, takeoffZones)
+					jumped = #takeoffZones > 0 or memory.landing.jumped
+				end
+				memory.ladderZone = if ladder then place.zone else nil
+				-- The garden the player stands in (0 if none), written only when it changed.
+				local getAttribute, setAttribute = player.GetAttribute, player.SetAttribute
+				if getAttribute ~= nil and setAttribute ~= nil then
+					local inGarden = place.garden or 0
+					if getAttribute(player, "InGarden") ~= inGarden then
+						setAttribute(player, "InGarden", inGarden)
+					end
+				end
 				table.insert(samples, {
 					userId = player.UserId,
 					position = root.Position,
@@ -220,12 +375,21 @@ function PlayerTracker.new(deps: Deps): Tracker
 					zone = place.zone,
 					garden = place.garden,
 					thudFrom = thudFrom,
+					falling = memory.landing.falling,
+					jumped = jumped,
+					moveGrace = inGrace,
+					onStitchedEdge = not memory.landing.falling and onStitchedEdge(character),
+					onLadder = ladder ~= nil,
+					ladder = ladder,
 				})
 			end
 		end
 		return samples
 	end
-	return { tick = tick }
+	local function moved(_self: Tracker, userId: number)
+		graces[userId] = { since = deps.now(), stillTicks = 0 }
+	end
+	return { tick = tick, moved = moved }
 end
 
 return PlayerTracker

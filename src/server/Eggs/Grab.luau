@@ -1,8 +1,9 @@
 --!strict
--- Grabbing eggs. Every egg spot gets a hold prompt ("Hold to Grab"). When a player's hold finishes, the server
--- checks it again itself (a player's own device can't be trusted), and the first player to pass gets the egg.
--- This module is the one owner of the EggSpots state: it runs the refills, and it gives later tasks (banking,
--- catches, leaving) one place to return or bank an egg.
+-- Grabbing eggs. Every egg spot (a nest) gets a hold prompt ("Hold to Grab"), on only while the nest's egg waits. When
+-- a player's hold finishes, the server checks it again itself (a player's own device can't be trusted), and the first
+-- player to pass gets the egg.
+-- This module is the one owner of the EggSlots state: it runs the refills (an egg returns to a random clear nest of its
+-- rank, Rules 70 to 78), and it gives later tasks (banking, catches, leaving) one place to return or bank an egg.
 -- Everything it touches is passed in, so a test can give it fake spots, players, remotes and a fake clock.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,7 +15,7 @@ local GiantDirector = require(script.Parent.Parent.Giant.GiantDirector)
 local RateLimiter = require(script.Parent.Parent.Remotes.RateLimiter)
 local WorldIndex = require(script.Parent.Parent.World.WorldIndex)
 local Carry = require(script.Parent.Carry)
-local EggSpots = require(script.Parent.EggSpots)
+local EggSlots = require(script.Parent.EggSlots)
 local SpotModels = require(script.Parent.SpotModels)
 
 -- What Grab needs from a player. A real Player fits, and tests pass simple stand-ins.
@@ -30,14 +31,18 @@ export type SignalLike = {
 	Connect: (self: any, callback: (any) -> ()) -> ConnectionLike,
 }
 
--- A hold prompt as Grab uses it: the event for a finished hold, and a way to remove it.
+-- A hold prompt as Grab uses it: the event for a finished hold, whether it shows (on while the nest's egg waits), and a
+-- way to remove it.
 export type PromptLike = {
 	Triggered: SignalLike,
+	Enabled: boolean,
 	Destroy: (self: any) -> (),
 }
 
 -- Why an egg went back: a hand slam caught the carrier, or anything else (they died, reset or left).
 export type ReturnReason = "Caught" | "Lost"
+-- What an egg's pop says: a nest refilled, a carried egg went back to its nest, or went home to a nest that had refilled.
+export type PopKind = "Refill" | "Back" | "Gone"
 
 export type Deps = {
 	spots: { WorldIndex.EggSpot },
@@ -45,8 +50,13 @@ export type Deps = {
 	-- How the egg sits on the back: from the root part to the egg's centre, and how tall it is (Carry.attachEgg).
 	carriedOffset: CFrame,
 	carriedHeight: number,
-	-- Only PlayerRemoving is used: a player who leaves is forgotten.
-	players: { PlayerRemoving: SignalLike },
+	-- PlayerRemoving: a player who leaves is forgotten.
+	-- GetPlayers: where everyone stands, so a refill keeps clear of them.
+	players: { PlayerRemoving: SignalLike, GetPlayers: (self: any) -> { PlayerLike } },
+	-- How many eggs of each rank wait at once. Left out, Grab.slotsFor works it out from the spots.
+	slotsPerRank: { [Config.RarityName]: number }?,
+	-- Picks the nest of a refill. Left out, Random.new().
+	random: Random?,
 	-- Heartbeat, or a stand-in in tests. It drives the refill checks.
 	heartbeat: GiantDirector.HeartbeatLike,
 	-- Tells one player that someone else got the egg first (the GrabMissed remote).
@@ -55,22 +65,39 @@ export type Deps = {
 	now: () -> number,
 	-- Makes the prompt on one anchor. Left out, Grab.createPrompt makes the real one; tests pass a fake.
 	createPrompt: ((anchor: Attachment, rarity: Config.RarityName) -> PromptLike)?,
+	-- The giant's phase, read on every step: the right cuff nests lock while it is Awake (Rule 100). Left out, it is
+	-- always "Asleep" (nothing locks).
+	phase: (() -> Config.Phase)?,
+	-- Which zone a position is in. An egg on his body (belly, beard, nightcap) shows a 10-stud beam. Left out, no beam
+	-- is shortened.
+	zoneOf: ((position: Vector3) -> Config.ZoneName)?,
 }
 
 export type Grab = {
-	-- Puts the player's carried egg back on its own spot (see EggSpots.returnEgg), takes it off their back and
-	-- clears their Carrying attribute. Returns what happened and the spot's name, or nil if they carry nothing.
+	-- Puts the player's carried egg back on its own nest (see EggSlots.returnEgg), takes it off their back and
+	-- clears their Carrying attribute. Returns what happened and the nest's name, or nil if they carry nothing.
 	-- `why` says why it went back ("Caught" for a hand slam; left out, it is "Lost") and goes to the `returned` signal.
 	returnEgg: (self: Grab, player: PlayerLike, why: ReturnReason?) -> (("back" | "gone")?, string?),
-	-- The player's carried egg leaves the world for their garden (see EggSpots.bank): it comes off their back and
-	-- Carrying is cleared, but the spot keeps counting down. Returns the spot's name and the egg's rarity, or nil.
+	-- The player's carried egg leaves the world for their garden (see EggSlots.bank): it comes off their back and
+	-- Carrying is cleared, but the egg's slot keeps counting down. Returns the nest's name and the egg's rarity, or nil.
 	bank: (self: Grab, player: PlayerLike) -> (string?, Config.RarityName?),
-	-- Fires after a grab succeeds (Carrying is set by then), with the player and the egg's rarity. Analytics listens to it.
+	-- Fires after a grab succeeds (Carrying is set by then), with the player and the egg's rarity.
+	-- Analytics listens to it.
 	grabbed: Signal.Signal<PlayerLike, Config.RarityName>,
 	-- Fires when a carried egg really went back (not when it was banked, and not for a player who carried nothing), after
 	-- it is off their back: the player, the egg's rarity and why. Analytics listens to it.
 	returned: Signal.Signal<PlayerLike, Config.RarityName, ReturnReason>,
-	-- One refill check. The heartbeat calls it every 0.1 s; tests call it by hand.
+	-- Fires once per refill, after the egg shows on its nest: the egg's rarity and how many seconds the refill waited
+	-- after its countdown ended (0 on time, more when no nest was clear).
+	refilled: Signal.Signal<Config.RarityName, number>,
+	-- Fires where an egg pops (the nest's position) and why: "Refill" after each refill, "Back" when a returned egg
+	-- is on its nest again, "Gone" when its slot had already refilled elsewhere (fired at the old nest).
+	popped: Signal.Signal<Vector3, PopKind>,
+	-- Notes that one of his fists just landed (the director's `slammed`). The right cuff nests stay locked for
+	-- Config.Nests.ArmReturnSeconds after it, while his arm swings back.
+	noteFist: (self: Grab) -> (),
+	-- One refill check, and the lock check of the right cuff nests. The heartbeat calls it every 0.1 s; tests call it by
+	-- hand.
 	step: (self: Grab) -> (),
 	-- Removes the prompts, the eggs on the spots and on backs, and every connection. Safe to call twice.
 	stop: (self: Grab) -> (),
@@ -84,6 +111,21 @@ local REFILL_CHECK_SECONDS = 0.1
 local MAX_CHECKS_PER_FRAME = 3
 
 local Grab = {}
+
+-- How many eggs of each rank wait at once: Config.Rarity[rank].Slots, but never more than the rank has nests, and 0 for
+-- a rank with no nests. Every spot is a nest (Task 12), so there is no bare-spot allowance.
+function Grab.slotsFor(spots: { WorldIndex.EggSpot }): { [Config.RarityName]: number }
+	local counts: { [string]: number } = {}
+	for _, spot in spots do
+		counts[spot.rarity] = (counts[spot.rarity] or 0) + 1
+	end
+	local slots: { [Config.RarityName]: number } = {}
+	local ranks = Config.RarityOrder :: { Config.RarityName }
+	for _, rank: Config.RarityName in ranks do
+		slots[rank] = math.min(Config.Rarity[rank].Slots, counts[rank] or 0)
+	end
+	return slots
+end
 
 -- Is this grab allowed? `distance` is how far the player's root part is from the egg's prompt anchor
 -- (math.huge if they have no root part). Returns true, or false and why: "dead", "too far" or "already carrying".
@@ -125,12 +167,37 @@ function Grab.start(deps: Deps): Grab
 	local trove = Trove.new()
 	local stopped = false
 
-	local definitions: { EggSpots.SpotDefinition } = {}
+	local definitions: { EggSlots.NestDefinition } = {}
 	for _, spot in deps.spots do
-		table.insert(definitions, { name = spot.name, rarity = spot.rarity })
+		table.insert(
+			definitions,
+			{ name = spot.name, rank = spot.rarity, position = spot.cframe.Position, garden = spot.garden }
+		)
 	end
-	local state = EggSpots.new(definitions)
-	local spotModels = SpotModels.new(deps.spots, deps.templates)
+	local state = EggSlots.new(definitions, deps.slotsPerRank or Grab.slotsFor(deps.spots))
+	local random = deps.random or Random.new()
+	local function pick(count: number): number
+		return random:NextInteger(1, count)
+	end
+	-- Each nest's prompt by name: on while the nest's egg waits, off while it is empty.
+	local prompts: { [string]: PromptLike } = {}
+	-- The nests on his right cuff, and whether they are locked now. A locked nest keeps its egg but its prompt is off.
+	local cuffSpots: { WorldIndex.EggSpot } = {}
+	for _, spot in deps.spots do
+		if spot.ridesRightArm == true then
+			table.insert(cuffSpots, spot)
+		end
+	end
+	local cuffNames: { string } = {}
+	for _, spot in cuffSpots do
+		table.insert(cuffNames, spot.name)
+	end
+	local cuffLocked = false
+	-- The lock's clock: whether the last step saw him Awake, when a step first saw him leave Awake, and the last fist.
+	local sawAwake = false
+	local leftAwakeAt: number? = nil
+	local lastFistAt: number? = nil
+	local spotModels = SpotModels.new(deps.spots, deps.templates, deps.zoneOf)
 	trove:Add(function()
 		spotModels:destroy()
 	end)
@@ -142,14 +209,30 @@ function Grab.start(deps: Deps): Grab
 	trove:Add(function()
 		returned:Destroy()
 	end)
+	local refilled = Signal.new() :: Signal.Signal<Config.RarityName, number>
+	trove:Add(function()
+		refilled:Destroy()
+	end)
+	local popped = Signal.new() :: Signal.Signal<Vector3, PopKind>
+	trove:Add(function()
+		popped:Destroy()
+	end)
 	-- Each spot's rarity by name, so the egg that went back can be named (the server's own list, never the client's).
 	local rarityOfSpot: { [string]: Config.RarityName } = {}
+	local positionOfSpot: { [string]: Vector3 } = {}
 	for _, spot in deps.spots do
 		rarityOfSpot[spot.name] = spot.rarity
+		positionOfSpot[spot.name] = spot.cframe.Position
 	end
 	local limiter = RateLimiter.new(GRABS_PER_SECOND, 1, deps.now)
 	-- Everyone who carries an egg right now, so stop() can take every egg off every back.
 	local carriers: { [number]: PlayerLike } = {}
+
+	-- A nest's prompt is on only while its egg waits and the nest isn't locked.
+	local function refreshPrompt(nestName: string)
+		local view = EggSlots.nest(state, nestName) :: EggSlots.NestView
+		prompts[nestName].Enabled = view.waiting and not view.locked
+	end
 
 	local function takeEggOffBack(player: PlayerLike)
 		carriers[player.UserId] = nil
@@ -178,21 +261,21 @@ function Grab.start(deps: Deps): Grab
 		if root ~= nil and root:IsA("BasePart") then
 			distance = (root.Position - spot.promptAnchor.WorldPosition).Magnitude
 		end
-		local carrying = EggSpots.carrying(state, player.UserId) ~= nil
+		local carrying = EggSlots.carrying(state, player.UserId) ~= nil
 		local ok = Grab.check(alive, distance, carrying)
 		if not ok or character == nil then
 			return
 		end
 
-		local taken, reason = EggSpots.take(state, spot.name, player.UserId, deps.now())
+		local taken, reason = EggSlots.take(state, spot.name, player.UserId, deps.now())
 		if not taken then
 			if reason == "no egg" then
 				deps.grabMissed(player)
 			end
 			return
 		end
-		local view = EggSpots.spot(state, spot.name)
-		spotModels:hide(spot.name, if view then view.refillAt else nil)
+		spotModels:hide(spot.name)
+		prompts[spot.name].Enabled = false
 		carriers[player.UserId] = player
 		player:SetAttribute("Carrying", spot.rarity)
 		Carry.attachEgg(character, deps.templates[spot.rarity], deps.carriedOffset, deps.carriedHeight)
@@ -200,8 +283,15 @@ function Grab.start(deps: Deps): Grab
 	end
 
 	for _, spot in deps.spots do
-		spotModels:show(spot.name)
+		local waiting = (EggSlots.nest(state, spot.name) :: EggSlots.NestView).waiting
+		if waiting then
+			spotModels:show(spot.name)
+		else
+			spotModels:hide(spot.name)
+		end
 		local prompt = createPrompt(spot.promptAnchor, spot.rarity)
+		prompt.Enabled = waiting
+		prompts[spot.name] = prompt
 		local connection = prompt.Triggered:Connect(function(player)
 			onTriggered(spot, player :: PlayerLike)
 		end)
@@ -218,14 +308,33 @@ function Grab.start(deps: Deps): Grab
 		removing:Disconnect()
 	end)
 
+	-- Where everyone stands: a new egg never lands within Config.Nests.PlayerDistance of a player (Rule 76), and a
+	-- nest's post never turns solid on one (Rule 85).
+	local function rootsNow(): { Vector3 }
+		local roots: { Vector3 } = {}
+		for _, player in deps.players:GetPlayers() do
+			local character = player.Character
+			local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+			if root ~= nil and root:IsA("BasePart") then
+				table.insert(roots, root.Position)
+			end
+		end
+		return roots
+	end
+
 	local function returnEgg(_self: Grab, player: PlayerLike, why: ReturnReason?): (("back" | "gone")?, string?)
-		local result: ("back" | "gone")?, spotName: string? = EggSpots.returnEgg(state, player.UserId)
+		local result: ("back" | "gone")?, spotName: string? = EggSlots.returnEgg(state, player.UserId)
 		if spotName == nil then
 			return nil, nil
 		end
 		takeEggOffBack(player)
 		if result == "back" then
-			spotModels:show(spotName)
+			spotModels:show(spotName, rootsNow())
+			refreshPrompt(spotName)
+		end
+		local nestPosition: Vector3? = positionOfSpot[spotName]
+		if nestPosition ~= nil and result ~= nil then
+			popped:Fire(nestPosition, if result == "back" then "Back" else "Gone")
 		end
 		local rarity: Config.RarityName? = rarityOfSpot[spotName]
 		if rarity ~= nil then
@@ -236,7 +345,7 @@ function Grab.start(deps: Deps): Grab
 	end
 
 	local function bank(_self: Grab, player: PlayerLike): (string?, Config.RarityName?)
-		local spotName: string?, rarity: Config.RarityName? = EggSpots.bank(state, player.UserId)
+		local spotName: string?, rarity: Config.RarityName? = EggSlots.bank(state, player.UserId)
 		if spotName == nil then
 			return nil, nil
 		end
@@ -244,9 +353,52 @@ function Grab.start(deps: Deps): Grab
 		return spotName, rarity
 	end
 
+	local function noteFist(_self: Grab)
+		lastFistAt = deps.now()
+	end
+
+	-- Locks or unlocks the right cuff nests (Rule 100): locked while he is Awake, until UnlockSeconds after a step first
+	-- saw him leave Awake, and until ArmReturnSeconds after the last fist. Only a change touches the nests.
+	local function updateCuffLock(now: number)
+		if #cuffNames == 0 then
+			return
+		end
+		local phase: Config.Phase = if deps.phase ~= nil then deps.phase() else "Asleep"
+		if phase == "Awake" then
+			sawAwake = true
+			leftAwakeAt = nil
+		elseif sawAwake then
+			sawAwake = false
+			leftAwakeAt = now
+		end
+		local left = leftAwakeAt
+		local fist = lastFistAt
+		local locked = phase == "Awake"
+			or (left ~= nil and now - left < Config.Nests.UnlockSeconds)
+			or (fist ~= nil and now - fist < Config.Nests.ArmReturnSeconds)
+		if locked == cuffLocked then
+			return
+		end
+		cuffLocked = locked
+		EggSlots.setLocked(state, cuffNames, locked)
+		for _, spot in cuffSpots do
+			spotModels:setLocked(spot.name, locked)
+			refreshPrompt(spot.name)
+		end
+	end
+
 	local function step(_self: Grab)
-		for _, spotName in EggSpots.update(state, deps.now()) do
-			spotModels:show(spotName)
+		updateCuffLock(deps.now())
+		local playersAt = rootsNow()
+		spotModels:step(playersAt)
+		for _, refill in EggSlots.update(state, deps.now(), playersAt, pick) do
+			spotModels:show(refill.nest, playersAt)
+			refreshPrompt(refill.nest)
+			refilled:Fire(refill.rank, refill.waited)
+			local nestPosition: Vector3? = positionOfSpot[refill.nest]
+			if nestPosition ~= nil then
+				popped:Fire(nestPosition, "Refill")
+			end
 		end
 	end
 
@@ -258,8 +410,17 @@ function Grab.start(deps: Deps): Grab
 		trove:Destroy()
 	end
 
-	local grab: Grab =
-		{ returnEgg = returnEgg, bank = bank, grabbed = grabbed, returned = returned, step = step, stop = stop }
+	local grab: Grab = {
+		returnEgg = returnEgg,
+		bank = bank,
+		grabbed = grabbed,
+		returned = returned,
+		refilled = refilled,
+		popped = popped,
+		noteFist = noteFist,
+		step = step,
+		stop = stop,
+	}
 
 	trove:Add(GiantDirector.run(grab, deps.heartbeat, REFILL_CHECK_SECONDS, MAX_CHECKS_PER_FRAME))
 	return grab

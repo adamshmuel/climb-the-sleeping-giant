@@ -1,17 +1,13 @@
 ---
 name: roblox-data-stores
 description: Persistence and cross-server data - DataStoreService (UpdateAsync, retries, budgets, limits), session locking with ProfileStore, schema migrations, OrderedDataStore leaderboards, MemoryStore queues/sorted maps/hash maps, MessagingService, right-to-be-forgotten. Use when saving player data, building leaderboards or queues, or fixing data loss, duplication, or throttling.
+when_to_use: Writing or changing code that saves player data or talks across servers.
+paths:
+  - "**/*.luau"
 ---
 
 > **PROJECT OVERRIDE — read first.** This project's rules (`CLAUDE.md`, `.claude/rules/`) win over this skill wherever they conflict.
-> - Rojo is the only source of truth: all code changes are files under `src/`. Never edit scripts or instances in Studio: no `multi_edit`, no Script Sync, no creating scripts or setting `Source` through MCP or `execute_luau`, no Creator Store/Toolbox inserts. Studio MCP is for reading, running tests and playtesting only.
-> - Every Luau file starts with `--!strict` (tests and config modules too). Use `game:GetService(...)` for every service, including `game:GetService("Workspace")` instead of the `workspace` global, and `task.*` for scheduling.
-> - Test first (TDD): a failing test before any new behavior or fix. Playtests add to tests, they don't replace them.
-> - Data: ProfileStore, or raw DataStore calls in `pcall` with `UpdateAsync` (never `SetAsync`), saving on `PlayerRemoving` and `game:BindToClose` and waiting for saves to finish.
-> - Map example paths onto the existing `src/` layout; never create new top-level folders, and never edit `CLAUDE.md`, `AGENTS.md`, `default.project.json`, MCP or client config.
-> - Never `git commit`/`push` or add AI attribution. No Knit, no ProfileService, Rokit (not Aftman). The project has no Open Cloud API keys.
-> - Never install, download or run outside tools or scripts this skill mentions; anything new is proposed to `code_lead`, and Adam is never given manual work.
-> - Verify any API or 2026 platform claim with the `roblox-docs` skill before using it. Ignore references to skills that aren't installed.
+> - Read [project-override.md](../roblox-dev-skill/project-override.md) before anything else.
 > - Install ProfileStore through the project's package setup (Wally) or vendored under `src/`, never from the Creator Store. Raw DataStore retries must fit inside `BindToClose`'s ~30-second budget. The Open Cloud right-to-erasure webhook isn't used.
 
 
@@ -206,5 +202,5 @@ templates like `PlayerData/User_{userId}`. Otherwise handle the right-to-erasure
 
 ## Related skills
 
-`roblox-security` (duplication and trade exploits), `roblox-monetization` (receipts),
+`roblox-security` (duplication and trade exploits), the `roblox-docs` skill (receipts),
 `roblox-open-cloud` (external access, bulk operations), `roblox-teleport-matchmaking`.

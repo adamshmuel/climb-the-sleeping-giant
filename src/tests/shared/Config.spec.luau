@@ -29,41 +29,49 @@ describe("Config", function()
 		expect(Config.Movement.TiptoeSpeedFactor).toBe(0.6)
 	end)
 
+	it("Roblox climbs at 70% of WalkSpeed", function()
+		expect(Config.Movement.ClimbSpeedFactor).toBe(0.7)
+	end)
+
 	it("grabbing takes a 1 second hold within 8 studs, plus 2 studs for lag", function()
 		expect(Config.Grab).toEqual({ HoldSeconds = 1, ReachStuds = 8, ReachToleranceStuds = 2 })
 	end)
 
-	it("rarities are listed Common, Uncommon, Rare", function()
-		expect(Config.RarityOrder).toEqual({ "Common", "Uncommon", "Rare" })
+	it("rarities are listed Common, Uncommon, Rare, Epic, Legendary", function()
+		expect(Config.RarityOrder).toEqual({ "Common", "Uncommon", "Rare", "Epic", "Legendary" })
 	end)
 
-	it("egg spots are 8 Common, 4 Uncommon and 4 Rare", function()
-		expect(Config.Rarity.Common.Spots).toBe(8)
-		expect(Config.Rarity.Uncommon.Spots).toBe(4)
-		expect(Config.Rarity.Rare.Spots).toBe(4)
-	end)
-
-	it("refill times are 10, 30 and 60 seconds", function()
+	it("refill times are 10, 30, 60, 60 and 60 seconds", function()
 		expect(Config.Rarity.Common.RefillSeconds).toBe(10)
 		expect(Config.Rarity.Uncommon.RefillSeconds).toBe(30)
 		expect(Config.Rarity.Rare.RefillSeconds).toBe(60)
+		expect(Config.Rarity.Epic.RefillSeconds).toBe(60)
+		expect(Config.Rarity.Legendary.RefillSeconds).toBe(60)
 	end)
 
-	it("carrying slows you 0%, 5% and 10%", function()
+	it("carrying slows you 0%, 5%, 10%, 10% and 10%", function()
 		expect(Config.Rarity.Common.CarrySlowdown).toBe(0)
 		expect(Config.Rarity.Uncommon.CarrySlowdown).toBe(0.05)
 		expect(Config.Rarity.Rare.CarrySlowdown).toBe(0.1)
+		expect(Config.Rarity.Epic.CarrySlowdown).toBe(0.1)
+		expect(Config.Rarity.Legendary.CarrySlowdown).toBe(0.1)
 	end)
 
-	it("carrying multiplies noise by 1.25, 1.5 and 2.5", function()
+	it("carrying multiplies noise by 1.25, 1.5, 2.5, 2.5 and 2.5", function()
 		expect(Config.Rarity.Common.CarryNoise).toBe(1.25)
 		expect(Config.Rarity.Uncommon.CarryNoise).toBe(1.5)
 		expect(Config.Rarity.Rare.CarryNoise).toBe(2.5)
+		expect(Config.Rarity.Epic.CarryNoise).toBe(2.5)
+		expect(Config.Rarity.Legendary.CarryNoise).toBe(2.5)
 	end)
 
 	it("walking makes 4 noise a second and Tiptoe cuts it to 20%", function()
 		expect(Config.Noise.WalkPerSecond).toBe(4)
 		expect(Config.Noise.TiptoeFactor).toBe(0.2)
+	end)
+
+	it("climbing a ladder is 1.3 times as loud", function()
+		expect(Config.Noise.LadderMultiplier).toBeCloseTo(1.3)
 	end)
 
 	it("a jump landing makes a burst of 20 noise", function()
@@ -105,13 +113,96 @@ describe("Config", function()
 		expect((Config.Meter :: any).NewPlayerEggsNeeded).toBe(nil)
 	end)
 
-	it("slams come every 2.5 s with a 1.5 s warning", function()
-		expect(Config.Wake.SlamInterval).toBe(2.5)
+	it("the 6 slam warnings come at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 s, each landing 1.5 s later", function()
+		expect(Config.Wake.SlamWarningTimes).toEqual({ 2.3, 4.8, 7.2, 9.4, 11.5, 13.5 })
 		expect(Config.Wake.SlamWarningSeconds).toBe(1.5)
 	end)
 
-	it("the first slam warning comes 1 s after waking", function()
-		expect(Config.Wake.FirstSlamWarningAt).toBe(1)
+	it("the old fixed slam rhythm is gone", function()
+		expect((Config.Wake :: any).FirstSlamWarningAt).toBe(nil)
+		expect((Config.Wake :: any).SlamInterval).toBe(nil)
+	end)
+
+	it("a slam throws a player down for 0.15 s, holds 0.6 s and lets them up for 0.25 s", function()
+		expect(Config.Wake.TumbleDownSeconds).toBe(0.15)
+		expect(Config.Wake.TumbleStillSeconds).toBe(0.6)
+		expect(Config.Wake.TumbleUpSeconds).toBe(0.25)
+	end)
+
+	it("a slam shows from 35 studs, full at 45 and never past 60", function()
+		expect(Config.Wake.ShowSlamNearStuds).toBe(35)
+		expect(Config.Wake.ShowSlamFarStuds).toBe(45)
+		expect(Config.Wake.ShowSlamMaxStuds).toBe(60)
+	end)
+
+	it("the hand reaches 1 stud under the surface and 45 studs over it", function()
+		expect(Config.Wake.HandBelowStuds).toBe(1)
+		expect(Config.Wake.HandAboveStuds).toBe(45)
+	end)
+
+	it("the door takes 3 s", function()
+		expect(Config.Wake.DoorSeconds).toBe(3)
+	end)
+
+	it("the breather is 1 slam", function()
+		expect(Config.Wake.BreatherSlams).toBe(1)
+	end)
+
+	it("the slam shake is 1 stud, full within 15 studs, none from 60, for 0.4 s", function()
+		expect(Config.Wake.SlamShakeStuds).toBe(1)
+		expect(Config.Wake.SlamShakeFullWithinStuds).toBe(15)
+		expect(Config.Wake.SlamShakeNoneFromStuds).toBe(60)
+		expect(Config.Wake.SlamShakeSeconds).toBe(0.4)
+	end)
+
+	it("the ladder grace has a positive number of seconds for every ladder, and no other key", function()
+		local seconds = Config.Wake.LadderGraceSeconds
+		local names: { [string]: boolean } = {}
+		for _, ladder in Config.Ladders.Models do
+			names[ladder] = true
+			expect(type(seconds[ladder])).toBe("number")
+			expect(seconds[ladder] > 0).toBe(true)
+		end
+		for key in seconds do
+			expect(names[key]).toBe(true)
+		end
+	end)
+
+	-- Source: work/p3t15b/step6-note.md (Play B, 2026-11-12), end B (feet at the top) rounded up to 0.1 s, plus 1 s.
+	it("the ladder grace is each ladder's measured climb time plus 1 s", function()
+		local seconds = Config.Wake.LadderGraceSeconds
+		expect(seconds.BootLadder_Left).toBeCloseTo(4.8, 2)
+		expect(seconds.BootLadder_Right).toBeCloseTo(4.8, 2)
+		expect(seconds.BeardLadder).toBeCloseTo(5.2, 2)
+		expect(seconds.CapLadder).toBeCloseTo(3.4, 2)
+	end)
+
+	it("the head tips for 0.3 s", function()
+		expect(Config.Wake.HeadTipSeconds).toBe(0.3)
+	end)
+
+	it("the wake birds fly at 30 studs a second", function()
+		expect(Config.Wake.BirdSpeedStuds).toBe(30)
+	end)
+
+	it("the wake birds flap 4 times a second", function()
+		expect(Config.Wake.BirdFlapsPerSecond).toBe(4)
+	end)
+
+	it("the wake birds are gone after 3 s", function()
+		expect(Config.Wake.BirdSeconds).toBe(3)
+	end)
+
+	it("each wake dust spot bursts 20 particles", function()
+		expect(Config.Wake.DustBurst).toBe(20)
+	end)
+
+	it("a player's own fist is 0.9 transparent", function()
+		expect(Config.Wake.OwnFistTransparency).toBe(0.9)
+	end)
+
+	it("the bonk stars turn once in 0.8 s", function()
+		expect(Config.Wake.BonkStarTurnSeconds).toBe(0.8)
 	end)
 
 	it("the giant stays awake 15 s and the red circle is 30 studs wide", function()
@@ -119,14 +210,24 @@ describe("Config", function()
 		expect(Config.Wake.SlamCircleDiameter).toBe(30)
 	end)
 
+	it("a red circle's edge stays 1 stud clear of every garden", function()
+		expect(Config.Wake.SlamGardenMarginStuds).toBe(1)
+	end)
+
 	it("the banner shows 3 s and Heavy Sleep lasts 45 s", function()
 		expect(Config.Wake.BannerSeconds).toBe(3)
 		expect(Config.Wake.HeavySleepSeconds).toBe(45)
 	end)
 
-	it("the wake-up camera shake is 0.5 studs for 0.5 s", function()
-		expect(Config.Wake.ShakeStuds).toBe(0.5)
-		expect(Config.Wake.ShakeSeconds).toBe(0.5)
+	it("the old 0.5 stud wake shake keys are gone", function()
+		local wake: any = Config.Wake
+		expect(wake.ShakeStuds).toBe(nil)
+		expect(wake.ShakeSeconds).toBe(nil)
+	end)
+
+	it("the wake shake is 1.5 studs for 1 s", function()
+		expect(Config.Wake.WakeShakeStuds).toBe(1.5)
+		expect(Config.Wake.WakeShakeSeconds).toBe(1.0)
 	end)
 
 	it("a bounced player's camera looks 30 degrees up while floating", function()
@@ -163,18 +264,197 @@ describe("Config", function()
 		})
 	end)
 
-	it("footprints: 3.6 apart, redone every 0.25 s, lifted 0.05 (0.35 on ramp planks), 100 at most", function()
-		expect(Config.Footprints).toEqual({
-			Spacing = 3.6,
-			UpdateSeconds = 0.25,
-			Lift = 0.05,
-			RampLift = 0.35,
-			MaxShown = 100,
+	it(
+		"footprints: 3.6 apart, redone every 0.25 s, lifted 0.05 (0.35 on ramp planks), 100 at most, stop 2 before a ladder",
+		function()
+			expect(Config.Footprints).toEqual({
+				Spacing = 3.6,
+				UpdateSeconds = 0.25,
+				Lift = 0.05,
+				RampLift = 0.35,
+				MaxShown = 100,
+				LadderStop = 2,
+			})
+		end
+	)
+
+	it("the four ways up, in garden order, with their gardens and walk limits", function()
+		expect(Config.WaysUp).toEqual({
+			{ Name = "Left boot ladder", Gardens = { 1, 2, 3 }, WalkLimitSeconds = { 7.5, 5, 4 } },
+			{ Name = "Left ramp", Gardens = { 4 }, WalkLimitSeconds = { 4 } },
+			{ Name = "Right ramp", Gardens = { 5 }, WalkLimitSeconds = { 4 } },
+			{ Name = "Right boot ladder", Gardens = { 6, 7, 8 }, WalkLimitSeconds = { 4, 5, 7.5 } },
+		})
+	end)
+
+	it("every garden 1 to 8 is in exactly one way up, with one walk limit each", function()
+		local counts: { [number]: number } = {}
+		for _, wayUp in Config.WaysUp do
+			expect(#wayUp.WalkLimitSeconds).toBe(#wayUp.Gardens)
+			for _, garden in wayUp.Gardens do
+				counts[garden] = (counts[garden] or 0) + 1
+			end
+		end
+		for garden = 1, 8 do
+			expect(counts[garden]).toBe(1)
+		end
+	end)
+
+	it("the ladders: four models, a 2-stud margin", function()
+		expect(Config.Ladders).toEqual({
+			Models = { "BeardLadder", "CapLadder", "BootLadder_Left", "BootLadder_Right" },
+			NearStuds = 2,
 		})
 	end)
 
 	it("the game loop ticks every 0.1 s", function()
 		expect(Config.Tick.Seconds).toBe(0.1)
+	end)
+
+	it("the stuck scan's body size is a positive width and height", function()
+		expect(type(Config.Stuck.BodyWidth)).toBe("number")
+		expect(type(Config.Stuck.BodyHeight)).toBe("number")
+		expect(Config.Stuck.BodyWidth > 0).toBe(true)
+		expect(Config.Stuck.BodyHeight > 0).toBe(true)
+	end)
+
+	it("the stuck scan's grid is 2 studs apart", function()
+		expect(Config.Stuck.ScanSpacing).toBe(2)
+	end)
+
+	it("a safe spot is checked every 0.5 s", function()
+		expect(Config.Stuck.SafeSaveSeconds).toBe(0.5)
+	end)
+
+	it("the rescue distance is 4 studs", function()
+		expect(Config.Stuck.RescueDistance).toBe(4)
+	end)
+
+	it("the stuck scan covers 10 studs of meadow around the giant", function()
+		expect(Config.Stuck.ScanMargin).toBe(10)
+	end)
+
+	it("the stuck scan has a time limit of 120 seconds", function()
+		expect(Config.Stuck.ScanSeconds).toBe(120)
+	end)
+
+	it("has the Reset and loop limits", function()
+		expect(Config.Stuck.ResetCooldownSeconds).toBe(2)
+		expect(Config.Stuck.LoopMoves).toBe(3)
+		expect(Config.Stuck.LoopSeconds).toBe(30)
+	end)
+
+	it("has the stuck limits", function()
+		expect(Config.Stuck.StuckSeconds).toBe(3)
+		expect(Config.Stuck.StuckDistance).toBe(2)
+		expect(Config.Stuck.PressChangesPerSecond).toBe(10)
+	end)
+
+	it("the egg slots add up to 19", function()
+		local total = 0
+		for _, rank in Config.RarityOrder do
+			total += Config.Rarity[rank].Slots
+		end
+		expect(total).toBe(19)
+	end)
+
+	it("the nests add up to 38", function()
+		local total = 0
+		for _, rank in Config.RarityOrder do
+			total += Config.Rarity[rank].Nests
+		end
+		expect(total).toBe(38)
+	end)
+
+	it("every rank has more nests than slots", function()
+		for _, rank in Config.RarityOrder do
+			expect(Config.Rarity[rank].Nests).toBeGreaterThan(Config.Rarity[rank].Slots)
+		end
+	end)
+
+	it("slots are 8, 4, 4, 2 and 1", function()
+		expect(Config.Rarity.Common.Slots).toBe(8)
+		expect(Config.Rarity.Uncommon.Slots).toBe(4)
+		expect(Config.Rarity.Rare.Slots).toBe(4)
+		expect(Config.Rarity.Epic.Slots).toBe(2)
+		expect(Config.Rarity.Legendary.Slots).toBe(1)
+	end)
+
+	it("nests are 16, 8, 6, 4 and 4", function()
+		expect(Config.Rarity.Common.Nests).toBe(16)
+		expect(Config.Rarity.Uncommon.Nests).toBe(8)
+		expect(Config.Rarity.Rare.Nests).toBe(6)
+		expect(Config.Rarity.Epic.Nests).toBe(4)
+		expect(Config.Rarity.Legendary.Nests).toBe(4)
+	end)
+
+	it("the nest spacing and distance numbers match spec 5 section 5", function()
+		expect(Config.Nests.EggSpacing).toBe(6)
+		expect(Config.Nests.MeadowSpacing).toBe(8)
+		expect(Config.Nests.PlayerDistance).toBe(15)
+		expect(Config.Nests.RetrySeconds).toBe(1)
+		expect(Config.Nests.TwinDistance).toBe(2)
+		expect(Config.Nests.EyeDistance).toBe(10)
+	end)
+
+	it("the nest seam and walking-surface numbers match spec 5 section 5", function()
+		expect(Config.Nests.SeamDegrees).toBe(65)
+		expect(Config.Nests.SeamMatch).toBe(1)
+		expect(Config.Nests.WalkSurfaceBelow).toBe(0.2)
+		expect(Config.Nests.WalkSurfaceAbove).toBe(0.7)
+		expect(Config.Nests.SeamHeight).toBe(12)
+		expect(Config.Nests.ClimbableHeight).toBe(15)
+	end)
+
+	it("the nest timing and slide numbers match spec 5 section 5", function()
+		expect(Config.Nests.BeamFadeSeconds).toBe(0.3)
+		expect(Config.Nests.UnlockSeconds).toBe(0.5)
+		expect(Config.Nests.ArmReturnSeconds).toBe(0.5)
+		expect(Config.Nests.SlideTipSeconds).toBe(3)
+		expect(Config.Nests.SlideDrop).toBe(5)
+	end)
+
+	it("the nest jump reach is 9 up, 10 across and a 5 stud body", function()
+		expect(Config.Nests.Jump).toEqual({ Up = 9, Across = 10, BodyHeight = 5 })
+	end)
+
+	it("rare egg one is the lower belly left nest", function()
+		expect(Config.Nests.RareEggOne).toBe("Nest_LowerBelly_Left")
+	end)
+
+	it("Config.Ranks holds the whole rank table, with the 10-stud body beam and its three zones", function()
+		expect(Config.Ranks).toEqual({
+			VisibleBelow = 0.5,
+			FloatLimit = 0.2,
+			SinkNestUpright = 0.3,
+			SinkNestLeaning = 1.5,
+			SinkEggUpright = 0.3,
+			SinkEggLeaning = 1,
+			EggInNest = 0.2,
+			LeaningFromDegrees = 5,
+			BodyBeamStuds = 10,
+			LegendaryBeamStuds = 35,
+			LegendaryBeamWidth0 = 4,
+			LegendaryBeamWidth1 = 3,
+			LegendaryBeamColor = Color3.fromRGB(255, 190, 40),
+			LegendaryBeamLightEmission = 0.5,
+			LegendaryBeamLightInfluence = 0,
+			LegendaryBeamFaceCamera = true,
+			LegendaryBeamBaseTransparency = 0.05,
+			LegendaryBeamTopTransparency = 0.4,
+			BodyZones = { Belly = true, Beard = true, Nightcap = true },
+			BandEdges = { Rare = 40, Epic = 85, Legendary = 130 },
+			EdgeWarning = 3,
+			TiptoeLimit = 60,
+			TiptoeLimitLegendary = 85,
+			ColourWords = {
+				Common = "cream white",
+				Uncommon = "leaf green",
+				Rare = "sky blue",
+				Epic = "purple",
+				Legendary = "gold",
+			},
+		})
 	end)
 
 	it("Config can't be changed while the game runs", function()
@@ -185,5 +465,66 @@ describe("Config", function()
 
 	it("every table inside Config is frozen", function()
 		expect(isDeepFrozen(Config)).toBe(true)
+	end)
+
+	it("Rule 34: the middle gardens are 3 to 6, and the two groups hold gardens 1 to 8 once each", function()
+		expect(Config.Gardens.MiddleFirst).toEqual({ 3, 4, 5, 6 })
+		local seen: { [number]: number } = {}
+		for _, group in { Config.Gardens.MiddleFirst, Config.Gardens.Outer } do
+			for _, garden in group do
+				seen[garden] = (seen[garden] or 0) + 1
+			end
+		end
+		for garden = 1, 8 do
+			expect(seen[garden]).toBe(1)
+		end
+		expect(#Config.Gardens.MiddleFirst + #Config.Gardens.Outer).toBe(8)
+	end)
+end)
+
+-- Spec 7 section 5, "Other values" and "The three hearing groups" (plan 7, Task 1).
+describe("Config.Audio", function()
+	it("the music fades over 1 s and the snore stops in 0.1 s", function()
+		expect(Config.Audio.MusicFadeSeconds).toBe(1)
+		expect(Config.Audio.SnoreStopSeconds).toBe(0.1)
+	end)
+
+	it("the thinned music and the light snore are half loudness", function()
+		expect(Config.Audio.ThinnedMusicFactor).toBe(0.5)
+		expect(Config.Audio.LightSnoreFactor).toBe(0.5)
+	end)
+
+	it("Tiptoe footsteps are a quarter of normal", function()
+		expect(Config.Audio.TiptoeFootstepFactor).toBe(0.25)
+	end)
+
+	it("at most 3 copies of one sound play at once", function()
+		expect(Config.Audio.MaxCopies).toBe(3)
+	end)
+
+	it("the chase tune starts 1 s after he wakes", function()
+		expect(Config.Audio.ChaseStartSeconds).toBe(1)
+	end)
+
+	it("the snore speed is 0.95 to 1.05, and 0.76 to 0.84 in Heavy Sleep", function()
+		expect(Config.Audio.SnoreSpeed).toEqual({ Min = 0.95, Max = 1.05 })
+		expect(Config.Audio.HeavySleepSnoreSpeed).toEqual({ Min = 0.76, Max = 0.84 })
+	end)
+
+	it("the 85% sounds come at 0 s, 0.5 s and 1.0 s", function()
+		expect(Config.Audio.WarningTimes).toEqual({ SnortOne = 0, SnortTwo = 0.5, Mumble = 1.0 })
+	end)
+
+	it("the Whole valley curve is full to 60 studs, 0.34 at 200 and 0.2 from 600", function()
+		expect(Config.Audio.WholeValleyCurve).toEqual({ [0] = 1, [60] = 1, [200] = 0.34, [600] = 0.2 })
+	end)
+
+	it("the Nearby curve is full to 10 studs and silent from 80", function()
+		expect(Config.Audio.NearbyCurve).toEqual({ [0] = 1, [10] = 1, [80] = 0 })
+	end)
+
+	it("the audio numbers are frozen", function()
+		expect(Config.Audio ~= nil).toBe(true)
+		expect(isDeepFrozen(Config.Audio)).toBe(true)
 	end)
 end)

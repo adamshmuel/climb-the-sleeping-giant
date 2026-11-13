@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Trove = require(ReplicatedStorage.Packages.Trove)
 local Layout = require(script.Parent.Layout)
+local PillPin = require(script.Parent.PillPin)
 local Theme = require(script.Parent.Theme)
 local Ui = require(script.Parent.Ui)
 
@@ -72,6 +73,11 @@ export type Deps = {
 	step: SignalLike, -- once per frame, for the fill (RunService.RenderStepped)
 	now: () -> number, -- the clock in seconds, for the fill
 	viewport: ViewportLike,
+	-- Phone pin (Task 56): the egg's point on the screen in pixels, or nil when it is behind the camera. Left out, the
+	-- pill always follows the egg.
+	project: ((adornee: Instance) -> Vector2?)?,
+	-- Called with true when the pill gets pinned to its fixed spot, and false when it is let go or goes away.
+	onPinned: ((pinned: boolean) -> ())?,
 }
 
 -- What start gives back: `stop` takes the prompt off and cleans up. `press` and `release` do what pressing and
@@ -105,7 +111,22 @@ type Shown = {
 	pressed: boolean,
 	holdStart: number?,
 	stepConnection: ConnectionLike?,
+	touch: boolean, -- a touch prompt: only these pin
+	placed: PillPin.State,
+	pinConnection: ConnectionLike?,
+	-- Roblox hides a prompt and shows it again at once when the input type changes. A pressed pill waits one frame
+	-- after a hide: a re-show in that frame keeps it, otherwise the next frame removes it.
+	hiding: boolean,
+	hideConnection: ConnectionLike?,
+	-- Worked out when the pill shows and when the screen changes, so the frame check doesn't ask the layout each frame.
+	pillHeight: number, -- keyDiameter + 2 * paddingY
+	billboardWidth: number, -- the room the pill floats in
 }
+
+-- What the key circle says: the hand for a finger, the key's name for a keyboard.
+local function keyLabelFor(prompt: PromptLike, inputType: Enum.ProximityPromptInputType): string
+	return if inputType == Enum.ProximityPromptInputType.Touch then HAND else prompt.KeyboardKeyCode.Name
+end
 
 -- Builds the prompt's pieces for one egg spot (sizes come later, from the layout).
 local function build(layer: ScreenGui, prompt: PromptLike, inputType: Enum.ProximityPromptInputType): Parts
@@ -157,8 +178,7 @@ local function build(layer: ScreenGui, prompt: PromptLike, inputType: Enum.Proxi
 
 	local key = Ui.panel("Key", content, Theme.white, UDim.new(0.5, 0))
 	key.LayoutOrder = 1
-	local keyLabel = if inputType == Enum.ProximityPromptInputType.Touch then HAND else prompt.KeyboardKeyCode.Name
-	local keyText = Ui.text("KeyText", key, keyLabel, 1, Theme.ink)
+	local keyText = Ui.text("KeyText", key, keyLabelFor(prompt, inputType), 1, Theme.ink)
 	keyText.Size = UDim2.fromScale(1, 1)
 
 	local words = Ui.text("GrabText", content, WORDS, 1, Theme.white)
@@ -209,6 +229,11 @@ local function spotOf(inside: Instance?): Instance?
 	return inside:FindFirstAncestorOfClass("Model")
 end
 
+-- A locked spot (the cuff nest while the giant is awake) can't be grabbed from. A prompt with no spot is never locked.
+local function isLocked(spot: Instance?): boolean
+	return spot ~= nil and spot:GetAttribute("Locked") == true
+end
+
 -- A spot whose egg was taken has Waiting set to false. A prompt that belongs to no spot is never empty.
 local function isEmpty(spot: Instance?): boolean
 	return spot ~= nil and spot:GetAttribute("Waiting") == false
@@ -228,8 +253,8 @@ function GrabPrompt.start(deps: Deps): Handle
 	local carrying = deps.player:GetAttribute("Carrying") ~= nil
 	-- Every grab prompt under the root, so they can be switched off and on.
 	local tracked: { [Instance]: boolean } = {}
-	-- Each tracked prompt's listener for its spot's Waiting attribute.
-	local watching: { [Instance]: RBXScriptConnection? } = {}
+	-- Each tracked prompt's listeners for its spot's Waiting and Locked attributes.
+	local watching: { [Instance]: { RBXScriptConnection }? } = {}
 
 	local function setFill(current: Shown, share: number)
 		current.parts.fill.Size = UDim2.fromScale(share, 1)
@@ -249,38 +274,163 @@ function GrabPrompt.start(deps: Deps): Handle
 		end
 		shown = nil
 		stopFollowingFrames(current)
+		if current.pinConnection then
+			current.pinConnection:Disconnect()
+			current.pinConnection = nil
+		end
+		if current.hideConnection then
+			current.hideConnection:Disconnect()
+			current.hideConnection = nil
+		end
 		-- A finger still down when the prompt goes away would leave the hold stuck, so let go for it.
 		if current.pressed then
 			current.pressed = false
 			current.prompt:InputHoldEnd()
 		end
+		current.parts.pill:Destroy() -- it may be on the pinned layer, outside the billboard
 		current.parts.gui:Destroy()
+		if current.placed == "pinned" and deps.onPinned then
+			deps.onPinned(false)
+		end
 	end
 	trove:Add(remove)
 
 	local function relayout()
 		local current = shown
 		if current then
-			applyLayout(current.parts, Layout.forScreen(deps.viewport.get()).prompt)
+			local size = Layout.forScreen(deps.viewport.get()).prompt
+			applyLayout(current.parts, size)
+			current.pillHeight = size.keyDiameter + 2 * size.paddingY
+			current.billboardWidth = size.billboardWidth
 		end
+	end
+
+	-- Moves the pill between next to the egg and its fixed spot on the screen, and tells onPinned.
+	local function place(current: Shown, state: PillPin.State)
+		if current.placed == state then
+			return
+		end
+		current.placed = state
+		local pill = current.parts.pill
+		if state == "pinned" then
+			pill.AnchorPoint = Vector2.new(0, 1)
+			pill.Position = UDim2.new(0.5, 0, 1, -Layout.pin.bottomGap)
+			pill.Parent = Ui.pinnedLayer(deps.parent)
+		else
+			pill.AnchorPoint = Vector2.new(0.5, 0.5)
+			pill.Position = UDim2.fromScale(0.5, 0.5)
+			pill.Parent = current.parts.gui
+		end
+		if deps.onPinned then
+			deps.onPinned(state == "pinned")
+		end
+	end
+
+	-- Works out the box the pill would have next to the egg and lets PillPin say where the pill goes.
+	local function evaluate(current: Shown)
+		local project = deps.project
+		if project == nil then
+			return
+		end
+		local viewport = deps.viewport.get()
+		local width = current.parts.pill.AbsoluteSize.X
+		if width <= 0 then
+			width = current.billboardWidth -- not drawn yet: the room it floats in is the biggest it can be
+		end
+		local height = current.pillHeight
+		local point = project(current.prompt.Parent :: Instance)
+		local box: PillPin.Box? = nil
+		if point ~= nil then
+			local centerX = point.X + SIZE_OFFSET.X * current.billboardWidth
+			box = {
+				left = centerX - width / 2,
+				top = point.Y - height / 2,
+				right = centerX + width / 2,
+				bottom = point.Y + height / 2,
+			}
+		end
+		place(
+			current,
+			PillPin.decide({
+				touch = current.touch,
+				pressed = current.pressed,
+				current = current.placed,
+				box = box,
+				safe = { left = 0, top = 0, right = viewport.X, bottom = viewport.Y },
+			})
+		)
+	end
+
+	-- A touch pill follows the frames to see whether it must pin to the screen. Does nothing if it already does.
+	local function startPin(current: Shown)
+		if deps.project == nil or not current.touch or current.pinConnection ~= nil then
+			return
+		end
+		current.pinConnection = deps.step:Connect(function()
+			evaluate(current)
+		end)
+		evaluate(current)
 	end
 
 	local press: () -> () = function() end
 	local release: () -> () = function() end
 
 	local function onShown(prompt: PromptLike, inputType: Enum.ProximityPromptInputType)
-		-- Prompts of other styles draw themselves. While carrying, or on an empty spot, nothing is drawn.
+		-- Prompts of other styles draw themselves. While carrying, or on an empty or locked spot, nothing is drawn.
 		if
 			stopped
 			or carrying
 			or prompt.Style ~= Enum.ProximityPromptStyle.Custom
 			or isEmpty(spotOf(prompt.Parent))
+			or isLocked(spotOf(prompt.Parent))
 		then
+			return
+		end
+		local existing = shown
+		if existing and existing.prompt == prompt then
+			-- Roblox shows the same prompt again when the input type changes (keyboard to finger). Keep the pill and
+			-- the press that is on it: rebuilding would let go of the press and lose the first touch.
+			existing.touch = inputType == Enum.ProximityPromptInputType.Touch
+			existing.parts.keyText.Text = keyLabelFor(prompt, inputType)
+			local wasHiding = existing.hiding
+			existing.hiding = false
+			if existing.hideConnection then
+				existing.hideConnection:Disconnect()
+				existing.hideConnection = nil
+			end
+			if existing.touch then
+				startPin(existing)
+			else
+				if existing.pinConnection then
+					existing.pinConnection:Disconnect()
+					existing.pinConnection = nil
+				end
+				evaluate(existing)
+			end
+			-- Roblox may have ended the hold when it hid the prompt: start it again so it keeps going.
+			if existing.pressed and wasHiding then
+				prompt:InputHoldEnd()
+				prompt:InputHoldBegin()
+			end
 			return
 		end
 		remove() -- one prompt at a time: the one Roblox showed last
 		local parts = build(layer, prompt, inputType)
-		shown = { prompt = prompt, parts = parts, pressed = false, holdStart = nil, stepConnection = nil }
+		local current: Shown = {
+			prompt = prompt,
+			parts = parts,
+			pressed = false,
+			holdStart = nil,
+			stepConnection = nil,
+			touch = inputType == Enum.ProximityPromptInputType.Touch,
+			placed = "following",
+			pinConnection = nil,
+			hiding = false,
+			hideConnection = nil,
+			pillHeight = 0,
+			billboardWidth = 0,
+		}
+		shown = current
 		-- These connections end when the pill is destroyed in remove().
 		parts.pill.InputBegan:Connect(function(input: InputObject)
 			if isPress(input) and input.UserInputState ~= Enum.UserInputState.Change then
@@ -293,11 +443,30 @@ function GrabPrompt.start(deps: Deps): Handle
 			end
 		end)
 		relayout()
+		startPin(current)
 	end
 
 	local function onHidden(prompt: PromptLike)
-		if shown and shown.prompt == prompt then
+		local current = shown
+		if current == nil or current.prompt ~= prompt then
+			return
+		end
+		if not current.pressed then
 			remove()
+			return
+		end
+		-- A pressed pill waits one frame: Roblox shows the same prompt again right after a hide when the input
+		-- type changes, and the press must survive that.
+		current.hiding = true
+		if current.hideConnection == nil then
+			current.hideConnection = deps.step:Connect(function()
+				if shown == current and current.hiding then
+					remove()
+				elseif current.hideConnection then
+					current.hideConnection:Disconnect()
+					current.hideConnection = nil
+				end
+			end)
 		end
 	end
 
@@ -348,11 +517,13 @@ function GrabPrompt.start(deps: Deps): Handle
 		end
 	end
 
-	-- A prompt is on unless the player carries an egg or its spot is empty. Roblox hides a switched-off prompt by
-	-- itself (and calls onHidden); switching it off is the point.
+	-- A prompt is on unless the player carries an egg, its spot is empty, or its spot is locked (the cuff nest while
+	-- the giant is awake). Roblox hides a switched-off prompt by itself (and calls onHidden); switching it off is the
+	-- point.
 	local function update(instance: Instance)
 		if instance:IsA("ProximityPrompt") then
-			instance.Enabled = not carrying and not isEmpty(spotOf(instance))
+			local spot = spotOf(instance)
+			instance.Enabled = not carrying and not isEmpty(spot) and not isLocked(spot)
 		end
 	end
 
@@ -364,23 +535,29 @@ function GrabPrompt.start(deps: Deps): Handle
 		update(instance)
 		local spot = spotOf(instance)
 		if spot ~= nil and watching[instance] == nil then
-			watching[instance] = spot:GetAttributeChangedSignal("Waiting"):Connect(function()
+			-- The prompt that is drawn belongs to the spot that just emptied or locked: take it away.
+			local function refresh()
 				update(instance)
-				-- The prompt that is drawn belongs to the spot that just emptied: take it away.
 				local current = shown
-				if current ~= nil and isEmpty(spot) and spotOf(current.prompt.Parent) == spot then
+				if current ~= nil and (isEmpty(spot) or isLocked(spot)) and spotOf(current.prompt.Parent) == spot then
 					remove()
 				end
-			end)
+			end
+			watching[instance] = {
+				spot:GetAttributeChangedSignal("Waiting"):Connect(refresh),
+				spot:GetAttributeChangedSignal("Locked"):Connect(refresh),
+			}
 		end
 	end
 
 	local function untrack(instance: Instance)
 		tracked[instance] = nil
-		local connection = watching[instance]
-		if connection ~= nil then
+		local connections = watching[instance]
+		if connections ~= nil then
 			watching[instance] = nil
-			connection:Disconnect()
+			for _, connection in connections do
+				connection:Disconnect()
+			end
 		end
 	end
 

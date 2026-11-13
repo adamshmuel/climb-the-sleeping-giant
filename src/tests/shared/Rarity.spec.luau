@@ -10,6 +10,14 @@ describe("Rarity.isRareOrRarer", function()
 		expect(Rarity.isRareOrRarer("Rare")).toBe(true)
 	end)
 
+	it("is true for Epic", function()
+		expect(Rarity.isRareOrRarer("Epic")).toBe(true)
+	end)
+
+	it("is true for Legendary", function()
+		expect(Rarity.isRareOrRarer("Legendary")).toBe(true)
+	end)
+
 	it("is false for Common", function()
 		expect(Rarity.isRareOrRarer("Common")).toBe(false)
 	end)

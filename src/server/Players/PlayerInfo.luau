@@ -16,6 +16,7 @@ export type Info = {
 	eggsHome: number,
 	rareHome: boolean, -- has brought a Rare egg, or a rarer one, home: no longer a new player
 	freeSaveUsed: boolean, -- has already had the new player's one free save
+	held: boolean, -- stands still after a rescue until they let go of the stick (Recovery sets it)
 }
 
 -- What this module needs from a player. A real Player fits, and tests pass simple stand-ins.
@@ -69,6 +70,7 @@ function PlayerInfo.fromPlayer(player: PlayerLike): Info
 		eggsHome = eggCountFrom(player:GetAttribute("EggsHome")),
 		rareHome = player:GetAttribute("RareHome") == true,
 		freeSaveUsed = player:GetAttribute("FreeSaveUsed") == true,
+		held = player:GetAttribute("Held") == true,
 	}
 end
 

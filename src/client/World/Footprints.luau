@@ -151,7 +151,8 @@ local function waitingEggNames(root: Instance, player: PlayerLike): { string }
 	end
 	local names: { string } = {}
 	for _, spot in root:GetChildren() do
-		if spot:GetAttribute("Waiting") == true then
+		-- A locked nest (plan 5) is not led to until its lock opens.
+		if spot:GetAttribute("Waiting") == true and spot:GetAttribute("Locked") ~= true then
 			table.insert(names, spot.Name)
 		end
 	end

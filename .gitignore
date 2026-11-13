@@ -24,3 +24,9 @@ sourcemap.json
 # Session notes for the main chat, kept out of git on purpose
 /docs/handoff.md
 /docs/action-items.md
+
+# Claude Code worktrees (code.claude.com/docs/en/worktrees)
+.claude/worktrees/
+
+# Working files. No trailing slash, so a worktree's link to the main work/ is ignored too
+/work

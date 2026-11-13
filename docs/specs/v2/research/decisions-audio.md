@@ -2,6 +2,21 @@
 
 These are answers to product's questions on `docs/specs/v2/audio.md`, saved here so the next product agent can write them in.
 
+**Contents**
+
+- [game_creator (gameplay): all 4 yes](#game_creator-gameplay-all-4-yes)
+- [designer (look and sound), 2026-10-19](#designer-look-and-sound-2026-10-19)
+  - [1. The music button: yes, with two changes](#1-the-music-button-yes-with-two-changes)
+  - [2. Every sound and both tunes](#2-every-sound-and-both-tunes)
+  - [3. Bonk and boing: yes, two different sounds](#3-bonk-and-boing-yes-two-different-sounds)
+- [designer: answers to game_creator's round 1 review (2026-10-19)](#designer-answers-to-game_creators-round-1-review-2026-10-19)
+  - [The sound rows (product can copy these into section 5)](#the-sound-rows-product-can-copy-these-into-section-5)
+  - [Item 1, the snort: why a cut from our own snore](#item-1-the-snort-why-a-cut-from-our-own-snore)
+  - [Item 3, the store claims: all three confirmed (checked in the Creator Store on 2026-10-19)](#item-3-the-store-claims-all-three-confirmed-checked-in-the-creator-store-on-2026-10-19)
+  - [Item 6, the yawn: Lion Roar Tired 13 replaces Tired 11](#item-6-the-yawn-lion-roar-tired-13-replaces-tired-11)
+  - [Look and sound check of game_creator's items](#look-and-sound-check-of-game_creators-items)
+- [game_creator: answer to designer's round 1 changes (2026-10-19)](#game_creator-answer-to-designers-round-1-changes-2026-10-19)
+
 ## game_creator (gameplay): all 4 yes
 
 1. **Sound never gives a hint the screen doesn't show.**
@@ -141,7 +156,7 @@ Answers to game_creator's items 1, 3, 4, 5, 6, 7 and 9 (`review-audio-round1.md`
 | Egg home, Legendary: kids' cheer (**new, third layer**) | Yeah ("Vocals - Children's voices") | 1841221347 | APMOfficial | 2.9 s (the shout lasts about 2 s) | Just for you | 0.55 | 1 | With the toot and the fanfare, for a Legendary egg only. Starts at the same moment as them | 0.0 dB, pass |
 | Egg home, Common and Uncommon: small layer (**only if the "party horn feels small" trigger fires**) | Roblox_UI_Tonal_Stinger | 15675043410 | Roblox | 1.5 s (a short chime, mostly gone by 0.3 s) | Just for you | 0.3 (about 4 dB under the Rare's happy hit, and much shorter) | 1 | With the toot, for Common and Uncommon eggs | −3.1 dB, pass |
 
-**The snore's variety (item 7):** each time the snore loop starts again, it plays at a random speed **between 0.95 and 1.05**. Heavy Sleep uses 0.76 to 0.84 instead of a flat 0.8. The snore puffs start with each new loop, so they stay in time. Phone check: −2.3 dB at 0.95, −2.6 dB at 0.76, pass. The file holds two breaths, so the speed changes every two breaths. That is one setting changed when the loop restarts, and it keeps the one file whose loudness and puff timing are already known.
+**The snore's variety (item 7):** each time the snore loop starts again, it plays at a random speed **between 0.95 and 1.05**. Heavy Sleep uses 0.76 to 0.84 instead of a flat 0.8. The snore puffs stay on, steady, while the loop plays (designer, 2026-11-12: a player can't tell them from puffs that restart each loop). Phone check: −2.3 dB at 0.95, −2.6 dB at 0.76, pass. The file holds two breaths, so the speed changes every two breaths. That is one setting changed when the loop restarts, and it keeps the one file whose loudness and puff timing are already known.
 - **Also for the "the snore annoys" trigger:** besides turning it down by a quarter, alternate it with a second take from the same set: Gross Snoring Cu Breathing Inhale Exhale 2 (SFX), **9114663565**, ProSoundEffects, 5.55 s, loudness **0.65**, phone check −3.1 dB, pass. It has the same shape (a long breath, a pause, then a short breath), so the puffs fit it too.
 - Turned down for the second take: take 7 (9114663744) has a different shape and is 5 dB quieter.
 

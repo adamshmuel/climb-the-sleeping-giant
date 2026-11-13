@@ -1,17 +1,27 @@
 --!strict
--- Shows the egg on each egg spot and takes it away again, and writes the spot's Waiting and RefillAt attributes so
--- every client can read them. RefillAt is a time on the shared server clock (Workspace:GetServerTimeNow()).
--- The spot decides nothing here: EggSpots says when an egg is there, and this module only draws it.
--- A meadow spot also has a flat glow ring (GlowRing) under the egg: it is fainter when the spot is empty. The labels
--- and the countdowns are drawn by each player's own client (SpotLabels), from the Waiting and RefillAt attributes.
+-- Shows the egg on each egg spot and takes it away again, and writes the spot's Waiting attribute so every client can
+-- read it. Nothing writes RefillAt any more (Task 7b: an empty nest shows no timer); show clears an old one.
+-- A meadow spot may also have an invisible EggPost (a folder of parts, Rule 85): solid while its egg waits and no player
+-- stands close (PostClear), never solid without an egg.
+-- The spot decides nothing here: Grab says when an egg is there, and this module only draws it.
+-- A meadow spot also has a flat glow ring (GlowRing) under the egg: show sets it to the waiting look. The labels are
+-- drawn by each player's own client (SpotLabels), from the Waiting attribute.
 
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+local PostClear = require(script.Parent.PostClear)
 local WorldIndex = require(script.Parent.Parent.World.WorldIndex)
 
 export type SpotModels = {
-	-- Puts a copy of the spot's egg on it (the only one), and sets Waiting to true and RefillAt to nothing.
-	show: (self: SpotModels, spotName: string) -> (),
-	-- Takes the egg off the spot, and sets Waiting to false and RefillAt to the time it comes back (nil: unknown).
-	hide: (self: SpotModels, spotName: string, refillAt: number?) -> (),
+	-- Puts a copy of the spot's egg on it (the only one), and sets Waiting to true and RefillAt to nothing. Its EggPost
+	-- turns solid unless a root in `playersAt` (none if nil) is close; then it turns solid on a later `step`.
+	show: (self: SpotModels, spotName: string, playersAt: { Vector3 }?) -> (),
+	-- Turns solid every EggPost that `show` left blocked and that no root in `playersAt` is close to now.
+	step: (self: SpotModels, playersAt: { Vector3 }) -> (),
+	-- Takes the egg off the spot, makes its EggPost not solid and sets Waiting to false. An empty nest shows no timer, so it writes no RefillAt and
+	-- leaves the glow ring as it is.
+	hide: (self: SpotModels, spotName: string) -> (),
+	-- Writes the spot's Locked attribute (a right cuff nest locks while he is awake, Rule 100). The egg stays as it is.
+	setLocked: (self: SpotModels, spotName: string, locked: boolean) -> (),
 	-- Takes every egg away.
 	destroy: (self: SpotModels) -> (),
 }
@@ -19,15 +29,58 @@ export type SpotModels = {
 -- The name of the egg model on a spot, and of a meadow spot's glow ring.
 local EGG_NAME = "Egg"
 local RING_NAME = "GlowRing"
+local POST_NAME = "EggPost"
 
 local SpotModels = {}
+
+-- Shortens the egg's beam so its two attachments are `studs` apart in the world, keeping its direction, or pointing
+-- along `direction` (a world direction) when one is given. A copy of the egg only: the template is never changed. An
+-- egg with no beam is left alone.
+local function shortenBeam(egg: Model, studs: number, direction: Vector3?)
+	for _, descendant in egg:GetDescendants() do
+		if descendant:IsA("Beam") then
+			local bottom = descendant.Attachment0
+			local top = descendant.Attachment1
+			local part = if top then top.Parent else nil
+			if bottom ~= nil and top ~= nil and part ~= nil and part:IsA("BasePart") then
+				local along = top.WorldPosition - bottom.WorldPosition
+				if along.Magnitude > 0 then
+					top.Position =
+						part.CFrame:PointToObjectSpace(bottom.WorldPosition + (direction or along.Unit) * studs)
+				end
+			end
+		end
+	end
+end
+
+-- Gives the egg's beam the Legendary look: a wide gold column, solid at the base and fading at the top (13e ruling).
+-- A copy of the egg only: the template is never changed. The values are in Config.Ranks.
+local function showLegendaryBeam(egg: Model)
+	local ranks = Config.Ranks
+	for _, descendant in egg:GetDescendants() do
+		if descendant:IsA("Beam") then
+			descendant.Width0 = ranks.LegendaryBeamWidth0
+			descendant.Width1 = ranks.LegendaryBeamWidth1
+			descendant.Color = ColorSequence.new(ranks.LegendaryBeamColor)
+			descendant.LightEmission = ranks.LegendaryBeamLightEmission
+			descendant.LightInfluence = ranks.LegendaryBeamLightInfluence
+			descendant.FaceCamera = ranks.LegendaryBeamFaceCamera
+			descendant.Transparency =
+				NumberSequence.new(ranks.LegendaryBeamBaseTransparency, ranks.LegendaryBeamTopTransparency)
+		end
+	end
+end
 
 -- How see-through the glow ring is: 60% with an egg waiting, 85% on an empty spot (spec section 6, "Empty egg spot").
 -- Exported so the real-world test checks the same numbers.
 SpotModels.WAITING_RING_TRANSPARENCY = 0.6
 SpotModels.EMPTY_RING_TRANSPARENCY = 0.85
 
-function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.EggTemplates): SpotModels
+function SpotModels.new(
+	spots: { WorldIndex.EggSpot },
+	templates: WorldIndex.EggTemplates,
+	zoneOf: ((position: Vector3) -> Config.ZoneName)?
+): SpotModels
 	local spotByName: { [string]: WorldIndex.EggSpot } = {}
 	for _, spot in spots do
 		spotByName[spot.name] = spot
@@ -57,9 +110,25 @@ function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.Egg
 		end
 	end
 
+	-- Makes every part of the spot's EggPost solid or not. A spot with no EggPost does nothing.
+	local function setPostSolid(spot: WorldIndex.EggSpot, solid: boolean)
+		local post = spot.model:FindFirstChild(POST_NAME)
+		if post == nil then
+			return
+		end
+		for _, part in post:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CanCollide = solid
+			end
+		end
+	end
+
+	-- Spots whose egg waits but whose post is still off because a player was close.
+	local blocked: { [string]: boolean } = {}
+
 	local models: SpotModels
 	models = {
-		show = function(_self, spotName)
+		show = function(_self, spotName, playersAt)
 			local spot = find(spotName)
 			removeEgg(spot)
 			local egg = templates[spot.rarity]:Clone()
@@ -74,22 +143,53 @@ function SpotModels.new(spots: { WorldIndex.EggSpot }, templates: WorldIndex.Egg
 				end
 			end
 			egg:PivotTo(spot.cframe)
+			-- Eggs on his body (belly, beard, nightcap) get a short beam, so a column of light doesn't wash the screen. The
+			-- Legendary egg's is a little longer and points straight up, so its gold shows above the cap from every garden.
+			if zoneOf ~= nil and Config.Ranks.BodyZones[zoneOf(spot.cframe.Position)] then
+				if spot.rarity == "Legendary" then
+					shortenBeam(egg, Config.Ranks.LegendaryBeamStuds, Vector3.yAxis)
+					showLegendaryBeam(egg)
+				else
+					shortenBeam(egg, Config.Ranks.BodyBeamStuds)
+				end
+			end
 			egg.Parent = spot.model
 			setRing(spot, SpotModels.WAITING_RING_TRANSPARENCY)
 			spot.model:SetAttribute("Waiting", true)
 			spot.model:SetAttribute("RefillAt", nil)
+			if PostClear.blocked(spot.cframe.Position, playersAt or {}) then
+				blocked[spotName] = true
+				setPostSolid(spot, false)
+			else
+				blocked[spotName] = nil
+				setPostSolid(spot, true)
+			end
 		end,
-		hide = function(_self, spotName, refillAt)
+		step = function(_self, playersAt)
+			for spotName in blocked do
+				local spot = find(spotName)
+				if not PostClear.blocked(spot.cframe.Position, playersAt) then
+					blocked[spotName] = nil
+					setPostSolid(spot, true)
+				end
+			end
+		end,
+		hide = function(_self, spotName)
 			local spot = find(spotName)
 			removeEgg(spot)
-			setRing(spot, SpotModels.EMPTY_RING_TRANSPARENCY)
+			blocked[spotName] = nil
+			setPostSolid(spot, false)
 			spot.model:SetAttribute("Waiting", false)
-			spot.model:SetAttribute("RefillAt", refillAt)
+		end,
+		setLocked = function(_self, spotName, locked)
+			find(spotName).model:SetAttribute("Locked", locked)
 		end,
 		destroy = function(_self)
 			for _, spot in spots do
 				removeEgg(spot)
+				setPostSolid(spot, false)
 			end
+			table.clear(blocked)
 		end,
 	}
 	return models

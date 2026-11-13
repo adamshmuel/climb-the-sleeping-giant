@@ -448,8 +448,8 @@ security risks, as they can contain malicious scripts called backdoors."*
   > So a sandboxed third-party model that is *supposed* to deal damage still needs
   > `AvatarBehavior`, and one that legitimately talks to your systems needs `RemoteEvent`. Grant the
   > narrow capability the model actually requires; do not grant `Network`, `DataStore`, or
-  > `AssetRequire` to reach it. Re-derive this table after any engine update with
-  > `~/RobloxDocs/scripts/audit-skill-examples.py` (section B).
+  > `AssetRequire` to reach it. Re-check this table against the class pages
+  > (`roblox-docs` skill) after any engine update.
 
 - **Inspect all scripts** in third-party assets before use
 - **Watch for obfuscated code** or whitespace that hides malicious code off-screen

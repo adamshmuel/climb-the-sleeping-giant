@@ -402,6 +402,17 @@ describe("Catcher caught signal", function()
 		expect(harness.heardCaught[2].rarity).toBe("Common")
 	end)
 
+	it("a caught Epic carrier's egg goes back and the caught message says Epic", function()
+		local harness = newHarness()
+		local player = add(harness, newPlayer(1, Vector3.new(10, 3, 10)))
+		player.attributes.Carrying = "Epic"
+		harness.catcher:catch(1)
+		expect(#harness.heardCaught).toBe(1)
+		expect(harness.heardCaught[1].rarity).toBe("Epic")
+		expect(harness.heardCaught[1].carryingThen).toBeNil()
+		expect(player.attributes.Carrying).toBeNil()
+	end)
+
 	it("fires nothing for a player who carries nothing", function()
 		local harness = newHarness()
 		add(harness, newPlayer(1, Vector3.new(10, 3, 10)))

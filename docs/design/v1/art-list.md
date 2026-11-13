@@ -2,6 +2,14 @@
 
 Every model the game needs, where it comes from, and how it moves. How the models get into the code is `code_lead`'s decision.
 
+Contents
+- Where everything is in Studio
+- Generated models: the giant, the slam fist, eggs (and egg spots), pets, the giant's things, garden pieces, made but not used
+- Walk surfaces (how players get onto the giant)
+- Store models
+- Built from Studio parts
+- Effects
+
 Sizes are in studs, Roblox's unit of length. A player is about 5 studs tall.
 
 ## Where everything is in Studio
@@ -82,9 +90,9 @@ The fixed places where eggs wait, in `World.EggSpots`. Each egg sits on a spot. 
 | `EggSpot_Uncommon_3` | Right boot top | (26, 31.6, -61.5) | Green glow, sparkles |
 | `EggSpot_Uncommon_4` | Right boot top, near the belly | (21.5, 30, -55) | Green glow, sparkles |
 | `EggSpot_Rare_1` | Belly path, lower | (-12.5, 41.3, -40.3) | Blue glow, sparkles, light beam |
-| `EggSpot_Rare_2` | Belly path, middle | (-11.2, 50.1, -34.8) | Blue glow, sparkles, light beam |
-| `EggSpot_Rare_3` | Belly, upper | (-8.1, 57.5, -30.7) | Blue glow, sparkles, light beam |
-| `EggSpot_Rare_4` | Belly top, right edge, 2 studs clear of the beard ladder | (2.5, 64.5, -29.5) | Blue glow, sparkles, light beam |
+| `EggSpot_Rare_2` | Belly path, middle | (-11.2, 49.89, -34.8) | Blue glow, sparkles, light beam |
+| `EggSpot_Rare_3` | Belly, upper | (-8.1, 54.38, -30.7) | Blue glow, sparkles, light beam |
+| `EggSpot_Rare_4` | Belly top, right edge, just south of the beard ladder's foot (about 3 studs from its right rail) | (2.5, 60.88, -30.5) | Blue glow, sparkles, light beam |
 
 - **Rare eggs lean with the belly** (half the slope, 18–30°). Upright, they sank into the steep belly. Leaning, they look like they rest on it.
 - **Two labels near each other:** from garden 3's spawn spot, the labels of Common 3 and Common 4 sit close together, one above the other, but each still reads "Common". They separate as soon as the player walks. Accepted.

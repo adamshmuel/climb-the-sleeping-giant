@@ -11,6 +11,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Trove = require(ReplicatedStorage.Packages.Trove)
 
 local BodyBeams = {}
@@ -36,8 +37,6 @@ local HIDE_WITHIN_STUDS = 30
 -- The beam turns on again when the camera is farther than this, in studs. The gap stops a flicker at the edge.
 local SHOW_BEYOND_STUDS = 35
 
--- The zones that are his body. The boots and the meadow keep their beams.
-local BODY_ZONES: { [string]: boolean } = { Belly = true, Beard = true, Nightcap = true }
 local EGG_NAME = "Egg"
 local ZONES_NAME = "Zones"
 
@@ -67,7 +66,7 @@ function BodyBeams.bodyReader(world: Instance): (Vector3) -> boolean?
 			local zone: any = box:GetAttribute("Zone")
 			if box:IsA("BasePart") and type(zone) == "string" then
 				sawBox = true
-				if BODY_ZONES[zone] then
+				if Config.Ranks.BodyZones[zone] then
 					local local_ = box.CFrame:PointToObjectSpace(position)
 					local half = box.Size / 2
 					if

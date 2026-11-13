@@ -3,11 +3,12 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local GiantCycle = require(ServerScriptService.Server.Giant.GiantCycle)
 
 -- The spec values (section 5, "The wake-up"). They are typed in here on purpose: if Config changes, these tests fail.
-local WARNING_TIMES = { 1.0, 3.5, 6.0, 8.5, 11.0, 13.5 }
-local LANDING_TIMES = { 2.5, 5, 7.5, 10, 12.5, 15 }
+local WARNING_TIMES = { 2.3, 4.8, 7.2, 9.4, 11.5, 13.5 }
+local LANDING_TIMES = { 3.8, 6.3, 8.7, 10.9, 13.0, 15.0 }
 
 local function near(actual: number, expected: number)
 	expect(math.abs(actual - expected) < 1e-6).toBe(true)
@@ -41,7 +42,7 @@ describe("GiantCycle.slams", function()
 		end
 	end)
 
-	it("the slams land at 2.5, 5, 7.5, 10, 12.5 and 15 seconds", function()
+	it("the slams land at 3.8, 6.3, 8.7, 10.9, 13.0 and 15.0 seconds", function()
 		local slams = GiantCycle.slams()
 		expect(#slams).toBe(#LANDING_TIMES)
 		for index, slam in slams do
@@ -49,12 +50,28 @@ describe("GiantCycle.slams", function()
 		end
 	end)
 
-	it("the warnings come at 1.0, 3.5, 6.0, 8.5, 11.0 and 13.5 seconds", function()
+	it("the warnings come at 2.3, 4.8, 7.2, 9.4, 11.5 and 13.5 seconds", function()
 		local slams = GiantCycle.slams()
 		expect(#slams).toBe(#WARNING_TIMES)
 		for index, slam in slams do
 			near(slam.warnAt, WARNING_TIMES[index])
 		end
+	end)
+
+	it("each gap between fists is shorter than or equal to the one before", function()
+		local slams = GiantCycle.slams()
+		expect(#slams).toBe(6)
+		for index = 3, #slams do
+			local gap = slams[index].landsAt - slams[index - 1].landsAt
+			local gapBefore = slams[index - 1].landsAt - slams[index - 2].landsAt
+			expect(gap <= gapBefore + 1e-6).toBe(true)
+		end
+	end)
+
+	it("the 6th fist lands at or before the end of the awake time", function()
+		local slams = GiantCycle.slams()
+		expect(#slams).toBe(6)
+		expect(slams[6].landsAt <= Config.Wake.AwakeSeconds + 1e-6).toBe(true)
 	end)
 
 	it("each slam lands 1.5 seconds after its warning", function()
@@ -111,25 +128,25 @@ describe("GiantCycle.phaseAt", function()
 end)
 
 describe("GiantCycle.eventsBetween", function()
-	it("0 to 1.0 holds only the first warning (a warning at the end of the window counts)", function()
-		local events = GiantCycle.eventsBetween(0, 1.0)
+	it("0 to 2.3 holds only the first warning (a warning at the end of the window counts)", function()
+		local events = GiantCycle.eventsBetween(0, 2.3)
 		expect(#events).toBe(1)
 		expect(events[1].kind).toBe("SlamWarning")
 		expect(events[1].slam).toBe(1)
-		near(events[1].at, 1.0)
-		near(events[1].landsAt :: number, 2.5)
+		near(events[1].at, 2.3)
+		near(events[1].landsAt :: number, 3.8)
 	end)
 
-	it("1.0 to 1.1 holds nothing (an event exactly at the start doesn't count again)", function()
-		expect(#GiantCycle.eventsBetween(1.0, 1.1)).toBe(0)
+	it("2.3 to 2.4 holds nothing (an event exactly at the start doesn't count again)", function()
+		expect(#GiantCycle.eventsBetween(2.3, 2.4)).toBe(0)
 	end)
 
 	it("a landing carries its slam number and time", function()
-		local events = GiantCycle.eventsBetween(2.4, 2.5)
+		local events = GiantCycle.eventsBetween(3.7, 3.8)
 		expect(#events).toBe(1)
 		expect(events[1].kind).toBe("SlamLanded")
 		expect(events[1].slam).toBe(1)
-		near(events[1].at, 2.5)
+		near(events[1].at, 3.8)
 	end)
 
 	it("14.9 to 15.0 holds the 6th landing first, then Heavy Sleep starting", function()

@@ -2,22 +2,47 @@
 
 (Earlier name: Sneak the Nest. Same core idea, rebuilt on new research from 2026-10-11.)
 
+This file is the idea as it is now. Two files beside it hold the rest:
+
+| File | What's in it | When to read it |
+|---|---|---|
+| [climb-the-sleeping-giant-research.md](climb-the-sleeping-giant-research.md) | Trend evidence and the competitor study (charts, prices, badges, forum lessons, Roblox guides), fetched 2026-10-11 | When you need the evidence behind a decision, or the competitors' prices and looks |
+| [climb-the-sleeping-giant-history.md](climb-the-sleeping-giant-history.md) | What changed from "Sneak the Nest" and why, and every decision made after Gate 1, with what would change it | When you want to change a rule or a value, or need a playtest trigger |
+
+Contents:
+- [What changed and why](#what-changed-and-why) (moved to the history file)
+- [Pitch](#pitch)
+- [Genre](#genre)
+- [Who it's for](#who-its-for)
+- [Trend evidence](#trend-evidence) (moved to the research file)
+- [Competitor study](#competitor-study) (moved to the research file)
+- [Core loop](#core-loop)
+- [What matters most](#what-matters-most): core gameplay, supporting, scenery, the things that touch the giant
+- [Twist](#twist)
+- [The giant and his valley](#the-giant-and-his-valley), with the 5 zones
+- [V1 gameplay](#v1-gameplay):
+  - [The first 60 seconds](#the-first-60-seconds)
+  - [Minutes 1 to 10](#minutes-1-to-10)
+  - [Sneaking and noise](#sneaking-and-noise)
+  - [The wake-up](#the-wake-up)
+  - [Deep Sleep (the server event)](#deep-sleep-the-server-event)
+  - [Hatching and pets](#hatching-and-pets)
+  - [The base and cash](#the-base-and-cash)
+  - [Upgrades](#upgrades)
+  - [Playing with friends](#playing-with-friends)
+  - [Daily rewards](#daily-rewards)
+  - [In V1, and left out of V1](#in-v1-and-left-out-of-v1)
+- [Virality](#virality)
+- [Look](#look)
+- [Retention](#retention)
+- [Monetization](#monetization): game passes, developer products, fairness rules
+- [Decisions made after Gate 1, and why](#decisions-made-after-gate-1-and-why) (moved to the history file)
+- [Reviewing a built feature](#reviewing-a-built-feature): my checks at Gate 4
+- [Risks (premortem)](#risks-premortem)
+
 ## What changed and why
 
-The heart of the game stays: sneak up to a sleeping giant, grab an egg, get home, hatch it into a pet that earns cash, upgrade, go deeper. The research showed that this alone is no longer new, so the parts around it changed.
-
-| What | Before | Now | Why (evidence, 2026-10-11) |
-|---|---|---|---|
-| Name | Sneak the Nest | **Climb the Sleeping Giant** | It says what you do (climb), the danger (he's asleep) and our one-of-a-kind creature: "Giant" is in 0 of 305 chart names on 2026-10-14, while "Egg" is in 11 and "Steal" in 10. Starting with an action word is how 7 of 12 hits made since 2025 are named. No Roblox game uses it. It replaces "Steal the Giant's Eggs", which sounded hostile and like a copy of Steal An Egg. See [name research](name-research.md). |
-| The twist | "You steal from a monster, not from players" | **One colossal giant that you climb on.** The rarest eggs are tucked into his boots, belly, cuffs and nightcap. The whole server shares his sleep. | The old twist already exists. Steal An Egg guards its eggs with big animals. "Don't Steal the Bobo" (468 million visits) has you sneak past sleeping guards. "Dont Wake Up for Eggs" (2026-09-16) and "Dont Wake the Kitty" do it too. No game lets you climb onto one giant sleeper. |
-| Where the eggs are | In a nest bowl around the giant | On and around the giant's body: 5 zones, from the meadow at his feet up to his pillow | Climbing higher on him is the progression (getting better over time), and it is a picture no other game's icon shows. |
-| Waking up | He gets up and chases you | He sits up, roars, **bounces everyone off his body**, then slams his huge hands at egg carriers. After that he can't wake again for 45 seconds. | Bouncing 8 players off a giant is a clip players share. Sitting and slamming needs no walking animation, which is untested. The 45-second rest stops one player from waking him on purpose over and over. |
-| Server events | None | **Deep Sleep** every 10 minutes: a 60-second window when noise counts half and a special Dream Egg appears on his nose | Steal An Egg and Don't Steal the Bobo show countdowns such as "Guaranteed Legendary in 23:04". They pull the whole server together at one moment. |
-| Sharing and friends | Shared giant, Twin Eggs, Lookout | Kept the shared giant and Twin Eggs (now **Team Eggs**). Added the **"Adam woke the Giant!"** banner, an invite reward and a Friend Boost. Cut the Lookout job. | Roblox now ranks games partly on "co-play days" (days people play with friends). Steal An Egg shows "Friend Boost +20%". The Lookout added a role without adding fun. |
-| Collecting | 5 rarities | 6 rarities, plus **sizes** (Big, Huge) and a **Golden** version of every pet | Every top egg game has sizes and special versions. "For the HUGE" is the only badge in Steal Animal Egg (1,992,732 owners). |
-| Prices | Set from 3 games | Reset from what 12 games sell. The **Lullaby** (put the giant to sleep) drops from 49 to 19 Robux. | Don't Steal the Bobo and Dont Wake the Kitty sell "Make guards sleep for 60s" for 9 Robux. Ours helps the whole server, so it starts a little higher. |
-| Who it's for | Not stated | Ages 8-14 first, phone first. Content kept at **Mild** so it can reach Roblox's under-16 catalogs. Fun for teens at launch. | Since 2026, players under 16 only see games rated Minimal or Mild (ages 5-8) or up to Moderate (ages 9-15), and only after a 16+ trial. |
-| Look | A nest in a bowl | A storybook valley with a huge, cute-grumpy giant in pajamas, made from real store models and generated models | Our last build looked far below Adopt Me. The top egg games look plain in play (flat green studs), so a rich world is our chance to stand out. |
+Moved to [the history file, "What changed and why"](climb-the-sleeping-giant-history.md#what-changed-and-why). In short: the heart of the game stayed, and the name, twist, egg places, wake-up, events, friends, collecting, prices, audience and look were rebuilt on the 2026-10-11 research.
 
 ## Pitch
 
@@ -37,100 +62,11 @@ Roblox describes a tycoon as a game about "the management of a business or base"
 
 ## Trend evidence
 
-Data fetched 2026-10-11 at 18:43 UTC from the Roblox charts and game details (`roblox-trends` skill).
-
-| Signal | Number |
-|---|---|
-| Simulation in Top Playing Now | 33 games, 2,738,851 players. The biggest genre. |
-| Simulation in Up-and-Coming | 40 games, 431,406 players. The biggest genre in the fastest-growing list. |
-| Tycoon subgenre | Top Playing Now: 5 games, 1,680,412 players. Up-and-Coming: 10 games, 208,357 players. |
-| Steal An Egg | No. 1 on Roblox: 1,323,939 playing (1,215,470 four days earlier). Created 2026-07-25. 7.75 billion visits. 92% upvotes. |
-| Break and Steal an Egg | 95,356 playing. 97% upvotes. Created 2026-09-05. |
-| Other egg games charting today | Steal Animal Egg 18,364. Drill for Eggs 17,632. Clone to Steal Eggs 12,237. Lift Rock For Eggs 11,910. Shoot For Eggs 11,878. Crack the Egg 6,360. All created in September 2026. |
-| Sneaking past sleepers | Don't Steal the Bobo: 468 million visits, 14.2 million favorites, 95% upvotes, still 4,216 playing after a year. Dont Wake the Kitty: 76.5 million visits. Dont Wake Grandma: 205.9 million visits. |
-| Co-op against one big monster | 99 Nights in the Forest: 314,875 playing, 30.0 billion visits. Its deer monster is in every thumbnail. |
-| Social chase | Huss Valley, a tag game made 2026-08-31: 140,623 playing, No. 1 on Up-and-Coming, even though it is a plain green field. |
-
-What it means:
-- The "grab an egg from a guard, hatch it, earn" loop is the hottest thing on Roblox, and it is still growing.
-- Sneaking past sleepers has worked for a year.
-- Co-op against one big monster and chaotic chases are what grow fastest.
-- Our game combines all three.
-- The danger is that the egg genre is crowded: new copies launch every week.
+Moved to [the research file, "Trend evidence"](climb-the-sleeping-giant-research.md#trend-evidence) (data fetched 2026-10-11). In short: Simulation > Tycoon is the biggest genre, the egg-heist loop is No. 1 on Roblox and still growing, sneaking past sleepers has worked for a year, and the egg genre is crowded.
 
 ## Competitor study
 
-Reference screenshots and summaries are in `references/top-games/<game>/` (the shared reference library, filled 2026-10-11 with 28 games).
-
-### The closest games
-
-| Game | How it plays | What it sells (Robux) | Where players drop off (badges) | How it looks |
-|---|---|---|---|---|
-| **Steal An Egg** (1,323,939 playing) | Grab eggs from under big guard animals, carry them home, eggs grow and hatch, pets earn cash. You can also raid other players' bases. | X2 Money 399, X2 Growth Speed 467 | Welcome 227.9M. Hatched Secret 80.3M (35%). Hatched Eternal 54.5M (24%). Divine Trail 20.3M (9%). Hatched Divine 10.3M (4.5%). | A flat green studded floor, base walls, huge blocky pets. `steal-an-egg/shot-08.jpg` to `shot-10.jpg`. Its store icon (`store-icon.png`) is a polished 3D render, far nicer than the game itself. |
-| **Break and Steal an Egg** (95,356) | Break an egg with a pickaxe, grab the animal, escape the guard who chases you, place it in your pen. No player stealing. | No passes for sale | Only one badge (Welcome 9,958,360) | Copies Steal An Egg's look and buttons. A "RUN!" banner shows while you carry. `break-and-steal-an-egg/shot-06.jpg`. |
-| **Don't Steal the Bobo** (4,216 now, 468M visits) | Sneak up on sleeping Bobos, grab one, run when it wakes, take it home. Rarer ones sit farther out. No player stealing. Trading. | "Make guards sleep for 60s": 9 Robux (seen in a gameplay video). Packs, potions, a free spin wheel with paid spins. | Welcome 66.5M (no other badges) | Flat red and green floors, cute plush characters, a "Safe Zone" painted on the floor. `dont-steal-the-bobo/shot-02.jpg` to `shot-05.jpg`. |
-| **Steal the Bobo** (the same studio's follow-up) | The same idea, plus stealing from other players | n/a | 268 playing, 10.3M visits, 89% upvotes | The version with player stealing flopped next to the original. |
-| **Clone to Steal Eggs** (12,237) | Send clones to steal eggs from a chain of guard creatures | Auto Hatch 40, x2 Cash 75, VIP 150, +4 Pet Slots 95, +2 Pet Slots 185, Extra Clone 95 | Chicken 82%. Snake 51%. Yeti 34%. T-Rex 19%. Whale 6.8%. Dragon 3.0%. | A template look: flat studs, voxel animals |
-| **Dont Wake Up for Eggs** (2,708) | Sneak eggs without waking the animals | x2 Cash 75, VIP 150, +4 Pet Slots 148, +2 Pet Slots 76 | First Egg 82% of Welcome, so 18% leave before their first egg | A template look. Only 79% upvotes. |
-| **Steal Animal Egg** (18,364) | Take eggs from animals, steal from players | Starter Packs 3 / 9 / 59 / 199, VIP 99, x2 Cash 199, x2 Growth 229, Auto Place 149, cosmetics 49-799 | "For the HUGE" 1,992,732 | Busy buttons, a starter-pack offer always on screen |
-| **Drill for Eggs** (17,632) | Dig down to guarded eggs, sneak them back | VIP 160, MVP 395, x2 Power 160, x2 Money 120, x2 Hatch Speed 149, Supreme 1,495, Legend 4,500. A "Jail Guards for 15s" button. | No badges | Flat studs with dug pits |
-| **Ride A Pet** (79,337, 96% upvotes) | Ride pets to find eggs, hatch faster pets | Infinite Radar 399 | No badges | **The best-looking egg game:** real terrain, low-poly trees, fenced ranches, big detailed creatures. `ride-a-pet/shot-03.jpg` and `shot-04.jpg`. |
-
-### What we learned
-
-1. **The loop is proven, but the twist has to be new.** Guard animals, sleeping guards and "don't wake them" all exist. The new parts are the one colossal giant you climb on, the server-wide wake-up, the Deep Sleep event and the bounce-off.
-2. **Player stealing isn't needed, and may hurt.** The two highest-rated games in the wave have none: Break and Steal (97%) and Bobo (95%). When Bobo's studio added player stealing, the new game flopped (268 playing against 4,216). We keep "nobody can rob you".
-3. **The first egg must come in seconds.** Dont Wake Up for Eggs loses 18% of players before their first egg.
-4. **Every tier loses about half the players.** Clone to Steal Eggs goes 82%, 51%, 34%, 19%, 7%, 3% from one guard to the next. Most players must reach the Rare zone in their first session.
-5. **Rare hatches drive people on.** 35% of Steal An Egg players hatch a Secret pet, and only 4.5% a Divine one.
-6. **The in-game look of the egg games is low.** Their icons are polished renders, but their worlds are flat studs. A world as rich as Ride A Pet's or Adopt Me's is a real edge. Players also judge the first screen within seconds.
-7. **Price ranges players already pay:**
-
-   | Item | Range (Robux) |
-   |---|---|
-   | 2x Cash | 75-399 (middle about 199) |
-   | VIP | 85-375 |
-   | Faster hatching | 149-467 |
-   | More pet slots | 76-185 |
-   | Auto hatch | 40 |
-   | Put the guards to sleep for 60 seconds | 9 |
-   | Starter packs | 3-199 |
-
-### Developer forum lessons (opinions, not data)
-
-- **Roblox now ranks games over 28 days.** The ranking looks at how many people click your game, whether they leave in the first few minutes, how many days they come back, and how many days they play with friends. [Recommended For You Algorithm Improvements](https://devforum.roblox.com/t/recommended-for-you-algorithm-improvements-that-better-value-long-term-retention/4684575)
-- **Since August 2026, retention plus fair spending earn more Home page spots.** Retention means players coming back. "If retention is low, focus on core gameplay first." [Boost Your Discovery](https://devforum.roblox.com/t/boost-your-discovery-by-building-games-people-want-to-play/4779042)
-- **Test up to 5 thumbnails at once and leave them alone for 7 days.** Personalized thumbnails raised click-and-play rates by 12% on average. [5 Tips From Roblox Staff on Thumbnail Personalization](https://devforum.roblox.com/t/5-tips-from-roblox-staff-to-get-the-most-out-of-thumbnail-personalization/3471689)
-- **If the icon doesn't show the twist, you're "just another Steal a ___ game".** A kid picks the icon they recognize. [Steal a House: Trend Game with a Twist](https://devforum.roblox.com/t/new-game-steal-a-house-trend-game-with-a-twist/3812996)
-- **Copying the trend isn't enough.** One brainrot copy had 2.5% of players come back the next day, with 5-minute sessions. [How do "slop" games do so well?](https://devforum.roblox.com/t/how-do-slop-games-do-so-well/4510868)
-- **The first 20 days of data matter most.** A small ad budget at release helps Roblox learn who likes the game. [How to (actually) make a popular game](https://devforum.roblox.com/t/how-to-actually-make-a-popular-game/3115791)
-- **Keep the first minutes simple.**
-  - No long tutorial that can't be skipped.
-  - Clear goals.
-  - Confetti on every reward.
-
-  [How to increase retention in a simulator](https://devforum.roblox.com/t/how-to-increase-retention-engagement-etc-in-a-simulator/3292053)
-- **Bugs and unfair moments cost approval, and the game doesn't recover.** [How do I improve my game's monetization?](https://devforum.roblox.com/t/how-do-i-improve-my-games-monetization/2522234)
-
-### Official Roblox rules and guides used
-
-- [Discovery](https://create.roblox.com/docs/discovery):
-  - The most important signals are click-and-play rate, early leaving (judged between 61 and 180 seconds), days played and playtime.
-  - Games that copy another game's title and look are "no longer prioritized".
-  - Roblox advises: "Add your own spin to existing trends."
-- [Roblox Kids and Select](https://create.roblox.com/docs/production/publishing/kids-and-select):
-  - Under-16 players only get a game after a trial with players aged 16 and over.
-  - The game needs 250 plays from "highly engaged" players within 60 days.
-  - The owner must verify their account, turn on 2-step verification, and either pay a refundable fee or have Roblox Plus for 2 months.
-- [Content maturity](https://create.roblox.com/docs/production/promotion/content-maturity): roaring, suspense music, creepy-looking characters and jump scares still count as Mild fear.
-- [Roblox's August 2026 rule](https://www.pocketgamer.biz/roblox-restricts-reward-driven-media-feeds-in-kids-and-select/): no rewards for watching an endless video or picture feed. Steal An Egg was removed for exactly this, then put back without the feed.
-- [Friend referral system](https://create.roblox.com/docs/production/promotion/referral-system) and [invite prompts](https://create.roblox.com/docs/production/promotion/invite-prompts): Roblox's built-in way to reward both the friend who invites and the friend who joins.
-- [Thumbnails](https://create.roblox.com/docs/production/publishing/thumbnails):
-  - Show real gameplay.
-  - Keep text to a short description of what happens.
-  - Keep important things away from the bottom edge.
-- [Onboarding](https://create.roblox.com/docs/production/game-design/onboarding) (the first minutes of a new player): teach only the essentials, get to the fun fast, and end with a "moment of joy".
-- Older guidance that still applies: players dislike paying to skip timers, and random items sold for Robux have extra rules ([Monetization](https://create.roblox.com/docs/production/monetization)).
+Moved to [the research file, "Competitor study"](climb-the-sleeping-giant-research.md#competitor-study): the 9 closest games with their prices, badge drop-offs and looks, what we learned, the price ranges players already pay, developer forum lessons and the official Roblox guides used.
 
 ## Core loop
 
@@ -144,6 +80,69 @@ The core loop is the set of actions a player repeats over and over.
 6. **Upgrade:** spend cash on quieter shoes, faster legs, a stronger back, more incubators and more pads, then climb higher for rarer eggs.
 
 **Fun in the first 10 seconds:** you spawn at your garden gate looking straight at the giant's enormous sleeping face. His snores blow the grass flat and "Zzz" bubbles float up. Glowing footprints lead to an egg next to his boot, eight steps away.
+
+## What matters most
+
+This list sorts every real thing in the world by how much it matters to the player. Use it to match effort to value. It follows two rules: scenery gets the cheap fix, and change the scenery, not the giant.
+
+| Tier | What it means | How much effort a problem gets |
+|---|---|---|
+| **Core gameplay** | Players play with it in the core loop: sneak, grab, carry home, hatch, earn, upgrade | Real time. Fix it properly and check it in Play |
+| **Supporting** | Helps the core loop: keeps players safe, shows the way, or rewards them | A solid fix, but the simplest one that does the job |
+| **Scenery** | There only for looks and story. No egg, no path and no noise zone sits on it, and nothing in the game sends players there | The cheapest fix that keeps players safe and the look intact: block it off, make it smaller or simpler, move it, or let the rescue (Rule 28: Stuck players are rescued) catch the player. A second task on the same thing goes to `product` first |
+
+**Keep it current:** when a spec adds a part or an object, it gets a row here. Pets join the core list when hatching (spec 2) is built.
+
+### Core gameplay
+
+| Thing | Why it's core |
+|---|---|
+| His face, his eyelids and the sleep meter (the big "Zzz" bubble), with its warnings: the eyelid flutter, the snoring stopping, the double snort and the "Mmm... my eggs..." bubble | Sneaking is the core loop. These tell every player how close he is to waking |
+| The wake-up: sitting up, the bounce-off, the slam fist and the red slam circles | The shared danger, and the funniest moment of the twist |
+| His boots and knees: the boot tops, the boot toe nests, the knee pockets and the lap fold | Boots and Knees zone, Uncommon eggs |
+| The four ways up onto the boot tops: two boot ramps and two boot ladders (the side ladders, side pads and thigh planks were dropped on 2026-11-03). Then the two lap planks, the lap landing with its front apron, the two belly ramps and the belly path | The only roads onto him. Every heist uses one, and each garden has its own close by |
+| His belly top and upper sides down to the stitched seam, with the lower belly nests and the 2 belly pockets | Belly zone, Rare eggs, walk anywhere |
+| His arms out to his white cuffs, the 4 cuff pockets and the 2 cuff straps | Epic eggs |
+| The beard–belly fold nests at the foot of his beard | Rare eggs |
+| The beard ladder and the cap ladder: one middle pair on his centre line (x 0), the beard ladder from the belly to his nose, the cap ladder from his nose to the nightcap brim | The only way to his nightcap. On the centre line it is the same distance from both sides, so the climb, the way home and the Deep Sleep race stay level for every garden (V2, Adam, 2026-11-04) |
+| His nightcap: the cap ladder top, the brim, the side stripe and the top of the cap | Legendary eggs, the top of the climb, and the Dream Egg during Deep Sleep |
+| Every egg and its straw nest: 16 in the meadow, 22 on him | What players come for |
+| Each garden: the Safe Gate, the incubators, the pet pads, the cash chest, and the plank bridge over the stream | Home: carry the egg in, hatch it, earn and upgrade. Every heist starts and ends here |
+
+### Supporting
+
+| Thing | How it helps |
+|---|---|
+| The glowing footprints | Show the way to the next egg and back home |
+| The stitched seam and its blue hem band | Show where walking ends on his sides |
+| The invisible guards: rail guards on the planks, edge guards, slide guards, and the forehead guard's smooth side walls and side rails | Stop falls and stuck spots |
+| The rescue and its lavender puff (Rule 28: Stuck players are rescued, and Rule 33: What a rescue looks like) | Gets a stuck player back to their last safe spot |
+| The 12 landing spots in the meadow | Where players float down when he wakes |
+| Egg glow, sparkles, light beams, rank words and the refill pop | Let players spot an egg and its rank from far away |
+| The picket fences and stepping stones in each garden | Show where your safe plot starts, and lead to the pads, incubators and chest |
+| The light on his face | Keeps his face, and its warnings, bright |
+| The safe-home confetti, the caught puff and the slam dust | Reward and feedback moments |
+
+### Scenery
+
+| Thing | Notes |
+|---|---|
+| The pillow behind his head, and the red cushion he leans on (the chair) with its armrests | See below |
+| The Sock, the teacup and the candle (things he dropped) | Story props. The footprints guide players, not these |
+| Trees, bushes, flowers, mushrooms, rocks, logs, stumps, lantern posts, the stream, the hills, the garden hedges and flower borders, the pollen and petals | The storybook valley that makes the game look full |
+| The lace bows on his boot tops | Players walk straight through them |
+| The tail and pom-pom of his nightcap | Their nests were dropped in spec 5 (Egg nests and climbing) |
+| The parts of him off every route: his back, under his beard, his cheeks, the sides of his forehead, his skin below the seam | Only for looks. But he is the star of every thumbnail, so **he is never reshaped**: block these parts off with smooth guards, or change the scenery next to them |
+
+### The things that touch the giant
+
+| Thing | Tier | Does the player play with it? | Would a player notice if it were smaller, simpler or moved? |
+|---|---|---|---|
+| **The Sock** | Scenery | No. No egg, no path, no noise. Players only bump into it in the meadow by his left side (your right as you face him), near the boot ladder gardens 1 to 3 use (`BootLadder_Left`) | No, if it still reads as a giant sock from the gardens. Smaller, with no overhanging edge, or moved a few studs off the walk: nobody would notice |
+| **The pillow** | Scenery | No. No egg and no path. A player only lands on it by stepping or jumping off the back of his nightcap, so it only has to let them slide off safely. (Zone 5 is called "Beard, Pillow and Nightcap", but nothing is played on the pillow) | Half as big, with his head still clearly leaning on it: no. Moved away from his head: yes, because his head would float |
+| **The nightcap** | Core gameplay (the brim, the side stripe, the top of the cap and the cap ladder top) | Yes. The 4 Legendary nests, the Dream Egg in Deep Sleep, the loudest steps (x3) and the top of the climb | Yes. It is the goal. Only its tail and pom-pom are scenery |
+| **The beard** | Core gameplay for the fold at its foot only; the rest is scenery | The fold, with its Rare nests, and the middle beard ladder, the way up to his nose (V2, Adam, 2026-11-04) | The fold: yes. The rest: block it, never reshape it |
+| **The forehead and nose** | Supporting (the nose top only, where the beard ladder ends and the cap ladder starts); the rest is scenery | The nose top is on the way to the cap. No egg on them: the Dream Egg sits on his cap. A player got stuck on the forehead sides in the first playtest | No. A smooth guard that slides players off is enough |
 
 ## Twist
 
@@ -172,7 +171,7 @@ It keeps the tension of a steal game with no griefing (players bullying or robbi
 | 3. The Belly | The wide, soft middle of his body | Rare | Higher (x1.5) |
 | 4. His arms and cuffs | Out along his sleeves to pockets on his white cuffs | Epic | Higher (x1.5): it counts as the Belly |
 | 5. The Beard, Pillow and Nightcap | Up his beard onto his cap, next to his ear | Legendary | High (x2) on the beard, highest (x3) on the cap |
-| Event: his nose | Only during Deep Sleep | Secret (the Dream Egg) | Half noise during Deep Sleep |
+| Event: the top of his nightcap | Only during Deep Sleep | Secret (the Dream Egg) | Half noise during Deep Sleep |
 
 Players walk on invisible walking surfaces shaped to his body, hidden under the giant model. This is decided now, because it is the reliable Roblox way to make a big model walkable. It also lets the builder choose exactly where players can stand.
 
@@ -207,6 +206,7 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
   - the zone you're in (see the table). The meadow is silent, so noise only counts once you step onto his boots.
 - **Tiptoe:** a toggle button (a big button on phones, a key on computers). It moves you at 60% speed and makes very little noise. There is no separate sprint button.
 - **Quiet moments drain the meter:** 1 point per second for each player in the server. A busy server has to tiptoe. A solo player walking a Rare home gets the 60% warning, and only wakes him from the highest spots without tiptoeing.
+- **A Legendary egg off his nightcap always makes him stir:** a solo player who tiptoes the whole way to the cap and home always gets the 60% eyelid flutter, but never the 85% last warning and never wakes him alone. Below the cap, a full-Tiptoe trip stays under 60% (2026-11-11, `work/p5t19/cap-ruling.md`).
 - **A jump landing on the giant is loud for everyone:** it counts in full, so one clumsy jump near the top of the meter wakes him for the whole server.
 - **Jumping or falling off him is loud too:** one thud per fall, sized by the zone you fell from (for example, off his belly counts like a jump on his belly). It's a fast way down, but a gamble when the meter is high. Jumps that start and end in the meadow make no thud.
 - **Eggs are shared:** every egg sits at a fixed spot, and the first player to finish the grab gets it. The spot refills after a short wait. A carried egg is yours until you get home or he catches you; nobody can take it from you.
@@ -230,8 +230,8 @@ Roblox counts players who leave between 61 and 180 seconds as a bad sign. So thi
 - **For 60 seconds:**
   - he snores deeper;
   - noise counts half;
-  - a glowing **Dream Egg** (Secret rarity) appears on the tip of his nose.
-- **The race:** the whole server tries for the nose at once, so this is where the funniest wake-ups happen.
+  - a glowing **Dream Egg** (Secret rarity) appears on the top of his nightcap, above the cap ladder top.
+- **The race:** the whole server tries for the cap at once, up the one middle pair of ladders (the beard ladder, then the cap ladder, on his centre line), so this is where the funniest wake-ups happen.
 - **Team Egg:** a giant **Team Egg** also appears on his belly. It needs 2 players holding it to move it, and both carriers get a pet from it, rolled at Epic odds or better.
 
 ### Hatching and pets
@@ -332,7 +332,7 @@ Virality means why players invite friends and share the game.
 2. **Clip moments are built in:** the bounce-off, the blame banner, a near miss under a giant hand, his face waking up a few steps from you.
 3. **The stakes are shared.** One player's noise affects everyone, so chat fills with "SHHH!". This turns strangers into a team and gives them a reason to bring friends.
 4. **Friends pay off:** the Friend Boost, Team Eggs and the invite egg.
-5. **YouTube moments:** Dream Egg races, Huge Golden pets, "I climbed onto the giant's face".
+5. **YouTube moments:** Dream Egg races, Huge Golden pets, "I climbed onto the giant's nightcap".
 6. **A countdown everyone shares:** Deep Sleep every 10 minutes keeps players around and gives the whole server one moment.
 
 ## Look
@@ -412,46 +412,15 @@ All prices are starting points taken from what 12 competing games charge (see th
 
 ## Decisions made after Gate 1, and why
 
-These were decided while the design, the core heist spec (`docs/specs/core-heist.md`) and the build went on. Exact numbers live in the spec. This section keeps the reasons, and what would change each decision.
+Moved to [the history file, "Decisions made after Gate 1, and why"](climb-the-sleeping-giant-history.md#decisions-made-after-gate-1-and-why): the look decisions, the gameplay decisions and the price reasons, each with what would change it. The main rules they set are in the sections above. Exact numbers live in the specs.
 
-### Look decisions (design review)
-
-| Decision | Why | What would change it |
-|---|---|---|
-| The giant half-lies on a red cushion, not flat on his back | The generated model came out that way, and it shows his face from every garden. All 5 zones still work. | Nothing planned |
-| The icon and thumbnails show him **asleep** (closed lids, big "Zzz") with a tiny thief holding an egg up | Round 1 showed him with open eyes, which said "awake" and broke the pitch | Store tests (thumbnail personalization) favour a wake-up picture: keep both in the test set |
-| Ramps and rope ladders on his body are visible, not hidden | Players sank into his body and got stuck without them. Seen up close, they also say "you climb him". | Nothing planned |
-| No belly scratch and no arm twitch at the 85% warning | Players walk out along his arms to the Epic cuff pockets, so nothing they stand on may move while he sleeps. The double snort and the "Mmm... my eggs..." bubble by his nose carry the warning. | Nothing planned |
-| At 60% the meter pulses once and the Z Z Z pause for 2 seconds, besides the eyelid flutter | Players looking at their feet miss the flutter, and sound is muted on many phones | New players don't slow down after the first 60% warning: also show the tip "Tiptoe!" for 2 seconds |
-
-### Gameplay decisions (spec questions and the build)
-
-| Decision | Why | What would change it |
-|---|---|---|
-| Eggs are shared at fixed spots: Meadow 8, Boots 4, Belly 4. Refill: Common 10 s, Uncommon 30 s, Rare 60 s. | Steal An Egg and Don't Steal the Bobo share their eggs too, and the race for the rare spot is fun. A 10-second Common refill keeps "first egg in 15 seconds" true when a neighbour just took the nearest egg. | Most players get no Rare within 5 minutes in a 6–8-player test: add a 5th belly spot. New players wait at empty Common spots: refill Commons in 5 s. |
-| A new player gets one free save: the first time their own noise would fill the meter, he stays asleep, the meter drops to 70 and the 85% warning plays again. A player stops being new when they bring a Rare egg or better home. (Replaced "held under 84% until 2 eggs are home", which Adam found let a new player take every Rare without ever waking him.) | Beginners get one "phew, that was close" moment, then the normal rules. At 70, a kid who obeys the tip within 1 second still gets the Rare home. Two Commons come home in about 40 seconds with no risk, so "new" ends with the first Rare, not 2 eggs | Fewer than half of saved carriers get that egg home: the save drops the meter to 60 instead. Fewer than 1 in 10 new players wake him before their first Rare is home (the danger feels fake): to 75 instead. More than half of saved players wake him within 3 seconds of the save: an orange glow at the screen edges for the warning |
-| Drain is 1 point per second for each player, with **no minimum** (a solo player drains 1 per second) | builder measured a solo Rare heist in Play: with a minimum of 2 per second it peaked at 49%, so a solo player never got the 60% scare. Without the minimum it reaches about 65%. Busier servers are unchanged. Raising walking noise instead would have made full servers wake him too often. | Solo walk from Rare_1 peaks under 60% from any garden: Rare carry ×3. Solo Rare_1 peaks over 80%, or a solo walk from Rare_1 or Rare_2 wakes him: solo drain 1.5 per second. Waking him from Rare_3 or Rare_4 without tiptoeing is intended. |
-| The meadow is silent (zone ×0, was ×0.5), and carrying a Rare is ×2.5 (was ×2) | Only the left ramp reaches his belly, so the far gardens walk up to 220 studs more each way. With a noisy meadow, carrying a Rare home adds about 3 points a second for a solo player. The same Rare_1 heist that peaks at 65–67% from garden 4 would peak near 100% from garden 1 and about 125% from garden 8, so where you live would decide whether he wakes. With a silent meadow the peak comes at the ramp foot and is the same from every garden: about 66% with the ×2.5 carry. It also matches the first minute already planned: the meter starts to move on the ramp. | A solo Rare_1 heist differs by more than 5 points between gardens 4, 1 and 8: find what still makes noise in the meadow. In a 6–8-player test, gardens 7 and 8 bank fewer than half as many Rares per player as gardens 3 and 4: add a plank between his legs, from the right boot top to the belly path. |
-| A jump landing on him adds 20 × the zone multiplier (Belly = 30) | So one clumsy jump past the 60% warning wakes him for everyone | Nothing planned |
-| Jumping or falling **off** him adds one thud, sized by the zone you fell from, counted once per fall | A silent jump-off would skip all the carrying noise, so everyone would jump off and the nervous walk home would disappear. Counting every bump while sliding down would punish kids for physics they don't control. | More than half of Rare heists end with a jump-off: thud ×1.5. Nobody ever jumps off: thud ×0.5. |
-| A busy server must tiptoe on him (8 players walking on his belly wake him in about 2.5 seconds) | That is the shared "SHHH!" moment the twist is built on | An 8-player server wakes him more than about once every 2 minutes: drain 1.5 per player |
-| Slam warning 1.5 seconds. One slam every 2.5 seconds, at the nearest carrier who wasn't the last target. | A child needs about 1 second to run out of a 30-stud circle, plus half a second to react | Fewer than 1 in 3 slams catch anyone: 1.2 s. More than 2 in 3 catch someone: 2 s. |
-| Sound waits for spec 10 (Launch polish). The heist must read without sound. | Many kids play muted on phones | Nothing planned |
-
-### Prices
-
-The prices in "Monetization" are unchanged since this rewrite. They sit in the middle of what 12 competing games charge (see the competitor study). The Lullaby is 19 Robux, not the 9 that competitors charge, because ours puts the giant to sleep for the whole server.
-
-What would change them:
-- After 2 weeks with players, use Roblox's price optimization tool.
-- Fewer than 1 in 200 players buys a Lullaby in the first week: test 9 Robux.
-- Any price change, and anything new for sale, is Adam's decision ("Asking the user").
+## Reviewing a built feature
 
 ### My checks at Gate 4 (first-impression review of a built feature)
 
 Play it as a brand-new player, on computer and on a phone screen, in a solo server and with other players if possible. Take screenshots and compare them with `references/top-games/`, especially `adopt-me`, `ride-a-pet` and `steal-an-egg`.
 
-1. **First 10 seconds:** I spawn facing his whole sleeping face, with no camera fix from a script, and the footprints and the meter are on screen. Nothing covers his face, and the bottom corners are free on a phone.
+1. **First 10 seconds:** I spawn facing his whole sleeping face, with no camera fix from a script, and the footprints and the meter are on screen. Only the thin middle cap and beard ladders cross his face (V2, 2026-11-04): his eyes and the "!" stay readable, and the bottom corners are free on a phone.
 2. **Would a kid stay?** The world looks at least as full as Ride A Pet's, and clearly better than the flat-stud egg games.
 3. **First egg home within 60 seconds,** with a clear "Safe!" reward moment.
 4. **The first scare happens solo:** a walking Rare heist from Rare_1 passes 60%, and I notice it without sound (pulse, Z Z Z pause, flutter).

@@ -4,55 +4,92 @@
 
 Roblox game built with Rojo. The code's source of truth is `src/` in git; Roblox Studio is driven through the Roblox Studio MCP.
 
+## The game
+Every agent knows the product it builds: what a player does, the sides and every way up the giant (`game_creator` keeps it true).
+@docs/game-at-a-glance.md
+
+## Check before you claim
+For the main chat and every agent that loads this file. Based on the prompting guide's [investigate before answering](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) sample.
+- Never state a number, time limit, interval, setting, URL, API name, file content or "it works" as a fact unless it was checked in this session: run it, fetch it, read the file or the guide.
+- When something isn't checked, check it first, or say "not checked" in the same sentence. A guess is never the reason given for a recommendation.
+
+## When a shot or test fails
+The user's golden rule: "if any shot or test fails, the owners should consider it with our regular discretion (Agile, importance and cost-effective)."
+- A failed shot, Play check or test goes to its owners in the same turn: `product` (with `game_creator` for importance) weighs how much it matters to a player against its cost and picks fix now, accept for now, or cut; `code_lead` finds a code cause. Never stop to ask the user, never start a fix hunt alone.
+- Tell the user in one line what failed and who is weighing it. `.claude/hooks/failures-to-owners.py` blocks a turn that ends after a failed report without an owner.
+
+## The main chat's veto
+The user's golden rule (2026-11-10): when a task or test takes too long, or time passes with no real progress, the main chat has a veto over every owner. It uses the team's discretion and YAGNI ("you aren't gonna need it": don't build what players won't miss). The game must still pass the viral test and look industry standard, but time and money never go to unimportant things.
+- **When:** a task past its time limit, a loop (`stop-and-step-back` skill, "Triggers"), or 30 minutes with no commit while a task is open. `.claude/hooks/task-clock.py` shows a "Veto check" note at each of these.
+- **How:** read any doc the decision needs (spec, plan, progress, rulings, idea), then pick: keep going, lower the bar, accept for now, cut, or change the approach. Owners' rulings can be overruled; a cut of a whole feature or anything about money still goes to the user.
+- Log each veto in one line in `docs/problems-log/teamwork.md` (what, why, time saved) and tell the user in one line.
+- **The main chat is also the producer** (the user, 2026-11-10: use their judgment to improve how fast the team ships, the way a real game studio runs). Before every agent starts: does a player need this step now, is it the cheapest agent and model with a small brief, can it run in parallel? An agent that hits its turn limit or a step that repeats is a process problem: fix the process, not only the step. `task-clock.py` shows this "Producer check" at every agent start; each task close applies one process gain (`closing-a-task` skill).
+
+## Follow Anthropic's guides
+The agent setup (this file, `.claude/rules`, `agents`, `skills`, `hooks`, settings and the workflow) follows Anthropic's official guides: [best practices](https://code.claude.com/docs/en/best-practices), [memory](https://code.claude.com/docs/en/memory), [subagents](https://code.claude.com/docs/en/sub-agents), [skills](https://code.claude.com/docs/en/skills), [hooks](https://code.claude.com/docs/en/hooks).
+- Before any setup change or suggestion, the user's included, check the guide and say in one line: it fits, or the better way the guide gives, with the link.
+- `.claude/hooks/setup-guides.py` enforces it: a reminder on setup prompts and edits, a block on CLAUDE.md or a rule file past 200 lines (SKILL.md past 500), and a block on shell writes to setup files.
+- `.claude/hooks/guides-check.py` compares the guide pages, model pages included, with their last reviewed copies at every session start. Changed lines are reviewed at the next task close (`guides-check` skill).
+- A learning goes to its home, never into this file: a hook if it must always happen, a rule or path rule if every agent needs it, a skill if it is a procedure, or the agent's own memory (`memory: project`) if only that agent needs it (`closing-a-task` skill).
+
 ## Layout (default.project.json)
 - `src/shared` → `ReplicatedStorage.Shared` (ModuleScripts used by both sides)
 - `src/server` → `ServerScriptService.Server` (`init.server.luau` = Script)
 - `src/client` → `StarterPlayer.StarterPlayerScripts.Client` (`init.client.luau` = LocalScript)
 - `tools` → `ServerStorage.Tools` (world scripts; run by requiring a copy)
 
-Logic goes in ModuleScripts. `init.*.luau` files only require and wire things up, which keeps the logic unit-testable.
+Logic goes in ModuleScripts; `init.*.luau` files only require and wire things up. Path-scoped rules load with the files they cover: `luau.md` (code and tests), `rojo.md` (sync), `docs.md` (writing docs), `generic-agents.md` (agent files).
 
 ## Agents
-Project agents live in `.claude/agents/`: `game_creator` (ideas, gameplay, business), `designer` (look and feel, mockups), `product` (specs, build reviews), `code_lead` (architecture, plans, code review, progress) and `builder` (code and tests). The main chat is the messenger between them and Adam. The flow, the approval gates and who owns what are in `.claude/rules/agent-workflow.md`.
+Project agents live in `.claude/agents/`. Their definitions are generic, for reuse in other Roblox games; facts about this game go in `docs/`, rules and skills.
 
-Agent definitions are generic, so they can be reused for other Roblox games. Facts about this game go in skills, rules and `docs/`, never in `.claude/agents/` (`.claude/rules/generic-agents.md`).
+| Topic | Owner |
+|---|---|
+| Game idea, gameplay, players, business and monetization | `game_creator` |
+| Look and feel, style guide, mockups | `designer` |
+| Specs and the order of work | `product` |
+| Reviewing what was built, as a player and against its spec | `product_reviewer` |
+| Code architecture, plans, task breakdown, code review, progress | `code_lead` |
+| Code and its tests | `builder` |
+| Running jobs others wrote: test runs, fetches, names checks | `runner` |
+| Tools, setup, agent configuration, commits | main chat |
 
-## Docs layout
-Each version or large feature set is a folder, so an agent only reads what it needs and stays under its memory limit:
-- `docs/specs/<version>/index.md`: a short map with one line per feature (its file, status and build order). Each feature has its own small spec, `docs/specs/<version>/<feature>.md`, with at most 15 rules.
-- `docs/plans/<version>/index.md` plus `docs/plans/<version>/<feature>.md`: the same shape for build plans.
-- `docs/design/<version>/`: the look for that version (look study, style guide, art list, build check, mockups). A later version holds only what it adds or changes. The earlier style guide still applies unless the new one replaces a part of it.
-- Research and owner input for a version go in `docs/specs/<version>/research/`.
-- An agent gets the index and only the feature files it works on, never the whole folder.
-- V1 is partly older: its design is in `docs/design/v1/`, but its spec and plan are still `docs/specs/core-heist.md` and `docs/plans/core-heist.md`.
+The main chat is the messenger between the agents and the user. How they work together is in `.claude/rules/agent-workflow.md`; the steps and gates are the `the-flow` skill.
 
-## Source of truth
-- Change code by editing files in `src/`. Never use MCP `multi_edit` on Rojo-synced scripts, because Rojo overwrites Studio edits on the next sync.
-- Use the MCP for runtime and world work: `execute_luau` for building and inspecting non-synced instances (Workspace parts, maps, lighting), plus playtesting, console output and screenshots.
-- Anything built in Studio that must persist lives in the place file (the user saves it) or gets exported into the Rojo tree. Say which one when you build something.
+## Model per job
+Each job uses the cheapest model that does it well.
+
+| Kind of job | Model |
+|---|---|
+| **Thinking:** ideas, looks, specs, plans, reviews, rulings, finding why something failed | Opus |
+| **Building:** tests, code and Play jobs; running Play and judging it against a pass list | Sonnet (`builder`) |
+| **Running only:** a full test run and its fetch, a read-only names check, copying files, filling a table from given numbers, `scripts/job-check.sh` | Haiku (`runner`) |
+
+- Every full test run goes to the `runner`, never inside a Sonnet or Opus step. The `builder` writes code and sees its red; `code_lead` judges the result.
+- `code_lead` keeps the thinking and hands its simple jobs to `builder` or `runner` as a short prompt in `work/`.
+- **`code_lead` on Sonnet for simple jobs.** Plans, rulings and reviews stay on Opus. A job with nothing new to decide (a task card copied from a finished plan, a re-check against a written list) starts `code_lead` with the Agent tool's `model: "sonnet"`, which overrides its file ([sub-agents](https://code.claude.com/docs/en/sub-agents#choose-a-model)). A resumed agent keeps its model, so this is a fresh start with the file paths.
+- If a cheaper model fails a step, the step goes up one model, that kind of job moves up in this table, and it is logged in the problems log.
+
+## Speed rules
+| Rule | What it means |
+|---|---|
+| **Hard time limits** | A small fix (a moved part, a missing part, a failing test): **10 minutes**. A new part or a task: **1 hour**, or its planned time if shorter. At the limit, work stops and the `stop-and-step-back` skill starts. Over the limit means the approach is wrong, not that it needs more time. |
+| **Small jobs, few agents** | A small fix is done by one agent (the main chat or one `builder`), checked by one `runner` test run, then committed. No meeting, no handoff, no review round. The full flow is only for new parts and features. |
+| **Backup before every world change** | A step that changes, moves or removes world parts clones them into `ServerStorage.WorldBackups.<task>` in the same call. Before a task's first world change, the main chat copies the saved place file to `work/place-backups/<task>-<date>.rbxl`. Backups are cleaned out only at Gate 4. |
+
+When a task starts, the main chat starts its task clock (`stop-and-step-back` skill, "Triggers"). Every stop trigger (time, loop, same object, plan, look) and what to do is in the `stop-and-step-back` skill. Each task close uses the `closing-a-task` skill.
 
 ## Roblox Studio MCP
-- Call `list_roblox_studios` first to get the `studio_id`.
-- Deleting or replacing instances in Studio needs no confirmation from Adam when the change matches the spec, the gameplay and the game idea. If the owner of that topic (`product`, `game_creator` or `designer`) has approved it, go ahead. Ask Adam first only for the bigger changes listed in `agent-workflow.md`, "Asking the user".
-- Use the built-in MCP skills via the `skill` tool: `rbx-unit-test` for tests, `rbx-debug`, `rbx-perf-profiling`, `rbx-scene-analysis` and `rbx-device-simulator-lua` when relevant.
-
-## Docs
-Use the project `roblox-docs` skill before relying on memory for any Roblox API. Never guess API names or signatures.
+- Call `list_roblox_studios` first to get the `studio_id`. If it is empty, stop and report.
+- Use the MCP for runtime and world work: `execute_luau` to build and inspect non-synced instances (Workspace parts, maps, lighting), plus playtesting, console output and screenshots. Code changes go in `src/`.
+- Deleting or replacing instances needs no confirmation from the user when the change matches the spec and its owner (`product`, `game_creator` or `designer`) approved it. Bigger changes follow "Asking the user" in `agent-workflow.md`.
+- Built-in MCP skills via the `skill` tool: `rbx-unit-test`, `rbx-debug`, `rbx-perf-profiling`, `rbx-scene-analysis`, `rbx-device-simulator-lua`.
+- Use the `roblox-docs` skill before relying on memory for any Roblox API. Never guess API names or signatures.
 
 ## Dev loop
-0. **Keep the Mac awake.** Before any Studio work, the main chat checks `pgrep -x caffeinate`. If nothing runs, it starts `caffeinate -d -i -u` in the background (only one copy). This stops the Mac and its screen from sleeping, so long Studio jobs, playtests and `screen_capture` don't fail. Stop it when the session's Studio work is done.
-1. Edit `src/`. The PostToolUse hook runs StyLua and selene on `.luau` files, so fix any lint errors it reports.
-2. Make sure this project's `rojo serve` is running and the Studio plugin is connected. Start it in the background if it isn't running. Rojo only syncs in edit mode, and the plugin can disconnect after playtests (`[Rojo-Warn] Disconnected` in the console). Before trusting Studio, `script_read` a file you changed. If it's stale, ask the user to click Connect in the Rojo plugin.
-   - **Trial and harness scripts never go in `src/` or `tools/`.** Deleting a synced file crashes `rojo serve` (`NotFound` in `change_processor.rs`), which disconnects the plugin and needs the user to click Connect. Keep trial scripts in `work/` and paste them into Studio with `execute_luau` (build any temporary ModuleScripts there, and destroy them in the same call).
-   - **Delete synced folders only with `scripts/rojo-safe-rm.sh <path>`.** `rojo serve` 7.7.1 crashes when a synced folder is removed or moved while it still has files, or right after its files change (tested 2026-10-27). The script deletes the files, waits, then removes the empty folders. Deleting a single file is safe. A PreToolUse hook (`.claude/hooks/rojo-safe-delete.py`) blocks `rm -r`, `rmdir` and `mv` on folders under `src/` and `tools/`.
-   - **Port 34873, not Rojo's default 34872.** Another game on this Mac (Grab-It & Run!) serves on 34872. Connecting to it once copied that game's code into this place (2026-10-26). `servePort` in `default.project.json` sets 34873, and the plugin's port box must say 34873.
-   - **Check before asking for Connect:** `curl -s localhost:34873/api/rojo | strings | grep -A1 projectName` must print `MyRobloxGame`. After connecting, Studio must not have `ServerScriptService.GameServer`, `ServerScriptService.GrabItModules` or `ReplicatedStorage.GrabIt`. If it does, disconnect, close the place without saving, and reopen the file.
+0. **Keep the Mac awake.** Before Studio work, check `pgrep -x caffeinate`; if nothing runs, start `caffeinate -d -i -u` in the background (one copy). Stop it when the session's Studio work is done.
+1. Edit `src/`. A PostToolUse hook runs StyLua and selene on `.luau` files; fix what it reports.
+2. Make sure this project's `rojo serve` runs on **port 34873** (not 34872, which another game on this Mac uses) and the Studio plugin is connected. Details and the check before Connect: `.claude/rules/rojo.md`.
 3. `start_stop_play` → `get_console_output` → fix → stop play.
 
 Tools are pinned in the Rokit manifest; run `rokit install` after cloning.
-
-## Luau / Roblox rules
-- Start every file with `--!strict`. Use `game:GetService(...)` and the `task.*` library (never `wait`, `spawn` or `delay`).
-- Server-authoritative: the server validates every RemoteEvent/RemoteFunction argument (type, range, ownership, rate). Never trust client values for currency, damage or position.
-- DataStores: wrap every call in `pcall`, prefer `UpdateAsync`, and save on `PlayerRemoving` and `game:BindToClose`.
-- Disconnect connections and destroy instances you create. Don't leak them per player or per round.

@@ -1,5 +1,22 @@
 # Spec 1: Core heist
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+- [6. Screens and states](#6-screens-and-states)
+  - [The sleep meter (top centre)](#the-sleep-meter-top-centre)
+  - [Spots and states](#spots-and-states)
+  - [Sound](#sound)
+  - [The world](#the-world)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 ## 1. Goal and why
 
 A player sneaks onto the sleeping giant, grabs an egg and carries it home before he wakes. This is the heart of the game: the "Sneak, Grab, Escape" part of the core loop (the actions players repeat) and the twist, one giant that the whole server (one running copy of the game, up to 8 players) shares (`docs/ideas/climb-the-sleeping-giant.md`, sections "Core loop", "Twist", "Sneaking and noise" and "The wake-up"). It comes first so the fun part is playable before anything else is built. Hatching, cash and upgrades come in the next specs (see `docs/specs/index.md`).
@@ -89,9 +106,11 @@ The idea's first minute also has a hatch and coins at 15–40 s. Those come with
 
 **Rule 1: Spawn facing the giant.**
 - Each player must appear on their own garden's spawn spot, 18 studs (Roblox's unit of length; a player is about 5 studs tall) in front of their Safe Gate, turned to face the giant.
-- The camera must tilt up once at spawn by about 36° (from Roblox's normal 15° down to 21° up), so the floating Z Z Z sit clear of the sleep meter at every garden, on phones and computers.
-- His sleeping face and the Z Z Z must be in view from every garden's spawn spot: from the front at gardens 4 and 5, from the side at the others. No prop may stand between the spawn spot and his face.
-- The first egg and its footprints must not hide behind the player. The egg that counts is the one the footprints lead to at that moment: the nearest waiting egg (Rule 2: Footprints show the way). After a catch, that can be a different egg than at the first spawn. If that egg is less than 20° from the way the player faces, the player and camera turn away from it until it sits 20° off (about 10° to 16° at gardens 1, 2, 6, 7 and 8; gardens 3 to 5 don't turn). If no egg is waiting at that moment, the player is not turned and simply faces the giant. During the spawn view, the camera also sits 1.5 studs higher. This holds at every spawn, also after being caught. His face and the Z Z Z must still show below the meter.
+- The camera must tilt up once at spawn by about 36° (from Roblox's normal 15° down to 21° up), so his sleeping face fills the view just below the sleep meter at every garden, on phones and computers.
+- His sleeping face must be in view from every garden's spawn spot: from the front at gardens 4 and 5, from the side at the others. No prop may stand between the spawn spot and his face.
+- From every garden's spawn spot, the "he's asleep" picture must be the Z Z Z on the sleep meter (plan 3 Task 8f): at least 24 points tall on a phone, the same at every garden. The floating Z Z Z by his nightcap stay as built, as the sign up close and in clips. They have no rule about where they fall on screen, because the meter is always drawn over them.
+- *Changed on 2026-11-10 (plan 3 Task 8e, `work/p3t8/8e-measure-ruling.md`):* it was measured on the real phone that, from the gardens, his head sits right under the meter. The floating Zs are about 8 points there, and no size fits between the meter and his face. So the gardens' sleep sign moved to the meter.
+- The first egg and its footprints must not hide behind the player. The egg that counts is the one the footprints lead to at that moment: the nearest waiting egg (Rule 2: Footprints show the way). After a catch, that can be a different egg than at the first spawn. If that egg is less than 20° from the way the player faces, the player and camera turn away from it until it sits 20° off (about 10° to 16° at gardens 1, 2, 6, 7 and 8; gardens 3 to 5 don't turn). If no egg is waiting at that moment, the player is not turned and simply faces the giant. During the spawn view, the camera also sits 1.5 studs higher. This holds at every spawn, also after being caught. His face must still show below the meter.
 - The first time the player moves after spawning, if they haven't turned the camera yet, the camera must tilt back to Roblox's normal 15° down over 0.6 seconds, keeping its left-right direction and its distance, so the footprints show on the walk. (At 21° up the camera sits just above the lawn and hides the trail.) A player who turned the camera first keeps their own tilt. A camera turn during the tilt (key, mouse or touch) must stop the tilt at once and work straight away; no press or drag is ever ignored.
 - The extra 1.5 studs of height must always ease back to 0 over 0.6 seconds. It starts at the player's first move or first camera turn, whichever comes first. A camera turn never stops it: if a turn comes halfway, the height keeps easing to 0 from where it is.
 - After that, the player controls the camera.
@@ -113,6 +132,7 @@ The idea's first minute also has a hatch and coins at 15–40 s. Those come with
 - A player who isn't carrying must be able to take an egg by holding the grab button for 1 second within reach of it.
 - The first player to finish the hold gets the egg.
 - A player carries one egg at a time, on their back, and nobody can take it from them.
+- On a touch screen, the grab button must be fully on screen, with nothing covering it, whenever the player can grab. When it can't sit beside the egg, it sits at the bottom centre, and any bottom tip waits until it moves back or goes away. A tip that shows only once is shown in full afterwards, never used up while hidden.
 
 **Rule 5: Bring it home.**
 - Walking through your **own** Safe Gate while carrying an egg must bank it. The egg then stays visible in your garden.
@@ -139,6 +159,12 @@ The idea's first minute also has a hatch and coins at 15–40 s. Those come with
 - A player standing still, or moving in the meadow or a garden, must add none. The meadow is silent, so every garden is equally far from the danger.
 - A jump or fall that starts on the giant must add one burst of noise (a thud) when it lands, sized by the highest zone it left. This is true wherever it ends: back on him, on a boot, or in the meadow.
 - Each jump that starts on the giant thuds once when it lands, even if the next jump starts at once (Jump held down). A fall without a jump counts once, wherever it ends, even if it slides down his side. Jumps that start and end in the meadow add none.
+- The set ways down must not thud (added by V2 on 2026-10-20, `v2/gardens-and-ways-up.md` and `v2/egg-nests-and-climbing.md`; the belly strip drop added on 2026-10-21). Roblox can't climb down a leaning ladder, and every ladder leans, so each ladder drop below is its ladder's only way down:
+  - letting go of a boot ladder, or walking off its top, onto the grass near its foot;
+  - on his head: any fall or slide that starts on his cap, the cap ladder, the nose top, the beard ladder or the beard face, and stops on the nose top or the belly path. This covers walking off the cap ladder's top onto the nose, falling off the cap ladder's sides onto the nose, letting go of the beard ladder, and walking off the nose's front edge down the beard face, as long as it stops on the belly path;
+  - on his belly: a drop or slide off the raised strip down the middle of his belly, over one of its steep sides, that stops on the belly beside it (V2's walk area, `v2/egg-nests-and-climbing.md`, Rule 79: Walk anywhere down to the seam). The drop is at most 3.8 studs and gains the player nothing.
+
+  Each adds the normal step noise for its length instead, as if the player had walked it, plus the carried egg's usual extra. A carried egg stays on the player's back. A jump off a ladder's rungs while climbing is Roblox's way to let go, so it counts as letting go and follows the same landing limits (product, 2026-11-10, Task 26b). Every other fall still thuds once: any other jump, always; a fall off the boots anywhere but off a ladder; and a fall or slide from his head, or from the belly's raised middle strip, that ends in the meadow, on a boot top or on the lap landing, sized by the zone it started in.
 - All values are in section 5.
 
 **Rule 9: Tiptoe is quiet.**
@@ -233,6 +259,7 @@ All are starting values. The playtest result that would change each one is in th
 | Carrying | Common ×1.25, Uncommon ×1.5, Rare ×2.5 | Idea: "carrying a heavy egg adds a little". game_creator, after Task 23: Rare went from ×2 to ×2.5, to make up for the silent meadow and keep the solo Rare_1 peak near 66%. | See the drain below |
 | Tiptoe | Noise ×0.2 | Idea: "very little noise" | A busy server wakes him even when everyone tiptoes: ×0.1 |
 | Thud from a jump or fall that starts on the giant | +20 × the highest zone the fall left (Boots 20, Belly 30, Beard 40, Nightcap 60), once per jump or fall. Each jump that starts on the giant thuds once when it lands, even if the next jump starts at once (Jump held down). A fall without a jump counts once, wherever it ends. Only a fast fall counts: small steps and the normal walk down the ramp add nothing beyond walking noise. Tiptoe doesn't reduce it. The new-player limit (84%) still applies. | game_creator, answer 3: one clumsy jump from the 60% warning wakes him. game_creator, Task 13 question: jumping off him must be a loud gamble, or carriers would always jump off and skip the slow walk home. | More than half of Rare heists end with a jump-off: raise the jump-off thud to 1.5×. Players never jump off: lower it to 0.5×. "Jump on him" causes more than half of all wake-ups in the first week ("GiantWoke"): show the tip "Jumping is loud!" for 2 s at a player's first thud on him |
+| Thud on the set ways down (Rule 8: Steps make noise; added by V2 on 2026-10-20, the belly strip drop on 2026-10-21) | None. The drop or slide adds the normal step noise for its length, as if walked, plus the carried egg's usual extra | game_creator, 2026-10-20 (`v2/research/decisions-plans.md`, "Getting down the ladders" and "Thuds found in Task 25 Play"): two thudding drops from the cap would add about 100 to the meter, so every Legendary trip home would wake him, and a forced +20 on the boot ladders would break V2's 5-point fairness limit between gardens, for physics the player can't control. In Play, a side fall off the cap ladder onto the nose thudded +40 and a walk off the nose's front edge down the beard face +39.9: these gain nothing, skip no part of the walk home, and phone thumbstick drift makes them easy to do by accident. game_creator, 2026-10-21 (`v2/research/decisions-plans.md`, "Task 26 step 26-4e ruling"): the drop of up to 3.8 studs off a steep side of the belly's raised middle strip onto the belly beside it is silent for the same reason. It lasts about 0.2 s, under the fall check's 0.3 s, so it may already be silent; a test proves it either way | V2's egg scores show a trip home from the cap quieter than one from the beard: the cap way down gets half a Nightcap thud (+30). More than half of the cap trips in a playtest wake him on the way down: game_creator looks again. Gardens with a ladder come out more than 5 points quieter than ramp gardens in V2's fairness check: the boot and side ladder drop gets half a Boots thud (+10) |
 | Drain | 1 point per second for each player in the server (a solo server drains 1 per second) | game_creator, answer 3. The "at least 2" floor was removed after builder's Play test (Task 21): with it, a solo Rare heist from Rare_1 peaked at 49.4% and never gave the 60% warning. | An 8-player server wakes him more than about once every 2 minutes: 1.5 per player. Solo Rare_1 walking peaks under 60%: raise the Rare carry multiplier from ×2.5 to ×3, then re-measure Rare_2 from garden 8; if that wakes him, also set the solo drain to 1.5 per second. On phones this is judged on the middle of 3 runs whose times on the giant are within 10% of the computer's (Task 42's single phone run peaked at 55.6%, against 68.6–71.6% on a computer in Task 41). If the phone walk on the giant is shorter, the walker cut corners: keep ×2.5. Solo Rare_1 walking peaks over 80%, or a solo walking heist from Rare_1 or Rare_2 wakes him: set the solo drain to 1.5 per second, and keep 1 per player for 2 or more players. |
 | Warning marks | 60% and 85% | Idea, "Warnings before he wakes" | — |
 | A warning replays after | the meter falls 10 points below its mark | Product: stops the flutter, the meter pulse and the Z Z Z fade from flickering when the meter hovers at 60 | — |
@@ -396,6 +423,7 @@ The Epic egg (beard), the Legendary egg (nightcap) and the Dream Egg (nose) stay
 | Slow connection | The server decides grabs, banking and catches. The egg shows on the back only once the server agrees. |
 | A cheater claims to be home, or sends fake noise | Noise and banking are worked out by the server from where players really are. Nothing the player's device sends can raise or lower the meter or bank an egg. |
 | A carrier jumps or steps off his belly and ends up in the meadow | One thud, sized by the zone they jumped from (+30 from the belly), even if they touch his side or a boot ledge on the way down (Rule 8: Steps make noise). It's allowed: a fast but loud escape. From about 70% it wakes him, and the banner names the jumper. |
+| A phone player's thumbstick drifts on his head, and they slip off the cap ladder's side or the nose's front edge | If they stop on the nose top or the belly path, it's quiet: step noise only, no thud (Rule 8: Steps make noise). If they end up in the meadow, one thud, sized by the zone they started in. A jump always thuds |
 | A phone player walks into a ledge | No automatic jump. They jump only by pressing the jump button, and every route ledge can be walked without one (Rule 15: The climb needs no jump). |
 | A player on the right boot top tries to reach the belly | The drop between his legs stops them. A jump across it is a jump that starts on the giant, so it thuds (Rule 8: Steps make noise). A player who falls into the gap can walk out to the meadow and is never stuck (Rule 15: The climb needs no jump). |
 | A player holds Jump on him | Every hop thuds (Rule 8: Steps make noise). Hopping home can't skip the jump-off thud: the hop that leaves him lands in the meadow and thuds, and only the meadow hops after it are silent. |

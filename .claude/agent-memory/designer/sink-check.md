@@ -1,0 +1,28 @@
+---
+name: sink-check
+description: look checks must measure how deep a main character's skin covers nearby parts (rays), not judge shots only; Rule 103 limits
+metadata:
+  type: feedback
+---
+Every look check measures sink depth with rays for parts on or against the giant (rays from above for decks, from outside for walls). Past Rule 103's limits (0.3 studs on a part's two end faces, 0.1 on any other face), or along a walk edge, counts as worse.
+**Why:** 2026-11-04: Adam marked wood swallowed by the giant (lap landing up to 2.19, belly ramp planks up to 6.75) that my shot-only checks missed.
+**How to apply:** In every look check on climbs, decks or ladders on the giant. Fix by cutting the visible wood to his skin line and keeping the solid walk piece invisible. See [[mockups]].
+- 6a2 (2026-11-04): boards cut to his skin line, chained 0.05 drops at bends, passed: overlap wedges read as plank joints, a 0.15 lip and a bare half next to skin were not visible as faults.
+- 5b (2026-11-04): before picking a fix for a sunk ladder, measure the sink profile along it; the boot bulge sat near the top, so a swing about the hooks needed 10° and floated the foot. A straight slide out (truss + look together) kept the climb.
+- 5b1 (2026-11-04): phone look shots come out 402x186 and blurred, too small to judge sub-stud fits; judge phone on layout only and rely on ray depths for fit.
+- p5t13 (2026-11-08): my cuff strap top hung 2.2 outboard of the rim; a straight band beside a rounded arm cannot reach the rim without sinking into it. Before handing over a strap or ramp, ray its top end and its middle line against the cloth, and give it a level tab where it joins the limb.
+- p5t13b (2026-11-08): a flat tab can't sit in a 0.03-0.2 band over a rounded cuff rim (cloth fell 0.45-1.06 across 1.5 studs). Ray the whole tab footprint before pricing a tab; walk parts are CanQuery false, so turn it on for ray checks and restore.
+- p5t13b flap (2026-11-08): rays on the giant hit its collision shape (left_arm is PreciseConvexDecomposition), which can sit under the drawn mesh; always add a top-down shot with the part tinted to see how far it goes under the drawn surface.
+- p5t13b edges (2026-11-08): before handing over any walk piece, ray 0.3 past every open edge of every walk part on the path (both sides). My flap table's "air" cells were a 26-stud drop I didn't flag; the edges grew into a 4th fix.
+- p5t13b curbs (2026-11-08): a curb length set in a decision is a guess; ray every 0.1 near its open end after building. The flap curb at "0.8 short" left 2.5-25 drops; it needed 0.25-0.3. Exclude old live copies (World.CuffWalk) from edge rays.
+- p5t13b fill (2026-11-08): a visible fill under a cuff ledge stuck out of the drawn arm (pink test, seen from gates 7-8); for a stuck slot over a drop beside a limb, use an invisible solid fill and check it: no sink (GetPartsInPart), top covered (no new floor), stuck dump clean.
+- p5t15 (2026-11-08): before calling a strip or ridge a wall, ray across it with an exclude loop (ladders, rungs); the belly's centre strip was gentle at z -26..-24 and the real splitter was the beard ladder's foot 2.4-4 over the cloth.
+- p5t15d (2026-11-09): a "float" from a down-ray can start inside his body (ray from inside the mesh hits the far side). Before calling a walk spot floating, also ray sideways 1 stud above it to the skin, and check look-only boards (CanQuery off) by shape. The belly ramp "floats" were on the board or inside his shirt.
+- p5t15e (2026-11-09): my 65° seam table was 1-2.5 studs off mirror at z -38..-36 while real Play slips mirrored within 0.4. Mirror-check every measured line table (left x vs -right x per row) before handing it over, and place look lines (stitches) on measured Play slip points, not on a slope-angle line.
+- p5t15e2 (2026-11-09): my "one Play jump onto each curb" proof grew into a 35-call jump rig. Write a proof as the cheapest check that reproduces the bug (placed body found it, so a placed drop-on proves it), priced in calls in the verdict.
+- p5t15e2/15e3 (2026-11-09): a cuff "float" was never a floor problem. The strap and pocket art was still hidden in `Mockup_Nests.Art` (Transparency 1, `MockupTransparency` 0), and no task had copied it into the world. Before judging any float on a walk piece, list the visible art in its box and check whether its mockup art is still hidden; only then ray against the giant.
+- p5t15e3 sink (2026-11-09): a strap whose inner edge tucks under a cuff in one clean seam reads as sewn on; accept it by name pattern with a limit (names repeat, so patterns not full paths) instead of moving art the walk floor matches.
+- p5t16 (2026-11-09): a look-only task priced 22 min of designer shot steps. Price look checks as shots taken by the builder in its open session plus one judging step for me; look-only parts that exist in Edit get Edit see-shots from the player camera spot.
+- p5t16 C (2026-11-09): look-compare read 0.00 on gate shots that clearly gained the seam line; it misses small new art, so always open the pairs myself. See shots must stand where the art is (not in a pocket gap) and face it, or they prove nothing.
+- p5t16 SB2 (2026-11-09): a line on a 65 deg slope of a round body sits past the visible edge from any player-height camera; my high mockup view promised it. Before promising "the player sees X", check a sight line from the real game camera spot (1 call) and take "view" mockups from that camera only.
+- p5t12 (2026-11-10): my knee pocket y 30.2 was a thigh plank's top, not his skin; the planks were dropped later and it floated 3.2. When a support under a spot is removed, re-ray every nest that was placed on it (ray include `World.Giant` only to get his skin).

@@ -156,24 +156,26 @@ describe("SpotModels.hide", function()
 		local spot = newSpot("EggSpot_Common_1", "Common", CFrame.new(0, 5, 0))
 		local models = SpotModels.new({ spot }, newTemplates(true))
 		models:show("EggSpot_Common_1")
-		models:hide("EggSpot_Common_1", 110)
+		models:hide("EggSpot_Common_1")
 		expect(#eggsOn(spot)).toBe(0)
 	end)
 
-	it("sets Waiting to false and RefillAt to the given time", function()
+	it("writes Waiting false and no RefillAt, even if an old caller still passes a time", function()
 		local spot = newSpot("EggSpot_Common_1", "Common", CFrame.new(0, 5, 0))
 		local models = SpotModels.new({ spot }, newTemplates(true))
 		models:show("EggSpot_Common_1")
-		models:hide("EggSpot_Common_1", 110.5)
+		-- Task 7b: hide takes only the name now. A caller built for the old signature must not put a timer on the nest.
+		local hideWithTime = models.hide :: any
+		hideWithTime(models, "EggSpot_Common_1", 110)
 		expect(spot.model:GetAttribute("Waiting")).toBe(false)
-		expect(spot.model:GetAttribute("RefillAt")).toBe(110.5)
+		expect(spot.model:GetAttribute("RefillAt")).toBeNil()
 	end)
 
 	it("keeps the spot's Base and its prompt anchor", function()
 		local spot = newSpot("EggSpot_Common_1", "Common", CFrame.new(0, 5, 0))
 		local models = SpotModels.new({ spot }, newTemplates(true))
 		models:show("EggSpot_Common_1")
-		models:hide("EggSpot_Common_1", 110)
+		models:hide("EggSpot_Common_1")
 		expect(spot.model:FindFirstChild("Base")).never.toBeNil()
 		expect(spot.promptAnchor.Parent).never.toBeNil()
 	end)
@@ -181,16 +183,16 @@ describe("SpotModels.hide", function()
 	it("does nothing wrong when the spot has no egg", function()
 		local spot = newSpot("EggSpot_Common_1", "Common", CFrame.new(0, 5, 0))
 		local models = SpotModels.new({ spot }, newTemplates(true))
-		models:hide("EggSpot_Common_1", 110)
+		models:hide("EggSpot_Common_1")
 		expect(#eggsOn(spot)).toBe(0)
-		expect(spot.model:GetAttribute("RefillAt")).toBe(110)
+		expect(spot.model:GetAttribute("Waiting")).toBe(false)
 	end)
 
 	it("lets the egg be shown again afterwards", function()
 		local spot = newSpot("EggSpot_Common_1", "Common", CFrame.new(0, 5, 0))
 		local models = SpotModels.new({ spot }, newTemplates(true))
 		models:show("EggSpot_Common_1")
-		models:hide("EggSpot_Common_1", 110)
+		models:hide("EggSpot_Common_1")
 		models:show("EggSpot_Common_1")
 		expect(#eggsOn(spot)).toBe(1)
 		expect(spot.model:GetAttribute("Waiting")).toBe(true)
@@ -220,6 +222,11 @@ local function newLookingTemplate(rarity: string, withBeam: boolean): Model
 		bottom.Parent = body
 		local top = Instance.new("Attachment")
 		top.Name = "BeamTop"
+		top.Position = Vector3.new(0, 26, 0) -- the real Rare template's beam is about 26 studs long
+		if rarity == "Legendary" then
+			-- the real Legendary template's beam leans about 18 degrees (read in Studio, 13c Step A)
+			top.Position = Vector3.new(-0.186, 0.951, -0.248).Unit * 26
+		end
 		top.Parent = body
 		local beam = Instance.new("Beam")
 		beam.Attachment0 = bottom
@@ -234,6 +241,8 @@ local function newLookingTemplates(): WorldIndex.EggTemplates
 		Common = newLookingTemplate("Common", false),
 		Uncommon = newLookingTemplate("Uncommon", false),
 		Rare = newLookingTemplate("Rare", true),
+		Epic = newLookingTemplate("Epic", true),
+		Legendary = newLookingTemplate("Legendary", true),
 	}
 end
 
@@ -275,19 +284,18 @@ describe("SpotModels: how a spot looks", function()
 		expect(ringOf(spot).Transparency).toBeCloseTo(0.6, 5)
 	end)
 
-	it("makes the ring 85% see-through when the egg is taken", function()
+	it("hide leaves the GlowRing alone", function()
 		local spot = newMeadowSpot("EggSpot_Common_1")
 		local models = SpotModels.new({ spot }, newLookingTemplates())
-		models:show("EggSpot_Common_1")
-		models:hide("EggSpot_Common_1", 110)
-		expect(ringOf(spot).Transparency).toBeCloseTo(0.85, 5)
+		models:hide("EggSpot_Common_1")
+		expect(ringOf(spot).Transparency).toBeCloseTo(0.35, 5)
 	end)
 
 	it("makes the ring 60% see-through again when the egg comes back", function()
 		local spot = newMeadowSpot("EggSpot_Common_1")
 		local models = SpotModels.new({ spot }, newLookingTemplates())
 		models:show("EggSpot_Common_1")
-		models:hide("EggSpot_Common_1", 110)
+		models:hide("EggSpot_Common_1")
 		models:show("EggSpot_Common_1")
 		expect(ringOf(spot).Transparency).toBeCloseTo(0.6, 5)
 	end)
@@ -296,7 +304,7 @@ describe("SpotModels: how a spot looks", function()
 		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
 		local models = SpotModels.new({ spot }, newLookingTemplates())
 		models:show("EggSpot_Rare_1")
-		models:hide("EggSpot_Rare_1", 110)
+		models:hide("EggSpot_Rare_1")
 		expect(countOf(spot.model, "ParticleEmitter")).toBe(0)
 		expect(countOf(spot.model, "Light")).toBe(0)
 		expect(countOf(spot.model, "Beam")).toBe(0)
@@ -325,9 +333,20 @@ describe("SpotModels: how a spot looks", function()
 		local models = SpotModels.new({ spot }, newLookingTemplates())
 		models:show("EggSpot_Uncommon_1")
 		expect(#eggsOn(spot)).toBe(1)
-		models:hide("EggSpot_Uncommon_1", 110)
+		models:hide("EggSpot_Uncommon_1")
 		expect(#eggsOn(spot)).toBe(0)
 		expect(spot.model:FindFirstChild("GlowRing")).toBeNil()
+	end)
+end)
+
+describe("SpotModels.setLocked", function()
+	it("writes the Locked attribute true, and false again", function()
+		local spot = newSpot("EggSpot_Common_1", "Common", CFrame.new(0, 5, 0))
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:setLocked("EggSpot_Common_1", true)
+		expect(spot.model:GetAttribute("Locked")).toBe(true)
+		models:setLocked("EggSpot_Common_1", false)
+		expect(spot.model:GetAttribute("Locked")).toBe(false)
 	end)
 end)
 
@@ -341,5 +360,272 @@ describe("SpotModels.destroy", function()
 		models:destroy()
 		expect(#eggsOn(one)).toBe(0)
 		expect(#eggsOn(two)).toBe(0)
+	end)
+end)
+
+-- Rule 85: a meadow spot's invisible EggPost (a folder of parts) is solid only while its egg waits and no player is near.
+local POST_AT = CFrame.new(0, 5, 0)
+local CLEAR = Config.Nests.PostClear
+local NEAR_PLAYER = Vector3.new(CLEAR.HalfBase + CLEAR.Sideways - 0.5, 5, 0) -- inside the clear check's sideways reach
+local FAR_PLAYER = Vector3.new(CLEAR.HalfBase + CLEAR.Sideways + 0.5, 5, 0) -- outside it
+
+-- A spot with an EggPost of 2 parts, both not solid to begin with.
+local function newPostSpot(): (WorldIndex.EggSpot, { BasePart })
+	local spot = newSpot("EggSpot_Common_1", "Common", POST_AT)
+	local post = Instance.new("Folder")
+	post.Name = "EggPost"
+	local parts: { BasePart } = {}
+	for n = 1, 2 do
+		local part = Instance.new("Part")
+		part.Name = `Wedge{n}`
+		part.CanCollide = false
+		part.Parent = post
+		table.insert(parts, part)
+	end
+	post.Parent = spot.model
+	return spot, parts
+end
+
+local function allSolid(parts: { BasePart }, solid: boolean): boolean
+	for _, part in parts do
+		if part.CanCollide ~= solid then
+			return false
+		end
+	end
+	return true
+end
+
+describe("SpotModels EggPost (Rule 85)", function()
+	it("show makes the post solid when no player is close", function()
+		local spot, parts = newPostSpot()
+		SpotModels.new({ spot }, newTemplates(true)):show("EggSpot_Common_1", { FAR_PLAYER })
+		expect(allSolid(parts, true)).toBe(true)
+	end)
+
+	it("show makes the post solid when it is not told where players are", function()
+		local spot, parts = newPostSpot()
+		SpotModels.new({ spot }, newTemplates(true)):show("EggSpot_Common_1")
+		expect(allSolid(parts, true)).toBe(true)
+	end)
+
+	it("show leaves the post not solid while a player is close", function()
+		local spot, parts = newPostSpot()
+		SpotModels.new({ spot }, newTemplates(true)):show("EggSpot_Common_1", { NEAR_PLAYER })
+		expect(allSolid(parts, false)).toBe(true)
+	end)
+
+	it("hide makes a solid post not solid", function()
+		local spot, parts = newPostSpot()
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:show("EggSpot_Common_1")
+		models:hide("EggSpot_Common_1")
+		expect(allSolid(parts, false)).toBe(true)
+	end)
+
+	it("step turns a blocked post solid once the player has moved away, and not before", function()
+		local spot, parts = newPostSpot()
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:show("EggSpot_Common_1", { NEAR_PLAYER })
+		models:step({ NEAR_PLAYER })
+		expect(allSolid(parts, false)).toBe(true)
+		models:step({ FAR_PLAYER })
+		expect(allSolid(parts, true)).toBe(true)
+	end)
+
+	it("step does not make a post solid after hide took its egg away", function()
+		local spot, parts = newPostSpot()
+		local models = SpotModels.new({ spot }, newTemplates(true))
+		models:show("EggSpot_Common_1", { NEAR_PLAYER })
+		models:hide("EggSpot_Common_1")
+		models:step({})
+		expect(allSolid(parts, false)).toBe(true)
+	end)
+end)
+
+-- The beam on an egg on his body is 10 studs long, and 35 for the Legendary egg (spec 4 section 6; Config.Ranks.BodyBeamStuds
+-- and LegendaryBeamStuds). The fake Rare, Epic and Legendary beams are 26 studs (newLookingTemplate), so a
+-- shortened clone is easy to tell from an untouched one.
+local function beamLength(root: Instance): number
+	local beam = root:FindFirstChildWhichIsA("Beam", true) :: Beam
+	local a0 = beam.Attachment0 :: Attachment
+	local a1 = beam.Attachment1 :: Attachment
+	return (a1.WorldPosition - a0.WorldPosition).Magnitude
+end
+
+local function zoneStub(zone: Config.ZoneName): (Vector3) -> Config.ZoneName
+	return function(_position: Vector3): Config.ZoneName
+		return zone
+	end
+end
+
+describe("SpotModels: the beam on his body (10 studs; 35 for the Legendary egg)", function()
+	for _, zone in { "Belly", "Beard", "Nightcap" } do
+		it(`shortens the shown egg's beam to 10 studs in the {zone}`, function()
+			local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Rare_1")
+			expect(beamLength(spot.model)).toBeCloseTo(10, 2)
+		end)
+	end
+
+	for _, zone in { "Meadow", "Boots" } do
+		it(`keeps the beam's 26 studs in the {zone}`, function()
+			local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Rare_1")
+			expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+		end)
+	end
+
+	it("keeps the beam's 26 studs when no zoneOf is given", function()
+		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+		local models = SpotModels.new({ spot }, newLookingTemplates())
+		models:show("EggSpot_Rare_1")
+		expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+	end)
+
+	it("leaves the template's own beam at 26 studs after a show on the belly", function()
+		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+		local templates = newLookingTemplates()
+		local models = SpotModels.new({ spot }, templates, zoneStub("Belly"))
+		models:show("EggSpot_Rare_1")
+		expect(beamLength(templates.Rare)).toBeCloseTo(26, 2)
+	end)
+
+	it("shows an Uncommon egg with no beam on the belly without an error and without a beam", function()
+		local spot = newSpot("EggSpot_Uncommon_1", "Uncommon", leaned)
+		local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub("Belly"))
+		models:show("EggSpot_Uncommon_1")
+		expect(#eggsOn(spot)).toBe(1)
+		expect(countOf(spot.model, "Beam")).toBe(0)
+	end)
+
+	it("shortens the second clone too, when the egg is hidden and shown again", function()
+		local spot = newSpot("EggSpot_Rare_1", "Rare", leaned)
+		local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub("Belly"))
+		models:show("EggSpot_Rare_1")
+		models:hide("EggSpot_Rare_1")
+		models:show("EggSpot_Rare_1")
+		expect(countOf(spot.model, "Beam")).toBe(1)
+		expect(beamLength(spot.model)).toBeCloseTo(10, 2)
+	end)
+
+	it("gives 10 studs on a flat spot and on a leaning spot", function()
+		local flat = newSpot("EggSpot_Rare_1", "Rare", CFrame.new(0, 5, 0))
+		local tilted = newSpot("EggSpot_Rare_2", "Rare", leaned)
+		local models = SpotModels.new({ flat, tilted }, newLookingTemplates(), zoneStub("Belly"))
+		models:show("EggSpot_Rare_1")
+		models:show("EggSpot_Rare_2")
+		expect(beamLength(flat.model)).toBeCloseTo(10, 2)
+		expect(beamLength(tilted.model)).toBeCloseTo(10, 2)
+	end)
+
+	-- Where the beam's end sits compared with its start, in the world.
+	local function beamRise(root: Instance): Vector3
+		local beam = root:FindFirstChildWhichIsA("Beam", true) :: Beam
+		local a0 = beam.Attachment0 :: Attachment
+		local a1 = beam.Attachment1 :: Attachment
+		return a1.WorldPosition - a0.WorldPosition
+	end
+
+	for _, zone in { "Belly", "Beard", "Nightcap" } do
+		it(`gives the Legendary egg a 35-stud beam in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			expect(beamLength(spot.model)).toBeCloseTo(35, 2)
+		end)
+
+		it(`points the Legendary egg's beam straight up in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			local rise = beamRise(spot.model)
+			expect(rise.Y).toBeGreaterThan(0)
+			expect(rise.X).toBeCloseTo(0, 2)
+			expect(rise.Z).toBeCloseTo(0, 2)
+		end)
+	end
+
+	for _, rarity in { "Rare", "Epic" } do
+		it(`keeps a {rarity} egg's beam at 10 studs on the Nightcap`, function()
+			local name = `EggSpot_{rarity}_1`
+			local spot = newSpot(name, rarity :: Config.RarityName, leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub("Nightcap"))
+			models:show(name)
+			expect(beamLength(spot.model)).toBeCloseTo(10, 2)
+		end)
+	end
+
+	for _, zone in { "Meadow", "Boots" } do
+		it(`keeps the Legendary egg's beam at 26 studs in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", leaned)
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			expect(beamLength(spot.model)).toBeCloseTo(26, 2)
+		end)
+	end
+
+	-- The Legendary egg's beam on his body is a wide gold column a kid can see from every garden (13e ruling).
+	local function firstBeam(root: Instance): Beam
+		return root:FindFirstChildWhichIsA("Beam", true) :: Beam
+	end
+
+	for _, zone in { "Belly", "Beard", "Nightcap" } do
+		it(`gives the Legendary egg's beam the wide gold look in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", CFrame.new(5, 6, 7))
+			local models = SpotModels.new({ spot }, newLookingTemplates(), zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			local beam = firstBeam(spot.model)
+			local ranks = Config.Ranks
+			expect(beam.Width0).toBe(ranks.LegendaryBeamWidth0)
+			expect(beam.Width1).toBe(ranks.LegendaryBeamWidth1)
+			expect(beam.Color.Keypoints[1].Value).toBe(ranks.LegendaryBeamColor)
+			expect(beam.LightEmission).toBe(ranks.LegendaryBeamLightEmission)
+			expect(beam.LightInfluence).toBe(ranks.LegendaryBeamLightInfluence)
+			expect(beam.FaceCamera).toBe(ranks.LegendaryBeamFaceCamera)
+			local points = beam.Transparency.Keypoints
+			expect(points[1].Value).toBeCloseTo(ranks.LegendaryBeamBaseTransparency, 5)
+			expect(points[#points].Value).toBeCloseTo(ranks.LegendaryBeamTopTransparency, 5)
+		end)
+	end
+
+	for _, rarity in { "Rare", "Epic" } do
+		it(`leaves a {rarity} egg's beam look as the template's on the Nightcap`, function()
+			local name = `EggSpot_{rarity}_1`
+			local spot = newSpot(name, rarity :: Config.RarityName, leaned)
+			local templates = newLookingTemplates()
+			local models = SpotModels.new({ spot }, templates, zoneStub("Nightcap"))
+			models:show(name)
+			local beam = firstBeam(spot.model)
+			local original = firstBeam(templates[rarity :: Config.RarityName])
+			expect(beam.Width0).toBe(original.Width0)
+			expect(beam.Width1).toBe(original.Width1)
+			expect(beam.Color.Keypoints[1].Value).toBe(original.Color.Keypoints[1].Value)
+			expect(beam.LightEmission).toBe(original.LightEmission)
+		end)
+	end
+
+	for _, zone in { "Meadow", "Boots" } do
+		it(`leaves the Legendary egg's beam look as the template's in the {zone}`, function()
+			local spot = newSpot("EggSpot_Legendary_1", "Legendary", leaned)
+			local templates = newLookingTemplates()
+			local models = SpotModels.new({ spot }, templates, zoneStub(zone :: Config.ZoneName))
+			models:show("EggSpot_Legendary_1")
+			local beam = firstBeam(spot.model)
+			local original = firstBeam(templates.Legendary)
+			expect(beam.Width0).toBe(original.Width0)
+			expect(beam.Width1).toBe(original.Width1)
+			expect(beam.Color.Keypoints[1].Value).toBe(original.Color.Keypoints[1].Value)
+			expect(beam.LightEmission).toBe(original.LightEmission)
+		end)
+	end
+
+	it("leaves the Legendary template's own beam at 26 studs after a show on the Nightcap", function()
+		local spot = newSpot("EggSpot_Legendary_1", "Legendary", leaned)
+		local templates = newLookingTemplates()
+		local models = SpotModels.new({ spot }, templates, zoneStub("Nightcap"))
+		models:show("EggSpot_Legendary_1")
+		expect(beamLength(templates.Legendary)).toBeCloseTo(26, 2)
 	end)
 end)

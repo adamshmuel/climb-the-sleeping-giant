@@ -1,5 +1,19 @@
 # Plan: Core heist
 
+**Contents** (tasks are bold `**Task N:` lines; search for one to jump)
+- [Before Task 1: setup (main chat)](#before-task-1-setup-main-chat)
+- [Tasks](#tasks)
+  - [Part 1: Tools and the gardens](#part-1-tools-and-the-gardens) (Tasks 1, 2, 3, 4, 5, 34)
+  - [Part 2: Zones, the climb and noise](#part-2-zones-the-climb-and-noise) (Tasks 6, 7, 8, 9, 10, 11, 12, 35, 13, 14, 15, 36, 37)
+  - [Part 3: Eggs](#part-3-eggs) (Tasks 16, 17, 18, 19, 20, 21, 40, 38, 39, 22)
+  - [Part 4: Finding the way](#part-4-finding-the-way) (Tasks 23, 41, 42, 24)
+  - [Part 5: Warnings and the wake-up](#part-5-warnings-and-the-wake-up) (Tasks 25, 26, 27, 28, 29, 30, 31, 43, 32, 33)
+  - [Part 6: Build review fixes](#part-6-build-review-fixes-added-after-the-build-review-2026-10-13) (Tasks 44, 45, 46, 47, 51, 48, 49, 50)
+- [Every rule is covered](#every-rule-is-covered)
+- [Checked only by playing](#checked-only-by-playing)
+- [Things learned during the build](#things-learned-during-the-build)
+- [Notes for code_lead](#notes-for-code_lead)
+
 **Status: build review fixes.** All 43 tasks were built and approved by 2026-10-13. The build review asked for 7 changes, planned as Tasks 44 to 49 (Part 6). Tasks 44, 45, 46 and 50 are approved; Task 47 is next. After them: qa, then the build reviews again and Gate 4.
 
 How spec 1 (`docs/specs/core-heist.md`) gets built, as small tasks in test-first order. How the code is organised is in `docs/architecture.md`.
@@ -232,7 +246,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - puts one egg model per rarity in `ServerStorage.Assets.Eggs`.
 - Failing test first: "the real world has 8, 4 and 4 egg spots, each in its zone".
 - Done when: the test passes, and Play screenshots of the meadow, the boots and the belly go to `designer`.
-- Review round 1 (designer): `EggSpot_Common_3` moves from (-48, -78) to (-54, -86), so garden 3's egg is 34 studs from its spawn spot and its label no longer lines up with Common_4's from garden 4 ("CommonCommon"). The script moves an existing spot when its place differs from its table, and a real-world test pins every spot to its approved place.
+- History: [docs/progress/v1/history/core-heist.md, "Task 16"](../progress/v1/history/core-heist.md#task-16)
 
 **Task 17: Egg spots keep track of every egg**
 - Spec rules: Rule 3 (Eggs wait in three zones), and Rule 4 (Hold to grab), one egg per player and the first finished hold wins.
@@ -354,22 +368,8 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - real world: the 8 landing spots are in the meadow (not on him, not in a garden, not in water), on standable ground, at least 10 studs apart, with room for a standing player.
 - Done when: the tests pass, and Play screenshots with the route drawn for a moment (runtime only) go to `designer`.
 - As built: 75 route points (32 stand at a target) and 76 links; the longest link is 20.1 studs. The 8 landing spots are on flat grass in front of and beside his boots, 11.3 to 78.4 studs apart from each other and from his middle as the tests ask, with open sky above each one. **The right boot top does not join the belly path**: there is a 10-stud drop between his legs. So the right ramp only leads to the right boot's two Uncommon eggs, and every Rare heist goes up the left ramp (`product` was told). `WorldIndex.loadRoute` and `loadLandingSpots` exist, but nothing calls them at server start yet: Task 24 adds the route to the start-up check, and Task 27 the landing spots.
-- Review round 1 (`designer`'s look check, `game_creator`'s gameplay check). Every meadow prop (bushes, rocks, sunflowers) has `CanCollide` off, so the walk checks, which only look for solid parts, missed them: the route went through a bush, a boulder and four sunflower stems. Changes, built by a fresh builder:
-  - East of the giant: `Meadow_14` moves to (102, -22), and new `Meadow_16` (106, -6) and `Meadow_17` (103, 4) take the path round the bush and the boulder (53 studs instead of 36.5).
-  - Bridge 6's exit: new `Meadow_18` (66, -84) takes the path round a sunflower.
-  - `Meadow_4` moves to (-57, -68) and `Meadow_6` to (-18, -75), 3 studs clear of a sunflower each.
-  - Landing spots move to (x, z): 1 (-45, -79), 2 (-43, -96), 3 (52, -92), 4 (48, -80), 5 (-48, -64), 6 (-50, -54), 7 (46, -64), 8 (50, -54). The farthest is about 106 studs from his middle, so the limit goes from 80 to 110.
-  - New rule from `game_creator`: every landing spot is at least 10 studs from every egg spot, so a bounced player never lands on an egg (the grab reach is 8). `designer`'s spot 1 (-48, -80) was 8.5 studs from the Common egg near garden 3, and `game_creator`'s spot 2 (-44, -96) was 2.3 studs from a flower clump, so `code_lead` checked (-45, -79) and (-43, -96) instead; builder confirms them and `designer` checks them.
-  - The world script can now run again on a place that already has the route: it checks everything first, says "already done" when nothing differs, and otherwise rebuilds the route and the landing spots and reports what changed.
-  - New real-world tests: route links stay 3 studs from every sunflower stem and 1 stud from the edge of every bush or rock; landing spots stay 5 studs from both and 10 studs from every egg spot.
-  - As built after round 1: 78 route points and 79 links; the longest link is 20.6 studs. Three places moved a little from the list above, each checked and accepted by `code_lead`:
-    - `Meadow_18` is at (64, -84), not (66, -84): a solid post of bridge 6 stands 1.1 studs from (66, -84), and the bridge's rope crosses it at body height. The nearest sunflower stem is 3.2 studs from the path.
-    - Landing spot 2 is at (-42, -97), not (-43, -96): a flower clump was 2.3 studs from (-43, -96), under `designer`'s 2.5. At (-42, -97) it is 3.5 studs away.
-    - Landing spot 3 is at (52, -91), not (52, -92): the grass at (52, -92) is a 22° slope, and the rule is flat grass (10° at most). (52, -91) is flat.
-  - `Meadow_4` and `Meadow_6` pass their sunflowers with 3.01 studs to spare, just over the 3-stud rule.
-  - `designer`'s look check approved everything except spot 8, whose flower clump is 2.4 studs away: round 2 moves it to (49, -54) (flowers 3.3 studs, spot 7 10.4 studs). `designer` dropped the upper limit on the distance from his body, so spots 2 and 3 are fine.
-  - Approved by `code_lead` in review round 1: 856 tests pass, the script's first run, its "already done" run and its "a point moved by hand is put back" run all came from the exact file.
-  - Review round 2 (approved by `code_lead`): landing spot 8 moved to (49, -54); its nearest flower clump is 3.3 studs away. Only `LANDING_PLACES[8]` and its test changed; the script's first run moved only spot 8, the second said "already done"; 860 tests pass.
+- History: [docs/progress/v1/history/core-heist.md, "Task 23"](../progress/v1/history/core-heist.md#task-23)
+  - History: [docs/progress/v1/history/core-heist.md, "Task 23"](../progress/v1/history/core-heist.md#task-23)
 
 **Task 41: The meadow is silent, and a Rare is louder** (added after Task 23; built after Task 23's review round 1, before Task 24)
 - Spec rules: Rule 8 (Steps make noise): noise counts only on the giant, from his boots up, including the ramps and ladders; spec section 5, the zone multiplier row (Meadow 0) and the carrying row (Rare ×2.5), and worked examples 1 and 2; Check B1 and the new Check B3 (fair for every garden).
@@ -384,7 +384,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - walking from garden 8 to the last meadow point before the left ramp (`Meadow_5`) and back with no egg never moves the meter from 0.
   - A miss goes to `game_creator` and `product` unchanged.
 - Order: after Task 23's round 1, because that round moves garden 8's way round the bush and the boulder, which this measurement walks. Before Task 24, because the spec and the code disagree until it is done, and Task 25's warnings need the right meter.
-- Result (approved by `code_lead` in review round 1): only `Config` changed outside the tests; 860 tests pass (856 before, 4 new). In Play, Rare_1 heists peaked at 68.6% (garden 4), 68.9% (garden 1, banked for real) and 71.6% (garden 8), 3 points apart; Rare_2 from garden 8 peaked at 84.4% and he stayed asleep; the walk with no egg to `Meadow_5` and back never moved the meter. Every peak is where the player steps off the ramp's foot, as worked example 1 says. code_lead's own check: a meadow walk with no egg made no meter change at all, and walking up the left ramp added 8.8 (the example says +9).
+- History: [docs/progress/v1/history/core-heist.md, "Task 41"](../progress/v1/history/core-heist.md#task-41)
 - Found in Play: on phones, Roblox's auto-jump (an automatic hop when a phone player walks into a ledge) made the walker hop twice on the giant, and the thuds woke him. `game_creator` turned auto-jump off for the whole game: Task 42.
 
 **Task 42: Phone auto-jump is off** (added after Task 41; built after Task 23's round 2, before Task 24)
@@ -394,7 +394,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
 - Files: `src/tests/server/World/RealWorld.spec.luau` (builder); `default.project.json` (main chat, step S7).
 - Failing test first: in `RealWorld.spec`, next to "the slope limit is 70", the test "phone auto-jump is off" checks `StarterPlayer.AutoJumpEnabled` is false. It fails today, because Roblox's default is true. After S7 it passes.
 - Done when: the test passes, and in Play with the iPhone 14 simulator (auto-jump left at the game's setting, never changed at runtime): the player's and the character's `AutoJumpEnabled` are false; walking into a garden fence and a ramp foot makes no hop; one full Rare_1 heist from garden 1 along the route needs no jump, never gets stuck, and he doesn't wake. On the computer, Space still jumps.
-- Result (approved by `code_lead` in review round 1): the test failed before step S7 and passes after it; 861 tests pass. In Play on the iPhone 14 simulator, auto-jump was off for the player and the character; walking into a garden fence and along the ramp's foot made no hop; a full Rare_1 heist from garden 1 needed no jump, never stalled, and banked the egg with him asleep. On the computer, Space still jumps. code_lead's own check: walking into the ground's edge and a candle on the phone made no hop, and the thumbstick and Jump button show clear of Tiptoe.
+- History: [docs/progress/v1/history/core-heist.md, "Task 42"](../progress/v1/history/core-heist.md#task-42)
 
 **Task 24: Footprints**
 - Spec rules: Rule 2 (Footprints show the way); spec section 6, "Spawn" row: the tip "Follow the glowing footprints!".
@@ -406,19 +406,12 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - They are copies of `ReplicatedStorage.Assets.Footprint` (a Model in the place file), made by this player's own client in the Workspace, so only this player sees them. Each one lies on the ground under it and points the way to walk.
 - Failing test first: on small fake routes, `RouteGraph` finds the shortest way, joins at the nearest spot on a link, picks the waiting egg with the shortest walk (not the nearest in a straight line), and places footprints every 3.6 studs counted from the target. `Footprints` (fake world and clock): it shows the way to the nearest waiting egg; while carrying, the way to the player's own gate; it moves on when that egg is taken; it shows nothing with no waiting egg; stopping removes every footprint and connection. `Messages`: the tip shows from the start and hides for good at the first grab.
 - Done when: the tests pass. In Play only this player sees footprints; they lead to the nearest waiting egg across the bridge, turn to the player's own gate while carrying, and move on when an egg is taken. The tip "Follow the glowing footprints!" shows until the first grab. Compare with `view-spawn.png` and `hud-*-spawn.png`.
-- Result (code approved by `code_lead` in review round 1; `designer`'s look check is running): 941 tests pass (80 new). In Play the footprints lead across the bridge to the nearest waiting egg, turn to the player's gate while carrying, go up the left ramp when only a Rare waits (garden 5), only exist on this player's client, and are rebuilt cleanly after a respawn. One addition, accepted: a footprint never drops more than 1.5 studs below the route line (`MAX_DROP`), because a ray fell between bridge planks onto the stream bed. The `Messages` tests that said "no tip at the start" were rewritten for the new rule, which is correct. Two small points, not blocking: every update lays every footprint again (up to 100 ground rays every 0.25 s), which is worth trimming only if the "Speed on phones" check (see "Checked only by playing") shows a cost; and the test named "... after a respawn" doesn't respawn (the tip state lives in a client script that runs once per visit, and Play showed it stays gone).
+- History: [docs/progress/v1/history/core-heist.md, "Task 24"](../progress/v1/history/core-heist.md#task-24)
 - For `designer` (look): from the real spawn camera the footprints hide behind the garden's front edge and the player's body, and on the ramp the plank cleats cut across them.
-- Review round 1 (`designer`'s look check asked for 3 changes; `product` added the ease-back to Rule 1 (Spawn facing the giant) and a "Spawn camera ease-back" row to spec section 5). One handoff to a fresh builder, in this order:
-  1. **Brighter colour.** All 4 parts of the footprint template (`ReplicatedStorage.Assets.Footprint`: Sole, Toe1, Toe2, Toe3) go from pale #FFEC78 to #FFD43B, still Neon and the same size. Why: the pale trail washed out on the bridge planks and looked like the cream Common egg. This is a world change, made by `tools/world/09-footprint-colour.luau` and guarded by a real-world test.
-  2. **Higher on the ramp planks.** On the two boot-ramp planks (`Ramp_Walk`), a footprint sits 0.35 studs above the plank instead of 0.05 (`Config.Footprints.RampLift`). Why: the ramp's cross-strips (cleats) stick up 0.295 studs and cut through footprints any lower. The ground finder now also says which part it hit. A real-world test checks that 0.35 clears every cleat.
-  3. **Camera eases back on the first move.** The 36° tilt at spawn stays, so the first view still shows his face and the Z Z Z. The first time the player walks, if they haven't turned the camera yet, it eases back to Roblox's normal 15° down over 0.6 seconds (`Config.Spawn.EaseBackSeconds`), keeping its left-right direction and distance. A player who turned the camera first keeps their own view. Why: at 21° up the camera sits just above the lawn and the trail can't be seen on the walk. Files: `src/client/Fx/CameraFx.luau` and its test.
+- History: [docs/progress/v1/history/core-heist.md, "Task 24"](../progress/v1/history/core-heist.md#task-24)
 - Files in round 1: `tools/world/09-footprint-colour.luau` (new), `src/shared/Config.luau`, `src/client/World/Footprints.luau`, `src/client/Fx/CameraFx.luau`, and tests (`Config.spec`, `Footprints.spec`, `CameraFx.spec`, `RealWorld.spec`).
 - Round 1 result: 972 tests pass (31 new). The colour and the ramp height passed `code_lead`'s review and `designer`'s look check. The ease-back runs 21° up to 15° down in 0.6 s at gardens 1, 4 and 7 and on the phone. One problem: a camera turn that starts during the ease is ignored, and stays ignored after the ease while the key or finger is held. `product` decided this is not acceptable and added to Rule 1 (Spawn facing the giant): "A camera turn during the ease (key, mouse or touch) must stop the ease at once and work straight away."
-- Review round 2 (one fresh builder): **a camera turn during the ease works at once.**
-  - Why it happened: the ease held the camera `Scriptable`, and Roblox turns its own camera input off while the camera is `Scriptable`. A press that starts then is dropped until the player presses again.
-  - The fix (`code_lead`'s choice, tried in Play first): the camera stays `Custom` the whole time. Every frame, right after Roblox's camera has moved it, CameraFx changes only the pitch. If the player is turning the camera (Roblox's own `CameraRotationAction` is not zero: keys, mouse, touch and gamepad all feed it), the ease stops on that frame. The spawn view is also never put back while the player is turning.
-  - Files: `src/client/Fx/CameraFx.luau` and `CameraFx.spec`.
-  - Mouse and touch can't be dragged with the Studio tools, so they are proved by unit tests (any turn stops the ease, and the camera never leaves `Custom`) and by setting `CameraRotationAction` in Play on the phone simulator, the same input a touch drag gives.
+- History: [docs/progress/v1/history/core-heist.md, "Task 24"](../progress/v1/history/core-heist.md#task-24)
 - Round 2 result (approved by `code_lead`): 990 tests pass. In Play, W then Left 0.2 s later: the ease stopped on the first frame of the turn, the camera turned on every frame while Left was held, and it stayed `Custom` throughout. On the phone simulator, setting `CameraRotationAction` mid-ease did the same. A plain ease still runs 21° up to 15° down in 0.6 s at gardens 1, 4 and 7 and on the phone, with no snap back. Real mouse and touch drags are left to `qa` (see "Checked only by playing").
 
 ### Part 5: Warnings and the wake-up
@@ -436,12 +429,8 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - `product`: the tip "Stand still or tiptoe!" shows for 3 s, to carriers too, in the carry pill's place. The bubble stays 3 s. The Z Z Z and snore puffs come back when the meter falls to 75, or when Heavy Sleep starts.
   - `designer`: the Tiptoe glow is an orange ring (10 px on computers, 6 px on phones, 45% see-through) that holds 0.4 s and fades over 0.8 s, behind the white "on" ring. The arm twitch and the eyelid flutter each take 0.5 s (0.25 up, 0.25 down), twice. The Z Z Z fade to 50% see-through over 0.2 s, hold, and come back over 0.2 s, 2 s in all.
 
-- Built (approved in review round 1, 2026-10-13). 1061 tests pass. `designer`'s change during the build: when Tiptoe is on, the orange glow sits just outside the white "on" ring (so it shows in full on phones too), and goes back to the button's edge when Tiptoe turns off. Accepted on purpose: `GiantFx.luau` was written before its tests (a break of the test-first rule). The builder proved every test can fail by breaking the code on purpose (about 20 breaks, each caught), so the tests were kept and not rewritten.
-- Round 1 (`designer`'s look check, 2026-10-13: **changes**, 2 values; the style guide is updated):
-  - the Tiptoe glow is 15% see-through instead of 45% (at 45% it looked like a faint brown ring over the dark hill behind the button). Width, timing and placement stay;
-  - the arm twitch lifts 12° instead of 5° (5° moved the fist only about 25 px), around the same axis, with the same timing.
-  - The numbers live in `TiptoeButton.luau` (the glow's starting see-through) and `GiantFx.luau` (`twitchDegrees`). `designer` accepted the bubble placement as built.
-  - Approved by `code_lead` and `designer` (2026-10-13). Still 1061 tests. In Play the glow logged 0.15 for 0.4 s, then faded and hid at 1.2 s; the arm peaked near 12° twice and went back exactly to its start. Clear orange on the computer and the iPhone 14.
+- History: [docs/progress/v1/history/core-heist.md, "Task 25"](../progress/v1/history/core-heist.md#task-25)
+  - History: [docs/progress/v1/history/core-heist.md, "Task 25"](../progress/v1/history/core-heist.md#task-25)
 
 **Task 26: Wake-up timeline and landing spots**
 - Spec rules: Rule 12 (Waking bounces everyone off), Rule 13 (Hand slams hunt egg carriers), the timing, and Rule 14 (Heavy Sleep after waking), the timing.
@@ -453,8 +442,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
 - How it works (`code_lead`'s choices):
   - `GiantCycle` counts in seconds since he woke. Each tick the director asks for the events between the last tick's time and this one's (slam warnings, slam landings, Heavy Sleep, back to Asleep at 0), so a slow tick can never skip or repeat one. At 15 s the 6th slam lands before Heavy Sleep starts.
   - `BounceOff` gives out spots closest pair first, measured across the ground (height ignored, because players float straight down). If there are more players than spots, spots are shared.
-- Built (2026-10-13): 1092 tests pass (31 new). Review round 1 (`code_lead`): **changes**, one test. The rule "a tie goes to the lower landing spot number" had no test that could fail when the spots come in another order. Accepted as built: with no players, `BounceOff` returns an empty list even when there are no spots; it only stops with an error when someone needs a spot. The world check already stops the server if the landing spots are missing.
-- Approved in review round 1 (2026-10-13): the new test fails when the tie rule is removed. 1093 tests pass. No Play check: nothing calls these modules until Task 27.
+- History: [docs/progress/v1/history/core-heist.md, "Task 26"](../progress/v1/history/core-heist.md#task-26)
 
 **Task 27: Wake-up on the server**
 - Spec rules: Rule 12 (Waking bounces everyone off) and Rule 14 (Heavy Sleep after waking).
@@ -470,25 +458,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - **A reset by hand:** if anything sets `Phase` back to `Asleep` during the timeline (a test reset from the Studio tools), the timeline stops.
   - **Not here:** the slam events from `GiantCycle` are skipped until Task 30. `Floater` remembers who is still floating (`isFloating`), so Task 29 can skip them as slam targets.
 
-- Built (2026-10-13): 1141 tests pass (48 new). In Play a belly wake and a ladder wake both floated down onto landing spot 6, not flung, egg and Tiptoe kept; the timeline ran Awake, Heavy Sleep at 15 s, Asleep at 0 at 60 s. Accepted: a player in a garden is never bounced, whatever zone box they stand in (Rule 6: Gardens are safe), with its own test.
-- Review round 1 (`code_lead` and `designer`, 2026-10-13): **changes**:
-  1. The push let go late: the root sank 0.8 studs into the grass and popped back up. It now stops 2.5 studs above standing height (`designer`), and the server also stops it by time, because it sees a player's position late.
-  2. Bounced players turn to face his face, and the new `Bounced` remote snaps their camera behind them, 30° up (35° if his eyes don't clear the meter at landing spots 2 and 6); the first move after landing eases it to 15° down, like the spawn (spec Rule 12, updated by `product`). Adds `WorldIndex.loadGiantFace`, `Net`'s `Bounced`, `Config.Wake.BounceCameraUpDegrees` and the client's `CameraFx` and `init.client.luau` to this task's files.
-  3. A reset from outside also removes `PhaseEndsAt`.
-- Round 1 approved by `code_lead` (2026-10-13): 1178 tests pass. In Play the push ended 2.7 studs above standing height, with no sink (0.06 studs) and no pop; the player faced his face exactly, the camera held 30° up through the float, and a W press after landing eased it to 15° down in about 0.6 s. Accepted: the 4 s limit stays as a backstop in case the float numbers change; the camera reads 20 studs away for the one frame of the move; the camera waits until the float has really been seen before it counts a landing.
-- Round 1 look check (`designer`, 2026-10-13): every code change approved. One world change, round 2: during the float and just after landing, the camera sits 9 to 11 studs behind the player and low down, so it ends up inside meadow props. A sunflower head filled a third to half of the screen mid-float at landing spots 3, 5, 6 and 7, and flowers stood in front of the player after landing at spots 6 and 8 (style guide row "Clear view behind each landing spot").
-- Round 2 (world prep, sent to a fresh builder): a new script, `tools/world/10-clear-landing-views.luau`, takes 7 meadow props out of `World.Nature`: the sunflowers at (51.7, -96.9), (-50.3, -70.7), (-52.9, -62.4), (-60.2, -59.0) and (47.7, -72.0), the white flower clump at (-56.6, -62.9) and the yellow one at (52.6, -59.8) (each model's middle, x and z).
-  - How (`code_lead`'s choices): each prop is matched by its name and its middle (within 0.5 studs; the next prop with the same name is at least 8 studs away). The props move to `ServerStorage.ArtLibrary.RemovedNature`, like the props `02b-garden-extras` took away, so nothing is destroyed and they are easy to bring back. They leave the meadow, as `designer` asked. The script checks everything first, says "already done" on a second run, and also reports which props stand behind each landing spot.
-  - Failing test first: a real-world test that the 7 props are no longer in `World.Nature` but in `RemovedNature`, and that the meadow keeps 23 sunflowers, 21 white and 24 yellow flower clumps (28, 22 and 25 before).
-  - No route or landing spot test depends on these props: those tests only need some sunflowers and bushes to exist, and they check distances, which only grow when props go away. `08-route` must still say "already done" afterwards. Its comment on `Meadow_4` named one of the removed sunflowers, so it is reworded.
-  - Done when: also new spot 6 float and landing screenshots on the computer and the iPhone 14, for `designer`.
-- Round 2 approved by `code_lead` (2026-10-13): 1179 tests pass. The 7 props are in `RemovedNature`, and the meadow keeps 23 sunflowers, 21 white and 24 yellow flower clumps. `08-route` still says "already done". In Play at landing spot 6 nothing stood between the camera and the player or his face. `designer` approved the props. Spot 5 keeps its white flower clump: `designer` set the rule to 12 studs back, and the clump is 13.7 back.
-- Round 2 look check (`designer`): one more change, round 3. Just after landing, the low camera made the footprint trail next to the landing spot look like a huge flat yellow blob over the lower right of the screen, behind Tiptoe and Jump. `product` added a bullet to Rule 2 (Footprints show the way): the trail hides from the start of the float until the first move after landing, then fades back in over 0.6 s (style guide row "Footprints during the bounce view").
-- Round 3 (client only, sent to a fresh builder; `scratchpad/handoffs/task27-round3.md`). Adds `src/client/World/Footprints.luau`, its spec and `CameraFx.spec` to this task's files.
-  - How (`code_lead`'s choices): the footprints get `hide`, `fadeIn(seconds)` and `show`. The camera watcher tells the footprints "hide" when a bounce is accepted. It then runs its own wait for the first move after landing, separate from the camera's wait, so a camera turn doesn't stop it. It sends "fadeIn" at that move, or "show" at once on a respawn. The fade uses the camera ease's 0.6 s (`Config.Spawn.EaseBackSeconds`), so the two stay together.
-  - Failing tests first: the footprints hide at once, stay hidden for new copies, and fade back evenly; a camera turn before the first move still brings the trail back at that move.
-  - Done when: in Play at spot 6, a per-frame log shows the trail hidden from the bounce to the first move and fading in over about 0.6 s. Landing and after-move screenshots on the computer and the iPhone 14 go to `designer`.
-- Round 3 approved by `code_lead` and `designer` (2026-10-13): 1204 tests pass (25 new). In Play the trail stayed hidden from the bounce through the landing, then came back from fully see-through to normal over 0.6 s while the camera eased from 30° up to 15° down. After a camera turn during the float, the trail still came back at the first move, and the camera didn't ease. No yellow shows in the landing shots. Accepted: one existing test now counts 2 waiting threads after a second bounce (the camera's and the trail's), and it still fails if the old wait is left running. `stop` both cancels the trail wait and clears the listeners: either one alone would do, and keeping both is harmless. The big red shape beside spot 6 after a step right is the giant's sock, a set piece (`designer`: accepted on purpose). **Task 27 is done.**
+- History: [docs/progress/v1/history/core-heist.md, "Task 27"](../progress/v1/history/core-heist.md#task-27)
 
 **Task 28: Wake-up on screen**
 - Spec rules: Rule 12 (Waking bounces everyone off), the looks.
@@ -521,11 +491,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - a carrier within 15 studs of the centre when it lands is caught.
 - Done when: all pass.
 - Owners' answers before the handoff (`game_creator`, 2026-10-13, now in Rule 13 and spec section 8): a lone carrier is targeted by every slam; a carrier on the giant can be targeted too (the circle sits where they stand); a circle aimed at a carrier may cover a landing spot, but a player still floating down is never caught, and neither is a carrier who touched down less than 1.5 s before the hand lands.
-- Approved at the first review (`code_lead`, 2026-10-13): 1395 tests pass (64 new: 61 in `Slams.spec`, 3 in `RealWorld.spec`). Every test that passed at once was proven by breaking the code on purpose. In the real world 11 of the 18 meadow route points fit as empty-slam spots; the other 7 each cover a landing spot. No Play check: nothing calls `Slams` until Task 30. Accepted as built:
-  - "within 15 studs" includes exactly 15, for players and landing spots as well as for catches;
-  - a pushed circle moves in 0.1-stud steps, so it is never more than 0.1 studs further than needed; if nothing before his face is clear (it can't happen in the real world), it ends under his face;
-  - when no meadow point fits, a tie goes to the first point in the list;
-  - the circle's centre for a target is the target's middle (about 3 studs above their feet); Task 30 finds the surface under it for drawing.
+- History: [docs/progress/v1/history/core-heist.md, "Task 29"](../progress/v1/history/core-heist.md#task-29)
 
 **Task 30: Slams on the server**
 - Spec rules: Rule 13 (Hand slams hunt egg carriers) and Rule 6 (Gardens are safe), no slams in gardens.
@@ -537,10 +503,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - **Being caught (`Catcher`):** the egg goes back to its spot first, then the player is moved onto their own spawn spot (in front of their gate), turned to face his face like at spawn, then `Caught` goes to everyone. No respawn: Tiptoe, the character and the camera stay as they are.
 - Failing test first (fake players, fake clock): each slam sends `SlamWarning` 1.5 s before `SlamLanded` with the same point; a carrier inside when it lands loses the egg to its spot, is moved to their own spawn spot and `Caught` is sent, Tiptoe stays as it was; a floating carrier, one in a garden and one who touched down 1.4 s ago are not caught; a reset stops the slams.
 - Done when: the tests pass, and in Play (computer and iPhone 14): a carrier who stands still is caught and sent home without the egg; a carrier who runs out of the circle keeps the egg; a carrier moved into a circle just after landing from the bounce-off is not caught. Task 31 draws the real circles and the fist, so this check marks each circle with a temporary red disc made at runtime. Screenshots go to `designer`.
-- Approved at the first review (`code_lead` and `designer`, 2026-10-13): 1459 tests pass (64 new). In Play a still carrier was caught at slam 1 and stood on their own spawn spot facing him, Tiptoe kept; a carrier who ran was not caught; one moved into a circle 0.1 s after touching down was not caught, and slam 2 caught them. Accepted as built:
-  - a caught player appears about 0.5 studs above the spawn spot (its top stands above the grass) and settles within 2 frames, with no fall or thud (`designer` accepted it);
-  - only the slam before is avoided for empty slams, so slams 4 and 6 can hit the same meadow point (Task 29's rule);
-  - the camera after a catch is left to Roblox (Task 43 snaps it behind the player).
+- History: [docs/progress/v1/history/core-heist.md, "Task 30"](../progress/v1/history/core-heist.md#task-30)
 
 **Task 31: Slams on screen**
 - Spec rules: Rule 13 (Hand slams hunt egg carriers): "a red circle shows where it will land, on the surface where the target stands", and the "Awake" row of spec section 6 ("Each slam"). From round 3 also Rule 12 (Waking bounces everyone off): a circle under a just-landed player starts the camera's ease.
@@ -548,31 +511,14 @@ These are tools and setup, so the main chat does them once. Why each one is need
 - How it works (`code_lead`'s choices, in `docs/architecture.md`, section 3): each device draws its own circle, fist and dust from `SlamWarning`; the fist's fall is timed by the landing time on the shared server clock; the circle tilts to the slope under it; the arm turns about his shoulder toward the point. Looks from the style guide's "The slams" section.
 - Failing test first: the circle is two discs (gold 30 studs under red 27 studs, 20% see-through, 0.05 thick, 0.02 and 0.01 studs up, not solid, no shadow); the fist is 45 studs up when it appears and touches the point at the landing time; the circle fades out over 0.3 s once the fist lifts; at full swing the arm points from the shoulder at the point; stopping removes everything.
 - Done when: in Play, on computer and iPhone 14: a gold-rimmed red circle appears 1.5 s before each slam, on the grass and on his belly; his arm swings toward it; the fist drops onto it as the slam lands, with white dust and gold sparkles, then lifts away; a carrier who lands from the bounce inside a circle doesn't see the screen turn red; the pill and banner never cover the player or their egg. Compare with `view-slam-drop.png`, `view-slam-land.png` and `view-phone-slam-land.png`.
-- Review rounds: round 1 kept the arm out of his body and made the dust bigger. Round 2 made both discs Neon, with the red `#E0233A`, so the Rare eggs' blue lights can't turn it pink. Round 3 (`designer`'s check, and Rule 12 (Waking bounces everyone off) updated by `product`):
-  - every circle follows the shape under it (his body, the boot ramps, the bridges and the meadow ground; no flat discs anywhere): small pieces (at most 3 studs a side) in rings, each placed by its own ray, tilted to match, and split smaller where it would sit buried or floating (new pure module `src/client/Fx/SlamCircle.luau`). The rays pass through players, eggs and props. Building is spread over frames, at most 1,000 rays a frame;
-  - a red circle that appears under a landed player who hasn't moved or turned the camera starts the 15°-down ease at once (`CameraFx`); the footprints still wait for the first move.
-  - Failing tests first: the ring layout covers the circle with cells no bigger than 2.9 studs; on maths surfaces (sphere, bowl, fold, edge) every piece sits 0.02 to 0.3 studs above the surface at 9 points; the ray budget holds; `circleAt` eases the camera only for a landed, unmoved player with the circle under them.
-- Approved at review round 3 (`code_lead` and `designer`, 2026-10-13): 1705 tests pass. In Play, circles lay on his belly, the boot, the ramp, the bridges, the water and the grass, on the computer and iPhone 14; a landed player who hadn't moved saw the camera tip from 30° up to 15° down in 0.6 s as a circle appeared under them, and the footprints stayed hidden. Accepted as built:
-  - the "stretch" code (a piece on a leaning surface grows to cover what lies under its cell, up to 3 studs) was written before its tests, after a Play finding; the tests were then proven by breaking the code on purpose. A one-time exception to test-first;
-  - gaps: on smooth ground no gap is wider than 0.3 studs; at creases, plank edges and shorelines the edge is ragged, with gaps up to a few studs (`designer` accepted this for V1; the style guide records the numbers). Playtest trigger: if a player caught on a bridge, ramp, boot or his belly says they didn't see the circle, switch to builder's tested bigger budget (gaps about 1.8%, up to 16,155 rays, 1,282 pieces and 17 frames a circle);
-  - the layout is 125 cells; a rim cell's corner reaches 15.08 studs from the middle, not 15.05, which the piece's own 0.05 margin covers;
-  - a piece checks 8 points, not 9: the middle point always passes, because the piece sits exactly 0.12 (or 0.11) studs above the ray that placed it;
-  - the fold test checks "no gap wider than half a stud" between 1.1 and 8 studs from the fold, not "every point covered": a piece is held to 3 studs, so a 2.9-stud cell on a 30° lean can't be covered exactly;
-  - a circle already showing when a player lands doesn't start the ease (Rule 12 says "appears");
-  - the stale "gold disc with a smaller red disc" comment in `Theme.luau` and a no-op sum in `SlamCircle.layout` (`width` is always 2.9) are tidied in Task 43.
+- History: [docs/progress/v1/history/core-heist.md, "Task 31"](../progress/v1/history/core-heist.md#task-31)
 
 **Task 43: Being caught on screen** (split from Task 31, so each is small enough to review in one go)
 - Spec rules: Rule 13 (Hand slams hunt egg carriers): "sent back to their own spawn spot with a star puff and the 'Caught!' card", and the "Caught" row of spec section 6.
 - Files: `src/client/Fx/Celebrations.luau` (the star puff), `src/client/Hud/Messages.luau` (the card), `src/client/Fx/CameraFx.luau` (the camera snap), `src/client/init.client.luau`, and their tests. Two tidy-ups left from Task 31, with no change in behaviour: the old "gold disc with a smaller red disc" comment in `src/client/Hud/Theme.luau`, and the no-op sum for `width` in `src/client/Fx/SlamCircle.luau`.
 - Failing test first: the "Caught!" card says "The egg went back. You lost nothing else.", sits bottom left of centre on computers and bottom centre on phones, and hides after 3 s; only the caught player gets the card, everyone sees the puff; the caught player's camera snaps behind them, 21° up, at their own zoom, with the spawn ease-back and its cancel-on-turn.
 - Done when: in Play, at gardens 1, 4 and 8 on computer and iPhone 14: the puff shows on the player at their spawn spot, the card shows for 3 s, his whole face and the slamming fist show below the meter, and the puff and card don't cover each other. Compare with `core-*-caught.png` and `view-caught.png`. Style guide row "Camera after being caught".
-- Approved at the first review (`code_lead` and `designer`, 2026-10-13): 1789 tests pass (84 new). In Play, real catches at gardens 1, 4 and 8 on the computer and iPhone 14: the player stood on their spawn spot without the egg, the camera was 21° up at the zoom they had before, his face and the fist showed below the meter, the puff wrapped the player and the card showed for 3 s. At slam 1 the card and the red wake banner don't overlap on either screen. Accepted as built:
-  - the puff bursts 30 stars and 15 smoke puffs and wraps the player's middle, not their feet (`designer`);
-  - for the first few frames (under 0.1 s) after the snap, Roblox's camera is still catching up with the move home, so it can show one frame of the old place: a jump cut, like any teleport (`designer`);
-  - a player still holding a move key at the catch gets the 15°-down ease at once, as at spawn; there is no wait for them to stand still (`designer`);
-  - the burst goes through a `burst` dependency (the game calls `emitter:Emit`), so tests can count it, like `SlamFx`;
-  - the wait for a spawn spot that hasn't streamed in yet lives in `CameraFx.whenSpotIsThere` (at most 2 s), so `init.client.luau` stays wiring only. In Studio every spawn spot was always there, so that wait is proven by tests only;
-  - the card sits on the `Hud` screen like the wake banner; its words have no outline, as in the mockup.
+- History: [docs/progress/v1/history/core-heist.md, "Task 43"](../progress/v1/history/core-heist.md#task-43)
 
 **Task 32: Heavy Sleep on screen**
 - Spec rules: Rule 14 (Heavy Sleep after waking), the looks.
@@ -585,7 +531,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
 
   Compare with `core-*-heavysleep.png`.
 - How it works (designer's answers): the Z Z Z sign grows around its bottom-left corner, so it grows up and to the right, away from his face. When Heavy Sleep ends, the Z Z Z shrink back over 0.5 s with the pose's smooth easing, and the puffs are normal at once. The normal look is always what the place had, saved the first time.
-- Approved at the first review (`code_lead` and `designer`, 2026-10-13): 1823 tests pass (34 new). In Play from garden 1 the sign was 40 x 40 studs with Rate 6 in Heavy Sleep, and 16 x 16 with Rate 2 and the meter at 0 after it. Two tests that passed at once are kept as guards: an 85 warning while he is asleep leaves the normal look, and the puffs are back to normal at once when Heavy Sleep ends. At garden 4 on the phone one whole Z and half of the next show below the meter; at garden 1 on the phone the top Z is cut by about 10 px; from his belly the Z Z Z are above the screen. `designer` accepted all three and added a style guide rule: at least one whole Z below the meter at every garden's spawn spot, on the computer and the iPhone 14.
+- History: [docs/progress/v1/history/core-heist.md, "Task 32"](../progress/v1/history/core-heist.md#task-32)
 
 **Task 33: Analytics events**
 - Spec rules: none (spec section 10, "Success signals").
@@ -600,7 +546,7 @@ These are tools and setup, so the main chat does them once. Why each one is need
   - a catch logs "PlayerCaught" with the rarity of the lost egg.
 - How the breakdowns are sent: `AnalyticsService:LogCustomEvent(player, "EggHome", 1, customFields)`, where `customFields` uses the keys `Enum.AnalyticsCustomFieldKeys.CustomField01.Name` (the rarity) and `CustomField02.Name` (the garden number, from the player's `PlotIndex`, as text). Custom field values must be text. Checked in the Roblox docs on 2026-10-12 and 2026-10-13. The garden number feeds the "Ways up to the belly" trigger in spec section 5.
 - Done when: all events in the section 10 table are logged at the right moments: the tests pass, and in Play the console shows one "event fired" line per expected event during a real heist, a wake-up and a catch.
-- Approved at the first review (`code_lead`, 2026-10-13): 1905 tests pass (82 new). In Play from garden 1, joining logged one onboarding line, walking out past 10 studs one "Heist" line, and a wake-up with nobody named one custom line ("Waker left"); builder's run also showed the grab, the bank, a "Jump on him" wake and a catch. Accepted choices: a grab while an earlier heist is still at step 2 opens a new heist; a banked egg with no open heist logs no funnel step; "GiantWoke" says "Waker left" whenever the waker can't be found. Two code lines no test can flip are kept as guards: ending the heist at a catch (the next check ends it anyway, because Carrying is already cleared) and the "waker not in this tick" branch in GiantDirector (it can't happen today).
+- History: [docs/progress/v1/history/core-heist.md, "Task 33"](../progress/v1/history/core-heist.md#task-33)
 
 ### Part 6: Build review fixes (added after the build review, 2026-10-13)
 
@@ -614,7 +560,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Done when: in Play beside Rare_1, three uphill jumps each add +30 once; a still jump, a downhill jump and a real Space press add +30 once each; an uphill jump on the boot ramp adds +20; a meadow jump and the whole walk up to Rare_2 add no thud.
 - Architecture change (written into `docs/architecture.md` at review): the jump comes from the player's own device (the server sees its character's state). That is safe, because it can only add noise to the player's own fall, one thud per fall, like a real jump.
 - Known side effect, unchanged: a thud is added when the player next stands still, so a player who jumps and keeps walking up gets it when they stop. A jump that ends against the belly wall (Roblox's "Climbing" state, which is not standable ground) thuds when they step off it.
-- **Approved 2026-10-13** at the first review: 1930 tests pass, `./scripts/check.sh` passes. code_lead's own Play check beside Rare_1: an uphill jump +29.9 once, a real Space press +29.9 once. Holding Space to hop without stopping counts as one fall, so it thuds once, when the player stops (also true before this task).
+- History: [docs/progress/v1/history/core-heist.md, "Task 44"](../progress/v1/history/core-heist.md#task-44)
 
 **Task 45: The spawn view shows the first egg**
 - Spec rules: Rule 1 (Spawn facing the giant), Rule 2 (Footprints show the way), and Rule 13 (Hand slams hunt egg carriers) for the spawn after a catch.
@@ -622,7 +568,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Files: `src/shared/Config.luau` (the 20° and the 1.5 studs); `src/client/World/Footprints.luau` (one shared "which egg" answer for the trail and the camera); `src/client/Fx/CameraFx.luau` (the turn, the height, and the wake shake adding to the height instead of fighting it); `src/client/init.client.luau`; their tests.
 - Failing test first: an egg 10° to the right ends 20° to the right; an egg dead ahead ends 20° to the left; an egg 25° off doesn't turn anyone; the camera height is 1.5 at the spawn view and exactly 0 after the 0.6 s ease; a wake shake during the spawn view ends on the height, not on 0.
 - Done when: each garden's turn matches designer's (garden 1 about 10° right, 2 about 14° left, 6 about 16° left, 7 about 14° right, 8 about 13° right, 3 to 5 none); in Play on the computer and the iPhone 14 the egg, its label and the trail show beside the player at gardens 1, 2 (or 6) and 4, also after a catch; a forced 20° case still shows his face and a whole Z below the meter; the shake and a camera turn leave no height behind.
-- **Approved 2026-10-13** at the first review (code_lead and designer): 1983 tests pass, `./scripts/check.sh` passes. The turns match designer's numbers within 0.3° at all 8 gardens. Accepted builder choices: the camera turns from the egg spot's own place (not its route point); no turn for a player already turning the camera at spawn; the raise and the wake shake share one writer of `Humanoid.CameraOffset`; the height ease has its own render binding. An egg 0.01° or more off dead ahead keeps its side (designer agrees).
+- History: [docs/progress/v1/history/core-heist.md, "Task 45"](../progress/v1/history/core-heist.md#task-45)
 
 **Task 46: Eggs never hide the player**
 - Spec rules: Rule 3 (Eggs wait in three zones), section 6 (spots and states).
@@ -630,7 +576,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Files: `src/client/World/EggFade.luau` (new) and its test; `src/client/init.client.luau`.
 - Failing test first: a box halfway between the camera and the player blocks, a box behind either doesn't; a blocking egg reaches exactly 0.7 at 0.15 s and is back at 0 at 0.3 s after it stops blocking.
 - Done when: in Play, just below Rare_1 on the belly path, the player shows through the Rare egg on the computer and the iPhone 14 (review shots 08 and 18 fixed), and the egg still reads as a Rare.
-- **Approved 2026-10-13** at the first review (code_lead and designer): 2015 tests pass, `./scripts/check.sh` passes. In Play the Rare_1 egg on the belly and the Common_1 egg in the meadow went from clear to 70% see-through in about 0.15 s and back in about 0.3 s, on the computer and the iPhone 14; the carried egg stayed solid; the server's eggs stayed at 0. Accepted builder choices: a small helper picks the head and the root of a living character, so the start-up script holds no logic; a fade within a millionth of clear or full counts as there; each egg's box is measured once, on the first frame it has a part; a part that arrives while the egg is faded gets the same value; a refilled egg starts clear. The test uses the egg's outer box, so a leaning Rare can fade when the view only crosses a corner of that box (designer agrees).
+- History: [docs/progress/v1/history/core-heist.md, "Task 46"](../progress/v1/history/core-heist.md#task-46)
 
 **Task 47: Egg labels never stack, and a bigger grab pill on phones**
 - Spec rules: Rule 3 (Eggs wait in three zones) and section 6 (egg labels); Rule 4 (Hold to grab).
@@ -638,7 +584,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Files: `src/client/World/SpotLabels.luau`, `src/client/Hud/Layout.luau`, their tests.
 - Failing test first: of two overlapping labels the nearer shows, in any list order; touching edges don't count; a label touching the meter's box or past the top edge fades, and comes back once clear; the phone pill's key plus padding is 44 px.
 - Done when: in Play the boot top and the belly views of review shots 11, 20 and 22 show one label where two stacked; with the camera close behind a meadow Common (Task 46 shots 03 and 06) its label is gone instead of cut under the meter; the phone pill measures 44 px tall and still grabs; the computer pill is unchanged.
-- **Approved 2026-10-13** at the first review (code_lead and designer): 2084 tests pass, `./scripts/check.sh` passes. In Play on the belly below Rare_1, Rare_2 to Rare_4 (under the meter or past the top) were hidden and Rare_1 showed; on the iPhone 14 the phone pill measured 44 px tall (34 px key, 18 px hand, 16 px words, 200 x 60 billboard). One test file outside the list changed: two `GrabPrompt.spec` checks of the old phone sizes, because the sizes changed (accepted). Accepted builder choices: the rectangle is the drawn words (`TextBounds`), not the whole sign; labels behind the camera, past 75 studs or not drawn yet take no part and fade back in; without a screen (tests) labels are never hidden. designer accepted that on the iPhone 14 at garden 3's spawn, Common 4's label fades because its corner overlaps Common 3's by about 10 x 8 px (allowing small overlaps would let letters touch).
+- History: [docs/progress/v1/history/core-heist.md, "Task 47"](../progress/v1/history/core-heist.md#task-47)
 
 **Task 51: Egg labels sit straight above their egg** (added 2026-10-13, after the Task 47 review)
 - Spec rules: Rule 3 (Eggs wait in three zones) and section 6 (egg labels), with designer's style guide row "Egg labels sit straight above their egg" (product adds it to the spec first).
@@ -648,7 +594,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Failing test first: the test helper changes to draw the label the way Roblox really does; then a label on a 30° spot must sit straight above the egg's tip, and an empty tilted spot's countdown 1.5 studs straight above the Base.
 - Done when: in Play a marker ball at the label's intended middle sits on the drawn label (Rare_1 and a meadow Common); the "Rare" over Rare_1 sits straight above its egg on the computer and the iPhone 14; meadow labels don't move; Task 47's rules still work.
 - Order: after Task 49.
-- **Approved 2026-10-13** at the first review (code_lead and designer): 2119 tests pass, `./scripts/check.sh` passes. The test helper `centreOf` now draws the label the way Roblox really does (the offset turned by the Base). That is a test change because the facts about Roblox changed, and with the old code it turned the tilted-spot test red. code_lead's own Play check on Rare_1: the label's drawn middle is exactly 1.45 studs straight above the egg's tip (1 stud gap plus half the label), a red marker ball there sits on the "Rare" label, and a green ball at the old spot floats far off to the side. Accepted by designer for V1: a far "Common" label can sit under the phone's Jump button (playtest trigger: if a phone player misses an egg because of it, the meter rule also covers the Jump and thumbstick areas); up close the word sits a little below the label's middle, because the text is drawn at the bottom of the label.
+- History: [docs/progress/v1/history/core-heist.md, "Task 51"](../progress/v1/history/core-heist.md#task-51)
 
 **Task 48: World prep: the garden sign reads from both sides**
 - Spec rules: section 2 (the first 60 seconds: "their own name on the gate's sign") and Rule 5 (Bring it home).
@@ -656,7 +602,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Files: `tools/world/11-sign-faces.luau` (new world script); `src/tests/server/World/RealWorld.spec.luau`.
 - Failing test first: the real-world check of the face sizes, their distance from the board and their canvas sizes fails on today's world.
 - Done when: the world script changes 16 faces, then says "already done" on a second run; in Play the name fits inside the plank from outside and shows from inside the garden. The place then has unsaved world changes.
-- **Approved 2026-10-13** at the first review (code_lead and designer): 2090 tests pass, `./scripts/check.sh` passes. code_lead's second run of the real file said "already done"; all 8 gardens have both faces 4.4 x 1.6 studs, 3.08 studs apart, canvases 220 x 80; from inside garden 1 the name sits inside the plank. A long name ("sushi_salmon's Garden") wraps to two lines and still fits (designer agrees). Accepted builder choices: "0.35 studs out" is measured to the face's middle; the board is found by a 23 x 9 grid of rays at the mesh's collision shape; a face within 0.005 studs of its place counts as done. The place has unsaved world changes.
+- History: [docs/progress/v1/history/core-heist.md, "Task 48"](../progress/v1/history/core-heist.md#task-48)
 
 **Task 49: The "Slam" analytics event**
 - Spec rules: none (spec section 10, "Success signals", the new "Slam" row).
@@ -664,7 +610,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Files: `src/server/Giant/GiantDirector.luau` (a `slammed` signal: who it aimed at and who it caught), `src/server/Analytics.luau`, `src/server/init.server.luau`, their tests.
 - Failing test first: a caught target logs "Caught" with value 1 on the target; a runner logs "Missed" with 0; an empty-meadow slam logs "Empty" on the player who has been in the server longest.
 - Done when: in Play a wake-up with nobody carrying logs one "GiantWoke" line and one line per slam (6), and a catch adds its "PlayerCaught" line.
-- **Approved 2026-10-13** at the first review (code_lead): 2117 tests pass, `./scripts/check.sh` passes. code_lead's own Play wake-up with nobody carrying logged 7 custom lines (one "GiantWoke", six "Slam"); builder's run with a carrier added one "PlayerCaught". The director's new `slammed` signal fires once per slam, right after that landing's catches. Accepted builder choice: when the target is still here but only another player was caught, the event is logged on the target with "Caught". That is the spec's own wording ("Logged on the slam's target"), so product doesn't need to confirm it. The `planned ~= nil` guard in GiantDirector can't be flipped by a test (a slam always warns before it lands) and is kept as a guard.
+- History: [docs/progress/v1/history/core-heist.md, "Task 49"](../progress/v1/history/core-heist.md#task-49)
 
 **Task 50: Every hop thuds, even with Jump held down** (added 2026-10-13, after the Task 44 review)
 - Spec rules: Rule 8 (Steps make noise), as updated on 2026-10-13: each jump that starts on the giant thuds once when it lands, even if the next jump starts at once (Jump held down); a fall without a jump counts once. Section 8's edge case "A player holds Jump on him".
@@ -674,7 +620,7 @@ The three build reviews (`docs/reviews/core-heist.md`, game_creator and designer
 - Failing test first: 3 hops with Jump held on the belly give 3 Belly thuds; hopping off him gives Belly thuds, then one more when the hop that left him lands in the meadow, and nothing for meadow hops. Two tests change because the rule changed: "a second jump in the same fall" and "a jump during a fast fall" now expect two thuds.
 - Done when: in Play beside Rare_1, 5 s of held Space adds one +30 per hop; hopping home with Jump held thuds for every hop that took off on him, and nothing in the meadow or the garden; a single jump still adds +30 once.
 - Order: after Task 46, before 47. It shares no file with Tasks 45 to 48; it shares `init.server.luau` with Task 49, which comes later.
-- **Approved 2026-10-13** at review round 1 (code_lead): 2033 tests pass, `./scripts/check.sh` passes. In Play beside Rare_1, 4 s of held Space gave 8 jumps and 8 thuds of about +30; builder's hop home with Jump held thudded for each of the 7 hops that took off on him and for none of the 73 meadow and garden hops. Round 1 added a limit: at most 4 thuds wait for a later tick, so a device faking jumps can't grow the list. Accepted builder choices: a take-off on the same tick as a fall ending at rest counts as the take-off; the take-off tick's own downward speed counts for the fall it ends; `took` hands out a fresh list each call.
+- History: [docs/progress/v1/history/core-heist.md, "Task 50"](../progress/v1/history/core-heist.md#task-50)
 
 ## Every rule is covered
 
@@ -828,14 +774,4 @@ How reviews have been done, so a new code_lead can carry on the same way.
 
 **Handoffs:** each one goes to a fresh builder, so it repeats everything it needs, in this order: spec rules, what to read first, project facts, existing pieces with their names and shapes, what to build, failing tests first, done when (with Play steps and screenshots), not in this task, and Studio tool facts.
 
-**Where things stand (code_lead's twenty-seventh session, 2026-10-13):** Task 51 approved at the first review (2119 tests pass, `./scripts/check.sh` passes). All 51 tasks are done, and so is the build review fix round (Tasks 44 to 51). Next: qa for the whole feature, then the build reviews again (the re-check list is in `docs/progress.md`, "Gate 4 hand-over"), then Gate 4.
-
-**Before that (code_lead's twenty-sixth session, 2026-10-13):** Task 49 approved at the first review (2117 tests pass). `baseline-before-task51` is taken, and `handoffs/task51.md` has the test count (2117) and points to the label rule product added to spec section 6. Before that: Task 48 approved (2090 tests; the place has unsaved world changes) and Task 47 approved (2084 tests); Task 51 (labels straight above tilted eggs) was added after Task 47. Next: Task 51, then qa for the whole feature.
-
-**Before that (code_lead's twenty-fifth session, 2026-10-13):** Task 46 approved (2015 tests pass). `baseline-before-task50` is taken and `handoffs/task50.md` has the test count. `handoffs/task47.md` now also has designer's new rule "Egg labels never sit under the meter" (product is adding it to the spec). Task 50 approved at review round 1 (2033 tests pass; the jump row in `docs/architecture.md` section 3 covers it). `baseline-before-task47` is taken and `handoffs/task47.md` has the test count and the meter rule. Next: Task 47, then 48, 49.
-
-**Before that:** Task 45 approved (1983 tests pass); `baseline-before-task46` is taken and `handoffs/task46.md` has the test count. Before that: Task 44 approved (1930 tests pass). The Task 45 handoff now follows designer's answer on the camera height, and the Task 49 handoff follows product's answer on the Slam edge cases (both are in the spec and style guide). `baseline-before-task45` is taken (1930 tests). Next: Task 45 (being built), then 46, 50 (added: every hop thuds; handoff `handoffs/task50.md`, baseline taken just before it goes out), 47, 48, 49.
-
-**Before that (code_lead's twenty-third session, 2026-10-13):** The build reviews asked for 7 changes, planned as Tasks 44 to 49 (Part 6). Handoffs are in the session scratchpad: `handoffs/task44.md` to `task49.md`. `baseline-before-task44` is taken (1905 tests pass). Task 45's handoff waits for designer's answer on the camera height when the player turns first; Task 49's waits for product's answer on two Slam edge cases. Before each later task goes out, take its own baseline and give the builder the current test count.
-
-**Before that (code_lead's twenty-second session):** All 43 tasks are done. Task 33 (analytics) was approved at the first review (1905 tests; `./scripts/check.sh` passes). The plan is finished. The whole feature now goes to qa, then to the build review and Gate 4 (see "Gate 4 hand-over" in `docs/progress.md`). Accepted earlier: a carrier on their own spawn spot can be targeted (outside the garden box, so Rule 6 (Gardens are safe) doesn't cover it); `armClear` is a required dependency of `GiantFx`; the arm passes through his body for at most about 0.25 s as it goes back to rest after slam 6 (`designer`).
+History: [docs/progress/v1/history/core-heist.md, "Session logs"](../progress/v1/history/core-heist.md#session-logs)

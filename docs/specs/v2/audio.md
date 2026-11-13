@@ -2,6 +2,22 @@
 
 Status: `approved` by Adam at Gate 3. New Rules 85 to 99. Changes no earlier rule.
 
+**Contents**
+- [1. Goal and why](#1-goal-and-why)
+- [2. The first 60 seconds](#2-the-first-60-seconds)
+- [3. Player stories](#3-player-stories)
+- [4. Rules](#4-rules)
+- [5. Numbers](#5-numbers)
+  - [The three hearing groups](#the-three-hearing-groups)
+  - [Every sound](#every-sound)
+  - [Other values](#other-values)
+- [6. Screens and states](#6-screens-and-states)
+- [7. How top games do it](#7-how-top-games-do-it)
+- [8. Edge cases](#8-edge-cases)
+- [9. Risks](#9-risks)
+- [10. Success signals](#10-success-signals)
+- [11. Out of scope](#11-out-of-scope)
+
 **Changed on 2026-10-19:** designer's answers are written in, then the round 1 review changes from game_creator and designer (`research/review-audio-round1.md`, with designer's new picks and game_creator's acceptance in `research/decisions-audio.md`, its last two sections). The main changes:
 - two snorts from his nose at the 85% warning, before the mumble; the snore stops at once at 85% (Rules 89, 90 and 91);
 - a children's cheer added for Legendary eggs, so Legendary sounds bigger than Epic (Rule 95);
@@ -10,6 +26,8 @@ Status: `approved` by Adam at Gate 3. New Rules 85 to 99. Changes no earlier rul
 - Adam's Gate 4 playtest plays with sound on (Rule 99).
 
 **Changed again on 2026-10-19** (code_lead's plan 7 question, `research/decisions-plans.md`, "code_lead #6"): Rule 89 (Music follows the meter) gets a row for a free save. The music is silent during the replayed warning, like the snore and the Z Z Z, though the meter is then 70%.
+
+**Changed again on 2026-11-12** (code_lead's plan 7 question, Task 5): Rule 89 (Music follows the meter), row "Asleep, 85% or more": the music stays silent until the warning ends **and** the meter is under 75%, for every 85% warning, first or replayed. Before, it could come back during the mumble in a full server. Section 5, snore row: the snore puffs stay on, steady, while the loop plays (designer's answer); they don't restart with each loop.
 
 **Owner decisions written in** (all in `research/decisions-audio.md`):
 - **game_creator (2026-10-14), 4 answers:** no sound-only hints, the snore at 60% and 85%, silence at 85%, and a cartoon roar with no words.
@@ -105,7 +123,7 @@ It covers the sound list moved from spec 10 (`core-heist.md`, section 11), the i
 |---|---|
 | Asleep, meter under 60% | The calm tune at its normal loudness |
 | Asleep, 60% to 84% | The same tune at half loudness, muffled (as if under a blanket) |
-| Asleep, 85% or more | Fully silent. The music starts fading at the 85% moment, with the snorts, the bubble and the paused Z Z Z, and is silent by 1 second, when the mumble starts (Rule 91: The mumble). It stays silent until the meter falls below 75% (like the Z Z Z, Rule 10: He warns before he wakes). Then back to the muffled tune |
+| Asleep, 85% or more | Fully silent. The music starts fading at the 85% moment, with the snorts, the bubble and the paused Z Z Z, and is silent by 1 second, when the mumble starts (Rule 91: The mumble). It stays silent until that warning ends (the bubble is gone) and the meter is under 75%, so the mumble always plays in silence, even in a full server where the meter can drop under 75% during the warning (Rule 10: He warns before he wakes). Then back to the tune for the meter |
 | After a free save | Fully silent, as at 85%: the music fades out over 1 second from the save, even though the meter is now 70%, so the replayed snorts and mumble play in silence (Rule 17: A free save replays the 85% warning, Rule 91: The mumble). It stays silent until the replayed warning ends and the meter is under 75% (like the Z Z Z and the snore, Rule 90), then plays the tune for the meter |
 | Awake | The chase tune (Rule 93: Chase music) |
 | Heavy Sleep | The calm tune at its normal loudness |
@@ -170,7 +188,7 @@ designer picked every sound and both tunes on 2026-10-19. Each one was checked i
 |---|---|---|---|---|---|---|---|
 | Calm tune (loop) | Sneaky Schemes - Alt1, NoMel | 9045117358 | APMOfficial | Just for you | 0.2 | 1 | Rule 89. Loops only from 0.05 s to 127.7 s, skipping the nearly silent last 2.3 s |
 | Chase tune (loop) | Silly Chase | 9042777456 | APMOfficial | Just for you | 0.3 | 1 | 1 s after he wakes (Rule 93). Starts 0.3 s into the file each time; loops from 0.3 s to 102.35 s |
-| Snore (loop) | Gross Snoring Cu Breathing Inhale Exhale 4 (SFX) | 9114663574 | ProSoundEffects | Whole valley, his mouth | 0.8 | Random, 0.95 to 1.05, picked each time the loop starts | Rule 90. The file holds two breaths, so the speed changes every two breaths, and the snore puffs restart with each loop |
+| Snore (loop) | Gross Snoring Cu Breathing Inhale Exhale 4 (SFX) | 9114663574 | ProSoundEffects | Whole valley, his mouth | 0.8 | Random, 0.95 to 1.05, picked each time the loop starts | Rule 90. The file holds two breaths, so the speed changes every two breaths. The snore puffs stay on, steady, while the loop plays (designer, 2026-11-12) |
 | Heavy Sleep snore (loop) | The same file as the snore | 9114663574 | ProSoundEffects | Whole valley, his mouth | 0.9 | Random, 0.76 to 0.84 | Rule 90 |
 | 85% snort (two) | A cut from the snore file: only 3.46 s to 3.86 s (its short second breath), with a 0.05 s fade at the end so it doesn't click | 9114663574 | ProSoundEffects | Whole valley, the tip of his nose | 1.0 (level with the snore) | First snort 1, second 0.9 (a touch deeper: "snort, SNORT") | Rule 91. At 0 s and 0.5 s of each 85% warning, with the two snort puff bursts. Both end by about 0.94 s |
 | "Mmm..." mumble | Goliath Vocal Deep Growling Voice 22 (SFX) | 9114628818 | ProSoundEffects | Whole valley, his mouth | 0.9 | 1 (slower fails the phone check) | Rule 91. Starts 1.0 s into the warning and lasts 2.1 s, so it ends at about 3.1 s, before the bubble fades away |

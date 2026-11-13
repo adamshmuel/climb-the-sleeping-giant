@@ -1,4 +1,8 @@
 {
+	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"attribution": { "commit": "", "pr": "", "sessionUrl": false },
+	"includeGitInstructions": false,
+	"worktree": { "symlinkDirectories": ["work"] },
 	"permissions": {
 		"allow": [
 			"mcp__Roblox_Studio__list_roblox_studios",
@@ -22,8 +26,20 @@
 			"mcp__Roblox_Studio__user_keyboard_input",
 			"mcp__Roblox_Studio__user_mouse_input",
 			"mcp__Roblox_Studio__execute_luau",
-			"Bash(rojo serve:*)"
-		]
+			"Bash(rojo serve:*)",
+			"mcp__Roblox_Studio__generate_mesh",
+			"mcp__Roblox_Studio__wait_job_finished",
+			"WebSearch",
+			"WebFetch(domain:www.anthropic.com)",
+			"WebFetch(domain:create.roblox.com)",
+			"WebFetch(domain:github.com)",
+			"WebFetch(domain:devforum.roblox.com)",
+			"WebFetch(domain:luau.org)",
+			"WebFetch(domain:roblox.github.io)",
+			"WebFetch(domain:about.roblox.com)",
+			"WebFetch(domain:rojo.space)"
+		],
+		"deny": ["mcp__Roblox_Studio__multi_edit", "Bash(git push *)"]
 	},
 	"hooks": {
 		"PostToolUse": [
@@ -33,6 +49,26 @@
 					{
 						"type": "command",
 						"command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/luau-check.sh"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/job-check-hook.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/file-size.py"
+						},
+						{
+							"type": "command",
+							"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/docs-check.py"
+						},
+						{
+							"type": "command",
+							"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/work-tidy.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/setup-lint.py"
 					}
 				]
 			}
@@ -43,17 +79,131 @@
 					{
 						"type": "command",
 						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-idle-stop.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/failures-to-owners.py"
+					}
+				]
+			}
+		],
+		"UserPromptSubmit": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/setup-guides.py"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-clock.py"
+					}
+				]
+			}
+		],
+		"SessionStart": [
+			{
+				"matcher": "startup|clear|compact",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.py"
+					}
+				]
+			},
+			{
+				"matcher": "startup",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/work-tidy.py",
+						"timeout": 30
+					}
+				]
+			},
+			{
+				"matcher": "startup|resume",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guides-check.py",
+						"timeout": 10
+					}
+				]
+			},
+			{
+				"matcher": "startup|resume|compact",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-place.py"
 					}
 				]
 			}
 		],
 		"PreToolUse": [
 			{
+				"matcher": "Agent",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/task-clock.py",
+						"onFailure": "continue"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/card-guard.py",
+						"onFailure": "continue"
+					}
+				]
+			},
+			{
+				"matcher": "Edit|Write|MultiEdit|Bash",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/setup-guides.py",
+						"onFailure": "block"
+					}
+				]
+			},
+			{
 				"matcher": "Bash",
 				"hooks": [
 					{
 						"type": "command",
-						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rojo-safe-delete.py"
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rojo-safe-delete.py",
+						"onFailure": "block"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-osascript.py",
+							"onFailure": "block"
+					},
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/git-guard.py",
+						"onFailure": "block"
+					}
+				]
+			},
+			{
+				"matcher": "mcp__Roblox_Studio__execute_luau",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/luau-paren-line.py",
+							"onFailure": "block"
+					}
+				]
+			},
+			{
+				"matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__Roblox_Studio__.*|mcp__ccd_session__start_session",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-place.py",
+						"onFailure": "block"
 					}
 				]
 			}

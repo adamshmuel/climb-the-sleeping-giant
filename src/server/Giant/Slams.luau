@@ -6,6 +6,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local HandShape = require(ReplicatedStorage.Shared.HandShape)
 local Zones = require(script.Parent.Zones)
 
 export type Player = {
@@ -15,11 +16,15 @@ export type Player = {
 	inGarden: boolean,
 	floating: boolean, -- still floating down after the bounce-off
 	landedAgo: number?, -- seconds since the bounce-off float touched down, nil if it hasn't in this wake-up
+	joinedThisWake: boolean?, -- true: joined after he woke, never a target
+	appearedAgo: number?, -- seconds since a catch or a new character put them at the door, nil = never appeared
+	bonkedLast: boolean?, -- true: the slam before bonked them, not a target now
+	inLadderGrace: boolean?, -- true: still inside their ladder grace (Rule 60), not a target now
 }
+-- A slam's circle as the hit test sees it: the hand's centre and the surface point it lands on.
+export type HandCircle = { centre: Vector3, point: Vector3 }
 export type Circle = { centre: Vector3, target: number? } -- target is the user id aimed at, nil for an empty-meadow slam
 
--- Studs of free grass between the circle's edge and a garden, so the edge never touches the fence.
-local GARDEN_MARGIN = 1
 -- A jump is about 7 studs high; a circle on the meadow must not catch someone high up on the giant above it.
 local HEIGHT_LIMIT = 10
 -- How far a pushed circle moves each try. The result is never more than this much further than it had to move.
@@ -35,6 +40,13 @@ end
 local function flatDistance(a: Vector3, b: Vector3): number
 	return math.sqrt((a.X - b.X) ^ 2 + (a.Z - b.Z) ^ 2)
 end
+Slams.flatDistance = flatDistance
+
+-- Whether a point is inside a slam's circle: within its radius across the ground, and not high above or below it.
+-- The catch and the rescue's red-circle guard both use this one test.
+function Slams.inCircle(point: Vector3, centre: Vector3): boolean
+	return flatDistance(point, centre) <= circleRadius() and math.abs(point.Y - centre.Y) <= HEIGHT_LIMIT
+end
 
 -- The distance across the ground from a point to the nearest point of a garden's flat rectangle, worked out in the
 -- garden's own space (gardens are level, turned about the vertical only). Inside the rectangle it is 0.
@@ -46,9 +58,9 @@ local function gapToGarden(point: Vector3, garden: Zones.GardenBox): number
 	return math.sqrt(gapX * gapX + gapZ * gapZ)
 end
 
--- Does a circle at this centre stand at least GARDEN_MARGIN studs outside every garden?
+-- Does a circle at this centre stand at least Config.Wake.SlamGardenMarginStuds outside every garden?
 local function isClearOfGardens(centre: Vector3, gardens: { Zones.GardenBox }): boolean
-	local needed = circleRadius() + GARDEN_MARGIN
+	local needed = circleRadius() + Config.Wake.SlamGardenMarginStuds
 	for _, garden in gardens do
 		if gapToGarden(centre, garden) < needed then
 			return false
@@ -57,28 +69,62 @@ local function isClearOfGardens(centre: Vector3, gardens: { Zones.GardenBox }): 
 	return true
 end
 
--- Could this player be aimed at? Only a carrier who is on the ground (not floating) and outside the gardens.
+-- Could this player be aimed at? On the ground (not floating), outside the gardens, not someone who joined after he woke,
+-- not bonked by the slam before, not still inside their ladder grace (Rule 60), and not still at the door (less than
+-- DoorSeconds since they appeared there).
+-- Whether they carry an egg does not matter here: carriers are preferred in pickTarget.
 local function canBeTargeted(player: Player): boolean
-	return player.carrying and not player.floating and not player.inGarden
+	if
+		player.floating
+		or player.inGarden
+		or player.joinedThisWake == true
+		or player.bonkedLast == true
+		or player.inLadderGrace == true
+	then
+		return false
+	end
+	local appearedAgo = player.appearedAgo
+	return appearedAgo == nil or appearedAgo >= Config.Wake.DoorSeconds
 end
 
--- The carrier nearest to him across the ground, skipping the last target if anyone else can be aimed at. A tie goes to
--- the lower user id, so the answer does not depend on the order of the list.
+-- Would a circle aimed at this player land before they could move? Yes for a player the slam before bonked, for one
+-- still inside their ladder grace (Rule 60), and for one who appeared at the door less than DoorSeconds ago (Rules 62
+-- and 63). The director then plans a show slam
+-- instead of a warning at them. Players on the ground outside the gardens only; a late joiner is never aimed at.
+function Slams.isProtected(player: Player): boolean
+	if player.floating or player.inGarden or player.joinedThisWake == true then
+		return false
+	end
+	if player.bonkedLast == true or player.inLadderGrace == true then
+		return true
+	end
+	local appearedAgo = player.appearedAgo
+	return appearedAgo ~= nil and appearedAgo < Config.Wake.DoorSeconds
+end
+
+-- Carriers first: the target is picked from the players who carry an egg, and only when none can be aimed at, from the
+-- others. Inside that group it is the player nearest to him across the ground, skipping the last target if anyone else in
+-- the group can be aimed at. A tie goes to the lower user id, so the answer does not depend on the order of the list.
 function Slams.pickTarget(players: { Player }, giantFace: Vector3, lastTarget: number?): Player?
-	local eligible: { Player } = {}
-	local othersThanLast = 0
+	local carriers: { Player } = {}
+	local others: { Player } = {}
 	for _, player in players do
 		if canBeTargeted(player) then
-			table.insert(eligible, player)
-			if player.userId ~= lastTarget then
-				othersThanLast += 1
-			end
+			table.insert(if player.carrying then carriers else others, player)
+		end
+	end
+	local group: { Player } = if #carriers > 0 then carriers else others
+
+	local othersThanLast = 0
+	for _, player in group do
+		if player.userId ~= lastTarget then
+			othersThanLast += 1
 		end
 	end
 
 	local best: Player? = nil
 	local bestDistance = math.huge
-	for _, player in eligible do
+	for _, player in group do
 		if player.userId == lastTarget and othersThanLast > 0 then
 			continue
 		end
@@ -199,29 +245,38 @@ function Slams.plan(
 	return { centre = Slams.pickEmpty(meadowPoints, players, landingSpots, gardens, lastCentre, pick), target = nil }
 end
 
--- The user ids of everyone the hand catches, in the players' list order: carriers who are on the ground (not floating),
--- outside the gardens, within the circle across the ground and not more than HEIGHT_LIMIT studs above or below it. A
--- carrier who touched down from the bounce-off float less than SlamWarningSeconds ago is not caught: they could not
--- steer the fall, so they get the same warning as everyone.
-function Slams.caught(players: { Player }, centre: Vector3): { number }
-	local radius = circleRadius()
-	local caught: { number } = {}
-	for _, player in players do
-		if not canBeTargeted(player) then
-			continue
-		end
-		local landedAgo = player.landedAgo
-		if landedAgo ~= nil and landedAgo < Config.Wake.SlamWarningSeconds then
-			continue
-		end
-		if
-			flatDistance(player.position, centre) <= radius
-			and math.abs(player.position.Y - centre.Y) <= HEIGHT_LIMIT
-		then
-			table.insert(caught, player.userId)
-		end
+-- Whether the hand can never touch this player: in a garden, floating down after the bounce-off, or touched down less
+-- than SlamWarningSeconds ago (they could not steer the fall, so they get the same warning as everyone).
+local function neverHit(player: Player): boolean
+	if player.floating or player.inGarden then
+		return true
 	end
-	return caught
+	local landedAgo = player.landedAgo
+	return landedAgo ~= nil and landedAgo < Config.Wake.SlamWarningSeconds
+end
+
+-- Whether a position is under the hand: inside the circle across the ground, from just under the surface below it to
+-- high over it (`surfaceUnder` is that surface's height).
+function Slams.underHand(position: Vector3, circle: HandCircle, surfaceUnder: number): boolean
+	return HandShape.contains(position, circle.centre, surfaceUnder)
+end
+
+-- Everyone the hand hits, in the players' list order: carriers are caught, everyone else is bonked. `surfaceUnder` gives
+-- the height of the surface under a position.
+function Slams.hits(
+	players: { Player },
+	circle: HandCircle,
+	surfaceUnder: (position: Vector3) -> number
+): { caught: { number }, bonked: { number } }
+	local caught: { number } = {}
+	local bonked: { number } = {}
+	for _, player in players do
+		if neverHit(player) or not Slams.underHand(player.position, circle, surfaceUnder(player.position)) then
+			continue
+		end
+		table.insert(if player.carrying then caught else bonked, player.userId)
+	end
+	return { caught = caught, bonked = bonked }
 end
 
 return Slams

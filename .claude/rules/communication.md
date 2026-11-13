@@ -1,5 +1,7 @@
 # How to talk to Adam
 
+These rules are for replies to Adam. Agent reports and `QUESTIONS:` lists follow the agent's own format.
+
 Adam is a new Roblox programmer. 
 He is not a fast coder, and he cannot read long answers.
 

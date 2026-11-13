@@ -481,3 +481,79 @@ describe("SleepMeterUi.start: keeping clear of Roblox's buttons", function()
 		expect(rig.meter().Position.X.Offset).toBeCloseTo(117, 3)
 	end)
 end)
+
+-- The music button (plan 7 Task 16) keeps 8 px from the meter at its biggest, so onLayout's third value is the meter's
+-- left edge at the pulse size: centre x - width * 1.1 / 2.
+describe("SleepMeterUi.start: onLayout's meter left edge", function()
+	type Told = { meterRight: number, meterLeft: number }
+
+	local function startTold(viewport: Vector2, edge: number)
+		local parent = made(Instance.new("Folder"))
+		local giantState = made(Instance.new("Folder"))
+		giantState:SetAttribute("Meter", 0)
+		giantState:SetAttribute("Phase", "Asleep")
+		local topbarEvent = made(Instance.new("BindableEvent"))
+		local currentEdge = edge
+		local told: { Told } = {}
+		local stop = SleepMeterUi.start({
+			parent = parent,
+			createTween = function(instance: Instance, info: TweenInfo, goal: { [string]: any })
+				return newFakeTween(instance, info, goal)
+			end,
+			giantState = giantState,
+			warning = { OnClientEvent = made(Instance.new("BindableEvent")).Event },
+			viewport = {
+				get = function()
+					return viewport
+				end,
+				connect = function()
+					return function() end
+				end,
+			},
+			topbarInset = {
+				get = function()
+					return currentEdge
+				end,
+				connect = function(callback: () -> ())
+					local connection = topbarEvent.Event:Connect(callback)
+					return function()
+						connection:Disconnect()
+					end
+				end,
+			},
+			now = function()
+				return 0
+			end,
+			onLayout = function(_screen: any, meterRight: number, meterLeft: number)
+				table.insert(told, { meterRight = meterRight, meterLeft = meterLeft })
+			end,
+		})
+		table.insert(stops, stop)
+		return {
+			told = told,
+			moveEdge = function(x: number)
+				currentEdge = x
+				topbarEvent:Fire()
+				task.wait()
+			end,
+		}
+	end
+
+	it("tells 277 on the iPhone 14 screen (centre 420, width 260, pulse 1.1)", function()
+		local rig = startTold(Vector2.new(840, 368), 164)
+		local last = rig.told[#rig.told]
+		expect(last.meterLeft).toBeCloseTo(277, 3)
+		expect(last.meterRight).toBeCloseTo(550, 3) -- the second value is unchanged
+	end)
+
+	it("tells 189 on the 4.7-inch phone screen (centre 332)", function()
+		local rig = startTold(Vector2.new(664, 352), 164)
+		expect(rig.told[#rig.told].meterLeft).toBeCloseTo(189, 3)
+	end)
+
+	it("tells the pulse-size edge again when Roblox's buttons push the meter right", function()
+		local rig = startTold(Vector2.new(840, 368), 164)
+		rig.moveEdge(500) -- the centre slides to 500 + 8 + 143 = 651, so the biggest left edge is 508
+		expect(rig.told[#rig.told].meterLeft).toBeCloseTo(508, 3)
+	end)
+end)

@@ -1,0 +1,13 @@
+# Mockups
+
+- A mockup's first call makes its folder and loads each generated model by its asset id into that folder. Never search the world by name for a model: a search for "tuft" grabbed the live meadow grass. Never move or change anything a world search finds.
+- To retake an old shot, its avatar sits hidden in `ServerStorage.ArtLibrary.MockupAvatars.<folder>` and mockup parts are stored at Transparency 1: save each part's value in an attribute, show, shoot, put back. Use `Mockup_WakeUp.CamHelper.fov(device)` for the field of view, since the Studio window size changes.
+- Look check "before" for added art: reparent the folder to ServerStorage (exact, survives into Play), count parts before and after. Gate cameras show cuff art only as a small detail; add close-ups (allowed) to judge it. (p5t15e3)
+- p3t8 8c (2026-11-10): a job-made "spawn camera" row looked level along the spot, not 21 deg up toward his face as look-cameras.md says, and cut his face off. Check every shot row against look-cameras.md before judging a spawn or face shot.
+- p3t8 8e (2026-11-10): a world billboard sized in studs alone is specks from 130 studs and too big up close. Size it studs + offset points (BillboardGui Size scale = studs, offset = points; docs checked) so it reads from every spawn.
+- p3t8 8e step back: give a screen-size target per element (one Z >= 24 pt), not per box; a box of 3 diagonal Zs makes each Z ~1/3 of it. Measure projected boxes vs HUD AbsolutePosition before shot rounds. Beside-the-head placement = SizeOffset (screen-relative), not StudsOffset (changes with distance). DistanceLower/UpperLimit are deprecated.
+- p3t8 8f: HUD mockups over real phone Play shots: scale the 416x186 shot to 840x368 points (real viewport) and redraw only the changed HUD piece on its measured box. Fredoka One capital Z = 0.74 of font size (Chrome).
+- p3t8 8f step back: a moving HUD piece (rising Zs) needs its highest frame drawn and >= 8 pt margin to every screen edge there; zero margin forced point-exact Play measures. Write limits relative to another HUD piece in the same ScreenGui (no GetGuiInset; phone sim reports 58 but GUI is 20 pt taller than viewport).
+
+- Judging a tint from Play shots: sample real pixel colours (python3 PIL getpixel on the jpg) at the egg in sun and shade; the Epic #5E3CFF tint measured #2500FE in shade vs #832FFF in sun (p5t12, 2026-11-10).
+- Phone HIDDEN verdict (p5t17c, 2026-11-10): first check the phone shot used the computer shot's camera; 844x390 has the same vertical view, so a sideways camera, not the phone, hides things. Body-egg beams are off within 30 studs, so no beam shows at a nest up close.

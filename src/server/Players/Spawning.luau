@@ -46,9 +46,13 @@ local function writeSigns(garden: WorldIndex.Garden, text: string)
 end
 
 -- Starts giving gardens to players, now and whenever one joins or leaves.
--- Returns a function that stops it and cleans everything up.
-function Spawning.start(gardens: { WorldIndex.Garden }, players: PlayersLike): () -> ()
-	local assigner = PlotAssigner.new(#gardens)
+-- Returns a function that stops it and cleans everything up. pick(n) chooses among n free gardens (Rule 34); tests pass
+-- a fixed one, the game leaves it out and gets a random one from one Random made here.
+function Spawning.start(gardens: { WorldIndex.Garden }, players: PlayersLike, pick: ((number) -> number)?): () -> ()
+	local rng = Random.new()
+	local assigner = PlotAssigner.new(#gardens, pick or function(n: number): number
+		return rng:NextInteger(1, n)
+	end)
 	local gardenByIndex: { [number]: WorldIndex.Garden } = {}
 	for _, garden in gardens do
 		gardenByIndex[garden.index] = garden

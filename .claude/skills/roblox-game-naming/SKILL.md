@@ -5,7 +5,7 @@ description: Research-first naming for a Roblox game. Drills down into about 30 
 
 # Roblox game naming
 
-A name is chosen from data, never from taste or memory. Every naming idea, including one from Adam or another agent (for example "good names name the main character"), is a **guess to test**: count it against the data and report what the data shows, even if it shows the idea is wrong.
+A name is chosen from data, never from taste or memory. Every naming idea, including one from the user or another agent (for example "good names name the main character"), is a **guess to test**: count it against the data and report what the data shows, even if it shows the idea is wrong.
 
 Live data comes from the `roblox-trends` skill (commands 1, 2, 4, 9 and 10). Always state the date and time the data was fetched.
 
@@ -25,7 +25,7 @@ Write down the reason for the new name, if there is one.
 - the top of Top Earning (command 9);
 - the biggest breakouts of the last 12–18 months (new games that grew fast). Find them in Up-and-Coming and Top Trending with creation dates (command 4), and in recent articles, such as a web search for "fastest growing Roblox games <year>".
 
-Get each game's core loop from the shared library `references/top-games/` (see `agent-workflow.md`), or from its description.
+Get each game's core loop from the shared library `references/top-games/` (the `top-games-library` skill), or from its description.
 
 **3. Drill-down table:** one row per game, with these columns:
 
@@ -64,7 +64,7 @@ A name already in use, crowded with copies, or likely to look like a copy of a t
 
 ## Output
 
-Write `docs/ideas/name-research.md`, following `.claude/rules/readable-docs.md`. Explain every term the first time it is used. In this order:
+Write `docs/ideas/name-research.md`, following `.claude/rules/docs.md`. Explain every term the first time it is used. In this order:
 1. the data date, and why a new name is needed;
 2. the drill-down table;
 3. the patterns, with counts, and each team idea tested;
@@ -75,7 +75,7 @@ Write `docs/ideas/name-research.md`, following `.claude/rules/readable-docs.md`.
 8. the pick;
 9. sources: every chart, article and guide, with links. Then a line on what couldn't be found. No article proves that a naming style causes success; say so.
 
-The file only proposes. Renaming the idea file, the design folder or anything else happens only after Adam picks the name.
+The file only proposes. Renaming the idea file, the design folder or anything else happens only after the user picks the name.
 
 Reply with:
 - the file path;

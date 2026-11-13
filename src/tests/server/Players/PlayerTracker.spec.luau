@@ -8,30 +8,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local PlayerTracker = require(ServerScriptService.Server.Players.PlayerTracker)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
+local TrackerRig = require(script.Parent.TrackerRig)
+
+local makeCharacter = TrackerRig.makeCharacter
+local rootOf = TrackerRig.rootOf
+local groundSpeedRig = TrackerRig.groundSpeedRig
+local noZones = TrackerRig.noZones
+local noGardens = TrackerRig.noGardens
 
 -- Under strict typing a plain local widens "Belly" to `string`, so each zone is declared with its type.
 local BELLY: Config.ZoneName = "Belly"
 
--- A character with no parent, so the test never changes the place. Destroy it when the test is done.
-local function makeCharacter(position: Vector3, health: number?): Model
-	local character = Instance.new("Model")
-	local humanoid = Instance.new("Humanoid")
-	humanoid.Health = health or 100
-	humanoid.Parent = character
-	local root = Instance.new("Part")
-	root.Name = "HumanoidRootPart"
-	root.Anchored = true
-	root.Position = position
-	root.Parent = character
-	return character
-end
-
-local function rootOf(character: Model): BasePart
-	return character:FindFirstChild("HumanoidRootPart") :: BasePart
-end
-
-local noZones: { Zones.ZoneBox } = {}
-local noGardens: { Zones.GardenBox } = {}
 local neverGrounded = function(_character: Model): boolean
 	return false
 end
@@ -290,42 +277,6 @@ describe("PlayerTracker tick", function()
 		character:Destroy()
 	end)
 end)
-
--- A tracker for one character, with a clock and a "standing on the ground" switch the test sets by hand.
-type Rig = {
-	tracker: PlayerTracker.Tracker,
-	setTime: (seconds: number) -> (),
-	setGrounded: (grounded: boolean) -> (),
-}
-
-local function groundSpeedRig(character: Model): Rig
-	local players: { PlayerTracker.PlayerLike } = { { UserId = 1, Character = character } }
-	local time = 0
-	local grounded = false
-	local tracker = PlayerTracker.new({
-		getPlayers = function()
-			return players
-		end,
-		zoneBoxes = noZones,
-		gardens = noGardens,
-		isGrounded = function(_character: Model): boolean
-			return grounded
-		end,
-		takeoffs = neverTookOff,
-		now = function()
-			return time
-		end,
-	})
-	return {
-		tracker = tracker,
-		setTime = function(seconds: number)
-			time = seconds
-		end,
-		setGrounded = function(value: boolean)
-			grounded = value
-		end,
-	}
-end
 
 describe("PlayerTracker groundSpeed", function()
 	it("a character that moved 4.8 studs across the ground in 0.5 s goes 9.6 studs a second", function()
@@ -744,5 +695,112 @@ describe("PlayerTracker jumps", function()
 		expect(thuds).toEqual({ 3, 5, 8 }) -- the first two at the next take-offs, the last at rest
 
 		character:Destroy()
+	end)
+end)
+
+-- A stand-in player that counts every SetAttribute call, and keeps the attributes it was given.
+type CountingPlayer = {
+	UserId: number,
+	Character: Model?,
+	attributes: { [string]: any },
+	writes: number,
+}
+
+local function newCountingPlayer(userId: number, character: Model?): CountingPlayer
+	local player = {
+		UserId = userId,
+		Character = character,
+		attributes = {} :: { [string]: any },
+		writes = 0,
+	}
+	local methods = player :: any
+	methods.GetAttribute = function(self: any, name: string): any
+		return self.attributes[name]
+	end
+	methods.SetAttribute = function(self: any, name: string, value: any)
+		self.writes += 1
+		self.attributes[name] = value
+	end
+	return player
+end
+
+describe("PlayerTracker InGarden attribute", function()
+	local gardens: { Zones.GardenBox } = {
+		{ index = 3, cframe = CFrame.new(100, 5, 0), size = Vector3.new(30, 20, 30) },
+	}
+
+	local function trackerFor(player: CountingPlayer): PlayerTracker.Tracker
+		local players: { PlayerTracker.PlayerLike } = { player :: any }
+		return PlayerTracker.new({
+			getPlayers = function()
+				return players
+			end,
+			zoneBoxes = noZones,
+			gardens = gardens,
+			isGrounded = neverGrounded,
+			takeoffs = neverTookOff,
+			now = zeroClock,
+		})
+	end
+
+	it("walking into garden 3 sets InGarden to 3 once, and walking out sets 0 once", function()
+		local character = makeCharacter(Vector3.new(0, 5, 0))
+		local player = newCountingPlayer(1, character)
+		local tracker = trackerFor(player)
+
+		tracker:tick()
+		expect(player.attributes.InGarden).toBe(0)
+		expect(player.writes).toBe(1)
+
+		rootOf(character).Position = Vector3.new(100, 5, 0)
+		tracker:tick()
+		expect(player.attributes.InGarden).toBe(3)
+		expect(player.writes).toBe(2)
+
+		rootOf(character).Position = Vector3.new(0, 5, 0)
+		tracker:tick()
+		expect(player.attributes.InGarden).toBe(0)
+		expect(player.writes).toBe(3)
+
+		character:Destroy()
+	end)
+
+	it("a tick where nothing changed writes nothing", function()
+		local character = makeCharacter(Vector3.new(100, 5, 0))
+		local player = newCountingPlayer(1, character)
+		local tracker = trackerFor(player)
+
+		tracker:tick()
+		local writesAfterFirst = player.writes
+		tracker:tick()
+		tracker:tick()
+
+		expect(player.writes).toBe(writesAfterFirst)
+
+		character:Destroy()
+	end)
+
+	it("a player with no living character gets no write", function()
+		local dead = makeCharacter(Vector3.new(100, 5, 0), 0)
+		local player = newCountingPlayer(1, dead)
+		local missing = newCountingPlayer(2, nil)
+		local players: { PlayerTracker.PlayerLike } = { player :: any, missing :: any }
+		local tracker = PlayerTracker.new({
+			getPlayers = function()
+				return players
+			end,
+			zoneBoxes = noZones,
+			gardens = gardens,
+			isGrounded = neverGrounded,
+			takeoffs = neverTookOff,
+			now = zeroClock,
+		})
+
+		tracker:tick()
+
+		expect(player.writes).toBe(0)
+		expect(missing.writes).toBe(0)
+
+		dead:Destroy()
 	end)
 end)

@@ -1,0 +1,12 @@
+# 8. Studio rules for the build
+
+Part of [the architecture](../architecture.md).
+
+
+- Play sessions start with `start_stop_play`, and end with it before any code change, because Rojo only syncs in edit mode.
+- World changes go through a script in `tools/world/`. The script checks before it creates, so running it twice does no harm. It returns a short report of what it changed.
+- **A big world script is a folder** (from stuck safety Task 31): `tools/world/<nn-name>/` with shared files (helpers and records two or more sections use), one file per section (each returns a function that runs its section and returns its message; nothing happens when a file is only required), and `Run.luau`, which runs the sections in order and joins their messages. Rojo syncs `tools` into `ServerStorage.Tools`. A world script is run in Edit mode (`execute_luau`) with `return require(game:GetService("ServerStorage").Tools.world["15-real-shape"]:Clone().Run)()`: `Run` gives back a function, and calling it runs every section. The copy makes sure the newest code runs. A new section is a new file plus one line in `Run`.
+  - `tools/world/15-real-shape/` (24 files, the biggest 546 lines) has five shared files, kept in the old file's order: `Shared` (the general helpers), `S2WalkParts` (the walk pieces' records), `S2bHeadParts` and `S2bHeadChecks` (the head's records and the checks most later sections use), `FitShared` (the closer-fit records and helpers of sections 2f to 3a2) and `FolderShared` (the folder helpers of sections 3b and 4). A file only requires files above it in that order, so there is never a loop. A helper a new section needs goes into the shared file of its topic, never a copy. Why: the parts can `require` each other, so no helper is copied and the type checker sees every part; small world scripts stay one file and are still pasted into `execute_luau`.
+- Every model that the game copies into `Workspace` has all its parts `Anchored`. An unanchored copy falls below the world's floor (`FallenPartsDestroyHeight`) and Roblox deletes it. Models stored in `ServerStorage` don't fall, because physics doesn't run there.
+- After world changes, the place must be saved by Adam. The progress map (`docs/progress/index.md`, "Place file") says when the place has unsaved world changes.
+- Play test tools (V2), such as the bot walk, live in `tools/play/`. They are run with `execute_luau` in Play, like the world scripts in Edit mode, and are never part of the game.

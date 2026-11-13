@@ -70,6 +70,9 @@ type FakePlayer = {
 	root: BasePart?,
 	egg: BasePart?,
 	attributeWrites: number, -- how many times anything called SetAttribute on the player
+	writes: { [string]: number }, -- how many times each attribute name was written
+	attributes: { [string]: any },
+	GetAttribute: (self: any, name: string) -> any,
 	SetAttribute: (self: any, name: string, value: any) -> (),
 }
 
@@ -84,8 +87,15 @@ local function newPlayer(userId: number, position: Vector3, options: Options?): 
 		root = nil,
 		egg = nil,
 		attributeWrites = 0,
-		SetAttribute = function(self: any, _name: string, _value: any)
+		writes = {},
+		attributes = {},
+		GetAttribute = function(self: any, name: string): any
+			return self.attributes[name]
+		end,
+		SetAttribute = function(self: any, name: string, value: any)
 			self.attributeWrites += 1
+			self.writes[name] = (self.writes[name] or 0) + 1
+			self.attributes[name] = value
 		end,
 	}
 	if options ~= nil and options.noCharacter == true then
@@ -235,14 +245,20 @@ describe("Floater.float", function()
 		expect(egg:FindFirstChildOfClass("WeldConstraint")).never.toBe(nil)
 	end)
 
-	it("leaves every attribute alone, so Carrying and Tiptoe stay as they were", function()
+	it("writes only Floating, so Carrying and Tiptoe stay as they were", function()
 		local harness = newHarness()
 		local player = newPlayer(1, Vector3.new(0, 80, 0))
 		local character = player.Character :: Model
 		harness.floater:float(player, SPOT)
 		expect(harness.floater:isFloating(1)).toBe(true)
 		harness.floater:step()
-		expect(player.attributeWrites).toBe(0)
+		local otherWrites = 0
+		for name, count in player.writes do
+			if name ~= "Floating" then
+				otherWrites += count
+			end
+		end
+		expect(otherWrites).toBe(0)
 		expect(character:GetAttribute("Carrying")).toBe("Rare")
 		expect(character:GetAttribute("Tiptoe")).toBe(true)
 	end)
@@ -615,5 +631,35 @@ describe("Floater clean-up", function()
 		harness.floater:destroy()
 		harness.floater:destroy()
 		expect(harness.playerRemoving:count()).toBe(0)
+	end)
+end)
+
+describe("Floater Floating attribute", function()
+	it("Floating is true from the float's start until it lets go, then false", function()
+		local harness = newHarness()
+		local player = newPlayer(1, Vector3.new(0, 80, 0))
+		harness.floater:float(player, SPOT)
+		expect(player:GetAttribute("Floating")).toBe(true)
+		setRootAbove(player, SPOT, 0.5)
+		harness.floater:step()
+		expect(harness.floater:isFloating(1)).toBe(false)
+		expect(player:GetAttribute("Floating")).toBe(false)
+	end)
+
+	it("a second float for the same player leaves Floating true", function()
+		local harness = newHarness()
+		local player = newPlayer(1, Vector3.new(0, 80, 0))
+		harness.floater:float(player, SPOT)
+		harness.floater:float(player, OTHER_SPOT)
+		expect(player:GetAttribute("Floating")).toBe(true)
+		expect(harness.floater:isFloating(1)).toBe(true)
+	end)
+
+	it("a player who leaves mid-float causes no error", function()
+		local harness = newHarness()
+		local player = newPlayer(1, Vector3.new(0, 80, 0))
+		harness.floater:float(player, SPOT)
+		harness.playerRemoving:Fire(player)
+		expect(harness.floater:isFloating(1)).toBe(false)
 	end)
 end)

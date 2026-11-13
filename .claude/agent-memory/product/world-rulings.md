@@ -1,0 +1,49 @@
+# World rulings
+
+- When a fill's own surface makes new stuck spots, choose between one more fix and the rescue after that first failure, not after a second.
+- Before a ruling leans on "a miss only costs a few seconds", play that miss with the player's own controls (phone and keyboard), not a bot stand-in.
+- When a rule makes a fall quiet because of where it ends, also log where falls end, and set a playtest trigger for players using it as a shortcut (for example off the brim's front, down the beard to the belly).
+- Every plank or ladder end in a spec gets a measured ray-down height before the spec is approved.
+- Set every walk limit from the measured footprint route, never a straight line. Fix an overrun by moving the spawn spot, never by raising the limit.
+- Real-play tests run before the route/footprint tasks only test V1: check which tasks are built before ruling on trail findings; check the tester held E before calling a grab broken.
+- Before ruling a climb gap a world gap, check the job walked the spec's own route (World.Route points, Rule 79's strip north end); 6a3 pushed into a drawn edge instead.
+- A measuring task's pass list ends on the last layer its "Stands on" can change; 6a3 ran past 6a2 up to the cap and grew 3 rounds.
+- Before ruling a moved way-up foot, check Rule 43's 5-stud landing-spot gap (spot 7 sat exactly at 5.0 from the right boot ladder) and keep mirrored ladders mirrored (move both by the larger side).
+- A ladder or plank move changes every distance a spec quotes from its ends: grep the spec for the old figure when ruling the move, and judge it against the grab reach (8 studs), not a bare number.
+- A pocket under a walk part is scenery: close it whole and mirrored when the cost is the same; keep the fill inside the part's outline and re-check nearby grab prompts.
+- A 'nobody in' walk names every open edge it must press (both long edges, both ends, per side) before it runs; 6b's first walk missed the lap-end knee edge (2026-11-08).
+- A walk-map count for 'closed' or 'no route' uses the Play walk-off slope (78°, spec 5 2026-10-20), not the 70° Humanoid limit; 6c's first count used 70 (2026-11-08).
+- A height-gap check (Rule 82) must include walk parts the same task builds (cuff ledges at 32.3 were missed by a y>=36 filter) and jump-only tops (ray scan, solid only), not just a walk-link flood from the meadow (2026-11-08).
+- A walk piece copied from mockup art gets a two-ray end check (cloth under its top-end middle, low end touches the ledge) before the task that builds on it; the cuff strap sat 2.2 out for 3 weeks (2026-11-08).
+- On a main character, spec a walk piece and its art as one shape that lies on him, from a full both-sides ray grid of the footprint; one level band for walk and look missed 3 times on the cuff tab (2026-11-08).
+- Before ruling an edge fix on a walk piece, ring every walk piece's whole outline (flaps and tabs too) with rays 0.3 out, both sides; the 2-curb picks missed the flap's own uphill edge (2026-11-08).
+- Edge-drop rays start well above the edge (20 up), never 0.3 up: beside the cuff strap the arm sits above the edge, so a low ray starts inside it and reads a fake 26 drop; that error put a curb on a safe edge and shrank the door to 1 stud vs a 2-wide body (2026-11-08).
+- A Rule 22 rare-spot claim is checked against condition 2's full need list (walk pieces and Rule 79's walk area, cuff ledges included), not PlayerNeeds.fromWorld's nearest point; a spot under BackLedge_Right was offered as 38.6 from needs while 5 under the ledge (2026-11-08).
+- Rule 82 jump surfaces include his body walked onto from one (thighs and crease from the boot tops); a list of named surfaces missed it. Headroom rays must see every collidable, not only World.Giant (missed the ladder foot) (2026-11-08).
+- When a walk-map scan flags new stuck spots beside a slide layer, Play them with player controls (map stops at 70°, Play walks to 78°) before a second build fix (p5t15 ruling 2 looped, 2026-11-08).
+- After one failed build fix on a slide-foot stuck spot, Play it next; p5t15's grow and tile both failed because cloth at 72-74° is 'slide' on the map but standable in Play (2026-11-08).
+- A Play stall check ends at first solid ground off the cloth; a bot pressing one way for 12 s logs fence stalls in the meadow that aren't stuck. Ask jobs to log the first landing, not only the cap end (p5t15 3d-2, 2026-11-08).
+- A walk-area sample rule needs every edge named (north too), not only the seam; Task 14's 'pyjama above the seam' climbed his chest and made 552 fake gaps (p5t15c Q1, 2026-11-09).
+- A check may skip a walk piece's floats only after its look-only cover (e.g. BellyRamp Cover boards, CanQuery off) is measured by shape under it; guards and curbs may be skipped outright (p5t15d row 4, 2026-11-09).
+- A new guard near a nest gets the nest's stand spot in its reach pass list (15d thigh guard sat 4 studs from the knee-pocket stop).
+- When confirming a card's decision table, check it splits player fixes from test repairs (order-the-work Step 3), and that a fix is proven by the Play job that found the problem, not a flood model; 15d bundled both and hit the time stop (2026-11-09).
+- A check's flood or sample model is compared with a Play walk across both halves before its counts become a red; 14/15g's Walk-only flood from one left start gave 880 then 289 fake gaps. Narrow the real-world test to what Play can't prove (2026-11-09).
+- A belly 'can a player reach it' walk starts where players arrive (ramp top), never at a placed mid-belly spot; 15e's z −28 legs started at (±10, −28) (2026-11-09).
+- A Play pass band must be wider than the instrument's resolution and checked against the last Play measure, and never judge against a line not built yet; 15e's ±1 seam band vs a 1.6-stud detector and unbuilt stitches stopped Step 2 (2026-11-09).
+- A phone check isn't moved to a later task when that task builds on what the phone check could change (15e: phone stall vs Task 16 stitches); keep a cut phone walk in the same Play session and move only what stands on the later piece (2026-11-09).
+- A guard that hangs below the thigh beside his leg makes a mid-air pocket a slide can stop in (15e SR36: held 17 up, rescue after 3.2 s of pressing, left side missed it by 0.3); judge a pocket by 'looks broken, one side only', not just 'rescue frees it' (2026-11-09).
+- Rule 82 guards a way in from outside the lap landing; a climb-out between two spots both behind it (15e KL, left crease 69°) is a recovery, not a route: check zone, egg distance and where it's entered before fixing (2026-11-09).
+- Before ruling a 'pocket' fix, get the touching parts and floor slope under the body (overlap + rays) first: SR36 was a <70° leg band, not the guard, and the guard trim fixed nothing (15e, 2026-11-09). A no-key hold on visible ground with a way off when pressing isn't stuck.
+- A Play pass rule must match the spec's route shape (Rule 79 says walk round the strip, so 'end 3 studs straight across' never passes), and a rescue window must be checked against the game's own clock (StuckWatch resets on a 1-stud bob); XK looped 4 rounds (2026-11-09).
+- Perch-exit tries placed by teleport fell before the press 3 of 4 times: a try is valid only if the body is still at its start when the key goes down; a drop by itself counts as the way out (Rule 22), not a failed exit.
+- A Play proof reproduces the bug the way it was found (a placed body for a float), listed with each result's pick; 'one jump onto each curb' on a 0.4 ridge couldn't fail and grew 15e2 to 35 calls (2026-11-09).
+- A float fix checks every collidable top under the body against the drawn art (tinted top-down shot), not only the part that failed; 15e2's steep curb tops passed but the walk floor under them stuck out past the sleeve (2026-11-09).
+- When a task "copies art" from a Mockup_ folder, check the art still matches the latest table: the 2026-11-09 seam redraw left `Art.Seam` up to 3.9 off, so Task 16 lays stitches from the table (p5t16).
+- Don't carry a Play check forward onto look-only parts built on a line drawn from that same Play; cite the rows (p5t16: T16 re-walked 15e's 4 passed rows, about 15 min).
+- A cleanup step inside a building task (moving a mockup folder) is its own piece after its last reader; grep tests and world scripts for readers (p5t16: 5 tests, 2 scripts, Task 12).
+- Before ruling a float fix, check the art under the walk piece is in the world and visible (not just in a Mockup_ folder); 15e2/15e3 trimmed and steepened for 3 rounds while the cuff strap art was never copied out (2026-11-09).
+- Before adding a check to a task in a step back, grep the spec's section 6 and the plan for where it already lives; p5t16 pulled Task 23's "sees the seam" check forward and looped twice (a hem on a round belly is hidden from its flat top).
+- Before ruling on a strange thing in one shot, compare 2-3 other shots from the same device; the p3t8 dark box was in only 1 of 3 phone shots, so a check, not a fix (2026-11-10).
+- After an Edit to a decision file, grep for the new heading before reporting it as written; a failed Edit was once reported as added (p3t8, 2026-11-10).
+- A ray walk-measure must use the game's real slope limit (CharacterMaxSlopeAngle, read in Studio) and spec Rule 79's 65-70 Play pass, never a tighter card rule; a 1.5-per-2-stud rise cap is only 37 degrees and blocked 17w falsely (2026-11-10).
+- A Rule 82 jump red is scoped first: only jump surfaces reached without the lap landing, and only nests behind it (belly, cuffs, head); meadow, boot-toe, lap fold and knee pocket nests are meant to be grabbed from outside. The nest bar is the 1-s hold (a standing spot), not a mid-air apex (p5t18a, 2026-11-10).

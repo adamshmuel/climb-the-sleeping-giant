@@ -142,6 +142,23 @@ describe("JumpWatcher", function()
 		character:Destroy()
 	end)
 
+	it(
+		"a jump off a ladder's rungs (Climbing to Jumping) records no take-off, but Running to Jumping still does",
+		function()
+			local rig = newRig()
+			local _player, character = addPlayerInGame(rig)
+			local watcher = start(rig)
+
+			rig.states[character]:fire(STATE.Climbing, STATE.Jumping)
+			expect(#watcher:took(character)).toBe(0)
+
+			rig.states[character]:fire(STATE.Running, STATE.Jumping)
+			expect(#watcher:took(character)).toBe(1)
+			watcher:stop()
+			character:Destroy()
+		end
+	)
+
 	it("a jump after the last took counts again", function()
 		local rig = newRig()
 		local _player, character = addPlayerInGame(rig)

@@ -81,7 +81,8 @@ Theme.tiptoeGradient = ColorSequence.new({
 })
 
 -- Eggs: a highlight, the main colour and a shade, from the mockups' egg pictures (core-hud.html, hud.html). The main
--- colour is the rarity's colour from the style guide (Common cream white, Uncommon leaf green, Rare sky blue).
+-- colour is the rarity's colour from the style guide (Common cream white, Uncommon leaf green, Rare sky blue, Epic
+-- purple, Legendary gold).
 export type RarityLook = {
 	light: Color3,
 	main: Color3,
@@ -92,6 +93,8 @@ Theme.rarity = {
 	Common = { light = Color3.fromHex("FFFFFF"), main = Color3.fromHex("EDE6D6"), dark = Color3.fromHex("BFB49C") },
 	Uncommon = { light = Color3.fromHex("C8F7BE"), main = Color3.fromHex("5BD45B"), dark = Color3.fromHex("2E9E3A") },
 	Rare = { light = Color3.fromHex("CDEBFF"), main = Color3.fromHex("3FA9FF"), dark = Color3.fromHex("1F78D1") },
+	Epic = { light = Color3.fromHex("E3C8FF"), main = Color3.fromHex("B05CFF"), dark = Color3.fromHex("7A2EC9") },
+	Legendary = { light = Color3.fromHex("FFEDB0"), main = Color3.fromHex("FFC93C"), dark = Color3.fromHex("D9951A") },
 } :: { [string]: RarityLook } -- by rarity name
 
 -- The dark, see-through plates behind the grab prompt, the carry pill and the tips (core-hud.html, hud.html).
@@ -118,8 +121,27 @@ Theme.bannerRedMainAt = 0.55
 Theme.slamGold = Color3.fromHex("FFC93C")
 Theme.slamRed = Color3.fromHex("E0233A")
 
+-- The "RUN HOME!" pill's fill: the wake banner's red, light at the top and dark at the bottom (style guide wake-up.md:
+-- "#FF7A86 to #C4142A"; mockup wake-hud.html: #runhome).
+Theme.runHome = {
+	fillTop = Theme.bannerRedLight,
+	fillMiddle = Theme.bannerRed,
+	fillBottom = Theme.bannerRedDark,
+	middleAt = Theme.bannerRedMainAt,
+}
+
 -- The white marks on the bar at 60% and 85%.
 Theme.tickColor = Color3.new(1, 1, 1)
 Theme.tickTransparency = 0.2
+
+-- The red edges while he hunts (style guide wake-up.md, "Red edges"). `color` is wake red; `solid` is how solid the gradient
+-- is at the screen edge (55%); the pulse goes from band transparency 0 (full strength) to `weakest` (0.6, strength 40%) and
+-- back; `steady` is the band transparency with Reduce Motion on (0.3, strength 70%).
+Theme.redEdge = table.freeze({
+	color = Color3.fromHex("FF3B4E"),
+	solid = 0.55,
+	weakest = 0.6,
+	steady = 0.3,
+})
 
 return Theme

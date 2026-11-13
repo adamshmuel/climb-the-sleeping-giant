@@ -2,6 +2,13 @@
 
 Every mockup image, what it is made of, how hard it is for a beginner to build, and how it scores next to real screenshots of top games. Checked 2026-10-11, and checked again on 2026-10-12 after game_creator's review (round 1). Every image below was retaken or re-rendered in that second check.
 
+Contents
+- How the scoring works (and the top-game screenshots we compared with)
+- Images: screen mockups, core heist screen, view shots, concept, icon and thumbnails
+- What is still below the top games, and why
+- What the real game can't match, and how it will look instead
+- Phone check
+
 ## How the scoring works
 
 Each image is scored 1 (poor) to 5 (best) on five things, next to real gameplay screenshots from `references/top-games/`:

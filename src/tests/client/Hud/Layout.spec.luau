@@ -286,6 +286,13 @@ describe("Layout.forScreen: the safe-home card", function()
 	end)
 end)
 
+describe("Layout.forScreen: the no-egg tip's circle", function()
+	it("is 40 px across on a computer and 24 px on a phone", function()
+		expect(Layout.forScreen(Vector2.new(1280, 720)).tip.circleSize).toBe(40)
+		expect(Layout.forScreen(Vector2.new(750, 390)).tip.circleSize).toBe(24)
+	end)
+end)
+
 describe("Layout.forScreen: the wake banner", function()
 	it("is low and right of centre on a computer: bottom 100 px up, middle at 66% of the width", function()
 		local banner = Layout.forScreen(Vector2.new(1280, 720)).banner
@@ -297,7 +304,6 @@ describe("Layout.forScreen: the wake banner", function()
 		local banner = Layout.forScreen(Vector2.new(1280, 720)).banner
 		expect(banner.textSize).toBe(34)
 		expect(banner.secondTextSize).toBe(17)
-		expect(banner.showSecondLine).toBe(true)
 		expect(banner.paddingY).toBe(10)
 		expect(banner.paddingX).toBe(28)
 		expect(banner.borderThickness).toBe(5)
@@ -334,6 +340,25 @@ describe("Layout.forScreen: the wake banner", function()
 		expect(banner.shadowOffset).toBe(5)
 		expect(banner.cornerRadius).toBe(13)
 		expect(banner.rotation).toBe(-2)
+	end)
+
+	it("shows one line on every screen: no second line on a computer or a phone", function()
+		expect(Layout.forScreen(Vector2.new(1280, 720)).banner.showSecondLine).toBe(false)
+		expect(Layout.forScreen(Vector2.new(750, 390)).banner.showSecondLine).toBe(false)
+	end)
+
+	it("pins the phone banner's right edge 12 px left of the Jump column, which is 138 px wide", function()
+		expect(Layout.jumpColumn).toBe(138)
+		expect(Layout.forScreen(Vector2.new(750, 390)).banner.jumpGap).toBe(12)
+	end)
+
+	it("does not pin the computer banner to the Jump column", function()
+		expect(Layout.forScreen(Vector2.new(1280, 720)).banner.jumpGap).toBeNil()
+	end)
+
+	it("cuts a phone name over 12 letters, and never cuts on a computer", function()
+		expect(Layout.forScreen(Vector2.new(750, 390)).banner.nameLetters).toBe(12)
+		expect(Layout.forScreen(Vector2.new(1280, 720)).banner.nameLetters).toBeNil()
 	end)
 
 	it("never uses text under 14 px, on either screen", function()
@@ -408,5 +433,58 @@ describe("Layout.forScreen: the Caught! card", function()
 
 	it("is the same on a phone held the other way up", function()
 		expect(Layout.forScreen(Vector2.new(390, 750)).caught.centerX).toBe(0.5)
+	end)
+end)
+
+-- The music button (plan 7 Task 16; spec 7 Rule 98). All numbers are HudTop pixels. The 58 band, the 164 edge, the
+-- 16 first-button left and the 277 and 189 meter left edges are the ones measured in Play (work/p7/task16-ruling.md).
+describe("Layout.musicButton", function()
+	local BAND = 58
+	local EDGE = 164
+	local FIRST_LEFT = 16
+
+	it("is 44 px in a 58 px band, the same as Roblox's own buttons", function()
+		expect(Layout.musicButton(BAND, EDGE, FIRST_LEFT, 277).size).toBe(44)
+	end)
+
+	it("is 76 percent of the band, rounded", function()
+		expect(Layout.musicButton(40, EDGE, FIRST_LEFT, 1000).size).toBe(30)
+		expect(Layout.musicButton(50, EDGE, FIRST_LEFT, 1000).size).toBe(38)
+	end)
+
+	it("sits beside Roblox's buttons, level with their top, on the iPhone 14", function()
+		local spot = Layout.musicButton(BAND, EDGE, FIRST_LEFT, 277)
+		expect(spot.x).toBe(164)
+		expect(spot.y).toBe(12)
+		expect(spot.movedDown).toBe(false)
+	end)
+
+	it("moves under Roblox's first button on the 4.7-inch phone, 6 px below the band", function()
+		local spot = Layout.musicButton(BAND, EDGE, FIRST_LEFT, 189)
+		expect(spot.size).toBe(44)
+		expect(spot.x).toBe(16)
+		expect(spot.y).toBe(64)
+		expect(spot.movedDown).toBe(true)
+	end)
+
+	it("stays beside Roblox's buttons when it is exactly 8 px from the meter", function()
+		-- 164 + 44 + 8 = 216
+		local spot = Layout.musicButton(BAND, EDGE, FIRST_LEFT, 216)
+		expect(spot.movedDown).toBe(false)
+		expect(spot.x).toBe(164)
+		expect(spot.y).toBe(12)
+	end)
+
+	it("moves down as soon as the gap to the meter is under 8 px", function()
+		local spot = Layout.musicButton(BAND, EDGE, FIRST_LEFT, 215)
+		expect(spot.movedDown).toBe(true)
+		expect(spot.x).toBe(16)
+		expect(spot.y).toBe(64)
+	end)
+
+	it("follows the edge when Roblox's buttons end somewhere else", function()
+		local spot = Layout.musicButton(BAND, 250, FIRST_LEFT, 1000)
+		expect(spot.x).toBe(250)
+		expect(spot.y).toBe(12)
 	end)
 end)

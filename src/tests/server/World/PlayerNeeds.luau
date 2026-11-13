@@ -1,0 +1,232 @@
+--!strict
+-- PlayerNeeds: a test helper (stuck safety Task 23, review round 1). One list of "the places players need", shared by the
+-- stuck scan's rare-spot check (StuckScan.spec) and the slide guard check (RealWorld.spec), so the two can never
+-- disagree about what players need. A place is a point, a segment (a route link) or a box (a walk piece, a seam part).
+-- When a later spec adds a new walk piece, a seam or a steep layer, it goes here and both checks see it.
+
+local WorldIndex = require(game:GetService("ServerScriptService").Server.World.WorldIndex)
+
+export type Need = {
+	name: string,
+	kind: "point" | "segment" | "box",
+	a: Vector3, -- the point, one end of the segment, or the middle of the box
+	b: Vector3?, -- the other end of a segment
+	part: BasePart?, -- the part of a box
+	-- The corners of a box that holds the place (its reach), to skip the far ones quickly.
+	low: Vector3,
+	high: Vector3,
+	-- How far a point is from the place (0 inside a box).
+	distance: (position: Vector3) -> number,
+}
+
+-- Spec 5's four Legendary nest points on his nightcap (docs/specs/v2/egg-nests-and-climbing.md, the nests table). The
+-- brim pair is just past the cap ladder's top, the side pair farther up the cap's front slope.
+export type Nest = { name: string, position: Vector3, group: "brim" | "side" }
+local NESTS: { Nest } = {
+	{ name = "left brim nest", position = Vector3.new(-14, 117.1, 14), group = "brim" },
+	{ name = "right brim nest", position = Vector3.new(14, 117.1, 14), group = "brim" },
+	{ name = "left side nest", position = Vector3.new(-17, 119, 28), group = "side" },
+	{ name = "right side nest", position = Vector3.new(17, 119, 28), group = "side" },
+}
+
+local LADDER_NAMES = { "BeardLadder", "CapLadder" }
+local LADDER_TRUSS = "Climb"
+local WALK_PIECE_SUFFIX = "_Walk" -- Boots_Walk, RightBoots_Walk, Belly_Walk, Ramp_Walk: the invisible walk pieces
+-- The seam's stitch parts are World.Seam (plan 5, Task 11). Spec 5's steep invisible layer is World.SteepLayer; it is
+-- not a place players need (Rule 22 condition 2), so only PlayerNeeds.steepLayer reads it.
+local SEAM_FOLDER = "Seam"
+local CUFF_WALK_FOLDER = "CuffWalk"
+local STEEP_LAYER_FOLDER = "SteepLayer"
+
+local PlayerNeeds = {}
+PlayerNeeds.NESTS = NESTS
+
+-- How far a point is from a box (0 inside it). A wedge is measured as its whole box, so a wedge is never judged farther
+-- away than it is.
+function PlayerNeeds.distanceToBox(point: Vector3, cframe: CFrame, size: Vector3): number
+	local at = cframe:PointToObjectSpace(point)
+	local half = size / 2
+	local outside = Vector3.new(
+		math.max(math.abs(at.X) - half.X, 0),
+		math.max(math.abs(at.Y) - half.Y, 0),
+		math.max(math.abs(at.Z) - half.Z, 0)
+	)
+	return outside.Magnitude
+end
+
+function PlayerNeeds.pointNeed(name: string, point: Vector3): Need
+	return {
+		name = name,
+		kind = "point",
+		a = point,
+		low = point,
+		high = point,
+		distance = function(position: Vector3): number
+			return (position - point).Magnitude
+		end,
+	}
+end
+
+-- A route link: the nearest point on the segment from `a` to `b`.
+function PlayerNeeds.segmentNeed(name: string, a: Vector3, b: Vector3): Need
+	local along = b - a
+	local lengthSquared = along:Dot(along)
+	return {
+		name = name,
+		kind = "segment",
+		a = a,
+		b = b,
+		low = a:Min(b),
+		high = a:Max(b),
+		distance = function(position: Vector3): number
+			local fraction = if lengthSquared > 1e-9
+				then math.clamp((position - a):Dot(along) / lengthSquared, 0, 1)
+				else 0
+			return (position - (a + along * fraction)).Magnitude
+		end,
+	}
+end
+
+-- A part as a place players need: the nearest point of its box.
+function PlayerNeeds.boxNeed(name: string, part: BasePart): Need
+	local reach = Vector3.one * (part.Size.Magnitude / 2)
+	return {
+		name = name,
+		kind = "box",
+		a = part.Position,
+		part = part,
+		low = part.Position - reach,
+		high = part.Position + reach,
+		distance = function(position: Vector3): number
+			return PlayerNeeds.distanceToBox(position, part.CFrame, part.Size)
+		end,
+	}
+end
+
+-- How far a point is from the nearest of the places.
+function PlayerNeeds.nearestDistance(needs: { Need }, position: Vector3): number
+	local nearest = math.huge
+	for _, need in needs do
+		nearest = math.min(nearest, need.distance(position))
+	end
+	return nearest
+end
+
+-- The two ends of a ladder's truss: its foot and its top.
+local function trussEnds(truss: BasePart): (Vector3, Vector3)
+	local size = truss.Size
+	local half = if size.X >= size.Y and size.X >= size.Z
+		then Vector3.new(size.X / 2, 0, 0)
+		elseif size.Y >= size.Z then Vector3.new(0, size.Y / 2, 0)
+		else Vector3.new(0, 0, size.Z / 2)
+	local endA = truss.CFrame:PointToWorldSpace(half)
+	local endB = truss.CFrame:PointToWorldSpace(-half)
+	if endB.Y < endA.Y then
+		return endB, endA
+	end
+	return endA, endB
+end
+
+-- Every part under the folder `folderName` (in the world, or inside WalkSurfaces) as a box need named "<folder> <part>".
+local function folderNeeds(world: Instance, walk: Instance?, folderName: string): { Need }
+	local found: { Need } = {}
+	local folder = world:FindFirstChild(folderName) or (if walk then walk:FindFirstChild(folderName) else nil)
+	if folder ~= nil then
+		local folderParts: { Instance } = folder:GetDescendants()
+		for _, descendant in folderParts do
+			if descendant:IsA("BasePart") then
+				table.insert(found, PlayerNeeds.boxNeed(`{folderName} {descendant.Name}`, descendant))
+			end
+		end
+	end
+	return found
+end
+
+-- Every place players need, as the plan lists them: every route point and link, every egg spot, every landing spot,
+-- every ladder's foot and top and truss, every invisible walk piece, spec 5's Legendary nest points, the seam when it
+-- exists, and the cuff ledges (World.CuffWalk, whose parts do not end "_Walk"; its curbs are solid, so they count). The
+-- steep layer is not a need: see PlayerNeeds.steepLayer. `world` is the model that holds WalkSurfaces (and the seam's
+-- and the cuff's folders, which may also be inside WalkSurfaces). The route, egg spots and landing spots are given, so a made-up world can pass none.
+function PlayerNeeds.build(
+	world: Instance,
+	route: { WorldIndex.RoutePoint },
+	eggSpots: { WorldIndex.EggSpot },
+	landings: { WorldIndex.LandingSpot }
+): { Need }
+	local needs: { Need } = {}
+	local byName: { [string]: WorldIndex.RoutePoint } = {}
+	for _, point in route do
+		byName[point.name] = point
+		table.insert(needs, PlayerNeeds.pointNeed(point.name, point.position))
+	end
+	for _, point in route do
+		for _, neighbour in point.neighbours do
+			local other = byName[neighbour]
+			if other ~= nil and point.name < neighbour then
+				table.insert(
+					needs,
+					PlayerNeeds.segmentNeed(`link {point.name} to {neighbour}`, point.position, other.position)
+				)
+			end
+		end
+	end
+	for _, spot in eggSpots do
+		table.insert(needs, PlayerNeeds.pointNeed(spot.name, spot.cframe.Position))
+	end
+	for _, spot in landings do
+		table.insert(needs, PlayerNeeds.pointNeed(`LandingSpot_{spot.index}`, spot.position))
+	end
+	local walk = world:FindFirstChild("WalkSurfaces")
+	if walk ~= nil then
+		for _, ladderName in LADDER_NAMES do
+			local ladder = walk:FindFirstChild(ladderName)
+			local truss = if ladder then ladder:FindFirstChild(LADDER_TRUSS) else nil
+			if truss ~= nil and truss:IsA("BasePart") then
+				local foot, top = trussEnds(truss)
+				table.insert(needs, PlayerNeeds.pointNeed(`{ladderName} foot`, foot))
+				table.insert(needs, PlayerNeeds.pointNeed(`{ladderName} top`, top))
+			end
+		end
+		local walkParts: { Instance } = walk:GetDescendants()
+		for _, descendant in walkParts do
+			if
+				descendant:IsA("BasePart")
+				and (
+					descendant.Name == LADDER_TRUSS
+					or string.sub(descendant.Name, -#WALK_PIECE_SUFFIX) == WALK_PIECE_SUFFIX
+				)
+			then
+				table.insert(needs, PlayerNeeds.boxNeed(`walk piece {descendant.Name}`, descendant))
+			end
+		end
+	end
+	for _, nest in NESTS do
+		table.insert(needs, PlayerNeeds.pointNeed(nest.name, nest.position))
+	end
+	for _, need in folderNeeds(world, walk, SEAM_FOLDER) do
+		table.insert(needs, need)
+	end
+	for _, need in folderNeeds(world, walk, CUFF_WALK_FOLDER) do
+		table.insert(needs, need)
+	end
+	return needs
+end
+
+-- Spec 5's steep invisible layer (World.SteepLayer) as box needs. It is not a place players need (Rule 22 condition 2: it
+-- is a slide face below the seam), so build() leaves it out; the slide-guard test keeps its guards 2 studs away from it.
+function PlayerNeeds.steepLayer(world: Instance): { Need }
+	local walk = world:FindFirstChild("WalkSurfaces")
+	return folderNeeds(world, walk, STEEP_LAYER_FOLDER)
+end
+
+-- The same, read from the real world (it stops with an error if the route, egg spots or landing spots are missing).
+function PlayerNeeds.fromWorld(world: Instance): { Need }
+	return PlayerNeeds.build(
+		world,
+		WorldIndex.loadRoute(world),
+		WorldIndex.loadEggSpots(world),
+		WorldIndex.loadLandingSpots(world)
+	)
+end
+
+return PlayerNeeds

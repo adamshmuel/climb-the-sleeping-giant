@@ -31,18 +31,12 @@ local function heavySleepEndsAt(): number
 	return Config.Wake.AwakeSeconds + Config.Wake.HeavySleepSeconds
 end
 
--- The slams that land while he is awake (a landing exactly at the end of the awake time counts).
+-- One slam per entry of Config.Wake.SlamWarningTimes; each lands SlamWarningSeconds after its warning.
 function GiantCycle.slams(): { Slam }
 	local list: { Slam } = {}
-	local number = 1
-	while true do
-		local warnAt = Config.Wake.FirstSlamWarningAt + (number - 1) * Config.Wake.SlamInterval
+	for number, warnAt in Config.Wake.SlamWarningTimes do
 		local landsAt = warnAt + Config.Wake.SlamWarningSeconds
-		if landsAt > Config.Wake.AwakeSeconds then
-			break
-		end
 		table.insert(list, { number = number, warnAt = warnAt, landsAt = landsAt })
-		number += 1
 	end
 	return list
 end

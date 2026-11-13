@@ -65,7 +65,7 @@ describe("PlayerInfo.fromPlayer", function()
 	end)
 
 	it("ignores a Carrying value that is not a rarity name", function()
-		expect(PlayerInfo.fromPlayer(fakePlayer({ Carrying = "Legendary" })).carrying).toBeNil()
+		expect(PlayerInfo.fromPlayer(fakePlayer({ Carrying = "Mythic" })).carrying).toBeNil()
 		expect(PlayerInfo.fromPlayer(fakePlayer({ Carrying = 5 })).carrying).toBeNil()
 		expect(PlayerInfo.fromPlayer(fakePlayer({ Carrying = true })).carrying).toBeNil()
 	end)

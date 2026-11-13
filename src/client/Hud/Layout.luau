@@ -7,6 +7,48 @@ local Layout = {}
 -- A screen whose short side is under this many pixels is a phone (Studio's iPhone 14 simulator gives 390).
 local PHONE_SHORT_SIDE = 500
 
+-- Roblox's Jump button column on a phone: pixels from the right edge of the safe area to the column's left edge
+-- (style guide wake-up.md, "Wake banner on phones"). The phone wake banner ends `banner.jumpGap` left of it. 138 is the
+-- style guide's design value (the designer owns it), not a measurement: in Play the real Jump button sits 95 px from the
+-- right edge.
+Layout.jumpColumn = 138
+
+-- The red edges while he hunts (style guide wake-up.md, "Red edges"; spec 6 Rule 68). Every size is a fraction of the screen.
+--  `depth`: how deep each band is, as a fraction of the screen height, on every edge (the side bands use RelativeYY).
+--  `phoneSideHeight`: the side bands on a phone stop this far down, 45% above the bottom, so the thumbstick and Jump button
+--                     corners get no red.
+--  `phoneBottomFrom`, `phoneBottomTo`: the phone's bottom band covers only the middle, 28% to 72% of the width.
+--  `fadeSeconds`: the time to fade fully in or out.  `pulseSeconds`: one pulse, full strength to 40% and back.
+--  `displayOrder`: below the Hud and HudTop screens (0), so every button and pill is drawn over the red.
+Layout.redEdges = table.freeze({
+	depth = 0.14,
+	phoneSideHeight = 0.55,
+	phoneBottomFrom = 0.28,
+	phoneBottomTo = 0.72,
+	-- Phone only: each faded end is `stripCount` strips (designer ruling, style guide wake-up.md "Red edges on phones").
+	-- The side bands fade over their last `sideFadeShare` of the length, the bottom band over the first and the last
+	-- `bottomFadeShare` of its width.
+	stripCount = 4,
+	sideFadeShare = 0.2,
+	bottomFadeShare = 0.25,
+	fadeSeconds = 0.5,
+	pulseSeconds = 1,
+	displayOrder = -1,
+})
+
+-- A phone shows a name on the wake banner up to this many letters whole; a longer one is cut to one letter fewer and an
+-- ellipsis, so the banner stays on one line, left of the Jump column.
+Layout.phoneNameLetters = 12
+
+-- Where the phone grab pill leaves the egg and sits at a fixed spot (Task 56). The two lines are pixels above the
+-- safe area's bottom: the pill pins when its box is lower than the first, and follows the egg again only above the
+-- second. The 20 px between them stops it flickering. A pinned pill's bottom edge sits `bottomGap` above the bottom.
+Layout.pin = table.freeze({
+	pinLine = 64,
+	unpinLine = 84,
+	bottomGap = 12,
+})
+
 export type Meter = {
 	width: number,
 	height: number,
@@ -80,6 +122,10 @@ export type Tip = {
 	borderThickness: number,
 	textSize: number,
 	textOutline: number,
+	circleSize: number, -- the no-egg tip's red circle icon, across (the carrier's egg icon is the pill's)
+	circleRim: number, -- the circle's gold rim, inside its edge
+	circleRing: number, -- the circle's Ink ring, outside its edge
+	circleGap: number, -- between the circle and the words
 }
 
 -- The green card under the meter ("Safe! Common egg is home"): the egg's picture and the words, on a green plate.
@@ -100,8 +146,8 @@ export type Card = {
 }
 
 -- The red wake banner ("Leo woke the Giant!"). On every screen it stands low and right of centre (on the Hud screen), so
--- it never covers his face or the red slam circles. A computer has a smaller second line under the words; a phone has
--- one small line.
+-- it never covers his face or the red slam circles. It is one line on every screen. A phone pins its right edge left of
+-- the Jump column.
 export type Banner = {
 	bottomOffset: number, -- pixels from the bottom of the safe area to the banner's outer edge (outline included)
 	centerX: number, -- where the banner's middle is, across the screen: 0.5 is the middle, 0.66 is two thirds of the way
@@ -109,7 +155,9 @@ export type Banner = {
 	paddingY: number,
 	gap: number, -- space between the 💥 and the words
 	secondGap: number, -- space between the words and the second line
-	showSecondLine: boolean, -- "Run home with your egg!" shows on computers only
+	showSecondLine: boolean, -- false on every screen: the banner is one line (the words under it live in the bottom tip)
+	jumpGap: number?, -- phone only: the banner's right edge stands this many pixels left of the Jump column (nil: no pin)
+	nameLetters: number?, -- phone only: a name over this many letters is cut (nil: never cut)
 	borderThickness: number, -- the Ink outline around the banner
 	shadowOffset: number, -- how far the Ink shadow shows under the banner
 	cornerRadius: number,
@@ -138,6 +186,39 @@ export type Caught = {
 	secondTextSize: number, -- "The egg went back. You lost nothing else."
 }
 
+-- The red "RUN HOME!" pill at the top, right of the sleep meter (style guide wake-up.md, "RUN HOME!" and "Where RUN HOME!
+-- sits"; mockup wake-hud.html: #runhome). Sizes in pixels; the pill is a fixed size so its box is known without drawing it.
+export type RunHomePill = {
+	width: number,
+	height: number,
+	leftGap: number, -- from the meter's right edge to the pill's left edge
+	topOffset: number, -- from the top of the screen to the pill's top edge
+	borderThickness: number, -- the Ink outline
+	shadowOffset: number, -- how far the Ink shadow shows under the pill
+	textSize: number, -- "RUN HOME!"
+	textOutline: number, -- the Ink outline round the words
+	emojiTextSize: number, -- the runner picture
+	gap: number, -- between the picture and the words
+	tilt: number, -- degrees (negative: the right side is higher)
+}
+
+-- One Z of the Z Z Z on the sleep meter (style guide: meter-zs.md). `dx` and `dy` are points from the meter's right
+-- edge and its top edge to the corner of the letter's text box; `height` is the letter's own height.
+export type ZLetter = {
+	dx: number,
+	dy: number,
+	height: number,
+}
+
+export type Zs = {
+	calm: { ZLetter },
+	heavy: { ZLetter }, -- Heavy Sleep: bigger, same place
+	letterPerTextSize: number, -- a letter is this much of its TextSize tall (TextSize = height / 0.74)
+	strokeThickness: number, -- the Sleep-blue edge
+	dropOffset: number, -- how far below the Ink copy sits
+	tilt: number, -- degrees each letter is turned
+}
+
 export type Screen = {
 	phone: boolean,
 	meter: Meter,
@@ -148,6 +229,8 @@ export type Screen = {
 	card: Card,
 	banner: Banner,
 	caught: Caught,
+	runHome: RunHomePill,
+	zs: Zs,
 }
 
 local computerMeter: Meter = {
@@ -286,6 +369,10 @@ local computerTip: Tip = {
 	borderThickness = 4,
 	textSize = 24,
 	textOutline = 2,
+	circleSize = 40,
+	circleRim = 5,
+	circleRing = 3,
+	circleGap = 10,
 }
 
 local phoneTip: Tip = {
@@ -295,6 +382,10 @@ local phoneTip: Tip = {
 	borderThickness = 3,
 	textSize = 15,
 	textOutline = 1.5,
+	circleSize = 24,
+	circleRim = 3,
+	circleRing = 2,
+	circleGap = 6,
 }
 
 -- The values are the mockup's (core-hud.html: .msg), except the phone's top: 62 px, 6 px lower than the mockup's 56, so
@@ -343,7 +434,7 @@ local computerBanner: Banner = {
 	paddingY = 10,
 	gap = 8,
 	secondGap = 2,
-	showSecondLine = true,
+	showSecondLine = false,
 	borderThickness = 5,
 	shadowOffset = 7,
 	cornerRadius = 18,
@@ -362,6 +453,8 @@ local phoneBanner: Banner = {
 	gap = 4,
 	secondGap = 0,
 	showSecondLine = false,
+	jumpGap = 12,
+	nameLetters = Layout.phoneNameLetters,
 	borderThickness = 3,
 	shadowOffset = 5,
 	cornerRadius = 13,
@@ -422,6 +515,70 @@ table.freeze(phoneBanner)
 table.freeze(computerCaught)
 table.freeze(phoneCaught)
 
+-- The values are the style guide's (wake-up.md lines 39 to 44): 34 px words on a computer and 20 px on a phone, a 4 px
+-- outline and 5 px shadow (phone 3 and 3), turned -2 degrees, level with the meter, 14 px from the top (phone 12) and
+-- 14 px right of the meter (phone 10). The width and height fit the picture, the words and the mockup's padding (6 px
+-- above and below, 14 px left, 22 px right), and are scaled like the phone's other pieces.
+local computerRunHome: RunHomePill = {
+	width = 270,
+	height = 60,
+	leftGap = 14,
+	topOffset = 14,
+	borderThickness = 4,
+	shadowOffset = 5,
+	textSize = 34,
+	textOutline = 3,
+	emojiTextSize = 36,
+	gap = 8,
+	tilt = -2,
+}
+
+local phoneRunHome: RunHomePill = {
+	width = 160,
+	height = 38,
+	leftGap = 10,
+	topOffset = 12,
+	borderThickness = 3,
+	shadowOffset = 3,
+	textSize = 20,
+	textOutline = 2,
+	emojiTextSize = 21,
+	gap = 5,
+	tilt = -2,
+}
+table.freeze(computerRunHome)
+table.freeze(phoneRunHome)
+
+-- The values are the style guide's (meter-zs.md, "Where", "Size" and "Heavy Sleep"): (dx, dy, letter height).
+-- The top Z sits 5 points lower than the mockup so it stays on screen at the top of its 8-point rise (plan 4 Task 13d).
+local function letters(rows: { { number } }): { ZLetter }
+	local result: { ZLetter } = {}
+	for _, row in rows do
+		table.insert(result, table.freeze({ dx = row[1], dy = row[2], height = row[3] }))
+	end
+	return table.freeze(result)
+end
+
+local computerZs: Zs = {
+	calm = letters({ { 8, 30, 30 }, { 40, 4, 36 }, { 78, -7, 42 } }),
+	heavy = letters({ { 8, 22, 40 }, { 52, -4, 46 }, { 102, -7, 52 } }),
+	letterPerTextSize = 0.74,
+	strokeThickness = 4,
+	dropOffset = 3,
+	tilt = -12, -- counter-clockwise, like the mockup's rotate(-12deg)
+}
+
+local phoneZs: Zs = {
+	calm = letters({ { 6, 20, 24 }, { 32, 0, 28 }, { 62, -19, 32 } }),
+	heavy = letters({ { 6, 14, 32 }, { 40, -10, 38 }, { 80, -19, 44 } }),
+	letterPerTextSize = 0.74,
+	strokeThickness = 4,
+	dropOffset = 3,
+	tilt = -12, -- counter-clockwise, like the mockup's rotate(-12deg)
+}
+table.freeze(computerZs)
+table.freeze(phoneZs)
+
 -- True when the screen counts as a phone: its short side is under 500 pixels, held either way up.
 function Layout.isPhone(screenSize: Vector2): boolean
 	return math.min(screenSize.X, screenSize.Y) < PHONE_SHORT_SIDE
@@ -446,6 +603,25 @@ function Layout.meterCenterX(
 	return math.max(center, closestCenter)
 end
 
+-- The music button (plan 7 Task 16; spec 7 Rule 98), all in HudTop pixels. Numbers measured in Play (work/p7/task16-ruling.md).
+local MUSIC_SIZE_SHARE = 0.76 -- of the top-bar band: 44 px in Roblox's 58 px band, like Roblox's own buttons
+Layout.MUSIC_FIRST_LEFT = 16 -- Roblox's first button's left edge: where the button goes when it moves down
+local MUSIC_ROW_TOP = 12 -- Roblox's buttons sit 12 px from the top of the band
+local MUSIC_DOWN_GAP = 6 -- when it moves down, it sits this far below the band
+
+export type MusicSpot = { size: number, x: number, y: number, movedDown: boolean }
+
+-- Where the music button goes. It sits right of Roblox's buttons (`edge` is where their free space starts), level with
+-- their top. If the sleep meter at its biggest (`meterLeft`) would come within 8 px of it, it moves under Roblox's
+-- first button (`firstLeft` is that button's left edge), 6 px below the band.
+function Layout.musicButton(band: number, edge: number, firstLeft: number, meterLeft: number): MusicSpot
+	local size = math.round(MUSIC_SIZE_SHARE * band)
+	if edge + size + BUTTON_GAP > meterLeft then
+		return { size = size, x = firstLeft, y = band + MUSIC_DOWN_GAP, movedDown = true }
+	end
+	return { size = size, x = edge, y = MUSIC_ROW_TOP, movedDown = false }
+end
+
 -- All the sizes for a screen of this size.
 function Layout.forScreen(screenSize: Vector2): Screen
 	local phone = Layout.isPhone(screenSize)
@@ -459,6 +635,8 @@ function Layout.forScreen(screenSize: Vector2): Screen
 		card = if phone then phoneCard else computerCard,
 		banner = if phone then phoneBanner else computerBanner,
 		caught = if phone then phoneCaught else computerCaught,
+		runHome = if phone then phoneRunHome else computerRunHome,
+		zs = if phone then phoneZs else computerZs,
 	}
 end
 

@@ -12,8 +12,11 @@
 --    (2 on each boot top) and 4 Rare along the belly path. Each spot is a Model with a Rarity attribute, an
 --    invisible Base whose top is where the egg's bottom sits, a PromptAnchor for the hold prompt, and (meadow
 --    only) its own glow ring. Every spot is always sent to players.
--- 2b. A spot whose place differs from its table entry (by more than half a stud) is moved to the table place:
---    its Base, its prompt anchor (it rides on the Base) and, on Common spots, its glow ring.
+-- 2b. A spot whose place differs from its table entry (by more than half a stud sideways), or whose Base top is more
+--    than 0.3 studs above or below the surface under its table place (stuck safety Task 24: the walk pieces under some
+--    spots were taken away, so the ground got lower), is moved to the table place: its Base, its prompt anchor (it
+--    rides on the Base) and, on Common spots, its glow ring. A sideways move changes x and z; a drop only changes
+--    the height and the lean.
 -- 3. The mockup eggs leave Workspace.World.Eggs. The emptied folder goes with them, so World has no Eggs folder.
 
 local Workspace = game:GetService("Workspace")
@@ -33,19 +36,24 @@ local COMMON_SPOTS: { { number } } = {
 	{ 88, -32 },
 	{ 93, 12 },
 }
--- Uncommon: on the boot tops (the walk surfaces), 2 on each.
+-- Uncommon: on the boot tops, 2 on each. Spots 2 and 4 moved in stuck safety Task 24 (owners agreed on 2026-10-20) from
+-- (-21.5, -55.5) and (21.5, -55), which stood on the edge of the boot's top and in the dip behind it, to the flat top of
+-- their own boot: 6.5 studs from the other egg on that boot, 1.6 studs back from the 1 stud step in the boot top (z -60.4),
+-- and clear of the lap plank of plan 3 (z -60 to -51).
 local UNCOMMON_SPOTS: { { number } } = {
 	{ -26, -62.5 },
-	{ -21.5, -55.5 },
+	{ -19.5, -62 },
 	{ 26, -61.5 },
-	{ 21.5, -55 },
+	{ 19.5, -62 },
 }
 -- Rare: along the belly path, from low to high. The last one is on the right edge so it stays clear of the beard ladder.
+-- The last one moved 1 stud south in stuck safety Task 25 (from (2.5, -29.5)), because the beard rails now reach his
+-- drawn belly and would touch it there. game_creator and designer both said yes.
 local RARE_SPOTS: { { number } } = {
 	{ -12.5, -40.3 },
 	{ -11.2, -34.8 },
 	{ -8.1, -30.7 },
-	{ 2.5, -29.5 },
+	{ 2.5, -30.5 },
 }
 
 -- The mockup egg each template is made from.
@@ -64,6 +72,7 @@ local BELLY_LEAN = 0.5
 local RING_LIFT = 0.02 -- the glow ring's middle sits this far above the grass, so its 0.2 thick top shows
 
 local MOVE_LIMIT = 0.5 -- studs: a spot closer than this to its table place counts as already there
+local HEIGHT_LIMIT = 0.3 -- studs: a spot whose Base top is closer than this to the surface under it counts as on it
 
 local report: { string } = {}
 local function say(line: string)
@@ -330,9 +339,10 @@ local function run(): any
 			if place and base and base:IsA("BasePart") then
 				local oldTop = base.CFrame:PointToWorldSpace(Vector3.new(0, base.Size.Y / 2, 0))
 				local miss = (Vector2.new(oldTop.X, oldTop.Z) - Vector2.new(place[1], place[2])).Magnitude
-				if miss > MOVE_LIMIT then
-					local ringRotation = (findMockup("Egg_Meadow1"):FindFirstChild("GlowRing") :: BasePart).CFrame.Rotation
-					local shape = spotShape(world, rarity, number, place[1], place[2], ringRotation)
+				local ringRotation = (findMockup("Egg_Meadow1"):FindFirstChild("GlowRing") :: BasePart).CFrame.Rotation
+				local shape = spotShape(world, rarity, number, place[1], place[2], ringRotation)
+				local drop = oldTop.Y - shape.top.Y
+				if miss > MOVE_LIMIT or math.abs(drop) > HEIGHT_LIMIT then
 					base.CFrame = shape.baseCFrame -- the PromptAnchor attachment rides on the Base
 					local ring = spot:FindFirstChild("GlowRing")
 					if ring and ring:IsA("BasePart") then
@@ -341,14 +351,15 @@ local function run(): any
 					table.insert(
 						movedLines,
 						string.format(
-							"%s (%.1f, %.1f, %.1f) -> (%.1f, %.1f, %.1f)",
+							"%s (%.1f, %.1f, %.1f) -> (%.1f, %.1f, %.1f)%s",
 							spot.Name,
 							oldTop.X,
 							oldTop.Y,
 							oldTop.Z,
 							shape.top.X,
 							shape.top.Y,
-							shape.top.Z
+							shape.top.Z,
+							if miss > MOVE_LIMIT then "" else " (height and lean only)"
 						)
 					)
 				end

@@ -202,7 +202,7 @@ if (state === "bonk") { meter("AWAKE! Back to sleep in 0:07"); $("tip").classLis
 if (state === "garden") { meter("AWAKE! Back to sleep in 0:06"); }
 // bonked on a ladder with no egg: they hold on with the star ring. Nothing new on screen; the tip stays.
 if (state === "ladder") { meter("AWAKE! Back to sleep in 0:09"); $("tip").classList.remove("hide"); }
-// a carrier climbing down the left boot ladder with an Uncommon egg, a red circle below and the ladder glowing red
+// a carrier climbing down the left boot ladder with an Uncommon egg, a red circle below (no ladder glow: dropped 2026-11-04)
 if (state === "slam") {
   meter("AWAKE! Back to sleep in 0:12"); rh.classList.remove("hide"); $("carry").classList.remove("hide");
   document.querySelector("#carry .egg").style.background = "radial-gradient(circle at 35% 30%, #DFFFD8, #5BD45B 60%, #2E9E3A)";

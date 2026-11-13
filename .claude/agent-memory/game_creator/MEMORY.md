@@ -1,0 +1,3 @@
+- [Idea file layout](idea-file-layout.md) — idea / research / history split; write docs in the worktree path
+- [Step backs on measuring jobs](step-back-measuring-jobs.md) — check steer and past Plays; price a shortcut first; move unbuilt art to the measured line
+- [Walk vs art on the giant](walk-vs-art-on-giant.md) — walk vs look limits; ray-grid landings; keep game-at-a-glance.md current

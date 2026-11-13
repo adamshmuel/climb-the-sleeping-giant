@@ -7,6 +7,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local RouteData = require(ReplicatedStorage.Shared.RouteData)
 local Zones = require(script.Parent.Parent.Giant.Zones)
+local NestReader = require(script.Parent.NestReader)
+local SlideWatch = require(script.Parent.Parent.Players.SlideWatch)
+local WayDown = require(script.Parent.Parent.Players.WayDown)
+local PathCheck = require(script.Parent.PathCheck)
+
+export type Ladder = WayDown.Ladder
 
 export type Box = { cframe: CFrame, size: Vector3 }
 
@@ -22,33 +28,68 @@ export type Garden = {
 }
 
 -- One place where an egg waits (Rule 3): a Model in World.EggSpots with a Rarity, a Base and a PromptAnchor.
+-- A nest (Rule 70) also has a Nest part, a NestName, a Twin and, for Common, a Garden. Every spot is a nest.
 export type EggSpot = {
 	name: string,
 	rarity: Config.RarityName,
 	cframe: CFrame, -- the top centre of the Base: where the egg's bottom sits
 	promptAnchor: Attachment, -- where the hold prompt goes (about 2 studs above the Base)
 	model: Model,
+	nest: BasePart?, -- the part the egg's nest looks like
+	nestName: string?,
+	twin: string?, -- the name of the other nest of the pair (its own name if it has no partner)
+	garden: number?, -- 1 to 8, on Common nests only: the garden whose meadow it is in
+	ridesRightArm: boolean?, -- true when the nest moves with his right arm (never on Common)
 }
 
 -- One point of the footprint route (World.Route), as RouteData reads it.
 export type RoutePoint = RouteData.Point
 
--- One place in the meadow where a player lands after the bounce-off (Rule 12): LandingSpot_1 to LandingSpot_8.
+-- One way up from the gardens (Config.WaysUp): its foot and top points on the route.
+export type WayUp = {
+	name: string,
+	gardens: { number },
+	walkLimitSeconds: { number }, -- one per garden, same order as gardens
+	foot: RoutePoint,
+	top: RoutePoint,
+}
+
+-- One place in the meadow where a player lands after the bounce-off (Rule 12): LandingSpot_1 to LandingSpot_10.
 export type LandingSpot = {
-	index: number, -- 1 to 8
+	index: number, -- 1 to 10
 	position: Vector3, -- the top centre of the spot's part: where a player's feet land
 }
 
--- The egg models in ServerStorage.Assets.Eggs, one per rarity.
-export type EggTemplates = { Common: Model, Uncommon: Model, Rare: Model }
+-- One stitch of the seam (World.Seam.SeamLine): where it is and which way is downhill (flat, length 1).
+export type SeamPoint = SlideWatch.SeamPoint
+
+-- The egg models in ServerStorage.Assets.Eggs, one per rank in Config.RarityOrder.
+export type EggTemplates = { [string]: Model }
+
+-- The pieces the wake-up needs (plan 6 Task 10, moved in by tools/world/25-wake-pieces.luau).
+export type WakePieces = {
+	mouth: Model, -- World.Giant.AwakeMouth (with Mouth and Tongue)
+	bang: BasePart, -- World.GiantFX.BangAnchor (with the Bang and ZPop guis)
+	dustSpots: { BasePart }, -- World.GiantFX.WakeDust.DustSpot, each with a ParticleEmitter
+	birds: { Model }, -- ReplicatedStorage.Assets.WakeBirds
+	rightArm: BasePart, -- the part marked RightArmRest
+}
 
 -- The zones that must each have at least one box. The Meadow is "in no box", so it has none.
 local ZONE_NAMES = { "Boots", "Belly", "Beard", "Nightcap" }
 
+-- The five rank names an egg spot's Rarity may hold, looked up by text.
+local RARITY_NAMES: { [any]: boolean } = {}
+for _, name in Config.RarityOrder do
+	RARITY_NAMES[name] = true
+end
+
 local PLOT_COUNT = 8
 local PET_PAD_COUNT = 6
 local HOME_SPOT_COUNT = 12
-local LANDING_SPOT_COUNT = 8
+local WAKE_DUST_COUNT = 7
+local WAKE_BIRD_COUNT = 24
+local LANDING_SPOT_COUNT = 10
 
 local WorldIndex = {}
 
@@ -229,7 +270,6 @@ end
 -- The pieces of the climb that Task 8 builds, so the world check notices if they are missing.
 export type Climb = {
 	rightRamp: Instance,
-	rightBootsWalk: Instance,
 	steepGuards: Instance,
 }
 
@@ -240,7 +280,7 @@ function WorldIndex.readClimb(world: Instance): (Climb?, { string })
 	end
 	local problems: { string } = {}
 	local found: { [string]: Instance? } = {}
-	for _, name in { "RightBootRamp", "RightBoots_Walk", "SteepGuards" } do
+	for _, name in { "RightBootRamp", "SteepGuards" } do
 		found[name] = walk:FindFirstChild(name)
 		if found[name] == nil then
 			table.insert(problems, `WalkSurfaces is missing {name}`)
@@ -251,7 +291,6 @@ function WorldIndex.readClimb(world: Instance): (Climb?, { string })
 	end
 	return {
 		rightRamp = found.RightBootRamp :: Instance,
-		rightBootsWalk = found.RightBoots_Walk :: Instance,
 		steepGuards = found.SteepGuards :: Instance,
 	}, {}
 end
@@ -262,9 +301,17 @@ local function withArticle(className: string): string
 	return if string.find("AEIOU", first, 1, true) then `an {className}` else `a {className}`
 end
 
--- Reads World.EggSpots: 8 Common, 4 Uncommon and 4 Rare spots, each a Model with a Rarity attribute, a Base part and
--- a PromptAnchor attachment on the Base. The spots come back in name order. Problems come one per line.
--- The count line is left out while a spot has a bad Rarity, because that spot would be counted wrong.
+-- What NestReader needs from this file, so each fact stays written once here.
+local nestContext: NestReader.Context = {
+	plotCount = PLOT_COUNT,
+	rarityNames = RARITY_NAMES,
+	withArticle = withArticle,
+}
+
+-- Reads World.EggSpots: any number of spots (at least one), each a Model with a Rarity attribute (one of the five
+-- ranks), a Base part and a PromptAnchor attachment on the Base. A spot with a Nest child or a NestName is a nest and
+-- also needs the nest fields (`NestReader.readNest`); each garden then needs 2 Common meadow nests, or none (Rule 70).
+-- The spots come back in name order. Problems come one per line.
 function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 	local folder = world:FindFirstChild("EggSpots")
 	if folder == nil then
@@ -272,13 +319,17 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 	end
 	local spots: { EggSpot } = {}
 	local problems: { string } = {}
-	local counts: { [string]: number } = { Common = 0, Uncommon = 0, Rare = 0 }
-	local needs = Config.Rarity -- how many spots of each rarity there must be (Config: Common 8, Uncommon 4, Rare 4)
-	local rarityProblem = false
 	local children = folder:GetChildren()
 	table.sort(children, function(a, b)
 		return a.Name < b.Name
 	end)
+	local nestNames: { [string]: boolean } = {}
+	for _, child in children do
+		if child:IsA("Model") and NestReader.isNest(child) then
+			nestNames[child.Name] = true
+		end
+	end
+	local meadowNests: { [number]: { string } } = {} -- garden number -> names of its Common nests
 	for _, child in children do
 		local label = `EggSpots.{child.Name}`
 		if not child:IsA("Model") then
@@ -289,12 +340,8 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 		local rarity = child:GetAttribute("Rarity") :: any
 		if rarity == nil then
 			table.insert(problems, `{label} has no Rarity`)
-			rarityProblem = true
-		elseif counts[rarity] == nil then
+		elseif not RARITY_NAMES[rarity] then
 			table.insert(problems, `{label} has an unknown Rarity "{rarity}"`)
-			rarityProblem = true
-		else
-			counts[rarity] += 1
 		end
 		local base = child:FindFirstChild("Base")
 		local anchor: Instance? = nil
@@ -313,6 +360,14 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 				)
 			end
 		end
+		-- Every spot is a nest (Rule 70): a bare V1 spot now reports "missing Nest" and "no NestName".
+		local nestFields = NestReader.readNest(child, label, rarity, nestNames, problems, nestContext)
+		local garden = nestFields.garden
+		if garden ~= nil then
+			local names = meadowNests[garden] or {}
+			meadowNests[garden] = names
+			table.insert(names, child.Name)
+		end
 		if #problems == before then
 			local basePart = base :: BasePart
 			table.insert(spots, {
@@ -321,22 +376,23 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 				cframe = basePart.CFrame * CFrame.new(0, basePart.Size.Y / 2, 0),
 				promptAnchor = anchor :: Attachment,
 				model = child,
+				nest = nestFields.nest,
+				nestName = nestFields.nestName,
+				twin = nestFields.twin,
+				garden = nestFields.garden,
+				ridesRightArm = nestFields.ridesRightArm,
 			})
 		end
 	end
-	if
-		not rarityProblem
-		and (
-			counts.Common ~= needs.Common.Spots
-			or counts.Uncommon ~= needs.Uncommon.Spots
-			or counts.Rare ~= needs.Rare.Spots
-		)
-	then
-		table.insert(
-			problems,
-			`EggSpots needs {needs.Common.Spots} Common, {needs.Uncommon.Spots} Uncommon and `
-				.. `{needs.Rare.Spots} Rare spots, found {counts.Common}, {counts.Uncommon}, {counts.Rare}`
-		)
+	if #children == 0 then
+		table.insert(problems, "EggSpots has no spots")
+	end
+	-- A garden has 2 Common meadow nests, or none (Rule 70).
+	for garden = 1, PLOT_COUNT do
+		local names = meadowNests[garden]
+		if names ~= nil and #names ~= 2 then
+			table.insert(problems, `garden {garden} has {#names} meadow nests: {table.concat(names, ", ")}`)
+		end
 	end
 	if #problems > 0 then
 		return nil, problems
@@ -345,7 +401,7 @@ function WorldIndex.readEggSpots(world: Instance): ({ EggSpot }?, { string })
 end
 
 -- Reads the egg models the server copies onto the spots: `assets` is ServerStorage.Assets, and its Eggs folder must
--- hold a Model named Common, Uncommon and Rare. (It takes the Assets folder, not the world, because the egg models
+-- hold a Model for every rank in Config.RarityOrder. (It takes the Assets folder, not the world, because the egg models
 -- do not live in the world.)
 function WorldIndex.readEggTemplates(assets: Instance): (EggTemplates?, { string })
 	local eggs = assets:FindFirstChild("Eggs")
@@ -367,7 +423,7 @@ function WorldIndex.readEggTemplates(assets: Instance): (EggTemplates?, { string
 	if #problems > 0 then
 		return nil, problems
 	end
-	return { Common = found.Common, Uncommon = found.Uncommon, Rare = found.Rare }, {}
+	return found, {}
 end
 
 -- Reads World.Route: a Model that always streams to players (each client draws its own footprints from it) and holds
@@ -397,7 +453,62 @@ function WorldIndex.readRoute(world: Instance): ({ RoutePoint }?, { string })
 	return points, {}
 end
 
--- Reads World.LandingSpots: exactly LandingSpot_1 to LandingSpot_8, each a BasePart. They come back in number order.
+-- Finds, for one kind of end ("WayUpFoot" or "WayUpTop"), the single route point of each way up in Config.WaysUp.
+-- Adds a problem line for a missing one, a second one, and a name that is not in Config.WaysUp.
+local function findWayUpEnds(points: { RoutePoint }, attribute: string, problems: { string }): { [string]: RoutePoint }
+	local known: { [string]: boolean } = {}
+	for _, wayUp in Config.WaysUp do
+		known[wayUp.Name] = true
+	end
+	local found: { [string]: RoutePoint } = {}
+	for _, point in points do
+		local value = if attribute == "WayUpFoot" then point.wayUpFoot else point.wayUpTop
+		if value == nil then
+			continue
+		end
+		if not known[value] then
+			table.insert(problems, `{point.name} has {attribute} "{value}", which is not in Config.WaysUp`)
+		elseif found[value] ~= nil then
+			table.insert(problems, `Route points {found[value].name} and {point.name} both have {attribute} "{value}"`)
+		else
+			found[value] = point
+		end
+	end
+	for _, wayUp in Config.WaysUp do
+		if found[wayUp.Name] == nil then
+			table.insert(problems, `No route point has {attribute} "{wayUp.Name}"`)
+		end
+	end
+	return found
+end
+
+-- Reads the four ways up (Config.WaysUp) from the route: for each one, the point with its WayUpFoot and the point with
+-- its WayUpTop. They come back in Config order. Problems come one per line; with any problem there are no ways up.
+function WorldIndex.readWaysUp(world: Instance): ({ WayUp }?, { string })
+	local points, routeProblems = WorldIndex.readRoute(world)
+	if points == nil then
+		return nil, routeProblems
+	end
+	local problems: { string } = {}
+	local feet = findWayUpEnds(points, "WayUpFoot", problems)
+	local tops = findWayUpEnds(points, "WayUpTop", problems)
+	if #problems > 0 then
+		return nil, problems
+	end
+	local waysUp: { WayUp } = {}
+	for _, wayUp in Config.WaysUp do
+		table.insert(waysUp, {
+			name = wayUp.Name,
+			gardens = wayUp.Gardens,
+			walkLimitSeconds = wayUp.WalkLimitSeconds,
+			foot = feet[wayUp.Name],
+			top = tops[wayUp.Name],
+		})
+	end
+	return waysUp, {}
+end
+
+-- Reads World.LandingSpots: exactly LandingSpot_1 to LandingSpot_10, each a BasePart. They come back in number order.
 function WorldIndex.readLandingSpots(world: Instance): ({ LandingSpot }?, { string })
 	local folder = world:FindFirstChild("LandingSpots")
 	if folder == nil then
@@ -499,6 +610,169 @@ function WorldIndex.loadLandingSpots(world: Instance): { LandingSpot }
 	return spots
 end
 
+-- Reads World.Seam.SeamLine: every BasePart in it is one stitch, with a `Down` attribute (a flat Vector3 pointing
+-- downhill). Sorted by name. Problems are listed like readLandingSpots does.
+function WorldIndex.readSeamLine(world: Instance): ({ SeamPoint }?, { string })
+	local seam = world:FindFirstChild("Seam")
+	if seam == nil then
+		return nil, { "World is missing Seam" }
+	end
+	local line = seam:FindFirstChild("SeamLine")
+	if line == nil then
+		return nil, { "Seam is missing SeamLine" }
+	end
+	local parts: { BasePart } = {}
+	for _, child in line:GetChildren() do
+		if child:IsA("BasePart") then
+			table.insert(parts, child)
+		end
+	end
+	table.sort(parts, function(a, b)
+		return a.Name < b.Name
+	end)
+	local points: { SeamPoint } = {}
+	local problems: { string } = {}
+	for _, part in parts do
+		local down = part:GetAttribute("Down")
+		if typeof(down) == "Vector3" then
+			table.insert(points, { position = part.Position, down = down })
+		else
+			table.insert(problems, `SeamLine.{part.Name} has no Down (a Vector3)`)
+		end
+	end
+	if #parts == 0 then
+		table.insert(problems, "SeamLine is empty")
+	end
+	if #problems > 0 then
+		return nil, problems
+	end
+	return points, {}
+end
+
+-- Same as readSeamLine, but stops the server with every problem listed (one per line) if the world is wrong.
+function WorldIndex.loadSeamLine(world: Instance): { SeamPoint }
+	local points, problems = WorldIndex.readSeamLine(world)
+	if points == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return points
+end
+
+-- The four ways down (spec core-heist Rule 8): the model names are Config.Ladders.Models (under World.WalkSurfaces).
+-- Here: each one's kind, and for a boot ladder the route point on the grass at its foot.
+local CLIMB_INFO: { [string]: { kind: "head" | "boot", ground: string? } } = {
+	BeardLadder = { kind = "head" },
+	CapLadder = { kind = "head" },
+	BootLadder_Left = { kind = "boot", ground = "RoutePoint_LadderLeft_Foot" },
+	BootLadder_Right = { kind = "boot", ground = "RoutePoint_LadderRight_Foot" },
+}
+
+-- Reads the four ladders from World.WalkSurfaces.<model>.Climb (a TrussPart: its ends are the ladder's foot and top)
+-- and, for the boot ladders, the route point on the grass at the foot from World.Route. Problems are listed like
+-- readSeamLine does.
+function WorldIndex.readClimbParts(world: Instance): ({ Ladder }?, { string })
+	local surfaces = world:FindFirstChild("WalkSurfaces")
+	if surfaces == nil then
+		return nil, { "World is missing WalkSurfaces" }
+	end
+	local route = world:FindFirstChild("Route")
+	local ladders: { Ladder } = {}
+	local problems: { string } = {}
+	for _, name in Config.Ladders.Models do
+		local entry = { name = name, kind = CLIMB_INFO[name].kind, ground = CLIMB_INFO[name].ground }
+		local model = surfaces:FindFirstChild(entry.name)
+		local climb = if model ~= nil then model:FindFirstChild("Climb") else nil
+		if climb == nil or not climb:IsA("TrussPart") then
+			table.insert(problems, `WalkSurfaces is missing {entry.name} with a TrussPart Climb`)
+			continue
+		end
+		local ground: Vector3? = nil
+		if entry.ground ~= nil then
+			local point = if route ~= nil then route:FindFirstChild(entry.ground) else nil
+			if point == nil or not point:IsA("BasePart") then
+				table.insert(problems, `Route is missing {entry.ground}`)
+				continue
+			end
+			ground = point.Position
+		end
+		local foot, top = PathCheck.trussEnds(climb)
+		table.insert(ladders, { name = entry.name, kind = entry.kind, foot = foot, top = top, ground = ground })
+	end
+	if #problems > 0 then
+		return nil, problems
+	end
+	return ladders, {}
+end
+
+-- Same as readClimbParts, but stops the server with every problem listed (one per line) if the world is wrong.
+function WorldIndex.loadClimbParts(world: Instance): { Ladder }
+	local ladders, problems = WorldIndex.readClimbParts(world)
+	if ladders == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return ladders
+end
+
+-- Reads the ladder boxes in World.LadderBoxes: each part's Ladder (a model in WalkSurfaces with a TrussPart Climb) and
+-- Zone attributes, its place and its size. Problems are listed one per line, like readZones does.
+function WorldIndex.readLadders(world: Instance): ({ Zones.LadderBox }?, { string })
+	local folder = world:FindFirstChild("LadderBoxes")
+	if folder == nil then
+		return nil, { "World is missing LadderBoxes" }
+	end
+	local surfaces = world:FindFirstChild("WalkSurfaces")
+	local boxes: { Zones.LadderBox } = {}
+	local problems: { string } = {}
+	local children = folder:GetChildren()
+	table.sort(children, function(a, b)
+		return a.Name < b.Name
+	end)
+	for _, child in children do
+		if not child:IsA("BasePart") then
+			table.insert(problems, `LadderBoxes.{child.Name} must be a BasePart, not a {child.ClassName}`)
+			continue
+		end
+		local ladder = child:GetAttribute("Ladder")
+		local zone = child:GetAttribute("Zone") :: any
+		if type(ladder) ~= "string" then
+			table.insert(problems, `LadderBoxes.{child.Name} has no Ladder attribute`)
+			continue
+		end
+		if zone == nil then
+			table.insert(problems, `LadderBoxes.{child.Name} has no Zone attribute`)
+			continue
+		end
+		if not table.find(ZONE_NAMES, zone) then
+			table.insert(problems, `LadderBoxes.{child.Name} has an unknown Zone "{zone}"`)
+			continue
+		end
+		local model = if surfaces ~= nil then surfaces:FindFirstChild(ladder) else nil
+		if model == nil then
+			table.insert(problems, `WalkSurfaces is missing the ladder {ladder} (LadderBoxes.{child.Name})`)
+			continue
+		end
+		local climb = model:FindFirstChild("Climb")
+		if climb == nil or not climb:IsA("TrussPart") then
+			table.insert(problems, `WalkSurfaces.{ladder} has no TrussPart Climb (LadderBoxes.{child.Name})`)
+			continue
+		end
+		table.insert(boxes, { ladder = ladder, zone = zone, cframe = child.CFrame, size = child.Size })
+	end
+	if #problems > 0 then
+		return nil, problems
+	end
+	return boxes, {}
+end
+
+-- Same as readLadders, but stops the server with every problem listed (one per line) if the world is wrong.
+function WorldIndex.loadLadders(world: Instance): { Zones.LadderBox }
+	local boxes, problems = WorldIndex.readLadders(world)
+	if boxes == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return boxes
+end
+
 -- Reads the point bounced players turn to look at: the pivot position of World.Giant.SleepEyes (the centre of his face).
 function WorldIndex.readGiantFace(world: Instance): (Vector3?, { string })
 	local giant = world:FindFirstChild("Giant")
@@ -522,6 +796,85 @@ function WorldIndex.loadGiantFace(world: Instance): Vector3
 		error(table.concat(problems, "\n"), 0)
 	end
 	return face
+end
+
+-- Reads the wake pieces from `world` (Workspace.World) and `assets` (ReplicatedStorage.Assets); one problem per piece.
+function WorldIndex.readWakePieces(world: Instance, assets: Instance): (WakePieces?, { string })
+	local problems: { string } = {}
+	local giant = need(world, "Giant", "Model", "World", "Giant", problems)
+	local fx = need(world, "GiantFX", "Folder", "World", "GiantFX", problems)
+	local mouth: Instance? = nil
+	local rightArm: Instance? = nil
+	if giant ~= nil then
+		mouth = need(giant, "AwakeMouth", "Model", "World", "Giant.AwakeMouth", problems)
+		if mouth ~= nil then
+			need(mouth, "Mouth", "BasePart", "World", "Giant.AwakeMouth.Mouth", problems)
+			need(mouth, "Tongue", "BasePart", "World", "Giant.AwakeMouth.Tongue", problems)
+		end
+		local marked: { Instance } = {}
+		for _, descendant in giant:GetDescendants() do
+			if descendant:IsA("BasePart") and descendant:GetAttribute("RightArmRest") == true then
+				table.insert(marked, descendant)
+			end
+		end
+		rightArm = marked[1]
+		if #marked ~= 1 then
+			table.insert(problems, `World.Giant has {#marked} parts marked RightArmRest, needs 1`)
+		end
+	end
+	local bang: Instance? = nil
+	local dustSpots: { BasePart } = {}
+	if fx ~= nil then
+		bang = need(fx, "BangAnchor", "BasePart", "World", "GiantFX.BangAnchor", problems)
+		if bang ~= nil then
+			need(bang, "Bang", "BillboardGui", "World", "GiantFX.BangAnchor.Bang", problems)
+			need(bang, "ZPop", "BillboardGui", "World", "GiantFX.BangAnchor.ZPop", problems)
+		end
+		local dust = need(fx, "WakeDust", "Folder", "World", "GiantFX.WakeDust", problems)
+		if dust ~= nil then
+			for _, spot in dust:GetChildren() do
+				local emitter = spot:FindFirstChildWhichIsA("ParticleEmitter")
+				if spot.Name == "DustSpot" and spot:IsA("BasePart") and emitter ~= nil then
+					table.insert(dustSpots, spot)
+				end
+			end
+			if #dustSpots ~= WAKE_DUST_COUNT then
+				table.insert(problems, `World.GiantFX.WakeDust has {#dustSpots} DustSpots, needs {WAKE_DUST_COUNT}`)
+			end
+		end
+	end
+	local birds: { Model } = {}
+	local birdFolder = need(assets, "WakeBirds", "Folder", "Assets", "WakeBirds", problems)
+	if birdFolder ~= nil then
+		for _, bird in birdFolder:GetChildren() do
+			if bird:IsA("Model") then
+				table.insert(birds, bird)
+			end
+		end
+		if #birds ~= WAKE_BIRD_COUNT then
+			table.insert(problems, `Assets.WakeBirds has {#birds} models, needs {WAKE_BIRD_COUNT}`)
+		end
+	end
+	if #problems > 0 or mouth == nil or bang == nil or rightArm == nil then
+		return nil, problems
+	end
+	local pieces: WakePieces = {
+		mouth = mouth :: Model,
+		bang = bang :: BasePart,
+		dustSpots = dustSpots,
+		birds = birds,
+		rightArm = rightArm :: BasePart,
+	}
+	return pieces, problems
+end
+
+-- Same as readWakePieces, but stops the server with every problem listed if the world is wrong.
+function WorldIndex.loadWakePieces(world: Instance, assets: Instance): WakePieces
+	local pieces, problems = WorldIndex.readWakePieces(world, assets)
+	if pieces == nil then
+		error(table.concat(problems, "\n"), 0)
+	end
+	return pieces
 end
 
 return WorldIndex

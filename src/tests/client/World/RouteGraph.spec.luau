@@ -3,15 +3,17 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local RouteGraph = require(StarterPlayer.StarterPlayerScripts.Client.World.RouteGraph)
 
 local SPACING = 3.6
 
-type Point = { name: string, position: Vector3, neighbours: { string }, target: string? }
+type Point = RouteGraph.Point
 
--- A small fake route on flat ground. `places` gives every point's x and z (y is 0) and its target if it has one;
--- `links` lists the pairs that are joined, and each link goes both ways, like the real route.
-type Place = { x: number, z: number, target: string? }
+-- A small fake route on flat ground. `places` gives every point's x and z (y is 0 unless it gives one) and its target if it has one;
+-- `links` lists the pairs that are joined, and each link goes both ways, like the real route. Two linked places with
+-- the same `ladder` name are a climb (RouteData.isClimb).
+type Place = { x: number, z: number, y: number?, target: string?, ladder: string? }
 
 local function newRoute(places: { [string]: Place }, links: { { string } }): { Point }
 	local neighbours: { [string]: { string } } = {}
@@ -26,9 +28,10 @@ local function newRoute(places: { [string]: Place }, links: { { string } }): { P
 	for name, place in places do
 		table.insert(points, {
 			name = name,
-			position = Vector3.new(place.x, 0, place.z),
+			position = Vector3.new(place.x, place.y or 0, place.z),
 			neighbours = neighbours[name],
 			target = place.target,
+			ladder = place.ladder,
 		})
 	end
 	table.sort(points, function(a, b)
@@ -341,5 +344,136 @@ describe("RouteGraph.way: placing footprints", function()
 		expectNear(way.steps[1].direction, expected)
 		expectNear(way.steps[1].position, Vector3.new(10, 5, 0))
 		expect(way.steps[2].position.Y).toBeCloseTo(5 - 3.6 * expected.Y, 3)
+	end)
+end)
+
+describe("RouteGraph.find: the quickest way", function()
+	-- Walking speed from the game's config; climbing is 70% of it (Roblox docs, Humanoid.Climbing; the same factor as
+	-- PathCheck.CLIMB_SPEED in src/server/World/PathCheck.luau).
+	local WALK_SPEED = Config.Movement.WalkSpeed
+	local CLIMB_SPEED = 0.7 * WALK_SPEED
+
+	-- Two ways from S (0, 0, 0) to T (0, 0, ladderLength): a ladder link S to T, and a walk S to W to T whose two
+	-- legs are 13 studs each (26 in all). W sits beside the middle of the ladder.
+	local function ladderOrWalk(ladderLength: number): { Point }
+		local across = math.sqrt(13 * 13 - (ladderLength / 2) ^ 2)
+		return newRoute({
+			S = { x = 0, z = 0, ladder = "L" },
+			T = { x = 0, z = ladderLength, target = "Egg_T", ladder = "L" },
+			W = { x = across, z = ladderLength / 2 },
+		}, { { "S", "T" }, { "S", "W" }, { "W", "T" } })
+	end
+
+	it("takes the 26-stud walk over a 20-stud ladder, because the ladder is slower", function()
+		-- Ladder 20 / 11.2 = 1.79 s; walk 26 / 16 = 1.63 s.
+		local found = RouteGraph.find(RouteGraph.new(ladderOrWalk(20)), Vector3.new(0, 0, 0), { "Egg_T" })
+		expect(found).never.toBeNil()
+		local route = found :: RouteGraph.Found
+		expect(#route.path).toBe(3)
+		expect(route.length).toBeCloseTo(26, 3)
+		expect(route.seconds).toBeCloseTo(26 / WALK_SPEED, 3)
+	end)
+
+	it("takes a 14-stud ladder over the 26-stud walk, because the ladder is quicker", function()
+		-- Ladder 14 / 11.2 = 1.25 s; walk 26 / 16 = 1.63 s.
+		local found = RouteGraph.find(RouteGraph.new(ladderOrWalk(14)), Vector3.new(0, 0, 0), { "Egg_T" })
+		expect(found).never.toBeNil()
+		local route = found :: RouteGraph.Found
+		expect(#route.path).toBe(2)
+		expect(route.length).toBeCloseTo(14, 3)
+		expect(route.seconds).toBeCloseTo(14 / CLIMB_SPEED, 3)
+	end)
+
+	it("adds up seconds over walk and climb links, and length over studs", function()
+		-- A walks 10 studs to F, then the ladder climbs 14 studs to U.
+		local points = newRoute({
+			A = { x = 0, z = 0 },
+			F = { x = 10, z = 0, ladder = "L" },
+			U = { x = 10, z = 14, target = "Egg_U", ladder = "L" },
+		}, { { "A", "F" }, { "F", "U" } })
+		local found = RouteGraph.find(RouteGraph.new(points), Vector3.new(0, 0, 0), { "Egg_U" })
+		expect(found).never.toBeNil()
+		local route = found :: RouteGraph.Found
+		expect(route.length).toBeCloseTo(24, 3)
+		expect(route.seconds).toBeCloseTo(10 / WALK_SPEED + 14 / CLIMB_SPEED, 3)
+	end)
+end)
+
+describe("RouteGraph.place: ladders", function()
+	-- A fake way up a ladder, like the real ones (tools/world/08-route/RoutePlaces.luau, "the ways up"): the rung is at
+	-- x = 0, Foot is 1 stud out from it, RunIn 3 studs out, and the approach point 8 studs from RunIn at 25 degrees to
+	-- the line. The Top is 20 studs above the Foot, then a point on the top that is the target.
+	local RUN_IN = Vector3.new(-3, 0, 0)
+	local FOOT = Vector3.new(-1, 0, 0)
+	local TOP = Vector3.new(-1, 20, 0)
+	local PAD = Vector3.new(5, 20, 0)
+	local APPROACH = RUN_IN + Vector3.new(-math.cos(math.rad(25)), 0, math.sin(math.rad(25))) * 8
+	local graph = RouteGraph.new(newRoute({
+		Approach = { x = APPROACH.X, z = APPROACH.Z },
+		RunIn = { x = RUN_IN.X, z = RUN_IN.Z },
+		Foot = { x = FOOT.X, z = FOOT.Z, ladder = "L" },
+		Top = { x = TOP.X, y = TOP.Y, z = TOP.Z, ladder = "L" },
+		Pad = { x = PAD.X, y = PAD.Y, z = PAD.Z, target = "Egg_Pad" },
+	}, { { "Approach", "RunIn" }, { "RunIn", "Foot" }, { "Foot", "Top" }, { "Top", "Pad" } }))
+	local function steps(from: Vector3): { RouteGraph.Step }
+		return (RouteGraph.way(graph, from, { "Egg_Pad" }, SPACING) :: RouteGraph.Way).steps
+	end
+
+	-- How far a place is from the straight stretch a to b.
+	local function distanceToStretch(position: Vector3, a: Vector3, b: Vector3): number
+		local along = b - a
+		local t = math.clamp((position - a):Dot(along) / along:Dot(along), 0, 1)
+		return (position - (a + along * t)).Magnitude
+	end
+
+	-- The footprint of the walk before the ladder that is nearest to the foot, and how far it is from Foot.
+	local function lastBeforeFoot(list: { RouteGraph.Step }): (RouteGraph.Step, number)
+		local best = list[1]
+		local bestDistance = math.huge
+		for _, step in list do
+			if step.position.Y < 1 and (step.position - FOOT).Magnitude < bestDistance then
+				best, bestDistance = step, (step.position - FOOT).Magnitude
+			end
+		end
+		return best, bestDistance
+	end
+
+	it("puts no footprint on the ladder link", function()
+		for _, step in steps(APPROACH) do
+			expect(distanceToStretch(step.position, FOOT, TOP)).toBeGreaterThan(0.01)
+		end
+	end)
+
+	it("ends the walk before the ladder 1 to 3 studs from the foot, and starts the top side at the target", function()
+		local list = steps(APPROACH)
+		local _, distance = lastBeforeFoot(list)
+		expect(distance).toBeGreaterThanOrEqual(1)
+		expect(distance).toBeLessThanOrEqual(3)
+		expectNear(list[1].position, PAD)
+	end)
+
+	it("faces the last 8 studs of trail within 30 degrees of the run-in to foot direction", function()
+		local list = steps(APPROACH)
+		local last = lastBeforeFoot(list)
+		local facing = (FOOT - RUN_IN).Unit
+		local checked = 0
+		for _, step in list do
+			if step.position.Y < 1 and (step.position - last.position).Magnitude <= 8 then
+				checked += 1
+				expect(math.deg(math.acos(math.clamp(step.direction:Dot(facing), -1, 1)))).toBeLessThanOrEqual(30)
+			end
+		end
+		expect(checked).toBeGreaterThan(1)
+	end)
+
+	it("keeps every footprint ahead where it was when the walker moves 1 stud along the first run", function()
+		local before = steps(APPROACH)
+		local after = steps(APPROACH + (RUN_IN - APPROACH).Unit)
+		expect(#after).toBeLessThanOrEqual(#before)
+		expect(#after).toBeGreaterThan(#before - 2)
+		for index, step in after do
+			expectNear(step.position, before[index].position)
+			expectNear(step.direction, before[index].direction)
+		end
 	end)
 end)

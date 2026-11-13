@@ -1,14 +1,33 @@
-# Build check: V2 additions
+# Build check: V2 additions (history)
+
+This file is the full dated log of every V2 build-check session, kept word for word. It is history: where an image was retaken, an older row here no longer counts. The current record (one line per image, latest only, grouped by spec) is `docs/design/v2/build-check-current.md`. Index of the V2 look: `docs/design/v2/style-guide.md`.
+
+Contents
+- First table: rescue and ways up (2026-10-14)
+- Egg ranks (V2 spec 4: Egg reachability), 2026-10-14
+- Wake-up (V2 spec 6: Wake-up), 2026-10-14
+  - Egg ranks retake: the rank glow (2026-10-14)
+- Nest map and the seam (V2 spec 5 change), 2026-10-14
+- Studio session 2026-10-18: cuff pockets, ramp pocket, 85% warning, wake check
+- Studio session 2026-10-18 (second): the moved lap planks, the lap fold and Plan B
+- Studio session 2026-10-19: the nest art and the refill pop
+- Studio session 2026-10-19 (second): spec 5 world shots, part 1
+- Studio session 2026-10-19 (third): spec 5 world shots, part 2
+- Studio session 2026-10-19 (fourth): the wake with the right cuff egg raised (spec 5, Rule 100)
+- Studio session 2026-10-19 (fifth): the slide tip (spec 5) and the ways-up retakes on the moved build (spec 3)
+- Studio session 2026-10-19 (sixth): the 85% warning (spec 1)
+- The music button (V2 spec 7: Audio, Rule 98: The music button), 2026-10-19
+- Boot ladder from gardens 1 and 2 (2026-11-03)
 
 Same scoring as `docs/design/v1/build-check.md`: 1 (poor) to 5 (best), next to the same top-game screenshots. Best of the top games: World 4, Light 4, Life 5, Buttons 4, Phone 4.
 
 | Image | What it shows | Art used | Difficulty | World | Light | Life | Buttons | Phone | Below the top games? |
 |---|---|---|---|---|---|---|---|---|---|
 | `mockups/rescue-desktop.png`, `mockups/rescue-phone.png` (backgrounds `view-rescue.png`, `view-phone-rescue.png`) | A stuck player has just been moved back down the belly path. A lavender puff with gold sparkles is around them, and a fading puff is at the spot they left by the beard. The meter, Tiptoe and the phone controls are unchanged | The real world (giant, belly path, beard ladder, Rare egg), a plain blocky avatar, two particle emitters with Roblox's built-in smoke and sparkle textures | Easy (two particle emitters and `Emit()`) | 4 | 4 | 4 | 4 | 4 | Life: 4 against Adopt Me's 5. Only one player is on screen |
-| `mockups/wayup-boot-desktop.png`, `mockups/wayup-boot-phone.png` (backgrounds `view-wayup-boot.png`, `view-phone-wayup-boot.png`; retaken 2026-10-14 with the rank glow) | Garden 3 after the spawn camera eases back: the glowing boot ladder on the left boot, the side ladder and thigh plank behind it. The boot and belly eggs now have their rank glow (see "Egg ranks retake" below) | Real world, plain avatar, rope ladders, planks and footprints from parts, one `Highlight` | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4 against Adopt Me's 5. One player |
-| `mockups/wayup-side-desktop.png`, `mockups/wayup-side-phone.png` | Garden 1 (the farthest): his face from the side, the glowing side ladder in front of his fist, footprints across the meadow | Same | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. On the phone the ladder is small (about 25 px wide) but it's the brightest thing on that side |
+| `mockups/wayup-boot-desktop.png`, `mockups/wayup-boot-phone.png` (backgrounds `view-wayup-boot.png`, `view-phone-wayup-boot.png`; retaken 2026-10-14 with the rank glow) | Garden 3 after the spawn camera eases back: the glowing boot ladder on the left boot, the side ladder and thigh plank behind it (both dropped 2026-11-03; retaken 2026-11-04 below). The boot and belly eggs now have their rank glow (see "Egg ranks retake" below) | Real world, plain avatar, rope ladders, planks and footprints from parts, one `Highlight` | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4 against Adopt Me's 5. One player |
+| `mockups/wayup-side-desktop.png`, `mockups/wayup-side-phone.png` | Garden 1 (the farthest): his face from the side, the glowing side ladder in front of his fist (dropped 2026-11-03; replaced by `wayup-gate1-*` and `wayup-gate2-*` below), footprints across the meadow | Same | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. On the phone the ladder is small (about 25 px wide) but it's the brightest thing on that side |
 | `mockups/wayup-plank-desktop.png`, `mockups/wayup-plank-phone.png` | Garden 5: the right ramp, and past it the two lap planks meeting between his boots | Same | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4 |
-| `mockups/climb-desktop.png`, `mockups/climb-phone.png` | Climbing down the left boot ladder with an Uncommon egg on the back; the ladder glows; carry pill "Uncommon egg! Get it home" | Same, plus the Uncommon egg model | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. Roblox's own climbing animation moves the arms in Play; here the avatar stands still |
+| `mockups/climb-desktop.png`, `mockups/climb-phone.png` | Climbing down the left boot ladder with an Uncommon egg on the back; the ladder glows (the ladder glow was dropped 2026-11-03; retaken 2026-11-04 below); carry pill "Uncommon egg! Get it home" | Same, plus the Uncommon egg model | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. Roblox's own climbing animation moves the arms in Play; here the avatar stands still |
 | `mockups/ladder-top-desktop.png`, `mockups/ladder-top-phone.png` (retaken 2026-10-14, and again with the rank glow) | Stepping off the boot ladder top onto the boot: the two Uncommon eggs, the lap plank, and the trail running up from the landing to Rare egg 1 at its V1 spot on the belly. The two Uncommon eggs on the far boot glow at about half strength behind the near egg | Same | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. The "Rare" label sits just right of the meter on the phone |
 | `mockups/plank-desktop.png`, `mockups/plank-phone.png` (retaken 2026-10-14) | Crossing the right lap plank: rails on both sides, the trail over the landing and up his belly to Rare egg 1 at its V1 spot, with Rare egg 2 above it | Same | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. The avatar covers most of the landing; the trail on the belly is small but readable |
 | `mockups/ladder-slam-desktop.png`, `mockups/ladder-slam-phone.png` (backgrounds `view-ladder-slam.png`, `view-phone-ladder-slam.png`; redone 2026-10-14 with the wake-up screen layer from `wake-hud.html?state=slam`) | He is awake and a slam targets a player climbing down the left boot ladder with an Uncommon egg. The ladder glows red, the red circle is on the grass below, the meter is a full red bar, "RUN HOME!" sits right of the meter, the red edges show, and the pill says "Dodge the red circles!" with the green egg icon | Real world, plain avatar, the Uncommon egg, the ladder, one `Highlight`, the circle built with the game's own circle code | Easy (one `Highlight`, recoloured) | 4 | 4 | 4 | 4 | 4 | Life: 4. The carried egg covers most of the avatar, as in `climb`. The view was retaken from the same spot (the old one had an "Uncommon" word that would now sit under "RUN HOME!"); the near boot-top egg sits partly under the meter on the computer, which V1 allows for eggs |
@@ -145,7 +164,7 @@ No new images this round: the seam and pocket mockups come next. This round was 
 | What | Result | Difficulty |
 |---|---|---|
 | The seam | Measured on both sides from z −38 to −14, y 41.7 to 48.9. On his arms it is the cuff's rim (y 38 to 40.5) | Easy (small flat stitch parts) |
-| Seam 12 studs above what a jump reaches | Passes over the side pads from z −33 forward. Fails next to the thigh planks (z −39 to −33), at his hip crease and at the front of his cuffs | |
+| Seam 12 studs above what a jump reaches | Passed over the side pads from z −33 forward. Failed next to the thigh planks (z −39 to −33; both pieces dropped 2026-11-03), at his hip crease and at the front of his cuffs | |
 | Fixes | Crease filler, low-seam lift (walk area starts at y 44.5 from z −39 to −33) and a cuff ridge, all invisible, steep and smooth | Medium (shaped invisible parts) |
 | Standing on his arm | Yes: his sleeve and cuff tops are walkable and join his belly top | |
 | Right ramp | Fits: his skin under it matches the left within 0.4 studs; about 37° | Easy |
@@ -154,7 +173,7 @@ No new images this round: the seam and pocket mockups come next. This round was 
 
 **What the real game can't match:** nothing found.
 
-**Not checked in Play:** the seam at 65°, the three invisible fixes against the bot walk, hopping in and out of a cuff pocket, and whether a jump off a thigh plank can grab Rare egg 1 or the new Rare pocket eggs in mid-air.
+**Not checked in Play:** the seam at 65°, the three invisible fixes against the bot walk, hopping in and out of a cuff pocket, and whether a jump off a thigh plank could grab Rare egg 1 or the new Rare pocket eggs in mid-air (no longer needed: the thigh planks were dropped 2026-11-03).
 
 
 ## Studio session 2026-10-18: cuff pockets, ramp pocket, 85% warning, wake check
@@ -422,3 +441,58 @@ Compared with three top-game shots that show a game button in Roblox's top bar:
 | `mockups/hud-music-small-phone.png` | A 4.7-inch phone (667 × 375) with Roblox's buttons at full size: the button would touch the meter, so it moves under Roblox's round button | Same | Easy (one size check in code) | 4 | 4 | 4 | 4 | 4 | No. Nothing is cut off or covered |
 
 What the real game can't match: nothing. Not checked in Play (this place was not run, by request): the real size of Roblox's buttons, the value of `GuiService.TopbarInset` (it reads 0 in edit mode), and whether Roblox shows a backpack button in our game. The build review checks them on the computer and the iPhone 14 simulator.
+
+## Boot ladder from gardens 1 and 2 (2026-11-03)
+
+The side ladders were dropped, so gardens 1 and 2 now use the left boot ladder. These replace `wayup-side-desktop.png` and `wayup-side-phone.png` (and their `view-*-wayup-side` shots), which show the dropped side ladder. They are real Play captures of the built game at the `gate-1` and `gate-2` cameras in `look-cameras.md`: computer at Studio's window size, phone in the device simulator (iPhone 14, landscape). The avatar stands on each garden's spawn spot. The screen layer is the game's own, not an HTML overlay.
+
+| Image | Shows | Art used | Difficulty | Notes |
+|---|---|---|---|---|
+| `mockups/wayup-gate1-desktop.png`, `mockups/wayup-gate1-phone.png` | Garden 1 at first spawn: the giant's side, and off to the left the plain-wood left boot ladder on his boot, its foot behind the sock and a rock | Built world only | Easy (nothing new) | Ladder is on screen but small and brown on a dark boot. Readable once the trail glow lights it |
+| `mockups/wayup-gate2-desktop.png`, `mockups/wayup-gate2-phone.png` | Garden 2 at first spawn: the left boot ladder above the sock, its top half clear | Built world only | Easy (nothing new) | Ladder clearly on screen; the sock hides its foot |
+
+Not re-scored side by side: same cameras, world and light as the earlier `wayup-side` check (all 4s), with a smaller ladder than the side ladder had (the side ladder was dropped 2026-11-03).
+
+## Ladder slam without the red flash (2026-11-04)
+
+Adam dropped the red ladder flash (and the yellow ladder glow before it). `view-ladder-slam.png`, `view-phone-ladder-slam.png`, `ladder-slam-desktop.png` and `ladder-slam-phone.png` were retaken from the same spot (avatar from `ArtLibrary.MockupAvatars.Mockup_LadderSlam`, feet about 20.5 studs up the left boot ladder, camera 12.5 studs behind the head, 20° down; Studio field of view widened so the HTML crop shows Roblox's 70°). The ladder is now the built `World.WalkSurfaces.BootLadder_Left` (plain wood), the circle the same `Mockup_LadderSlam.Circle`, the screen layer `wake-hud.html?state=slam`. Everything was hidden again afterwards.
+
+| Image | Shows | Art used | Difficulty | World | Light | Life | Buttons | Phone | Below the top games? |
+|---|---|---|---|---|---|---|---|---|---|
+| `mockups/ladder-slam-desktop.png`, `mockups/ladder-slam-phone.png` (backgrounds `view-ladder-slam.png`, `view-phone-ladder-slam.png`) | He is awake and a slam targets a carrier climbing down the left boot ladder with an Uncommon egg. Plain wooden ladder, the red circle on the grass below, red meter, "RUN HOME!", red edges, the tip "Dodge the red circles!" | Real world, plain avatar, the Uncommon egg, the built ladder, the game's circle | Easy (nothing new) | 4 | 4 | 4 | 4 | 4 | No on the scores. **Weak spot:** from the ladder the circle shows only as a red-and-gold sliver at the bottom edge, partly under the tip; on the phone even less. A climber sees the slam coming only from the wake cues (red edges, meter, "RUN HOME!") and, once built, the whoosh from below (plan 7 Task 10). Spec 3 section 5's trigger covers it if climbers keep getting caught |
+
+Compared with the same three wake-up shots as before: `steal-animal-egg/shot-06.jpg`, `break-and-steal-an-egg/shot-06.jpg`, `doors/shot-06.jpg`.
+
+## Boot ladder and climb without the yellow glow (2026-11-04)
+
+The yellow ladder glow was dropped (Adam, 2026-11-03). `wayup-boot-*` and `climb-*` (and their `view-*` backgrounds) were retaken in edit mode on the built plain-wood `World.WalkSurfaces.BootLadder_Left`. The side ladders are gone from the world, so they no longer show. `wayup-boot`: avatar on garden 3's `SpawnSpot`, facing his face, camera 12.5 studs behind the head, 15° down, with the rank-glow eggs of `Mockup_EggRanks`. `climb`: avatar halfway down the ladder (root part at (−45.1, 12, −64)) with the Uncommon egg, camera at (−56, 15, −68) looking at (−43, 12.5, −63). Screen layer `wayup-hud.html` (`state=boot`, `state=climb`). Everything was hidden again afterwards.
+
+| Image | Shows | Art used | Difficulty | World | Light | Life | Buttons | Phone | Below the top games? |
+|---|---|---|---|---|---|---|---|---|---|
+| `mockups/wayup-boot-desktop.png`, `mockups/wayup-boot-phone.png` | Garden 3 after the spawn camera eases back: the plain-wood boot ladder up the left boot, the thigh plank, the Common eggs in the meadow, the rank glow on the boot and belly eggs | Real world, plain avatar, egg models | Easy | 4 | 4 | 4 | 4 | 4 | No. The ladder is less bright than the yellow one was, but it stands out against the dark boot. Weak spot: the two near Common eggs' words touch ("Common Common"), as V1's labels would from this spot |
+| `mockups/climb-desktop.png`, `mockups/climb-phone.png` | Climbing down the left boot ladder with the Uncommon egg on the back; carry pill "Uncommon egg! Get it home" | Same, plus the Uncommon egg | Easy | 4 | 4 | 4 | 4 | 4 | Life: 4. The egg covers most of the avatar, as before |
+
+Compared with `adopt-me/shot-01.jpg`, `ride-a-pet/shot-03.jpg` and `steal-an-egg/shot-08.jpg`, as in the first ways-up check.
+
+
+
+## Task 4a (judged 2026-11-04)
+
+Look check for plan 3 Task 4a, the two boot ladders (commit ec95c9b, 2026-11-03). Before shots `work/t4a/look-before/`, after shots `work/t4a/look-after/`, taken minutes apart on 2026-11-03 from the fixed cameras in `look-cameras.md`. The wide mockup ramps (`Mockup_WaysUp`) stand in both sets and are not judged here. Framing note: the after computer shots came out narrower (1488x1080 against 1879x1080), so their left and right edges are cut; same cameras, nothing in the world differs because of it.
+
+| Pair | Verdict | What I see |
+|---|---|---|
+| meadow-wide, computer | Same | Two thin plain-wood ladders on the outer sides of the boots, small next to the ramps; same wood and rope as the ramps, nothing clashes |
+| meadow-wide, phone | Same | Same two thin ladders, barely visible at phone size; the giant and his face read as before |
+| meadow-front, computer | Same | Ladders sit on the outer boot sides beside each ramp, symmetric, read as part of the same wood set |
+| meadow-front, phone | Same | Thin lines beside the ramps; nothing covers the giant, the eggs area or the centre |
+| gate-3, computer | Better | A clear ladder now runs up the near boot beside the belly: from garden 3's gate the way up is readable at once |
+| gate-3, phone | Better | Same ladder, still readable at phone size against the dark boot |
+| gate-6, computer | Better | A ladder now stands on the near boot's front, in the middle of the view; garden 6 sees its own way up |
+| gate-6, phone | Better | Same ladder, clearly visible next to the teacup |
+
+Climb shot (`look-after/climb-left-boot-top-player-camera.jpg`, Play, player camera): the avatar stands on the flat boot top with the ladder's top rungs and rail beside him, not inside the boot; the meter, Tiptoe button and tip stay clear of him. The carried Uncommon egg sits close behind the head, as in the earlier climb mockups.
+
+Verdict: no pair worse; 4 same, 4 better. Approve.
+
+Viral test: yes. The ladders are plain wood that matches the world and gives gardens 3 and 6 a way up that shows from spawn, so nothing here would make a kid pick the game next door instead.

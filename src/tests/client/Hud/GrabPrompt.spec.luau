@@ -8,225 +8,17 @@ local Hud = StarterPlayer.StarterPlayerScripts.Client.Hud
 local GrabPrompt = require(Hud.GrabPrompt)
 local Theme = require(Hud.Theme)
 
--- Everything a test makes is destroyed afterwards, so the real place is never changed.
-local madeInstances: { Instance } = {}
-local stops: { () -> () } = {}
+local GrabPromptRig = require(script.Parent.GrabPromptRig)
 
-local function made<T>(instance: T): T
-	table.insert(madeInstances, instance :: any)
-	return instance
-end
+type FakePrompt = GrabPromptRig.FakePrompt
+local made = GrabPromptRig.made
+local newFakePrompt = GrabPromptRig.newFakePrompt
+local newRig = GrabPromptRig.newRig
+local newSignal = GrabPromptRig.newSignal
 
 afterEach(function()
-	for _, stop in stops do
-		stop()
-	end
-	table.clear(stops)
-	for _, instance in madeInstances do
-		instance:Destroy()
-	end
-	table.clear(madeInstances)
+	GrabPromptRig.cleanup()
 end)
-
--- A tiny stand-in for a Roblox event: Connect, Fire and Disconnect, all in plain Luau.
-local function newSignal(): any
-	local handlers: { (...any) -> () } = {}
-	return {
-		Connect = function(_self: any, callback: (...any) -> ())
-			table.insert(handlers, callback)
-			return {
-				Disconnect = function()
-					local at = table.find(handlers, callback)
-					if at then
-						table.remove(handlers, at)
-					end
-				end,
-			}
-		end,
-		Fire = function(_self: any, ...: any)
-			for _, handler in table.clone(handlers) do
-				handler(...)
-			end
-		end,
-		count = function(_self: any): number
-			return #handlers
-		end,
-	}
-end
-
--- A stand-in for a grab prompt on an egg spot's anchor: it counts the presses it is told about.
-type FakePrompt = {
-	Name: string,
-	Parent: Attachment,
-	Style: Enum.ProximityPromptStyle,
-	HoldDuration: number,
-	KeyboardKeyCode: Enum.KeyCode,
-	Enabled: boolean,
-	holdBegins: number,
-	holdEnds: number,
-	InputHoldBegin: (self: FakePrompt) -> (),
-	InputHoldEnd: (self: FakePrompt) -> (),
-}
-
-local function newFakePrompt(name: string): FakePrompt
-	local anchor = made(Instance.new("Attachment"))
-	local prompt: FakePrompt
-	prompt = {
-		Name = name,
-		Parent = anchor,
-		Style = Enum.ProximityPromptStyle.Custom,
-		HoldDuration = 1,
-		KeyboardKeyCode = Enum.KeyCode.E,
-		Enabled = true,
-		holdBegins = 0,
-		holdEnds = 0,
-		InputHoldBegin = function(self: FakePrompt)
-			self.holdBegins += 1
-		end,
-		InputHoldEnd = function(self: FakePrompt)
-			self.holdEnds += 1
-		end,
-	}
-	return prompt
-end
-
-type Rig = {
-	parent: Folder,
-	root: Folder,
-	attributes: Folder,
-	service: any,
-	step: any,
-	handle: GrabPrompt.Handle,
-	clock: { now: number },
-	setCarrying: (value: any) -> (),
-	setViewport: (size: Vector2) -> (),
-	show: (prompt: FakePrompt, inputType: Enum.ProximityPromptInputType?) -> (),
-	hide: (prompt: FakePrompt) -> (),
-	holdBegin: (prompt: FakePrompt) -> (),
-	holdEnd: (prompt: FakePrompt) -> (),
-	advance: (seconds: number) -> (),
-	prompts: () -> { BillboardGui },
-	prompt: () -> BillboardGui,
-	pill: () -> TextButton,
-	fill: () -> Frame,
-	key: () -> TextLabel,
-	words: () -> TextLabel,
-}
-
--- Starts the prompt drawing on fake stand-ins for the player's screen, the player, Roblox's prompt events, the frame
--- clock and the screen size, so a test can drive all of them.
-local function newRig(viewport: Vector2?): Rig
-	local parent = made(Instance.new("Folder"))
-	local root = made(Instance.new("Folder"))
-	local attributes = made(Instance.new("Folder"))
-	local viewportEvent = made(Instance.new("BindableEvent"))
-	local viewportSize = viewport or Vector2.new(1280, 720)
-	local service = {
-		PromptShown = newSignal(),
-		PromptHidden = newSignal(),
-		PromptButtonHoldBegan = newSignal(),
-		PromptButtonHoldEnded = newSignal(),
-	}
-	local step = newSignal()
-	local clock = { now = 100 }
-
-	local handle = GrabPrompt.start({
-		parent = parent,
-		service = service,
-		player = {
-			GetAttribute = function(_self: any, name: string): any
-				return attributes:GetAttribute(name)
-			end,
-			GetAttributeChangedSignal = function(_self: any, name: string): RBXScriptSignal
-				return attributes:GetAttributeChangedSignal(name)
-			end,
-		},
-		root = root,
-		step = step,
-		now = function()
-			return clock.now
-		end,
-		viewport = {
-			get = function()
-				return viewportSize
-			end,
-			connect = function(callback: () -> ())
-				local connection = viewportEvent.Event:Connect(callback)
-				return function()
-					connection:Disconnect()
-				end
-			end,
-		},
-	})
-	table.insert(stops, handle.stop)
-
-	local function prompts(): { BillboardGui }
-		local found: { BillboardGui } = {}
-		local layer = parent:FindFirstChild("WorldPrompts")
-		if layer then
-			for _, child in layer:GetDescendants() do
-				if child.Name == "GrabPrompt" and child:IsA("BillboardGui") then
-					table.insert(found, child)
-				end
-			end
-		end
-		return found
-	end
-	local function find<T>(name: string): T
-		local gui = prompts()[1]
-		return gui:FindFirstChild(name, true) :: any
-	end
-	return {
-		parent = parent,
-		root = root,
-		attributes = attributes,
-		service = service,
-		step = step,
-		handle = handle,
-		clock = clock,
-		setCarrying = function(value: any)
-			attributes:SetAttribute("Carrying", value)
-			task.wait()
-		end,
-		setViewport = function(size: Vector2)
-			viewportSize = size
-			viewportEvent:Fire()
-			task.wait()
-		end,
-		show = function(prompt: FakePrompt, inputType: Enum.ProximityPromptInputType?)
-			service.PromptShown:Fire(prompt, inputType or Enum.ProximityPromptInputType.Keyboard)
-		end,
-		hide = function(prompt: FakePrompt)
-			service.PromptHidden:Fire(prompt)
-		end,
-		holdBegin = function(prompt: FakePrompt)
-			service.PromptButtonHoldBegan:Fire(prompt, nil)
-		end,
-		holdEnd = function(prompt: FakePrompt)
-			service.PromptButtonHoldEnded:Fire(prompt, nil)
-		end,
-		advance = function(seconds: number)
-			clock.now += seconds
-			step:Fire(seconds)
-		end,
-		prompts = prompts,
-		prompt = function()
-			return prompts()[1]
-		end,
-		pill = function()
-			return find("Pill")
-		end,
-		fill = function()
-			return find("Fill")
-		end,
-		key = function()
-			return find("KeyText")
-		end,
-		words = function()
-			return find("GrabText")
-		end,
-	}
-end
 
 -- Real prompts for the "turned off while carrying" tests: Roblox's own instances, never parented into the place.
 local function newRealPrompt(parent: Instance): ProximityPrompt
@@ -446,6 +238,84 @@ describe("GrabPrompt: pressing the prompt (touch screens)", function()
 		expect(prompt.holdEnds).toBe(0)
 	end)
 
+	it("same prompt re-shown keeps the pill and its press", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local prompt = newFakePrompt("Grab")
+		rig.show(prompt, Enum.ProximityPromptInputType.Keyboard)
+		local pill = rig.pill()
+		rig.handle.press()
+		rig.show(prompt, Enum.ProximityPromptInputType.Touch)
+		expect(prompt.holdEnds).toBe(0)
+		expect(rig.pill() == pill).toBe(true)
+	end)
+
+	it("a re-show switches the key label", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local prompt = newFakePrompt("Grab")
+		rig.show(prompt, Enum.ProximityPromptInputType.Keyboard)
+		local keyText = rig.key()
+		rig.handle.press()
+		rig.show(prompt, Enum.ProximityPromptInputType.Touch)
+		expect(keyText.Parent ~= nil).toBe(true)
+		expect(keyText.Text == "👆").toBe(true)
+	end)
+
+	it("a different prompt still replaces the pill and ends the hold", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local first = newFakePrompt("Grab")
+		local second = newFakePrompt("Grab")
+		rig.show(first, Enum.ProximityPromptInputType.Touch)
+		local pill = rig.pill()
+		rig.handle.press()
+		rig.show(second, Enum.ProximityPromptInputType.Touch)
+		expect(first.holdEnds).toBe(1)
+		expect(rig.pill() == pill).toBe(false)
+	end)
+
+	it("a hide then show of the same prompt keeps the pill and its press", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local prompt = newFakePrompt("Grab")
+		rig.show(prompt, Enum.ProximityPromptInputType.Keyboard)
+		local pill = rig.pill()
+		rig.handle.press()
+		rig.hide(prompt)
+		rig.show(prompt, Enum.ProximityPromptInputType.Touch)
+		rig.frame()
+		expect(rig.pill() == pill).toBe(true)
+		local endsBefore = prompt.holdEnds
+		rig.handle.release()
+		expect(prompt.holdEnds).toBe(endsBefore + 1)
+	end)
+
+	it("the re-show restarts the hold", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local prompt = newFakePrompt("Grab")
+		rig.show(prompt, Enum.ProximityPromptInputType.Keyboard)
+		rig.handle.press()
+		rig.hide(prompt)
+		rig.show(prompt, Enum.ProximityPromptInputType.Touch)
+		expect(prompt.holdBegins).toBe(2)
+	end)
+
+	it("a hide with no show removes the pill on the next frame and ends the hold", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local prompt = newFakePrompt("Grab")
+		rig.show(prompt, Enum.ProximityPromptInputType.Keyboard)
+		rig.handle.press()
+		rig.hide(prompt)
+		rig.frame()
+		expect(#rig.prompts()).toBe(0) -- rig.pill() errors when no prompt is drawn
+		expect(prompt.holdEnds).toBe(1)
+	end)
+
+	it("a hide of an unpressed pill removes it at once", function()
+		local rig = newRig(Vector2.new(844, 390))
+		local prompt = newFakePrompt("Grab")
+		rig.show(prompt, Enum.ProximityPromptInputType.Keyboard)
+		rig.hide(prompt)
+		expect(#rig.prompts()).toBe(0)
+	end)
+
 	it("ends the hold when the finger lifts", function()
 		local rig = newRig(Vector2.new(844, 390))
 		local prompt = newFakePrompt("Grab")
@@ -476,6 +346,7 @@ describe("GrabPrompt: pressing the prompt (touch screens)", function()
 		rig.show(prompt, Enum.ProximityPromptInputType.Touch)
 		rig.handle.press()
 		rig.hide(prompt)
+		rig.frame() -- a pressed pill waits one frame after a hide, in case Roblox shows it again
 		expect(prompt.holdEnds).toBe(1)
 	end)
 
@@ -541,7 +412,7 @@ describe("GrabPrompt: while the player carries an egg", function()
 				end,
 			},
 		})
-		table.insert(stops, handle.stop)
+		GrabPromptRig.onCleanup(handle.stop)
 		expect(prompt.Enabled).toBe(false)
 	end)
 
@@ -578,10 +449,11 @@ end)
 
 -- A real egg spot as far as the prompt can tell: Model > Base > PromptAnchor > the prompt. `waiting` is the spot's
 -- Waiting attribute (nil leaves it unset). It goes into the root, so the prompt is found there.
-local function newSpotWithPrompt(root: Instance, waiting: boolean?): (Model, ProximityPrompt)
+local function newSpotWithPrompt(root: Instance, waiting: boolean?, locked: boolean?): (Model, ProximityPrompt)
 	local spot = made(Instance.new("Model"))
 	spot.Name = "EggSpot"
 	spot:SetAttribute("Waiting", waiting)
+	spot:SetAttribute("Locked", locked)
 	local base = Instance.new("Part")
 	base.Name = "Base"
 	base.Parent = spot
@@ -598,6 +470,41 @@ local function setWaiting(spot: Model, waiting: boolean?)
 	spot:SetAttribute("Waiting", waiting)
 	task.wait()
 end
+
+local function setLocked(spot: Model, locked: boolean?)
+	spot:SetAttribute("Locked", locked)
+	task.wait()
+end
+
+describe("GrabPrompt: a locked spot (the cuff nest while the giant is awake)", function()
+	it("switches the prompt off on a locked spot that has an egg", function()
+		local rig = newRig()
+		local _, prompt = newSpotWithPrompt(rig.root, true, true)
+		expect(prompt.Enabled).toBe(false)
+	end)
+
+	it("switches the prompt on when the spot unlocks", function()
+		local rig = newRig()
+		local spot, prompt = newSpotWithPrompt(rig.root, true, true)
+		setLocked(spot, false)
+		expect(prompt.Enabled).toBe(true)
+	end)
+
+	it("switches the prompt off when the spot locks", function()
+		local rig = newRig()
+		local spot, prompt = newSpotWithPrompt(rig.root, true, false)
+		setLocked(spot, true)
+		expect(prompt.Enabled).toBe(false)
+	end)
+
+	it("keeps the prompt off when the player stops carrying while the spot stays locked", function()
+		local rig = newRig()
+		local _, prompt = newSpotWithPrompt(rig.root, true, true)
+		rig.setCarrying("Common")
+		rig.setCarrying(nil)
+		expect(prompt.Enabled).toBe(false)
+	end)
+end)
 
 describe("GrabPrompt: spots without an egg", function()
 	it("switches the prompt off on a spot that is empty (Waiting is false)", function()

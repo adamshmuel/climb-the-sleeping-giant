@@ -11,8 +11,8 @@ local Lighting = game:GetService("Lighting")
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local PLOT_COUNT = 8
-local TEACUP_CENTRE = Vector2.new(76, -58)
-local SOCK_CENTRE = Vector2.new(-76, -58)
+local TEACUP_CENTRE = Vector2.new(76, 30)
+local SOCK_CENTRE = Vector2.new(-78, 22)
 local SOCK_YAW_DEGREES = 96
 local FLOWER_CLEAR_RADIUS = 15
 local FLOATING_Z_OFFSET = Vector3.new(14, 8, 2)

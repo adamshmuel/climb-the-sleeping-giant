@@ -6,12 +6,19 @@ export type Made = {
 	Remotes: Folder,
 	Warning: RemoteEvent, -- fires 60 or 85 when the meter rises past that mark; at a free save it fires (85, "FreeSave") to replay the 85% warning
 	SetTiptoe: RemoteEvent, -- the client asks for Tiptoe on or off (true or false)
+	SetMusic: RemoteEvent, -- the client tells the server its music is on or off (true or false)
 	GrabMissed: RemoteEvent, -- the server tells one player that someone else got the egg first (sends nothing)
 	EggHome: RemoteEvent, -- the server tells everyone an egg was banked: (player, rarity, position of the new egg)
 	Bounced: RemoteEvent, -- the server tells one player the flat direction (Vector3) they now face after the bounce-off
 	SlamWarning: RemoteEvent, -- the server tells everyone a red circle starts: (slam number, point on the surface, landsAt on the shared server clock)
 	SlamLanded: RemoteEvent, -- the server tells everyone the hand landed: (slam number, the same point)
 	Caught: RemoteEvent, -- the server tells everyone a carrier was caught: (the caught Player)
+	EggPop: RemoteEvent, -- the server tells everyone an egg popped at a nest: (position (Vector3), kind: "Refill" | "Back" | "Gone")
+	Thud: RemoteEvent, -- the server tells everyone a landing thud: (position (Vector3), noise (number))
+	SlideTip: RemoteEvent, -- the server tells one player they slipped on a too-steep slope, once per session (sends nothing)
+	Rescued: RemoteEvent, -- the server tells everyone a player was moved back to a safe spot: (the Player, where they were (Vector3), where they go (CFrame))
+	RequestReset: RemoteEvent, -- the client asks for a Reset (sends nothing): the server decides what happens
+	SetPressing: RemoteEvent, -- the client says it started or stopped pressing to move: (on: boolean)
 	GiantState: Folder, -- attributes: Meter, Phase, ... (docs/architecture.md, section 2)
 }
 
@@ -21,12 +28,19 @@ Net.RemotesName = "Remotes"
 Net.GiantStateName = "GiantState"
 Net.WarningName = "Warning"
 Net.SetTiptoeName = "SetTiptoe"
+Net.SetMusicName = "SetMusic"
 Net.GrabMissedName = "GrabMissed"
 Net.EggHomeName = "EggHome"
 Net.BouncedName = "Bounced"
 Net.SlamWarningName = "SlamWarning"
 Net.SlamLandedName = "SlamLanded"
 Net.CaughtName = "Caught"
+Net.EggPopName = "EggPop"
+Net.ThudName = "Thud"
+Net.SlideTipName = "SlideTip"
+Net.RescuedName = "Rescued"
+Net.RequestResetName = "RequestReset"
+Net.SetPressingName = "SetPressing"
 
 -- The second value of the Warning remote at a free save (Rule 17): (85, Net.FreeSaveKind) replays the 85% warning. A plain
 -- warning has no second value. The server and every client use this name, so nobody spells the word themselves.
@@ -50,12 +64,19 @@ function Net.setup(parent: Instance): Made
 	local remotes = (findOrMake(parent, Net.RemotesName, "Folder"))
 	local warning = (findOrMake(remotes, Net.WarningName, "RemoteEvent"))
 	local setTiptoe = (findOrMake(remotes, Net.SetTiptoeName, "RemoteEvent"))
+	local setMusic = (findOrMake(remotes, Net.SetMusicName, "RemoteEvent"))
 	local grabMissed = (findOrMake(remotes, Net.GrabMissedName, "RemoteEvent"))
 	local eggHome = (findOrMake(remotes, Net.EggHomeName, "RemoteEvent"))
 	local bounced = (findOrMake(remotes, Net.BouncedName, "RemoteEvent"))
 	local slamWarning = (findOrMake(remotes, Net.SlamWarningName, "RemoteEvent"))
 	local slamLanded = (findOrMake(remotes, Net.SlamLandedName, "RemoteEvent"))
 	local caught = (findOrMake(remotes, Net.CaughtName, "RemoteEvent"))
+	local eggPop = (findOrMake(remotes, Net.EggPopName, "RemoteEvent"))
+	local thud = (findOrMake(remotes, Net.ThudName, "RemoteEvent"))
+	local slideTip = (findOrMake(remotes, Net.SlideTipName, "RemoteEvent"))
+	local rescued = (findOrMake(remotes, Net.RescuedName, "RemoteEvent"))
+	local requestReset = (findOrMake(remotes, Net.RequestResetName, "RemoteEvent"))
+	local setPressing = (findOrMake(remotes, Net.SetPressingName, "RemoteEvent"))
 	local state, isNew = findOrMake(parent, Net.GiantStateName, "Folder")
 	if isNew then
 		state:SetAttribute("Meter", 0)
@@ -65,12 +86,19 @@ function Net.setup(parent: Instance): Made
 		Remotes = remotes :: Folder,
 		Warning = warning :: RemoteEvent,
 		SetTiptoe = setTiptoe :: RemoteEvent,
+		SetMusic = setMusic :: RemoteEvent,
 		GrabMissed = grabMissed :: RemoteEvent,
 		EggHome = eggHome :: RemoteEvent,
 		Bounced = bounced :: RemoteEvent,
 		SlamWarning = slamWarning :: RemoteEvent,
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
+		EggPop = eggPop :: RemoteEvent,
+		Thud = thud :: RemoteEvent,
+		SlideTip = slideTip :: RemoteEvent,
+		Rescued = rescued :: RemoteEvent,
+		RequestReset = requestReset :: RemoteEvent,
+		SetPressing = setPressing :: RemoteEvent,
 		GiantState = state :: Folder,
 	}
 end
@@ -104,6 +132,7 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 	local setTiptoe = if remotes
 		then waitForChildOfClass(remotes, Net.SetTiptoeName, "RemoteEvent", remaining())
 		else nil
+	local setMusic = if remotes then waitForChildOfClass(remotes, Net.SetMusicName, "RemoteEvent", remaining()) else nil
 	local grabMissed = if remotes
 		then waitForChildOfClass(remotes, Net.GrabMissedName, "RemoteEvent", remaining())
 		else nil
@@ -116,17 +145,34 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		then waitForChildOfClass(remotes, Net.SlamLandedName, "RemoteEvent", remaining())
 		else nil
 	local caught = if remotes then waitForChildOfClass(remotes, Net.CaughtName, "RemoteEvent", remaining()) else nil
+	local eggPop = if remotes then waitForChildOfClass(remotes, Net.EggPopName, "RemoteEvent", remaining()) else nil
+	local thud = if remotes then waitForChildOfClass(remotes, Net.ThudName, "RemoteEvent", remaining()) else nil
+	local slideTip = if remotes then waitForChildOfClass(remotes, Net.SlideTipName, "RemoteEvent", remaining()) else nil
+	local rescued = if remotes then waitForChildOfClass(remotes, Net.RescuedName, "RemoteEvent", remaining()) else nil
+	local requestReset = if remotes
+		then waitForChildOfClass(remotes, Net.RequestResetName, "RemoteEvent", remaining())
+		else nil
+	local setPressing = if remotes
+		then waitForChildOfClass(remotes, Net.SetPressingName, "RemoteEvent", remaining())
+		else nil
 	local state = waitForChildOfClass(parent, Net.GiantStateName, "Folder", remaining())
 	if
 		remotes == nil
 		or warning == nil
 		or setTiptoe == nil
+		or setMusic == nil
 		or grabMissed == nil
 		or eggHome == nil
 		or bounced == nil
 		or slamWarning == nil
 		or slamLanded == nil
 		or caught == nil
+		or eggPop == nil
+		or thud == nil
+		or slideTip == nil
+		or rescued == nil
+		or requestReset == nil
+		or setPressing == nil
 		or state == nil
 	then
 		local missing: { string } = {}
@@ -138,6 +184,9 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		end
 		if setTiptoe == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.SetTiptoeName}`)
+		end
+		if setMusic == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.SetMusicName}`)
 		end
 		if grabMissed == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.GrabMissedName}`)
@@ -157,6 +206,24 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		if caught == nil then
 			table.insert(missing, `{Net.RemotesName}.{Net.CaughtName}`)
 		end
+		if eggPop == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.EggPopName}`)
+		end
+		if thud == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.ThudName}`)
+		end
+		if slideTip == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.SlideTipName}`)
+		end
+		if rescued == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.RescuedName}`)
+		end
+		if requestReset == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.RequestResetName}`)
+		end
+		if setPressing == nil then
+			table.insert(missing, `{Net.RemotesName}.{Net.SetPressingName}`)
+		end
 		if state == nil then
 			table.insert(missing, Net.GiantStateName)
 		end
@@ -167,12 +234,19 @@ function Net.waitForClient(parent: Instance, timeoutSeconds: number, report: ((m
 		Remotes = remotes :: Folder,
 		Warning = warning :: RemoteEvent,
 		SetTiptoe = setTiptoe :: RemoteEvent,
+		SetMusic = setMusic :: RemoteEvent,
 		GrabMissed = grabMissed :: RemoteEvent,
 		EggHome = eggHome :: RemoteEvent,
 		Bounced = bounced :: RemoteEvent,
 		SlamWarning = slamWarning :: RemoteEvent,
 		SlamLanded = slamLanded :: RemoteEvent,
 		Caught = caught :: RemoteEvent,
+		EggPop = eggPop :: RemoteEvent,
+		Thud = thud :: RemoteEvent,
+		SlideTip = slideTip :: RemoteEvent,
+		Rescued = rescued :: RemoteEvent,
+		RequestReset = requestReset :: RemoteEvent,
+		SetPressing = setPressing :: RemoteEvent,
 		GiantState = state :: Folder,
 	}
 end

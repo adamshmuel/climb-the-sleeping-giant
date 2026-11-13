@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Climb the Sleeping Giant - Z Z Z on the sleep meter (plan 3 Task 8f)</title>
+<!--
+  Plan 3 Task 8f, Rule 1 (Spawn facing the giant): from the gardens, the "he's asleep" picture is a Z Z Z on the sleep meter.
+    sleepz-hud.html?device=desktop|phone&gate=1|4&state=calm|stir|heavy|warn
+  desktop = 1280x720 over an Edit shot from the look-cameras gate row (no HUD in it, so the HUD is drawn).
+  phone = 840x368 points, the real Phone_844x390 play view measured in Task 8e (8e-measure-note.md):
+    the background is the real Play shot (416x186, scaled up), so the Roblox buttons, Tiptoe, thumbstick
+    and jump come from the game itself. Only the sleep meter is redrawn, on its measured box (290,28)-(550,78.6),
+    so the states can change, plus the new Z Z Z.
+  The Zs sit just right of the meter: the left of the meter is taken by Roblox's buttons and the music button.
+-->
+<style>
+@font-face { font-family: "Fredoka One"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/FredokaOne-Regular.ttf"); }
+@font-face { font-family: "RbxEmoji"; src: url("file:///Applications/RobloxStudio.app/Contents/Resources/content/fonts/TwemojiMozilla.ttf"); }
+:root {
+  --ink: #2B2340; --cream: #FFF6E4; --sleep: #4A5BC4; --sleep-d: #2F3B8F;
+  --warn: #FF8A3D; --warn-d: #D8651A; --s: 1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+body { font-family: "Fredoka One", sans-serif; color: #fff; }
+.e { font-family: "RbxEmoji", sans-serif; font-style: normal; }
+#screen { position: relative; width: 100vw; height: 100vh; background-size: cover; background-position: center; }
+.stroke { -webkit-text-stroke: calc(5px * var(--s)) var(--ink); paint-order: stroke fill; }
+
+#rbx { position: absolute; top: 7px; left: 12px; display: flex; gap: 8px; align-items: center; }
+.rb { height: 44px; min-width: 44px; border-radius: 22px; background: rgba(18, 18, 24, .72); display: flex; align-items: center; justify-content: space-around; padding: 0 6px; }
+.rb svg { width: 22px; height: 22px; }
+#music { position: absolute; top: 7px; left: 164px; width: 44px; height: 44px; border-radius: 50%; background: rgba(43, 35, 64, .92);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85); display: flex; align-items: center; justify-content: center; }
+#music .e { font-size: 26px; line-height: 1; }
+
+/* sleep meter, top centre (copied from music-hud.html) */
+#sleep { position: absolute; left: 50%; transform: translateX(-50%); top: 12px; }
+.meter { position: relative; width: 400px; height: 62px; border-radius: 999px; background: var(--cream);
+  border: 4px solid var(--ink); box-shadow: 0 5px 0 var(--ink); display: flex; align-items: center; padding: 0 10px; gap: 10px; }
+.meter .face { font-size: 38px; }
+.meter .col { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.meter .lbl { font-size: 17px; color: var(--sleep-d); line-height: 1; white-space: nowrap; }
+.bar { position: relative; height: 20px; border-radius: 999px; background: #2F2A4A; border: 3px solid var(--ink); overflow: hidden; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #6EE07A, #FFE066 60%, #FF8A3D 85%, #FF3B4E); background-size: 400px 100%; }
+.tick { position: absolute; top: -2px; bottom: -2px; width: 3px; background: rgba(255,255,255,.8); }
+.lock { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+body.warn .fill { background: var(--warn); }
+body.warn .meter .lbl { color: var(--warn-d); }
+body.stir .fill { background: #FFE066; }
+body.heavy .fill { width: 100% !important; background: repeating-linear-gradient(45deg, #6F86F0 0 10px, #4A5BC4 10px 20px); }
+
+#actions { position: absolute; right: 18px; top: 40%; }
+.btn { position: relative; width: 92px; height: 92px; border-radius: 50%; border: 4px solid var(--ink); box-shadow: 0 6px 0 var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(#8F9CF0, var(--sleep) 55%, var(--sleep-d)); }
+.btn::after { content: ""; position: absolute; left: 14%; right: 14%; top: 8%; height: 20%; border-radius: 999px; background: rgba(255,255,255,.35); }
+.btn .e { font-size: 36px; line-height: 1; }
+.btn .t { font-size: 17px; }
+.key { font-size: 13px; padding: 0 6px; border-radius: 5px; background: var(--ink); margin-top: 2px; }
+body.warn .btn { background: linear-gradient(#FFB47A, var(--warn) 55%, var(--warn-d)); box-shadow: 0 6px 0 var(--ink), 0 0 18px 6px rgba(255, 138, 61, .8); }
+
+/* phone: only the meter is redrawn, on the measured box */
+body.touch #rbx, body.touch #music, body.touch #actions { display: none; }
+body.touch #sleep { top: 28px; }
+body.touch .meter { width: 260px; height: 46px; padding: 0 8px; gap: 6px; border-width: 3px; box-shadow: 0 3px 0 var(--ink); }
+body.touch .meter .face { font-size: 26px; }
+body.touch .meter .lbl { font-size: 14px; }
+body.touch .bar { height: 13px; border-width: 2px; }
+body.touch .fill { background-size: 260px 100%; }
+
+/* the Z Z Z: three letters rising up and to the right from the meter's right end, each bigger than the last.
+   White Fredoka One with a Sleep-blue edge and an Ink drop, like the world Zs. Sizes are the letter's height in points. */
+.z { position: absolute; line-height: 1; color: #fff; -webkit-text-stroke: 4px var(--sleep-d); paint-order: stroke fill;
+  text-shadow: 0 3px 0 var(--ink); transform: rotate(-12deg); }
+body.stir .z { opacity: .5; }
+body.warn .z { display: none; }
+#guide { position: absolute; border: 1px dashed #FF2E9A; display: none; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="rbx">
+    <div class="rb"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.5" fill="#fff" transform="rotate(15 12 12)"/><rect x="10" y="10" width="4" height="4" fill="#222" transform="rotate(15 12 12)"/></svg></div>
+    <div class="rb" style="width:88px"><svg viewBox="0 0 24 24"><g stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></g></svg>
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v11H11l-4 4v-4H4z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div id="music"><span class="e">🎵</span></div>
+  <div id="sleep">
+    <div class="meter" id="meter">
+      <span class="face e" id="face">😴</span>
+      <div class="col">
+        <span class="lbl" id="mlabel">Giant is sleeping</span>
+        <div class="bar"><div class="fill" id="fill" style="width:22%"></div><div class="tick" style="left:60%"></div><div class="tick" style="left:85%"></div></div>
+      </div>
+      <span class="lock e hide" id="lock"></span>
+    </div>
+  </div>
+  <div id="zs"></div>
+  <div id="actions"><div class="btn" id="tiptoe"><span class="e">🦶</span><span class="t stroke">Tiptoe</span><span class="key">C</span></div></div>
+</div>
+<script>
+const q = new URLSearchParams(location.search);
+const device = q.get("device") || "desktop";
+const gate = q.get("gate") || "4";
+const state = q.get("state") || "calm";
+const touch = device === "phone";
+const $ = id => document.getElementById(id);
+$("screen").style.backgroundImage = "url(" + (touch ? "view-phone-sleepz-g" : "view-sleepz-g") + gate + ".png)";
+if (touch) document.body.classList.add("touch");
+document.body.classList.add(state);
+
+const rows = {
+  calm:  ["😴", "Giant is sleeping", "22%"],
+  stir:  ["😔", "He's stirring... tiptoe!", "70%"],
+  warn:  ["😟", "He's waking up! Tiptoe!", "90%"],
+  heavy: ["😪", "Heavy Sleep · safe for 0:45", "100%"],
+};
+const r = rows[state];
+$("face").textContent = r[0]; $("mlabel").textContent = r[1]; $("fill").style.width = r[2];
+if (state === "heavy") $("lock").textContent = "🔒";
+
+// The Zs: [left, top, height] in points, measured from the meter's right edge and top.
+// phone meter box: x 290-550, top 28; computer: x 440-840, top 12.
+const W = window.innerWidth;
+const meterRight = touch ? 550 : W / 2 + 200;
+const meterTop = touch ? 28 : 12;
+const sets = {
+  phone:   { calm: [[6, 20, 24], [32, 0, 28], [62, -24, 32]], heavy: [[6, 14, 32], [40, -10, 38], [80, -24, 44]] },
+  desktop: { calm: [[8, 30, 30], [40, 4, 36], [78, -12, 42]], heavy: [[8, 22, 40], [52, -4, 46], [102, -12, 52]] },
+};
+const set = sets[touch ? "phone" : "desktop"][state === "heavy" ? "heavy" : "calm"];
+let html = "";
+for (const [dx, dy, h] of set) {
+  // Fredoka One's capital Z is 0.74 of the font size (measured in Chrome, 2026-11-10), so the font size is the letter height / 0.74
+  html += `<div class="z" style="left:${meterRight + dx}px; top:${meterTop + dy}px; font-size:${(h / 0.74).toFixed(1)}px">Z</div>`;
+}
+$("zs").innerHTML = html;
+document.title += ` | ${device} gate ${gate} ${state}`;
+</script>
+</body>
+</html>

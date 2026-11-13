@@ -1,8 +1,10 @@
 --!strict
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local JestGlobals = require(game:GetService("ServerStorage").DevPackages.JestGlobals)
 local describe, it, expect = JestGlobals.describe, JestGlobals.it, JestGlobals.expect
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Slams = require(ServerScriptService.Server.Giant.Slams)
 local Zones = require(ServerScriptService.Server.Giant.Zones)
 
@@ -21,6 +23,9 @@ local function player(userId: number, x: number, z: number, changes: { [string]:
 		inGarden = false,
 		floating = false,
 		landedAgo = nil,
+		joinedThisWake = false,
+		bonkedLast = false,
+		appearedAgo = nil,
 	}
 	if changes then
 		for key, value in changes do
@@ -102,9 +107,66 @@ describe("Slams.pickTarget", function()
 		expect(target and target.userId).toBe(2)
 	end)
 
-	it("a player who carries nothing is never a target, even if nearest", function()
+	it("a carrier is the target even when a player with no egg is nearer to him", function()
 		local target = Slams.pickTarget({ player(1, 5, 0, { carrying = false }), player(2, 80, 0) }, FACE, nil)
 		expect(target and target.userId).toBe(2)
+	end)
+
+	it("a solo player with no egg in the meadow is the target", function()
+		local target = Slams.pickTarget({ player(1, 5, 0, { carrying = false }) }, FACE, nil)
+		expect(target and target.userId).toBe(1)
+	end)
+
+	it("when the carrier is in a garden, the player with no egg is next", function()
+		local carrier = player(1, 80, 0, { inGarden = true })
+		local target = Slams.pickTarget({ carrier, player(2, 5, 0, { carrying = false }) }, FACE, nil)
+		expect(target and target.userId).toBe(2)
+	end)
+
+	it("two players with no egg: the nearer first, and the other when the nearer was the last target", function()
+		local near = player(1, 10, 0, { carrying = false })
+		local far = player(2, 60, 0, { carrying = false })
+		local first = Slams.pickTarget({ far, near }, FACE, nil)
+		local afterNear = Slams.pickTarget({ far, near }, FACE, 1)
+		local afterFar = Slams.pickTarget({ far, near }, FACE, 2)
+		expect(first and first.userId).toBe(1)
+		expect(afterNear and afterNear.userId).toBe(2)
+		expect(afterFar and afterFar.userId).toBe(1)
+	end)
+
+	it("a player who appeared at the door less than DoorSeconds ago is not a target, at DoorSeconds is", function()
+		local almost = player(1, 5, 0, { appearedAgo = Config.Wake.DoorSeconds - 0.1 })
+		local exactly = player(1, 5, 0, { appearedAgo = Config.Wake.DoorSeconds })
+		local other = player(2, 80, 0)
+		local early = Slams.pickTarget({ almost, other }, FACE, nil)
+		local ready = Slams.pickTarget({ exactly, other }, FACE, nil)
+		expect(early and early.userId).toBe(2)
+		expect(ready and ready.userId).toBe(1)
+	end)
+
+	it("a player who joined this wake-up is never a target", function()
+		local joined = player(1, 5, 0, { joinedThisWake = true })
+		local target = Slams.pickTarget({ joined, player(2, 80, 0) }, FACE, nil)
+		expect(target and target.userId).toBe(2)
+		expect(Slams.pickTarget({ joined }, FACE, nil)).toBeNil()
+	end)
+
+	it("a player the last slam bonked is skipped, and is the target again when not bonked", function()
+		local other = player(2, 80, 0)
+		local skipped = Slams.pickTarget({ player(1, 5, 0, { bonkedLast = true }), other }, FACE, nil)
+		local again = Slams.pickTarget({ player(1, 5, 0, { bonkedLast = false }), other }, FACE, nil)
+		expect(skipped and skipped.userId).toBe(2)
+		expect(again and again.userId).toBe(1)
+	end)
+
+	it("a player in a garden or floating is never a target, with or without an egg", function()
+		local nobody = {
+			player(1, 5, 0, { inGarden = true }),
+			player(2, 5, 0, { floating = true }),
+			player(3, 5, 0, { inGarden = true, carrying = false }),
+			player(4, 5, 0, { floating = true, carrying = false }),
+		}
+		expect(Slams.pickTarget(nobody, FACE, nil)).toBeNil()
 	end)
 
 	it("a player who landed a moment ago can still be a target (only floating players are skipped)", function()
@@ -114,7 +176,7 @@ describe("Slams.pickTarget", function()
 
 	it("nobody fits: nil", function()
 		local nobody = {
-			player(1, 5, 0, { carrying = false }),
+			player(1, 5, 0, { joinedThisWake = true }),
 			player(2, 5, 0, { floating = true }),
 			player(3, 5, 0, { inGarden = true }),
 		}
@@ -395,7 +457,7 @@ describe("Slams.plan", function()
 	end)
 
 	it("no carrier gives an empty-meadow circle with no target", function()
-		local players = { player(1, 0, 0, { carrying = false }) }
+		local players = { player(1, 0, 0, { carrying = false, joinedThisWake = true }) }
 		local result = Slams.plan(players, FACE, { westGarden() }, meadow, {}, nil, nil, first)
 		expect(result.target).toBeNil()
 		expect(result.centre == meadow[1]).toBe(true)
@@ -427,80 +489,144 @@ describe("Slams.plan", function()
 	end)
 end)
 
-describe("Slams.caught", function()
-	local centre = Vector3.new(-50, 5, 20)
+describe("Slams.inCircle", function()
+	local centre = Vector3.new(0, 40, 0)
 
-	it("a carrier exactly 15 studs away across the ground is caught", function()
-		expect(Slams.caught({ player(1, -35, 20) }, centre)).toEqual({ 1 })
+	it("is true on the circle's edge, across the ground", function()
+		local radius = Config.Wake.SlamCircleDiameter / 2
+		expect(Slams.inCircle(Vector3.new(radius, 40, 0), centre)).toBe(true)
+		expect(Slams.inCircle(Vector3.new(radius + 0.5, 40, 0), centre)).toBe(false)
 	end)
 
-	it("a carrier 15.1 studs away across the ground is not caught", function()
-		expect(Slams.caught({ player(1, -34.9, 20) }, centre)).toEqual({})
+	it("is false for someone far above the circle", function()
+		expect(Slams.inCircle(Vector3.new(0, 70, 0), centre)).toBe(false)
+	end)
+end)
+
+describe("Slams.hits", function()
+	local centre = Vector3.new(-50, 40, 20)
+	local circle = { centre = centre, point = Vector3.new(-50, 0, 20) }
+	local function surfaceUnder(_position: Vector3): number
+		return 0
+	end
+	local function at(userId: number, height: number, changes: { [string]: any }?): Player
+		local made: any = player(userId, -50, 20, changes)
+		made.position = Vector3.new(-50, height, 20)
+		return made :: Player
+	end
+
+	it("a carrier 30 studs over the surface is caught, 46 studs over is not hit", function()
+		expect(Slams.hits({ at(1, 30) }, circle, surfaceUnder)).toEqual({ caught = { 1 }, bonked = {} })
+		expect(Slams.hits({ at(1, 46) }, circle, surfaceUnder)).toEqual({ caught = {}, bonked = {} })
 	end)
 
-	it("the distance is measured across the ground in both directions", function()
-		-- 10 across in X and 10 in Z is 14.14 studs, caught; 11 and 11 is 15.56, not caught.
-		expect(Slams.caught({ player(1, -40, 30) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -39, 31) }, centre)).toEqual({})
+	it("a player with no egg inside the circle is bonked, not caught", function()
+		expect(Slams.hits({ at(1, 5, { carrying = false }) }, circle, surfaceUnder)).toEqual({
+			caught = {},
+			bonked = { 1 },
+		})
 	end)
 
-	it("a carrier 9 studs above the centre is caught, 11 studs above is not", function()
-		expect(Slams.caught({ player(1, -50, 20, { position = Vector3.new(-50, 14, 20) }) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -50, 20, { position = Vector3.new(-50, 16, 20) }) }, centre)).toEqual({})
+	it("a carrier and a player with no egg in one circle: one is caught, one is bonked", function()
+		local players = { at(7, 5, { carrying = false }), at(3, 5) }
+		expect(Slams.hits(players, circle, surfaceUnder)).toEqual({ caught = { 3 }, bonked = { 7 } })
 	end)
 
-	it("the distance across the ground ignores height: 14 studs across and 9 studs up is caught", function()
-		-- In 3D this carrier would be 16.6 studs away, outside the 15-stud circle.
-		expect(Slams.caught({ player(1, -36, 20, { position = Vector3.new(-36, 14, 20) }) }, centre)).toEqual({ 1 })
+	it("a player 2 studs under the surface point (under a bridge) is not hit", function()
+		expect(Slams.hits({ at(1, -2), at(2, -2, { carrying = false }) }, circle, surfaceUnder)).toEqual({
+			caught = {},
+			bonked = {},
+		})
 	end)
 
-	it("a carrier 9 studs below the centre is caught, 11 studs below is not", function()
-		expect(Slams.caught({ player(1, -50, 20, { position = Vector3.new(-50, -4, 20) }) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -50, 20, { position = Vector3.new(-50, -6, 20) }) }, centre)).toEqual({})
+	it("a player 15 studs from the centre is hit, 15.1 studs is not", function()
+		local edge: any = player(1, -35, 20, { carrying = false })
+		edge.position = Vector3.new(-35, 5, 20)
+		local outside: any = player(2, -34.9, 20, { carrying = false })
+		outside.position = Vector3.new(-34.9, 5, 20)
+		expect(Slams.hits({ edge, outside }, circle, surfaceUnder)).toEqual({ caught = {}, bonked = { 1 } })
 	end)
 
-	it("a carrier exactly 10 studs above the centre is caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { position = Vector3.new(-50, 15, 20) }) }, centre)).toEqual({ 1 })
+	it("a player in a garden or floating is never hit", function()
+		expect(Slams.hits({ at(1, 5, { inGarden = true }), at(2, 5, { floating = true }) }, circle, surfaceUnder)).toEqual({
+			caught = {},
+			bonked = {},
+		})
 	end)
 
-	it("a player who carries nothing is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { carrying = false }) }, centre)).toEqual({})
+	it("a player who landed 1.4 s ago is not hit, 1.5 s ago is hit", function()
+		expect(Slams.hits({ at(1, 5, { landedAgo = 1.4 }) }, circle, surfaceUnder)).toEqual({ caught = {}, bonked = {} })
+		expect(Slams.hits({ at(1, 5, { landedAgo = 1.5 }) }, circle, surfaceUnder)).toEqual({
+			caught = { 1 },
+			bonked = {},
+		})
+	end)
+end)
+
+-- Rules 62 and 63: who the director plans a protected warning for. A player the engine would hit for free is
+-- protected, because a circle aimed at them would land before they could move.
+describe("Slams.isProtected", function()
+	it("a player the slam before bonked is protected", function()
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false, bonkedLast = true }))).toBe(true)
 	end)
 
-	it("a floating carrier is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { floating = true }) }, centre)).toEqual({})
+	it("a player who appeared at the door less than the door seconds ago is protected", function()
+		local justBefore = Config.Wake.DoorSeconds - 0.1
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false, appearedAgo = justBefore }))).toBe(true)
 	end)
 
-	it("a carrier in a garden is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { inGarden = true }) }, centre)).toEqual({})
+	it("a player who appeared exactly the door seconds ago is no longer protected", function()
+		local changes = { carrying = false, appearedAgo = Config.Wake.DoorSeconds }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
 	end)
 
-	it("several carriers inside are all caught, in list order, and the target need not be one of them", function()
-		local players = { player(9, -45, 20), player(2, -50, 25), player(5, 100, 100), player(4, -55, 15) }
-		expect(Slams.caught(players, centre)).toEqual({ 9, 2, 4 })
+	it("a player who never appeared and wasn't bonked is not protected", function()
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false }))).toBe(false)
 	end)
 
-	it("nobody is caught when nobody is inside", function()
-		expect(Slams.caught({ player(1, 100, 100) }, centre)).toEqual({})
-		expect(Slams.caught({}, centre)).toEqual({})
+	it("a floating player is not protected even at the door", function()
+		local changes = { carrying = false, appearedAgo = 0.5, floating = true }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
 	end)
 
-	it("a carrier who landed 1.4 s ago is not caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { landedAgo = 1.4 }) }, centre)).toEqual({})
+	it("a bonked player who is back in a garden is not protected", function()
+		local changes = { carrying = false, bonkedLast = true, inGarden = true }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
 	end)
 
-	it("a carrier who landed exactly 1.5 s ago is caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { landedAgo = 1.5 }) }, centre)).toEqual({ 1 })
+	it("a player who joined during this wake-up is not protected", function()
+		local changes = { carrying = false, bonkedLast = true, appearedAgo = 0.5, joinedThisWake = true }
+		expect(Slams.isProtected(player(1, 0, 60, changes))).toBe(false)
+	end)
+end)
+
+-- Rule 60, the ladder grace: for a short time after a player first touches a ladder in a wake-up, no circle is aimed at
+-- them, and the director plans a show slam instead of a warning at them (like the door and the bonk).
+describe("Slams ladder grace", function()
+	it("a player in their grace is not picked and the next player is", function()
+		local near = player(1, 0, 60, { inLadderGrace = true })
+		local far = player(2, 0, 100)
+		local picked = Slams.pickTarget({ near, far }, FACE, nil)
+		expect(if picked ~= nil then picked.userId else nil).toBe(2)
 	end)
 
-	it("a carrier who landed long ago, or never floated, is caught", function()
-		expect(Slams.caught({ player(1, -50, 20, { landedAgo = 12 }) }, centre)).toEqual({ 1 })
-		expect(Slams.caught({ player(2, -50, 20, { landedAgo = nil }) }, centre)).toEqual({ 2 })
+	it("a player is picked again once they are past their grace", function()
+		local inGrace = player(1, 0, 60, { inLadderGrace = true })
+		local past = player(1, 0, 60, { inLadderGrace = false })
+		local far = player(2, 0, 100)
+		local whileInGrace = Slams.pickTarget({ inGrace, far }, FACE, nil)
+		local afterGrace = Slams.pickTarget({ past, far }, FACE, nil)
+		expect(if whileInGrace ~= nil then whileInGrace.userId else nil).toBe(2)
+		expect(if afterGrace ~= nil then afterGrace.userId else nil).toBe(1)
 	end)
 
-	it("a guarded carrier does not stop the others in the same circle from being caught", function()
-		local players =
-			{ player(1, -50, 20, { landedAgo = 0.3 }), player(2, -48, 20), player(3, -52, 20, { landedAgo = 0 }) }
-		expect(Slams.caught(players, centre)).toEqual({ 2 })
+	it("a player in their grace is protected", function()
+		expect(Slams.isProtected(player(1, 0, 60, { carrying = false, inLadderGrace = true }))).toBe(true)
+	end)
+
+	it("a floating or in-garden player in their grace is still not protected (the exits come first)", function()
+		expect(Slams.isProtected(player(1, 0, 60, { inLadderGrace = true, floating = true }))).toBe(false)
+		expect(Slams.isProtected(player(1, 0, 60, { inLadderGrace = true, inGarden = true }))).toBe(false)
+		expect(Slams.isProtected(player(1, 0, 60, { inLadderGrace = true, joinedThisWake = true }))).toBe(false)
 	end)
 end)
