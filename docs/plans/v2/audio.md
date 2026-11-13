@@ -291,9 +291,11 @@ Rule 88 (The game reads without sound): every sound plays with something on scre
 
 **Task 19: The Gate 4 sound check**
 - Spec rules: Rule 99 (Studio tests mute at runtime only): "a short sound check the team triggers while the game runs"; section 8, "Adam's Gate 4 playtest".
-- Files: `tools/play/sound-check.luau` (new; a Play tool, never part of the game, `docs/architecture.md` section 8).
+- Files: `tools/play/SoundCheck.luau` (new; a Play tool, never part of the game, `docs/architecture.md` section 8), `src/tests/server/Tools/SoundCheck.spec.luau` (new).
+- Stands on: Tasks 1 to 18.
+- Changed 2026-11-13 (code_lead): the logic goes in `SoundCheck.run(deps)` and is tested with fakes first, like the other tools in `tools/`; `SoundCheck.start(playerName)` only wires the real remotes. The wake-up moment runs only while he is Asleep.
 - What it does, run on the Server with `execute_luau` while a session runs, one moment at a time with a few seconds between: an egg home of each rank for the named player (`EggHome` fired with each rank, at their garden's first home spot), a free save (`Warning` fired with 85 and "FreeSave"), a rescue (`Rescued` fired for the player, from and to where they stand, so they don't move), and a wake-up for the yawn (`GiantState.Meter` written to 100; the director takes it, so he really wakes and lies down 15 s later). It saves nothing and changes nothing in the place. It doesn't mute and doesn't unmute: muting is the session's first call, and only in team sessions.
-- Failing test first: none (a tool). Its proof is Task 20, step 3.
+- Failing test first: `SoundCheck.spec` (each moment fires the right remote with the right values, in order) against an empty stub. Its Play proof is Task 20, step 3.
 - Done when: the script is reviewed, and its dry run in Task 20 shows every moment's sounds in the board's log.
 
 **Task 20: The Play proof**
